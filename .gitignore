@@ -1,2 +1,157 @@
+# ===================================
+# ARQUIVOS SENSÍVEIS E CONFIGURAÇÕES
+# ===================================
 .env
-node_modules
+.env.local
+.env.development
+.env.test
+.env.production
+.env.staging
+*.env
+
+# Configurações locais
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ===================================
+# DEPENDÊNCIAS E PACKAGES
+# ===================================
+node_modules/
+*/node_modules/
+**/node_modules/
+
+# Package manager files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+.pnpm-store/
+
+# ===================================
+# BUILD E COMPILAÇÃO
+# ===================================
+dist/
+build/
+out/
+*.tsbuildinfo
+.next/
+.nuxt/
+
+# ===================================
+# LOGS E DEBUG
+# ===================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ===================================
+# TESTES E COVERAGE
+# ===================================
+coverage/
+*.lcov
+.nyc_output/
+test-results/
+playwright-report/
+
+# ===================================
+# CACHE E TEMPORÁRIOS
+# ===================================
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+*.tmp
+*.temp
+tmp/
+temp/
+
+# ===================================
+# BANCO DE DADOS
+# ===================================
+*.db
+*.sqlite
+*.sqlite3
+database.db
+prisma/migrations/
+!prisma/schema.prisma
+
+# ===================================
+# UPLOADS E ARQUIVOS GERADOS
+# ===================================
+uploads/
+public/uploads/
+storage/
+files/
+*.pdf
+*.docx
+*.xlsx
+!docs/*.pdf
+
+# ===================================
+# SISTEMA OPERACIONAL
+# ===================================
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+
+# ===================================
+# RUNTIME E PROCESSOS
+# ===================================
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# ===================================
+# FERRAMENTAS DE DESENVOLVIMENTO
+# ===================================
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# ===================================
+# CERTIFICADOS E CHAVES
+# ===================================
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# ===================================
+# BACKUPS
+# ===================================
+*.backup
+*.bak
+*.old
+*.orig
