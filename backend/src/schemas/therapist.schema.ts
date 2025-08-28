@@ -55,3 +55,9 @@ const baseSchema = personalSchema
     .merge(jobSchema);
 
 export const therapistSchema = baseSchema;
+
+export const therapistIdSchema = z.object({
+    id: z.string().uuid({ message: "ID deve ser um UUID válido" })
+});
+
+export const therapistUpdateSchema = baseSchema.partial();

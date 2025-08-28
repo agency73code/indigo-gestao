@@ -6,5 +6,6 @@ ignoredBuiltDependencies:
   - '@prisma/client'
   - '@prisma/engines'
   - bcrypt
+  - esbuild
   - node
   - prisma
