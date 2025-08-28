@@ -81,3 +81,40 @@ export async function getTherapistById(req: Request, res: Response, next: NextFu
         next(error);
     }
 }
+
+export async function updateTherapistById(req: Request, res: Response) {
+    try {
+        const { id } = req.params;
+
+        if (!id) {
+            return res.status(400).json({
+                error: "ID é obrigatório"
+            });
+        }
+
+        const data = req.body;
+        const updatedTherapist = await updateTherapist(id, data);
+
+        res.json({
+            message: 'Terapeuta atualizado com sucesso',
+            data: updatedTherapist
+        });
+    } catch (error: any) {
+        if (error.message === 'Terapeuta não encontrado.') {
+            return res.status(404).json({
+                error: error.message
+            })
+        }
+
+        if (error.message.includes('já está em uso')) {
+            return res.status(409).json({
+                error: error.message
+            });
+        }
+
+        console.error('Erro ao atualizar terapeuta:', error);
+        res.status(500).json({
+            error: 'Erro interno do servidor'
+        })
+    }
+}

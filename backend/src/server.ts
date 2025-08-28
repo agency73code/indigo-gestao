@@ -1,4 +1,5 @@
 import express from "express";
+import type { Express } from "express";
 import helmet from "helmet";
 import cors from "cors";
 import compression from "compression";
@@ -7,7 +8,7 @@ import { env } from "./config/env.js";
 import { errorHandler } from "./middleware/errorHandler.middleware.js";
 import routes from "./routes/index.js";
 
-const app = express();
+const app: Express = express();
 
 app.use(helmet()); // Remove headers que expõem tecnologias
 app.use(cors({
@@ -45,10 +46,14 @@ app.get('/health', (req, res) => {
 // Middleware de tratamento de erros
 app.use(errorHandler); 
 
+export default app;
+
 // SERVIDOR
-const PORT = env.PORT;
-app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`📊 Environment: ${env.NODE_ENV}`);
-    console.log(`🔗 Health check: http://localhost:${PORT}/health`);
-});
+if (process.env.NODE_ENV !== 'test') {
+    const PORT = env.PORT;
+    app.listen(PORT, () => {
+        console.log(`🚀 Server running on port ${PORT}`);
+        console.log(`📊 Environment: ${env.NODE_ENV}`);
+        console.log(`🔗 Health check: http://localhost:${PORT}/health`);
+    });
+}

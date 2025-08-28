@@ -3,10 +3,15 @@ import type { Router as ExpressRouter } from 'express';
 import { 
     createTherapist, 
     getTherapists, 
-    getTherapistById 
+    getTherapistById,
+    updateTherapistById
 } from '../controllers/therapist.controller.js';
 import { validateBody, validateParams } from '../middleware/validation.middleware.js';
-import { therapistSchema, therapistIdSchema } from '../schemas/therapist.schema.js';
+import { 
+    therapistSchema, 
+    therapistIdSchema,
+    therapistUpdateSchema
+} from '../schemas/therapist.schema.js';
 
 const router: ExpressRouter = Router();
 
@@ -21,5 +26,11 @@ router.post('/cadastrar',
     validateBody(therapistSchema), 
     createTherapist
 );
+
+router.put('/:id',
+    validateParams(therapistIdSchema),
+    validateBody(therapistUpdateSchema),
+    updateTherapistById
+)
 
 export default router;

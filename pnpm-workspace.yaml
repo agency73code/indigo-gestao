@@ -9,3 +9,4 @@ ignoredBuiltDependencies:
   - esbuild
   - node
   - prisma
+  - unrs-resolver
