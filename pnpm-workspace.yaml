@@ -1,0 +1,10 @@
+packages:
+  - backend
+  - frontend
+
+ignoredBuiltDependencies:
+  - '@prisma/client'
+  - '@prisma/engines'
+  - bcrypt
+  - node
+  - prisma
