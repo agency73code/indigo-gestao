@@ -1,5 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
-import prisma from '../utils/db.util.js';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 // Isso aqui é o modelo de dados do terapeuta
 export interface TherapistData {

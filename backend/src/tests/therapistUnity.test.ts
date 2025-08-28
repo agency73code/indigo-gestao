@@ -15,7 +15,7 @@ async function runTest() {
         data_nascimento: new Date("1990-01-01"),
         telefone: "11112223331",
         celular: "11985982268",
-        email: "natantatan2000@gmail.com",
+        email: "kaio.rmdourado@gmail.com",
         email_indigo: "joao@indigo.com",
         possui_veiculo: "sim",
         placa_veiculo: "ABC1234",
