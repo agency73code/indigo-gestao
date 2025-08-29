@@ -1,11 +1,11 @@
 import type { Request, Response, NextFunction } from 'express';
-import { 
+import {
     saveTherapist,
     findTherapistById,
     getTherapistsList,
     updateTherapist,
     deleteTherapist,
-    getTherapistsStatistics
+    getTherapistsStatistics,
 } from '../models/therapist.model.js';
 import { sendWelcomeEmail } from '../utils/mail.util.js';
 import type { TherapistCreateData } from '../models/therapist.model.js';
@@ -18,19 +18,19 @@ export async function createTherapist(req: Request, res: Response, next: NextFun
         sendWelcomeEmail({
             to: therapist.email,
             name: therapist.nome,
-            token: therapist.token_redefinicao!
-        }).catch(error => {
+            token: therapist.token_redefinicao!,
+        }).catch((error) => {
             console.error('Erro ao enviar email de boas-vindas:', error);
         });
-        
+
         res.status(201).json({
-            message: "Terapeuta cadastrado com sucesso!",
+            message: 'Terapeuta cadastrado com sucesso!',
             data: {
                 id: therapist.id,
                 nome: therapist.nome,
                 email: therapist.email,
-                data_entrada: therapist.data_entrada
-            }
+                data_entrada: therapist.data_entrada,
+            },
         });
     } catch (error) {
         next(error);
@@ -42,13 +42,13 @@ export async function getTherapists(req: Request, res: Response, next: NextFunct
         const page = parseInt(req.query.page as string) || 1;
         const limit = parseInt(req.query.limit as string) || 10;
         const search = req.query.search as string;
-        
+
         const result = await getTherapistsList(page, limit, search);
 
         res.json({
-            message: "Terapeutas encontrados",
+            message: 'Terapeutas encontrados',
             data: result.therapists,
-            pagination: result.pagination
+            pagination: result.pagination,
         });
     } catch (error) {
         next(error);
@@ -61,21 +61,21 @@ export async function getTherapistById(req: Request, res: Response, next: NextFu
 
         if (!id) {
             return res.status(400).json({
-                error: "ID é obrigatório"
+                error: 'ID é obrigatório',
             });
         }
 
         const therapist = await findTherapistById(id);
 
         if (!therapist) {
-            return res.status(404).json({ 
-                error: "Terapeuta não encontrado" 
+            return res.status(404).json({
+                error: 'Terapeuta não encontrado',
             });
         }
 
         res.json({
-            message: "Terapeuta encontrado",
-            data: therapist
+            message: 'Terapeuta encontrado',
+            data: therapist,
         });
     } catch (error) {
         next(error);
@@ -88,7 +88,7 @@ export async function updateTherapistById(req: Request, res: Response) {
 
         if (!id) {
             return res.status(400).json({
-                error: "ID é obrigatório"
+                error: 'ID é obrigatório',
             });
         }
 
@@ -97,24 +97,24 @@ export async function updateTherapistById(req: Request, res: Response) {
 
         res.json({
             message: 'Terapeuta atualizado com sucesso',
-            data: updatedTherapist
+            data: updatedTherapist,
         });
     } catch (error: any) {
         if (error.message === 'Terapeuta não encontrado.') {
             return res.status(404).json({
-                error: error.message
-            })
+                error: error.message,
+            });
         }
 
         if (error.message.includes('já está em uso')) {
             return res.status(409).json({
-                error: error.message
+                error: error.message,
             });
         }
 
         console.error('Erro ao atualizar terapeuta:', error);
         res.status(500).json({
-            error: 'Erro interno do servidor'
-        })
+            error: 'Erro interno do servidor',
+        });
     }
 }

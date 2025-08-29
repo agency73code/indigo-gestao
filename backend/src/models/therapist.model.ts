@@ -12,7 +12,7 @@ export interface TherapistCreateData {
     foto_perfil?: string;
     email: string;
     email_indigo: string;
-    possui_veiculo: "sim" | "nao";
+    possui_veiculo: 'sim' | 'nao';
     placa_veiculo?: string;
     modelo_veiculo?: string;
     banco: string;
@@ -38,7 +38,8 @@ export interface TherapistCreateData {
     perfil_acesso: string;
 }
 
-export interface TherapistResponse extends Omit<terapeuta, 'senha' | 'token_redefinicao' | 'validade_token'> {}
+export interface TherapistResponse
+    extends Omit<terapeuta, 'senha' | 'token_redefinicao' | 'validade_token'> {}
 
 function generateResetToken() {
     const token = uuidv4();
@@ -91,7 +92,7 @@ export async function saveTherapist(data: TherapistCreateData): Promise<terapeut
                 atividade: 'ativo',
                 token_redefinicao: token,
                 validade_token: expiry,
-            }
+            },
         });
 
         return therapist;
@@ -143,7 +144,7 @@ export async function findTherapistById(id: string) {
             data_saida: true,
             perfil_acesso: true,
             atividade: true,
-        }
+        },
     });
 
     return therapist;
@@ -157,7 +158,7 @@ export async function getTherapistsList(page = 1, limit = 10, search?: string) {
             { nome: { contains: search, mode: 'insensitive' } },
             { email: { contains: search, mode: 'insensitive' } },
             { cpf: { contains: search } },
-        ]
+        ],
     } : {};
 
     const [therapists, total] = await Promise.all([
@@ -173,12 +174,12 @@ export async function getTherapistsList(page = 1, limit = 10, search?: string) {
                 atividade: true,
                 data_entrada: true,
                 perfil_acesso: true,
-            }, 
-            orderBy: { 
-                data_entrada: 'desc' 
-            }
+            },
+            orderBy: {
+                data_entrada: 'desc',
+            },
         }),
-        prisma.terapeuta.count({ where })
+        prisma.terapeuta.count({ where }),
     ]);
 
     return {
@@ -187,8 +188,8 @@ export async function getTherapistsList(page = 1, limit = 10, search?: string) {
             page,
             limit,
             total,
-            totalPages: Math.ceil(total / limit)
-        }
+            totalPages: Math.ceil(total / limit),
+        },
     };
 }
 
@@ -196,7 +197,7 @@ export async function updateTherapist(id: string, data: Partial<TherapistCreateD
     try {
         return await prisma.terapeuta.update({
             where: { id },
-            data
+            data,
         });
     } catch (error: any) {
         if (error.code === 'P2002') {
@@ -205,7 +206,6 @@ export async function updateTherapist(id: string, data: Partial<TherapistCreateD
         }
         if (error.code === 'P2025') {
             throw new Error('Terapeuta não encontrado.');
-
         }
         throw error;
     }
@@ -215,10 +215,10 @@ export async function deleteTherapist(id: string) {
     try {
         return await prisma.terapeuta.update({
             where: { id },
-            data: { 
-                atividade: 'inativo', 
-                data_saida: new Date() 
-            }
+            data: {
+                atividade: 'inativo',
+                data_saida: new Date(),
+            },
         });
     } catch (error: any) {
         if (error.code === 'P2025') {
@@ -236,10 +236,10 @@ export async function getTherapistsStatistics() {
         prisma.terapeuta.count({
             where: {
                 data_entrada: {
-                    gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
-                }
-            }
-        })
+                    gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+                },
+            },
+        }),
     ]);
 
     return {
@@ -247,6 +247,6 @@ export async function getTherapistsStatistics() {
         active,
         inactive,
         thisMonth,
-        activePercentage: total > 0 ? Math.round((active / total) * 100) : 0
+        activePercentage: total > 0 ? Math.round((active / total) * 100) : 0,
     };
 }

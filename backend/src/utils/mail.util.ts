@@ -1,6 +1,14 @@
 import nodemailer from 'nodemailer';
 
-export async function sendWelcomeEmail({ to, name, token }: { to: string; name: string; token: string }) {
+export async function sendWelcomeEmail({
+    to,
+    name,
+    token,
+}: {
+    to: string;
+    name: string;
+    token: string;
+}) {
     const transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST,
         port: Number(process.env.SMTP_PORT),
@@ -18,16 +26,16 @@ export async function sendWelcomeEmail({ to, name, token }: { to: string; name: 
         html: `
             <h2>Bem-vindo, ${name}!</h2>
             <p>Você foi cadastrado no sistema. Para definir sua senha, clique no link abaixo:</p>
-            <a href="http://127.0.0.1:3000/reset-password?token=${token}">Configurar minha senha</a>
+            <a href="http://127.0.0.1:3000/api/auth/validar-token/${token}">Configurar minha senha</a>
             <p>O link expira em 24 horas.</p>
             <p>Equipe Indigo Gestão</p>
         `,
-    }
+    };
 
     try {
         console.log(`Enviando e-mail para ${to}`);
         return transporter.sendMail(mailOptions);
     } catch (err: any) {
-        console.error("Erro ao enviar e-mail:", err.message);
+        console.error('Erro ao enviar e-mail:', err.message);
     }
 }

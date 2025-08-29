@@ -1,12 +1,12 @@
 packages:
-  - backend
-  - frontend
+    - backend
+    - frontend
 
 ignoredBuiltDependencies:
-  - '@prisma/client'
-  - '@prisma/engines'
-  - bcrypt
-  - esbuild
-  - node
-  - prisma
-  - unrs-resolver
+    - '@prisma/client'
+    - '@prisma/engines'
+    - bcrypt
+    - esbuild
+    - node
+    - prisma
+    - unrs-resolver

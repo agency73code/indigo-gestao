@@ -16,19 +16,19 @@ export const errorHandler = (error: Error, req: Request, res: Response, next: Ne
     if (error instanceof ZodError) {
         return res.status(400).json({
             error: 'Validation Error',
-            details: error.issues
+            details: error.issues,
         });
     }
 
     if (error.message.includes('Prisma')) {
         return res.status(500).json({
             error: 'Database Error',
-            message: 'Internal server error'
+            message: 'Internal server error',
         });
     }
 
     res.status(500).json({
         error: 'Internal Server Error',
-        message: error.message
+        message: error.message,
     });
-}
+};

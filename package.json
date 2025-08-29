@@ -1,28 +1,28 @@
 {
-  "name": "indigo-gestao",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev:backend": "pnpm --filter backend dev",
-    "dev:frontend": "pnpm --filter frontend dev",
-    "dev": "concurrently \"pnpm dev:backend\" \"pnpm dev:frontend\"",
-    "lint": "eslint . --ext .js,.ts,.jsx,.tsx",
-    "lint:fix": "eslint . --ext .js,.ts,.jsx,.tsx --fix",
-    "format": "prettier --write ."
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "packageManager": "pnpm@10.15.0",
-  "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^8.41.0",
-    "@typescript-eslint/parser": "^8.41.0",
-    "concurrently": "^9.2.1",
-    "eslint": "^9.34.0",
-    "eslint-config-prettier": "^10.1.8",
-    "prettier": "^3.6.2",
-    "typescript": "^5.9.2"
-  }
+    "name": "indigo-gestao",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "dev:backend": "pnpm --filter backend dev",
+        "dev:frontend": "pnpm --filter frontend dev",
+        "dev": "concurrently \"pnpm dev:backend\" \"pnpm dev:frontend\"",
+        "lint": "eslint . --ext .js,.ts,.jsx,.tsx",
+        "lint:fix": "eslint . --ext .js,.ts,.jsx,.tsx --fix",
+        "format": "prettier --write ."
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "packageManager": "pnpm@10.15.0",
+    "devDependencies": {
+        "@typescript-eslint/eslint-plugin": "^8.41.0",
+        "@typescript-eslint/parser": "^8.41.0",
+        "concurrently": "^9.2.1",
+        "eslint": "^9.34.0",
+        "eslint-config-prettier": "^10.1.8",
+        "prettier": "^3.6.2",
+        "typescript": "^5.9.2"
+    }
 }

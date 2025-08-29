@@ -17,7 +17,7 @@ export const validateBody = (schema: ZodSchema) => {
         } catch (error: any) {
             res.status(400).json({
                 error: 'Dados inválidos',
-                details: error.errors || error.message
+                details: error.errors || error.message,
             });
         }
     };
@@ -32,7 +32,7 @@ export function validateParams(schema: ZodSchema) {
         } catch (error: any) {
             res.status(400).json({
                 error: 'Parâmetros inválidos',
-                details: error.errors || error.message
+                details: error.errors || error.message,
             });
         }
     };
@@ -47,7 +47,7 @@ export function validateQuery(schema: ZodSchema) {
         } catch (error: any) {
             res.status(400).json({
                 error: 'Query inválida',
-                details: error.errors || error.message
+                details: error.errors || error.message,
             });
         }
     };
