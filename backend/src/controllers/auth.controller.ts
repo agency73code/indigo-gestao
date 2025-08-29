@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from 'express';
-import { findUserByResetToken } from '../models/auth.model.js';
+import { findUserByResetToken, newPassword } from '../models/auth.model.js';
 
 export async function validateToken(req: Request, res: Response, next: NextFunction) {
     try {
@@ -33,28 +33,14 @@ export async function validateToken(req: Request, res: Response, next: NextFunct
 
 export async function definePassword(req: Request, res: Response, next: NextFunction) {
     try {
-        const token = req.params;
-        const data = req.body;
+        const { token } = req.params;
+        const { password, confirmPassword } = req.body;
 
-        if (!data.password || !data.confirmPassword) {
-            return res.status(400).json({
-                sucess: false,
-                message: 'Esperado os campos password e confirmPassword'
-            });
-        }
-
-        if (data.password != data.confirmPassword) {
-            return res.status(400).json({
-                sucess: false,
-                message: 'Senha e confirmação de senha devem ser idênticas'
-            });
-        }
+        const user = await newPassword(token!, password, 'terapeuta');
 
         res.status(200).json({
-            sucess: true,
-            message: 'sucesso',
-            token: token,
-            data: data
+            success: true,
+            message: 'Senha definida com sucesso!',
         });
     } catch (error) {
         next(error);

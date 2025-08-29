@@ -90,17 +90,10 @@ describe('Therapist API', () => {
             perfil_acesso: 'terapeuta',
         };
 
-        const response = await request(app).post('/api/terapeutas/cadastrar').send(newTherapist);
-        //.expect(201);
-
-        // 🐛 DEBUG: Ver qual erro de validação
-        console.log('📤 POST Status:', response.status);
-        console.log('📋 POST Response:', JSON.stringify(response.body, null, 2));
-
-        expect(response.status).toBe(201);
-
-        console.log('📤 Status:', response.status);
-        console.log('📋 Response:', JSON.stringify(response.body, null, 2));
+        const response = await request(app)
+        .post('/api/terapeutas/cadastrar')
+        .send(newTherapist)
+        .expect(201);
 
         expect(response.body).toHaveProperty('data');
         expect(response.body.data).toHaveProperty('nome', newTherapist.nome);

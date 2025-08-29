@@ -1,4 +1,5 @@
 import { prisma } from '../config/database.js';
+import { hashPassword } from '../utils/hash.util.js'
 
 export async function findUserByResetToken(token: string, table: 'terapeuta') {
     const user = await prisma[table].findFirst({
@@ -12,6 +13,21 @@ export async function findUserByResetToken(token: string, table: 'terapeuta') {
             nome: true,
             email: true,
         },
+    });
+
+    return user;
+}
+
+export async function newPassword(token: string, password: string, table: 'terapeuta') {
+    const user = await prisma[table].updateMany({
+        where: {
+            token_redefinicao: token
+        },
+        data: {
+            senha: await hashPassword(password),
+            token_redefinicao: null,
+            validade_token: null
+        }
     });
 
     return user;
