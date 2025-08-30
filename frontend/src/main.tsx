@@ -1,11 +1,33 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import SignIn from './screens/screen-signin'
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import AuthLayout from './screens/auth/layout.tsx';
+import SignInPage from './screens/sign-in/page.tsx';
 
-import './global.css'
+import './global.css';
 
-ReactDOM.createRoot (document.getElementById('root')!).render(
-  <React.StrictMode>
-    <SignIn />
-  </React.StrictMode>,
-)
+ReactDOM.createRoot(document.getElementById('root')!).render(
+    <React.StrictMode>
+        <BrowserRouter>
+            <Routes>
+                <Route 
+                    path="/login" 
+                    element={
+                        <AuthLayout>
+                            <SignInPage />
+                        </AuthLayout>
+                    } 
+                />
+                
+                <Route 
+                    path="*" 
+                    element={
+                        <AuthLayout>
+                            <SignInPage />
+                        </AuthLayout>
+                    } 
+                />
+            </Routes>
+        </BrowserRouter>
+    </React.StrictMode>,
+);
