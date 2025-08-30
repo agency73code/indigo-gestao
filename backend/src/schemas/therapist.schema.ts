@@ -1,66 +1,79 @@
 import z from 'zod';
 import { cpf, cnpj } from 'cpf-cnpj-validator';
 
+// helpers
+const coerceDate = z.preprocess((v) => (typeof v === 'string' || v instanceof Date ? new Date(v) : v), z.date());
+const cpfField = z.string().refine((val) => cpf.isValid(val), { message: 'CPF inválido' });
+const cnpjOptionalField = z.string().refine((val) => cnpj.isValid(val), { message: 'CNPJ inválido' });
+const phone11orLess = z.string().length(11, 'Telefone/Celular deve ter 11 dígitos');
+const emailField = z.string().email();
+
+// --- Schemas de blocos ---
+
 const personalSchema = z.object({
-    nome: z.string().min(10).max(255),
-    cpf: z.string().refine((val) => cpf.isValid(val), { message: 'CPF inválido' }),
-    data_nascimento: z.string().transform((val) => new Date(val)),
-    telefone: z.string().length(11).default(''),
-    celular: z.string().length(11),
-    foto_perfil: z.string().url().default(''),
-    email: z.string().email(),
-    email_indigo: z.string().email(),
-    possui_veiculo: z.enum(['sim', 'nao']),
-    placa_veiculo: z.string().max(20).default(''),
-    modelo_veiculo: z.string().max(50).default(''),
+  nome: z.string().min(3).max(255),
+  cpf: cpfField,
+  data_nascimento: coerceDate,
+  telefone: phone11orLess.optional(),
+  celular: phone11orLess,
+  foto_perfil: z.string().url().optional(),
+  email: emailField,
+  email_indigo: emailField,
+  possui_veiculo: z.enum(['sim', 'nao']),
+  placa_veiculo: z.string().max(20).optional(),
+  modelo_veiculo: z.string().max(50).optional(),
 });
 
 const bankSchema = z.object({
-    banco: z.string().max(50),
-    agencia: z.string().max(20),
-    conta: z.string().max(50),
-    chave_pix: z.string().max(255),
+  banco: z.string().max(50),
+  agencia: z.string().max(20),
+  conta: z.string().max(50),
+  chave_pix: z.string().max(255).optional(),
 });
 
-const addressSchema = z.object({
-    cep_endereco: z.string().length(8),
-    logradouro_endereco: z.string().max(255),
-    numero_endereco: z.string().max(10),
-    bairro_endereco: z.string().max(100),
-    cidade_endereco: z.string().max(100),
-    uf_endereco: z.string().length(2),
-    complemento_endereco: z.string().max(100).default(''),
+const addressItemSchema = z.object({
+  cep: z.string().length(8),
+  logradouro: z.string().max(255),
+  numero: z.string().max(10),
+  bairro: z.string().max(100),
+  cidade: z.string().max(100),
+  uf: z.string().toUpperCase().length(2),
+  complemento: z.string().max(100).optional(),
+  tipo_endereco_id: z.number().int().positive(),
+  principal: z.number().default(1),
 });
 
 const companySchema = z.object({
-    cnpj_empresa: z
-        .string()
-        .refine((val) => cnpj.isValid(val), { message: 'CNPJ inválido' })
-        .default(''),
-    cep_empresa: z.string().length(8).default(''),
-    logradouro_empresa: z.string().max(255).default(''),
-    numero_empresa: z.string().max(10).default(''),
-    bairro_empresa: z.string().max(100).default(''),
-    cidade_empresa: z.string().max(100).default(''),
-    uf_empresa: z.string().length(2).default(''),
-    complemento_empresa: z.string().max(100).default(''),
+  cnpj_empresa: cnpjOptionalField,
 });
 
 const jobSchema = z.object({
-    data_entrada: z.string().transform((val) => new Date(val)),
-    perfil_acesso: z.string().max(20),
+  data_entrada: coerceDate,
+  perfil_acesso: z.string().max(20),
 });
 
-const baseSchema = personalSchema
-    .merge(bankSchema)
-    .merge(addressSchema)
-    .merge(companySchema)
-    .merge(jobSchema);
+const relationsSchema = z.object({
+  enderecos: z.array(addressItemSchema).min(1, 'Informe pelo menos um endereço').optional(),
+  areas_atuacao: z.number(),
+  cargos: z
+    .array(
+      z.object({
+        cargo_id: z.number().int().positive(),
+        numero_conselho: z.string().max(50).optional(),
+        data_entrada: coerceDate,
+      }),
+    )
+    .optional(),
+});
 
-export const therapistSchema = baseSchema;
+export const therapistSchema = personalSchema
+  .merge(bankSchema)
+  .merge(companySchema)
+  .merge(jobSchema)
+  .merge(relationsSchema);
 
 export const therapistIdSchema = z.object({
-    id: z.string().uuid({ message: 'ID deve ser um UUID válido' }),
+  id: z.string().uuid({ message: 'ID deve ser um UUID válido' }),
 });
 
-export const therapistUpdateSchema = baseSchema.partial();
+export const therapistUpdateSchema = therapistSchema.partial();
