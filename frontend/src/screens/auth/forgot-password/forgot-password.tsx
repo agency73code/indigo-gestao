@@ -4,10 +4,20 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@radix-ui/react-separator';
 import Logo from '@/components/ui/logo';
+import FooterBreadcrumb from '@/components/ui/footer-breadcrumb';
+import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
-export default function ForgotPasswordPage() {
+export default function ResetPasswordEmailSent() {
     return (
-        <form action="" className="space-y-6">
+        <motion.form 
+            action="" 
+            className="space-y-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+        >
             <section className="space-y-4">
                 <div className="flex justify-center mb-6">
                     <Logo />
@@ -33,11 +43,12 @@ export default function ForgotPasswordPage() {
 
                     <Separator />
 
-                    <Button type="submit" className="w-full">
-                        Recuperar senha
+                    <Button asChild type="submit" className="w-full">
+                        <Link to="/forgot-password/email-sent">Recuperar senha</Link>
                     </Button>
                 </Card>
+                <FooterBreadcrumb className="mt-4" />
             </section>
-        </form>
+        </motion.form>
     );
 }

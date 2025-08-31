@@ -4,9 +4,9 @@ import Logo from '@/components/ui/logo';
 import FooterBreadcrumb from '@/components/ui/footer-breadcrumb';
 import { Link } from 'react-router-dom';
 
-import resetPasswordIcon from '@/assets/images/auth/reset-password.svg';
+import resetPasswordIcon from '@/assets/images/auth/reset-password-email-sent.svg';
 
-export default function ResetSuccess() {
+export default function ForgotPasswordEmailSend() { 
     return (
         <form action="" className="space-y-6">
             <section className="space-y-4 flex flex-col">
@@ -18,10 +18,9 @@ export default function ResetSuccess() {
                         <img src={resetPasswordIcon} alt="Reset Password" className="w-40 h-32" />
                     </div>
                     <CardHeader className="space-y-1 p-0">
-                        <CardTitle className="text-2xl">Senha alterada com sucesso! </CardTitle>
+                        <CardTitle className="text-2xl">Confira seu e-mail </CardTitle>
                         <p className="text-sm text-muted-foreground">
-                            Pronto! Agora você já pode usar sua nova senha para acessar a conta.
-                            anterior.
+                            Se o e-mail informado estiver cadastrado, enviamos um link para redefinir sua senha. Ele expira em 60 minutos.
                         </p>
                     </CardHeader>
 

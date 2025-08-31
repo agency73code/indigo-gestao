@@ -5,10 +5,19 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import Logo from '@/components/ui/logo';
+import { motion } from 'framer-motion';
+import FooterBreadcrumb from '@/components/ui/footer-breadcrumb';
 
 export default function SignUpPage() {
     return (
-        <form action="" className="space-y-6">
+        <motion.form 
+            action="" 
+            className="space-y-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+        >
             <section className="space-y-4">
                 <div className="flex justify-center mb-6">
                     <Logo />
@@ -57,7 +66,8 @@ export default function SignUpPage() {
                         Entrar com Google
                     </Button>
                 </Card>
+                <FooterBreadcrumb className="mt-4" />
             </section>
-        </form>
+        </motion.form>
     );
 }

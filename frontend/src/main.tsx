@@ -5,6 +5,7 @@ import AuthLayout from './screens/auth/layout.tsx';
 import SignInPage from './screens/auth/sign-in/page.tsx';
 import SignUpPage from './screens/auth/sign-up/page.tsx';
 import ForgotPasswordPage from './screens/auth/forgot-password/forgot-password.tsx';
+import ForgotPasswordEmailSend from './screens/auth/forgot-password-email-sent/forgot-password-email-sent.tsx';
 import ResetPasswordPage from './screens/auth/reset-password/reset-password.tsx';
 import ResetSuccessPage from './screens/auth/reset-success/reset-success.tsx';
 
@@ -37,6 +38,15 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                     element={
                         <AuthLayout>
                             <ForgotPasswordPage />
+                        </AuthLayout>
+                    }
+                />
+
+                <Route
+                    path="/forgot-password/email-sent"
+                    element={
+                        <AuthLayout>
+                            <ForgotPasswordEmailSend />
                         </AuthLayout>
                     }
                 />

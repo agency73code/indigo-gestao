@@ -3,6 +3,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import Logo from '@/components/ui/logo';
+import FooterBreadcrumb from '@/components/ui/footer-breadcrumb';
 
 export default function ResetPassword() {
     return (
@@ -42,6 +43,7 @@ export default function ResetPassword() {
                         Recuperar senha
                     </Button>
                 </Card>
+                <FooterBreadcrumb className="mt-4" />
             </section>
         </form>
     );
