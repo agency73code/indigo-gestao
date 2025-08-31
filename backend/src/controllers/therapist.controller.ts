@@ -10,7 +10,7 @@ export async function createTherapist(req: Request, res: Response, next: NextFun
         const data = req.body as TherapistCreateData;
         const therapist = await saveTherapist(data);
 
-        sendWelcomeEmail({
+        await sendWelcomeEmail({
             to: therapist.email,
             name: therapist.nome,
             token: therapist.token_redefinicao!,
@@ -19,13 +19,8 @@ export async function createTherapist(req: Request, res: Response, next: NextFun
         });
 
         res.status(201).json({
-            message: 'Terapeuta cadastrado com sucesso!',
-            data: {
-                id: therapist.id,
-                nome: therapist.nome,
-                email: therapist.email,
-                data_entrada: therapist.data_entrada,
-            },
+            success: true,
+            message: 'Terapeuta cadastrado com sucesso!'
         });
     } catch (error) {
         next(error);

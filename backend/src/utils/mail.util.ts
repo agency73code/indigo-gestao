@@ -18,7 +18,7 @@ export async function sendWelcomeEmail({
             pass: process.env.SMTP_PASS,
         },
     });
-
+    const APP_URL = process.env.APP_URL;
     const mailOptions = {
         from: `"Indigo Gestão" <${process.env.SMTP_USER}>`,
         to,
@@ -26,7 +26,7 @@ export async function sendWelcomeEmail({
         html: `
             <h2>Bem-vindo, ${name}!</h2>
             <p>Você foi cadastrado no sistema. Para definir sua senha, clique no link abaixo:</p>
-            <a href="http://127.0.0.1:3000/api/auth/validar-token/${token}">Configurar minha senha</a>
+            <a href="${APP_URL}/reset-password?token=${token}">Configurar minha senha</a>
             <p>O link expira em 24 horas.</p>
             <p>Equipe Indigo Gestão</p>
         `,

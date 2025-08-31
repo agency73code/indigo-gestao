@@ -21,11 +21,7 @@ export async function validateToken(req: Request, res: Response, next: NextFunct
             });
         }
 
-        res.json({
-            success: true,
-            message: 'Usuário encontrado',
-            data: user,
-        });
+        res.status(204).send();
     } catch (error) {
         next(error);
     }
@@ -34,7 +30,7 @@ export async function validateToken(req: Request, res: Response, next: NextFunct
 export async function definePassword(req: Request, res: Response, next: NextFunction) {
     try {
         const { token } = req.params;
-        const { password, confirmPassword } = req.body;
+        const { password } = req.body;
 
         const user = await newPassword(token!, password, 'terapeuta');
 

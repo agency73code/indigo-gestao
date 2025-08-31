@@ -6,9 +6,9 @@ import { validateBody, validateParams } from '../middleware/validation.middlewar
 
 const router: ExpressRouter = Router();
 
-router.get('/validar-token/:token', validateToken);
+router.get('/password-reset/validate/:token', validateToken);
 
-router.patch('/definir-senha/:token',
+router.patch('/password-reset/:token',
     validateParams(tokenParamSchema),
     validateBody(passwordSchema),
     definePassword);

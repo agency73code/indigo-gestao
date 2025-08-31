@@ -19,7 +19,7 @@ export async function findUserByResetToken(token: string, table: 'terapeuta') {
 }
 
 export async function newPassword(token: string, password: string, table: 'terapeuta') {
-    const user = await prisma[table].updateMany({
+    const result = await prisma[table].updateMany({
         where: {
             token_redefinicao: token
         },
@@ -30,5 +30,5 @@ export async function newPassword(token: string, password: string, table: 'terap
         }
     });
 
-    return user;
+    return result;
 }
