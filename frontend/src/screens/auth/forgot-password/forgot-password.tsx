@@ -14,7 +14,7 @@ export default function ForgotPasswordPage() {
                 </div>
                 <Card className="space-y-6">
                     <CardHeader className="space-y-1 p-0">
-                        <CardTitle className="text-2xl font-bold">Recuperar acesso</CardTitle>
+                        <CardTitle className="text-2xl">Recuperar acesso</CardTitle>
                         <p className="text-sm text-muted-foreground">
                             Informe o e-mail cadastrado pela gestão e siga os passos no seu correio
                             eletrônico.

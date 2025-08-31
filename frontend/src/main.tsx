@@ -6,6 +6,7 @@ import SignInPage from './screens/auth/sign-in/page.tsx';
 import SignUpPage from './screens/auth/sign-up/page.tsx';
 import ForgotPasswordPage from './screens/auth/forgot-password/forgot-password.tsx';
 import ResetPasswordPage from './screens/auth/reset-password/reset-password.tsx';
+import ResetSuccessPage from './screens/auth/reset-success/reset-success.tsx';
 
 import './global.css';
 
@@ -45,6 +46,15 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                     element={
                         <AuthLayout>
                             <ResetPasswordPage />
+                        </AuthLayout>
+                    }
+                />
+
+                <Route
+                    path="/reset-success"
+                    element={
+                        <AuthLayout>
+                            <ResetSuccessPage />
                         </AuthLayout>
                     }
                 />

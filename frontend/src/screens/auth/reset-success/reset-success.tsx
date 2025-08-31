@@ -16,7 +16,7 @@ export default function ResetSuccess() {
                         <img src={resetPasswordIcon} alt="Reset Password" className="w-40 h-32" />
                     </div>
                     <CardHeader className="space-y-1 p-0">
-                        <CardTitle className="text-2xl font-bold">
+                        <CardTitle className="text-2xl">
                             Senha alterada com sucesso!{' '}
                         </CardTitle>
                         <p className="text-sm text-muted-foreground">
