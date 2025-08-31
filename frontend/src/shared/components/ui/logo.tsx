@@ -1,5 +1,4 @@
-import React from 'react';
-import IndigoLogo from '../../assets/logos/indigo.svg';
+import IndigoLogo from '../../../assets/logos/indigo.svg';
 
 interface LogoProps {
     className?: string;

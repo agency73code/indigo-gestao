@@ -1,0 +1,162 @@
+import { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import type { LoginCredentials, SignUpCredentials, ForgotPasswordData, ResetPasswordData } from '../types/auth.types';
+import type { User, AuthState } from '../types/auth.types';
+
+// Simulação de serviço de API - substituir por implementação real
+const authService = {
+  login: async (credentials: LoginCredentials): Promise<{ user: User; token: string }> => {
+    // Simulação de chamada API
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    if (credentials.email === 'admin@example.com' && credentials.password === 'password') {
+      return {
+        user: { id: '1', email: credentials.email, firstName: 'Admin', lastName: 'User' },
+        token: 'fake-jwt-token'
+      };
+    }
+    throw new Error('Credenciais inválidas');
+  },
+  
+  signUp: async (data: SignUpCredentials): Promise<{ user: User; token: string }> => {
+    // Simulação de chamada API
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    return {
+      user: { 
+        id: Date.now().toString(), 
+        email: data.email, 
+        firstName: data.firstName, 
+        lastName: data.lastName 
+      },
+      token: 'fake-jwt-token'
+    };
+  },
+  
+  forgotPassword: async (data: ForgotPasswordData): Promise<void> => {
+    // Simulação de chamada API
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    console.log('Reset email sent to:', data.email);
+  },
+  
+  resetPassword: async (data: ResetPasswordData): Promise<void> => {
+    // Simulação de chamada API
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    console.log('Password reset for:', data);
+  }
+};
+
+export function useAuth() {
+  const navigate = useNavigate();
+  const [authState, setAuthState] = useState<AuthState>({
+    user: null,
+    isAuthenticated: false,
+    isLoading: false,
+    error: null,
+  });
+
+  const login = useCallback(async (credentials: LoginCredentials) => {
+    setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
+    
+    try {
+      const { user, token } = await authService.login(credentials);
+      
+      // Por enquanto usando localStorage - TODO: migrar para httpOnly cookies
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      
+      setAuthState({
+        user,
+        isAuthenticated: true,
+        isLoading: false,
+        error: null,
+      });
+      
+      navigate('/dashboard');
+    } catch (error) {
+      setAuthState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: error instanceof Error ? error.message : 'Erro ao fazer login',
+      }));
+    }
+  }, [navigate]);
+
+  const signUp = useCallback(async (data: SignUpCredentials) => {
+    setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
+    
+    try {
+      const { user, token } = await authService.signUp(data);
+      
+      // Por enquanto usando localStorage - TODO: migrar para httpOnly cookies
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      
+      setAuthState({
+        user,
+        isAuthenticated: true,
+        isLoading: false,
+        error: null,
+      });
+      
+      navigate('/dashboard');
+    } catch (error) {
+      setAuthState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: error instanceof Error ? error.message : 'Erro ao criar conta',
+      }));
+    }
+  }, [navigate]);
+
+  const forgotPassword = useCallback(async (data: ForgotPasswordData) => {
+    setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
+    
+    try {
+      await authService.forgotPassword(data);
+      navigate('/forgot-password/email-sent');
+    } catch (error) {
+      setAuthState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: error instanceof Error ? error.message : 'Erro ao enviar email',
+      }));
+    }
+  }, [navigate]);
+
+  const resetPassword = useCallback(async (data: ResetPasswordData) => {
+    setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
+    
+    try {
+      await authService.resetPassword(data);
+      navigate('/reset-success');
+    } catch (error) {
+      setAuthState(prev => ({
+        ...prev,
+        isLoading: false,
+        error: error instanceof Error ? error.message : 'Erro ao redefinir senha',
+      }));
+    }
+  }, [navigate]);
+
+  const logout = useCallback(() => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setAuthState({
+      user: null,
+      isAuthenticated: false,
+      isLoading: false,
+      error: null,
+    });
+    navigate('/login');
+  }, [navigate]);
+
+  return {
+    ...authState,
+    login,
+    signUp,
+    forgotPassword,
+    resetPassword,
+    logout,
+  };
+}

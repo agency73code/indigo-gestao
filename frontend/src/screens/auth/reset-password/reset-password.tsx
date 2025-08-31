@@ -9,7 +9,7 @@ import AuthBackground from '@/components/AuthBackground';
 
 // KAIO
 import * as React from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 // KAIO
 const API = import.meta.env.VITE_API_URL;
@@ -18,7 +18,7 @@ export default function ResetPassword() {
     // KAIO
     const navigate = useNavigate();
     const [params] = useSearchParams();
-    const token = params.get('token') ?? ''
+    const token = params.get('token') ?? '';
 
     const [loading, setLoading] = React.useState(true);
     const [valid, setValid] = React.useState(false);
@@ -82,70 +82,72 @@ export default function ResetPassword() {
 
     if (loading) {
         return (
-        <section className="space-y-4">
-            <div className="flex justify-center mb-6"><Logo /></div>
-            <Card className="p-6">Validando token…</Card>
-        </section>
+            <section className="space-y-4">
+                <div className="flex justify-center mb-6">
+                    <Logo />
+                </div>
+                <Card className="p-6">Validando token…</Card>
+            </section>
         );
     }
 
     if (!valid) {
         return (
-        <section className="space-y-4">
-            <div className="flex justify-center mb-6"><Logo /></div>
-            <Card className="p-6 text-red-600">
-            {error || 'Token inválido.'}
-            </Card>
-        </section>
+            <section className="space-y-4">
+                <div className="flex justify-center mb-6">
+                    <Logo />
+                </div>
+                <Card className="p-6 text-red-600">{error || 'Token inválido.'}</Card>
+            </section>
         );
     }
 
     return (
         <AuthLayout>
-        <form onSubmit={onSubmit} className="space-y-6">
-            <section className="space-y-4">
-                <AuthBackground />
-                <div className="flex justify-center mb-6">
-                    <Logo />
-                </div>
-                <Card className="space-y-6">
-                    <CardHeader className="space-y-1 p-0">
-                        <CardTitle className="text-2xl">Redefina sua senha </CardTitle>
-                        <p className="text-sm text-muted-foreground">
-                            Crie uma nova senha. Para sua segurança, ela precisa ser diferente da
-                            anterior.
-                        </p>
-                    </CardHeader>
-
-                    <div className="space-y-1 mb">
-                        <Label htmlFor="password">Nova Senha</Label>
-                        <Input
-                            name="password"
-                            type="password"
-                            id="password"
-                            placeholder="digite sua senha"
-                            className="mb-4"
-                            value={password}
-                            onChange={e => setPassword(e.target.value)}
-                        />
-                        <Label htmlFor="confirmPassword">Confirme a senha</Label>
-                        <Input
-                            name="confirmPassword"
-                            type="confirmPassword"
-                            id="confirmPassword"
-                            placeholder="digite sua senha"
-                            value={confirmPassword}
-                            onChange={e => setConfirmPassword(e.target.value)}
-                        />
+            <form onSubmit={onSubmit} className="space-y-6">
+                <section className="space-y-4">
+                    <AuthBackground />
+                    <div className="flex justify-center mb-6">
+                        <Logo />
                     </div>
+                    <Card className="space-y-6">
+                        <CardHeader className="space-y-1 p-0">
+                            <CardTitle className="text-2xl">Redefina sua senha </CardTitle>
+                            <p className="text-sm text-muted-foreground">
+                                Crie uma nova senha. Para sua segurança, ela precisa ser diferente
+                                da anterior.
+                            </p>
+                        </CardHeader>
 
-                    <Button type="submit" className="w-full">
-                        Recuperar senha
-                    </Button>
-                </Card>
-                <FooterBreadcrumb className="mt-4" />
-            </section>
-        </form>
+                        <div className="space-y-1 mb">
+                            <Label htmlFor="password">Nova Senha</Label>
+                            <Input
+                                name="password"
+                                type="password"
+                                id="password"
+                                placeholder="digite sua senha"
+                                className="mb-4"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                            />
+                            <Label htmlFor="confirmPassword">Confirme a senha</Label>
+                            <Input
+                                name="confirmPassword"
+                                type="confirmPassword"
+                                id="confirmPassword"
+                                placeholder="digite sua senha"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                            />
+                        </div>
+
+                        <Button type="submit" className="w-full">
+                            Recuperar senha
+                        </Button>
+                    </Card>
+                    <FooterBreadcrumb className="mt-4" />
+                </section>
+            </form>
         </AuthLayout>
     );
 }

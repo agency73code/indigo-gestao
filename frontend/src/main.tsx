@@ -1,10 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import AuthLayout from './screens/auth/layout.tsx';
-import SignInPage from './screens/auth/sign-in/page.tsx';
-import SignUpPage from './screens/auth/sign-up/page.tsx';
-import ForgotPasswordPage from './screens/auth/forgot-password/forgot-password.tsx';
+import { LoginPage, SignUpPage, ForgotPasswordPage } from './features/auth';
 import ForgotPasswordEmailSend from './screens/auth/forgot-password-email-sent/forgot-password-email-sent.tsx';
 import ResetPasswordPage from './screens/auth/reset-password/reset-password.tsx';
 import ResetSuccessPage from './screens/auth/reset-success/reset-success.tsx';
@@ -15,68 +12,15 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
         <BrowserRouter>
             <Routes>
-                <Route
-                    path="/login"
-                    element={
-                        <AuthLayout>
-                            <SignInPage />
-                        </AuthLayout>
-                    }
-                />
-
-                <Route
-                    path="/register"
-                    element={
-                        <AuthLayout>
-                            <SignUpPage />
-                        </AuthLayout>
-                    }
-                />
-
-                <Route
-                    path="/forgot-password"
-                    element={
-                        <AuthLayout>
-                            <ForgotPasswordPage />
-                        </AuthLayout>
-                    }
-                />
-
-                <Route
-                    path="/forgot-password/email-sent"
-                    element={
-                        <AuthLayout>
-                            <ForgotPasswordEmailSend />
-                        </AuthLayout>
-                    }
-                />
-
-                <Route
-                    path="/reset-password"
-                    element={
-                        <AuthLayout>
-                            <ResetPasswordPage />
-                        </AuthLayout>
-                    }
-                />
-
-                <Route
-                    path="/reset-success"
-                    element={
-                        <AuthLayout>
-                            <ResetSuccessPage />
-                        </AuthLayout>
-                    }
-                />
-
-                <Route
-                    path="*"
-                    element={
-                        <AuthLayout>
-                            <SignInPage />
-                        </AuthLayout>
-                    }
-                />
+                <Route path="/sign-in" element={<LoginPage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/sign-up" element={<SignUpPage />} />
+                <Route path="/register" element={<SignUpPage />} />
+                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                <Route path="/forgot-password/email-sent" element={<ForgotPasswordEmailSend />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
+                <Route path="/reset-success" element={<ResetSuccessPage />} />
+                <Route path="*" element={<LoginPage />} />
             </Routes>
         </BrowserRouter>
     </React.StrictMode>,
