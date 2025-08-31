@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import Logo from '@/components/ui/logo';
 import FooterBreadcrumb from '@/components/ui/footer-breadcrumb';
+import AuthLayout from '../layout';
+import AuthBackground from '@/components/AuthBackground';
 
 // KAIO
 import * as React from 'react';
@@ -99,8 +101,14 @@ export default function ResetPassword() {
     }
 
     return (
+<<<<<<< HEAD
         <form onSubmit={onSubmit} className="space-y-6">
+=======
+        <AuthLayout>
+        <form action="" className="space-y-6">
+>>>>>>> 25fbcf3 (feat(front): ajustes nas telas de autenticação (layout e fundo))
             <section className="space-y-4">
+                <AuthBackground />
                 <div className="flex justify-center mb-6">
                     <Logo />
                 </div>
@@ -142,5 +150,6 @@ export default function ResetPassword() {
                 <FooterBreadcrumb className="mt-4" />
             </section>
         </form>
+        </AuthLayout>
     );
 }

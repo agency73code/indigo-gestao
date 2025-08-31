@@ -5,32 +5,41 @@ import FooterBreadcrumb from '@/components/ui/footer-breadcrumb';
 import { Link } from 'react-router-dom';
 
 import resetPasswordIcon from '@/assets/images/auth/reset-password.svg';
+import AuthLayout from '../layout';
+import AuthBackground from '@/components/AuthBackground';
 
 export default function ResetSuccess() {
     return (
-        <form action="" className="space-y-6">
-            <section className="space-y-4 flex flex-col">
-                <div className="flex justify-center mb-6">
-                    <Logo />
-                </div>
-                <Card className="space-y-6 text-center">
+        <AuthLayout>
+            <form action="" className="space-y-6">
+                <section className="space-y-4 flex flex-col">
+                    <AuthBackground />
                     <div className="flex justify-center mb-6">
-                        <img src={resetPasswordIcon} alt="Reset Password" className="w-40 h-32" />
+                        <Logo />
                     </div>
-                    <CardHeader className="space-y-1 p-0">
-                        <CardTitle className="text-2xl">Senha alterada com sucesso! </CardTitle>
-                        <p className="text-sm text-muted-foreground">
-                            Pronto! Agora você já pode usar sua nova senha para acessar a conta.
-                            anterior.
-                        </p>
-                    </CardHeader>
+                    <Card className="space-y-6 text-center">
+                        <div className="flex justify-center mb-6">
+                            <img
+                                src={resetPasswordIcon}
+                                alt="Reset Password"
+                                className="w-40 h-32"
+                            />
+                        </div>
+                        <CardHeader className="space-y-1 p-0">
+                            <CardTitle className="text-2xl">Senha alterada com sucesso! </CardTitle>
+                            <p className="text-sm text-muted-foreground">
+                                Pronto! Agora você já pode usar sua nova senha para acessar a conta.
+                                anterior.
+                            </p>
+                        </CardHeader>
 
-                    <Button asChild type="submit" className="w-full">
-                        <Link to="/sign-in">Voltar para o login</Link>
-                    </Button>
-                </Card>
-                <FooterBreadcrumb className="mt-4" />
-            </section>
-        </form>
+                        <Button asChild type="submit" className="w-full">
+                            <Link to="/sign-in">Voltar para o login</Link>
+                        </Button>
+                    </Card>
+                    <FooterBreadcrumb className="mt-4" />
+                </section>
+            </form>
+        </AuthLayout>
     );
 }
