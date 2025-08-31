@@ -29,6 +29,7 @@
         "helmet": "^8.1.0",
         "mysql2": "^3.14.3",
         "nodemailer": "^7.0.5",
+        "prisma": "^6.15.0",
         "uuid": "^11.1.0"
     },
     "devDependencies": {
@@ -38,7 +39,6 @@
         "@types/supertest": "^6.0.3",
         "@vitest/ui": "^3.2.4",
         "cpf-cnpj-validator": "^1.0.3",
-        "prisma": "^6.15.0",
         "supertest": "^7.1.4",
         "tsx": "^4.20.5",
         "typescript": "^5.9.2",

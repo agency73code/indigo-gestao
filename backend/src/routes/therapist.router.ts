@@ -1,11 +1,6 @@
 import { Router } from 'express';
 import type { Router as ExpressRouter } from 'express';
-import {
-    createTherapist,
-    getTherapists,
-    getTherapistById,
-    updateTherapistById,
-} from '../controllers/therapist.controller.js';
+import { createTherapist } from '../controllers/therapist.controller.js';
 import { validateBody, validateParams } from '../middleware/validation.middleware.js';
 import {
     therapistSchema,
@@ -15,17 +10,17 @@ import {
 
 const router: ExpressRouter = Router();
 
-router.get('/', getTherapists);
+//router.get('/', getTherapists);
 
-router.get('/:id', validateParams(therapistIdSchema), getTherapistById);
+//router.get('/:id', validateParams(therapistIdSchema), getTherapistById);
 
 router.post('/cadastrar', validateBody(therapistSchema), createTherapist);
 
-router.put(
-    '/:id',
-    validateParams(therapistIdSchema),
-    validateBody(therapistUpdateSchema),
-    updateTherapistById,
-);
+// router.put(
+//     '/:id',
+//     validateParams(therapistIdSchema),
+//     validateBody(therapistUpdateSchema),
+//     updateTherapistById,
+// );
 
 export default router;
