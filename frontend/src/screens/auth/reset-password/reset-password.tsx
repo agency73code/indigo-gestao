@@ -101,12 +101,8 @@ export default function ResetPassword() {
     }
 
     return (
-<<<<<<< HEAD
-        <form onSubmit={onSubmit} className="space-y-6">
-=======
         <AuthLayout>
-        <form action="" className="space-y-6">
->>>>>>> 25fbcf3 (feat(front): ajustes nas telas de autenticação (layout e fundo))
+        <form onSubmit={onSubmit} className="space-y-6">
             <section className="space-y-4">
                 <AuthBackground />
                 <div className="flex justify-center mb-6">
