@@ -34,9 +34,7 @@ export default function ForgotPasswordForm({
     return (
         <Card className="w-full max-w-[550px] mx-auto">
             <CardHeader className="space-y-1">
-                <CardTitle className="text-2xl tracking-tight">
-                    Esqueci minha senha
-                </CardTitle>
+                <CardTitle className="text-2xl tracking-tight">Esqueci minha senha</CardTitle>
                 <CardDescription className=" text-muted-foreground">
                     Digite seu e-mail para receber as instruções de recuperação
                 </CardDescription>

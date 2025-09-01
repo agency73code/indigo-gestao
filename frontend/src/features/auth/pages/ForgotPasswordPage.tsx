@@ -6,8 +6,10 @@ export default function ForgotPasswordPage() {
     const { forgotPassword, isLoading } = useAuth();
 
     return (
+
         <AuthLayout>
             <ForgotPasswordForm onSubmit={forgotPassword} isLoading={isLoading} />
         </AuthLayout>
     );
 }
+

@@ -31,10 +31,10 @@ export default function SignUpForm({ onSubmit, isLoading = false }: SignUpFormPr
     return (
         <Card className="w-full max-w-[550px] mx-auto">
             <CardHeader className="space-y-1">
-                <CardTitle className="text-3xl font-bold tracking-tight text-center">
+                <CardTitle className="text-2xl tracking-tight">
                     Criar conta
                 </CardTitle>
-                <CardDescription className="text-center text-muted-foreground">
+                <CardDescription className="text-muted-foreground">
                     Digite suas informações para criar sua conta
                 </CardDescription>
             </CardHeader>

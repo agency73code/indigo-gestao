@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { LoginPage, SignUpPage, ForgotPasswordPage } from './features/auth';
+import PageTransition from './shared/components/layout/PageTransition';
 import ForgotPasswordEmailSend from './screens/auth/forgot-password-email-sent/forgot-password-email-sent.tsx';
 import ResetPasswordPage from './screens/auth/reset-password/reset-password.tsx';
 import ResetSuccessPage from './screens/auth/reset-success/reset-success.tsx';
@@ -11,17 +12,22 @@ import './global.css';
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
         <BrowserRouter>
-            <Routes>
-                <Route path="/sign-in" element={<LoginPage />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/sign-up" element={<SignUpPage />} />
-                <Route path="/register" element={<SignUpPage />} />
-                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                <Route path="/forgot-password/email-sent" element={<ForgotPasswordEmailSend />} />
-                <Route path="/reset-password" element={<ResetPasswordPage />} />
-                <Route path="/reset-success" element={<ResetSuccessPage />} />
-                <Route path="*" element={<LoginPage />} />
-            </Routes>
+            <PageTransition>
+                <Routes>
+                    <Route path="/sign-in" element={<LoginPage />} />
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/sign-up" element={<SignUpPage />} />
+                    <Route path="/register" element={<SignUpPage />} />
+                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                    <Route
+                        path="/forgot-password/email-sent"
+                        element={<ForgotPasswordEmailSend />}
+                    />
+                    <Route path="/reset-password" element={<ResetPasswordPage />} />
+                    <Route path="/reset-success" element={<ResetSuccessPage />} />
+                    <Route path="*" element={<LoginPage />} />
+                </Routes>
+            </PageTransition>
         </BrowserRouter>
     </React.StrictMode>,
 );
