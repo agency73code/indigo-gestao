@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { LoginCredentials, SignUpCredentials, ForgotPasswordData, ResetPasswordData } from '../types/auth.types';
 import type { User, AuthState } from '../types/auth.types';
+import { signIn } from '../../../lib/api'
 
 // Simulação de serviço de API - substituir por implementação real
 const authService = {
@@ -55,32 +56,31 @@ export function useAuth() {
     error: null,
   });
 
-  const login = useCallback(async (credentials: LoginCredentials) => {
-    setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
-    
-    try {
-      const { user, token } = await authService.login(credentials);
-      
-      // Por enquanto usando localStorage - TODO: migrar para httpOnly cookies
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      
-      setAuthState({
-        user,
-        isAuthenticated: true,
-        isLoading: false,
-        error: null,
-      });
-      
-      navigate('/dashboard');
-    } catch (error) {
-      setAuthState(prev => ({
-        ...prev,
-        isLoading: false,
-        error: error instanceof Error ? error.message : 'Erro ao fazer login',
-      }));
-    }
-  }, [navigate]);
+  // Parte que é responsavel pelo login
+  const login = useCallback(
+    async (credentials: LoginCredentials) => {
+      setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
+      try {
+        const resp = await signIn(credentials.email, credentials.password);
+
+        localStorage.setItem('token', resp.token);
+        if (resp.user) localStorage.setItem('user', JSON.stringify(resp.user));
+
+        setAuthState({
+          user: (resp.user as User) ?? null,
+          isAuthenticated: true,
+          isLoading: false,
+          error: null,
+        });
+
+        navigate('/dashboard');
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : 'Erro ao fazer login'
+        setAuthState((prev) => ({ ...prev, isLoading: false, error: msg }));
+      }
+    },
+    [navigate]
+  )
 
   const signUp = useCallback(async (data: SignUpCredentials) => {
     setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
@@ -88,7 +88,6 @@ export function useAuth() {
     try {
       const { user, token } = await authService.signUp(data);
       
-      // Por enquanto usando localStorage - TODO: migrar para httpOnly cookies
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
       

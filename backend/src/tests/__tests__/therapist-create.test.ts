@@ -53,7 +53,7 @@ describe('POST /api/terapeutas/cadastrar', () => {
             // Endereços
             enderecos: [
                 {
-                    cep: '01234567',
+                    cep: '04883110',
                     logradouro: 'Rua das Flores',
                     numero: '123',
                     bairro: 'Centro',
