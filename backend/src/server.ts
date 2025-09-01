@@ -7,13 +7,14 @@ import rateLimit from 'express-rate-limit';
 import { env } from './config/env.js';
 import { errorHandler } from './middleware/errorHandler.middleware.js';
 import routes from './routes/index.js';
+import cookieParser from 'cookie-parser';
 
 const app: Express = express();
 
 app.use(helmet()); // Remove headers que expõem tecnologias
 app.use(
     cors({
-        origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+        origin: process.env.FRONTEND_URL,
         credentials: true,
     }),
 );
@@ -32,6 +33,7 @@ const limiter = rateLimit({
 app.use(limiter);
 
 app.use(express.json());
+app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 
 // Rotas

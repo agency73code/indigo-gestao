@@ -7,7 +7,7 @@ import PageTransition from './shared/components/layout/PageTransition';
 import NotFoundPage from './shared/components/pages/NotFoundPage';
 import TokenNotFoundPage from './shared/components/pages/TokenNotFoundPage';
 import ForgotPasswordEmailSend from './screens/auth/forgot-password-email-sent/forgot-password-email-sent.tsx';
-import ResetPasswordPage from './screens/auth/reset-password/reset-password.tsx';
+import ResetPasswordPage from "./screens/auth/reset-password/ResetPasswordPage.tsx";
 import ResetSuccessPage from './screens/auth/reset-success/reset-success.tsx';
 
 import './global.css';
