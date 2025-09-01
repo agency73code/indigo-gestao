@@ -41,7 +41,7 @@ export async function saveTherapist(data: TherapistCreateData): Promise<terapeut
                     data_saida: null,
                     perfil_acesso: data.perfil_acesso,
                     atividade: 'ativo',
-                    senha: null, // Será definida posteriormente
+                    senha: null,
                     token_redefinicao: token,
                     validade_token: expiry,
                 },
@@ -97,7 +97,7 @@ export async function saveTherapist(data: TherapistCreateData): Promise<terapeut
         });
 
         return therapist;
-    } catch (error: any) { // verificar o que isso faz
+    } catch (error: any) {
         if (error.code === 'P2002') {
             const field = error.meta?.target?.[0] || 'campo';
             const fieldMap: Record<string, string> = {

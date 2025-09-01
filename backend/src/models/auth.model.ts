@@ -18,6 +18,22 @@ export async function findUserByResetToken(token: string, table: 'terapeuta') {
     return user;
 }
 
+export async function loginUserByAccessInformation(accessInfo: string, table: 'terapeuta') {
+    let field: string;  
+    accessInfo.includes('@') ? field = 'email' : field = 'cpf';
+
+    const user = await prisma[table].findFirst({
+        where: {
+            [field]: accessInfo,
+        },
+        select: {
+            senha: true,
+        }
+    });
+
+    return user;
+}
+
 export async function newPassword(token: string, password: string, table: 'terapeuta') {
     const result = await prisma[table].updateMany({
         where: {

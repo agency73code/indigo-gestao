@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import type { Router as ExpressRouter } from 'express';
-import { validateToken, definePassword } from '../controllers/auth.controller.js';
+import { validateToken, definePassword, validateLogin } from '../controllers/auth.controller.js';
 import { passwordSchema, tokenParamSchema } from '../schemas/password.schema.js'
 import { validateBody, validateParams } from '../middleware/validation.middleware.js'
 
@@ -12,5 +12,7 @@ router.patch('/password-reset/:token',
     validateParams(tokenParamSchema),
     validateBody(passwordSchema),
     definePassword);
+
+router.post('/login', validateLogin);
 
 export default router;
