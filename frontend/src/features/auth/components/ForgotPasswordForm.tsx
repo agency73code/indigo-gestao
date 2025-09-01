@@ -1,16 +1,17 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from 'react-router-dom';
+
 import {
     Card,
     CardHeader,
     CardTitle,
     CardContent,
     CardDescription,
-} from '../../../components/ui/card';
-import { Input } from '../../../components/ui/input';
-import { Label } from '../../../components/ui/label';
-import { Button } from '../../../components/ui/button';
+} from '../../../shared/components/ui/card';
+import { Input } from '../../../shared/components/ui/input';
+import { Label } from '../../../shared/components/ui/label';
+import { Button } from '../../../shared/components/ui/button';
 import { forgotPasswordSchema } from '../../../shared/lib/validations';
 import type { ForgotPasswordData } from '../types/auth.types';
 
@@ -65,10 +66,10 @@ export default function ForgotPasswordForm({
                         aria-describedby={isLoading ? 'loading-text' : undefined}
                     >
                         {isLoading ? (
-                            <>
-                                <span className="animate-spin mr-2">⏳</span>
+                            <div className="flex items-center justify-center">
+                                <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2"></div>
                                 <span id="loading-text">Enviando...</span>
-                            </>
+                            </div>
                         ) : (
                             'Enviar instruções'
                         )}

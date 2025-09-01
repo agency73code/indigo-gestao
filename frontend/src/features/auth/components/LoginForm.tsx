@@ -8,10 +8,10 @@ import {
     CardTitle,
     CardContent,
     CardDescription,
-} from '../../../components/ui/card';
-import { Input } from '../../../components/ui/input';
-import { Label } from '../../../components/ui/label';
-import { Button } from '../../../components/ui/button';
+} from '../../../shared/components/ui/card';
+import { Input } from '../../../shared/components/ui/input';
+import { Label } from '../../../shared/components/ui/label';
+import { Button } from '../../../shared/components/ui/button';
 import { loginSchema } from '../../../shared/lib/validations';
 import type { LoginCredentials } from '../types/auth.types';
 
@@ -161,20 +161,10 @@ export default function LoginForm({ onSubmit, isLoading = false }: LoginFormProp
                                 aria-describedby={isLoading ? 'loading-text' : undefined}
                             >
                                 {isLoading ? (
-                                    <>
-                                        <motion.span
-                                            className="mr-2"
-                                            animate={{ rotate: 360 }}
-                                            transition={{
-                                                duration: 1,
-                                                repeat: Infinity,
-                                                ease: 'linear',
-                                            }}
-                                        >
-                                            ⏳
-                                        </motion.span>
+                                    <div className="flex items-center justify-center">
+                                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2"></div>
                                         <span id="loading-text">Entrando...</span>
-                                    </>
+                                    </div>
                                 ) : (
                                     'Entrar na conta'
                                 )}

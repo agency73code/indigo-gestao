@@ -3,16 +3,16 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from 'react-router-dom';
 import { signUpSchema } from '../../../shared/lib/validations';
 import type { SignUpCredentials } from '../types/auth.types';
-import { Button } from '../../../components/ui/button';
-import { Input } from '../../../components/ui/input';
-import { Label } from '../../../components/ui/label';
+import { Button } from '../../../shared/components/ui/button';
+import { Input } from '../../../shared/components/ui/input';
+import { Label } from '../../../shared/components/ui/label';
 import {
     Card,
     CardContent,
     CardDescription,
     CardHeader,
     CardTitle,
-} from '../../../components/ui/card';
+} from '../../../shared/components/ui/card';
 
 interface SignUpFormProps {
     onSubmit: (data: SignUpCredentials) => void;
@@ -31,9 +31,7 @@ export default function SignUpForm({ onSubmit, isLoading = false }: SignUpFormPr
     return (
         <Card className="w-full max-w-[550px] mx-auto">
             <CardHeader className="space-y-1">
-                <CardTitle className="text-2xl tracking-tight">
-                    Criar conta
-                </CardTitle>
+                <CardTitle className="text-2xl tracking-tight">Criar conta</CardTitle>
                 <CardDescription className="text-muted-foreground">
                     Digite suas informações para criar sua conta
                 </CardDescription>
@@ -149,10 +147,10 @@ export default function SignUpForm({ onSubmit, isLoading = false }: SignUpFormPr
                         aria-describedby={isLoading ? 'loading-text' : undefined}
                     >
                         {isLoading ? (
-                            <>
-                                <span className="animate-spin mr-2">⏳</span>
+                            <div className="flex items-center justify-center">
+                                <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent mr-2"></div>
                                 <span id="loading-text">Criando conta...</span>
-                            </>
+                            </div>
                         ) : (
                             'Criar conta'
                         )}
