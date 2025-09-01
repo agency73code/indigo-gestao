@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 
 import resetPasswordIcon from '@/assets/images/auth/reset-password.svg';
 import AuthLayout from '../layout';
-import AuthBackground from '@/components/AuthBackground';
+import AuthBackground from '@/components/ui/AuthBackground';
 
 export default function ResetSuccess() {
     return (

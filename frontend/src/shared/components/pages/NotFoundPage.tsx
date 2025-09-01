@@ -3,16 +3,16 @@ import { Link } from 'react-router-dom';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
 import Logo404 from '../../../components/ui/404';
-import AuthBackground from '@/components/AuthBackground';
+import AuthBackground from '@/components/ui/AuthBackground';
 
 const NotFoundPage: React.FC = () => {
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
             <AuthBackground />
             <Card className="w-full max-w-md mx-auto text-center">
-                        <div className="flex justify-center">
-                            <Logo404 className="opacity-80" />
-                        </div>
+                <div className="flex justify-center">
+                    <Logo404 className="opacity-80" />
+                </div>
                 <CardContent className="pt-0">
                     <div className="space-y-6">
                         {/* Ícone 404 SVG */}

@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import Logo from '@/components/ui/logo';
 import FooterBreadcrumb from '@/components/ui/footer-breadcrumb';
 import AuthLayout from '../layout';
-import AuthBackground from '@/components/AuthBackground';
+import AuthBackground from '@/components/ui/AuthBackground';
 
 // KAIO
 import * as React from 'react';

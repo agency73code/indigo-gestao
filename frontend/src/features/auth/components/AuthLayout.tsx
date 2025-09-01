@@ -1,6 +1,6 @@
 import Logo from '../../../shared/components/ui/logo';
 import FooterBreadcrumb from '../../../shared/components/ui/footer-breadcrumb';
-import AuthBackground from '@/components/AuthBackground';
+import AuthBackground from '@/components/ui/AuthBackground';
 
 interface AuthLayoutProps {
     children: React.ReactNode;
@@ -16,9 +16,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
                     <Logo />
                 </div>
 
-                <div className="p-0">
-                    {children}
-                </div>
+                <div className="p-0">{children}</div>
 
                 <div>
                     <FooterBreadcrumb className="mt-4" />

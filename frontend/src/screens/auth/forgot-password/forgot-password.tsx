@@ -7,7 +7,7 @@ import Logo from '@/components/ui/logo';
 import FooterBreadcrumb from '@/components/ui/footer-breadcrumb';
 import { Link } from 'react-router-dom';
 import AuthLayout from '../layout';
-import AuthBackground from '@/components/AuthBackground';
+import AuthBackground from '@/components/ui/AuthBackground';
 
 export default function ResetPasswordEmailSent() {
     return (

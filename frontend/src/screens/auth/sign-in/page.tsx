@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import Logo from '@/components/ui/logo';
-import AuthBackground from '@/components/AuthBackground';
+import AuthBackground from '@/components/ui/AuthBackground';
 import FooterBreadcrumb from '@/components/ui/footer-breadcrumb';
 import AuthLayout from '../layout';
 
