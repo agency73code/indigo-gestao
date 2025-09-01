@@ -16,7 +16,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
                     <Logo />
                 </div>
 
-                <div className="p-6">
+                <div className="p-0">
                     {children}
                 </div>
 
