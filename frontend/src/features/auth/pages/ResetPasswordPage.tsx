@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { resetPassword, validateResetToken } from "@/lib/api";
 import { ResetPasswordForm } from "@/features/auth/components/ResetPasswordForm";
-import type { ResetPasswordData } from '../../../features/auth/types/auth.types';
-import AuthLayout from '../../../features/auth/components/AuthLayout';
+import type { ResetPasswordData } from '../types/auth.types';
+import AuthLayout from '../components/AuthLayout';
+import TokenNotFoundPage from "@/shared/components/pages/TokenNotFoundPage";
 
 
 export default function ResetPasswordPage() {
@@ -44,6 +45,14 @@ export default function ResetPasswordPage() {
             setIsLoading(false);
         }
     };
+
+    if (!token || error) {
+        return (
+            <AuthLayout>
+                <TokenNotFoundPage />
+            </AuthLayout>
+        )
+    }
 
     return (
         <AuthLayout>
