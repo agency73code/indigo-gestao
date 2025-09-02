@@ -17,6 +17,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <BrowserRouter>
             <PageTransition>
                 <Routes>
+                    <Route path="/" element={<LoginPage />} />
                     <Route path="/sign-in" element={<LoginPage />} />
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
@@ -28,7 +29,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                     <Route path="/reset-success" element={<ResetSuccessPage />} />
                     <Route path="/404" element={<NotFoundPage />} />
                     <Route path="/token-not-found" element={<TokenNotFoundPage />} />
-                    <Route path="/" element={<LoginPage />} />
                     <Route path="*" element={<NotFoundPage />} />
                 </Routes>
             </PageTransition>
