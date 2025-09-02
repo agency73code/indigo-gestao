@@ -1,4 +1,5 @@
 import { prisma } from '../config/database.js';
+import type { LoginInput } from '../schemas/login.schema.js';
 import { hashPassword } from '../utils/hash.util.js'
 
 type Tables = 'terapeuta' | 'cliente';
@@ -7,6 +8,23 @@ type UserRow = {
     senha: string | null;
     nome: string;
     email: string | null;
+}
+
+export async function findUserByEmail(email: string) {
+    return prisma.terapeuta.findUnique({
+        where: { email: email },
+        select: { id: true, nome: true, email: true },
+    });
+}
+
+export async function passwordResetToken(userId: string, token: string, expiresAt: Date) {
+    return prisma.terapeuta.update({
+        where: { id: userId },
+        data: {
+            token_redefinicao: token,
+            validade_token: expiresAt,
+        },
+    });
 }
 
 export async function findUserByResetToken(token: string, table: Tables) {
@@ -29,12 +47,14 @@ export async function findUserByResetToken(token: string, table: Tables) {
 }
 
 export async function loginUserByAccessInformation(accessInfo: string, table: Tables): Promise<UserRow | null> {
-    const isEmail = accessInfo.includes('@');
-    const cpfOnlyDigits = accessInfo.replace(/\D/g, '');
-
     if (table === 'terapeuta') {
         const row = await prisma.terapeuta.findFirst({
-            where: isEmail ? { email_indigo: accessInfo } : { cpf: cpfOnlyDigits },
+            where: {
+                OR: [
+                    { email_indigo: accessInfo },
+                    { cpf: accessInfo },
+                ],
+            },
             select: {
                 id: true,
                 senha: true,
