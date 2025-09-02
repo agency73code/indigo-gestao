@@ -1,11 +1,12 @@
 import type { NextFunction, Request, Response } from 'express';
 import { env } from '../config/env.js'
-import { findUserByResetToken, newPassword, loginUserByAccessInformation } from '../models/auth.model.js';
+import { findUserByResetToken, newPassword, loginUserByAccessInformation, findUserByEmail, passwordResetToken } from '../models/auth.model.js';
 import { comparePassword } from '../utils/hash.util.js';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../config/database.js';
-import { randomUUID } from 'crypto';
+import { v4 as uuidv4 } from 'uuid';
 import { sendPasswordResetEmail } from '../utils/mail.util.js';
+import { normalizeAccessInfo } from '../utils/normalize.util.js';
 
 const RESET_TOKEN_EXPIRATION_MS = 60 * 60 * 1000;
 
@@ -78,8 +79,7 @@ export async function definePassword(req: Request, res: Response, next: NextFunc
 export async function validateLogin(req: Request, res: Response, next: NextFunction) {
     try {
         const { accessInfo, password } = req.body;
-
-        const user = await loginUserByAccessInformation(accessInfo, 'terapeuta');
+        const user = await loginUserByAccessInformation(normalizeAccessInfo(accessInfo), 'terapeuta');
         if(!user) return res.status(401).json({ success: false, message: 'Credenciais inválidas' });
         
         const ok = await comparePassword(password, user.senha!);
@@ -113,10 +113,7 @@ export async function requestPasswordReset(req: Request, res: Response, next: Ne
     try {
         const { email } = req.body as { email: string };
 
-        const user = await prisma.terapeuta.findUnique({
-            where: { email },
-            select: { id: true, nome: true, email: true },
-        });
+        const user = await findUserByEmail(email);
 
         if (!user) {
             return res.status(200).json({
@@ -125,16 +122,10 @@ export async function requestPasswordReset(req: Request, res: Response, next: Ne
             });
         }
 
-        const token = randomUUID();
+        const token = uuidv4();
         const expiresAt = new Date(Date.now() + RESET_TOKEN_EXPIRATION_MS);
 
-        await prisma.terapeuta.update({
-            where: { id: user.id },
-            data: {
-                token_redefinicao: token,
-                validade_token: expiresAt,
-            },
-        });
+        await passwordResetToken(user.id, token, expiresAt);
 
         await sendPasswordResetEmail({
             to: user.email,
