@@ -7,22 +7,23 @@ import AuthBackground from '@/features/auth/components/AuthBackground';
 
 const NotFoundPage: React.FC = () => {
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="min-h-screen flex items-center justify-center">
             <AuthBackground />
-            <Card className="w-full max-w-md mx-auto text-center">
+
+            <Card className="w-full max-w-[550px] mx-auto text-center">
                 <div className="flex justify-center">
-                    <Logo404 className="opacity-80" />
+                    <Logo404 className="" />
                 </div>
                 <CardContent className="pt-0">
                     <div className="space-y-6">
-                        {/* Ícone 404 SVG */}
-
-                        {/* Título */}
                         <div className="space-y-2">
-                            <h1 className="text-2xl font-semibold text-gray-900">
+                            <h1
+                                className="text-2xl font-semibold text-gray-800"
+                                style={{ fontFamily: 'Sora, sans-serif' }}
+                            >
                                 Página não encontrada
                             </h1>
-                            <p className="text-gray-600">
+                            <p className="text-gray-600" style={{ fontFamily: 'Sora, sans-serif' }}>
                                 A página que você está procurando não existe ou foi movida.
                             </p>
                         </div>

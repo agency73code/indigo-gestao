@@ -8,7 +8,7 @@ interface LogoProps {
 const Logo: React.FC<LogoProps> = ({ className = '' }) => {
     return (
         <div className={className}>
-            <img src={Indigo404} alt="Indigo 404" className="w-80 h-auto" />
+            <img src={Indigo404} alt="Indigo 404" className="w-90 h-auto" />
         </div>
     );
 };
