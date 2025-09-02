@@ -12,12 +12,14 @@ const FooterBreadcrumb: React.FC<FooterBreadcrumbProps> = ({ className = '' }) =
         >
             <span className="text-muted-foreground">© Indigo</span>
             <span className="mx-2 text-muted-foreground/60">•</span>
-            <Link
-                to="/contato"
+            <a
+                href="https://www.indigoinstituto.com.br/contato"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-muted-foreground/80 transition-colors"
             >
                 Contato
-            </Link>
+            </a>
             <span className="mx-2 text-muted-foreground/60">•</span>
             <Link
                 to="/politica-privacidade"

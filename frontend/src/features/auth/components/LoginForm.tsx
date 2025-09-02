@@ -171,18 +171,7 @@ export default function LoginForm({ onSubmit, isLoading = false }: LoginFormProp
                             </Button>
                         </motion.div>
 
-                        <motion.div
-                            className="text-center text-sm text-muted-foreground"
-                            variants={itemVariants}
-                        >
-                            Não tem uma conta?{' '}
-                            <Link
-                                to="/sign-up"
-                                className="text-primary hover:text-primary/80 transition-colors underline-offset-4 hover:underline"
-                            >
-                                Cadastre-se
-                            </Link>
-                        </motion.div>
+                        
                     </form>
                 </CardContent>
             </Card>
