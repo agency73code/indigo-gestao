@@ -7,10 +7,10 @@ import AuthBackground from '@/features/auth/components/AuthBackground';
 
 const TokenNotFoundPage: React.FC = () => {
     return (
-        <div className="min-h-screen flex items-center justify-cente px-4">
+        <div className="">
             <AuthBackground />
-            <Card className="w-full max-w-lg mx-auto text-center">
-                <CardContent className="pt-6">
+            <Card className="w-full text-center">
+                <CardContent className="">
                     <div className="space-y-6">
                         <div className="flex justify-center">
                             <TokenNotFoundLogo className="opacity-80" />
@@ -18,10 +18,13 @@ const TokenNotFoundPage: React.FC = () => {
 
                         {/* Título */}
                         <div className="space-y-2">
-                            <h1 className="text-2xl font-semibold text-gray-900">
+                            <h3
+                                className="text-2xl font-semibold text-gray-800"
+                                style={{ fontFamily: 'Sora, sans-serif' }}
+                            >
                                 Token não encontrado
-                            </h1>
-                            <p className="text-gray-600">
+                            </h3>
+                            <p className="text-gray-600" style={{ fontFamily: 'Sora, sans-serif' }}>
                                 O token de recuperação de senha é inválido ou expirou. Solicite um
                                 novo link de recuperação.
                             </p>
