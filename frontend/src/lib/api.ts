@@ -42,6 +42,24 @@ export async function signIn(accessInfo: string, password: string) {
     return data as { success: true; token: string; user?: { id: string; name?: string; email?: string } };
 }
 
+export async function forgotPassword(email: string) {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : null;
+
+    if (!res.ok) {
+      const msg = data?.message ?? `Request failed (${res.status})`;
+      throw new Error(msg);
+    }
+
+    return true;
+}
+
 // --- protected endpoints ---
 import { authFetch } from "./http";
 

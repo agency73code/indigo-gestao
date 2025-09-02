@@ -18,3 +18,7 @@ export const passwordSchema = z.object({
 export const tokenParamSchema = z.object({
     token: z.string().min(1, 'Token é obrigatório')
 });
+
+export const forgotPasswordBodySchema = z.object({ 
+    email: z.string().email('E-mail inválido'),
+ });

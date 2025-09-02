@@ -4,6 +4,8 @@ import { findUserByResetToken, newPassword, loginUserByAccessInformation } from 
 import { comparePassword } from '../utils/hash.util.js';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../config/database.js';
+import { randomUUID } from 'crypto';
+import { sendPasswordResetEmail } from '../utils/mail.util.js';
 
 export async function me(req: Request, res: Response, next: NextFunction) {
     const userCtx = req.user;
@@ -99,6 +101,48 @@ export async function validateLogin(req: Request, res: Response, next: NextFunct
             message: 'Login realizado com sucesso',
             token,
             user: { id: user.id, name: user.nome, email: user.email }
+        });
+    } catch (error) {
+        next(error);
+    }
+}
+
+export async function requestPasswordReset(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { email } = req.body as { email: string };
+
+        const user = await prisma.terapeuta.findUnique({
+            where: { email },
+            select: { id: true, nome: true, email: true },
+        });
+
+        if (!user) {
+            return res.status(200).json({
+                success: true,
+                message: 'Se o e-mail existir, enviaremos as instruções de recuperação.',
+            });
+        }
+
+        const token = randomUUID();
+        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+        await prisma.terapeuta.update({
+            where: { id: user.id },
+            data: {
+                token_redefinicao: token,
+                validade_token: expiresAt,
+            },
+        });
+
+        await sendPasswordResetEmail({
+            to: user.email,
+            name: user.nome,
+            token,
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: 'Se o e-mail existir, enviaremos as instruções de recuperação.'
         });
     } catch (error) {
         next(error);
