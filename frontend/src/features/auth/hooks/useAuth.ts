@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { LoginCredentials, SignUpCredentials, ForgotPasswordData, ResetPasswordData } from '../types/auth.types';
 import type { User, AuthState } from '../types/auth.types';
-import { signIn } from '../../../lib/api'
+import { signIn, forgotPassword as forgotPasswordApi } from '@/lib/api'
 
 // Simulação de serviço de API - substituir por implementação real
 const authService = {
@@ -49,6 +49,7 @@ const authService = {
 
 export function useAuth() {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
   const [authState, setAuthState] = useState<AuthState>({
     user: null,
     isAuthenticated: false,
@@ -56,7 +57,7 @@ export function useAuth() {
     error: null,
   });
 
-  // Parte que é responsavel pelo login
+  // endpoint responsavel pelo login
   const login = useCallback(
     async (credentials: LoginCredentials) => {
       setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
@@ -82,6 +83,7 @@ export function useAuth() {
     [navigate]
   )
 
+  // endpoint responsavel pelo Cadastro
   const signUp = useCallback(async (data: SignUpCredentials) => {
     setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
     
@@ -108,18 +110,16 @@ export function useAuth() {
     }
   }, [navigate]);
 
-  const forgotPassword = useCallback(async (data: ForgotPasswordData) => {
-    setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
-    
+  // endpoint responsavel pelo esqueci minha senha
+  const forgotPassword = useCallback(async ({ email }: ForgotPasswordData) => {
     try {
-      await authService.forgotPassword(data);
+      setIsLoading(true);
+      await forgotPasswordApi(email);
       navigate('/forgot-password/email-sent');
-    } catch (error) {
-      setAuthState(prev => ({
-        ...prev,
-        isLoading: false,
-        error: error instanceof Error ? error.message : 'Erro ao enviar email',
-      }));
+    } catch {
+      navigate('/forgot-password/email-sent')
+    } finally {
+      setIsLoading(false);
     }
   }, [navigate]);
 
@@ -155,6 +155,7 @@ export function useAuth() {
     login,
     signUp,
     forgotPassword,
+    isLoading,
     resetPassword,
     logout,
   };
