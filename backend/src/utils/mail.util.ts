@@ -62,7 +62,7 @@ export async function sendPasswordResetEmail({ to, name, token, }: { to: string,
         <p>Recebemos uma solicitação para redefinir sua senha.</p>
         <p>Para continuar, clique no link abaixo:</p>
         <a href="${FRONTEND_URL}/reset-password?token=${token}">Redefinir minha senha</a>
-        <p>Este link expira em 24 horas. Se você não fez esta solicitação, ignore este e-mail.</p>
+        <p>Este link expira em <strong>60 minutos</strong>. Se você não fez esta solicitação, ignore este e-mail.</p>
         <p>Equipe Indigo Gestão</p>`,
     };
 

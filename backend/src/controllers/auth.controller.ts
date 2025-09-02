@@ -7,6 +7,8 @@ import { prisma } from '../config/database.js';
 import { randomUUID } from 'crypto';
 import { sendPasswordResetEmail } from '../utils/mail.util.js';
 
+const RESET_TOKEN_EXPIRATION_MS = 60 * 60 * 1000;
+
 export async function me(req: Request, res: Response, next: NextFunction) {
     const userCtx = req.user;
     if (!userCtx) {
@@ -124,7 +126,7 @@ export async function requestPasswordReset(req: Request, res: Response, next: Ne
         }
 
         const token = randomUUID();
-        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        const expiresAt = new Date(Date.now() + RESET_TOKEN_EXPIRATION_MS);
 
         await prisma.terapeuta.update({
             where: { id: user.id },
