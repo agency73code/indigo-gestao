@@ -7,12 +7,11 @@ import AuthBackground from '@/features/auth/components/AuthBackground';
 
 const TokenNotFoundPage: React.FC = () => {
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <div className="min-h-screen flex items-center justify-cente px-4">
             <AuthBackground />
             <Card className="w-full max-w-lg mx-auto text-center">
                 <CardContent className="pt-6">
                     <div className="space-y-6">
-                        {/* Ícone Token Not Found SVG */}
                         <div className="flex justify-center">
                             <TokenNotFoundLogo className="opacity-80" />
                         </div>
