@@ -41,3 +41,18 @@ export async function signIn(accessInfo: string, password: string) {
     
     return data as { success: true; token: string; user?: { id: string; name?: string; email?: string } };
 }
+
+// --- protected endpoints ---
+import { authFetch } from "./http";
+
+export async function getMe() {
+  const res = await authFetch('/api/auth/me');
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : null;
+
+  if (!res.ok) {
+    const msg = data?.message ?? `Request failed (${res.status})`;
+    throw new Error(msg);
+  }
+  return data as { success: true; user: { id: string; name: string; email: string | null } };
+}

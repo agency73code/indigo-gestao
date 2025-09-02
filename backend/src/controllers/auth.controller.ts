@@ -3,6 +3,32 @@ import { env } from '../config/env.js'
 import { findUserByResetToken, newPassword, loginUserByAccessInformation } from '../models/auth.model.js';
 import { comparePassword } from '../utils/hash.util.js';
 import jwt from 'jsonwebtoken';
+import { prisma } from '../config/database.js';
+
+export async function me(req: Request, res: Response, next: NextFunction) {
+    const userCtx = req.user;
+    if (!userCtx) {
+        return res.status(401).json({ success: false, message: 'Não autenticado' })
+    }
+
+    const user = await prisma.terapeuta.findUnique({
+        where: { id: userCtx.id as string },
+        select: { id: true, nome: true, email_indigo: true, email: true },
+    });
+
+    if(!user) {
+        return res.status(404).json({ success: false, message: 'Usuário não encontrado' });
+    }
+
+    return res.json({
+        success: true,
+        user: {
+            id: user.id,
+            name: user.nome,
+            email: user.email_indigo ?? user.email ?? null
+        },
+    });
+}
 
 export async function validateToken(req: Request, res: Response, next: NextFunction) {
     try {
@@ -52,8 +78,9 @@ export async function validateLogin(req: Request, res: Response, next: NextFunct
         const user = await loginUserByAccessInformation(accessInfo, 'terapeuta');
         if(!user) return res.status(401).json({ success: false, message: 'Credenciais inválidas' });
         
-        const isValid = await comparePassword(password, user!.senha!);
-        if (!isValid) return res.status(401).json({ success: false, message: 'Credenciais inválidas' });
+        const ok = await comparePassword(password, user.senha!);
+        if (!ok) return res.status(401).json({ success: false, message: 'Credenciais inválidas' });
+
         const token = jwt.sign(
             { sub: user.id, role: 'terapeuta' },
             env.JWT_SECRET,
@@ -70,6 +97,7 @@ export async function validateLogin(req: Request, res: Response, next: NextFunct
         return res.status(200).json({
             success: true,
             message: 'Login realizado com sucesso',
+            token,
             user: { id: user.id, name: user.nome, email: user.email }
         });
     } catch (error) {
