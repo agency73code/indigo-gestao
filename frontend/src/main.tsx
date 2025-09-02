@@ -4,11 +4,11 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 import { LoginPage, SignUpPage, ForgotPasswordPage } from './features/auth';
 import PageTransition from './shared/components/layout/PageTransition';
-import NotFoundPage from './shared/components/pages/NotFoundPage';
+import NotFoundPage from './features/shell/pages/NotFoundPage.tsx';
 import TokenNotFoundPage from './shared/components/pages/TokenNotFoundPage';
-import ForgotPasswordEmailSend from './screens/auth/forgot-password-email-sent/forgot-password-email-sent.tsx';
-import ResetPasswordPage from "./features/auth/pages/ResetPasswordPage.tsx";
-import ResetSuccessPage from './screens/auth/reset-success/reset-success.tsx';
+import ForgotPasswordEmailSend from './features/auth/components/forgot-password-email-sent.tsx';
+import ResetPasswordPage from './features/auth/pages/ResetPasswordPage.tsx';
+import ResetSuccessPage from './features/auth/components/reset-success.tsx';
 
 import './global.css';
 

@@ -2,8 +2,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
-import TokenNotFoundLogo from '../../../components/ui/token-not-found';
-import AuthBackground from '@/components/ui/AuthBackground';
+import TokenNotFoundLogo from '../../../features/auth/components/token-not-found';
+import AuthBackground from '@/features/auth/components/AuthBackground';
 
 const TokenNotFoundPage: React.FC = () => {
     return (

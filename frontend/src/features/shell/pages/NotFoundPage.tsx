@@ -1,9 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Button } from '../ui/button';
-import { Card, CardContent } from '../ui/card';
-import Logo404 from '../../../components/ui/404';
-import AuthBackground from '@/components/ui/AuthBackground';
+import { Button } from '../../../shared/components/ui/button';
+import { Card, CardContent } from '../../../shared/components/ui/card';
+import Logo404 from '../../../common/components/layout/404';
+import AuthBackground from '@/features/auth/components/AuthBackground';
 
 const NotFoundPage: React.FC = () => {
     return (

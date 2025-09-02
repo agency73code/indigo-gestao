@@ -1,6 +1,6 @@
 import Logo from '../../../shared/components/ui/logo';
 import FooterBreadcrumb from '../../../shared/components/ui/footer-breadcrumb';
-import AuthBackground from '@/components/ui/AuthBackground';
+import AuthBackground from '@/features/auth/components/AuthBackground';
 
 interface AuthLayoutProps {
     children: React.ReactNode;

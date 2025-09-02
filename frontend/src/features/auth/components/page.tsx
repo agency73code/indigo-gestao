@@ -1,13 +1,13 @@
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Input } from '@/ui/input';
+import { Label } from '@/ui/label';
 import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Card, CardHeader, CardTitle } from '@/components/ui/card';
-import Logo from '@/components/ui/logo';
-import AuthBackground from '@/components/ui/AuthBackground';
-import FooterBreadcrumb from '@/components/ui/footer-breadcrumb';
-import AuthLayout from '../layout';
+import { Button } from '@/ui/button';
+import { Separator } from '@/ui/separator';
+import { Card, CardHeader, CardTitle } from '@/ui/card';
+import Logo from '@/common/components/layout/logo';
+import AuthBackground from '@/features/auth/components/AuthBackground';
+import FooterBreadcrumb from '@/features/auth/components/footer-breadcrumb';
+import AuthLayout from './layout';
 
 <style>
     @import

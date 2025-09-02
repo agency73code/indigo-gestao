@@ -1,12 +1,12 @@
-import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle } from '@/components/ui/card';
-import Logo from '@/components/ui/logo';
-import FooterBreadcrumb from '@/components/ui/footer-breadcrumb';
+import { Button } from '@/ui/button';
+import { Card, CardHeader, CardTitle } from '@/ui/card';
+import Logo from '@/common/components/layout/logo';
+import FooterBreadcrumb from '@/features/auth/components/footer-breadcrumb';
 import { Link } from 'react-router-dom';
 
 import resetPasswordIcon from '@/assets/images/auth/reset-password.svg';
-import AuthLayout from '../layout';
-import AuthBackground from '@/components/ui/AuthBackground';
+import AuthLayout from './layout';
+import AuthBackground from '@/features/auth/components/AuthBackground';
 
 export default function ResetSuccess() {
     return (

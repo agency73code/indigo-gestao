@@ -1,5 +1,5 @@
 import React from 'react';
-import IndigoLogo from '../../assets/logos/indigo.svg';
+import Indigo404 from '../../../assets/images/auth/404.svg';
 
 interface LogoProps {
     className?: string;
@@ -8,7 +8,7 @@ interface LogoProps {
 const Logo: React.FC<LogoProps> = ({ className = '' }) => {
     return (
         <div className={className}>
-            <img src={IndigoLogo} alt="Indigo Logo" className="w-40 h-auto" />
+            <img src={Indigo404} alt="Indigo 404" className="w-80 h-auto" />
         </div>
     );
 };
