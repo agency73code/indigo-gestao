@@ -1,8 +1,11 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { LoginCredentials, SignUpCredentials, ForgotPasswordData, ResetPasswordData } from '../types/auth.types';
 import type { User, AuthState } from '../types/auth.types';
-import { signIn, forgotPassword as forgotPasswordApi } from '@/lib/api'
+import { signIn, forgotPassword as forgotPasswordApi, getMe, apiLogout } from '@/lib/api'
+
+const AUTH_BYPASS =
+  import.meta.env.DEV && import.meta.env.VITE_AUTH_BYPASS === 'true';
 
 // Simulação de serviço de API - substituir por implementação real
 const authService = {
@@ -56,6 +59,32 @@ export function useAuth() {
     isLoading: false,
     error: null,
   });
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const me = await getMe();
+        if (!active) return;
+        setAuthState({
+          user: { id: String(me.user.id), email: me.user.email ?? "teste@teste.com", name: me.user.name ?? "teste" },
+          isAuthenticated: true,
+          isLoading: false,
+          error: null,
+        });
+      } catch {
+        if (AUTH_BYPASS && active) {
+          setAuthState({
+            user: { id: "dev-uid", email: "teste@teste.com", name: "teste" },
+            isAuthenticated: true,
+            isLoading: false,
+            error: null,
+          });
+        }
+      }
+    })();
+    return () => { active = false }
+  }, []);
 
   // endpoint responsavel pelo login
   const login = useCallback(
@@ -134,15 +163,18 @@ export function useAuth() {
     }
   }, [navigate]);
 
-  const logout = useCallback(() => {
-    setAuthState({
-      user: null,
-      isAuthenticated: false,
-      isLoading: false,
-      error: null,
-    });
-    navigate('/login');
-    
+  const logout = useCallback(async () => {
+    try {
+      await apiLogout();
+    } finally {
+      setAuthState({
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
+        error: null,
+      });
+      navigate('/login');
+    }
   }, [navigate]);
 
   return {

@@ -25,6 +25,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { useAuth } from "@/features/auth/hooks/useAuth"
 const data = {
   user: {
     name: "shadcn",
@@ -149,6 +150,11 @@ const data = {
   ],
 }
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { user } = useAuth();
+  const displayName = user?.name || "teste";
+  const displayEmail = user?.email || "teste@teste.com"
+  const displayAvatar = "/avatars/shadcn.jpg"
+
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>
@@ -174,7 +180,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={{ name: displayName, email: displayEmail, avatar: displayAvatar }} />
       </SidebarFooter>
     </Sidebar>
   )

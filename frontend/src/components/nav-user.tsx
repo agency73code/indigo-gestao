@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { useSidebar } from '@/components/ui/use-sidebar.tsx';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 
 export function NavUser({
     user,
@@ -23,6 +24,7 @@ export function NavUser({
     };
 }) {
     const { isMobile } = useSidebar();
+    const { logout } = useAuth();
 
     return (
         <SidebarMenu>
@@ -85,7 +87,11 @@ export function NavUser({
                             </DropdownMenuItem>
                         </DropdownMenuGroup>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem>
+                        <DropdownMenuItem
+                            onSelect={(e) => {
+                                e.preventDefault();
+                                logout();
+                            }}>
                             <LogOut />
                             Log out
                         </DropdownMenuItem>

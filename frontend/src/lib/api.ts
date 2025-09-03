@@ -84,3 +84,8 @@ export async function getMe() {
   }
   return data as { success: true; user: { id: string; name: string; email: string | null } };
 }
+
+export async function apiLogout() {
+  const res = await authFetch('/api/auth/logout', { method: 'POST' });
+  return res.ok;
+}
