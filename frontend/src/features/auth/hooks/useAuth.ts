@@ -1,5 +1,5 @@
-import { useState, useCallback, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { LoginCredentials, SignUpCredentials, ForgotPasswordData, ResetPasswordData } from '../types/auth.types';
 import type { User, AuthState } from '../types/auth.types';
 import { signIn, forgotPassword as forgotPasswordApi, getMe, apiLogout } from '@/lib/api'
@@ -30,8 +30,7 @@ const authService = {
       user: { 
         id: Date.now().toString(), 
         email: data.email, 
-        firstName: data.firstName, 
-        lastName: data.lastName 
+        name: `${data.firstName} ${data.lastName}`
       },
       token: 'fake-jwt-token'
     };
@@ -59,35 +58,30 @@ export function useAuth() {
     isLoading: false,
     error: null,
   });
-  const { pathname } = useLocation();
-  const shouldHydrate = pathname.startsWith('/app');
 
-  useEffect(() => {
-    if (!shouldHydrate) return;
-    let active = true;
-    (async () => {
-      try {
-        const me = await getMe();
-        if (!active) return;
+  const hydrate = useCallback(async () => {
+    setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
+    try {
+      const me = await getMe();
+      setAuthState({
+        user: { id: String(me.user.id), email: me.user.email ?? "teste@teste.com", name: me.user.name ?? "teste" },
+        isAuthenticated: true,
+        isLoading: false,
+        error: null,
+      });
+    } catch {
+      if (AUTH_BYPASS) {
         setAuthState({
-          user: { id: String(me.user.id), email: me.user.email ?? "teste@teste.com", name: me.user.name ?? "teste" },
+          user: { id: "dev-uid", email: "teste@teste.com", name: "teste" },
           isAuthenticated: true,
           isLoading: false,
           error: null,
         });
-      } catch {
-        if (AUTH_BYPASS && active) {
-          setAuthState({
-            user: { id: "dev-uid", email: "teste@teste.com", name: "teste" },
-            isAuthenticated: true,
-            isLoading: false,
-            error: null,
-          });
-        }
+      } else {
+        setAuthState((prev) => ({ ...prev, isLoading: false })); 
       }
-    })();
-    return () => { active = false }
-  }, [shouldHydrate]);
+    }
+  }, []);
 
   // endpoint responsavel pelo login
   const login = useCallback(
@@ -188,5 +182,6 @@ export function useAuth() {
     isLoading,
     resetPassword,
     logout,
+    hydrate,
   };
 }
