@@ -54,7 +54,7 @@ const jobSchema = z.object({
 
 const relationsSchema = z.object({
   enderecos: z.array(addressItemSchema).min(1, 'Informe pelo menos um endereço').optional(),
-  areas_atuacao: z.array(z.number()).optional(),
+  areas_atuacao: z.number().optional(),
   cargos: z
     .array(
       z.object({

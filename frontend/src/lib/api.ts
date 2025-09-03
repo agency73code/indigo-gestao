@@ -70,19 +70,30 @@ export async function forgotPassword(email: string) {
     return true;
 }
 
+import type { User } from "@/features/auth/types/auth.types";
 // --- protected endpoints ---
 import { authFetch } from "./http";
 
-export async function getMe() {
-  const res = await authFetch('/api/auth/me');
-  const text = await res.text();
-  const data = text ? JSON.parse(text) : null;
+type ApiMeResponse = {
+  user: User;
+  success?: boolean;
+};
 
-  if (!res.ok) {
-    const msg = data?.message ?? `Request failed (${res.status})`;
-    throw new Error(msg);
+let __inflightGetMe: Promise<ApiMeResponse> | null = null;
+
+export async function getMe(): Promise<ApiMeResponse> {
+  if (__inflightGetMe) return __inflightGetMe;
+  __inflightGetMe = (async () => {
+    const res = await authFetch('/api/auth/me', { method: 'GET' });
+    if (!res.ok) throw new Error('Failed to fetch me');
+    return (await res.json()) as ApiMeResponse;
+  })();
+  try {
+    return await __inflightGetMe;
+  } finally {
+    // pequena janela para “colar” chamadas quase simultâneas
+    setTimeout(() => { __inflightGetMe = null; }, 300);
   }
-  return data as { success: true; user: { id: string; name: string; email: string | null } };
 }
 
 export async function apiLogout() {
