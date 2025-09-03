@@ -9,6 +9,12 @@ import TokenNotFoundPage from './shared/components/pages/TokenNotFoundPage';
 import ForgotPasswordEmailSend from './features/auth/components/forgot-password-email-sent.tsx';
 import ResetPasswordPage from './features/auth/pages/ResetPasswordPage.tsx';
 import ResetSuccessPage from './features/auth/components/reset-success.tsx';
+import AppLayout from './features/shell/layouts/AppLayout';
+import DashboardPage from './features/dashboard/pages/DashboardPage';
+import CadastrosPage from './features/cadastros/pages/CadastrosPage';
+import ConsultasPage from './features/consultas/pages/ConsultasPage';
+import ArquivosPage from './features/arquivos/pages/ArquivosPage';
+import ConfiguracoesPage from './features/configuracoes/pages/ConfiguracoesPage';
 
 import './global.css';
 
@@ -27,6 +33,13 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                     />
                     <Route path="/reset-password" element={<ResetPasswordPage />} />
                     <Route path="/reset-success" element={<ResetSuccessPage />} />
+                    <Route path="/app" element={<AppLayout />}>
+                        <Route index element={<DashboardPage />} />
+                        <Route path="cadastros" element={<CadastrosPage />} />
+                        <Route path="consultas" element={<ConsultasPage />} />
+                        <Route path="arquivos" element={<ArquivosPage />} />
+                        <Route path="configuracoes" element={<ConfiguracoesPage />} />
+                    </Route>
                     <Route path="/404" element={<NotFoundPage />} />
                     <Route path="/token-not-found" element={<TokenNotFoundPage />} />
                     <Route path="*" element={<NotFoundPage />} />
