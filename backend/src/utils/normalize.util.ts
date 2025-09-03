@@ -1,4 +1,7 @@
 export function normalizeAccessInfo(value: string) {
-    const normalized = value.trim().toLowerCase().replace(/\s+/g, "");
-    return normalized;
+    const base = value.trim().toLowerCase();
+    if (base.includes('@')) {
+        return base.replace(/\s+/g, '');
+    }
+    return base.replace(/\D+/g, '');
 }

@@ -105,7 +105,7 @@ export default function LoginForm({ onSubmit, isLoading = false, error }: LoginF
                         transition={{ duration: 0.3 }}
                     >
                         <div
-                            className="bg-destructive/15 text-destructive text-sm p-3 rounded-md"
+                            className="bg-destructive/15 text-destructive text-sm p-3 rounded-[5px]"
                             role="alert"
                         >
                             {error}

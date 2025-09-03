@@ -44,7 +44,7 @@ const addressItemSchema = z.object({
 });
 
 const companySchema = z.object({
-  cnpj_empresa: cnpjOptionalField,
+  cnpj_empresa: cnpjOptionalField.optional(),
 });
 
 const jobSchema = z.object({
@@ -54,7 +54,7 @@ const jobSchema = z.object({
 
 const relationsSchema = z.object({
   enderecos: z.array(addressItemSchema).min(1, 'Informe pelo menos um endereço').optional(),
-  areas_atuacao: z.number(),
+  areas_atuacao: z.array(z.number()).optional(),
   cargos: z
     .array(
       z.object({
