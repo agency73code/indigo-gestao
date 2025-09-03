@@ -6,7 +6,7 @@ export const passwordSchema = z.object({
     .min(8, 'Senha deve ter pelo menos 8 caracteres')
     .max(100, 'Senha deve ter no máximo 100 caracteres')
     .regex(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&]/,
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d@$!%*?&#]+$/,
         'Senha deve conter: 1 minúscula, 1 maiúscula e 1 número'
     ),
     confirmPassword: z.string()
