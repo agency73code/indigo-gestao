@@ -16,10 +16,19 @@ type JwtPayload = { sub: string; role?: string; iat?: number; exp?: number };
 
 export function auth(req: Request, res: Response, next: NextFunction) {
     const header = req.headers.authorization || '';
-    const [scheme, token] = header.split(' ');
+    const [scheme, bearerToken] = header.split(' ');
 
-    if (scheme !== 'Bearer' || !token) {
-        return res.status(401).json({ success: false, message: 'Missing or invalid Authorization header' })
+    const cookieToken = (req).cookies?.token as string | undefined;
+
+    let token: string | undefined;
+    if (scheme === 'Bearer' && bearerToken) {
+        token = bearerToken;
+    } else if (cookieToken) {
+        token = cookieToken;
+    }
+
+    if (!token) {
+        return res.status(401).json({ success: false, message: 'Missing authentication token' })
     }
 
     try {

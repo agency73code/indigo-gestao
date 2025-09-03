@@ -64,17 +64,14 @@ export function useAuth() {
       try {
         const resp = await signIn(credentials.email, credentials.password);
 
-        localStorage.setItem('token', resp.token);
-        if (resp.user) localStorage.setItem('user', JSON.stringify(resp.user));
-
         setAuthState({
           user: (resp.user as User) ?? null,
           isAuthenticated: true,
           isLoading: false,
           error: null,
         });
-
         navigate('/dashboard');
+
       } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : 'Erro ao fazer login'
         setAuthState((prev) => ({ ...prev, isLoading: false, error: msg }));
@@ -88,10 +85,7 @@ export function useAuth() {
     setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
     
     try {
-      const { user, token } = await authService.signUp(data);
-      
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
+      const { user } = await authService.signUp(data);
       
       setAuthState({
         user,
@@ -99,8 +93,8 @@ export function useAuth() {
         isLoading: false,
         error: null,
       });
-      
       navigate('/dashboard');
+
     } catch (error) {
       setAuthState(prev => ({
         ...prev,
@@ -139,8 +133,6 @@ export function useAuth() {
   }, [navigate]);
 
   const logout = useCallback(() => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
     setAuthState({
       user: null,
       isAuthenticated: false,
@@ -148,6 +140,7 @@ export function useAuth() {
       error: null,
     });
     navigate('/login');
+    
   }, [navigate]);
 
   return {

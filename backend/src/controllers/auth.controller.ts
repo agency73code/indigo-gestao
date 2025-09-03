@@ -35,6 +35,19 @@ export async function me(req: Request, res: Response, next: NextFunction) {
     });
 }
 
+export async function logout(req: Request, res: Response, next: NextFunction) {
+    res.clearCookie('token', {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: env.NODE_ENV === 'production',
+    });
+
+    return res.status(200).json({
+        success: true,
+        message: 'Logout realizado com sucesso',
+    });
+}
+
 export async function validateToken(req: Request, res: Response, next: NextFunction) {
     try {
         const { token } = req.params;
@@ -99,12 +112,12 @@ export async function validateLogin(req: Request, res: Response, next: NextFunct
             { expiresIn: '1d' }
         );
 
-        // res.cookie('token', token, { 
-        //     httpOnly: true, 
-        //     sameSite: 'lax', 
-        //     secure: env.NODE_ENV === 'production', 
-        //     maxAge: 86_400_00 
-        // });
+        res.cookie('token', token, { 
+            httpOnly: true, 
+            sameSite: 'lax', 
+            secure: env.NODE_ENV === 'production', 
+            maxAge: 24 * 60 * 60 * 1000,
+        });
 
         return res.status(200).json({
             success: true,

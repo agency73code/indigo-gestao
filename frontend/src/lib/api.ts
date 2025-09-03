@@ -37,6 +37,7 @@ export async function signIn(accessInfo: string, password: string) {
   const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ accessInfo, password }),
   });
 
