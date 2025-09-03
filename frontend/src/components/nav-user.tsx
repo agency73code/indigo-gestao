@@ -25,8 +25,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
 } from "@/components/ui/sidebar"
+import { SidebarContext, useSidebar, type SidebarContextProps } from "./use-sidebar"
+
 
 export function NavUser({
   user,

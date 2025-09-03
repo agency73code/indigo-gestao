@@ -1,13 +1,18 @@
 import AuthLayout from '../components/AuthLayout';
 import LoginForm from '../components/LoginForm';
 import { useAuth } from '../hooks/useAuth';
+import type { LoginCredentials } from '../types/auth.types';
 
 export default function LoginPage() {
     const { login, isLoading } = useAuth();
 
+    const handleSubmit = async (data: LoginCredentials) => {
+        await login(data);
+    };
+
     return (
         <AuthLayout>
-            <LoginForm onSubmit={login} isLoading={isLoading} />
+            <LoginForm onSubmit={handleSubmit} isLoading={isLoading} />
         </AuthLayout>
     );
 }

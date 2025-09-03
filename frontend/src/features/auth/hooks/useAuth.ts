@@ -74,7 +74,7 @@ export function useAuth() {
           error: null,
         });
 
-        navigate('/dashboard');
+        navigate('/app');
       } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : 'Erro ao fazer login'
         setAuthState((prev) => ({ ...prev, isLoading: false, error: msg }));
@@ -100,7 +100,7 @@ export function useAuth() {
         error: null,
       });
       
-      navigate('/dashboard');
+      navigate('/app');
     } catch (error) {
       setAuthState(prev => ({
         ...prev,
