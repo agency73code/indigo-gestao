@@ -1,3 +1,3 @@
 export default function CadastrosPage() {
-  return <div>CadastrosPage</div>;
+    return <div>CadastrosPage</div>;
 }

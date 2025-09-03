@@ -7,30 +7,30 @@ import ArquivosPage from '../../features/arquivos/pages/ArquivosPage';
 import ConfiguracoesPage from '../../features/configuracoes/pages/ConfiguracoesPage';
 
 export const router = createBrowserRouter([
-  {
-    path: '/app',
-    element: <AppLayout />,
-    children: [
-      {
-        index: true,
-        element: <DashboardPage />,
-      },
-      {
-        path: 'cadastros',
-        element: <CadastrosPage />,
-      },
-      {
-        path: 'consultas',
-        element: <ConsultasPage />,
-      },
-      {
-        path: 'arquivos',
-        element: <ArquivosPage />,
-      },
-      {
-        path: 'configuracoes',
-        element: <ConfiguracoesPage />,
-      },
-    ],
-  },
+    {
+        path: '/app',
+        element: <AppLayout />,
+        children: [
+            {
+                index: true,
+                element: <DashboardPage />,
+            },
+            {
+                path: 'cadastros',
+                element: <CadastrosPage />,
+            },
+            {
+                path: 'consultas',
+                element: <ConsultasPage />,
+            },
+            {
+                path: 'arquivos',
+                element: <ArquivosPage />,
+            },
+            {
+                path: 'configuracoes',
+                element: <ConfiguracoesPage />,
+            },
+        ],
+    },
 ]);

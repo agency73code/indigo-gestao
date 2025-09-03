@@ -1,3 +1,3 @@
 export default function ConfiguracoesPage() {
-  return <div>ConfiguracoesPage</div>;
+    return <div>ConfiguracoesPage</div>;
 }

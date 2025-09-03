@@ -1,3 +1,3 @@
 export default function ArquivosPage() {
-  return <div>ArquivosPage</div>;
+    return <div>ArquivosPage</div>;
 }
