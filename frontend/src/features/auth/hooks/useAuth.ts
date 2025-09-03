@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import type { LoginCredentials, SignUpCredentials, ForgotPasswordData, ResetPasswordData } from '../types/auth.types';
 import type { User, AuthState } from '../types/auth.types';
 import { signIn, forgotPassword as forgotPasswordApi, getMe, apiLogout } from '@/lib/api'
@@ -59,8 +59,11 @@ export function useAuth() {
     isLoading: false,
     error: null,
   });
+  const { pathname } = useLocation();
+  const shouldHydrate = pathname.startsWith('/app');
 
   useEffect(() => {
+    if (!shouldHydrate) return;
     let active = true;
     (async () => {
       try {
@@ -84,7 +87,7 @@ export function useAuth() {
       }
     })();
     return () => { active = false }
-  }, []);
+  }, [shouldHydrate]);
 
   // endpoint responsavel pelo login
   const login = useCallback(
