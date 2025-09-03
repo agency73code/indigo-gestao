@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import type { LoginCredentials } from '../types/auth.types';
 
 export default function LoginPage() {
-    const { login, isLoading } = useAuth();
+    const { login, isLoading, error } = useAuth();
 
     const handleSubmit = async (data: LoginCredentials) => {
         await login(data);
@@ -12,7 +12,7 @@ export default function LoginPage() {
 
     return (
         <AuthLayout>
-            <LoginForm onSubmit={handleSubmit} isLoading={isLoading} />
+            <LoginForm onSubmit={handleSubmit} isLoading={isLoading} error={error || undefined} />
         </AuthLayout>
     );
 }

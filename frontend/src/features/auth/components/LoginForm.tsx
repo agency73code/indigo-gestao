@@ -18,6 +18,7 @@ import type { LoginCredentials } from '../types/auth.types';
 interface LoginFormProps {
     onSubmit: (data: LoginCredentials) => void;
     isLoading?: boolean;
+    error?: string;
 }
 
 const containerVariants: Variants = {
@@ -73,7 +74,7 @@ const buttonVariants: Variants = {
     },
 };
 
-export default function LoginForm({ onSubmit, isLoading = false }: LoginFormProps) {
+export default function LoginForm({ onSubmit, isLoading = false, error }: LoginFormProps) {
     const {
         register,
         handleSubmit,
@@ -95,6 +96,23 @@ export default function LoginForm({ onSubmit, isLoading = false }: LoginFormProp
                         </CardDescription>
                     </CardHeader>
                 </motion.div>
+
+                {error && (
+                    <motion.div
+                        className="px-6 pb-2"
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                    >
+                        <div
+                            className="bg-destructive/15 text-destructive text-sm p-3 rounded-md"
+                            role="alert"
+                        >
+                            {error}
+                        </div>
+                    </motion.div>
+                )}
+
                 <CardContent>
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                         <motion.div className="space-y-2" variants={itemVariants}>
@@ -170,8 +188,6 @@ export default function LoginForm({ onSubmit, isLoading = false }: LoginFormProp
                                 )}
                             </Button>
                         </motion.div>
-
-                        
                     </form>
                 </CardContent>
             </Card>
