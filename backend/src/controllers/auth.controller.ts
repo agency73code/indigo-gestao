@@ -69,8 +69,16 @@ export async function definePassword(req: Request, res: Response, next: NextFunc
         const { token } = req.params;
         const { password } = req.body;
 
-        await newPassword(token!, password, 'terapeuta');
-        res.status(200).json({ success: true, message: "Senha definida com sucesso" }); //K4$eJ#8dGpL1M
+        const result = await newPassword(token!, password, 'terapeuta');
+
+        if (!result || (typeof result === 'object' && 'count' in result && result.count === 0)) {
+            return res.status(404).json({
+                success: false,
+                message: 'Token não encontrado ou expirado',
+            });
+        }
+
+        return res.status(200).json({ success: true, message: "Senha definida com sucesso" });
     } catch (error) {
         next(error);
     }
