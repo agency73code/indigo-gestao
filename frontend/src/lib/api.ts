@@ -1,13 +1,14 @@
 const AUTH_BYPASS =
-  import.meta.env.DEV && import.meta.env.VITE_AUTH_BYPASS === 'true';export async function validateResetToken(token: string) {
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/password-reset/validate/${token}`);
+  import.meta.env.DEV && import.meta.env.VITE_AUTH_BYPASS === 'true';
 
-    if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.message || 'Token inválido ou expirado');
-    }
+export async function validateResetToken(token: string) {
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/password-reset/validate/${token}`);
+  if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.message || 'Token inválido ou expirado');
+  }
 
-    return response.json();
+    return res.json();
 }
 
 export async function resetPassword(token: string, password: string, confirmPassword: string) {
@@ -26,30 +27,29 @@ export async function resetPassword(token: string, password: string, confirmPass
 }
 
 export async function signIn(accessInfo: string, password: string) {
-
-    if (AUTH_BYPASS) {
+  if (AUTH_BYPASS) {
     return {
       success: true,
       token: 'dev.bypass.token',
       user: { id: 'dev-uid', name: 'Dev User', email: accessInfo },
     } as const;
   }
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ accessInfo, password }),
+  });
 
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accessInfo, password }),
-    });
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : null;
 
-    const text = await res.text();
-    const data = text ? JSON.parse(text) : null;
-
-    if (!res.ok) {
-        const msg = data?.error ?? data?.message ?? `Falha (${res.status})`;
-        throw new Error(msg);
-    }
-    
-    return data as { success: true; token: string; user?: { id: string; name?: string; email?: string } };
+  if (!res.ok) {
+      const msg = data?.error ?? data?.message ?? `Falha (${res.status})`;
+      throw new Error(msg);
+  }
+  
+  return data as { success: true; token: string; user?: { id: string; name?: string; email?: string } };
 }
 
 export async function forgotPassword(email: string) {

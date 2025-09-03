@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import type { Router as ExpressRouter } from 'express';
-import { validateToken, definePassword, validateLogin, me, requestPasswordReset } from '../controllers/auth.controller.js';
+import { validateToken, definePassword, validateLogin, me, requestPasswordReset, logout } from '../controllers/auth.controller.js';
 import { forgotPasswordBodySchema, passwordSchema, tokenParamSchema } from '../schemas/password.schema.js'
 import { validateBody, validateParams } from '../middleware/validation.middleware.js'
 import { auth } from '../middleware/auth.middleware.js'
@@ -11,6 +11,7 @@ router.get('/password-reset/validate/:token', validateToken);
 router.get('/me', auth, me);
 
 router.post('/login', validateLogin);
+router.post('/logout', logout);
 router.post('/forgot-password',
     validateBody(forgotPasswordBodySchema),
     requestPasswordReset

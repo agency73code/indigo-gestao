@@ -14,7 +14,7 @@ const app: Express = express();
 app.use(helmet()); // Remove headers que expõem tecnologias
 app.use(
     cors({
-        origin: process.env.FRONTEND_URL,
+        origin: env.FRONTEND_URL,
         credentials: true,
     }),
 );

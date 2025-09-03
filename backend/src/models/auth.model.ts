@@ -1,5 +1,4 @@
 import { prisma } from '../config/database.js';
-import type { LoginInput } from '../schemas/login.schema.js';
 import { hashPassword } from '../utils/hash.util.js'
 
 type Tables = 'terapeuta' | 'cliente';

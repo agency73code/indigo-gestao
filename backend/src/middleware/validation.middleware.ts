@@ -16,6 +16,7 @@ export const validateBody = (schema: ZodSchema) => {
             next();
         } catch (error: any) {
             res.status(400).json({
+                success: false,
                 error: 'Dados inválidos',
                 details: error.errors || error.message,
             });
@@ -31,6 +32,7 @@ export function validateParams(schema: ZodSchema) {
             next();
         } catch (error: any) {
             res.status(400).json({
+                success: false,
                 error: 'Parâmetros inválidos',
                 details: error.errors || error.message,
             });
@@ -46,6 +48,7 @@ export function validateQuery(schema: ZodSchema) {
             next();
         } catch (error: any) {
             res.status(400).json({
+                success: false,
                 error: 'Query inválida',
                 details: error.errors || error.message,
             });

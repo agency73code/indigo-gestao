@@ -35,6 +35,19 @@ export async function me(req: Request, res: Response, next: NextFunction) {
     });
 }
 
+export async function logout(req: Request, res: Response, next: NextFunction) {
+    res.clearCookie('token', {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: env.NODE_ENV === 'production',
+    });
+
+    return res.status(200).json({
+        success: true,
+        message: 'Logout realizado com sucesso',
+    });
+}
+
 export async function validateToken(req: Request, res: Response, next: NextFunction) {
     try {
         const { token } = req.params;
@@ -69,8 +82,16 @@ export async function definePassword(req: Request, res: Response, next: NextFunc
         const { token } = req.params;
         const { password } = req.body;
 
-        await newPassword(token!, password, 'terapeuta');
-        res.status(200).json({ success: true, message: "Senha definida com sucesso" }); //K4$eJ#8dGpL1M
+        const result = await newPassword(token!, password, 'terapeuta');
+
+        if (!result || (typeof result === 'object' && 'count' in result && result.count === 0)) {
+            return res.status(404).json({
+                success: false,
+                message: 'Token não encontrado ou expirado',
+            });
+        }
+
+        return res.status(200).json({ success: true, message: "Senha definida com sucesso" });
     } catch (error) {
         next(error);
     }
@@ -91,12 +112,12 @@ export async function validateLogin(req: Request, res: Response, next: NextFunct
             { expiresIn: '1d' }
         );
 
-        // res.cookie('token', token, { 
-        //     httpOnly: true, 
-        //     sameSite: 'lax', 
-        //     secure: env.NODE_ENV === 'production', 
-        //     maxAge: 86_400_00 
-        // });
+        res.cookie('token', token, { 
+            httpOnly: true, 
+            sameSite: 'lax', 
+            secure: env.NODE_ENV === 'production', 
+            maxAge: 24 * 60 * 60 * 1000,
+        });
 
         return res.status(200).json({
             success: true,
