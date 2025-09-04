@@ -64,7 +64,16 @@ export async function loginUserByAccessInformation(accessInfo: string, table: Ta
     };
   } else {
     const row = await prisma.cliente.findFirst({
-      where: { email_contato: accessInfo },
+      where: { 
+        OR: [
+            { email_contato: accessInfo },
+            {
+                cliente_responsavel: {
+                    some: { responsaveis: { cpf: accessInfo } },
+                },
+            },
+        ],
+       },
       select: {
         id: true,
         senha: true,
