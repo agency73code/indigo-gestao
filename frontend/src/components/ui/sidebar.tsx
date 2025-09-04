@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { SidebarContext, useSidebar, type SidebarContextProps } from './use-sidebar.tsx';
+import { SidebarContext, useSidebar, type SidebarContextProps } from '../sidebar/use-sidebar.ts';
 
 const SIDEBAR_COOKIE_NAME = 'sidebar_state';
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
