@@ -1,12 +1,18 @@
 import type { NextFunction, Request, Response } from 'express';
 import { env } from '../config/env.js'
-import { findUserByResetToken, newPassword, loginUserByAccessInformation, findUserByEmail, passwordResetToken } from '../models/auth.model.js';
 import { comparePassword } from '../utils/hash.util.js';
 import jwt from 'jsonwebtoken';
-import { prisma } from '../config/database.js';
 import { v4 as uuidv4 } from 'uuid';
 import { sendPasswordResetEmail } from '../utils/mail.util.js';
 import { normalizeAccessInfo } from '../utils/normalize.util.js';
+import { 
+    findTherapistById, 
+    findUserByEmail, 
+    findUserByResetToken, 
+    loginUserByAccessInformation, 
+    newPassword, 
+    passwordResetToken 
+} from '../features/auth/auth.repository.js';
 
 const RESET_TOKEN_EXPIRATION_MS = 60 * 60 * 1000;
 
@@ -16,10 +22,7 @@ export async function me(req: Request, res: Response, next: NextFunction) {
         return res.status(401).json({ success: false, message: 'Não autenticado' })
     }
 
-    const user = await prisma.terapeuta.findUnique({
-        where: { id: userCtx.id as string },
-        select: { id: true, nome: true, email_indigo: true, email: true },
-    });
+    const user = await findTherapistById(userCtx.id as string);
 
     if(!user) {
         return res.status(404).json({ success: false, message: 'Usuário não encontrado' });
