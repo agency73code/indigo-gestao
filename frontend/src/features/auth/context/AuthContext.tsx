@@ -1,0 +1,126 @@
+/* eslint-disable react-refresh/only-export-components */
+
+import { createContext, useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import type {
+  LoginCredentials,
+  ForgotPasswordData,
+  User,
+  AuthState,
+} from '../types/auth.types';
+import { signIn, forgotPassword as forgotPasswordApi, getMe, apiLogout } from '@/lib/api';
+
+const AUTH_BYPASS = import.meta.env.DEV && import.meta.env.VITE_AUTH_BYPASS === 'true';
+
+interface AuthContextValue extends AuthState {
+    login: (credentials: LoginCredentials) => Promise<void>;
+    forgotPassword: (data: ForgotPasswordData) => Promise<void>;
+    logout: () => Promise<void>;
+    hydrate: () => Promise<void>;
+}
+
+export const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+    const navigate = useNavigate();
+    const [authState, setAuthState] = useState<AuthState>({
+        user: null,
+        isAuthenticated: false,
+        isLoading: false,
+        error: null,
+    });
+
+    const hydrate = useCallback(async () => {
+        setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
+        try {
+            const me = await getMe();
+            setAuthState({
+                user: {
+                    id: String(me.user.id),
+                    email: me.user.email ?? 'teste@teste.com',
+                    name: me.user.name ?? 'teste',
+                },
+                isAuthenticated: true,
+                isLoading: false,
+                error: null,
+            });
+        } catch {
+            if (AUTH_BYPASS) {
+                setAuthState({
+                    user: { id: 'dev-uid', email: 'dev-uid@dev.com', name: 'dev-uid' },
+                    isAuthenticated: true,
+                    isLoading: false,
+                    error: null,
+                });
+            } else {
+                setAuthState(prev => ({ ...prev, isLoading: false }));
+            }
+        }
+    }, []);
+
+    const login = useCallback(
+        async (credentials: LoginCredentials) => {
+            setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
+            try {
+                const resp = await signIn(credentials.email, credentials.password);
+                setAuthState({
+                    user: (resp.user as User) ?? null,
+                    isAuthenticated: true,
+                    isLoading: false,
+                    error: null,
+                });
+                navigate('app');
+            } catch (e: unknown) {
+                const msg = e instanceof Error ? e.message : 'Erro ao fazer login';
+                setAuthState(prev => ({ ...prev, isLoading: false, error:msg }));
+            }
+        },
+        [navigate],
+    );
+
+    const forgotPassword = useCallback(
+        async ({ email }: ForgotPasswordData) => {
+            setAuthState(prev => ({ ...prev, isLoading: true, error:null }));
+            try {
+                await forgotPasswordApi(email);
+                navigate('/forgot-password/email-sent');
+            } catch {
+                navigate('/forgot-password/email-sent');
+            } finally {
+                setAuthState(prev => ({ ...prev, isLoading: false }));
+            }
+        },
+        [navigate],
+    );
+
+    const logout = useCallback(async () => {
+        try {
+            await apiLogout();
+        } finally {
+            setAuthState({
+                user: null,
+                isAuthenticated: false,
+                isLoading: false,
+                error: null,
+            });
+            navigate('/login');
+        }
+    }, [navigate]);
+
+    const didHydrateRef = useRef(false);
+    useEffect(() => {
+        if (didHydrateRef.current) return;
+        didHydrateRef.current = true;
+        void hydrate();
+    }, [hydrate])
+
+    const value: AuthContextValue = {
+        ...authState,
+        login,
+        forgotPassword,
+        logout,
+        hydrate,
+    };
+
+    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
