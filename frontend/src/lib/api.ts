@@ -79,12 +79,13 @@ type ApiMeResponse = {
   success?: boolean;
 };
 
-let __inflightGetMe: Promise<ApiMeResponse> | null = null;
+let __inflightGetMe: Promise<ApiMeResponse | null> | null = null;
 
-export async function getMe(): Promise<ApiMeResponse> {
+export async function getMe(): Promise<ApiMeResponse | null> {
   if (__inflightGetMe) return __inflightGetMe;
   __inflightGetMe = (async () => {
     const res = await authFetch('/api/auth/me', { method: 'GET' });
+    if (res.status === 401) return null;
     if (!res.ok) throw new Error('Failed to fetch me');
     return (await res.json()) as ApiMeResponse;
   })();

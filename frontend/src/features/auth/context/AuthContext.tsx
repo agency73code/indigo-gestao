@@ -31,9 +31,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     const hydrate = useCallback(async () => {
+        if (!document.cookie.includes('session')) {
+            if (AUTH_BYPASS) {
+                setAuthState({
+                    user: { id: 'dev-uid', email: 'dev-uid@dev.com', name: 'dev-uid' },
+                    isAuthenticated: true,
+                    isLoading: false,
+                    error: null,
+                });
+            }
+            return;
+        }
         setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
         try {
             const me = await getMe();
+            if(!me) {
+                setAuthState(prev => ({ ...prev, isLoading: false }));
+                return;
+            }
             setAuthState({
                 user: {
                     id: String(me.user.id),
