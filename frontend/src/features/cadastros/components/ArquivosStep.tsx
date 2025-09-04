@@ -1,0 +1,136 @@
+import { Label } from '@/ui/label';
+import { Upload, FileText, X } from 'lucide-react';
+import { useRef } from 'react';
+import type { Terapeuta } from '../types/cadastros.types';
+
+interface ArquivosStepProps {
+    data: Partial<Terapeuta>;
+    onUpdate: (field: string, value: File | null) => void;
+    errors: Record<string, string>;
+}
+
+export default function ArquivosStep({ data, onUpdate, errors }: ArquivosStepProps) {
+    const fileInputRefs = {
+        fotoPerfil: useRef<HTMLInputElement>(null),
+        diplomaGraduacao: useRef<HTMLInputElement>(null),
+        diplomaPosGraduacao: useRef<HTMLInputElement>(null),
+        registroCRP: useRef<HTMLInputElement>(null),
+        comprovanteEndereco: useRef<HTMLInputElement>(null),
+    };
+
+    const handleFileChange = (field: string, event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0] || null;
+        onUpdate(`arquivos.${field}`, file);
+    };
+
+    const removeFile = (field: string) => {
+        onUpdate(`arquivos.${field}`, null);
+        const ref = fileInputRefs[field as keyof typeof fileInputRefs];
+        if (ref.current) {
+            ref.current.value = '';
+        }
+    };
+
+    const FileUploadField = ({
+        field,
+        label,
+        required = false,
+        accept = 'image/*,.pdf,.doc,.docx',
+    }: {
+        field: string;
+        label: string;
+        required?: boolean;
+        accept?: string;
+    }) => {
+        const file = data.arquivos?.[field as keyof typeof data.arquivos] as File;
+        const hasFile = file instanceof File;
+        const errorKey = `arquivos.${field}`;
+
+        return (
+            <div className="space-y-2">
+                <Label>
+                    {label} {required && '*'}
+                </Label>
+
+                <div
+                    className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                        errors[errorKey]
+                            ? 'border-destructive'
+                            : 'border-muted-foreground/25 hover:border-muted-foreground/50'
+                    }`}
+                >
+                    {hasFile ? (
+                        <div className="flex items-center justify-between bg-muted rounded-md p-3">
+                            <div className="flex items-center gap-2">
+                                <FileText className="w-4 h-4" />
+                                <span className="text-sm truncate">{file.name}</span>
+                                <span className="text-xs text-muted-foreground">
+                                    ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                                </span>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => removeFile(field)}
+                                className="text-destructive hover:text-destructive/80"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+                    ) : (
+                        <div>
+                            <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                            <p className="text-sm text-muted-foreground mb-2">
+                                Clique para selecionar ou arraste um arquivo aqui
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                                Formatos aceitos: PDF, DOC, DOCX, JPG, PNG (máx. 10MB)
+                            </p>
+                        </div>
+                    )}
+
+                    <input
+                        ref={fileInputRefs[field as keyof typeof fileInputRefs]}
+                        type="file"
+                        accept={accept}
+                        onChange={(e) => handleFileChange(field, e)}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                </div>
+
+                {errors[errorKey] && <p className="text-sm text-destructive">{errors[errorKey]}</p>}
+            </div>
+        );
+    };
+
+    return (
+        <div className="space-y-6">
+            <h3 className="text-lg font-semibold">Documentos e Arquivos</h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FileUploadField field="fotoPerfil" label="Foto de Perfil" accept="image/*" />
+
+                <FileUploadField field="diplomaGraduacao" label="Diploma de Graduação" required />
+
+                <FileUploadField field="diplomaPosGraduacao" label="Diploma de Pós-Graduação" />
+
+                <FileUploadField field="registroCRP" label="Registro do CRP" required />
+
+                <FileUploadField
+                    field="comprovanteEndereco"
+                    label="Comprovante de Endereço"
+                    required
+                />
+            </div>
+
+            <div className="bg-muted/50 p-4 rounded-lg">
+                <h4 className="font-medium mb-2">Orientações para upload:</h4>
+                <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>• Arquivos devem ter no máximo 10MB</li>
+                    <li>• Formatos aceitos: PDF, DOC, DOCX, JPG, PNG</li>
+                    <li>• Certifique-se de que os documentos estão legíveis</li>
+                    <li>• A foto de perfil deve ser recente e profissional</li>
+                </ul>
+            </div>
+        </div>
+    );
+}
