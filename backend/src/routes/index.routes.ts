@@ -1,12 +1,13 @@
 import { Router } from 'express';
 import type { Router as ExpressRouter } from 'express';
-import therapistRouter from './therapist.router.js';
-import authRouter from './auth.router.js';
+import therapistRouter from './therapist.routes.js';
+import authRouter from './auth.routes.js';
+import clientRoutes from './client.routes.js'
 
 const router: ExpressRouter = Router();
 
 router.use('/terapeutas', therapistRouter);
-// router.use('/clientes', userRouter);
+router.use('/clientes', clientRoutes);
 // router.use('/agendamentos', appointmentRouter);
 router.use('/auth', authRouter);
 
@@ -17,7 +18,7 @@ router.get('/', (req, res) => {
         status: 'online',
         routes: {
             terapeutas: '/api/terapeutas',
-            // clientes: '/api/clientes',
+            clientes: '/api/clientes',
             // agendamentos: '/api/agendamentos',
             auth: '/api/auth',
             health: '/health',
