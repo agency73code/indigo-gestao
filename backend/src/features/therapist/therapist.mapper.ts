@@ -1,18 +1,15 @@
-import { v4 as uuidv4 } from 'uuid';
-import { prisma } from '../config/database.js';
-import type { terapeuta } from '@prisma/client';
-
-export interface TherapistResponse
-    extends Omit<terapeuta, 'senha' | 'token_redefinicao' | 'validade_token'> {}
+import type { PrismaClient } from "@prisma/client";
+import { v4 as uuidv4 } from "uuid";
+import type { TherapistCreateData } from "./therapist.types.js";
 
 function generateResetToken() {
     const token = uuidv4();
     const expiry = new Date();
-    expiry.setDate(expiry.getDate() + 1); // Token válido por 24 horas
+    expiry.setDate(expiry.getDate() + 1);
     return { token, expiry };
 }
 
-export async function saveTherapist(data: TherapistCreateData): Promise<terapeuta> {
+export async function createTherapistBase(prisma: PrismaClient, data: TherapistCreateData) {
     const id = uuidv4();
     const { token, expiry } = generateResetToken();
 
@@ -41,12 +38,12 @@ export async function saveTherapist(data: TherapistCreateData): Promise<terapeut
                     data_saida: null,
                     perfil_acesso: data.perfil_acesso,
                     atividade: 'ativo',
-                    senha: null, // Será definida posteriormente
+                    senha: null,
                     token_redefinicao: token,
                     validade_token: expiry,
                 },
             });
-        
+
             if (data.enderecos && data.enderecos.length > 0) {
                 for (const enderecoData of data.enderecos) {
                     const endereco = await tx.endereco.create({
@@ -66,7 +63,7 @@ export async function saveTherapist(data: TherapistCreateData): Promise<terapeut
                             terapeuta_id: id,
                             endereco_id: endereco.id,
                             tipo_endereco_id: enderecoData.tipo_endereco_id,
-                            principal: enderecoData.principal || 0
+                            principal: enderecoData.principal || 0,
                         },
                     });
                 }
@@ -74,7 +71,7 @@ export async function saveTherapist(data: TherapistCreateData): Promise<terapeut
 
             if (data.areas_atuacao && data.areas_atuacao.length > 0) {
                 await tx.terapeuta_area_atuacao.createMany({
-                    data: data.areas_atuacao.map(areaId => ({
+                    data: data.areas_atuacao.map((areaId) => ({
                         terapeuta_id: id,
                         area_atuacao_id: areaId,
                     })),
@@ -83,7 +80,7 @@ export async function saveTherapist(data: TherapistCreateData): Promise<terapeut
 
             if (data.cargos && data.cargos.length > 0) {
                 await tx.terapeuta_cargo.createMany({
-                    data: data.cargos.map(cargo => ({
+                    data: data.cargos.map((cargo) => ({
                         terapeuta_id: id,
                         cargo_id: cargo.cargo_id,
                         numero_conselho: cargo.numero_conselho || null,
@@ -93,73 +90,22 @@ export async function saveTherapist(data: TherapistCreateData): Promise<terapeut
                 });
             }
 
-            return newTherapist;            
+            return newTherapist;
         });
 
         return therapist;
-    } catch (error: any) { // verificar o que isso faz
+    } catch (error: any) {
         if (error.code === 'P2002') {
             const field = error.meta?.target?.[0] || 'campo';
             const fieldMap: Record<string, string> = {
-                'cpf': 'CPF',
-                'email': 'Email',
-                'email_indigo': 'Email Indigo',
-                'cnpj_empresa': 'CNPJ da empresa',
+                cpf: 'CPF',
+                email: 'Email',
+                email_indigo: 'Email Indigo',
+                cnpj_empresa: 'CNPJ da empresa',
             };
             const friendlyField = fieldMap[field] || field;
             throw new Error(`${friendlyField} já está em uso.`);
         }
         throw error;
     }
-}
-
-export interface TherapistCreateData {
-    // Dados pessoais básicos
-    nome: string;
-    cpf: string;
-    data_nascimento: string;
-    telefone?: string;
-    celular: string;
-    foto_perfil?: string;
-    email: string;
-    email_indigo: string;
-    
-    // Dados do veículo
-    possui_veiculo: 'sim' | 'nao';
-    placa_veiculo?: string;
-    modelo_veiculo?: string;
-    
-    // Dados bancários
-    banco: string;
-    agencia: string;
-    conta: string;
-    chave_pix?: string;
-    
-    // Dados da empresa (opcional)
-    cnpj_empresa?: string;
-    
-    // Dados administrativos
-    data_entrada: string;
-    perfil_acesso: string;
-    
-    // Relacionamentos
-    enderecos?: {
-        cep: string;
-        logradouro: string;
-        numero: string;
-        bairro: string;
-        cidade: string;
-        uf: string;
-        complemento?: string;
-        tipo_endereco_id: number;
-        principal?: number;
-    }[];
-    
-    areas_atuacao?: number[]; // IDs das áreas de atuação
-    
-    cargos?: {
-        cargo_id: number;
-        numero_conselho?: string;
-        data_entrada: Date;
-    }[];
 }

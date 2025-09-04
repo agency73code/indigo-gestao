@@ -1,14 +1,13 @@
 import type { Request, Response, NextFunction } from 'express';
-import {
-    saveTherapist
-} from '../models/therapist.model.js';
 import { sendWelcomeEmail } from '../utils/mail.util.js';
-import type { TherapistCreateData } from '../models/therapist.model.js';
+import type { TherapistCreateData } from '../features/therapist/therapist.types.js';
+import { createTherapistBase } from '../features/therapist/therapist.mapper.js';
+import { prisma } from '../config/database.js';
 
 export async function createTherapist(req: Request, res: Response, next: NextFunction) {
     try {
         const data = req.body as TherapistCreateData;
-        const therapist = await saveTherapist(data);
+        const therapist = await createTherapistBase(prisma, data);
 
         await sendWelcomeEmail({
             to: therapist.email,

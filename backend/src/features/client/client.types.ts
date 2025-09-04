@@ -1,4 +1,3 @@
-
 export interface ClientCreateData {
     nome: string;
     data_nascimento: string | Date;

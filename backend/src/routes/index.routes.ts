@@ -1,15 +1,15 @@
 import { Router } from 'express';
 import type { Router as ExpressRouter } from 'express';
-import therapistRouter from './therapist.routes.js';
-import authRouter from './auth.routes.js';
+import therapistRoutes from './therapist.routes.js';
+import authRoutes from './auth.routes.js';
 import clientRoutes from './client.routes.js'
 
 const router: ExpressRouter = Router();
 
-router.use('/terapeutas', therapistRouter);
+router.use('/terapeutas', therapistRoutes);
 router.use('/clientes', clientRoutes);
 // router.use('/agendamentos', appointmentRouter);
-router.use('/auth', authRouter);
+router.use('/auth', authRoutes);
 
 router.get('/', (req, res) => {
     res.json({

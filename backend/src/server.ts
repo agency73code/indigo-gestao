@@ -6,7 +6,7 @@ import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import { env } from './config/env.js';
 import { errorHandler } from './middleware/errorHandler.middleware.js';
-import routes from './routes/index.js';
+import routes from './routes/index.routes.js';
 import cookieParser from 'cookie-parser';
 
 const app: Express = express();

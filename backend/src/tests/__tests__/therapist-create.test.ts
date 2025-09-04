@@ -1,9 +1,8 @@
-import { describe, test, expect, beforeEach, afterAll } from 'vitest'
+import { describe, test, expect, beforeEach, afterAll  } from 'vitest'
 import request from 'supertest'
 import app from "../../server.js";
 import { prisma } from '../../config/database.js'
-import { sendWelcomeEmail } from '../../utils/mail.util.js';
-import { email } from 'zod';
+
 
 
 describe('POST /api/terapeutas/cadastrar', () => {
