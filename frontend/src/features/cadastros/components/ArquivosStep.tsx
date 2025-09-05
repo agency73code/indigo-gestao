@@ -53,11 +53,16 @@ export default function ArquivosStep({ data, onUpdate, errors }: ArquivosStepPro
                 </Label>
 
                 <div
-                    className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                    className={`relative border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer ${
                         errors[errorKey]
                             ? 'border-destructive'
                             : 'border-muted-foreground/25 hover:border-muted-foreground/50'
                     }`}
+                    onClick={() => {
+                        if (!hasFile) {
+                            fileInputRefs[field as keyof typeof fileInputRefs]?.current?.click();
+                        }
+                    }}
                 >
                     {hasFile ? (
                         <div className="flex items-center justify-between bg-muted rounded-md p-3">
@@ -70,7 +75,10 @@ export default function ArquivosStep({ data, onUpdate, errors }: ArquivosStepPro
                             </div>
                             <button
                                 type="button"
-                                onClick={() => removeFile(field)}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    removeFile(field);
+                                }}
                                 className="text-destructive hover:text-destructive/80"
                             >
                                 <X className="w-4 h-4" />
@@ -93,7 +101,7 @@ export default function ArquivosStep({ data, onUpdate, errors }: ArquivosStepPro
                         type="file"
                         accept={accept}
                         onChange={(e) => handleFileChange(field, e)}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        className="hidden"
                     />
                 </div>
 
@@ -109,17 +117,13 @@ export default function ArquivosStep({ data, onUpdate, errors }: ArquivosStepPro
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FileUploadField field="fotoPerfil" label="Foto de Perfil" accept="image/*" />
 
-                <FileUploadField field="diplomaGraduacao" label="Diploma de Graduação" required />
+                <FileUploadField field="diplomaGraduacao" label="Diploma de Graduação" />
 
                 <FileUploadField field="diplomaPosGraduacao" label="Diploma de Pós-Graduação" />
 
-                <FileUploadField field="registroCRP" label="Registro do CRP" required />
+                <FileUploadField field="registroCRP" label="Registro do CRP" />
 
-                <FileUploadField
-                    field="comprovanteEndereco"
-                    label="Comprovante de Endereço"
-                    required
-                />
+                <FileUploadField field="comprovanteEndereco" label="Comprovante de Endereço" />
             </div>
 
             <div className="bg-muted/50 p-4 rounded-lg">

@@ -1,7 +1,6 @@
 import { Input } from '@/ui/input';
 import { Label } from '@/ui/label';
-import { X } from 'lucide-react';
-import { useState } from 'react';
+import { Checkbox } from '../../../components/ui/checkbox';
 import type { Terapeuta } from '../types/cadastros.types';
 
 interface DadosProfissionaisStepProps {
@@ -10,180 +9,165 @@ interface DadosProfissionaisStepProps {
     errors: Record<string, string>;
 }
 
+const AREAS_ATUACAO = [
+    'Psicologia Clínica',
+    'Psicologia Organizacional',
+    'Psicologia Escolar/Educacional',
+    'Psicologia do Esporte',
+    'Psicologia Hospitalar',
+    'Psicologia Jurídica',
+    'Psicologia Social',
+    'Neuropsicologia',
+    'Psicologia do Trânsito',
+    'Outras',
+];
+
+const CARGOS = [
+    'Psicólogo Clínico',
+    'Psicólogo Organizacional',
+    'Psicólogo Escolar',
+    'Psicólogo Hospitalar',
+    'Neuropsicólogo',
+    'Coordenador de Psicologia',
+    'Supervisor de Psicologia',
+    'Outro',
+];
+
 export default function DadosProfissionaisStep({
     data,
     onUpdate,
     errors,
 }: DadosProfissionaisStepProps) {
-    const [novaEspecialidade, setNovaEspecialidade] = useState('');
-    const [novaFormaAtendimento, setNovaFormaAtendimento] = useState('');
-
-    const adicionarEspecialidade = () => {
-        if (novaEspecialidade.trim()) {
-            const especialidades = data.especialidades || [];
-            onUpdate('especialidades', [...especialidades, novaEspecialidade.trim()]);
-            setNovaEspecialidade('');
+    const handleAreaAtuacaoChange = (area: string, checked: boolean) => {
+        const areasAtuais = data.areasAtuacao || [];
+        if (checked) {
+            onUpdate('areasAtuacao', [...areasAtuais, area]);
+        } else {
+            onUpdate(
+                'areasAtuacao',
+                areasAtuais.filter((a: string) => a !== area),
+            );
         }
-    };
-
-    const removerEspecialidade = (index: number) => {
-        const especialidades = data.especialidades || [];
-        onUpdate(
-            'especialidades',
-            especialidades.filter((_, i) => i !== index),
-        );
-    };
-
-    const adicionarFormaAtendimento = () => {
-        if (novaFormaAtendimento.trim()) {
-            const formas = data.formasAtendimento || [];
-            onUpdate('formasAtendimento', [...formas, novaFormaAtendimento.trim()]);
-            setNovaFormaAtendimento('');
-        }
-    };
-
-    const removerFormaAtendimento = (index: number) => {
-        const formas = data.formasAtendimento || [];
-        onUpdate(
-            'formasAtendimento',
-            formas.filter((_, i) => i !== index),
-        );
     };
 
     return (
         <div className="space-y-6">
-            <h3 className="text-lg font-semibold">Dados Profissionais</h3>
+            <div>
+                <h3 className="text-lg font-semibold">Dados Profissionais</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                    Informe os dados profissionais do terapeuta. Campos marcados com * são
+                    obrigatórios.
+                </p>
+            </div>
 
+            {/* Área de Atuação */}
+            <div className="space-y-4">
+                <Label>Área de Atuação *</Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {AREAS_ATUACAO.map((area) => (
+                        <div key={area} className="flex items-center space-x-2">
+                            <Checkbox
+                                id={`area-${area}`}
+                                checked={(data.areasAtuacao || []).includes(area)}
+                                onCheckedChange={(checked: boolean) =>
+                                    handleAreaAtuacaoChange(area, checked)
+                                }
+                                className={errors.areasAtuacao ? 'border-destructive' : ''}
+                            />
+                            <Label
+                                htmlFor={`area-${area}`}
+                                className="text-sm font-normal cursor-pointer"
+                            >
+                                {area}
+                            </Label>
+                        </div>
+                    ))}
+                </div>
+                {errors.areasAtuacao && (
+                    <p className="text-sm text-destructive">{errors.areasAtuacao}</p>
+                )}
+            </div>
+
+            {/* Cargo */}
+            <div className="space-y-2">
+                <Label htmlFor="cargo">Cargo *</Label>
+                <select
+                    id="cargo"
+                    value={data.cargo || ''}
+                    onChange={(e) => onUpdate('cargo', e.target.value)}
+                    className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
+                        errors.cargo ? 'border-destructive' : ''
+                    }`}
+                >
+                    <option value="">Selecione o cargo</option>
+                    {CARGOS.map((cargo) => (
+                        <option key={cargo} value={cargo}>
+                            {cargo}
+                        </option>
+                    ))}
+                </select>
+                {errors.cargo && <p className="text-sm text-destructive">{errors.cargo}</p>}
+            </div>
+
+            {/* Número do Conselho */}
+            <div className="space-y-2">
+                <Label htmlFor="numeroConselho">Número do Conselho</Label>
+                <Input
+                    id="numeroConselho"
+                    value={data.numeroConselho || ''}
+                    onChange={(e) => onUpdate('numeroConselho', e.target.value)}
+                    placeholder="Ex: CRP 06/123456"
+                    className={errors.numeroConselho ? 'border-destructive' : ''}
+                />
+                {errors.numeroConselho && (
+                    <p className="text-sm text-destructive">{errors.numeroConselho}</p>
+                )}
+            </div>
+
+            {/* Número do Convênio */}
+            <div className="space-y-2">
+                <Label htmlFor="numeroConvenio">Número do Convênio</Label>
+                <Input
+                    id="numeroConvenio"
+                    value={data.numeroConvenio || ''}
+                    onChange={(e) => onUpdate('numeroConvenio', e.target.value)}
+                    placeholder="Digite o número do convênio"
+                    className={errors.numeroConvenio ? 'border-destructive' : ''}
+                />
+                {errors.numeroConvenio && (
+                    <p className="text-sm text-destructive">{errors.numeroConvenio}</p>
+                )}
+            </div>
+
+            {/* Data de Entrada e Data de Saída */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                    <Label htmlFor="crp">CRP *</Label>
+                    <Label htmlFor="dataEntrada">Data de Entrada *</Label>
                     <Input
-                        id="crp"
-                        value={data.crp || ''}
-                        onChange={(e) => onUpdate('crp', e.target.value)}
-                        placeholder="Ex: 06/123456"
-                        className={errors.crp ? 'border-destructive' : ''}
+                        id="dataEntrada"
+                        type="date"
+                        value={data.dataEntrada || ''}
+                        onChange={(e) => onUpdate('dataEntrada', e.target.value)}
+                        className={errors.dataEntrada ? 'border-destructive' : ''}
                     />
-                    {errors.crp && <p className="text-sm text-destructive">{errors.crp}</p>}
+                    {errors.dataEntrada && (
+                        <p className="text-sm text-destructive">{errors.dataEntrada}</p>
+                    )}
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="dataInicio">Data de Início *</Label>
+                    <Label htmlFor="dataSaida">Data de Saída</Label>
                     <Input
-                        id="dataInicio"
+                        id="dataSaida"
                         type="date"
-                        value={data.dataInicio || ''}
-                        onChange={(e) => onUpdate('dataInicio', e.target.value)}
-                        className={errors.dataInicio ? 'border-destructive' : ''}
+                        value={data.dataSaida || ''}
+                        onChange={(e) => onUpdate('dataSaida', e.target.value)}
+                        className={errors.dataSaida ? 'border-destructive' : ''}
                     />
-                    {errors.dataInicio && (
-                        <p className="text-sm text-destructive">{errors.dataInicio}</p>
+                    {errors.dataSaida && (
+                        <p className="text-sm text-destructive">{errors.dataSaida}</p>
                     )}
                 </div>
-            </div>
-
-            <div className="space-y-2">
-                <Label htmlFor="valorConsulta">Valor da Consulta (R$) *</Label>
-                <Input
-                    id="valorConsulta"
-                    type="number"
-                    step="0.01"
-                    value={data.valorConsulta || ''}
-                    onChange={(e) => onUpdate('valorConsulta', e.target.value)}
-                    placeholder="150.00"
-                    className={errors.valorConsulta ? 'border-destructive' : ''}
-                />
-                {errors.valorConsulta && (
-                    <p className="text-sm text-destructive">{errors.valorConsulta}</p>
-                )}
-            </div>
-
-            {/* Especialidades */}
-            <div className="space-y-4">
-                <Label>Especialidades *</Label>
-                <div className="flex gap-2">
-                    <Input
-                        value={novaEspecialidade}
-                        onChange={(e) => setNovaEspecialidade(e.target.value)}
-                        placeholder="Ex: Psicologia Clínica"
-                        onKeyPress={(e) => e.key === 'Enter' && adicionarEspecialidade()}
-                    />
-                    <button
-                        type="button"
-                        onClick={adicionarEspecialidade}
-                        className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm hover:bg-primary/90"
-                    >
-                        Adicionar
-                    </button>
-                </div>
-
-                {data.especialidades && data.especialidades.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                        {data.especialidades.map((especialidade, index) => (
-                            <div
-                                key={index}
-                                className="bg-secondary text-secondary-foreground px-3 py-1 rounded-full text-sm flex items-center gap-2"
-                            >
-                                {especialidade}
-                                <button
-                                    type="button"
-                                    onClick={() => removerEspecialidade(index)}
-                                    className="hover:text-destructive"
-                                >
-                                    <X className="w-3 h-3" />
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                )}
-
-                {errors.especialidades && (
-                    <p className="text-sm text-destructive">{errors.especialidades}</p>
-                )}
-            </div>
-
-            {/* Formas de Atendimento */}
-            <div className="space-y-4">
-                <Label>Formas de Atendimento *</Label>
-                <div className="flex gap-2">
-                    <Input
-                        value={novaFormaAtendimento}
-                        onChange={(e) => setNovaFormaAtendimento(e.target.value)}
-                        placeholder="Ex: Presencial, Online"
-                        onKeyPress={(e) => e.key === 'Enter' && adicionarFormaAtendimento()}
-                    />
-                    <button
-                        type="button"
-                        onClick={adicionarFormaAtendimento}
-                        className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm hover:bg-primary/90"
-                    >
-                        Adicionar
-                    </button>
-                </div>
-
-                {data.formasAtendimento && data.formasAtendimento.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                        {data.formasAtendimento.map((forma, index) => (
-                            <div
-                                key={index}
-                                className="bg-secondary text-secondary-foreground px-3 py-1 rounded-full text-sm flex items-center gap-2"
-                            >
-                                {forma}
-                                <button
-                                    type="button"
-                                    onClick={() => removerFormaAtendimento(index)}
-                                    className="hover:text-destructive"
-                                >
-                                    <X className="w-3 h-3" />
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                )}
-
-                {errors.formasAtendimento && (
-                    <p className="text-sm text-destructive">{errors.formasAtendimento}</p>
-                )}
             </div>
         </div>
     );

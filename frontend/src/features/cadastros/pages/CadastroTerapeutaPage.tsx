@@ -35,14 +35,7 @@ export default function CadastroTerapeutaPage() {
         telefone: '',
         celular: '',
         cpf: '',
-        rg: '',
         dataNascimento: '',
-        estadoCivil: '',
-        sexo: '',
-        nacionalidade: '',
-        profissao: '',
-        nomePai: '',
-        nomeMae: '',
         possuiVeiculo: 'nao' as 'sim' | 'nao',
         placaVeiculo: '',
         modeloVeiculo: '',
@@ -65,6 +58,12 @@ export default function CadastroTerapeutaPage() {
         },
 
         // Dados profissionais
+        areasAtuacao: [],
+        cargo: '',
+        numeroConselho: '',
+        numeroConvenio: '',
+        dataEntrada: '',
+        dataSaida: '',
         crp: '',
         especialidades: [],
         dataInicio: '',
@@ -184,16 +183,11 @@ export default function CadastroTerapeutaPage() {
                 break;
 
             case 3: // Dados Profissionais
-                if (!formData.crp?.trim()) newErrors.crp = 'CRP é obrigatório';
-                if (!formData.dataInicio?.trim())
-                    newErrors.dataInicio = 'Data de início é obrigatória';
-                if (!formData.valorConsulta?.trim())
-                    newErrors.valorConsulta = 'Valor da consulta é obrigatório';
-                if (!formData.especialidades?.length)
-                    newErrors.especialidades = 'Pelo menos uma especialidade é obrigatória';
-                if (!formData.formasAtendimento?.length)
-                    newErrors.formasAtendimento =
-                        'Pelo menos uma forma de atendimento é obrigatória';
+                if (!formData.areasAtuacao?.length)
+                    newErrors.areasAtuacao = 'Pelo menos uma área de atuação é obrigatória';
+                if (!formData.cargo?.trim()) newErrors.cargo = 'Cargo é obrigatório';
+                if (!formData.dataEntrada?.trim())
+                    newErrors.dataEntrada = 'Data de entrada é obrigatória';
                 break;
 
             case 4: // Formação
@@ -206,13 +200,7 @@ export default function CadastroTerapeutaPage() {
                 break;
 
             case 5: // Arquivos
-                if (!formData.arquivos?.diplomaGraduacao)
-                    newErrors['arquivos.diplomaGraduacao'] = 'Diploma de graduação é obrigatório';
-                if (!formData.arquivos?.registroCRP)
-                    newErrors['arquivos.registroCRP'] = 'Registro do CRP é obrigatório';
-                if (!formData.arquivos?.comprovanteEndereco)
-                    newErrors['arquivos.comprovanteEndereco'] =
-                        'Comprovante de endereço é obrigatório';
+                // Arquivos são opcionais - sem validação obrigatória
                 break;
 
             case 6: // Dados CNPJ (opcional)
@@ -309,7 +297,9 @@ export default function CadastroTerapeutaPage() {
             >
                 <Card className="max-w-full mx-auto">
                     <CardHeader>
-                        <CardTitle className="text-2xl mb-8">Cadastro de Terapeuta</CardTitle>
+                        <CardTitle className="text-2xl mb-8 text-primary">
+                            Cadastro de Terapeuta
+                        </CardTitle>
                         <MultiStepProgress
                             currentStep={currentStep}
                             totalSteps={STEPS.length}

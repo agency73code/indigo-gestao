@@ -33,9 +33,7 @@ export default function CadastroTerapeutaPage() {
         email: '',
         telefone: '',
         cpf: '',
-        rg: '',
         dataNascimento: '',
-        estadoCivil: '',
 
         // Endereço
         endereco: {
@@ -130,11 +128,9 @@ export default function CadastroTerapeutaPage() {
                 if (!formData.email?.trim()) newErrors.email = 'E-mail é obrigatório';
                 if (!formData.telefone?.trim()) newErrors.telefone = 'Telefone é obrigatório';
                 if (!formData.cpf?.trim()) newErrors.cpf = 'CPF é obrigatório';
-                if (!formData.rg?.trim()) newErrors.rg = 'RG é obrigatório';
                 if (!formData.dataNascimento?.trim())
                     newErrors.dataNascimento = 'Data de nascimento é obrigatória';
-                if (!formData.estadoCivil?.trim())
-                    newErrors.estadoCivil = 'Estado civil é obrigatório';
+                
                 break;
 
             case 2: // Endereço

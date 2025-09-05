@@ -15,7 +15,12 @@ export default function EnderecoStep({ data, onUpdate, errors }: EnderecoStepPro
 
     return (
         <div className="space-y-6">
-            <h3 className="text-lg font-semibold">Endereço Pessoal</h3>
+            <div>
+                <h3 className="text-lg font-semibold text-primary font-sora">Endereço Pessoal</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                    Preencha todos os campos com o endereço pessoal do terapeuta para registro.{' '}
+                </p>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">

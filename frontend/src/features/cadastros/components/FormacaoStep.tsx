@@ -38,6 +38,28 @@ export default function FormacaoStep({ data, onUpdate, errors }: FormacaoStepPro
                         )}
                     </div>
 
+                    
+                    <div className="space-y-2">
+                        <Label htmlFor="anoFormatura">Ano de Formatura *</Label>
+                        <Input
+                            id="anoFormatura"
+                            type="number"
+                            min="1900"
+                            max={new Date().getFullYear()}
+                            value={data.formacao?.anoFormatura || ''}
+                            onChange={(e) => handleFormacaoChange('anoFormatura', e.target.value)}
+                            placeholder="2020"
+                            className={errors['formacao.anoFormatura'] ? 'border-destructive' : ''}
+                        />
+                        {errors['formacao.anoFormatura'] && (
+                            <p className="text-sm text-destructive">
+                                {errors['formacao.anoFormatura']}
+                            </p>
+                        )}
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
                     <div className="space-y-2">
                         <Label htmlFor="instituicaoGraduacao">Instituição *</Label>
                         <Input
@@ -54,27 +76,6 @@ export default function FormacaoStep({ data, onUpdate, errors }: FormacaoStepPro
                         {errors['formacao.instituicaoGraduacao'] && (
                             <p className="text-sm text-destructive">
                                 {errors['formacao.instituicaoGraduacao']}
-                            </p>
-                        )}
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="anoFormatura">Ano de Formatura *</Label>
-                        <Input
-                            id="anoFormatura"
-                            type="number"
-                            min="1900"
-                            max={new Date().getFullYear()}
-                            value={data.formacao?.anoFormatura || ''}
-                            onChange={(e) => handleFormacaoChange('anoFormatura', e.target.value)}
-                            placeholder="2020"
-                            className={errors['formacao.anoFormatura'] ? 'border-destructive' : ''}
-                        />
-                        {errors['formacao.anoFormatura'] && (
-                            <p className="text-sm text-destructive">
-                                {errors['formacao.anoFormatura']}
                             </p>
                         )}
                     </div>
@@ -96,20 +97,7 @@ export default function FormacaoStep({ data, onUpdate, errors }: FormacaoStepPro
                         />
                     </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="instituicaoPosGraduacao">Instituição</Label>
-                        <Input
-                            id="instituicaoPosGraduacao"
-                            value={data.formacao?.instituicaoPosGraduacao || ''}
-                            onChange={(e) =>
-                                handleFormacaoChange('instituicaoPosGraduacao', e.target.value)
-                            }
-                            placeholder="Ex: Instituto de Psicologia"
-                        />
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+                   
                     <div className="space-y-2">
                         <Label htmlFor="anoPosGraduacao">Ano de Conclusão</Label>
                         <Input
@@ -122,6 +110,20 @@ export default function FormacaoStep({ data, onUpdate, errors }: FormacaoStepPro
                                 handleFormacaoChange('anoPosGraduacao', e.target.value)
                             }
                             placeholder="2022"
+                        />
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+                     <div className="space-y-2">
+                        <Label htmlFor="instituicaoPosGraduacao">Instituição</Label>
+                        <Input
+                            id="instituicaoPosGraduacao"
+                            value={data.formacao?.instituicaoPosGraduacao || ''}
+                            onChange={(e) =>
+                                handleFormacaoChange('instituicaoPosGraduacao', e.target.value)
+                            }
+                            placeholder="Ex: Instituto de Psicologia"
                         />
                     </div>
                 </div>

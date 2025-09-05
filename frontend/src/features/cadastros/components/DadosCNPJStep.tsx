@@ -118,19 +118,7 @@ export default function DadosCNPJStep({ data, onUpdate, errors }: DadosCNPJStepP
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="nomeFantasia">Nome Fantasia</Label>
-                                <Input
-                                    id="nomeFantasia"
-                                    value={data.cnpj?.nomeFantasia || ''}
-                                    onChange={(e) =>
-                                        handleCNPJChange('nomeFantasia', e.target.value)
-                                    }
-                                    placeholder="Nome comercial (se diferente da razão social)"
-                                />
-                            </div>
-                        </div>
+                        
                     </div>
 
                     {/* Endereço do CNPJ */}
