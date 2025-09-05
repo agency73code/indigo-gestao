@@ -31,11 +31,27 @@ export default function CadastroTerapeutaPage() {
         // Dados pessoais
         nome: '',
         email: '',
+        emailIndigo: '',
         telefone: '',
+        celular: '',
         cpf: '',
         rg: '',
         dataNascimento: '',
         estadoCivil: '',
+        sexo: '',
+        nacionalidade: '',
+        profissao: '',
+        nomePai: '',
+        nomeMae: '',
+        possuiVeiculo: 'nao' as 'sim' | 'nao',
+        placaVeiculo: '',
+        modeloVeiculo: '',
+
+        // Dados bancários
+        banco: '',
+        agencia: '',
+        conta: '',
+        chavePix: '',
 
         // Endereço
         endereco: {
@@ -127,14 +143,29 @@ export default function CadastroTerapeutaPage() {
         switch (currentStep) {
             case 1: // Dados Pessoais
                 if (!formData.nome?.trim()) newErrors.nome = 'Nome é obrigatório';
-                if (!formData.email?.trim()) newErrors.email = 'E-mail é obrigatório';
-                if (!formData.telefone?.trim()) newErrors.telefone = 'Telefone é obrigatório';
                 if (!formData.cpf?.trim()) newErrors.cpf = 'CPF é obrigatório';
-                if (!formData.rg?.trim()) newErrors.rg = 'RG é obrigatório';
                 if (!formData.dataNascimento?.trim())
                     newErrors.dataNascimento = 'Data de nascimento é obrigatória';
-                if (!formData.estadoCivil?.trim())
-                    newErrors.estadoCivil = 'Estado civil é obrigatório';
+                if (!formData.email?.trim()) newErrors.email = 'E-mail é obrigatório';
+                if (!formData.emailIndigo?.trim())
+                    newErrors.emailIndigo = 'E-mail Índigo é obrigatório';
+                if (!formData.celular?.trim()) newErrors.celular = 'Celular é obrigatório';
+                if (!formData.possuiVeiculo?.trim())
+                    newErrors.possuiVeiculo = 'Informação sobre veículo é obrigatória';
+
+                // Validações condicionais do veículo
+                if (formData.possuiVeiculo === 'sim') {
+                    if (!formData.placaVeiculo?.trim())
+                        newErrors.placaVeiculo = 'Placa do veículo é obrigatória';
+                    if (!formData.modeloVeiculo?.trim())
+                        newErrors.modeloVeiculo = 'Modelo do veículo é obrigatório';
+                }
+
+                // Validações dos dados bancários
+                if (!formData.banco?.trim()) newErrors.banco = 'Banco é obrigatório';
+                if (!formData.agencia?.trim()) newErrors.agencia = 'Agência é obrigatória';
+                if (!formData.conta?.trim()) newErrors.conta = 'Conta é obrigatória';
+                if (!formData.chavePix?.trim()) newErrors.chavePix = 'Chave Pix é obrigatória';
                 break;
 
             case 2: // Endereço
@@ -216,7 +247,7 @@ export default function CadastroTerapeutaPage() {
         setIsLoading(true);
 
         try {
-            // Aqui você fará a chamada para a API
+            // Chamada para a API
             console.log('Dados completos do terapeuta:', formData);
             await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulação
 
@@ -270,15 +301,15 @@ export default function CadastroTerapeutaPage() {
     };
 
     return (
-        <div className="container mx-auto py-6">
+        <div className="container mx-auto">
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
             >
-                <Card className="max-w-5xl mx-auto">
+                <Card className="max-w-full mx-auto">
                     <CardHeader>
-                        <CardTitle className="text-2xl">Cadastro de Terapeuta</CardTitle>
+                        <CardTitle className="text-2xl mb-8">Cadastro de Terapeuta</CardTitle>
                         <MultiStepProgress
                             currentStep={currentStep}
                             totalSteps={STEPS.length}

@@ -3,11 +3,27 @@ export interface Terapeuta {
     // Dados pessoais
     nome: string;
     email: string;
+    emailIndigo: string;
     telefone: string;
+    celular: string;
     cpf: string;
     rg: string;
     dataNascimento: string;
     estadoCivil: string;
+    sexo: string;
+    nacionalidade: string;
+    profissao: string;
+    nomePai?: string;
+    nomeMae: string;
+    possuiVeiculo: 'sim' | 'nao';
+    placaVeiculo?: string;
+    modeloVeiculo?: string;
+    
+    // Dados bancários
+    banco: string;
+    agencia: string;
+    conta: string;
+    chavePix: string;
     
     // Endereço pessoal
     endereco: {

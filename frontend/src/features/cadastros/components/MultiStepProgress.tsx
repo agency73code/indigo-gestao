@@ -45,7 +45,7 @@ export default function MultiStepProgress({
 
                                 {/* Step Label */}
                                 <span
-                                    className={`mt-2 text-xs text-center max-w-[80px] ${
+                                    className={`mt-2 text-xs text-center max-w-[120px] ${
                                         isCurrent
                                             ? 'text-primary font-medium'
                                             : isCompleted
