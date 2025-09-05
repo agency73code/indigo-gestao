@@ -1,4 +1,5 @@
 import { createBrowserRouter } from 'react-router-dom';
+import { Suspense } from 'react';
 import AppLayout from '../../features/shell/layouts/AppLayout';
 import DashboardPage from '../../features/dashboard/pages/DashboardPage';
 import CadastrosPage from '../../features/cadastros/pages/CadastrosPage';
@@ -8,6 +9,16 @@ import ConfiguracoesPage from '../../features/configuracoes/pages/ConfiguracoesP
 import CadastroTerapeutaPage from '../../features/cadastros/pages/CadastroTerapeutaPage';
 import CadastratoPacientePage from '../../features/cadastros/pages/CadastratoPacientePage';
 
+const LoadingSpinner = () => (
+    <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
+    </div>
+);
+
+const SuspenseWrapper = ({ children }: { children: React.ReactNode }) => (
+    <Suspense fallback={<LoadingSpinner />}>{children}</Suspense>
+);
+
 export const router = createBrowserRouter([
     {
         path: '/app',
@@ -15,31 +26,59 @@ export const router = createBrowserRouter([
         children: [
             {
                 index: true,
-                element: <DashboardPage />,
+                element: (
+                    <SuspenseWrapper>
+                        <DashboardPage />
+                    </SuspenseWrapper>
+                ),
             },
             {
                 path: 'cadastros',
-                element: <CadastrosPage />,
+                element: (
+                    <SuspenseWrapper>
+                        <CadastrosPage />
+                    </SuspenseWrapper>
+                ),
             },
             {
                 path: 'cadastro/terapeuta',
-                element: <CadastroTerapeutaPage />,
+                element: (
+                    <SuspenseWrapper>
+                        <CadastroTerapeutaPage />
+                    </SuspenseWrapper>
+                ),
             },
             {
                 path: 'cadastro/paciente',
-                element: <CadastratoPacientePage />,
+                element: (
+                    <SuspenseWrapper>
+                        <CadastratoPacientePage />
+                    </SuspenseWrapper>
+                ),
             },
             {
                 path: 'consultas',
-                element: <ConsultasPage />,
+                element: (
+                    <SuspenseWrapper>
+                        <ConsultasPage />
+                    </SuspenseWrapper>
+                ),
             },
             {
                 path: 'arquivos',
-                element: <ArquivosPage />,
+                element: (
+                    <SuspenseWrapper>
+                        <ArquivosPage />
+                    </SuspenseWrapper>
+                ),
             },
             {
                 path: 'configuracoes',
-                element: <ConfiguracoesPage />,
+                element: (
+                    <SuspenseWrapper>
+                        <ConfiguracoesPage />
+                    </SuspenseWrapper>
+                ),
             },
         ],
     },
