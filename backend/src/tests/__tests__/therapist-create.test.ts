@@ -6,14 +6,14 @@ import { prisma } from '../../config/database.js'
 
 
 describe('POST /api/terapeutas/cadastrar', () => {
-    // beforeEach(async () => {
-    //     await prisma.terapeuta_endereco.deleteMany();
-    //     await prisma.terapeuta_area_atuacao.deleteMany();
-    //     await prisma.terapeuta_cargo.deleteMany();
-    //     await prisma.documentos_terapeuta.deleteMany();
-    //     await prisma.terapeuta.deleteMany();
-    //     await prisma.endereco.deleteMany();
-    // });
+    beforeEach(async () => {
+        await prisma.terapeuta_endereco.deleteMany();
+        await prisma.terapeuta_area_atuacao.deleteMany();
+        await prisma.terapeuta_cargo.deleteMany();
+        await prisma.documentos_terapeuta.deleteMany();
+        await prisma.terapeuta.deleteMany();
+        await prisma.endereco.deleteMany();
+    });
 
     afterAll(async () => {
         await prisma.$disconnect();
@@ -28,7 +28,7 @@ describe('POST /api/terapeutas/cadastrar', () => {
             telefone: '11985982268',
             celular: '11999887766',
             foto_perfil: 'https://exemplo.com/foto.jpg',
-            email: 'kaio.rmdourado@gmail.com',
+            email: 'kaio.rmdourado1@gmail.com',
             email_indigo: 'kaio@indigo.com',
             
             // Dados do veículo
