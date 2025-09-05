@@ -1,11 +1,12 @@
 import { Input } from '@/ui/input';
 import { Label } from '@/ui/label';
-import { Checkbox } from '../../../components/ui/checkbox';
+import { Button } from '@/ui/button';
+import { Plus, X } from 'lucide-react';
 import type { Terapeuta } from '../types/cadastros.types';
 
 interface DadosProfissionaisStepProps {
     data: Partial<Terapeuta>;
-    onUpdate: (field: string, value: string | string[]) => void;
+    onUpdate: (field: string, value: any) => void;
     errors: Record<string, string>;
 }
 
@@ -38,15 +39,28 @@ export default function DadosProfissionaisStep({
     onUpdate,
     errors,
 }: DadosProfissionaisStepProps) {
-    const handleAreaAtuacaoChange = (area: string, checked: boolean) => {
-        const areasAtuais = data.areasAtuacao || [];
-        if (checked) {
-            onUpdate('areasAtuacao', [...areasAtuais, area]);
-        } else {
-            onUpdate(
-                'areasAtuacao',
-                areasAtuais.filter((a: string) => a !== area),
-            );
+    const dadosProfissionais = data.dadosProfissionais || [
+        { areaAtuacao: '', cargo: '', numeroConselho: '' },
+    ];
+
+    const handleDadoProfissionalChange = (index: number, field: string, value: string) => {
+        const updatedDados = [...dadosProfissionais];
+        updatedDados[index] = { ...updatedDados[index], [field]: value };
+        onUpdate('dadosProfissionais', updatedDados);
+    };
+
+    const adicionarDadoProfissional = () => {
+        const updatedDados = [
+            ...dadosProfissionais,
+            { areaAtuacao: '', cargo: '', numeroConselho: '' },
+        ];
+        onUpdate('dadosProfissionais', updatedDados);
+    };
+
+    const removerDadoProfissional = (index: number) => {
+        if (dadosProfissionais.length > 1) {
+            const updatedDados = dadosProfissionais.filter((_, i) => i !== index);
+            onUpdate('dadosProfissionais', updatedDados);
         }
     };
 
@@ -60,113 +74,160 @@ export default function DadosProfissionaisStep({
                 </p>
             </div>
 
-            {/* Área de Atuação */}
-            <div className="space-y-4">
-                <Label>Área de Atuação *</Label>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {AREAS_ATUACAO.map((area) => (
-                        <div key={area} className="flex items-center space-x-2">
-                            <Checkbox
-                                id={`area-${area}`}
-                                checked={(data.areasAtuacao || []).includes(area)}
-                                onCheckedChange={(checked: boolean) =>
-                                    handleAreaAtuacaoChange(area, checked)
-                                }
-                                className={errors.areasAtuacao ? 'border-destructive' : ''}
-                            />
-                            <Label
-                                htmlFor={`area-${area}`}
-                                className="text-sm font-normal cursor-pointer"
+            {/* Conjuntos de Dados Profissionais */}
+            {dadosProfissionais.map((dadoProfissional, index) => (
+                <div key={index} className="border rounded-lg p-4 space-y-4 relative">
+                    <div className="flex items-center justify-between">
+                        <h4 className="font-medium">
+                            {index === 0
+                                ? 'Área de Atuação Principal'
+                                : `Área de Atuação ${index + 1}`}
+                        </h4>
+                        {index > 0 && (
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removerDadoProfissional(index)}
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
                             >
-                                {area}
+                                <X className="w-4 h-4" />
+                            </Button>
+                        )}
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {/* Área de Atuação */}
+                        <div className="space-y-2">
+                            <Label htmlFor={`areaAtuacao-${index}`}>
+                                Área de Atuação {index === 0 ? '*' : ''}
                             </Label>
+                            <select
+                                id={`areaAtuacao-${index}`}
+                                value={dadoProfissional.areaAtuacao || ''}
+                                onChange={(e) =>
+                                    handleDadoProfissionalChange(
+                                        index,
+                                        'areaAtuacao',
+                                        e.target.value,
+                                    )
+                                }
+                                className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
+                                    errors[`dadosProfissionais.${index}.areaAtuacao`]
+                                        ? 'border-destructive'
+                                        : ''
+                                }`}
+                            >
+                                <option value="">Selecione a área de atuação</option>
+                                {AREAS_ATUACAO.map((area) => (
+                                    <option key={area} value={area}>
+                                        {area}
+                                    </option>
+                                ))}
+                            </select>
+                            {errors[`dadosProfissionais.${index}.areaAtuacao`] && (
+                                <p className="text-sm text-destructive">
+                                    {errors[`dadosProfissionais.${index}.areaAtuacao`]}
+                                </p>
+                            )}
                         </div>
-                    ))}
+
+                        {/* Cargo */}
+                        <div className="space-y-2">
+                            <Label htmlFor={`cargo-${index}`}>Cargo {index === 0 ? '*' : ''}</Label>
+                            <select
+                                id={`cargo-${index}`}
+                                value={dadoProfissional.cargo || ''}
+                                onChange={(e) =>
+                                    handleDadoProfissionalChange(index, 'cargo', e.target.value)
+                                }
+                                className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
+                                    errors[`dadosProfissionais.${index}.cargo`]
+                                        ? 'border-destructive'
+                                        : ''
+                                }`}
+                            >
+                                <option value="">Selecione o cargo</option>
+                                {CARGOS.map((cargo) => (
+                                    <option key={cargo} value={cargo}>
+                                        {cargo}
+                                    </option>
+                                ))}
+                            </select>
+                            {errors[`dadosProfissionais.${index}.cargo`] && (
+                                <p className="text-sm text-destructive">
+                                    {errors[`dadosProfissionais.${index}.cargo`]}
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Número do Conselho */}
+                        <div className="space-y-2">
+                            <Label htmlFor={`numeroConselho-${index}`}>Número do Conselho</Label>
+                            <Input
+                                id={`numeroConselho-${index}`}
+                                value={dadoProfissional.numeroConselho || ''}
+                                onChange={(e) =>
+                                    handleDadoProfissionalChange(
+                                        index,
+                                        'numeroConselho',
+                                        e.target.value,
+                                    )
+                                }
+                                placeholder="Ex: CRP 06/123456"
+                                className={
+                                    errors[`dadosProfissionais.${index}.numeroConselho`]
+                                        ? 'border-destructive'
+                                        : ''
+                                }
+                            />
+                            {errors[`dadosProfissionais.${index}.numeroConselho`] && (
+                                <p className="text-sm text-destructive">
+                                    {errors[`dadosProfissionais.${index}.numeroConselho`]}
+                                </p>
+                            )}
+                        </div>
+                    </div>
                 </div>
-                {errors.areasAtuacao && (
-                    <p className="text-sm text-destructive">{errors.areasAtuacao}</p>
-                )}
-            </div>
+            ))}
 
-            {/* Cargo */}
-            <div className="space-y-2">
-                <Label htmlFor="cargo">Cargo *</Label>
-                <select
-                    id="cargo"
-                    value={data.cargo || ''}
-                    onChange={(e) => onUpdate('cargo', e.target.value)}
-                    className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
-                        errors.cargo ? 'border-destructive' : ''
-                    }`}
-                >
-                    <option value="">Selecione o cargo</option>
-                    {CARGOS.map((cargo) => (
-                        <option key={cargo} value={cargo}>
-                            {cargo}
-                        </option>
-                    ))}
-                </select>
-                {errors.cargo && <p className="text-sm text-destructive">{errors.cargo}</p>}
-            </div>
+            {/* Botão para adicionar novo conjunto */}
+            <Button
+                type="button"
+                variant="outline"
+                onClick={adicionarDadoProfissional}
+                className="w-full flex items-center gap-2"
+            >
+                <Plus className="w-4 h-4" />
+                Adicionar outra área de atuação
+            </Button>
 
-            {/* Número do Conselho */}
-            <div className="space-y-2">
-                <Label htmlFor="numeroConselho">Número do Conselho</Label>
-                <Input
-                    id="numeroConselho"
-                    value={data.numeroConselho || ''}
-                    onChange={(e) => onUpdate('numeroConselho', e.target.value)}
-                    placeholder="Ex: CRP 06/123456"
-                    className={errors.numeroConselho ? 'border-destructive' : ''}
-                />
-                {errors.numeroConselho && (
-                    <p className="text-sm text-destructive">{errors.numeroConselho}</p>
-                )}
-            </div>
-
-            {/* Número do Convênio */}
-            <div className="space-y-2">
-                <Label htmlFor="numeroConvenio">Número do Convênio</Label>
-                <Input
-                    id="numeroConvenio"
-                    value={data.numeroConvenio || ''}
-                    onChange={(e) => onUpdate('numeroConvenio', e.target.value)}
-                    placeholder="Digite o número do convênio"
-                    className={errors.numeroConvenio ? 'border-destructive' : ''}
-                />
-                {errors.numeroConvenio && (
-                    <p className="text-sm text-destructive">{errors.numeroConvenio}</p>
-                )}
-            </div>
-
-            {/* Data de Entrada e Data de Saída */}
+            {/* Datas de Início e Fim */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                    <Label htmlFor="dataEntrada">Data de Entrada *</Label>
+                    <Label htmlFor="dataInicio">Data de Início *</Label>
                     <Input
-                        id="dataEntrada"
+                        id="dataInicio"
                         type="date"
-                        value={data.dataEntrada || ''}
-                        onChange={(e) => onUpdate('dataEntrada', e.target.value)}
-                        className={errors.dataEntrada ? 'border-destructive' : ''}
+                        value={data.dataInicio || ''}
+                        onChange={(e) => onUpdate('dataInicio', e.target.value)}
+                        className={errors.dataInicio ? 'border-destructive' : ''}
                     />
-                    {errors.dataEntrada && (
-                        <p className="text-sm text-destructive">{errors.dataEntrada}</p>
+                    {errors.dataInicio && (
+                        <p className="text-sm text-destructive">{errors.dataInicio}</p>
                     )}
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="dataSaida">Data de Saída</Label>
+                    <Label htmlFor="dataFim">Data de Fim</Label>
                     <Input
-                        id="dataSaida"
+                        id="dataFim"
                         type="date"
-                        value={data.dataSaida || ''}
-                        onChange={(e) => onUpdate('dataSaida', e.target.value)}
-                        className={errors.dataSaida ? 'border-destructive' : ''}
+                        value={data.dataFim || ''}
+                        onChange={(e) => onUpdate('dataFim', e.target.value)}
+                        className={errors.dataFim ? 'border-destructive' : ''}
                     />
-                    {errors.dataSaida && (
-                        <p className="text-sm text-destructive">{errors.dataSaida}</p>
-                    )}
+                    {errors.dataFim && <p className="text-sm text-destructive">{errors.dataFim}</p>}
                 </div>
             </div>
         </div>

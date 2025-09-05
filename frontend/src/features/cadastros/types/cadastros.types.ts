@@ -30,15 +30,18 @@ export interface Terapeuta {
     };
     
     // Dados profissionais
-    areasAtuacao: string[];
-    cargo: string;
-    numeroConselho?: string;
+    dadosProfissionais: Array<{
+        areaAtuacao: string;
+        cargo: string;
+        numeroConselho?: string;
+    }>;
     numeroConvenio?: string;
     dataEntrada: string;
     dataSaida?: string;
     crp: string;
     especialidades: string[];
     dataInicio: string;
+    dataFim?: string;
     valorConsulta: string;
     formasAtendimento: string[];
     

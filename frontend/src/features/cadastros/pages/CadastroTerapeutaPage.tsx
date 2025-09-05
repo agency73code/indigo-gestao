@@ -57,16 +57,21 @@ export default function CadastroTerapeutaPage() {
             estado: '',
         },
 
-        // Dados profissionais
-        areasAtuacao: [],
-        cargo: '',
-        numeroConselho: '',
+        // Dados profissionais (novo formato com array)
+        dadosProfissionais: [
+            {
+                areaAtuacao: '',
+                cargo: '',
+                numeroConselho: '',
+            },
+        ],
         numeroConvenio: '',
         dataEntrada: '',
         dataSaida: '',
         crp: '',
         especialidades: [],
         dataInicio: '',
+        dataFim: '',
         valorConsulta: '',
         formasAtendimento: [],
 
@@ -183,11 +188,36 @@ export default function CadastroTerapeutaPage() {
                 break;
 
             case 3: // Dados Profissionais
-                if (!formData.areasAtuacao?.length)
-                    newErrors.areasAtuacao = 'Pelo menos uma área de atuação é obrigatória';
-                if (!formData.cargo?.trim()) newErrors.cargo = 'Cargo é obrigatório';
-                if (!formData.dataEntrada?.trim())
-                    newErrors.dataEntrada = 'Data de entrada é obrigatória';
+                // Validar dados profissionais (primeiro conjunto é obrigatório)
+                if (
+                    !formData.dadosProfissionais?.length ||
+                    !formData.dadosProfissionais[0]?.areaAtuacao?.trim()
+                ) {
+                    newErrors['dadosProfissionais.0.areaAtuacao'] =
+                        'Área de atuação principal é obrigatória';
+                }
+                if (!formData.dadosProfissionais?.[0]?.cargo?.trim()) {
+                    newErrors['dadosProfissionais.0.cargo'] = 'Cargo principal é obrigatório';
+                }
+
+                // Validar conjuntos adicionais (se existirem)
+                formData.dadosProfissionais?.forEach((dado, index) => {
+                    if (index > 0) {
+                        // Para conjuntos adicionais
+                        if (dado.areaAtuacao?.trim() && !dado.cargo?.trim()) {
+                            newErrors[`dadosProfissionais.${index}.cargo`] =
+                                'Cargo é obrigatório quando área de atuação é preenchida';
+                        }
+                        if (dado.cargo?.trim() && !dado.areaAtuacao?.trim()) {
+                            newErrors[`dadosProfissionais.${index}.areaAtuacao`] =
+                                'Área de atuação é obrigatória quando cargo é preenchido';
+                        }
+                    }
+                });
+
+                // Validar data de início
+                if (!formData.dataInicio?.trim())
+                    newErrors.dataInicio = 'Data de início é obrigatória';
                 break;
 
             case 4: // Formação
