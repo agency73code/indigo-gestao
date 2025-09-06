@@ -35,6 +35,7 @@ export async function sendWelcomeEmail({
         from: `"Indigo Gestão" <${env.SMTP_USER}>`,
         to,
         subject: 'Bem-vindo à Indigo Gestão! Configure sua senha',
+        text: `Defina sua senha: ${resetUrl}\nSe não foi você, ignore este e-mail.`,
         html: `
             <h2>Bem-vindo, ${name}!</h2>
             <p>Você foi cadastrado no sistema. Para definir sua senha, clique no link abaixo:</p>
@@ -69,6 +70,7 @@ export async function sendPasswordResetEmail({ to, name, token, }: { to: string,
         from: `"Indigo Gestão" <${env.SMTP_USER}>`,
         to,
         subject: 'Redefinição de senha',
+        text: `Defina sua senha: ${resetUrl}\nSe não foi você, ignore este e-mail.`,
         html: `
         <p>Olá, ${name ?? 'usuário(a)'}!</p>
         <p>Recebemos uma solicitação para redefinir sua senha.</p>
