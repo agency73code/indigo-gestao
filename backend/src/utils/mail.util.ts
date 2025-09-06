@@ -1,6 +1,10 @@
 import nodemailer from 'nodemailer';
 import { env } from '../config/env.js';
 
+function buildResetUrl(token: string) {
+  return new URL(`/reset-password?token=${token}`, env.FRONTEND_URL).toString();
+}
+
 export async function sendWelcomeEmail({
     to,
     name,
@@ -20,6 +24,8 @@ export async function sendWelcomeEmail({
         },
     });
 
+    const resetUrl = buildResetUrl(token);
+
     const mailOptions = {
         from: `"Indigo Gestão" <${env.SMTP_USER}>`,
         to,
@@ -27,7 +33,7 @@ export async function sendWelcomeEmail({
         html: `
             <h2>Bem-vindo, ${name}!</h2>
             <p>Você foi cadastrado no sistema. Para definir sua senha, clique no link abaixo:</p>
-            <a href="${env.FRONTEND_URL}/reset-password?token=${token}">Configurar minha senha</a>
+            <a href="${resetUrl}">Redefinir minha senha</a>
             <p>O link expira em 24 horas.</p>
             <p>Equipe Indigo Gestão</p>
         `,
@@ -52,6 +58,8 @@ export async function sendPasswordResetEmail({ to, name, token, }: { to: string,
         },
     });
 
+    const resetUrl = buildResetUrl(token);
+
     const mailOptions = {
         from: `"Indigo Gestão" <${env.SMTP_USER}>`,
         to,
@@ -60,7 +68,7 @@ export async function sendPasswordResetEmail({ to, name, token, }: { to: string,
         <p>Olá, ${name ?? 'usuário(a)'}!</p>
         <p>Recebemos uma solicitação para redefinir sua senha.</p>
         <p>Para continuar, clique no link abaixo:</p>
-        <a href="${env.FRONTEND_URL}/reset-password?token=${token}">Redefinir minha senha</a>
+        <a href="${resetUrl}">Redefinir minha senha</a>
         <p>Este link expira em <strong>60 minutos</strong>. Se você não fez esta solicitação, ignore este e-mail.</p>
         <p>Equipe Indigo Gestão</p>`,
     };
