@@ -7,6 +7,7 @@ import ConsultasPage from '../../features/consultas/pages/ConsultasPage';
 import ArquivosPage from '../../features/arquivos/pages/ArquivosPage';
 import ConfiguracoesPage from '../../features/configuracoes/pages/ConfiguracoesPage';
 import CadastroTerapeutaPage from '../../features/cadastros/pages/CadastroTerapeutaPage';
+import CadastroClientePage from '../../features/cadastros/pages/CadastroClientePage';
 import CadastratoPacientePage from '../../features/cadastros/pages/CadastratoPacientePage';
 
 const LoadingSpinner = () => (
@@ -45,6 +46,14 @@ export const router = createBrowserRouter([
                 element: (
                     <SuspenseWrapper>
                         <CadastroTerapeutaPage />
+                    </SuspenseWrapper>
+                ),
+            },
+            {
+                path: 'cadastro/cliente',
+                element: (
+                    <SuspenseWrapper>
+                        <CadastroClientePage />
                     </SuspenseWrapper>
                 ),
             },

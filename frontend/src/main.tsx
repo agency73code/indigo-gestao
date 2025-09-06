@@ -16,6 +16,7 @@ import ConsultasPage from './features/consultas/pages/ConsultasPage';
 import ArquivosPage from './features/arquivos/pages/ArquivosPage';
 import ConfiguracoesPage from './features/configuracoes/pages/ConfiguracoesPage';
 import CadastroTerapeutaPage from './features/cadastros/pages/CadastroTerapeutaPage';
+import CadastroClientePage from './features/cadastros/pages/CadastroClientePage';
 import CadastratoPacientePage from './features/cadastros/pages/CadastratoPacientePage';
 import { AuthProvider } from './features/auth/context/AuthContext.tsx';
 
@@ -41,6 +42,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                             <Route index element={<DashboardPage />} />
                             <Route path="cadastros" element={<CadastrosPage />} />
                             <Route path="cadastro/terapeuta" element={<CadastroTerapeutaPage />} />
+                            <Route path="cadastro/cliente" element={<CadastroClientePage />} />
                             <Route path="cadastro/paciente" element={<CadastratoPacientePage />} />
                             <Route path="consultas" element={<ConsultasPage />} />
                             <Route path="arquivos" element={<ArquivosPage />} />

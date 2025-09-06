@@ -62,6 +62,10 @@ const data = {
                     url: '/app/cadastro/terapeuta',
                 },
                 {
+                    title: 'Cadastrar Cliente',
+                    url: '/app/cadastro/cliente',
+                },
+                {
                     title: 'Cadastrar Paciente',
                     url: '/app/cadastro/paciente',
                 },
