@@ -1,13 +1,14 @@
 export interface Terapeuta {
-    id?: string;
     // Dados pessoais
     nome: string;
-    email: string;
-    emailIndigo: string;
-    telefone: string;
-    celular: string;
     cpf: string;
     dataNascimento: string;
+    telefone: string;
+    celular: string;
+    email: string;
+    emailIndigo: string;
+
+    // Dados do veículo
     possuiVeiculo: 'sim' | 'nao';
     placaVeiculo?: string;
     modeloVeiculo?: string;
@@ -21,40 +22,44 @@ export interface Terapeuta {
     // Endereço pessoal
     endereco: {
         cep: string;
-        rua: string;
+        logradouro: string;
         numero: string;
         complemento?: string;
         bairro: string;
         cidade: string;
-        estado: string;
-    };
+        uf: string;
+        tipo_endereco_id: 1;
+        principal?: 1;
+    }[];
     
     // Dados profissionais
-    dadosProfissionais: Array<{
-        areaAtuacao: string;
-        cargo: string;
-        numeroConselho?: string;
-    }>;
-    numeroConvenio?: string;
+    areas_atuacao?: number[];
+
+    cargos?: {
+        cargo_id: number;
+        numero_conselho?: string;
+        data_entrada: Date;
+    }[];
+
+    // dataInicio: string;
+    // dataFim?: string;
+
     dataEntrada: string;
     dataSaida?: string;
-    crp: string;
-    especialidades: string[];
-    dataInicio: string;
-    dataFim?: string;
-    valorConsulta: string;
-    formasAtendimento: string[];
+
+    // crp: string;
+    // especialidades: string[];
+    // valorConsulta: string;
+    // formasAtendimento: string[];
     
     // Formação
-    formacao: {
-        graduacao: string;
-        instituicaoGraduacao: string;
-        anoFormatura: string;
-        posGraduacao?: string;
-        instituicaoPosGraduacao?: string;
-        anoPosGraduacao?: string;
-        cursos?: string;
-    };
+    graduacao: string;
+    instituicaoGraduacao: string;
+    anoFormatura: string;
+    posGraduacao?: string;
+    instituicaoPosGraduacao?: string;
+    anoPosGraduacao?: string;
+    cursos?: string;
     
     // Arquivos
     arquivos: {

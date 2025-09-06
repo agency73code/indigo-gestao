@@ -208,6 +208,14 @@ model terapeuta {
   conta                  String                   @db.VarChar(50)
   chave_pix              String?                  @db.VarChar(255)
   cnpj_empresa           String?                  @unique(map: "cnpj_empresa_UNIQUE") @db.VarChar(14)
+  razao_social           String?                  @db.VarChar(191)
+  graduacao              String?                  @db.VarChar(191)
+  grad_instituicao       String?                  @db.VarChar(191)
+  ano_formatura          String?                  @db.VarChar(4)
+  pos_graduacao          String?                  @db.VarChar(191)
+  pos_grad_instituicao   String?                  @db.VarChar(191)
+  ano_pos_graduacao      String?                  @db.VarChar(4)
+  cursos                 String?                  @db.Text
   data_entrada           DateTime                 @db.Date
   data_saida             DateTime?                @db.Date
   perfil_acesso          String                   @db.VarChar(20)

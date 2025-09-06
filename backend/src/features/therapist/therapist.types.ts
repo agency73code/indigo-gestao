@@ -22,6 +22,7 @@ export interface TherapistCreateData {
     
     // Dados da empresa (opcional)
     cnpj_empresa?: string;
+    razao_social?: string;
     
     // Dados administrativos
     data_entrada: string;
@@ -47,4 +48,18 @@ export interface TherapistCreateData {
         numero_conselho?: string;
         data_entrada: Date;
     }[];
+
+    // Formação
+    graduacao: string;
+    instituicaoGraduacao: string;
+    anoFormatura: string;
+    posGraduacao?: string;
+    instituicaoPosGraduacao?: string;
+    anoPosGraduacao?: string;
+    cursos?: string;
+
+    documentos?: {
+        tipo_documento?: string;
+        caminho_arquivo?: string;
+    }[]; 
 }

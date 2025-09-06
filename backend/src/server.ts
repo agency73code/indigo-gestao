@@ -12,12 +12,7 @@ import cookieParser from 'cookie-parser';
 const app: Express = express();
 
 app.use(helmet()); // Remove headers que expõem tecnologias
-app.use(
-    cors({
-        origin: env.FRONTEND_URL,
-        credentials: true,
-    }),
-);
+app.use(cors({ origin: env.FRONTEND_URL, credentials: true, }));
 
 app.use(compression()); // Comprime resposta para economizar banda
 
