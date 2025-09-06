@@ -11,27 +11,8 @@ import cookieParser from 'cookie-parser';
 
 const app: Express = express();
 
-const allowedOrigins = [
-    env.FRONTEND_IP_URL,
-    env.FRONTEND_HTTP_URL,
-    env.FRONTEND_HTTPS_URL,
-];
-
 app.use(helmet()); // Remove headers que expõem tecnologias
-app.use(
-    cors({
-        origin: (origin, callback) => {
-            if (!origin) return callback(null, true);
-
-            if (allowedOrigins.includes(origin)) {
-                return callback(null, true);
-            }
-
-            return callback(new Error('Not allowed by CORS'));
-        },
-        credentials: true,
-    }),
-);
+app.use(cors({ origin: env.FRONTEND_URL, credentials: true, }));
 
 app.use(compression()); // Comprime resposta para economizar banda
 
