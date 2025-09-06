@@ -1,8 +1,13 @@
 import nodemailer from 'nodemailer';
 import { env } from '../config/env.js';
 
+function baseUrl() {
+  if (env.NODE_ENV === 'production') return 'https://gestao.indigoinstituto.com.br';
+  return env.FRONTEND_URL || 'http://localhost:5173';
+}
+
 function buildResetUrl(token: string) {
-  return new URL(`/reset-password?token=${token}`, env.FRONTEND_URL).toString();
+  return new URL(`/reset-password?token=${token}`, baseUrl()).toString();
 }
 
 export async function sendWelcomeEmail({
