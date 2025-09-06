@@ -27,7 +27,7 @@ export default function CadastroTerapeutaPage() {
     const [currentStep, setCurrentStep] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
-    const [formData, setFormData] = useState<Partial<Terapeuta>>({
+    const [formData, setFormData] = useState<Partial<Terapeuta> & any>({
         // Dados pessoais
         nome: '',
         email: '',
@@ -47,24 +47,28 @@ export default function CadastroTerapeutaPage() {
         chavePix: '',
 
         // Endereço
-        endereco: {
-            cep: '',
-            rua: '',
-            numero: '',
-            complemento: '',
-            bairro: '',
-            cidade: '',
-            estado: '',
-        },
-
-        // Dados profissionais (novo formato com array)
-        dadosProfissionais: [
+        endereco: [
             {
-                areaAtuacao: '',
-                cargo: '',
-                numeroConselho: '',
+                cep: '',
+                logradouro: '',
+                numero: '',
+                complemento: '',
+                bairro: '',
+                cidade: '',
+                uf: '',
+                tipo_endereco_id: 1,
+                principal: 1,
             },
         ],
+
+        // Dados profissionais (temporário - não existe no tipo Terapeuta)
+        // dadosProfissionais: [
+        //     {
+        //         areaAtuacao: '',
+        //         cargo: '',
+        //         numeroConselho: '',
+        //     },
+        // ],
         numeroConvenio: '',
         dataEntrada: '',
         dataSaida: '',
@@ -115,7 +119,7 @@ export default function CadastroTerapeutaPage() {
     const handleInputChange = (field: string, value: string | string[] | File | null) => {
         const keys = field.split('.');
 
-        setFormData((prev) => {
+        setFormData((prev: any) => {
             const newData = { ...prev };
             let current: any = newData;
 
@@ -173,18 +177,18 @@ export default function CadastroTerapeutaPage() {
                 break;
 
             case 2: // Endereço
-                if (!formData.endereco?.cep?.trim())
-                    newErrors['endereco.cep'] = 'CEP é obrigatório';
-                if (!formData.endereco?.rua?.trim())
-                    newErrors['endereco.rua'] = 'Rua é obrigatória';
-                if (!formData.endereco?.numero?.trim())
-                    newErrors['endereco.numero'] = 'Número é obrigatório';
-                if (!formData.endereco?.bairro?.trim())
-                    newErrors['endereco.bairro'] = 'Bairro é obrigatório';
-                if (!formData.endereco?.cidade?.trim())
-                    newErrors['endereco.cidade'] = 'Cidade é obrigatória';
-                if (!formData.endereco?.estado?.trim())
-                    newErrors['endereco.estado'] = 'Estado é obrigatório';
+                if (!formData.endereco?.[0]?.cep?.trim())
+                    newErrors['endereco.0.cep'] = 'CEP é obrigatório';
+                if (!formData.endereco?.[0]?.logradouro?.trim())
+                    newErrors['endereco.0.logradouro'] = 'Logradouro é obrigatório';
+                if (!formData.endereco?.[0]?.numero?.trim())
+                    newErrors['endereco.0.numero'] = 'Número é obrigatório';
+                if (!formData.endereco?.[0]?.bairro?.trim())
+                    newErrors['endereco.0.bairro'] = 'Bairro é obrigatório';
+                if (!formData.endereco?.[0]?.cidade?.trim())
+                    newErrors['endereco.0.cidade'] = 'Cidade é obrigatória';
+                if (!formData.endereco?.[0]?.uf?.trim())
+                    newErrors['endereco.0.uf'] = 'UF é obrigatório';
                 break;
 
             case 3: // Dados Profissionais
@@ -201,7 +205,7 @@ export default function CadastroTerapeutaPage() {
                 }
 
                 // Validar conjuntos adicionais (se existirem)
-                formData.dadosProfissionais?.forEach((dado, index) => {
+                formData.dadosProfissionais?.forEach((dado: any, index: number) => {
                     if (index > 0) {
                         // Para conjuntos adicionais
                         if (dado.areaAtuacao?.trim() && !dado.cargo?.trim()) {

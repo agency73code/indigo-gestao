@@ -108,7 +108,7 @@ export default function CadastratoPacientePage() {
             >
                 <Card className="max-w-4xl mx-auto">
                     <CardHeader>
-                        <CardTitle className="text-2xl text-primary">Cadastro de Paciente</CardTitle>
+                        <CardTitle className="text-2xl text-primary">Cadastro dhgjfjhgfjhgfe Paciente</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <form onSubmit={handleSubmit} className="space-y-6">

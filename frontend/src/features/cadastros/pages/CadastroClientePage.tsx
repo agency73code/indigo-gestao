@@ -160,16 +160,34 @@ export default function CadastroClientePage() {
                 break;
 
             case 3: // Dados Pagamento
+                // Campos obrigatórios básicos
                 if (!formData.dadosPagamento?.nomeTitular?.trim())
                     newErrors['dadosPagamento.nomeTitular'] = 'Nome do titular é obrigatório';
+                if (!formData.dadosPagamento?.telefone1?.trim())
+                    newErrors['dadosPagamento.telefone1'] = 'Telefone é obrigatório';
+                if (!formData.dadosPagamento?.email1?.trim())
+                    newErrors['dadosPagamento.email1'] = 'E-mail é obrigatório';
                 if (!formData.dadosPagamento?.sistemaPagamento?.trim())
                     newErrors['dadosPagamento.sistemaPagamento'] =
                         'Sistema de pagamento é obrigatório';
-                if (!formData.dadosPagamento?.houveNegociacao)
-                    newErrors['dadosPagamento.houveNegociacao'] =
-                        'Campo "Houve negociação?" é obrigatório';
-                if (!formData.dadosPagamento?.valorSessao?.trim())
-                    newErrors['dadosPagamento.valorSessao'] = 'Valor da sessão é obrigatório';
+
+                // Validações condicionais baseadas no sistema de pagamento
+                if (formData.dadosPagamento?.sistemaPagamento === 'liminar') {
+                    if (!formData.dadosPagamento?.telefoneAdvogado1?.trim())
+                        newErrors['dadosPagamento.telefoneAdvogado1'] =
+                            'Telefone do advogado é obrigatório';
+                    if (!formData.dadosPagamento?.emailAdvogado1?.trim())
+                        newErrors['dadosPagamento.emailAdvogado1'] =
+                            'E-mail do advogado é obrigatório';
+                }
+
+                if (
+                    formData.dadosPagamento?.sistemaPagamento === 'particular' &&
+                    formData.dadosPagamento?.houveNegociacao === 'sim'
+                ) {
+                    if (!formData.dadosPagamento?.valorSessao?.trim())
+                        newErrors['dadosPagamento.valorSessao'] = 'Valor da sessão é obrigatório';
+                }
                 break;
 
             case 4: // Dados Escola
@@ -238,25 +256,25 @@ export default function CadastroClientePage() {
     };
 
     return (
-        <div className="mx-auto">
+        <div className="">
             {/* Header */}
-            <Card className="max-w-full mx-auto ml-0">
+            <Card className="max-w-full mx-auto ml0">
                 <CardHeader>
-                    <CardTitle className="text-2xl ml-0">Cadastro de Paciente</CardTitle>
+                    <CardTitle className="text-2xl mb-8 text-primary">
+                        Cadastro de Terapeuta
+                    </CardTitle>
+                    <MultiStepProgress
+                        currentStep={currentStep}
+                        totalSteps={STEPS.length}
+                        steps={STEPS}
+                    />
                 </CardHeader>
-
-                {/* Progress */}
-                <MultiStepProgress
-                    steps={STEPS}
-                    currentStep={currentStep}
-                    totalSteps={STEPS.length}
-                />
 
                 {/* Form Content */}
                 <div className="">{renderCurrentStep()}</div>
 
                 {/* Navigation Buttons */}
-                <div className="flex justify-between">
+                <div className="flex justify-between mt-8">
                     <Button
                         variant="outline"
                         onClick={prevStep}

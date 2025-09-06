@@ -162,7 +162,7 @@ export default function DadosPessoaisStep({ data, onUpdate, errors }: DadosPesso
             </div>
 
             {/* Mais de um Pai? */}
-            <div className="space-y-4 mb-8">
+            <div className="space-y-4">
                 <div className="space-y-2">
                     <Label>Mais de um Pai? *</Label>
                     <div className="flex gap-4">
