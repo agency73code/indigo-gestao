@@ -1,13 +1,8 @@
 import nodemailer from 'nodemailer';
 import { env } from '../config/env.js';
 
-function baseUrl() {
-  if (env.NODE_ENV === 'production') return 'https://gestao.indigoinstituto.com.br';
-  return env.FRONTEND_URL || 'http://localhost:5173';
-}
-
 function buildResetUrl(token: string) {
-  return new URL(`/reset-password?token=${token}`, baseUrl()).toString();
+  return new URL(`/reset-password?token=${token}`, env.FRONTEND_URL).toString();
 }
 
 export async function sendWelcomeEmail({
@@ -38,7 +33,7 @@ export async function sendWelcomeEmail({
         html: `
             <h2>Bem-vindo, ${name}!</h2>
             <p>Você foi cadastrado no sistema. Para definir sua senha, clique no link abaixo:</p>
-            <a href="https://gestao.indigoinstituto.com.br/reset-password?token=${token}">Redefinir minha senha</a>
+            <a href="${resetUrl}">Redefinir minha senha</a>
             <p>O link expira em 24 horas.</p>
             <p>Equipe Indigo Gestão</p>
         `,
@@ -73,7 +68,7 @@ export async function sendPasswordResetEmail({ to, name, token, }: { to: string,
         <p>Olá, ${name ?? 'usuário(a)'}!</p>
         <p>Recebemos uma solicitação para redefinir sua senha.</p>
         <p>Para continuar, clique no link abaixo:</p>
-        <a href="https://gestao.indigoinstituto.com.br/reset-password?token=${token}">Redefinir minha senha</a>
+        <a href="${resetUrl}">Redefinir minha senha</a>
         <p>Este link expira em <strong>60 minutos</strong>. Se você não fez esta solicitação, ignore este e-mail.</p>
         <p>Equipe Indigo Gestão</p>`,
     };
