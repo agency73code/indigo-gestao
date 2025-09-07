@@ -1,7 +1,7 @@
 import { Input } from '@/ui/input';
 import { Label } from '@/ui/label';
 import { useState } from 'react';
-import type { Terapeuta } from '../types/cadastros.types';
+import type { Terapeuta } from '../../types/cadastros.types';
 
 interface DadosCNPJStepProps {
     data: Partial<Terapeuta>;
@@ -117,8 +117,6 @@ export default function DadosCNPJStep({ data, onUpdate, errors }: DadosCNPJStepP
                                 )}
                             </div>
                         </div>
-
-                        
                     </div>
 
                     {/* Endereço do CNPJ */}

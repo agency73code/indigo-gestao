@@ -1,6 +1,6 @@
 import { Input } from '@/ui/input';
 import { Label } from '@/ui/label';
-import type { Terapeuta } from '../types/cadastros.types';
+import type { Terapeuta } from '../../types/cadastros.types';
 
 interface FormacaoStepProps {
     data: Partial<Terapeuta>;
@@ -38,7 +38,6 @@ export default function FormacaoStep({ data, onUpdate, errors }: FormacaoStepPro
                         )}
                     </div>
 
-                    
                     <div className="space-y-2">
                         <Label htmlFor="anoFormatura">Ano de Formatura *</Label>
                         <Input
@@ -97,7 +96,6 @@ export default function FormacaoStep({ data, onUpdate, errors }: FormacaoStepPro
                         />
                     </div>
 
-                   
                     <div className="space-y-2">
                         <Label htmlFor="anoPosGraduacao">Ano de Conclusão</Label>
                         <Input
@@ -115,7 +113,7 @@ export default function FormacaoStep({ data, onUpdate, errors }: FormacaoStepPro
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-                     <div className="space-y-2">
+                    <div className="space-y-2">
                         <Label htmlFor="instituicaoPosGraduacao">Instituição</Label>
                         <Input
                             id="instituicaoPosGraduacao"

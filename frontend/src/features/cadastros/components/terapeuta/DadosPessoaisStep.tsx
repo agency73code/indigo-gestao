@@ -1,6 +1,6 @@
 import { Input } from '@/ui/input';
 import { Label } from '@/ui/label';
-import type { Terapeuta } from '../types/cadastros.types';
+import type { Terapeuta } from '../../types/cadastros.types';
 
 interface DadosPessoaisStepProps {
     data: Partial<Terapeuta>;
@@ -12,7 +12,7 @@ export default function DadosPessoaisStep({ data, onUpdate, errors }: DadosPesso
     return (
         <div className="space-y-6">
             <div>
-                <h3 className="text-lg font-semibold text-primary font-sora">Dados Pessoais</h3>
+                <h3 className="text-lg font-semibold text-primary">Dados Pessoais</h3>
                 <p className="text-sm text-muted-foreground mt-1">
                     Informe os dados pessoais do terapeuta. Campos marcados com * são obrigatórios.
                 </p>
@@ -173,7 +173,9 @@ export default function DadosPessoaisStep({ data, onUpdate, errors }: DadosPesso
                 )}
             </div>
             <div>
-                <h3 className="text-lg font-semibold text-primary font-sora">Dados para pagamento</h3>
+                <h3 className="text-lg font-semibold text-primary font-sora">
+                    Dados para pagamento
+                </h3>
                 <p className="text-sm text-muted-foreground mt-1">
                     Informe os dados necessários para cadastro bancário do terapeuta.
                 </p>

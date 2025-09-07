@@ -7,12 +7,12 @@ import type { Terapeuta } from '../types/cadastros.types';
 
 // Componentes dos steps
 import MultiStepProgress from '../components/MultiStepProgress';
-import DadosPessoaisStep from '../components/DadosPessoaisStep';
-import EnderecoStep from '../components/EnderecoStep';
-import DadosProfissionaisStep from '../components/DadosProfissionaisStep';
-import FormacaoStep from '../components/FormacaoStep';
-import ArquivosStep from '../components/ArquivosStep';
-import DadosCNPJStep from '../components/DadosCNPJStep';
+import DadosPessoaisStep from '../components/terapeuta/DadosPessoaisStep';
+import EnderecoStep from '../components/terapeuta/EnderecoStep';
+import DadosProfissionaisStep from '../components/terapeuta/DadosProfissionaisStep';
+import FormacaoStep from '../components/terapeuta/FormacaoStep';
+import ArquivosStep from '../components/terapeuta/ArquivosStep';
+import DadosCNPJStep from '../components/terapeuta/DadosCNPJStep';
 
 const STEPS = [
     'Dados Pessoais',

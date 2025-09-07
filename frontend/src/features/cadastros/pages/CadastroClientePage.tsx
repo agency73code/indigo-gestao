@@ -258,10 +258,10 @@ export default function CadastroClientePage() {
     return (
         <div className="">
             {/* Header */}
-            <Card className="max-w-full mx-auto ml0">
-                <CardHeader>
+            <Card className="max-w-full mx-auto">
+                <CardHeader className='p-0'>
                     <CardTitle className="text-2xl mb-8 text-primary">
-                        Cadastro de Terapeuta
+                        Cadastro de Paciente
                     </CardTitle>
                     <MultiStepProgress
                         currentStep={currentStep}

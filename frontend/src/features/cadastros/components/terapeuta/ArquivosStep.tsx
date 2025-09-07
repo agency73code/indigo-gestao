@@ -1,7 +1,7 @@
 import { Label } from '@/ui/label';
 import { Upload, FileText, X } from 'lucide-react';
 import { useRef } from 'react';
-import type { Terapeuta } from '../types/cadastros.types';
+import type { Terapeuta } from '../../types/cadastros.types';
 
 interface ArquivosStepProps {
     data: Partial<Terapeuta>;

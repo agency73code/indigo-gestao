@@ -1,5 +1,7 @@
 'use client';
 import * as React from 'react';
+import indigoLogo from '@/assets/logos/indigo.svg'
+
 import {
     Command,
     Frame,
@@ -65,10 +67,7 @@ const data = {
                     title: 'Cadastrar Cliente',
                     url: '/app/cadastro/cliente',
                 },
-                {
-                    title: 'Cadastrar Paciente',
-                    url: '/app/cadastro/paciente',
-                },
+                
             ],
         },
         {
@@ -148,9 +147,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
                             <a href="#">
-                                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                                    <Command className="size-4" />
-                                </div>
+                                <img
+                                    src={indigoLogo}
+                                    alt={data.user.name}
+                                    className="w-10 h-10 rounded-full border border-border"
+                                />
                                 <div className="grid flex-1 text-left text-sm leading-tight">
                                     <span className="truncate font-medium">Instituto Índigo</span>
                                     <span className="truncate text-xs">Administrador</span>
@@ -171,3 +172,5 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </Sidebar>
     );
 }
+
+<link rel="icon" type="image/svg+xml" href="src/assets/logos/Logo-navegador (1).svg" />

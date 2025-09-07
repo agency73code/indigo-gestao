@@ -2,7 +2,7 @@ import { Input } from '@/ui/input';
 import { Label } from '@/ui/label';
 import { Button } from '@/ui/button';
 import { Plus, X } from 'lucide-react';
-import type { Terapeuta } from '../types/cadastros.types';
+import type { Terapeuta } from '../../types/cadastros.types';
 
 interface DadosProfissionaisStepProps {
     data: Partial<Terapeuta>;

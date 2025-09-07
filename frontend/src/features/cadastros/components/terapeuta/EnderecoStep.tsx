@@ -1,6 +1,6 @@
 import { Input } from '@/ui/input';
 import { Label } from '@/ui/label';
-import type { Terapeuta } from '../types/cadastros.types';
+import type { Terapeuta } from '../../types/cadastros.types';
 
 interface EnderecoStepProps {
     data: Partial<Terapeuta>;
