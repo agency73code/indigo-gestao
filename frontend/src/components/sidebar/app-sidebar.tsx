@@ -1,6 +1,6 @@
 'use client';
 import * as React from 'react';
-import indigoLogo from '@/assets/logos/indigo.svg'
+import indigoLogo from '@/assets/logos/indigo.svg';
 
 import {
     Frame,
@@ -35,21 +35,21 @@ const data = {
     navMain: [
         {
             title: 'Dashboard',
-            url: '#',
+            url: '/app',
             icon: LayoutDashboard,
             isActive: true,
             items: [
                 {
                     title: 'Atendimentos',
-                    url: '#',
+                    url: '/app/atendimentos',
                 },
                 {
                     title: 'Planejamento',
-                    url: '#',
+                    url: '/app/planejamento',
                 },
                 {
                     title: 'Financeiro',
-                    url: '#',
+                    url: '/app/financeiro',
                 },
             ],
         },
@@ -66,7 +66,6 @@ const data = {
                     title: 'Cadastrar Cliente',
                     url: '/app/cadastro/cliente',
                 },
-                
             ],
         },
         {
@@ -176,4 +175,3 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </Sidebar>
     );
 }
-
