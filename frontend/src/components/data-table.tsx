@@ -383,8 +383,8 @@ export function DataTable({ data: initialData }: { data: z.infer<typeof schema>[
     }
 
     return (
-        <Tabs defaultValue="outline" className="flex w-full flex-col justify-start gap-6">
-            <div className="flex items-center justify-between px-4 lg:px-6">
+        <Tabs defaultValue="outline" className="flex w-full flex-col justify-start gap-6 ">
+            <div className="flex items-center justify-between px-4 lg:px-6 ">
                 <Label htmlFor="view-selector" className="sr-only">
                     View
                 </Label>
@@ -633,7 +633,7 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
     return (
         <Sheet>
             <SheetTrigger asChild>
-                <Button variant="link" className="w-fit px-0 text-left text-foreground">
+                <Button variant="link" className="w-fit px-0 text-left text-foreground ">
                     {item.header}
                 </Button>
             </SheetTrigger>
@@ -644,7 +644,7 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
                         Showing total visitors for the last 6 months
                     </SheetDescription>
                 </SheetHeader>
-                <div className="flex flex-1 flex-col gap-4 overflow-y-auto py-4 text-sm">
+                <div className="flex flex-1 flex-col gap-4 overflow-y-auto py-4 text-sm" >
                     {!isMobile && (
                         <>
                             <ChartContainer config={chartConfig}>

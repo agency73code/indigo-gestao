@@ -148,7 +148,7 @@ export function ChartAreaInteractive() {
     });
 
     return (
-        <Card className="@container/card">
+        <Card className="@container/card rounded-[5px]">
             <CardHeader className="relative">
                 <CardTitle style={{ fontFamily: 'Sora, sans-serif' }}>Total Visitors</CardTitle>
                 <CardDescription>
