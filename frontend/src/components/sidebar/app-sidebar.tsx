@@ -3,7 +3,6 @@ import * as React from 'react';
 import indigoLogo from '@/assets/logos/indigo.svg'
 
 import {
-    Command,
     Frame,
     LayoutDashboard,
     LifeBuoy,
@@ -153,7 +152,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                     className="w-10 h-10 rounded-full border border-border"
                                 />
                                 <div className="grid flex-1 text-left text-sm leading-tight">
-                                    <span className="truncate font-medium">Instituto Índigo</span>
+                                    <span
+                                        className="truncate font-medium"
+                                        style={{ fontFamily: 'Sora, sans-serif' }}
+                                    >
+                                        Instituto Índigo
+                                    </span>
                                     <span className="truncate text-xs">Administrador</span>
                                 </div>
                             </a>
@@ -164,7 +168,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarContent>
                 <NavMain items={data.navMain} />
                 <NavProjects projects={data.projects} />
-                <NavSecondary items={data.navSecondary} className="mt-auto" />
+                <NavSecondary items={data.navSecondary} className="mt-auto " />
             </SidebarContent>
             <SidebarFooter>
                 <NavUser />
@@ -173,4 +177,3 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     );
 }
 
-<link rel="icon" type="image/svg+xml" href="src/assets/logos/Logo-navegador (1).svg" />

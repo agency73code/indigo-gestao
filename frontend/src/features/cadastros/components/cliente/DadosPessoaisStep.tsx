@@ -12,7 +12,12 @@ export default function DadosPessoaisStep({ data, onUpdate, errors }: DadosPesso
     return (
         <div className="space-y-6">
             <div>
-                <h3 className="text-lg font-semibold">Dados Pessoais</h3>
+                <h3
+                    className="text-lg font-semibold text-primary"
+                    style={{ fontFamily: 'Sora, sans-serif' }}
+                >
+                    Dados Pessoais
+                </h3>
                 <p className="text-sm text-muted-foreground mt-1">
                     Informe os dados pessoais do cliente. Campos marcados com * são obrigatórios.
                 </p>

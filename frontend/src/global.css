@@ -7,6 +7,8 @@
 :root {
     --font-family-sans: 'Inter', sans-serif;
     --font-family-heading: 'Sora', sans-serif;
+    --font-sora: 'Sora', sans-serif;
+    --font-sans: 'Inter', sans-serif;
     --sidebar: hsl(0 0% 98%);
     --sidebar-foreground: hsl(240 5.3% 26.1%);
     --sidebar-primary: hsl(240 5.9% 10%);
@@ -15,15 +17,6 @@
     --sidebar-accent-foreground: hsl(240 5.9% 10%);
     --sidebar-border: hsl(220 13% 91%);
     --sidebar-ring: hsl(217.2 91.2% 59.8%);
-}
-
-body {
-    font-family: var(--font-sans);
-}
-
-:root {
-    --font-sora: 'Sora';
-    --font-sans: 'Inter';
     --radius: 0.65rem;
     --background: oklch(1 0 0);
     --foreground: oklch(0.141 0.005 285.823);
@@ -56,6 +49,10 @@ body {
     --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
     --sidebar-border: oklch(0.92 0.004 286.32);
     --sidebar-ring: oklch(0.623 0.214 259.815);
+}
+
+body {
+    font-family: var(--font-sans);
 }
 
 .dark {
