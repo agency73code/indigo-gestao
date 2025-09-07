@@ -27,7 +27,7 @@ export default function EnderecoStep({ data, onUpdate, errors }: EnderecoStepPro
                     <Label htmlFor="cep">CEP *</Label>
                     <Input
                         id="cep"
-                        value={data.endereco?.[0]?.cep || ''}
+                        value={data.endereco?.cep || ''}
                         onChange={(e) => handleEnderecoChange('cep', e.target.value)}
                         placeholder="00000-000"
                         className={errors['endereco.0.cep'] ? 'border-destructive' : ''}
@@ -38,17 +38,17 @@ export default function EnderecoStep({ data, onUpdate, errors }: EnderecoStepPro
                 </div>
 
                 <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="logradouro">Logradouro *</Label>
+                    <Label htmlFor="rua">rua *</Label>
                     <Input
-                        id="logradouro"
-                        value={data.endereco?.[0]?.logradouro || ''}
-                        onChange={(e) => handleEnderecoChange('logradouro', e.target.value)}
+                        id="rua"
+                        value={data.endereco?.rua || ''}
+                        onChange={(e) => handleEnderecoChange('rua', e.target.value)}
                         placeholder="Nome da rua"
-                        className={errors['endereco.0.logradouro'] ? 'border-destructive' : ''}
+                        className={errors['endereco.0.rua'] ? 'border-destructive' : ''}
                     />
-                    {errors['endereco.0.logradouro'] && (
+                    {errors['endereco.0.rua'] && (
                         <p className="text-sm text-destructive">
-                            {errors['endereco.0.logradouro']}
+                            {errors['endereco.0.rua']}
                         </p>
                     )}
                 </div>
@@ -59,7 +59,7 @@ export default function EnderecoStep({ data, onUpdate, errors }: EnderecoStepPro
                     <Label htmlFor="numero">Número *</Label>
                     <Input
                         id="numero"
-                        value={data.endereco?.[0]?.numero || ''}
+                        value={data.endereco?.numero || ''}
                         onChange={(e) => handleEnderecoChange('numero', e.target.value)}
                         placeholder="123"
                         className={errors['endereco.0.numero'] ? 'border-destructive' : ''}
@@ -73,7 +73,7 @@ export default function EnderecoStep({ data, onUpdate, errors }: EnderecoStepPro
                     <Label htmlFor="complemento">Complemento</Label>
                     <Input
                         id="complemento"
-                        value={data.endereco?.[0]?.complemento || ''}
+                        value={data.endereco?.complemento || ''}
                         onChange={(e) => handleEnderecoChange('complemento', e.target.value)}
                         placeholder="Apto, Sala..."
                     />
@@ -83,7 +83,7 @@ export default function EnderecoStep({ data, onUpdate, errors }: EnderecoStepPro
                     <Label htmlFor="bairro">Bairro *</Label>
                     <Input
                         id="bairro"
-                        value={data.endereco?.[0]?.bairro || ''}
+                        value={data.endereco?.bairro || ''}
                         onChange={(e) => handleEnderecoChange('bairro', e.target.value)}
                         placeholder="Nome do bairro"
                         className={errors['endereco.0.bairro'] ? 'border-destructive' : ''}
@@ -97,7 +97,7 @@ export default function EnderecoStep({ data, onUpdate, errors }: EnderecoStepPro
                     <Label htmlFor="cidade">Cidade *</Label>
                     <Input
                         id="cidade"
-                        value={data.endereco?.[0]?.cidade || ''}
+                        value={data.endereco?.cidade || ''}
                         onChange={(e) => handleEnderecoChange('cidade', e.target.value)}
                         placeholder="Nome da cidade"
                         className={errors['endereco.0.cidade'] ? 'border-destructive' : ''}
@@ -110,13 +110,13 @@ export default function EnderecoStep({ data, onUpdate, errors }: EnderecoStepPro
 
             <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
                 <div className="space-y-2">
-                    <Label htmlFor="uf">Estado *</Label>
+                    <Label htmlFor="estado">Estado *</Label>
                     <select
-                        id="uf"
-                        value={data.endereco?.[0]?.uf || ''}
-                        onChange={(e) => handleEnderecoChange('uf', e.target.value)}
+                        id="estado"
+                        value={data.endereco?.estado || ''}
+                        onChange={(e) => handleEnderecoChange('estado', e.target.value)}
                         className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
-                            errors['endereco.0.uf'] ? 'border-destructive' : ''
+                            errors['endereco.0.estado'] ? 'border-destructive' : ''
                         }`}
                     >
                         <option value="">Selecione o estado</option>
