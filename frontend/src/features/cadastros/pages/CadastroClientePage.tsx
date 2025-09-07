@@ -9,7 +9,7 @@ import {
 } from '../components/cliente';
 import MultiStepProgress from '../components/MultiStepProgress';
 import type { Cliente } from '../types/cadastros.types';
-import { Card, CardTitle } from '@/ui/card';
+import { CardTitle } from '@/ui/card';
 import { CardHeader } from '@/shared/components/ui/card';
 
 const STEPS = ['Dados Pessoais', 'Endereço', 'Dados Pagamento', 'Dados Escola'];
@@ -256,9 +256,8 @@ export default function CadastroClientePage() {
     };
 
     return (
-        <div className="">
+        <div className="container mx-auto p-8">
             {/* Header */}
-            <Card className="max-w-full mx-auto">
                 <CardHeader className='p-0'>
                     <CardTitle className="text-2xl mb-8 text-primary">
                         Cadastro de Paciente
@@ -302,7 +301,6 @@ export default function CadastroClientePage() {
                         </Button>
                     )}
                 </div>
-            </Card>
         </div>
     );
 }

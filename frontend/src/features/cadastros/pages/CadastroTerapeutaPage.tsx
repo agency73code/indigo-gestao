@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
+import { CardContent, CardHeader, CardTitle } from '@/ui/card';
 import { Button } from '@/ui/button';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -329,7 +329,6 @@ export default function CadastroTerapeutaPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
             >
-                <Card className="max-w-full mx-auto">
                     <CardHeader>
                         <CardTitle className="text-2xl mb-8 text-primary">
                             Cadastro de Terapeuta
@@ -386,7 +385,6 @@ export default function CadastroTerapeutaPage() {
                             )}
                         </div>
                     </CardContent>
-                </Card>
             </motion.div>
         </div>
     );

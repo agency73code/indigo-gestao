@@ -1,7 +1,8 @@
+
+
 export default function Footer() {
     return (
-        <footer className="bg-gray-100 p-4 border-t ronded-[5px]">
-            <p>Footer</p>
-        </footer>
+         <header className="bg-background flex min-h-screen border-l shrink-0 items-center gap-2 border-b px-4">
+        </header>
     );
 }
