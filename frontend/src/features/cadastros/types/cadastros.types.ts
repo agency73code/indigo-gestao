@@ -1,55 +1,50 @@
 export interface Terapeuta {
+    id?: string;
     // Dados pessoais
     nome: string;
-    cpf: string;
-    dataNascimento: string;
-    telefone: string;
-    celular: string;
     email: string;
     emailIndigo: string;
-
-    // Dados do veículo
+    telefone: string;
+    celular: string;
+    cpf: string;
+    dataNascimento: string;
     possuiVeiculo: 'sim' | 'nao';
     placaVeiculo?: string;
     modeloVeiculo?: string;
-    
+
     // Dados bancários
     banco: string;
     agencia: string;
     conta: string;
     chavePix: string;
-    
+
     // Endereço pessoal
     endereco: {
         cep: string;
-        logradouro: string;
+        rua: string;
         numero: string;
         complemento?: string;
         bairro: string;
         cidade: string;
-        uf: string;
-    }[];
-    
+        estado: string;
+    };
+
     // Dados profissionais
-    areas_atuacao?: number[];
-
-    cargos?: {
-        cargo_id: number;
-        numero_conselho?: string;
-        data_entrada: Date;
-    }[];
-
-    dataInicio: string;
-    dataFim?: string;
-
+    dadosProfissionais: Array<{
+        areaAtuacao: string;
+        cargo: string;
+        numeroConselho?: string;
+    }>;
+    numeroConvenio?: string;
     dataEntrada: string;
     dataSaida?: string;
-
     crp: string;
     especialidades: string[];
+    dataInicio: string;
+    dataFim?: string;
     valorConsulta: string;
     formasAtendimento: string[];
-    
+
     // Formação
     formacao: {
         graduacao: string;
@@ -60,7 +55,7 @@ export interface Terapeuta {
         anoPosGraduacao?: string;
         cursos?: string;
     };
-    
+
     // Arquivos
     arquivos: {
         fotoPerfil?: File | string;
@@ -69,7 +64,7 @@ export interface Terapeuta {
         registroCRP?: File | string;
         comprovanteEndereco?: File | string;
     };
-    
+
     // Dados CNPJ (opcional)
     cnpj?: {
         numero: string;

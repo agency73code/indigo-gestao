@@ -1,3 +1,3 @@
 export { default as CadastroTerapeutaPage } from './pages/CadastroTerapeutaPage';
-export { default as CadastratoPacientePage } from './pages/CadastratoPacientePage';
+export { default as CadastroClientePage } from './pages/CadastroClientePage';
 export type * from './types/cadastros.types';
