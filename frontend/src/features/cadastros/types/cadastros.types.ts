@@ -28,8 +28,6 @@ export interface Terapeuta {
         bairro: string;
         cidade: string;
         uf: string;
-        tipo_endereco_id: 1;
-        principal?: 1;
     }[];
     
     // Dados profissionais
@@ -41,25 +39,27 @@ export interface Terapeuta {
         data_entrada: Date;
     }[];
 
-    // dataInicio: string;
-    // dataFim?: string;
+    dataInicio: string;
+    dataFim?: string;
 
     dataEntrada: string;
     dataSaida?: string;
 
-    // crp: string;
-    // especialidades: string[];
-    // valorConsulta: string;
-    // formasAtendimento: string[];
+    crp: string;
+    especialidades: string[];
+    valorConsulta: string;
+    formasAtendimento: string[];
     
     // Formação
-    graduacao: string;
-    instituicaoGraduacao: string;
-    anoFormatura: string;
-    posGraduacao?: string;
-    instituicaoPosGraduacao?: string;
-    anoPosGraduacao?: string;
-    cursos?: string;
+    formacao: {
+        graduacao: string;
+        instituicaoGraduacao: string;
+        anoFormatura: string;
+        posGraduacao?: string;
+        instituicaoPosGraduacao?: string;
+        anoPosGraduacao?: string;
+        cursos?: string;
+    };
     
     // Arquivos
     arquivos: {
