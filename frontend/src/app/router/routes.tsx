@@ -2,23 +2,17 @@ import { createBrowserRouter } from 'react-router-dom';
 import { Suspense } from 'react';
 import AppLayout from '../../features/shell/layouts/AppLayout';
 import DashboardPage from '../../features/dashboard/pages/DashboardPage';
-import CadastrosPage from '../../features/cadastros/pages/CadastrosPage';
 import ConsultasPage from '../../features/consultas/pages/ConsultasPage';
 import ArquivosPage from '../../features/arquivos/pages/ArquivosPage';
 import ConfiguracoesPage from '../../features/configuracoes/pages/ConfiguracoesPage';
 import CadastroTerapeutaPage from '../../features/cadastros/pages/CadastroTerapeutaPage';
 import CadastroClientePage from '../../features/cadastros/pages/CadastroClientePage';
-import CadastratoPacientePage from '../../features/cadastros/pages/CadastratoPacientePage';
 
-const LoadingSpinner = () => (
-    <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
+const suspenseFallback = (
+    <div className='flex items-center justify-center h-64'>
+        <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent" />
     </div>
-);
-
-const SuspenseWrapper = ({ children }: { children: React.ReactNode }) => (
-    <Suspense fallback={<LoadingSpinner />}>{children}</Suspense>
-);
+)
 
 export const router = createBrowserRouter([
     {
@@ -28,65 +22,50 @@ export const router = createBrowserRouter([
             {
                 index: true,
                 element: (
-                    <SuspenseWrapper>
+                    <Suspense fallback={suspenseFallback}>
                         <DashboardPage />
-                    </SuspenseWrapper>
+                    </Suspense>
                 ),
             },
-            {
-                path: 'cadastros',
-                element: (
-                    <SuspenseWrapper>
-                        <CadastrosPage />
-                    </SuspenseWrapper>
-                ),
-            },
+            
             {
                 path: 'cadastro/terapeuta',
                 element: (
-                    <SuspenseWrapper>
+                    <Suspense fallback={suspenseFallback}>
                         <CadastroTerapeutaPage />
-                    </SuspenseWrapper>
+                    </Suspense>
                 ),
             },
             {
                 path: 'cadastro/cliente',
                 element: (
-                    <SuspenseWrapper>
+                    <Suspense fallback={suspenseFallback}>
                         <CadastroClientePage />
-                    </SuspenseWrapper>
-                ),
-            },
-            {
-                path: 'cadastro/paciente',
-                element: (
-                    <SuspenseWrapper>
-                        <CadastratoPacientePage />
-                    </SuspenseWrapper>
+                    </Suspense>
                 ),
             },
             {
                 path: 'consultas',
                 element: (
-                    <SuspenseWrapper>
+                    <Suspense fallback={suspenseFallback}>
                         <ConsultasPage />
-                    </SuspenseWrapper>
+                    </Suspense>
                 ),
             },
             {
                 path: 'arquivos',
                 element: (
-                    <SuspenseWrapper>
+                    <Suspense fallback={suspenseFallback}>
                         <ArquivosPage />
-                    </SuspenseWrapper>
+                    </Suspense>
                 ),
             },
             {
                 path: 'configuracoes',
                 element: (
-                    <SuspenseWrapper>
+                    <Suspense fallback={suspenseFallback}>
                         <ConfiguracoesPage />
-                    </SuspenseWrapper>
+                    </Suspense>
                 ),
             },
         ],

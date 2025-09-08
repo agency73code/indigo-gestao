@@ -4,6 +4,7 @@ import { Button } from '@/ui/button';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Terapeuta } from '../types/cadastros.types';
+import { authFetch } from '@/lib/http';
 
 // Componentes dos steps
 import MultiStepProgress from '../components/MultiStepProgress';
@@ -47,19 +48,15 @@ export default function CadastroTerapeutaPage() {
         chavePix: '',
 
         // Endereço
-        endereco: [
-            {
-                cep: '',
-                logradouro: '',
-                numero: '',
-                complemento: '',
-                bairro: '',
-                cidade: '',
-                uf: '',
-                tipo_endereco_id: 1,
-                principal: 1,
-            },
-        ],
+        endereco: {
+            cep: '',
+            rua: '',
+            numero: '',
+            complemento: '',
+            bairro: '',
+            cidade: '',
+            estado: '',
+        },
 
         // Dados profissionais (temporário - não existe no tipo Terapeuta)
         // dadosProfissionais: [
@@ -177,18 +174,18 @@ export default function CadastroTerapeutaPage() {
                 break;
 
             case 2: // Endereço
-                if (!formData.endereco?.[0]?.cep?.trim())
-                    newErrors['endereco.0.cep'] = 'CEP é obrigatório';
-                if (!formData.endereco?.[0]?.logradouro?.trim())
-                    newErrors['endereco.0.logradouro'] = 'Logradouro é obrigatório';
-                if (!formData.endereco?.[0]?.numero?.trim())
-                    newErrors['endereco.0.numero'] = 'Número é obrigatório';
-                if (!formData.endereco?.[0]?.bairro?.trim())
-                    newErrors['endereco.0.bairro'] = 'Bairro é obrigatório';
-                if (!formData.endereco?.[0]?.cidade?.trim())
-                    newErrors['endereco.0.cidade'] = 'Cidade é obrigatória';
-                if (!formData.endereco?.[0]?.uf?.trim())
-                    newErrors['endereco.0.uf'] = 'UF é obrigatório';
+                if (!formData.endereco?.cep?.trim())
+                    newErrors['endereco.cep'] = 'CEP é obrigatório';
+                if (!formData.endereco?.rua?.trim())
+                    newErrors['endereco.rua'] = 'rua é obrigatório';
+                if (!formData.endereco?.numero?.trim())
+                    newErrors['endereco.numero'] = 'Número é obrigatório';
+                if (!formData.endereco?.bairro?.trim())
+                    newErrors['endereco.bairro'] = 'Bairro é obrigatório';
+                if (!formData.endereco?.cidade?.trim())
+                    newErrors['endereco.cidade'] = 'Cidade é obrigatória';
+                if (!formData.endereco?.estado?.trim())
+                    newErrors['endereco.estado'] = 'estado é obrigatório';
                 break;
 
             case 3: // Dados Profissionais
@@ -270,10 +267,20 @@ export default function CadastroTerapeutaPage() {
 
         try {
             // Chamada para a API
-            console.log('Dados completos do terapeuta:', formData);
-            await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulação
+            // console.log('Dados completos do terapeuta:', formData);
+            // await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulação
+            const payload = formData;
+            console.log('Enviando terapeuta:', payload);
 
-            // Redirecionar ou mostrar mensagem de sucesso
+            const res = await authFetch('/api/terapeutas/cadastrar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            const result = await res.json().catch(() => null);
+            console.log('Resposta do backend:', result);
+            if(!res.ok) throw new Error('Falha ao carregar terapeuta');
+
             alert('Terapeuta cadastrado com sucesso!');
         } catch (error) {
             console.error('Erro ao cadastrar terapeuta:', error);

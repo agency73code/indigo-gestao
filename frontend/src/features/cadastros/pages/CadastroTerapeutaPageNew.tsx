@@ -130,7 +130,7 @@ export default function CadastroTerapeutaPage() {
                 if (!formData.cpf?.trim()) newErrors.cpf = 'CPF é obrigatório';
                 if (!formData.dataNascimento?.trim())
                     newErrors.dataNascimento = 'Data de nascimento é obrigatória';
-
+                
                 break;
 
             case 2: // Endereço

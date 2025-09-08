@@ -6,7 +6,7 @@
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
         "dev:backend": "pnpm --filter backend dev",
-        "dev:frontend": "pnpm --filter frontend vite",
+        "dev:frontend": "pnpm --filter frontend dev",
         "dev": "concurrently \"pnpm dev:backend\" \"pnpm dev:frontend\"",
         "lint": "eslint . --ext .js,.ts,.jsx,.tsx",
         "lint:fix": "eslint . --ext .js,.ts,.jsx,.tsx --fix",
@@ -17,12 +17,17 @@
     "license": "ISC",
     "packageManager": "pnpm@10.15.0",
     "devDependencies": {
+        "@eslint/js": "^9.34.0",
         "@typescript-eslint/eslint-plugin": "^8.41.0",
         "@typescript-eslint/parser": "^8.41.0",
         "concurrently": "^9.2.1",
         "eslint": "^9.34.0",
         "eslint-config-prettier": "^10.1.8",
+        "eslint-plugin-react": "^7.37.5",
+        "eslint-plugin-react-hooks": "^5.2.0",
+        "eslint-plugin-react-refresh": "^0.4.20",
         "prettier": "^3.6.2",
-        "typescript": "^5.9.2"
+        "typescript": "^5.9.2",
+        "typescript-eslint": "^8.41.0"
     }
 }
