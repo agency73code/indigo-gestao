@@ -140,36 +140,40 @@ const data = {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     return (
         <Sidebar variant="inset" {...props}>
-            <SidebarHeader>
+            <SidebarHeader className="pt-">
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <a href="#">
-                                <img
-                                    src={indigoLogo}
-                                    alt={data.user.name}
-                                    className="w-10 h-10 rounded-full border border-border"
-                                />
-                                <div className="grid flex-1 text-left text-sm leading-tight">
+                            <a className="flex pt-4 flex-col min-h-fit items-center" href="#">
+                                <div className="mb-4">
+                                    <img
+                                        src={indigoLogo}
+                                        alt={data.user.name}
+                                        className="w-24 h-24 rounded-full border border-border"
+                                    />
+                                </div>
+                                <div className="flex flex-col items-center text-center text-sm leading-tight">
                                     <span
-                                        className="truncate font-medium"
+                                        className="font-medium block mb-1"
                                         style={{ fontFamily: 'Sora, sans-serif' }}
                                     >
                                         Instituto Índigo
                                     </span>
-                                    <span className="truncate text-xs">Administrador</span>
+                                    <span className="text-xs block text-muted-foreground">
+                                        Administrador
+                                    </span>
                                 </div>
                             </a>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarHeader>
-            <SidebarContent>
+            <SidebarContent className="pt-2">
                 <NavMain items={data.navMain} />
                 <NavProjects projects={data.projects} />
                 <NavSecondary items={data.navSecondary} className="mt-auto " />
             </SidebarContent>
-            <SidebarFooter>
+            <SidebarFooter className="md:hidden">
                 <NavUser />
             </SidebarFooter>
         </Sidebar>
