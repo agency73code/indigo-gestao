@@ -10,7 +10,7 @@ interface EnderecoStepProps {
 
 export default function EnderecoStep({ data, onUpdate, errors }: EnderecoStepProps) {
     const handleEnderecoChange = (field: string, value: string) => {
-        onUpdate(`endereco.0.${field}`, value);
+        onUpdate(`endereco.${field}`, value);
     };
 
     return (

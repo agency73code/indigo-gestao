@@ -6,7 +6,7 @@
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
         "dev:backend": "pnpm --filter backend dev",
-        "dev:frontend": "pnpm --filter frontend vite",
+        "dev:frontend": "pnpm --filter frontend dev",
         "dev": "concurrently \"pnpm dev:backend\" \"pnpm dev:frontend\"",
         "lint": "eslint . --ext .js,.ts,.jsx,.tsx",
         "lint:fix": "eslint . --ext .js,.ts,.jsx,.tsx --fix",

@@ -4,6 +4,7 @@ import { Button } from '@/ui/button';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Terapeuta } from '../types/cadastros.types';
+import { authFetch } from '@/lib/http';
 
 // Componentes dos steps
 import MultiStepProgress from '../components/MultiStepProgress';
@@ -47,19 +48,17 @@ export default function CadastroTerapeutaPage() {
         chavePix: '',
 
         // Endereço
-        endereco: [
-            {
-                cep: '',
-                logradouro: '',
-                numero: '',
-                complemento: '',
-                bairro: '',
-                cidade: '',
-                uf: '',
-                tipo_endereco_id: 1,
-                principal: 1,
-            },
-        ],
+        endereco: {
+            cep: '',
+            logradouro: '',
+            numero: '',
+            complemento: '',
+            bairro: '',
+            cidade: '',
+            uf: '',
+            tipo_endereco_id: 1,
+            principal: 1,
+        },
 
         // Dados profissionais (temporário - não existe no tipo Terapeuta)
         // dadosProfissionais: [
@@ -270,10 +269,20 @@ export default function CadastroTerapeutaPage() {
 
         try {
             // Chamada para a API
-            console.log('Dados completos do terapeuta:', formData);
-            await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulação
+            // console.log('Dados completos do terapeuta:', formData);
+            // await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulação
+            const payload = formData;
+            console.log('Enviando terapeuta:', payload);
 
-            // Redirecionar ou mostrar mensagem de sucesso
+            const res = await authFetch('/api/terapeutas/cadastrar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            const result = await res.json().catch(() => null);
+            console.log('Resposta do backend:', result);
+            if(!res.ok) throw new Error('Falha ao carregar terapeuta');
+
             alert('Terapeuta cadastrado com sucesso!');
         } catch (error) {
             console.error('Erro ao cadastrar terapeuta:', error);
