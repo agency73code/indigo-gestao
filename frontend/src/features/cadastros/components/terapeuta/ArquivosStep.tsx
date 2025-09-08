@@ -66,12 +66,21 @@ export default function ArquivosStep({ data, onUpdate, errors }: ArquivosStepPro
                 >
                     {hasFile ? (
                         <div className="flex items-center justify-between bg-muted rounded-md p-3">
-                            <div className="flex items-center gap-2">
-                                <FileText className="w-4 h-4" />
-                                <span className="text-sm truncate">{file.name}</span>
-                                <span className="text-xs text-muted-foreground">
-                                    ({(file.size / 1024 / 1024).toFixed(2)} MB)
-                                </span>
+                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                                <FileText className="w-4 h-4 flex-shrink-0" />
+                                <div className="min-w-0 flex-1">
+                                    <span
+                                        className="text-sm block truncate max-w-[200px]"
+                                        title={file.name}
+                                    >
+                                        {file.name.length > 30
+                                            ? `${file.name.substring(0, 27)}...`
+                                            : file.name}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                        ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                                    </span>
+                                </div>
                             </div>
                             <button
                                 type="button"
@@ -79,7 +88,7 @@ export default function ArquivosStep({ data, onUpdate, errors }: ArquivosStepPro
                                     e.stopPropagation();
                                     removeFile(field);
                                 }}
-                                className="text-destructive hover:text-destructive/80"
+                                className="text-destructive hover:text-destructive/80 flex-shrink-0 ml-2"
                             >
                                 <X className="w-4 h-4" />
                             </button>
