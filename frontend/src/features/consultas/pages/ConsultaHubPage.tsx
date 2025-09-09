@@ -1,25 +1,25 @@
 import { Link } from 'react-router-dom';
 import { User, Users } from 'lucide-react';
-import { CardHeader } from '@/ui/card';
 
-export default function ConsultasPage() {
+export default function ConsultaHubPage() {
     return (
-        <div className='flex flex-col top-0 left-0 w-full h-full px-6'>
-            <CardHeader className='px-0 py-6'>
-                <h1 style={{ fontFamily: 'sora' }} className="text-2xl font-semibold text-primary">
-                    Consulta
-                </h1>
+        <div className='flex flex-col top-0 left-0 w-full h-full px-6 py-6'>
+            <div className='mb-6'>
+                <h1 
+                    style={{ fontFamily: 'sora' }}
+                    className="text-2xl font-semibold text-primary">Consulta</h1>
                 <p className="text-sm text-muted-foreground">O que você deseja consultar?</p>
-            </CardHeader>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-full">
                 <Link
                     to="/app/consultas/terapeutas"
                     className="group block rounded-lg border bg-card p-6 hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                     aria-label="Consultar e gerenciar terapeutas cadastrados"
                 >
-                    <div className="flex flex-col gap-4">
-                        <div className="flex-shrink-0 w-20 h-20 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                            <User className="w-10 h-10 text-blue-600" />
+                    <div className=" items-start gap-4 flex flex-col">
+                        <div className="flex-shrink-0 w-30 h-30 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                            <User className="w-20 h-20 text-blue-500" />
                         </div>
                         <div>
                             <h2 className="text-lg font-medium text-foreground group-hover:text-primary transition-colors">
@@ -37,9 +37,9 @@ export default function ConsultasPage() {
                     className="group block rounded-lg border bg-card p-6 hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                     aria-label="Consultar e gerenciar pacientes cadastrados"
                 >
-                    <div className="flex flex-col gap-4">
-                        <div className="flex-shrink-0 w-20 h-20 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors">
-                            <Users className="w-10 h-10 text-green-600" />
+                    <div className="flex items-start gap-4  flex-col">
+                        <div className="flex-shrink-0 w-30 h-30 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors">
+                            <Users className="w-20 h-20 text-green-700" />
                         </div>
                         <div>
                             <h2 className="text-lg font-medium text-foreground group-hover:text-primary transition-colors">

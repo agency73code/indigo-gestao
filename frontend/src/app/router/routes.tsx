@@ -2,11 +2,12 @@ import { createBrowserRouter } from 'react-router-dom';
 import { Suspense } from 'react';
 import AppLayout from '../../features/shell/layouts/AppLayout';
 import DashboardPage from '../../features/dashboard/pages/DashboardPage';
-import ConsultasPage from '../../features/consultas/pages/ConsultasPage';
+import ConsultaPage from '../../features/consultas/pages/ConsultasPage';
 import TerapeutasListPage from '../../features/consultas/pages/TerapeutasListPage';
 import PacientesListPage from '../../features/consultas/pages/PacientesListPage';
 import ArquivosPage from '../../features/arquivos/pages/ArquivosPage';
 import ConfiguracoesPage from '../../features/configuracoes/pages/ConfiguracoesPage';
+import CadastroHubPage from '../../features/cadastros/pages/CadastroHubPage';
 import CadastroTerapeutaPage from '../../features/cadastros/pages/CadastroTerapeutaPage';
 import CadastroClientePage from '../../features/cadastros/pages/CadastroClientePage';
 
@@ -31,6 +32,14 @@ export const router = createBrowserRouter([
             },
 
             {
+                path: 'cadastros',
+                element: (
+                    <Suspense fallback={suspenseFallback}>
+                        <CadastroHubPage />
+                    </Suspense>
+                ),
+            },
+            {
                 path: 'cadastro/terapeuta',
                 element: (
                     <Suspense fallback={suspenseFallback}>
@@ -50,7 +59,7 @@ export const router = createBrowserRouter([
                 path: 'consultas',
                 element: (
                     <Suspense fallback={suspenseFallback}>
-                        <ConsultasPage />
+                        <ConsultaPage />
                     </Suspense>
                 ),
             },

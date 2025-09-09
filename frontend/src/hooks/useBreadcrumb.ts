@@ -14,6 +14,8 @@ const routeToTitleMap: Record<string, string> = {
   '/app/cadastro/cliente': 'Cadastro de Cliente',
   '/app/cadastro/paciente': 'Cadastro de Paciente',
   '/app/consultas': 'Consultas',
+  '/app/consultas/terapeutas': 'Terapeutas',
+  '/app/consultas/pacientes': 'Pacientes',
   '/app/arquivos': 'Arquivos',
   '/app/configuracoes': 'Configurações',
 };
@@ -44,10 +46,23 @@ export function useBreadcrumb(): BreadcrumbItem[] {
             label: exactTitle
           }
         ];
-      } else {
-        // Para outras rotas, retorna apenas o título
-        return [{ label: exactTitle }];
       }
+      
+      // Para rotas de consulta específicas, criamos a hierarquia
+      if (pathname.includes('/consultas/')) {
+        return [
+          {
+            label: 'Consultas',
+            href: '/app/consultas'
+          },
+          {
+            label: exactTitle
+          }
+        ];
+      }
+      
+      // Para outras rotas, retorna apenas o título
+      return [{ label: exactTitle }];
     }
 
     // Fallback caso a rota não esteja no mapeamento

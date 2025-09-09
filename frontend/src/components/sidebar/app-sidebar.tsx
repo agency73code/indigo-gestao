@@ -55,7 +55,7 @@ const data = {
         },
         {
             title: 'Cadastro',
-            url: '#',
+            url: '/app/cadastros',
             icon: UserPlus,
             items: [
                 {
@@ -70,7 +70,7 @@ const data = {
         },
         {
             title: 'Consulta',
-            url: '#',
+            url: '/app/consultas',
             icon: UserRoundSearchIcon,
             items: [
                 {
