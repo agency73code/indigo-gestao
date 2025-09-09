@@ -1,6 +1,25 @@
 const AUTH_BYPASS =
   import.meta.env.DEV && import.meta.env.VITE_AUTH_BYPASS === 'true';
 
+export async function uploadArquivos(arquivos: Record<string, File | undefined>) {
+  const data = new FormData();
+
+  Object.entries(arquivos).forEach(([campo, valor]) => {
+    if (valor instanceof File) {
+      data.append(campo, valor);
+    }
+  });
+
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/arquivos/upload`, {
+    method: 'POST',
+    body: data,
+    credentials: 'include',
+  });
+
+  if (!res.ok) throw new Error("Falha no upload de arquivos");
+  return res.json();
+}
+
 export async function validateResetToken(token: string) {
   const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/password-reset/validate/${token}`);
   if (!res.ok) {

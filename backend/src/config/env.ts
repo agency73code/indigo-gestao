@@ -21,6 +21,10 @@ const envSchema = z.object({
     SMTP_PORT: z.coerce.number().min(1),
     SMTP_USER: z.string().email().min(1),
     SMTP_PASS: z.string().min(1),
+    GOOGLE_PROJECT_ID: z.string().min(1),
+    GOOGLE_CLIENT_EMAIL: z.string().min(1),
+    GOOGLE_PRIVATE_KEY: z.string().min(1),
+    GOOGLE_DRIVE_FOLDER_ID: z.string().min(1),
 });
 
 export const env = envSchema.parse(process.env);

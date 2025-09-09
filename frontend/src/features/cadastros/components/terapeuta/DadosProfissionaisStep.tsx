@@ -6,32 +6,33 @@ import type { Terapeuta } from '../../types/cadastros.types';
 
 interface DadosProfissionaisStepProps {
     data: Partial<Terapeuta>;
-    onUpdate: (field: string, value: any) => void;
+    onUpdate: (field: string, value: unknown) => void;
     errors: Record<string, string>;
 }
 
 const AREAS_ATUACAO = [
-    'Psicologia Clínica',
-    'Psicologia Organizacional',
-    'Psicologia Escolar/Educacional',
-    'Psicologia do Esporte',
-    'Psicologia Hospitalar',
-    'Psicologia Jurídica',
-    'Psicologia Social',
-    'Neuropsicologia',
-    'Psicologia do Trânsito',
-    'Outras',
+    'Fonoaudiologia',
+    'Psicomotricidade',
+    'Fisioterapia',
+    'Terapia Ocupacional',
+    'Psicopedagogia',
+    'Educador Físico',
+    'Terapia ABA',
+    'Musicoterapia',
+    'Pedagogia',
+    'Neuropsicologia'
 ];
 
 const CARGOS = [
-    'Psicólogo Clínico',
-    'Psicólogo Organizacional',
-    'Psicólogo Escolar',
-    'Psicólogo Hospitalar',
-    'Neuropsicólogo',
-    'Coordenador de Psicologia',
-    'Supervisor de Psicologia',
-    'Outro',
+    'Acompanhante Terapeutico',
+    'Coordenador ABA',
+    'Supervisor ABA',
+    'Mediador de Conflitos',
+    'Coordenador Executivo',
+    'Professor UniIndigo',
+    'Terapeuta clinico',
+    'Terapeuta Supervisor',
+    'Gerente'
 ];
 
 export default function DadosProfissionaisStep({
