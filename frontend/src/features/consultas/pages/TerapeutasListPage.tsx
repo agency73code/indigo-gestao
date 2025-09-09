@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
-import { CardContent, CardHeader, CardTitle } from '@/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
 import { Button } from '@/ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import ToolbarConsulta from '../components/ToolbarConsulta';
 import TherapistTable from '../components/TherapistTable';
 import TherapistProfileDrawer from '../components/TherapistProfileDrawer';
@@ -151,88 +152,96 @@ export default function TerapeutasListPage() {
 
     return (
         <div className="flex flex-col top-0 left-0 w-full h-full">
-                <CardHeader>
-                    <CardTitle className="text-2xl font-semibold text-primary">
-                        Consultar Terapeutas
-                    </CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                        Visualize e gerencie os terapeutas cadastrados no sistema.
-                    </p>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    <ToolbarConsulta
-                        searchValue={searchTerm}
-                        onSearchChange={setSearchTerm}
-                        placeholder="Buscar por nome, e-mail, telefone, registro ou especialidade..."
-                        showFilters={false}
-                    />
+            <CardHeader>
+                <CardTitle className="text-2xl font-semibold text-primary">
+                    Consultar Terapeutas
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                    Visualize e gerencie os terapeutas cadastrados no sistema.
+                </p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                <div className="flex items-center gap-4">
+                    <div className="flex-1">
+                        <ToolbarConsulta
+                            searchValue={searchTerm}
+                            onSearchChange={setSearchTerm}
+                            placeholder="Buscar por nome, e-mail, telefone, registro ou especialidade..."
+                            showFilters={false}
+                        />
+                    </div>
+                    <Link to="/app/cadastro/terapeuta">
+                        <Button className="flex items-center gap-2">
+                            <Plus className="h-4 w-4" />
+                            Adicionar Terapeuta
+                        </Button>
+                    </Link>
+                </div>
 
-                    <TherapistTable
-                        therapists={paginatedTherapists}
-                        loading={loading}
-                        onViewProfile={handleViewProfile}
-                        sortState={sortState}
-                        onSort={handleSort}
-                    />
+                <TherapistTable
+                    therapists={paginatedTherapists}
+                    loading={loading}
+                    onViewProfile={handleViewProfile}
+                    sortState={sortState}
+                    onSort={handleSort}
+                />
 
-                    {!loading && filteredAndSortedTherapists.length > 0 && (
-                        <div className="flex justify-between">
-                            <div className="text-sm text-muted-foreground">
-                                Mostrando {(pagination.page - 1) * pagination.pageSize + 1} a{' '}
-                                {Math.min(pagination.page * pagination.pageSize, pagination.total)}{' '}
-                                de {pagination.total} resultados
-                            </div>
-
-                            {totalPages > 1 && (
-                                <div className="flex items-center space-x-2">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() =>
-                                            handlePageChange(Math.max(1, pagination.page - 1))
-                                        }
-                                        disabled={pagination.page === 1}
-                                        className="flex items-center gap-2"
-                                    >
-                                        <ChevronLeft className="w-4 h-4" />
-                                        Anterior
-                                    </Button>
-
-                                    <div className="flex items-center space-x-1">
-                                        {visiblePages.map((page) => (
-                                            <Button
-                                                key={page}
-                                                variant={
-                                                    page === pagination.page ? 'default' : 'outline'
-                                                }
-                                                size="sm"
-                                                onClick={() => handlePageChange(page)}
-                                                className="min-w-[40px]"
-                                            >
-                                                {page}
-                                            </Button>
-                                        ))}
-                                    </div>
-
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() =>
-                                            handlePageChange(
-                                                Math.min(totalPages, pagination.page + 1),
-                                            )
-                                        }
-                                        disabled={pagination.page === totalPages}
-                                        className="flex items-center gap-2"
-                                    >
-                                        Próxima
-                                        <ChevronRight className="w-4 h-4" />
-                                    </Button>
-                                </div>
-                            )}
+                {!loading && filteredAndSortedTherapists.length > 0 && (
+                    <div className="flex justify-between">
+                        <div className="text-sm text-muted-foreground">
+                            Mostrando {(pagination.page - 1) * pagination.pageSize + 1} a{' '}
+                            {Math.min(pagination.page * pagination.pageSize, pagination.total)} de{' '}
+                            {pagination.total} resultados
                         </div>
-                    )}
-                </CardContent>
+
+                        {totalPages > 1 && (
+                            <div className="flex items-center space-x-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                        handlePageChange(Math.max(1, pagination.page - 1))
+                                    }
+                                    disabled={pagination.page === 1}
+                                    className="flex items-center gap-2"
+                                >
+                                    <ChevronLeft className="w-4 h-4" />
+                                    Anterior
+                                </Button>
+
+                                <div className="flex items-center space-x-1">
+                                    {visiblePages.map((page) => (
+                                        <Button
+                                            key={page}
+                                            variant={
+                                                page === pagination.page ? 'default' : 'outline'
+                                            }
+                                            size="sm"
+                                            onClick={() => handlePageChange(page)}
+                                            className="min-w-[40px]"
+                                        >
+                                            {page}
+                                        </Button>
+                                    ))}
+                                </div>
+
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                        handlePageChange(Math.min(totalPages, pagination.page + 1))
+                                    }
+                                    disabled={pagination.page === totalPages}
+                                    className="flex items-center gap-2"
+                                >
+                                    Próxima
+                                    <ChevronRight className="w-4 h-4" />
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </CardContent>
 
             <TherapistProfileDrawer
                 therapist={selectedTherapist}
