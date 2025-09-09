@@ -16,7 +16,7 @@ import {
 
 const RESET_TOKEN_EXPIRATION_MS = 60 * 60 * 1000;
 
-export async function me(req: Request, res: Response, next: NextFunction) {
+export async function me(req: Request, res: Response) {
     const userCtx = req.user;
     if (!userCtx) {
         return res.status(401).json({ success: false, message: 'Não autenticado' })
@@ -38,7 +38,7 @@ export async function me(req: Request, res: Response, next: NextFunction) {
     });
 }
 
-export async function logout(req: Request, res: Response, next: NextFunction) {
+export async function logout(req: Request, res: Response) {
     res.clearCookie('token', {
         httpOnly: true,
         sameSite: 'lax',

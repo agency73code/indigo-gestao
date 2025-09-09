@@ -14,6 +14,7 @@ import DadosProfissionaisStep from '../components/terapeuta/DadosProfissionaisSt
 import FormacaoStep from '../components/terapeuta/FormacaoStep';
 import ArquivosStep from '../components/terapeuta/ArquivosStep';
 import DadosCNPJStep from '../components/terapeuta/DadosCNPJStep';
+//import { uploadArquivos } from '@/lib/api';
 
 const STEPS = [
     'Dados Pessoais',
@@ -264,6 +265,13 @@ export default function CadastroTerapeutaPage() {
         if (!validateCurrentStep()) return;
 
         setIsLoading(true);
+
+        // try {
+        //     const resp = await uploadArquivos(formData.arquivos || {});
+        //     console.log("Arquivos enviados", resp);
+        // } catch (err) {
+        //     console.error("Erro no upload de arquivos", err);
+        // }
 
         try {
             // Chamada para a API

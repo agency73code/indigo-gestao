@@ -35,6 +35,7 @@ export interface Terapeuta {
         cargo: string;
         numeroConselho?: string;
     }>;
+
     numeroConvenio?: string;
     dataEntrada: string;
     dataSaida?: string;
