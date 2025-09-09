@@ -9,11 +9,11 @@ import {
   type TipoEndereco,
 } from './therapist.types.js';
 
-// const TIPO_ENDERECO_MAP = {
-//   'residencial': 1,
-//   'institucional': 2,
-//   'empresarial': 3,
-// } as const;
+const TIPO_ENDERECO_MAP = {
+  residencial: 1,
+  institucional: 2,
+  empresarial: 3,
+} as const;
 
 const AREA_MAP = {
   'Fonoaudiologia': 1,
@@ -150,7 +150,10 @@ export async function normalizer(input: FrontTerapeuta): Promise<TherapistCreate
     atualizado_em: new Date(),
   };
 
-  const tipoEndereco: TipoEndereco = { id: 1, tipo: 'pessoal' };
+  const tipoEndereco: TipoEndereco = { 
+    id: TIPO_ENDERECO_MAP.residencial,
+    tipo: 'pessoal',
+  };
 
   const areaAtuacao: TerapeutaAreaAtuacao[] = input.dadosProfissionais.map(
     (dp) => ({
@@ -185,6 +188,40 @@ export async function normalizer(input: FrontTerapeuta): Promise<TherapistCreate
       tipo_endereco: tipoEndereco,
     },
   ];
+
+  if (input.cnpj?.endereco) {
+    const enderecoCnpj: Endereco = {
+      id: 0,
+      cep: input.cnpj.endereco.cep,
+      logradouro: input.cnpj.endereco.rua,
+      numero: input.cnpj.endereco.numero,
+      bairro: input.cnpj.endereco.bairro,
+      cidade: input.cnpj.endereco.cidade,
+      uf: input.cnpj.endereco.estado,
+      complemento: input.cnpj.endereco.complemento ?? null,
+      criado_em: new Date(),
+      atualizado_em: new Date(),
+    };
+  
+
+    const tipoEnderecoCnpj: TipoEndereco = {
+      id: TIPO_ENDERECO_MAP.empresarial,
+      tipo: 'empresarial',
+    };
+
+    enderecos.push({
+        id: 0,
+        terapeuta_id: '',
+        endereco_id: 0,
+        tipo_endereco_id: tipoEnderecoCnpj.id,
+        principal: 0,
+        criado_em: new Date(),
+        atualizado_em: new Date(),
+        endereco: enderecoCnpj,
+        tipo_endereco: tipoEnderecoCnpj,
+    });
+  }
+
 
   return {
     nome: input.nome,
