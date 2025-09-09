@@ -125,6 +125,7 @@ export async function normalizer(input: FrontCliente): Promise<ClientCreateData>
         nome: input.nomeMae,
         cpf: input.cpfMae,
         parentesco: 'mae',
+        email: input.emailContato,
         prioridade: 1,
     });
 

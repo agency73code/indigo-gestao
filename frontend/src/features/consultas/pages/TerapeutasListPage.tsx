@@ -6,8 +6,8 @@ import { Link } from 'react-router-dom';
 import ToolbarConsulta from '../components/ToolbarConsulta';
 import TherapistTable from '../components/TherapistTable';
 import TherapistProfileDrawer from '../components/TherapistProfileDrawer';
-import { getTherapists } from '../mocks/therapists.mock';
 import type { Therapist, SortState, PaginationState } from '../types/consultas.types';
+import { listarTerapeutas } from '@/lib/api';
 
 // Hook para debounce
 function useDebounce<T>(value: T, delay: number): T {
@@ -29,6 +29,7 @@ function useDebounce<T>(value: T, delay: number): T {
 export default function TerapeutasListPage() {
     const [therapists, setTherapists] = useState<Therapist[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedTherapist, setSelectedTherapist] = useState<Therapist | null>(null);
     const [drawerOpen, setDrawerOpen] = useState(false);
@@ -52,12 +53,13 @@ export default function TerapeutasListPage() {
     useEffect(() => {
         const loadTherapists = async () => {
             setLoading(true);
+            setError(null);
             try {
-                // TODO: integrar API - substituir por service real
-                const data = await getTherapists();
+                const data = await listarTerapeutas();
                 setTherapists(data);
             } catch (error) {
                 console.error('Erro ao carregar terapeutas:', error);
+                setError(error instanceof Error ? error.message : 'Erro ao carregar terapeutas');
                 setTherapists([]);
             } finally {
                 setLoading(false);
@@ -177,6 +179,10 @@ export default function TerapeutasListPage() {
                         </Button>
                     </Link>
                 </div>
+
+                {error && (
+                    <p className='text-sm text-red-500'>{error}</p>
+                )}
 
                 <TherapistTable
                     therapists={paginatedTherapists}
