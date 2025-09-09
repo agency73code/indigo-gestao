@@ -1,14 +1,14 @@
 import type { Request, Response, NextFunction } from 'express';
-//import { sendWelcomeEmail } from '../utils/mail.util.js';
-// import { createTherapistBase } from '../features/therapist/therapist.mapper.js';
-// import { prisma } from '../config/database.js';
-// import { normalizer } from '../features/therapist/therapist.normalizer.js';
+import { normalizer } from '../features/therapist/therapist.normalizer.js';
+import { createTherapistBase } from '../features/therapist/therapist.mapper.js';
+import { prisma } from '../config/database.js';
+
 
 export async function createTherapist(req: Request, res: Response, next: NextFunction) {
     try {
-        // const normalized = await normalizer(req.body);
+        const normalized = await normalizer(req.body);
+        await createTherapistBase(prisma, normalized);
         
-        //const therapist = await createTherapistBase(prisma, normalized);
         //await createTherapistBase(prisma, normalized);
         // await sendWelcomeEmail({
         //     to: therapist.email,

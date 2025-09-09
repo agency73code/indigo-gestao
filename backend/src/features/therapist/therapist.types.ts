@@ -72,7 +72,6 @@ export interface DocumentoTerapeuta {
 }
 
 export interface Terapeuta {
-  id: string;
   nome: string;
   cpf: string;
   data_nascimento: Date;
@@ -104,8 +103,6 @@ export interface Terapeuta {
   senha: string | null;
   token_redefinicao: string | null;
   validade_token: Date | null;
-  criado_em: Date;
-  atualizado_em: Date;
   documentos_terapeuta: DocumentoTerapeuta[];
   terapeuta_area_atuacao: TerapeutaAreaAtuacao[];
   terapeuta_cargo: TerapeutaCargo[];

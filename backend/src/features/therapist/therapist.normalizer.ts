@@ -9,11 +9,11 @@ import {
   type TipoEndereco,
 } from './therapist.types.js';
 
-const TIPO_ENDERECO_MAP = {
-  'residencial': 1,
-  'institucional': 2,
-  'empresarial': 3,
-} as const;
+// const TIPO_ENDERECO_MAP = {
+//   'residencial': 1,
+//   'institucional': 2,
+//   'empresarial': 3,
+// } as const;
 
 const AREA_MAP = {
   'Fonoaudiologia': 1,
@@ -167,7 +167,7 @@ export async function normalizer(input: FrontTerapeuta): Promise<TherapistCreate
     terapeuta_id: '',
     cargo_id: CARGO_MAP[dp.cargo],
     numero_conselho: dp.numeroConselho ?? null,
-    data_entrada: new Date(input.dataEntrada),
+    data_entrada: new Date(input.dataInicio),
     data_saida: input.dataSaida ? new Date(input.dataSaida) : null,
     cargo: { id: CARGO_MAP[dp.cargo], nome: dp.cargo },
   }));
@@ -220,7 +220,7 @@ export async function normalizer(input: FrontTerapeuta): Promise<TherapistCreate
     ano_pos_graduacao: input.formacao.anoPosGraduacao ?? null,
     cursos: input.formacao.cursos ?? null,
 
-    data_entrada: new Date(input.dataEntrada),
+    data_entrada: new Date(input.dataInicio),
     data_saida: input.dataSaida ? new Date(input.dataSaida) : null,
     perfil_acesso: 'terapeuta',
     atividade: TerapeutaAtividade.Ativo,
