@@ -12,6 +12,8 @@ import ResetSuccessPage from './features/auth/components/reset-success.tsx';
 import AppLayout from './features/shell/layouts/AppLayout';
 import DashboardPage from './features/dashboard/pages/DashboardPage';
 import ConsultasPage from './features/consultas/pages/ConsultasPage';
+import TerapeutasListPage from './features/consultas/pages/TerapeutasListPage';
+import PacientesListPage from './features/consultas/pages/PacientesListPage';
 import ArquivosPage from './features/arquivos/pages/ArquivosPage';
 import ConfiguracoesPage from './features/configuracoes/pages/ConfiguracoesPage';
 import CadastroTerapeutaPage from './features/cadastros/pages/CadastroTerapeutaPage';
@@ -41,6 +43,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                             <Route path="cadastro/terapeuta" element={<CadastroTerapeutaPage />} />
                             <Route path="cadastro/cliente" element={<CadastroClientePage />} />
                             <Route path="consultas" element={<ConsultasPage />} />
+                            <Route path="consultas/terapeutas" element={<TerapeutasListPage />} />
+                            <Route path="consultas/pacientes" element={<PacientesListPage />} />
                             <Route path="arquivos" element={<ArquivosPage />} />
                             <Route path="configuracoes" element={<ConfiguracoesPage />} />
                         </Route>

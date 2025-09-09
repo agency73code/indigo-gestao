@@ -75,11 +75,11 @@ const data = {
             items: [
                 {
                     title: 'Terapeuta',
-                    url: '#',
+                    url: '/app/consultas/terapeutas',
                 },
                 {
                     title: 'Paciente',
-                    url: '#',
+                    url: '/app/consultas/pacientes',
                 },
             ],
         },
