@@ -9,7 +9,6 @@ const phone11orLess = z.string().length(11, 'Telefone/Celular deve ter 11 dígit
 const emailField = z.string().email();
 
 // --- Schemas de blocos ---
-
 const personalSchema = z.object({
   nome: z.string().min(3).max(255),
   cpf: cpfField,
@@ -43,8 +42,25 @@ const addressItemSchema = z.object({
   principal: z.number().default(1),
 });
 
+const cnpjAddressSchema = z.object({
+  cep: z.string().length(8),
+  rua: z.string().max(255),
+  numero: z.string().max(10),
+  bairro: z.string().max(100),
+  cidade: z.string().max(100),
+  estado: z.string().toUpperCase().length(2),
+  complemento: z.string().max(100).optional(),
+});
+
 const companySchema = z.object({
-  cnpj_empresa: cnpjOptionalField.optional(),
+  cnpj: z
+    .object({
+      numero: cnpjOptionalField,
+      razaoSocial: z.string().max(255),
+      nomeFantasia: z.string().max(255),
+      endereco: cnpjAddressSchema,
+    })
+    .optional(),
 });
 
 const jobSchema = z.object({
