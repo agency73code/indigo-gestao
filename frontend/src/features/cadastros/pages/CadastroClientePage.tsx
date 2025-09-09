@@ -11,6 +11,7 @@ import MultiStepProgress from '../components/MultiStepProgress';
 import type { Cliente } from '../types/cadastros.types';
 import { CardTitle } from '@/ui/card';
 import { CardHeader } from '@/shared/components/ui/card';
+import { cadastrarCliente } from '@/lib/api';
 
 const STEPS = ['Dados Pessoais', 'Endereço', 'Dados Pagamento', 'Dados Escola'];
 
@@ -222,8 +223,8 @@ export default function CadastroClientePage() {
         setIsLoading(true);
 
         try {
-            console.log('Dados completos do cliente:', formData);
-            await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulação
+            const payload = formData;
+            await cadastrarCliente(payload);
 
             alert('Cliente cadastrado com sucesso!');
         } catch (error) {

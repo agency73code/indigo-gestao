@@ -92,28 +92,32 @@ export async function normalizer(input: FrontCliente): Promise<ClientCreateData>
         bairro: e.bairro,
         cidade: e.cidade,
         uf: e.uf,
-        complemento: e.complemento || undefined,
+        ...(e.complemento ? { complemento: e.complemento } : {}),
         tipo_endereco_id: 1,
         principal: idx === 0 ? 1 : 0,
     }));
 
     const escolas = input.dadosEscola ? [{
-        tipo_escola: input.dadosEscola.tipoEscola,
-        nome: input.dadosEscola.nome,
-        telefone: input.dadosEscola.telefone,
-        email: input.dadosEscola.email || '',
-        enderecos: input.dadosEscola.endereco ? [{
-            cep: input.dadosEscola.endereco.cep || '',
-            logradouro: input.dadosEscola.endereco.logradouro || '',
-            numero: input.dadosEscola.endereco.numero || '',
-            bairro: input.dadosEscola.endereco.bairro || '',
-            cidade: input.dadosEscola.endereco.cidade || '',
-            uf: input.dadosEscola.endereco.uf || '',
-            complemento: input.dadosEscola.endereco.complemento || undefined,
-            tipo_endereco_id: 2,
-            principal: 0,
-        }]: undefined,
-    }]: undefined;
+    tipo_escola: input.dadosEscola.tipoEscola || 'publica',
+    nome: input.dadosEscola.nome,
+    telefone: input.dadosEscola.telefone,
+    email: input.dadosEscola.email || '',
+    ...(input.dadosEscola.endereco ? {
+        enderecos: [{
+        cep: input.dadosEscola.endereco.cep || '',
+        logradouro: input.dadosEscola.endereco.logradouro || '',
+        numero: input.dadosEscola.endereco.numero || '',
+        bairro: input.dadosEscola.endereco.bairro || '',
+        cidade: input.dadosEscola.endereco.cidade || '',
+        uf: input.dadosEscola.endereco.uf || '',
+        ...(input.dadosEscola.endereco.complemento
+            ? { complemento: input.dadosEscola.endereco.complemento }
+            : {}),
+        tipo_endereco_id: 2,
+        principal: 0,
+        }],
+    } : {}),
+    }] : undefined;
 
     const responsaveis: ClientCreateData['responsaveis'] = [];
 
@@ -175,9 +179,10 @@ export async function normalizer(input: FrontCliente): Promise<ClientCreateData>
         addContato('advogado', 'email', dadosPagamento.emailAdvogado2, dadosPagamento.mostrarEmailAdvogado2 ?? false);
         addContato('advogado', 'email', dadosPagamento.emailAdvogado3, dadosPagamento.mostrarEmailAdvogado3 ?? false);
 
-        const pagamento: any = {
+        type Pagamento = NonNullable<ClientCreateData['pagamentos']>[number];
+        const pagamento: Pagamento = {
             nome: dadosPagamento.nomeTitular,
-            numero_carteirinha: dadosPagamento.numeroCarteirinha,
+            numero_carteirinha: dadosPagamento.numeroCarteirinha || '',
             tipo_sistema: dadosPagamento.sistemaPagamento,
             pagamento_contatos,
         };
@@ -202,9 +207,9 @@ export async function normalizer(input: FrontCliente): Promise<ClientCreateData>
         email_contato: input.emailContato,
         data_entrada: asDate(input.dataEntrada),
         perfil_acesso: 'cliente',
-        enderecos,
-        escolas,
+        ...(enderecos && enderecos.length ? { enderecos } : {}),
+        ...(escolas && escolas.length ? { escolas } : {}),
         responsaveis,
-        pagamentos,
-    }
+        ...(pagamentos && pagamentos.length ? { pagamentos: pagamentos } : {}),
+    };
 }

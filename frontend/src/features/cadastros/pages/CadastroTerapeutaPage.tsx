@@ -4,7 +4,6 @@ import { Button } from '@/ui/button';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Terapeuta } from '../types/cadastros.types';
-import { authFetch } from '@/lib/http';
 
 // Componentes dos steps
 import MultiStepProgress from '../components/MultiStepProgress';
@@ -14,6 +13,7 @@ import DadosProfissionaisStep from '../components/terapeuta/DadosProfissionaisSt
 import FormacaoStep from '../components/terapeuta/FormacaoStep';
 import ArquivosStep from '../components/terapeuta/ArquivosStep';
 import DadosCNPJStep from '../components/terapeuta/DadosCNPJStep';
+import { cadastrarTerapeuta } from '@/lib/api';
 //import { uploadArquivos } from '@/lib/api';
 
 const STEPS = [
@@ -274,20 +274,8 @@ export default function CadastroTerapeutaPage() {
         // }
 
         try {
-            // Chamada para a API
-            // console.log('Dados completos do terapeuta:', formData);
-            // await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulação
             const payload = formData;
-            console.log('Enviando terapeuta:', payload);
-
-            const res = await authFetch('/api/terapeutas/cadastrar', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-            });
-            const result = await res.json().catch(() => null);
-            console.log('Resposta do backend:', result);
-            if(!res.ok) throw new Error('Falha ao carregar terapeuta');
+            await cadastrarTerapeuta(payload);
 
             alert('Terapeuta cadastrado com sucesso!');
         } catch (error) {
