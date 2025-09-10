@@ -49,6 +49,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                             <Route path="consultas/pacientes" element={<PacientesListPage />} />
                             <Route path="arquivos" element={<ArquivosPage />} />
                             <Route path="configuracoes" element={<ConfiguracoesPage />} />
+                            <Route path="configuracoes/:secao" element={<ConfiguracoesPage />} />
                         </Route>
                         <Route path="/404" element={<NotFoundPage />} />
                         <Route path="/token-not-found" element={<TokenNotFoundPage />} />

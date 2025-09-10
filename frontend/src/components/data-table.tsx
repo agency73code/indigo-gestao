@@ -465,7 +465,7 @@ export function DataTable({ data: initialData }: { data: z.infer<typeof schema>[
                 value="outline"
                 className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6"
             >
-                <div className="overflow-hidden rounded-lg border">
+                <div className="overflow-hidden rounded-[5px] border">
                     <DndContext
                         collisionDetection={closestCenter}
                         modifiers={[restrictToVerticalAxis]}

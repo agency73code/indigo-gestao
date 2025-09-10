@@ -18,6 +18,11 @@ const routeToTitleMap: Record<string, string> = {
   '/app/consultas/pacientes': 'Pacientes',
   '/app/arquivos': 'Arquivos',
   '/app/configuracoes': 'Configurações',
+  '/app/configuracoes/perfil': 'Perfil & Organização',
+  '/app/configuracoes/preferencias': 'Preferências',
+  '/app/configuracoes/notificacoes': 'Notificações',
+  '/app/configuracoes/seguranca': 'Segurança',
+  '/app/configuracoes/integracoes': 'Integrações',
 };
 
 export function useBreadcrumb(): BreadcrumbItem[] {
@@ -54,6 +59,19 @@ export function useBreadcrumb(): BreadcrumbItem[] {
           {
             label: 'Consultas',
             href: '/app/consultas'
+          },
+          {
+            label: exactTitle
+          }
+        ];
+      }
+      
+      // Para rotas de configurações específicas, criamos a hierarquia
+      if (pathname.includes('/configuracoes/')) {
+        return [
+          {
+            label: 'Configurações',
+            href: '/app/configuracoes'
           },
           {
             label: exactTitle

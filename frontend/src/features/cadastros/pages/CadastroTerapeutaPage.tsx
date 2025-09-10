@@ -113,7 +113,7 @@ export default function CadastroTerapeutaPage() {
         },
     });
 
-    const handleInputChange = (field: string, value: string | string[] | File | null) => {
+    const handleInputChange = (field: string, value: string | string[] | File | null | any) => {
         const keys = field.split('.');
 
         setFormData((prev: any) => {
