@@ -1,5 +1,72 @@
+import type { User } from "@/features/auth/types/auth.types";
+import { authFetch } from "./http";
+import type { Terapeuta, Cliente } from "@/features/cadastros/types/cadastros.types";
+import type { Therapist as TerapeutaConsulta } from '@/features/consultas/types/consultas.types'
+
 const AUTH_BYPASS =
   import.meta.env.DEV && import.meta.env.VITE_AUTH_BYPASS === 'true';
+
+export async function buscarTerapeutaPorId(id: string): Promise<Terapeuta> {
+    const res = await authFetch(`/api/terapeutas/${id}`, { method: 'GET' });
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : null;
+
+    if (!res.ok) {
+      const msg = data?.message ?? data?.error ?? `Falha (${res.status})`;
+      throw new Error(msg);
+    }
+
+    return data.data as Terapeuta;
+}
+
+export async function listarTerapeutas(): Promise<TerapeutaConsulta[]> {
+  const res = await authFetch('/api/terapeutas', { method: 'GET' });
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : null;
+
+  if (!res.ok) {
+    const msg = data?.message ?? data?.error ?? `Falha (${res.status})`;
+    throw new Error(msg);
+  }
+
+  return (data?.data ?? []) as TerapeutaConsulta[];
+}
+
+  export async function cadastrarCliente(payload: Partial<Cliente>) {
+  const res = await authFetch('/api/clientes/cadastrar', {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : null;
+
+  if (!res.ok) {
+    const msg = data?.message ?? data?.error ?? `Falha (${res.status})`;
+    throw new Error(msg);
+  }
+
+  return data as { success: true; message?: string };
+}
+
+export async function cadastrarTerapeuta(payload: Terapeuta) {
+  const res = await authFetch('/api/terapeutas/cadastrar', {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : null;
+
+  if (!res.ok) {
+    const msg = data?.message ?? data?.error ?? `Falha (${res.status})`;
+    throw new Error(msg);
+  }
+
+  return data as { success: true; message?: string };
+}
 
 export async function uploadArquivos(arquivos: Record<string, File | undefined>) {
   const data = new FormData();
@@ -88,10 +155,6 @@ export async function forgotPassword(email: string) {
 
     return true;
 }
-
-import type { User } from "@/features/auth/types/auth.types";
-// --- protected endpoints ---
-import { authFetch } from "./http";
 
 type ApiMeResponse = {
   user: User;

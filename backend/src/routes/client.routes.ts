@@ -4,6 +4,6 @@ import { createClienteController } from "../controllers/client.controller.js";
 
 const router: ExpressRouter = Router();
 
-router.post("/", createClienteController);
+router.post("/cadastrar", createClienteController);
 
 export default router;
