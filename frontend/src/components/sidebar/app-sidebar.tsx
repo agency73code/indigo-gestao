@@ -85,24 +85,28 @@ const data = {
         },
         {
             title: 'Configuração',
-            url: '#',
+            url: '/app/configuracoes',
             icon: Settings2,
             items: [
                 {
-                    title: 'Geral',
-                    url: '#',
+                    title: 'Perfil & Organização',
+                    url: '/app/configuracoes/perfil',
                 },
                 {
-                    title: 'Team',
-                    url: '#',
+                    title: 'Preferências',
+                    url: '/app/configuracoes/preferencias',
                 },
                 {
-                    title: 'Faturamento',
-                    url: '#',
+                    title: 'Notificações',
+                    url: '/app/configuracoes/notificacoes',
                 },
                 {
-                    title: 'Limites',
-                    url: '#',
+                    title: 'Segurança',
+                    url: '/app/configuracoes/seguranca',
+                },
+                {
+                    title: 'Integrações',
+                    url: '/app/configuracoes/integracoes',
                 },
             ],
         },
