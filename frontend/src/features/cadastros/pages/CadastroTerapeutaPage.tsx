@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { CardContent, CardHeader, CardTitle } from '@/ui/card';
+import { CardHeader, CardTitle } from '@/ui/card';
 import { Button } from '@/ui/button';
-import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Terapeuta } from '../types/cadastros.types';
 
@@ -326,69 +325,57 @@ export default function CadastroTerapeutaPage() {
     };
 
     return (
-        <div className="container mx-auto">
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-            >
-                    <CardHeader>
-                        <CardTitle className="text-2xl mb-8 text-primary">
-                            Cadastro de Terapeuta
-                        </CardTitle>
-                        <MultiStepProgress
-                            currentStep={currentStep}
-                            totalSteps={STEPS.length}
-                            steps={STEPS}
-                        />
-                    </CardHeader>
-                    <CardContent>
-                        <motion.div
-                            key={currentStep}
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            transition={{ duration: 0.3 }}
-                        >
-                            {renderCurrentStep()}
-                        </motion.div>
+        <div className="container mx-auto p-8">
+            {/* Header */}
+            <CardHeader>
+                <CardTitle className="text-2xl mb-8 text-primary">
+                    Cadastro de Terapeuta
+                </CardTitle>
+                <MultiStepProgress
+                    currentStep={currentStep}
+                    totalSteps={STEPS.length}
+                    steps={STEPS}
+                />
+            </CardHeader>
 
-                        <div className="flex justify-between mt-8 pt-6 border-t">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={prevStep}
-                                disabled={currentStep === 1}
-                                className="flex items-center gap-2"
-                            >
-                                <ChevronLeft className="w-4 h-4" />
-                                Anterior
-                            </Button>
+            {/* Form Content */}
+            <div className="">{renderCurrentStep()}</div>
 
-                            {currentStep === STEPS.length ? (
-                                <Button
-                                    onClick={handleSubmit}
-                                    disabled={isLoading}
-                                    className="flex items-center gap-2"
-                                >
-                                    {isLoading ? (
-                                        <>
-                                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                                            Cadastrando...
-                                        </>
-                                    ) : (
-                                        'Finalizar Cadastro'
-                                    )}
-                                </Button>
-                            ) : (
-                                <Button onClick={nextStep} className="flex items-center gap-2">
-                                    Próximo
-                                    <ChevronRight className="w-4 h-4" />
-                                </Button>
-                            )}
-                        </div>
-                    </CardContent>
-            </motion.div>
+            {/* Navigation Buttons */}
+            <div className="flex justify-between mt-8 pt-6 border-t">
+                <Button
+                    type="button"
+                    variant="outline"
+                    onClick={prevStep}
+                    disabled={currentStep === 1}
+                    className="flex items-center gap-2"
+                >
+                    <ChevronLeft className="w-4 h-4" />
+                    Anterior
+                </Button>
+
+                {currentStep === STEPS.length ? (
+                    <Button
+                        onClick={handleSubmit}
+                        disabled={isLoading}
+                        className="flex items-center gap-2"
+                    >
+                        {isLoading ? (
+                            <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                                Cadastrando...
+                            </>
+                        ) : (
+                            'Finalizar Cadastro'
+                        )}
+                    </Button>
+                ) : (
+                    <Button onClick={nextStep} className="flex items-center gap-2">
+                        Próximo
+                        <ChevronRight className="w-4 h-4" />
+                    </Button>
+                )}
+            </div>
         </div>
     );
 }
