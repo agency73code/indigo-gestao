@@ -6,7 +6,7 @@ import type { Terapeuta } from '../../types/cadastros.types';
 
 interface DadosProfissionaisStepProps {
     data: Partial<Terapeuta>;
-    onUpdate: (field: string, value: unknown) => void;
+    onUpdate: (field: string, value: string | string[] | File | null | any) => void;
     errors: Record<string, string>;
 }
 
