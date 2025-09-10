@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import ToolbarConsulta from '../components/ToolbarConsulta';
 import PatientTable from '../components/PatientTable';
 import PatientProfileDrawer from '../components/PatientProfileDrawer';
-import { getPatients } from '../mocks/patients.mock';
+import { listarClientes } from '@/lib/api'
 import type { Patient, SortState, PaginationState } from '../types/consultas.types';
 
 // Hook para debounce
@@ -29,6 +29,7 @@ function useDebounce<T>(value: T, delay: number): T {
 export default function PacientesListPage() {
     const [patients, setPatients] = useState<Patient[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
     const [drawerOpen, setDrawerOpen] = useState(false);
@@ -52,13 +53,19 @@ export default function PacientesListPage() {
     useEffect(() => {
         const loadPatients = async () => {
             setLoading(true);
+            setError(null);
             try {
                 // TODO: integrar API - substituir por service real
-                const data = await getPatients();
+                const data = await listarClientes();
                 setPatients(data);
             } catch (error) {
                 console.error('Erro ao carregar pacientes:', error);
                 setPatients([]);
+                setError(
+                    error instanceof Error
+                    ? error.message
+                    : 'Erro ao carregar pacientes',
+                );
             } finally {
                 setLoading(false);
             }
@@ -184,6 +191,10 @@ export default function PacientesListPage() {
                     sortState={sortState}
                     onSort={handleSort}
                 />
+
+                {!loading && error && (
+                    <div className='text-sm text-red-600 text-center'>{error}</div>
+                )}
 
                 {!loading && filteredAndSortedPatients.length > 0 && (
                     <div className="flex items-center justify-between">

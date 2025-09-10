@@ -2,7 +2,7 @@ import { X, User, MapPin, CreditCard, GraduationCap } from 'lucide-react';
 import { Button } from '@/ui/button';
 import ReadOnlyField from './ReadOnlyField';
 import type { Patient } from '../types/consultas.types';
-import { useClienteData } from '../hooks/useClienteData';
+import { useCliente } from '../hooks/useCliente';
 
 interface PatientProfileDrawerProps {
     patient: Patient | null;
@@ -17,7 +17,7 @@ export default function PatientProfileDrawer({
 }: PatientProfileDrawerProps) {
     // Usar hook para obter dados completos do cliente
     // Reutiliza tipos/schemas dos cadastros
-    const clienteData = useClienteData(patient);
+    const clienteData = useCliente(patient?.id, open);
 
     if (!patient || !open || !clienteData) return null;
 

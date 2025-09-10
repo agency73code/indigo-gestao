@@ -7,7 +7,7 @@ import { sendWelcomeEmail } from '../utils/mail.util.js';
 export async function getTherapistById(req: Request, res: Response, next: NextFunction) {
     try {
         const { id } = req.params;
-        if (!id) return null;
+        if (!id) return res.status(400).json({ success: false, message: "ID inválido" });
 
         const therapist = await prisma.terapeuta.findUnique({
             where: { id },

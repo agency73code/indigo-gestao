@@ -1,7 +1,7 @@
 import type { User } from "@/features/auth/types/auth.types";
 import { authFetch } from "./http";
 import type { Terapeuta, Cliente } from "@/features/cadastros/types/cadastros.types";
-import type { Therapist as TerapeutaConsulta } from '@/features/consultas/types/consultas.types'
+import type { Therapist as TerapeutaConsulta, Patient } from '@/features/consultas/types/consultas.types'
 
 const AUTH_BYPASS =
   import.meta.env.DEV && import.meta.env.VITE_AUTH_BYPASS === 'true';
@@ -32,7 +32,33 @@ export async function listarTerapeutas(): Promise<TerapeutaConsulta[]> {
   return (data?.data ?? []) as TerapeutaConsulta[];
 }
 
-  export async function cadastrarCliente(payload: Partial<Cliente>) {
+export async function listarClientes(): Promise<Patient[]> {
+    const res = await authFetch('/api/clientes', { method: 'GET' });
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : null;
+
+    if (!res.ok) {
+      const msg = data?.message ?? data?.error ?? `Falha (${res.status})`;
+      throw new Error(msg);
+    }
+
+    return (data?.data ?? []) as Patient[];
+}
+
+export async function buscarClientePorId(id: string): Promise<Cliente> {
+  const res = await authFetch(`/api/clientes/${id}`, { method: 'GET' });
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : null;
+
+  if (!res.ok) {
+    const msg = data?.message ?? data?.error ?? `Falha (${res.status})`;
+    throw new Error(msg);
+  }
+
+  return data.data as Cliente;
+}
+
+export async function cadastrarCliente(payload: Partial<Cliente>) {
   const res = await authFetch('/api/clientes/cadastrar', {
     method: 'POST',
     headers: { 'Content-Type':'application/json' },
