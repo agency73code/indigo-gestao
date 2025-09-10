@@ -1,4 +1,4 @@
-import type { Therapist as Terapeuta } from "@/features/consultas/types/consultas.types";
+import type { Terapeuta } from "@/features/cadastros/types/cadastros.types";
 import { buscarTerapeutaPorId } from "@/lib/api";
 import { useEffect, useState } from "react";
 

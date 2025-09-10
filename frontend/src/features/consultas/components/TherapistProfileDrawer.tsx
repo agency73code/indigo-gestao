@@ -2,7 +2,7 @@ import { X, User, MapPin, Briefcase, Building, GraduationCap, FileText, Car } fr
 import { Button } from '@/ui/button';
 import ReadOnlyField from './ReadOnlyField';
 import type { Therapist } from '../types/consultas.types';
-import { useTerapeutaData } from '../hooks/useTerapeutaData';
+import { useTerapeuta } from '../hooks/useTerapeuta';
 
 interface TherapistProfileDrawerProps {
     therapist: Therapist | null;
@@ -17,7 +17,7 @@ export default function TherapistProfileDrawer({
 }: TherapistProfileDrawerProps) {
     // Usar hook para obter dados completos do terapeuta
     // Reutiliza tipos/schemas dos cadastros
-    const terapeutaData = useTerapeutaData(therapist);
+    const terapeutaData = useTerapeuta(therapist?.id);
 
     if (!therapist || !open || !terapeutaData) return null;
 

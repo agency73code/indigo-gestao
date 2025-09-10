@@ -6,7 +6,7 @@ import type { Therapist as TerapeutaConsulta } from '@/features/consultas/types/
 const AUTH_BYPASS =
   import.meta.env.DEV && import.meta.env.VITE_AUTH_BYPASS === 'true';
 
-export async function buscarTerapeutaPorId(id: string): Promise<TerapeutaConsulta> {
+export async function buscarTerapeutaPorId(id: string): Promise<Terapeuta> {
     const res = await authFetch(`/api/terapeutas/${id}`, { method: 'GET' });
     const text = await res.text();
     const data = text ? JSON.parse(text) : null;
@@ -16,7 +16,7 @@ export async function buscarTerapeutaPorId(id: string): Promise<TerapeutaConsult
       throw new Error(msg);
     }
 
-    return data.data as TerapeutaConsulta;
+    return data.data as Terapeuta;
 }
 
 export async function listarTerapeutas(): Promise<TerapeutaConsulta[]> {
