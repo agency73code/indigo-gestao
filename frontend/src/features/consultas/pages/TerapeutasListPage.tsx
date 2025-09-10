@@ -55,8 +55,8 @@ export default function TerapeutasListPage() {
             setLoading(true);
             setError(null);
             try {
-                const data = await listarTerapeutas();
-                setTherapists(data);
+                const therapistList = await listarTerapeutas();
+                setTherapists(therapistList);
             } catch (error) {
                 console.error('Erro ao carregar terapeutas:', error);
                 setError(error instanceof Error ? error.message : 'Erro ao carregar terapeutas');

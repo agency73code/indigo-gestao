@@ -4,6 +4,61 @@ import { createTherapistBase } from '../features/therapist/therapist.mapper.js';
 import { prisma } from '../config/database.js';
 import { sendWelcomeEmail } from '../utils/mail.util.js';
 
+export async function getTherapistById(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { id } = req.params;
+        if (!id) return null;
+        
+        const therapist = await prisma.terapeuta.findUnique({
+            where: { id },
+            select: {
+                id: true,
+                nome: true,
+                email: true,
+                telefone: true,
+                celular: true,
+                foto_perfil: true,
+                atividade: true,
+                cnpj_empresa: true,
+                terapeuta_area_atuacao: {
+                    select: {
+                        area_atuacao: {
+                            select: { nome: true },
+                        },
+                    },
+                },
+                terapeuta_cargo: {
+                    select: {
+                        cargo: { select: { nome: true } },
+                        numero_conselho: true,
+                    },
+                },
+            },
+        });
+
+        if (!therapist) {
+            return res.status(404).json({ success: false, message: 'Terapeuta não encontrado' });
+        }
+
+        const formatted = {
+            id: therapist.id,
+            nome: therapist.nome,
+            email: therapist.email ?? undefined,
+            telefone: therapist.telefone ?? therapist.celular ?? undefined,
+            status: therapist.atividade === 'ativo' ? 'ATIVO' : 'INATIVO',
+            especialidade: therapist.terapeuta_area_atuacao[0]?.area_atuacao.nome,
+            conselho: therapist.terapeuta_cargo[0]?.cargo.nome,
+            registroConselho: therapist.terapeuta_cargo[0]?.numero_conselho ?? undefined,
+            avatarUrl: therapist.foto_perfil ?? undefined,
+            cnpj: therapist.cnpj_empresa ?? undefined,
+        };
+
+        res.json({ success: true, data: formatted });
+    } catch (error) {
+        next(error);
+    }
+}
+
 export async function listTherapists(req: Request, res: Response, next: NextFunction) {
     try {
         const therapist = await prisma.terapeuta.findMany({
