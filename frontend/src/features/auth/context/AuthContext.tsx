@@ -2,12 +2,7 @@
 
 import { createContext, useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type {
-  LoginCredentials,
-  ForgotPasswordData,
-  User,
-  AuthState,
-} from '../types/auth.types';
+import type { LoginCredentials, ForgotPasswordData, User, AuthState, } from '../types/auth.types';
 import { signIn, forgotPassword as forgotPasswordApi, getMe, apiLogout } from '@/lib/api';
 
 const AUTH_BYPASS = import.meta.env.DEV && import.meta.env.VITE_AUTH_BYPASS === 'true';
@@ -42,11 +37,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
             return;
         }
-        setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
+        setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
         try {
             const me = await getMe();
-            if(!me) {
-                setAuthState(prev => ({ ...prev, isLoading: false }));
+            if (!me) {
+                setAuthState((prev) => ({ ...prev, isLoading: false }));
                 return;
             }
             setAuthState({
@@ -60,22 +55,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 error: null,
             });
         } catch {
-            if (AUTH_BYPASS) {
-                setAuthState({
-                    user: { id: 'dev-uid', email: 'dev-uid@dev.com', name: 'dev-uid' },
-                    isAuthenticated: true,
-                    isLoading: false,
-                    error: null,
-                });
-            } else {
-                setAuthState(prev => ({ ...prev, isLoading: false }));
+            const token = document.cookie
+                .split('; ')
+                .find((row) => row.startsWith('session='))
+                ?.split('=')[1];
+
+            if (token) {
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1] ?? ''));
+                    const id = String(payload.user?.id ?? payload.sub ?? '');
+                    const email = payload.user?.email ?? payload.email ?? '';
+                    const name = payload.user?.name ?? payload.name ?? '';
+                    if (id) {
+                        setAuthState({
+                            user: { id, email, name },
+                            isAuthenticated: true,
+                            isLoading: false,
+                            error: null,
+                        });
+                        return;
+                    }
+                } catch {
+                    // token inválido
+                }
             }
+
+            setAuthState((prev) => ({ ...prev, isLoading: false }));
         }
     }, []);
 
     const login = useCallback(
         async (credentials: LoginCredentials) => {
-            setAuthState(prev => ({ ...prev, isLoading: true, error: null }));
+            setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
             try {
                 const resp = await signIn(credentials.email, credentials.password);
                 setAuthState({
@@ -87,7 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 navigate('app');
             } catch (e: unknown) {
                 const msg = e instanceof Error ? e.message : 'Erro ao fazer login';
-                setAuthState(prev => ({ ...prev, isLoading: false, error:msg }));
+                setAuthState((prev) => ({ ...prev, isLoading: false, error:msg }));
             }
         },
         [navigate],
@@ -95,14 +106,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const forgotPassword = useCallback(
         async ({ email }: ForgotPasswordData) => {
-            setAuthState(prev => ({ ...prev, isLoading: true, error:null }));
+            setAuthState((prev) => ({ ...prev, isLoading: true, error:null }));
             try {
                 await forgotPasswordApi(email);
                 navigate('/forgot-password/email-sent');
             } catch {
                 navigate('/forgot-password/email-sent');
             } finally {
-                setAuthState(prev => ({ ...prev, isLoading: false }));
+                setAuthState((prev) => ({ ...prev, isLoading: false }));
             }
         },
         [navigate],
@@ -127,7 +138,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (didHydrateRef.current) return;
         didHydrateRef.current = true;
         void hydrate();
-    }, [hydrate])
+    }, [hydrate]);
 
     const value: AuthContextValue = {
         ...authState,
