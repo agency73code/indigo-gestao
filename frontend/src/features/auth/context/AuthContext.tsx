@@ -26,61 +26,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     const hydrate = useCallback(async () => {
-        if (!document.cookie.includes('session')) {
-            if (AUTH_BYPASS) {
-                setAuthState({
-                    user: { id: 'dev-uid', email: 'dev-uid@dev.com', name: 'dev-uid' },
-                    isAuthenticated: true,
-                    isLoading: false,
-                    error: null,
-                });
-            }
+        if (AUTH_BYPASS) {
+            setAuthState({
+                user: { id: 'dev-uid', email: 'dev-uid@dev.com', name: 'dev-uid' },
+                isAuthenticated: true,
+                isLoading: false,
+                error: null,
+            });
             return;
         }
+
         setAuthState((prev) => ({ ...prev, isLoading: true, error: null }));
         try {
             const me = await getMe();
             if (!me) {
-                setAuthState((prev) => ({ ...prev, isLoading: false }));
+                setAuthState({
+                    user: null,
+                    isAuthenticated: false,
+                    isLoading: false,
+                    error: null,
+                });
                 return;
             }
             setAuthState({
                 user: {
                     id: String(me.user.id),
-                    email: me.user.email ?? 'teste@teste.com',
-                    name: me.user.name ?? 'teste',
+                    email: me.user.email ?? '',
+                    name: me.user.name ?? '',
                 },
                 isAuthenticated: true,
                 isLoading: false,
                 error: null,
             });
         } catch {
-            const token = document.cookie
-                .split('; ')
-                .find((row) => row.startsWith('session='))
-                ?.split('=')[1];
-
-            if (token) {
-                try {
-                    const payload = JSON.parse(atob(token.split('.')[1] ?? ''));
-                    const id = String(payload.user?.id ?? payload.sub ?? '');
-                    const email = payload.user?.email ?? payload.email ?? '';
-                    const name = payload.user?.name ?? payload.name ?? '';
-                    if (id) {
-                        setAuthState({
-                            user: { id, email, name },
-                            isAuthenticated: true,
-                            isLoading: false,
-                            error: null,
-                        });
-                        return;
-                    }
-                } catch {
-                    // token inválido
-                }
-            }
-
-            setAuthState((prev) => ({ ...prev, isLoading: false }));
+            setAuthState({
+                user: null,
+                isAuthenticated: false,
+                isLoading: false,
+                error: null,
+            });
         }
     }, []);
 

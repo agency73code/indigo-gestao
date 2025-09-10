@@ -16,13 +16,13 @@ import { useAuth } from '@/features/auth/hooks/useAuth';
 export function NavUser() {
     const { isMobile } = useSidebar();
     const { logout, user } = useAuth();
-    const displayName = user?.name || 'teste';
-    const displayEmail = user?.email || 'teste@teste.com';
-    const initials = displayName
+    const displayName = user?.name ?? '-';
+    const displayEmail = user?.email ?? '-';
+    const initials = user?.name ? user.name
         .split(' ')
         .map((n) => n[0]?.toUpperCase() ?? '')
         .slice(0, 2)
-        .join('');
+        .join('') : '?';
     const displayAvatar = '/avatars/shadcn.jpg';
 
     return (
