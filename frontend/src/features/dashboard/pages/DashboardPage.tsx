@@ -1,6 +1,6 @@
-import { ChartAreaInteractive } from '@/components/chart-area-interactive';
-import { DataTable } from '@/components/data-table';
-import { SectionCards } from '@/components/section-cards';
+import { ChartAreaInteractive } from '@/components/Dashboard/chart-area-interactive';
+import { DataTable } from '@/components/Dashboard/data-table';
+import { SectionCards } from '@/components/Dashboard/section-cards';
 
 // Dados de exemplo para a tabela
 const mockData = [
