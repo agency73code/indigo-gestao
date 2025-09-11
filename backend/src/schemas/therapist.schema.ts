@@ -93,3 +93,7 @@ export const therapistIdSchema = z.object({
 });
 
 export const therapistUpdateSchema = therapistSchema.partial();
+
+export type TherapistSchema = z.infer<typeof therapistSchema>;
+export type TherapistUpdateSchema = z.infer<typeof therapistUpdateSchema>;
+export type therapistIdSchema = z.infer<typeof therapistIdSchema>;

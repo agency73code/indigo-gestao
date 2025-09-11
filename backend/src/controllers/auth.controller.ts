@@ -5,13 +5,13 @@ import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { sendPasswordResetEmail } from '../utils/mail.util.js';
 import { normalizeAccessInfo } from '../utils/normalize.util.js';
-import { 
+import {
     findTherapistById, 
     findUserByEmail, 
     findUserByResetToken, 
     loginUserByAccessInformation, 
     newPassword, 
-    passwordResetToken 
+    passwordResetToken
 } from '../features/auth/auth.repository.js';
 
 const RESET_TOKEN_EXPIRATION_MS = 60 * 60 * 1000;
