@@ -12,14 +12,7 @@ router.get('/me', auth, me);
 
 router.post('/login', validateLogin);
 router.post('/logout', logout);
-router.post('/forgot-password',
-    validateBody(forgotPasswordBodySchema),
-    requestPasswordReset
-);
-
-router.patch('/password-reset/:token',
-    validateParams(tokenParamSchema),
-    validateBody(passwordSchema),
-    definePassword);
+router.post('/forgot-password', validateBody(forgotPasswordBodySchema), requestPasswordReset);
+router.patch('/password-reset/:token', validateParams(tokenParamSchema), validateBody(passwordSchema), definePassword);
 
 export default router;
