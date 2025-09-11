@@ -21,6 +21,11 @@ const routeToTitleMap: Record<string, string> = {
   '/app/configuracoes/perfil': 'Perfil & Organização',
   '/app/configuracoes/preferencias': 'Preferências',
   '/app/configuracoes/notificacoes': 'Notificações',
+  '/app/programas': 'Programas de Treino (OCP)',
+  '/app/programas/lista': 'Listar Programas',
+  '/app/programas/novo': 'Criar Programa',
+  '/app/programas/sessoes/nova': 'Registrar Sessão',
+  '/app/programas/relatorios/mensal': 'Relatório Mensal',
   '/app/configuracoes/seguranca': 'Segurança',
   '/app/configuracoes/integracoes': 'Integrações',
 };
@@ -79,8 +84,67 @@ export function useBreadcrumb(): BreadcrumbItem[] {
         ];
       }
       
+      // Para rotas de programas específicas, criamos a hierarquia
+      if (pathname.includes('/programas/')) {
+        return [
+          {
+            label: 'Programas',
+            href: '/app/programas'
+          },
+          {
+            label: exactTitle
+          }
+        ];
+      }
+      
       // Para outras rotas, retorna apenas o título
       return [{ label: exactTitle }];
+    }
+
+    // Lógica para rotas dinâmicas de programas
+    if (pathname.startsWith('/app/programas/') && !pathname.includes('/sessoes/') && !pathname.includes('/relatorios/')) {
+      const segments = pathname.split('/');
+      const programaId = segments[3]; // '/app/programas/{programaId}'
+      
+      if (segments.length === 4) {
+        // /app/programas/:programaId
+        return [
+          {
+            label: 'Programas',
+            href: '/app/programas'
+          },
+          {
+            label: `Detalhe do Programa — ID: ${programaId}`
+          }
+        ];
+      } else if (segments.length === 5 && segments[4] === 'editar') {
+        // /app/programas/:programaId/editar
+        return [
+          {
+            label: 'Programas',
+            href: '/app/programas'
+          },
+          {
+            label: `Editar Programa — ID: ${programaId}`
+          }
+        ];
+      }
+    }
+
+    // Lógica para rotas dinâmicas de sessões
+    if (pathname.includes('/programas/sessoes/') && pathname.split('/').length === 5) {
+      const segments = pathname.split('/');
+      const sessaoId = segments[4]; // '/app/programas/sessoes/{sessaoId}'
+      
+      return [
+        {
+          label: 'Programas',
+          href: '/app/programas'
+        },
+        {
+          label: `Sessão — ID: ${sessaoId}`
+        }
+      ];
     }
 
     // Fallback caso a rota não esteja no mapeamento

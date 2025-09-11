@@ -19,6 +19,14 @@ import CadastroTerapeutaPage from './features/cadastros/pages/CadastroTerapeutaP
 import CadastroClientePage from './features/cadastros/pages/CadastroClientePage';
 import CadastroHubPage from './features/cadastros/pages/CadastroHubPage';
 import ConsultaHubPage from './features/consultas/pages/ConsultaHubPage';
+import HubPage from './features/programas/pages/HubPage';
+import ListarProgramasPage from './features/programas/pages/ListarProgramasPage';
+import CriarProgramaPage from './features/programas/pages/CriarProgramaPage';
+import DetalheProgramaPage from './features/programas/pages/DetalheProgramaPage';
+import EditarProgramaPage from './features/programas/pages/EditarProgramaPage';
+import RegistrarSessaoPage from './features/programas/pages/RegistrarSessaoPage';
+import RelatorioMensalPage from './features/programas/pages/RelatorioMensalPage';
+import SessaoPage from './features/programas/pages/SessaoPage';
 import { AuthProvider } from './features/auth/context/AuthContext.tsx';
 
 import './global.css';
@@ -50,6 +58,23 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                             <Route path="arquivos" element={<ArquivosPage />} />
                             <Route path="configuracoes" element={<ConfiguracoesPage />} />
                             <Route path="configuracoes/:secao" element={<ConfiguracoesPage />} />
+                            <Route path="programas" element={<HubPage />} />
+                            <Route path="programas/lista" element={<ListarProgramasPage />} />
+                            <Route path="programas/novo" element={<CriarProgramaPage />} />
+                            <Route path="programas/:programaId" element={<DetalheProgramaPage />} />
+                            <Route
+                                path="programas/:programaId/editar"
+                                element={<EditarProgramaPage />}
+                            />
+                            <Route
+                                path="programas/sessoes/nova"
+                                element={<RegistrarSessaoPage />}
+                            />
+                            <Route
+                                path="programas/relatorios/mensal"
+                                element={<RelatorioMensalPage />}
+                            />
+                            <Route path="programas/sessoes/:sessaoId" element={<SessaoPage />} />
                         </Route>
                         <Route path="/404" element={<NotFoundPage />} />
                         <Route path="/token-not-found" element={<TokenNotFoundPage />} />
