@@ -26,8 +26,8 @@ export async function list(req: Request, res: Response, next: NextFunction) {
 
 export async function create(req: Request, res: Response, next: NextFunction) {
   try {
-    const created = await clientService.create(req.body);
-    res.status(201).json(created);
+    await clientService.create(req.body);
+    res.status(201).json({ success: true, message: 'Terapeuta cadastrado com sucesso!' });
   } catch (err) {
     next(err);
   }
