@@ -1,5 +1,7 @@
 import { Input } from '@/ui/input';
 import { Label } from '@/ui/label';
+import { useEffect } from 'react';
+import { useCepLookup } from '../../hooks/useCepLookup';
 import type { Cliente } from '../../types/cadastros.types';
 
 interface DadosEscolaStepProps {
@@ -16,6 +18,20 @@ export default function DadosEscolaStep({ data, onUpdate, errors }: DadosEscolaS
     const updateEnderecoEscola = (field: string, value: any) => {
         onUpdate(`dadosEscola.endereco.${field}`, value);
     };
+
+    const { data: cepData, error: cepError } = useCepLookup(
+        data.dadosEscola?.endereco?.cep || ''
+    );
+
+    useEffect(() => {
+        if (cepData) {
+            updateEnderecoEscola('logradouro', cepData.logradouro);
+            updateEnderecoEscola('bairro', cepData.bairro);
+            updateEnderecoEscola('cidade', cepData.cidade);
+            updateEnderecoEscola('uf', cepData.uf);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [cepData]);
 
     return (
         <div className="space-y-6">
@@ -120,6 +136,9 @@ export default function DadosEscolaStep({ data, onUpdate, errors }: DadosEscolaS
                             <p className="text-sm text-destructive">
                                 {errors['dadosEscola.endereco.cep']}
                             </p>
+                        )}
+                        {cepError && (
+                            <p className="text-sm text-destructive">{cepError}</p>
                         )}
                     </div>
 

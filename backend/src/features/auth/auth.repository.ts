@@ -5,7 +5,7 @@ import type { Tables, UserRow } from "./auth.types.js";
 export async function findUserByEmail(email: string) {
     return prisma.terapeuta.findUnique({
         where: { email },
-        select: { id:true, nome: true, email: true },
+        select: { id:true, nome: true, email: true, perfil_acesso: true },
     });
 }
 
@@ -52,6 +52,7 @@ export async function loginUserByAccessInformation(accessInfo: string, table: Ta
         senha: true,
         nome: true,
         email_indigo: true,
+        perfil_acesso: true,
       },
     });
 
@@ -61,10 +62,11 @@ export async function loginUserByAccessInformation(accessInfo: string, table: Ta
       senha: row.senha,
       nome: row.nome,
       email: row.email_indigo ?? null,
+      perfil_acesso: row.perfil_acesso,
     };
   } else {
     const row = await prisma.cliente.findFirst({
-      where: { 
+      where: {
         OR: [
             { email_contato: accessInfo },
             {
@@ -79,6 +81,7 @@ export async function loginUserByAccessInformation(accessInfo: string, table: Ta
         senha: true,
         nome: true,
         email_contato: true,
+        perfil_acesso: true,
       },
     });
 
@@ -88,6 +91,7 @@ export async function loginUserByAccessInformation(accessInfo: string, table: Ta
       senha: row.senha,
       nome: row.nome,
       email: row.email_contato ?? null,
+      perfil_acesso: row.perfil_acesso,
     };
   }
 }
@@ -116,6 +120,6 @@ export async function newPassword(token: string, password: string, table: Tables
 export async function findTherapistById(id: string) {
   return prisma.terapeuta.findUnique({
     where: { id },
-    select: { id: true, nome: true, email_indigo: true, email: true },
+    select: { id: true, nome: true, email_indigo: true, email: true, perfil_acesso: true },
   });
 }

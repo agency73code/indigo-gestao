@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const hydrate = useCallback(async () => {
         if (AUTH_BYPASS) {
             setAuthState({
-                user: { id: 'dev-uid', email: 'dev-uid@dev.com', name: 'dev-uid' },
+                user: { id: 'dev-uid', email: 'dev-uid@dev.com', name: 'dev-uid', perfil_acesso: 'gerente' },
                 isAuthenticated: true,
                 isLoading: false,
                 error: null,
@@ -53,6 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     id: String(me.user.id),
                     email: me.user.email ?? '',
                     name: me.user.name ?? '',
+                    perfil_acesso: me.user.perfil_acesso,
                 },
                 isAuthenticated: true,
                 isLoading: false,
