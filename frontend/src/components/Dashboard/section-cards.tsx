@@ -5,8 +5,8 @@ import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/comp
 
 export function SectionCards() {
     return (
-        <div className="*:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4 grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card lg:px-6">
-            <Card className="@container/card rounded-[5px]">
+        <div className="*:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4 grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card">
+            <Card className="@container/card rounded-[5px] relative overflow-hidden">
                 <CardHeader className="relative">
                     <CardDescription>Total Revenue</CardDescription>
                     <CardTitle
@@ -15,7 +15,7 @@ export function SectionCards() {
                     >
                         $1,250.00
                     </CardTitle>
-                    <div className="absolute right-4 top-4">
+                    <div className="absolute right-4 top-4 z-10">
                         <Badge variant="outline" className="flex gap-1 rounded-lg text-xs">
                             <TrendingUpIcon className="size-3" />
                             +12.5%
@@ -29,7 +29,7 @@ export function SectionCards() {
                     <div className="text-muted-foreground">Visitors for the last 6 months</div>
                 </CardFooter>
             </Card>
-            <Card className="@container/card rounded-[5px]">
+            <Card className="@container/card rounded-[5px] relative overflow-hidden">
                 <CardHeader className="relative">
                     <CardDescription>New Customers</CardDescription>
                     <CardTitle
@@ -38,7 +38,7 @@ export function SectionCards() {
                     >
                         1,234
                     </CardTitle>
-                    <div className="absolute right-4 top-4">
+                    <div className="absolute right-4 top-4 z-10">
                         <Badge variant="outline" className="flex gap-1 rounded-lg text-xs">
                             <TrendingDownIcon className="size-3" />
                             -20%
@@ -52,7 +52,7 @@ export function SectionCards() {
                     <div className="text-muted-foreground">Acquisition needs attention</div>
                 </CardFooter>
             </Card>
-            <Card className="@container/card rounded-[5px]">
+            <Card className="@container/card rounded-[5px] relative overflow-hidden">
                 <CardHeader className="relative">
                     <CardDescription>Active Accounts</CardDescription>
                     <CardTitle
@@ -61,7 +61,7 @@ export function SectionCards() {
                     >
                         45,678
                     </CardTitle>
-                    <div className="absolute right-4 top-4">
+                    <div className="absolute right-4 top-4 z-10">
                         <Badge variant="outline" className="flex gap-1 rounded-lg text-xs">
                             <TrendingUpIcon className="size-3" />
                             +12.5%
@@ -75,7 +75,7 @@ export function SectionCards() {
                     <div className="text-muted-foreground">Engagement exceed targets</div>
                 </CardFooter>
             </Card>
-            <Card className="@container/card rounded-[5px]">
+            <Card className="@container/card rounded-[5px] relative overflow-hidden">
                 <CardHeader className="relative">
                     <CardDescription>Growth Rate</CardDescription>
                     <CardTitle
@@ -84,7 +84,7 @@ export function SectionCards() {
                     >
                         4.5%
                     </CardTitle>
-                    <div className="absolute right-4 top-4">
+                    <div className="absolute right-4 top-4 z-10">
                         <Badge variant="outline" className="flex gap-1 rounded-lg text-xs">
                             <TrendingUpIcon className="size-3" />
                             +4.5%

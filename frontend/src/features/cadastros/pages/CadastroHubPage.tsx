@@ -1,57 +1,125 @@
 import { Link } from 'react-router-dom';
-import { User, Users } from 'lucide-react';
+import { User, Users, UserPlus } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function CadastroHubPage() {
+    const mainActions = [
+        {
+            title: 'Cadastrar Terapeuta',
+            description: 'Inclua um novo profissional no sistema com todos os dados necessários',
+            icon: User,
+            href: '/app/cadastro/terapeuta',
+            bgColor: 'bg-[var(--card-primary)]',
+            textColor: 'text-white',
+        },
+        {
+            title: 'Cadastrar Cliente',
+            description: 'Crie o cadastro completo do paciente/cliente no sistema',
+            icon: Users,
+            href: '/app/cadastro/cliente',
+            bgColor: 'bg-blue-500',
+            textColor: 'text-white',
+        },
+    ];
+
     return (
-        <div className='flex flex-col top-0 left-0 w-full h-full px-6 py-6'>
-            <div className='mb-6'>
-                <h1 
-                style={{ fontFamily: 'sora' }}
-                className="text-2xl font-semibold text-primary">Cadastro</h1>
-                <p className="text-sm text-muted-foreground">O que você deseja cadastrar?</p>
+        <div className="flex flex-col min-h-full w-full p-1 md:p-4 lg:p-8 space-y-6">
+            {/* Header Section */}
+            <div className="space-y-2">
+                <h1
+                    style={{ fontFamily: 'Sora, sans-serif' }}
+                    className="text-2xl sm:text-2xl font-semibold text-primary"
+                >
+                    Cadastro
+                </h1>
+                <p className="text-sm sm:text-base text-muted-foreground">
+                    Registre novos usuários e profissionais no sistema
+                </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-full">
-                <Link
-                    to="/app/cadastro/terapeuta"
-                    className="group block rounded-lg border bg-card p-6 hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                    aria-label="Cadastrar novo terapeuta no sistema"
-                >
-                    <div className="flex items-start gap-4 flex-col">
-                        <div className="flex-shrink-0 w-30 h-30 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                            <User className="w-20 h-20 text-blue-500" />
-                        </div>
-                        <div>
-                            <h2 className="text-lg font-medium text-foreground group-hover:text-primary transition-colors">
-                                Cadastrar Terapeuta
-                            </h2>
-                            <p className="text-sm text-muted-foreground mt-1">
-                                Inclua um novo profissional no sistema com todos os dados
-                                necessários.
-                            </p>
-                        </div>
-                    </div>
-                </Link>
+            {/* Main Action Cards */}
+            <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {mainActions.map((action, index) => (
+                        <Card
+                            key={index}
+                            className={`overflow-hidden hover:shadow-md transition-shadow rounded-[5px] ${action.bgColor} ${action.textColor}`}
+                        >
+                            <Link
+                                to={action.href}
+                                className="block h-full"
+                                aria-label={`${action.title}: ${action.description}`}
+                            >
+                                <div className="p-4">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex-1 space-y-1">
+                                            <h3 className="font-medium text-base sm:text-lg">
+                                                {action.title}
+                                            </h3>
+                                            <p className="text-xs sm:text-sm opacity-90">
+                                                {action.description}
+                                            </p>
+                                        </div>
+                                        <div className="bg-white/20 rounded-full p-3 ml-3">
+                                            <action.icon className="h-6 w-6" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </Link>
+                        </Card>
+                    ))}
+                </div>
+            </div>
 
-                <Link
-                    to="/app/cadastro/cliente"
-                    className="group block rounded-lg border bg-card p-6 hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                    aria-label="Cadastrar novo cliente/paciente no sistema"
+            {/* Quick Stats Cards */}
+            <div className="space-y-4">
+                <h2
+                    style={{ fontFamily: 'Sora, sans-serif' }}
+                    className="text-lg sm:text-xl font-medium text-foreground"
                 >
-                    <div className="flex items-start gap-4 flex-col">
-                        <div className="flex-shrink-0 w-30 h-30 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors">
-                            <Users className="w-20 h-20 text-green-700" />
-                        </div>
-                        <div>
-                            <h2 className="text-lg font-medium text-foreground group-hover:text-primary transition-colors">
-                                Cadastrar Cliente
-                            </h2>
-                            <p className="text-sm text-muted-foreground mt-1">
-                                Crie o cadastro completo do paciente/cliente no sistema.
-                            </p>
-                        </div>
-                    </div>
-                </Link>
+                    Visão Geral
+                </h2>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <Card className="rounded-[5px]">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">
+                                Cadastros Este Mês
+                            </CardTitle>
+                            <UserPlus className="h-5 w-5 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">15</div>
+                            <p className="text-xs text-muted-foreground">+8 desde o mês passado</p>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="rounded-[5px]">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">
+                                Terapeutas Cadastrados
+                            </CardTitle>
+                            <User className="h-5 w-5 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">24</div>
+                            <p className="text-xs text-muted-foreground">3 novos este mês</p>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="rounded-[5px]">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">
+                                Clientes Cadastrados
+                            </CardTitle>
+                            <Users className="h-5 w-5 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">156</div>
+                            <p className="text-xs text-muted-foreground">12 novos este mês</p>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
         </div>
     );

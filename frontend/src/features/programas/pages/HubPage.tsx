@@ -1,10 +1,8 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Search, FileText, BarChart3 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function HubPage() {
-    const [selectedPatient] = useState('');
 
     const mainActions = [
         {
@@ -12,8 +10,8 @@ export default function HubPage() {
             description: 'Criar um novo programa de treino personalizado',
             icon: Plus,
             href: '/app/programas/criar',
-            bgColor: 'bg-primary',
-            textColor: 'text-primary-foreground',
+            bgColor: 'bg-[var(--card-primary)]',
+            textColor: 'text-white',
         },
         {
             title: 'Consultar Programas',
@@ -27,9 +25,7 @@ export default function HubPage() {
             title: 'Nova Sessão',
             description: 'Registrar uma nova sessão de treino',
             icon: Search,
-            href: selectedPatient
-                ? `/app/programas/sessao/nova?pacienteId=${selectedPatient}`
-                : '/app/programas/sessao/nova',
+            href: '/app/programas/sessoes/nova',
             bgColor: 'bg-green-500',
             textColor: 'text-white',
         },
@@ -44,7 +40,7 @@ export default function HubPage() {
     ];
 
     return (
-        <div className="flex flex-col min-h-full w-full p-2 space-y-6">
+        <div className="flex flex-col min-h-full w-full p-1 md:p-4 lg:p-8 space-y-6">
             {/* Header Section */}
             <div className="space-y-2">
                 <h1

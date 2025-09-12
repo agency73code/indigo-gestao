@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../ui/button';
-import { Card, CardContent } from '../ui/card';
+import { Card, CardContent } from '../../../components/ui/card';
 import TokenNotFoundLogo from '../../../features/auth/components/token-not-found';
 import AuthBackground from '@/features/auth/components/AuthBackground';
 

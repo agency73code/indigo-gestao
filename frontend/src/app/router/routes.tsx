@@ -2,7 +2,6 @@ import { createBrowserRouter } from 'react-router-dom';
 import { Suspense } from 'react';
 import AppLayout from '../../features/shell/layouts/AppLayout';
 import DashboardPage from '../../features/dashboard/pages/DashboardPage';
-import ConsultaPage from '../../features/consultas/pages/ConsultasPage';
 import TerapeutasListPage from '../../features/consultas/pages/TerapeutasListPage';
 import PacientesListPage from '../../features/consultas/pages/PacientesListPage';
 import ArquivosPage from '../../features/arquivos/pages/ArquivosPage';
@@ -60,14 +59,6 @@ export const router = createBrowserRouter([
                 element: (
                     <Suspense fallback={suspenseFallback}>
                         <CadastroClientePage />
-                    </Suspense>
-                ),
-            },
-            {
-                path: 'consultas',
-                element: (
-                    <Suspense fallback={suspenseFallback}>
-                        <ConsultaPage />
                     </Suspense>
                 ),
             },

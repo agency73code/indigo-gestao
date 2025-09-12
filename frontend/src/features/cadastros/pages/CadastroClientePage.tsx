@@ -10,7 +10,7 @@ import {
 import MultiStepProgress from '../components/MultiStepProgress';
 import type { Cliente } from '../types/cadastros.types';
 import { CardTitle } from '@/ui/card';
-import { CardHeader } from '@/shared/components/ui/card';
+import { CardHeader } from '@/components/ui/card';
 import { cadastrarCliente } from '@/lib/api';
 
 const STEPS = ['Dados Pessoais', 'Endereço', 'Dados Pagamento', 'Dados Escola'];
@@ -259,49 +259,47 @@ export default function CadastroClientePage() {
     return (
         <div className="container mx-auto p-8">
             {/* Header */}
-                <CardHeader className='p-0'>
-                    <CardTitle className="text-2xl mb-8 text-primary">
-                        Cadastro de Paciente
-                    </CardTitle>
-                    <MultiStepProgress
-                        currentStep={currentStep}
-                        totalSteps={STEPS.length}
-                        steps={STEPS}
-                    />
-                </CardHeader>
+            <CardHeader className="p-0">
+                <CardTitle className="text-2xl mb-8 text-primary">Cadastro de Paciente</CardTitle>
+                <MultiStepProgress
+                    currentStep={currentStep}
+                    totalSteps={STEPS.length}
+                    steps={STEPS}
+                />
+            </CardHeader>
 
-                {/* Form Content */}
-                <div className="">{renderCurrentStep()}</div>
+            {/* Form Content */}
+            <div className="">{renderCurrentStep()}</div>
 
-                {/* Navigation Buttons */}
-                <div className="flex justify-between mt-8">
-                    <Button
-                        variant="outline"
-                        onClick={prevStep}
-                        disabled={currentStep === 1 || isLoading}
-                    >
-                        <ArrowLeft className="w-4 h-4 mr-2" />
-                        Anterior
+            {/* Navigation Buttons */}
+            <div className="flex justify-between mt-8">
+                <Button
+                    variant="outline"
+                    onClick={prevStep}
+                    disabled={currentStep === 1 || isLoading}
+                >
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Anterior
+                </Button>
+
+                {currentStep < STEPS.length ? (
+                    <Button onClick={nextStep} disabled={isLoading}>
+                        Próximo
+                        <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
-
-                    {currentStep < STEPS.length ? (
-                        <Button onClick={nextStep} disabled={isLoading}>
-                            Próximo
-                            <ArrowRight className="w-4 h-4 ml-2" />
-                        </Button>
-                    ) : (
-                        <Button onClick={handleSubmit} disabled={isLoading}>
-                            {isLoading ? (
-                                'Cadastrando...'
-                            ) : (
-                                <>
-                                    <Check className="w-4 h-4 mr-2" />
-                                    Finalizar Cadastro
-                                </>
-                            )}
-                        </Button>
-                    )}
-                </div>
+                ) : (
+                    <Button onClick={handleSubmit} disabled={isLoading}>
+                        {isLoading ? (
+                            'Cadastrando...'
+                        ) : (
+                            <>
+                                <Check className="w-4 h-4 mr-2" />
+                                Finalizar Cadastro
+                            </>
+                        )}
+                    </Button>
+                )}
+            </div>
         </div>
     );
 }

@@ -384,7 +384,7 @@ export function DataTable({ data: initialData }: { data: z.infer<typeof schema>[
 
     return (
         <Tabs defaultValue="outline" className="flex w-full flex-col justify-start gap-6 ">
-            <div className="flex items-center justify-between px-4 lg:px-6 ">
+            <div className="flex items-center justify-between">
                 <Label htmlFor="view-selector" className="sr-only">
                     View
                 </Label>
@@ -463,7 +463,7 @@ export function DataTable({ data: initialData }: { data: z.infer<typeof schema>[
             </div>
             <TabsContent
                 value="outline"
-                className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6"
+                className="relative flex flex-col gap-4 overflow-auto"
             >
                 <div className="overflow-hidden rounded-[5px] border">
                     <DndContext
@@ -474,7 +474,7 @@ export function DataTable({ data: initialData }: { data: z.infer<typeof schema>[
                         id={sortableId}
                     >
                         <Table>
-                            <TableHeader className="sticky top-0 z-10 bg-muted">
+                            <TableHeader className="sticky top-0 z-999 bg-muted">
                                 {table.getHeaderGroups().map((headerGroup) => (
                                     <TableRow key={headerGroup.id}>
                                         {headerGroup.headers.map((header) => {
@@ -644,7 +644,7 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
                         Showing total visitors for the last 6 months
                     </SheetDescription>
                 </SheetHeader>
-                <div className="flex flex-1 flex-col gap-4 overflow-y-auto py-4 text-sm" >
+                <div className="flex flex-1 flex-col gap-4 overflow-y-auto text-sm" >
                     {!isMobile && (
                         <>
                             <ChartContainer config={chartConfig}>

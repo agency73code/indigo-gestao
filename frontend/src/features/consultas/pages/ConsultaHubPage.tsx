@@ -1,56 +1,121 @@
 import { Link } from 'react-router-dom';
-import { User, Users } from 'lucide-react';
+import { User, Users, BarChart3 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function ConsultaHubPage() {
+    const mainActions = [
+        {
+            title: 'Consultar Terapeutas',
+            description: 'Visualize e gerencie os terapeutas cadastrados no sistema',
+            icon: User,
+            href: '/app/consultas/terapeutas',
+            bgColor: 'bg-[var(--card-primary)]',
+            textColor: 'text-white',
+        },
+        {
+            title: 'Consultar Pacientes',
+            description: 'Visualize e gerencie os pacientes cadastrados no sistema',
+            icon: Users,
+            href: '/app/consultas/pacientes',
+            bgColor: 'bg-blue-500',
+            textColor: 'text-white',
+        },
+    ];
+
     return (
-        <div className='flex flex-col top-0 left-0 w-full h-full px-6 py-6'>
-            <div className='mb-6'>
-                <h1 
-                    style={{ fontFamily: 'sora' }}
-                    className="text-2xl font-semibold text-primary">Consulta</h1>
-                <p className="text-sm text-muted-foreground">O que você deseja consultar?</p>
+        <div className="flex flex-col min-h-full w-full p-1 md:p-4 lg:p-8 space-y-6">
+            {/* Header Section */}
+            <div className="space-y-2">
+                <h1
+                    style={{ fontFamily: 'Sora, sans-serif' }}
+                    className="text-2xl sm:text-2xl font-semibold text-primary"
+                >
+                    Consulta
+                </h1>
+                <p className="text-sm sm:text-base text-muted-foreground">
+                    Visualize e gerencie os registros do sistema
+                </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-full">
-                <Link
-                    to="/app/consultas/terapeutas"
-                    className="group block rounded-lg border bg-card p-6 hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                    aria-label="Consultar e gerenciar terapeutas cadastrados"
-                >
-                    <div className=" items-start gap-4 flex flex-col">
-                        <div className="flex-shrink-0 w-30 h-30 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                            <User className="w-20 h-20 text-blue-500" />
-                        </div>
-                        <div>
-                            <h2 className="text-lg font-medium text-foreground group-hover:text-primary transition-colors">
-                                Consultar Terapeutas
-                            </h2>
-                            <p className="text-sm text-muted-foreground mt-1">
-                                Visualize e gerencie os terapeutas cadastrados no sistema.
-                            </p>
-                        </div>
-                    </div>
-                </Link>
+            {/* Main Action Cards */}
+            <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {mainActions.map((action, index) => (
+                        <Card
+                            key={index}
+                            className={`overflow-hidden hover:shadow-md transition-shadow rounded-[5px] ${action.bgColor} ${action.textColor}`}
+                        >
+                            <Link
+                                to={action.href}
+                                className="block h-full"
+                                aria-label={`${action.title}: ${action.description}`}
+                            >
+                                <div className="p-4">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex-1 space-y-1">
+                                            <h3 className="font-medium text-base sm:text-lg">
+                                                {action.title}
+                                            </h3>
+                                            <p className="text-xs sm:text-sm opacity-90">
+                                                {action.description}
+                                            </p>
+                                        </div>
+                                        <div className="bg-white/20 rounded-full p-3 ml-3">
+                                            <action.icon className="h-6 w-6" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </Link>
+                        </Card>
+                    ))}
+                </div>
+            </div>
 
-                <Link
-                    to="/app/consultas/pacientes"
-                    className="group block rounded-lg border bg-card p-6 hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                    aria-label="Consultar e gerenciar pacientes cadastrados"
+            {/* Quick Stats Cards */}
+            <div className="space-y-4">
+                <h2
+                    style={{ fontFamily: 'Sora, sans-serif' }}
+                    className="text-lg sm:text-xl font-medium text-foreground"
                 >
-                    <div className="flex items-start gap-4  flex-col">
-                        <div className="flex-shrink-0 w-30 h-30 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors">
-                            <Users className="w-20 h-20 text-green-700" />
-                        </div>
-                        <div>
-                            <h2 className="text-lg font-medium text-foreground group-hover:text-primary transition-colors">
-                                Consultar Pacientes
-                            </h2>
-                            <p className="text-sm text-muted-foreground mt-1">
-                                Visualize e gerencie os pacientes cadastrados no sistema.
+                    Visão Geral
+                </h2>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <Card className="rounded-[5px]">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Total Terapeutas</CardTitle>
+                            <User className="h-5 w-5 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">24</div>
+                            <p className="text-xs text-muted-foreground">+3 desde o mês passado</p>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="rounded-[5px]">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Total Pacientes</CardTitle>
+                            <Users className="h-5 w-5 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">156</div>
+                            <p className="text-xs text-muted-foreground">+12 novos este mês</p>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="rounded-[5px]">
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">Registros Ativos</CardTitle>
+                            <BarChart3 className="h-5 w-5 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">180</div>
+                            <p className="text-xs text-muted-foreground">
+                                Total de registros ativos
                             </p>
-                        </div>
-                    </div>
-                </Link>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
         </div>
     );
