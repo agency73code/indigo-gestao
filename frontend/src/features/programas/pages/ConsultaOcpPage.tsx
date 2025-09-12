@@ -1,0 +1,109 @@
+import { useState } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import {
+    HeaderSection,
+    PatientSelector,
+    SearchAndFilters,
+    ProgramList,
+    CreateProgramFab,
+    type Patient,
+    type SearchAndFiltersState,
+} from '../consultar-programas/components';
+
+export default function ConsultaOcpPage() {
+    const [searchParams, setSearchParams] = useSearchParams();
+    const navigate = useNavigate();
+
+    // Estados principais
+    const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+    const [searchState, setSearchState] = useState<SearchAndFiltersState>({
+        q: searchParams.get('q') || '',
+        status: (searchParams.get('status') as 'active' | 'archived' | 'all') || 'all',
+        sort: (searchParams.get('sort') as 'recent' | 'alphabetic') || 'recent',
+    });
+
+    // Handlers
+    const handlePatientSelect = (patient: Patient) => {
+        setSelectedPatient(patient);
+        console.log('Paciente selecionado:', patient.name);
+    };
+
+    const handlePatientClear = () => {
+        setSelectedPatient(null);
+        console.log('Paciente limpo');
+    };
+
+    const handleSearchChange = (newState: SearchAndFiltersState) => {
+        setSearchState(newState);
+
+        // Atualizar URL params
+        const params = new URLSearchParams();
+        if (newState.q) params.set('q', newState.q);
+        if (newState.status !== 'all') params.set('status', newState.status);
+        if (newState.sort !== 'recent') params.set('sort', newState.sort);
+
+        setSearchParams(params);
+        console.log('Filtros alterados:', newState);
+    };
+
+    const handleCreateProgram = () => {
+        if (!selectedPatient) {
+            console.log('Nenhum paciente selecionado para criar programa');
+            alert('Por favor, selecione um paciente antes de criar um programa.');
+            return;
+        }
+
+        console.log('Navegando para criar programa para:', selectedPatient.name);
+        // Navegar para página de criação passando o ID do paciente como query param
+        navigate(
+            `/app/programas/novo?patientId=${selectedPatient.id}&patientName=${encodeURIComponent(selectedPatient.name)}`,
+        );
+    }; // Transformar filtros para formato esperado pelos componentes
+    const selectedFilters = searchState.status === 'all' ? [] : [searchState.status];
+
+    return (
+        <div className="flex flex-col min-h-full w-full">
+            <div className="px-4 sm:px-6 py-4 sm:py-6">
+                <HeaderSection
+                    title="Programas de Treino (OCP)"
+                    subtitle="Consultar e gerenciar programas terapêuticos dos pacientes"
+                />
+            </div>
+
+            <main className="flex-1 px-4 sm:px-6 pb-20 sm:pb-24 w-full">
+                <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto w-full">
+                    {/* Seleção de Paciente */}
+                    <PatientSelector
+                        selected={selectedPatient}
+                        onSelect={handlePatientSelect}
+                        onClear={handlePatientClear}
+                    />
+
+                    {/* Busca e Filtros */}
+                    <SearchAndFilters
+                        q={searchState.q}
+                        status={searchState.status}
+                        sort={searchState.sort}
+                        onChange={(changes) => handleSearchChange({ ...searchState, ...changes })}
+                        disabled={!selectedPatient}
+                    />
+
+                    {/* Lista de Programas */}
+                    <ProgramList
+                        searchQuery={searchState.q}
+                        selectedFilters={selectedFilters}
+                        selectedPatientId={selectedPatient?.id || null}
+                        selectedPatientName={selectedPatient?.name}
+                    />
+                </div>
+            </main>
+
+            {/* FAB para Criar Programa */}
+            <CreateProgramFab
+                disabled={!selectedPatient}
+                onClick={handleCreateProgram}
+                patientName={selectedPatient?.name}
+            />
+        </div>
+    );
+}

@@ -3,13 +3,12 @@ import { Plus, Search, FileText, BarChart3 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function HubPage() {
-
     const mainActions = [
         {
             title: 'Criar Programa',
             description: 'Criar um novo programa de treino personalizado',
             icon: Plus,
-            href: '/app/programas/criar',
+            href: '/app/programas/novo',
             bgColor: 'bg-[var(--card-primary)]',
             textColor: 'text-white',
         },
@@ -33,7 +32,7 @@ export default function HubPage() {
             title: 'Relatório Mensal',
             description: 'Visualizar relatórios e estatísticas',
             icon: BarChart3,
-            href: '/app/programas/relatorio',
+            href: '/app/programas/relatorios/mensal',
             bgColor: 'bg-purple-500',
             textColor: 'text-white',
         },
@@ -55,11 +54,8 @@ export default function HubPage() {
                 </p>
             </div>
 
-            
-
             {/* Main Action Cards */}
             <div className="space-y-4">
-
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {mainActions.map((action, index) => (
                         <Card
@@ -94,12 +90,15 @@ export default function HubPage() {
 
             {/* Quick Stats Cards */}
             <div className="space-y-4">
-                <h2 
-                style={{ fontFamily: 'Sora, sans-serif' }}
-                className="text-lg sm:text-xl font-medium text-foreground">Visão Geral</h2>
+                <h2
+                    style={{ fontFamily: 'Sora, sans-serif' }}
+                    className="text-lg sm:text-xl font-medium text-foreground"
+                >
+                    Visão Geral
+                </h2>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <Card className='rounded-[5px]'>
+                    <Card className="rounded-[5px]">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Programas Ativos</CardTitle>
                             <BarChart3 className="h-5 w-5 text-muted-foreground" />
@@ -110,7 +109,7 @@ export default function HubPage() {
                         </CardContent>
                     </Card>
 
-                    <Card className='rounded-[5px]'>
+                    <Card className="rounded-[5px]">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Sessões Hoje</CardTitle>
                             <Search className="h-5 w-5 text-muted-foreground" />
@@ -123,7 +122,7 @@ export default function HubPage() {
                         </CardContent>
                     </Card>
 
-                    <Card className='rounded-[5px]'>
+                    <Card className="rounded-[5px]">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Taxa de Sucesso</CardTitle>
                             <Plus className="h-5 w-5 text-muted-foreground" />
@@ -135,8 +134,6 @@ export default function HubPage() {
                     </Card>
                 </div>
             </div>
-
-           
         </div>
     );
 }

@@ -90,7 +90,7 @@ const data = {
             icon: Activity,
             items: [
                 {
-                    title: 'Listar Programas',
+                    title: 'Consultar Programas',
                     url: '/app/programas/lista',
                 },
                 {

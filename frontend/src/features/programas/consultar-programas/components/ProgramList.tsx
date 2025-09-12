@@ -1,0 +1,120 @@
+import { useState, useEffect } from 'react';
+import type { ProgramListItem } from '../types';
+import { listPrograms } from '../services';
+import ProgramCard from './ProgramCard';
+import EmptyState from './EmptyState';
+import ErrorBanner from './ErrorBanner';
+
+interface ProgramListProps {
+    searchQuery: string;
+    selectedFilters: string[];
+    selectedPatientId: string | null;
+    selectedPatientName?: string;
+}
+
+export default function ProgramList({
+    searchQuery,
+    selectedFilters,
+    selectedPatientId,
+    selectedPatientName,
+}: ProgramListProps) {
+    const [programs, setPrograms] = useState<ProgramListItem[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    // Simulação de busca de programas
+    const loadPrograms = async () => {
+        if (!selectedPatientId) {
+            setPrograms([]);
+            return;
+        }
+
+        setLoading(true);
+        setError(null);
+
+        try {
+            const status =
+                selectedFilters.length === 1
+                    ? (selectedFilters[0] as 'active' | 'archived')
+                    : 'all';
+            const result = await listPrograms({
+                patientId: selectedPatientId,
+                q: searchQuery || undefined,
+                status,
+                sort: 'recent',
+            });
+            setPrograms(result);
+        } catch (err) {
+            setError('Erro ao carregar programas. Tente novamente.');
+            setPrograms([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Trigger search when dependencies change
+    useEffect(() => {
+        loadPrograms();
+    }, [selectedPatientId, searchQuery, selectedFilters]);
+
+    const handleOpenProgram = (programId: string) => {
+        console.log('Abrindo programa:', programId);
+        // Aqui implementaria navegação para o programa
+    };
+
+    const handleNewSession = (programId: string) => {
+        console.log('Nova sessão para programa:', programId);
+        // Aqui implementaria criação de nova sessão
+    };
+
+    const handleRetry = () => {
+        loadPrograms();
+    };
+
+    // Estados de erro
+    if (error) {
+        return <ErrorBanner message={error} onRetry={handleRetry} />;
+    }
+
+    // Estado sem paciente selecionado
+    if (!selectedPatientId) {
+        return <EmptyState variant="no-patient" />;
+    }
+
+    // Estado de carregamento
+    if (loading) {
+        return (
+            <div className="grid gap-4 sm:gap-6 animate-pulse">
+                {[...Array(3)].map((_, i) => (
+                    <div key={i} className="h-32 bg-gray-100 rounded-lg" />
+                ))}
+            </div>
+        );
+    }
+
+    // Estado sem resultados
+    if (programs.length === 0) {
+        const hasActiveFilters = Boolean(searchQuery) || selectedFilters.length > 0;
+        return (
+            <EmptyState
+                variant="no-programs"
+                patientName={selectedPatientName}
+                hasFilters={hasActiveFilters}
+            />
+        );
+    }
+
+    // Lista de programas
+    return (
+        <div className="grid gap-4 sm:gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2">
+            {programs.map((program) => (
+                <ProgramCard
+                    key={program.id}
+                    program={program}
+                    onOpen={handleOpenProgram}
+                    onNewSession={handleNewSession}
+                />
+            ))}
+        </div>
+    );
+}

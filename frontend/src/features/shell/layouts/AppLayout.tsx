@@ -59,9 +59,9 @@ export default function AppLayout() {
             <SidebarProvider>
                 <div className="flex min-h-screen w-full">
                     <AppSidebar />
-                    <div className="flex flex-1 flex-col min-h-screen p-3 ">
+                    <div className="flex flex-1 flex-col min-h-screen p-3">
                         <Header />
-                        <main className="bg-background flex min-h-[93%] border-l shrink-0 items-center gap-2 border-b p-3 rounded-b-[5px]">
+                        <main className="flex-1 bg-background overflow-auto">
                             <ErrorBoundary>
                                 <Outlet />
                             </ErrorBoundary>

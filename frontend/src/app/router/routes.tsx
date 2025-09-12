@@ -9,8 +9,9 @@ import ConfiguracoesPage from '../../features/configuracoes/pages/ConfiguracoesP
 import CadastroHubPage from '../../features/cadastros/pages/CadastroHubPage';
 import CadastroTerapeutaPage from '../../features/cadastros/pages/CadastroTerapeutaPage';
 import CadastroClientePage from '../../features/cadastros/pages/CadastroClientePage';
+import ConsultaHubPage from '../../features/consultas/pages/ConsultaHubPage';
 import HubPage from '../../features/programas/pages/HubPage';
-import ListarProgramasPage from '../../features/programas/pages/ListarProgramasPage';
+import ConsultaOcpPage from '../../features/programas/pages/ConsultaOcpPage';
 import CriarProgramaPage from '../../features/programas/pages/CriarProgramaPage';
 import DetalheProgramaPage from '../../features/programas/pages/DetalheProgramaPage';
 import EditarProgramaPage from '../../features/programas/pages/EditarProgramaPage';
@@ -63,6 +64,14 @@ export const router = createBrowserRouter([
                 ),
             },
             {
+                path: 'consultas',
+                element: (
+                    <Suspense fallback={suspenseFallback}>
+                        <ConsultaHubPage />
+                    </Suspense>
+                ),
+            },
+            {
                 path: 'consultas/terapeutas',
                 element: (
                     <Suspense fallback={suspenseFallback}>
@@ -106,7 +115,7 @@ export const router = createBrowserRouter([
                 path: 'programas/lista',
                 element: (
                     <Suspense fallback={suspenseFallback}>
-                        <ListarProgramasPage />
+                        <ConsultaOcpPage />
                     </Suspense>
                 ),
             },
