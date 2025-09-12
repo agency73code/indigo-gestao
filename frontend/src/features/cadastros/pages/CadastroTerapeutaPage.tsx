@@ -328,9 +328,7 @@ export default function CadastroTerapeutaPage() {
         <div className="container mx-auto p-8">
             {/* Header */}
             <CardHeader>
-                <CardTitle className="text-2xl mb-8 text-primary">
-                    Cadastro de Terapeuta
-                </CardTitle>
+                <CardTitle className="text-2xl mb-8 text-primary">Cadastro de Terapeuta</CardTitle>
                 <MultiStepProgress
                     currentStep={currentStep}
                     totalSteps={STEPS.length}

@@ -20,7 +20,7 @@ const AREAS_ATUACAO = [
     'Terapia ABA',
     'Musicoterapia',
     'Pedagogia',
-    'Neuropsicologia'
+    'Neuropsicologia',
 ];
 
 const CARGOS = [
@@ -32,7 +32,7 @@ const CARGOS = [
     'Professor UniIndigo',
     'Terapeuta clinico',
     'Terapeuta Supervisor',
-    'Gerente'
+    'Gerente',
 ];
 
 export default function DadosProfissionaisStep({

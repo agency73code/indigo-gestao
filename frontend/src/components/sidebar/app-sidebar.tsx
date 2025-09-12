@@ -12,6 +12,7 @@ import {
     Settings2,
     UserPlus,
     UserRoundSearchIcon,
+    Activity,
 } from 'lucide-react';
 import { NavMain } from '@/components/sidebar/nav-main';
 import { NavProjects } from '@/components/sidebar/nav-projects';
@@ -80,6 +81,29 @@ const data = {
                 {
                     title: 'Paciente',
                     url: '/app/consultas/pacientes',
+                },
+            ],
+        },
+        {
+            title: 'Programas',
+            url: '/app/programas',
+            icon: Activity,
+            items: [
+                {
+                    title: 'Listar Programas',
+                    url: '/app/programas/lista',
+                },
+                {
+                    title: 'Criar Programa',
+                    url: '/app/programas/novo',
+                },
+                {
+                    title: 'Registrar Sessão',
+                    url: '/app/programas/sessoes/nova',
+                },
+                {
+                    title: 'Relatório Mensal',
+                    url: '/app/programas/relatorios/mensal',
                 },
             ],
         },

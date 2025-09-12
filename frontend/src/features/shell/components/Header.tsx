@@ -3,7 +3,7 @@ import ThemeToggle from './ThemeToggle';
 import { Separator } from '@/components/ui/separator';
 import DynamicBreadcrumb from '@/shared/components/DynamicBreadcrumb';
 import { NavUser } from '@/components/sidebar/nav-user';
-import { GlobalSearch } from '@/components/global-search';
+import { GlobalSearch } from '@/components/Dashboard/global-search';
 import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
