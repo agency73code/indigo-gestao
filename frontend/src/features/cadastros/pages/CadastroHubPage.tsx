@@ -25,7 +25,7 @@ export default function CadastroHubPage() {
     return (
         <div className="flex flex-col min-h-full w-full p-1 md:p-4 lg:p-8 space-y-6">
             {/* Header Section */}
-            <div className="space-y-2">
+            <div className="space-y-2 p">
                 <h1
                     style={{ fontFamily: 'Sora, sans-serif' }}
                     className="text-2xl sm:text-2xl font-semibold text-primary"
@@ -38,12 +38,12 @@ export default function CadastroHubPage() {
             </div>
 
             {/* Main Action Cards */}
-            <div className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-4 ">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 ">
                     {mainActions.map((action, index) => (
                         <Card
                             key={index}
-                            className={`overflow-hidden hover:shadow-md transition-shadow rounded-[5px] ${action.bgColor} ${action.textColor}`}
+                            className={`overflow-hidden hover:shadow-md p-1 md:p-4 lg:p-8 transition-shadow rounded-[5px] ${action.bgColor} ${action.textColor}`}
                         >
                             <Link
                                 to={action.href}

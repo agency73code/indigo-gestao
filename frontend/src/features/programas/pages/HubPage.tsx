@@ -64,7 +64,7 @@ export default function HubPage() {
                     {mainActions.map((action, index) => (
                         <Card
                             key={index}
-                            className={`overflow-hidden hover:shadow-md transition-shadow rounded-[5px] ${action.bgColor} ${action.textColor}`}
+                            className={`overflow-hidden hover:shadow-md p-1 md:p-4 lg:p-8 transition-shadow rounded-[5px] ${action.bgColor} ${action.textColor}`}
                         >
                             <Link
                                 to={action.href}
