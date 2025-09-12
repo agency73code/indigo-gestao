@@ -58,11 +58,11 @@ export default function EnderecoStep({ data, onUpdate, errors }: EnderecoStepPro
                         value={data.endereco?.cep || ''}
                         onChange={(e) => handleEnderecoChange('cep', e.target.value)}
                         placeholder="00000-000"
-                        className={errors['endereco.0.cep'] ? 'border-destructive' : ''}
+                        className={errors['endereco.cep'] ? 'border-destructive' : ''}
                     />
                     {cepError && <p className='text-sm text-destructive'>{cepError}</p>}
-                    {errors['endereco.0.cep'] && (
-                        <p className="text-sm text-destructive">{errors['endereco.0.cep']}</p>
+                    {errors['endereco.cep'] && (
+                        <p className="text-sm text-destructive">{errors['endereco.cep']}</p>
                     )}
                 </div>
 
@@ -73,11 +73,11 @@ export default function EnderecoStep({ data, onUpdate, errors }: EnderecoStepPro
                         value={data.endereco?.rua || ''}
                         onChange={(e) => handleEnderecoChange('rua', e.target.value)}
                         placeholder="Nome da rua"
-                        className={errors['endereco.0.rua'] ? 'border-destructive' : ''}
+                        className={errors['endereco.rua'] ? 'border-destructive' : ''}
                     />
-                    {errors['endereco.0.rua'] && (
+                    {errors['endereco.rua'] && (
                         <p className="text-sm text-destructive">
-                            {errors['endereco.0.rua']}
+                            {errors['endereco.rua']}
                         </p>
                     )}
                 </div>
@@ -91,10 +91,10 @@ export default function EnderecoStep({ data, onUpdate, errors }: EnderecoStepPro
                         value={data.endereco?.numero || ''}
                         onChange={(e) => handleEnderecoChange('numero', e.target.value)}
                         placeholder="123"
-                        className={errors['endereco.0.numero'] ? 'border-destructive' : ''}
+                        className={errors['endereco.numero'] ? 'border-destructive' : ''}
                     />
-                    {errors['endereco.0.numero'] && (
-                        <p className="text-sm text-destructive">{errors['endereco.0.numero']}</p>
+                    {errors['endereco.numero'] && (
+                        <p className="text-sm text-destructive">{errors['endereco.numero']}</p>
                     )}
                 </div>
 
@@ -115,10 +115,10 @@ export default function EnderecoStep({ data, onUpdate, errors }: EnderecoStepPro
                         value={data.endereco?.bairro || ''}
                         onChange={(e) => handleEnderecoChange('bairro', e.target.value)}
                         placeholder="Nome do bairro"
-                        className={errors['endereco.0.bairro'] ? 'border-destructive' : ''}
+                        className={errors['endereco.bairro'] ? 'border-destructive' : ''}
                     />
-                    {errors['endereco.0.bairro'] && (
-                        <p className="text-sm text-destructive">{errors['endereco.0.bairro']}</p>
+                    {errors['endereco.bairro'] && (
+                        <p className="text-sm text-destructive">{errors['endereco.bairro']}</p>
                     )}
                 </div>
 
@@ -129,10 +129,10 @@ export default function EnderecoStep({ data, onUpdate, errors }: EnderecoStepPro
                         value={data.endereco?.cidade || ''}
                         onChange={(e) => handleEnderecoChange('cidade', e.target.value)}
                         placeholder="Nome da cidade"
-                        className={errors['endereco.0.cidade'] ? 'border-destructive' : ''}
+                        className={errors['endereco.cidade'] ? 'border-destructive' : ''}
                     />
-                    {errors['endereco.0.cidade'] && (
-                        <p className="text-sm text-destructive">{errors['endereco.0.cidade']}</p>
+                    {errors['endereco.cidade'] && (
+                        <p className="text-sm text-destructive">{errors['endereco.cidade']}</p>
                     )}
                 </div>
             </div>
@@ -145,7 +145,7 @@ export default function EnderecoStep({ data, onUpdate, errors }: EnderecoStepPro
                         value={data.endereco?.estado || ''}
                         onChange={(e) => handleEnderecoChange('estado', e.target.value)}
                         className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
-                            errors['endereco.0.estado'] ? 'border-destructive' : ''
+                            errors['endereco.estado'] ? 'border-destructive' : ''
                         }`}
                     >
                         <option value="">Selecione o estado</option>
@@ -177,8 +177,8 @@ export default function EnderecoStep({ data, onUpdate, errors }: EnderecoStepPro
                         <option value="SE">Sergipe</option>
                         <option value="TO">Tocantins</option>
                     </select>
-                    {errors['endereco.0.estado'] && (
-                        <p className="text-sm text-destructive">{errors['endereco.0.estado']}</p>
+                    {errors['endereco.estado'] && (
+                        <p className="text-sm text-destructive">{errors['endereco.estado']}</p>
                     )}
                 </div>
             </div>

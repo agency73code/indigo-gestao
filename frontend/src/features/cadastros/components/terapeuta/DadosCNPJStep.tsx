@@ -1,6 +1,7 @@
 import { Input } from '@/ui/input';
 import { Label } from '@/ui/label';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useCepLookup } from '../../hooks/useCepLookup';
 import type { Terapeuta } from '../../types/cadastros.types';
 
 interface DadosCNPJStepProps {
@@ -11,6 +12,9 @@ interface DadosCNPJStepProps {
 
 export default function DadosCNPJStep({ data, onUpdate, errors }: DadosCNPJStepProps) {
     const [temCNPJ, setTemCNPJ] = useState(!!data.cnpj?.numero);
+    const { data: cepData, error: cepError } = useCepLookup(
+        data.cnpj?.endereco?.cep || ''
+    );
 
     const handleCNPJChange = (field: string, value: string) => {
         onUpdate(`cnpj.${field}`, value);
@@ -36,6 +40,16 @@ export default function DadosCNPJStep({ data, onUpdate, errors }: DadosCNPJStepP
             onUpdate('cnpj.endereco.estado', '');
         }
     };
+
+    useEffect(() => {
+        if (cepData) {
+            handleCNPJEnderecoChange('rua', cepData.logradouro || '');
+            handleCNPJEnderecoChange('bairro', cepData.bairro || '');
+            handleCNPJEnderecoChange('cidade', cepData.cidade || '');
+            handleCNPJEnderecoChange('estado', cepData.uf || '');
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [cepData]);
 
     return (
         <div className="space-y-6">
@@ -135,7 +149,9 @@ export default function DadosCNPJStep({ data, onUpdate, errors }: DadosCNPJStepP
                                     placeholder="00000-000"
                                 />
                             </div>
-
+                            {cepError && (
+                                <p className='text-sm text-destructive'>{cepError}</p>
+                            )}
                             <div className="space-y-2 md:col-span-2">
                                 <Label htmlFor="cnpjRua">Rua</Label>
                                 <Input
@@ -211,9 +227,33 @@ export default function DadosCNPJStep({ data, onUpdate, errors }: DadosCNPJStepP
                                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     <option value="">Selecione o estado</option>
-                                    <option value="SP">São Paulo</option>
-                                    <option value="RJ">Rio de Janeiro</option>
+                                    <option value="AC">Acre</option>
+                                    <option value="AL">Alagoas</option>
+                                    <option value="AP">Amapá</option>
+                                    <option value="AM">Amazonas</option>
+                                    <option value="BA">Bahia</option>
+                                    <option value="CE">Ceará</option>
+                                    <option value="DF">Distrito Federal</option>
+                                    <option value="ES">Espírito Santo</option>
+                                    <option value="GO">Goiás</option>
+                                    <option value="MA">Maranhão</option>
+                                    <option value="MT">Mato Grosso</option>
+                                    <option value="MS">Mato Grosso do Sul</option>
                                     <option value="MG">Minas Gerais</option>
+                                    <option value="PA">Pará</option>
+                                    <option value="PB">Paraíba</option>
+                                    <option value="PR">Paraná</option>
+                                    <option value="PE">Pernambuco</option>
+                                    <option value="PI">Piauí</option>
+                                    <option value="RJ">Rio de Janeiro</option>
+                                    <option value="RN">Rio Grande do Norte</option>
+                                    <option value="RS">Rio Grande do Sul</option>
+                                    <option value="RO">Rondônia</option>
+                                    <option value="RR">Roraima</option>
+                                    <option value="SC">Santa Catarina</option>
+                                    <option value="SP">São Paulo</option>
+                                    <option value="SE">Sergipe</option>
+                                    <option value="TO">Tocantins</option>
                                     {/* Adicionar outros estados conforme necessário */}
                                 </select>
                             </div>
