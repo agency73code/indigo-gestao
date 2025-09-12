@@ -8,6 +8,7 @@
         "dev:backend": "pnpm --filter backend dev",
         "dev:frontend": "pnpm --filter frontend dev",
         "dev": "concurrently \"pnpm dev:backend\" \"pnpm dev:frontend\"",
+        "build": "concurrently \"pnpm --filter backend build\" \"pnpm --filter frontend build\"",
         "lint": "eslint . --ext .js,.ts,.jsx,.tsx",
         "lint:fix": "eslint . --ext .js,.ts,.jsx,.tsx --fix",
         "format": "prettier --write ."

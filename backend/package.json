@@ -16,7 +16,6 @@
     "license": "ISC",
     "packageManager": "pnpm@10.15.0",
     "dependencies": {
-        "@casl/ability": "^6.7.3",
         "@prisma/client": "^6.15.0",
         "@types/bcrypt": "^6.0.0",
         "@types/nodemailer": "^7.0.1",

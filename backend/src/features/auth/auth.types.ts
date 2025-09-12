@@ -3,8 +3,7 @@ export type Tables = 'terapeuta' | 'cliente';
 export interface AuthUser {
   id: string | number;
   nome: string;
-  email: string | null;
-  perfil_acesso: string;
+  email: string | null
 }
 
 export interface UserRow extends AuthUser {

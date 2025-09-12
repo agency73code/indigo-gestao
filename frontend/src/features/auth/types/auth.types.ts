@@ -4,7 +4,7 @@ export interface User {
   name?: string;
   firstName?: string;
   lastName?: string;
-  perfil_acesso?: string;
+  role?: string;
 }
 
 export interface LoginCredentials {
