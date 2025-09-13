@@ -12,7 +12,7 @@ import CadastroClientePage from '../../features/cadastros/pages/CadastroClienteP
 import ConsultaHubPage from '../../features/consultas/pages/ConsultaHubPage';
 import HubPage from '../../features/programas/pages/HubPage';
 import ConsultaOcpPage from '../../features/programas/pages/ConsultaOcpPage';
-import CriarProgramaPage from '../../features/programas/pages/CriarProgramaPage';
+import CadastroOcpPage from '../../features/programas/pages/CadastroOcpPage';
 import DetalheProgramaPage from '../../features/programas/pages/DetalheProgramaPage';
 import EditarProgramaPage from '../../features/programas/pages/EditarProgramaPage';
 import RegistrarSessaoPage from '../../features/programas/pages/RegistrarSessaoPage';
@@ -123,7 +123,7 @@ export const router = createBrowserRouter([
                 path: 'programas/novo',
                 element: (
                     <Suspense fallback={suspenseFallback}>
-                        <CriarProgramaPage />
+                        <CadastroOcpPage />
                     </Suspense>
                 ),
             },

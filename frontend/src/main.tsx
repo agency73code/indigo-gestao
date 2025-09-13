@@ -21,7 +21,7 @@ import CadastroHubPage from './features/cadastros/pages/CadastroHubPage';
 import ConsultaHubPage from './features/consultas/pages/ConsultaHubPage';
 import HubPage from './features/programas/pages/HubPage';
 import ConsultaOcpPage from './features/programas/pages/ConsultaOcpPage';
-import CriarProgramaPage from './features/programas/pages/CriarProgramaPage';
+import CadastroOcpPage from './features/programas/pages/CadastroOcpPage';
 import DetalheProgramaPage from './features/programas/pages/DetalheProgramaPage';
 import EditarProgramaPage from './features/programas/pages/EditarProgramaPage';
 import RegistrarSessaoPage from './features/programas/pages/RegistrarSessaoPage';
@@ -60,7 +60,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                             <Route path="configuracoes/:secao" element={<ConfiguracoesPage />} />
                             <Route path="programas" element={<HubPage />} />
                             <Route path="programas/lista" element={<ConsultaOcpPage />} />
-                            <Route path="programas/novo" element={<CriarProgramaPage />} />
+                            <Route path="programas/novo" element={<CadastroOcpPage />} />
                             <Route path="programas/:programaId" element={<DetalheProgramaPage />} />
                             <Route
                                 path="programas/:programaId/editar"
