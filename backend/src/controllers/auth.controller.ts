@@ -33,7 +33,8 @@ export async function me(req: Request, res: Response) {
         user: {
             id: user.id,
             name: user.nome,
-            email: user.email_indigo ?? user.email ?? null
+            email: user.email_indigo ?? user.email ?? null,
+            perfil_acesso: user.perfil_acesso,
         },
     });
 }
@@ -104,7 +105,8 @@ export async function validateLogin(req: Request, res: Response, next: NextFunct
     try {
         const { accessInfo, password } = req.body;
         const user = await loginUserByAccessInformation(normalizeAccessInfo(accessInfo), 'terapeuta');
-        if(!user) return res.status(401).json({ success: false, message: 'Credenciais inválidas' });
+        if (!user) return res.status(401).json({ success: false, message: 'Credenciais inválidas' });
+        if (!user.senha) return res.status(400).json({ seccess: false, message: 'Você não possui uma senha cadastrada.' });
         
         const ok = await comparePassword(password, user.senha!);
         if (!ok) return res.status(401).json({ success: false, message: 'Credenciais inválidas' });
@@ -126,7 +128,7 @@ export async function validateLogin(req: Request, res: Response, next: NextFunct
             success: true,
             message: 'Login realizado com sucesso',
             token,
-            user: { id: user.id, name: user.nome, email: user.email }
+            user: { id: user.id, name: user.nome, email: user.email, perfil_acesso: user.perfil_acesso }
         });
     } catch (error) {
         next(error);

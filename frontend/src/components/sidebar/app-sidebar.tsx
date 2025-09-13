@@ -1,7 +1,7 @@
 'use client';
 import * as React from 'react';
 import indigoLogo from '@/assets/logos/indigo.svg';
-
+import { useAbility } from '@/features/auth/abilities/useAbility';
 import {
     Frame,
     LayoutDashboard,
@@ -166,6 +166,16 @@ const data = {
     ],
 };
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+    const ability = useAbility();
+
+    // verifica o nome da rota do nav, ajuda a mapear
+    //console.log("DEBUG navMain original:", data.navMain.map(i => i.url))
+
+    const navMainFiltered = data.navMain.filter((item) => {
+        if (item.url === '/app/cadastros' && !ability.can('manage', 'Cadastro')) return false
+        return true
+    });
+
     return (
         <Sidebar variant="inset" {...props}>
             <SidebarHeader className="pt-">
@@ -197,7 +207,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </SidebarMenu>
             </SidebarHeader>
             <SidebarContent className="pt-2">
-                <NavMain items={data.navMain} />
+                <NavMain items={navMainFiltered} />
                 <NavProjects projects={data.projects} />
                 <NavSecondary items={data.navSecondary} className="mt-auto " />
             </SidebarContent>

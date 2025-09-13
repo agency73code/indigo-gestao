@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import Header from '../components/Header';
 import { AppSidebar } from '@/components/sidebar/app-sidebar';
 import { SidebarProvider } from '@/components/ui/sidebar';
+import { AbilityProvider } from '@/features/auth/abilities/AbilityProvider';
 
 interface ErrorBoundaryState {
     hasError: boolean;
@@ -57,17 +58,19 @@ export default function AppLayout() {
     return (
         <ErrorBoundary>
             <SidebarProvider>
-                <div className="flex min-h-screen w-full">
-                    <AppSidebar />
-                    <div className="flex flex-1 flex-col min-h-screen p-3">
-                        <Header />
-                        <main className="flex-1 bg-background overflow-auto">
-                            <ErrorBoundary>
-                                <Outlet />
-                            </ErrorBoundary>
-                        </main>
+                <AbilityProvider>
+                    <div className="flex min-h-screen w-full">
+                        <AppSidebar />
+                        <div className="flex flex-1 flex-col min-h-screen p-3">
+                            <Header />
+                            <main className="flex-1 bg-background overflow-auto">
+                                <ErrorBoundary>
+                                    <Outlet />
+                                </ErrorBoundary>
+                            </main>
+                        </div>
                     </div>
-                </div>
+                </AbilityProvider>
             </SidebarProvider>
         </ErrorBoundary>
     );

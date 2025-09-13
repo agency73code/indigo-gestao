@@ -51,7 +51,8 @@ export async function loginUserByAccessInformation(accessInfo: string, table: Ta
         id: true,
         senha: true,
         nome: true,
-        email_indigo: true
+        email_indigo: true,
+        perfil_acesso: true
       },
     });
 
@@ -60,7 +61,8 @@ export async function loginUserByAccessInformation(accessInfo: string, table: Ta
       id: row.id,
       senha: row.senha,
       nome: row.nome,
-      email: row.email_indigo ?? null
+      email: row.email_indigo ?? null,
+      perfil_acesso: row.perfil_acesso
     };
   } else {
     const row = await prisma.cliente.findFirst({
@@ -78,7 +80,8 @@ export async function loginUserByAccessInformation(accessInfo: string, table: Ta
         id: true,
         senha: true,
         nome: true,
-        email_contato: true
+        email_contato: true,
+        perfil_acesso: true
       },
     });
 
@@ -87,7 +90,8 @@ export async function loginUserByAccessInformation(accessInfo: string, table: Ta
       id: row.id,
       senha: row.senha,
       nome: row.nome,
-      email: row.email_contato ?? null
+      email: row.email_contato ?? null,
+      perfil_acesso: row.perfil_acesso
     };
   }
 }
@@ -116,6 +120,6 @@ export async function newPassword(token: string, password: string, table: Tables
 export async function findTherapistById(id: string) {
   return prisma.terapeuta.findUnique({
     where: { id },
-    select: { id: true, nome: true, email_indigo: true, email: true },
+    select: { id: true, nome: true, email_indigo: true, email: true, perfil_acesso: true },
   });
 }
