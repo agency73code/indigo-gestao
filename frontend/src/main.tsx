@@ -30,6 +30,7 @@ import SessaoPage from './features/programas/pages/SessaoPage';
 import { AuthProvider } from './features/auth/context/AuthContext.tsx';
 
 import './global.css';
+import { RequireAbility } from './features/auth/components/RequireAbility.tsx';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
@@ -49,7 +50,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
                         <Route path="/reset-success" element={<ResetSuccessPage />} />
                         <Route path="/app" element={<AppLayout />}>
                             <Route index element={<DashboardPage />} />
-                            <Route path="cadastros" element={<CadastroHubPage />} />
+                            <Route path="cadastros" element={<RequireAbility action='manage' subject='Cadastro'><CadastroHubPage /></RequireAbility>} />
                             <Route path="cadastro/terapeuta" element={<CadastroTerapeutaPage />} />
                             <Route path="cadastro/cliente" element={<CadastroClientePage />} />
                             <Route path="consultas" element={<ConsultaHubPage />} />
