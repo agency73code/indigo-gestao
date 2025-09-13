@@ -112,7 +112,7 @@ export async function validateLogin(req: Request, res: Response, next: NextFunct
         if (!ok) return res.status(401).json({ success: false, message: 'Credenciais inválidas' });
 
         const token = jwt.sign(
-            { sub: user.id, role: 'terapeuta' },
+            { sub: user.id, perfil_acesso: user.perfil_acesso },
             env.JWT_SECRET,
             { expiresIn: '1d' }
         );

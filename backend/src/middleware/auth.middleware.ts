@@ -1,18 +1,8 @@
-/*
-
-Este middleware:
-lê Authorization: Bearer <token>;
-valida com env.JWT_SECRET;
-coloca req.user = { id, role };
-retorna 401 se faltar/invalidar.
-
-*/
-
 import type { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env.js';
 
-type JwtPayload = { sub: string; role?: string; iat?: number; exp?: number };
+type JwtPayload = { sub: string; perfil_acesso?: string; iat?: number; exp?: number };
 
 export function auth(req: Request, res: Response, next: NextFunction) {
     const header = req.headers.authorization || '';
@@ -35,7 +25,7 @@ export function auth(req: Request, res: Response, next: NextFunction) {
         const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
 
         const baseUser = { id: decoded.sub } as Express.UserPayload;
-        if (decoded.role) baseUser.role = decoded.role;
+        if (decoded.perfil_acesso) baseUser.perfil_acesso = decoded.perfil_acesso;
         req.user = baseUser;
 
         return next();
