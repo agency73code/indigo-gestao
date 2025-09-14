@@ -90,7 +90,7 @@ const data = {
             icon: Activity,
             items: [
                 {
-                    title: 'Consultar Programas',
+                    title: 'Listar Programas',
                     url: '/app/programas/lista',
                 },
                 {
@@ -172,8 +172,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     //console.log("DEBUG navMain original:", data.navMain.map(i => i.url))
 
     const navMainFiltered = data.navMain.filter((item) => {
-        if (item.url === '/app/cadastros' && !ability.can('manage', 'Cadastro')) return false
-        return true
+        if (item.url === '/app/cadastros' && !ability.can('manage', 'Cadastro')) return false;
+        return true;
     });
 
     return (

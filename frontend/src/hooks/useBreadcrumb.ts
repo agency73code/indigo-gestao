@@ -35,6 +35,11 @@ export function useBreadcrumb(): BreadcrumbItem[] {
 
   return useMemo(() => {
     const pathname = location.pathname;
+    const searchParams = new URLSearchParams(location.search);
+    const patientId = searchParams.get('patientId');
+    const preservePatientId = (href: string) => {
+      return patientId ? `${href}?patientId=${patientId}` : href;
+    };
     
     // Se estamos na rota raiz do app, retorna apenas Dashboard
     if (pathname === '/app' || pathname === '/app/') {
@@ -89,7 +94,7 @@ export function useBreadcrumb(): BreadcrumbItem[] {
         return [
           {
             label: 'Programas',
-            href: '/app/programas'
+            href: preservePatientId('/app/programas')
           },
           {
             label: exactTitle
@@ -111,10 +116,14 @@ export function useBreadcrumb(): BreadcrumbItem[] {
         return [
           {
             label: 'Programas',
-            href: '/app/programas'
+            href: preservePatientId('/app/programas')
           },
           {
-            label: `Detalhe do Programa — ID: ${programaId}`
+            label: 'Listar Programas',
+            href: preservePatientId('/app/programas/lista')
+          },
+          {
+            label: `Programa ${programaId}`
           }
         ];
       } else if (segments.length === 5 && segments[4] === 'editar') {
@@ -122,10 +131,18 @@ export function useBreadcrumb(): BreadcrumbItem[] {
         return [
           {
             label: 'Programas',
-            href: '/app/programas'
+            href: preservePatientId('/app/programas')
           },
           {
-            label: `Editar Programa — ID: ${programaId}`
+            label: 'Listar Programas',
+            href: preservePatientId('/app/programas/lista')
+          },
+          {
+            label: `Programa ${programaId}`,
+            href: preservePatientId(`/app/programas/${programaId}`)
+          },
+          {
+            label: 'Editar'
           }
         ];
       }
@@ -133,16 +150,13 @@ export function useBreadcrumb(): BreadcrumbItem[] {
 
     // Lógica para rotas dinâmicas de sessões
     if (pathname.includes('/programas/sessoes/') && pathname.split('/').length === 5) {
-      const segments = pathname.split('/');
-      const sessaoId = segments[4]; // '/app/programas/sessoes/{sessaoId}'
-      
       return [
         {
           label: 'Programas',
-          href: '/app/programas'
+          href: preservePatientId('/app/programas')
         },
         {
-          label: `Sessão — ID: ${sessaoId}`
+          label: 'Nova Sessão'
         }
       ];
     }

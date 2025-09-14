@@ -1,6 +1,6 @@
 import { Plus, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { ProgramDetail } from '../types';
 
 interface ActionBarProps {
@@ -9,13 +9,27 @@ interface ActionBarProps {
 
 export default function ActionBar({ program }: ActionBarProps) {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
 
     const handleRegisterSession = () => {
-        navigate(`/programas/sessoes/nova?programaId=${program.id}&patientId=${program.patientId}`);
+        const params = new URLSearchParams();
+        params.set('programaId', program.id);
+        params.set('patientId', program.patientId);
+
+        const patientIdFromUrl = searchParams.get('patientId');
+        if (patientIdFromUrl) {
+            params.set('patientId', patientIdFromUrl);
+        }
+
+        navigate(`/app/programas/sessoes/nova?${params.toString()}`);
     };
 
     const handleEditProgram = () => {
-        navigate(`/programas/${program.id}/editar`);
+        const patientId = searchParams.get('patientId');
+        const path = `/app/programas/${program.id}/editar`;
+        const url = patientId ? `${path}?patientId=${patientId}` : path;
+
+        navigate(url);
     };
 
     return (
