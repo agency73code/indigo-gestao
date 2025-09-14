@@ -25,6 +25,9 @@ export default function CadastroOcpPage() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
 
+    // Estado para controlar a visibilidade da SaveBar
+    const [showSaveBar, setShowSaveBar] = useState(false);
+
     // Estados do formulário
     const [formState, setFormState] = useState<FormState>({
         patient: null,
@@ -112,6 +115,35 @@ export default function CadastroOcpPage() {
             setFormState((prev) => ({ ...prev, stimuli: [initialStimulus] }));
         }
     }, [formState.stimuli.length, isLoading]);
+
+    // Controlar visibilidade da SaveBar baseado no scroll
+    useEffect(() => {
+        const handleScroll = () => {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const scrollHeight = document.documentElement.scrollHeight;
+            const clientHeight = window.innerHeight;
+
+            // Mostrar SaveBar quando estiver nos últimos 50% da página
+            const scrollPercentage = (scrollTop + clientHeight) / scrollHeight;
+            const shouldShow = scrollPercentage > 0.9;
+
+            setShowSaveBar(shouldShow);
+        };
+
+        // Adicionar listener
+        window.addEventListener('scroll', handleScroll, { passive: true });
+
+        // Verificar posição inicial (sempre mostrar se página for pequena)
+        const isShortPage = document.documentElement.scrollHeight <= window.innerHeight * 1.5;
+        if (isShortPage) {
+            setShowSaveBar(true);
+        } else {
+            handleScroll();
+        }
+
+        // Cleanup
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
 
     // Validação
     const validateForm = (): ValidationErrors => {
@@ -277,8 +309,8 @@ export default function CadastroOcpPage() {
                         <div className="h-4 bg-muted rounded w-1/2"></div>
                     </div>
                 </div>
-                <main className="flex-1 px-4 sm:px-6 pb-32 w-full">
-                    <div className="space-y-6 max-w-4xl mx-auto">
+                <main className="flex-1 px-4 sm:px-6 pb-56 w-full">
+                    <div className="space-y-6 max-w-4xl md:max-w-none mx-auto">
                         {Array.from({ length: 4 }).map((_, i) => (
                             <div key={i} className="h-40 bg-muted rounded-lg animate-pulse"></div>
                         ))}
@@ -289,9 +321,9 @@ export default function CadastroOcpPage() {
     }
 
     return (
-        <div className="flex flex-col min-h-full w-full">
+        <div className="flex flex-col min-h-full w-full p-0 sm:p-6">
             {/* Header */}
-            <div className="px-4 sm:px-6 py-4 sm:py-6">
+            <div className="px-1 sm:px-6 py-4 sm:py-6">
                 <div className="space-y-2">
                     <h1
                         style={{ fontFamily: 'Sora, sans-serif' }}
@@ -306,8 +338,8 @@ export default function CadastroOcpPage() {
             </div>
 
             {/* Conteúdo principal */}
-            <main className="flex-1 px-4 sm:px-6 pb-32 w-full">
-                <div className="space-y-6 max-w-4xl mx-auto">
+            <main className="flex-1 px-1 sm:px-6 pb-60 w-full">
+                <div className="space-y-6 max-w-4xl md:max-w-none mx-auto">
                     {/* Informações do cabeçalho */}
                     <HeaderInfo
                         patient={formState.patient}
@@ -346,15 +378,26 @@ export default function CadastroOcpPage() {
                 </div>
             </main>
 
-            {/* Barra de salvamento */}
-            <SaveBar
-                onSave={() => handleSave(false)}
-                onSaveAndStart={() => handleSave(true)}
-                onCancel={handleCancel}
-                isSaving={isSaving}
-                canSave={canSave()}
-                patientName={formState.patient?.name}
-            />
+            {/* Barra de salvamento com animação suave */}
+            <div
+                className={`fixed bottom-0 left-0 right-0 transition-all duration-700 ease-out ${
+                    showSaveBar ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
+                }`}
+                style={{
+                    transform: showSaveBar ? 'translateY(0)' : 'translateY(100%)',
+                    transition:
+                        'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease-out',
+                }}
+            >
+                <SaveBar
+                    onSave={() => handleSave(false)}
+                    onSaveAndStart={() => handleSave(true)}
+                    onCancel={handleCancel}
+                    isSaving={isSaving}
+                    canSave={canSave()}
+                    patientName={formState.patient?.name}
+                />
+            </div>
 
             {/* Validação global se necessário */}
             {errors.general && (

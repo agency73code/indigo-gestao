@@ -56,8 +56,8 @@ export default function DetalheProgramaPage() {
     // Loading state
     if (loading) {
         return (
-            <div className="min-h-screen bg-background pb-24">
-                <div className="max-w-lg mx-auto p-4 space-y-6">
+            <div className="min-h-screen bg-background pb-28">
+                <div className="max-w-lg md:max-w-none mx-auto md:mx-4 lg:mx-8 p-4 space-y-6">
                     <Skeleton className="h-48 w-full rounded-[5px]" />
                     <Skeleton className="h-32 w-full rounded-[5px]" />
                     <Skeleton className="h-40 w-full rounded-[5px]" />
@@ -72,7 +72,7 @@ export default function DetalheProgramaPage() {
     if (error || !program) {
         return (
             <div className="min-h-screen bg-background">
-                <div className="max-w-lg mx-auto p-4 pt-8">
+                <div className="max-w-lg md:max-w-none mx-auto md:mx-4 lg:mx-8 p-4 pt-8">
                     <ErrorBanner message={error || 'Programa não encontrado.'} onRetry={loadData} />
                 </div>
             </div>
@@ -82,8 +82,8 @@ export default function DetalheProgramaPage() {
     const lastSession = sessions.length > 0 ? sessions[0] : null;
 
     return (
-        <div className="min-h-screen bg-background pb-24">
-            <div className="max-w-lg mx-auto p-4 space-y-6">
+        <div className="min-h-screen bg-background pb-28">
+            <div className="max-w-lg md:max-w-none mx-auto md:mx-4 lg:mx-8 p-4 space-y-6">
                 {/* Header com informações do paciente e programa */}
                 <HeaderProgram program={program} />
 

@@ -258,8 +258,8 @@ export default function EditarProgramaPage() {
     // Loading state
     if (loading) {
         return (
-            <div className="min-h-screen bg-background pb-24">
-                <div className="max-w-lg mx-auto p-4 space-y-6">
+            <div className="min-h-screen bg-background pb-40">
+                <div className="max-w-lg md:max-w-none mx-auto md:mx-4 lg:mx-8 p-4 space-y-6">
                     <Skeleton className="h-24 w-full rounded-[5px]" />
                     <Skeleton className="h-48 w-full rounded-[5px]" />
                     <Skeleton className="h-32 w-full rounded-[5px]" />
@@ -274,7 +274,7 @@ export default function EditarProgramaPage() {
     if (error || !program) {
         return (
             <div className="min-h-screen bg-background">
-                <div className="max-w-lg mx-auto p-4 pt-8">
+                <div className="max-w-lg md:max-w-none mx-auto md:mx-4 lg:mx-8 p-4 pt-8">
                     <div className="bg-red-50 border border-red-200 rounded-md p-4">
                         <p className="text-red-700">{error || 'Programa não encontrado.'}</p>
                         <button onClick={loadProgram} className="mt-2 text-red-800 underline">
@@ -287,8 +287,8 @@ export default function EditarProgramaPage() {
     }
 
     return (
-        <div className="min-h-screen bg-background pb-32">
-            <div className="max-w-lg mx-auto p-4 space-y-6">
+        <div className="min-h-screen bg-background pb-40">
+            <div className="max-w-lg md:max-w-none mx-auto md:mx-4 lg:mx-8 p-4 space-y-6">
                 {/* Header com informações read-only */}
                 <HeaderInfo program={program} />
 

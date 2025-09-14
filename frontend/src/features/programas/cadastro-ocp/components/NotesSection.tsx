@@ -9,7 +9,7 @@ interface NotesSectionProps {
 
 export default function NotesSection({ notes, onNotesChange }: NotesSectionProps) {
     return (
-        <Card className="rounded-[5px]">
+        <Card className="rounded-[5px] p-2">
             <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
                 <CardTitle className="text-base flex items-center gap-2">
                     <FileText className="h-4 w-4" />
