@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
     HeaderProgram,
@@ -16,6 +16,8 @@ import type { ProgramDetail, SessionListItem } from '../detalhe-ocp/types';
 
 export default function DetalheProgramaPage() {
     const { programaId } = useParams<{ programaId: string }>();
+    const [searchParams] = useSearchParams();
+    const patientId = searchParams.get('patientId');
 
     const [program, setProgram] = useState<ProgramDetail | null>(null);
     const [sessions, setSessions] = useState<SessionListItem[]>([]);
@@ -104,7 +106,7 @@ export default function DetalheProgramaPage() {
             </div>
 
             {/* Barra de ações fixa no rodapé */}
-            <ActionBar program={program} />
+            <ActionBar program={program} patientId={patientId} />
         </div>
     );
 }
