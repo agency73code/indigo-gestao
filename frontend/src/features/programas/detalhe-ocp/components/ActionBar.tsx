@@ -5,20 +5,17 @@ import type { ProgramDetail } from '../types';
 
 interface ActionBarProps {
     program: ProgramDetail;
-    patientId?: string | null;
 }
 
-export default function ActionBar({ program, patientId }: ActionBarProps) {
+export default function ActionBar({ program }: ActionBarProps) {
     const navigate = useNavigate();
 
-    const currentPatientId = patientId || program.patientId;
-
     const handleRegisterSession = () => {
-        navigate(`/programas/sessoes/nova?programaId=${program.id}&patientId=${currentPatientId}`);
+        navigate(`/programas/sessoes/nova?programaId=${program.id}&patientId=${program.patientId}`);
     };
 
     const handleEditProgram = () => {
-        navigate(`/programas/${program.id}/editar?patientId=${currentPatientId}`);
+        navigate(`/programas/${program.id}/editar`);
     };
 
     return (

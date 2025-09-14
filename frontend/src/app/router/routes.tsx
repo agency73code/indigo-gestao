@@ -1,6 +1,15 @@
-import { createBrowserRouter } from 'react-router-dom';
 import { Suspense } from 'react';
+import { createBrowserRouter } from 'react-router-dom';
+
+import { LoginPage, ForgotPasswordPage } from '../../features/auth';
+import ForgotPasswordEmailSend from '../../features/auth/components/forgot-password-email-sent';
+import ResetPasswordPage from '../../features/auth/pages/ResetPasswordPage';
+import ResetSuccessPage from '../../features/auth/components/reset-success';
+import { RequireAbility } from '../../features/auth/components/RequireAbility';
+import AuthProviderLayout from '../../features/shell/layouts/AuthProviderLayout';
 import AppLayout from '../../features/shell/layouts/AppLayout';
+import NotFoundPage from '../../features/shell/pages/NotFoundPage';
+import TokenNotFoundPage from '../../shared/components/pages/TokenNotFoundPage';
 import DashboardPage from '../../features/dashboard/pages/DashboardPage';
 import TerapeutasListPage from '../../features/consultas/pages/TerapeutasListPage';
 import PacientesListPage from '../../features/consultas/pages/PacientesListPage';
@@ -27,146 +36,166 @@ const suspenseFallback = (
 
 export const router = createBrowserRouter([
     {
-        path: '/app',
-        element: <AppLayout />,
+        path: '/',
+        element: <AuthProviderLayout />,
         children: [
+            { index: true, element: <LoginPage /> },
+            { path: 'sign-in', element: <LoginPage /> },
+            { path: 'login', element: <LoginPage /> },
+            { path: 'forgot-password', element: <ForgotPasswordPage /> },
             {
-                index: true,
-                element: (
-                    <Suspense fallback={suspenseFallback}>
-                        <DashboardPage />
-                    </Suspense>
-                ),
+                path: 'forgot-password/email-sent',
+                element: <ForgotPasswordEmailSend />,
             },
-
+            { path: 'reset-password', element: <ResetPasswordPage /> },
+            { path: 'reset-success', element: <ResetSuccessPage /> },
             {
-                path: 'cadastros',
-                element: (
-                    <Suspense fallback={suspenseFallback}>
-                        <CadastroHubPage />
-                    </Suspense>
-                ),
+                path: 'app',
+                element: <AppLayout />,
+                children: [
+                    {
+                        index: true,
+                        element: (
+                            <Suspense fallback={suspenseFallback}>
+                                <DashboardPage />
+                            </Suspense>
+                        ),
+                    },
+                    {
+                        path: 'cadastros',
+                        element: (
+                            <Suspense fallback={suspenseFallback}>
+                                <RequireAbility action="manage" subject="Cadastro">
+                                    <CadastroHubPage />
+                                </RequireAbility>
+                            </Suspense>
+                        ),
+                    },
+                    {
+                        path: 'cadastro/terapeuta',
+                        element: (
+                            <Suspense fallback={suspenseFallback}>
+                                <CadastroTerapeutaPage />
+                            </Suspense>
+                        ),
+                    },
+                    {
+                        path: 'cadastro/cliente',
+                        element: (
+                            <Suspense fallback={suspenseFallback}>
+                                <CadastroClientePage />
+                            </Suspense>
+                        ),
+                    },
+                    {
+                        path: 'consultas',
+                        element: (
+                            <Suspense fallback={suspenseFallback}>
+                                <ConsultaHubPage />
+                            </Suspense>
+                        ),
+                    },
+                    {
+                        path: 'consultas/terapeutas',
+                        element: (
+                            <Suspense fallback={suspenseFallback}>
+                                <TerapeutasListPage />
+                            </Suspense>
+                        ),
+                    },
+                    {
+                        path: 'consultas/pacientes',
+                        element: (
+                            <Suspense fallback={suspenseFallback}>
+                                <PacientesListPage />
+                            </Suspense>
+                        ),
+                    },
+                    {
+                        path: 'arquivos',
+                        element: (
+                            <Suspense fallback={suspenseFallback}>
+                                <ArquivosPage />
+                            </Suspense>
+                        ),
+                    },
+                    {
+                        path: 'configuracoes',
+                        element: (
+                            <Suspense fallback={suspenseFallback}>
+                                <ConfiguracoesPage />
+                            </Suspense>
+                        ),
+                    },
+                    {
+                        path: 'programas',
+                        element: (
+                            <Suspense fallback={suspenseFallback}>
+                                <HubPage />
+                            </Suspense>
+                        ),
+                    },
+                    {
+                        path: 'programas/lista',
+                        element: (
+                            <Suspense fallback={suspenseFallback}>
+                                <ConsultaOcpPage />
+                            </Suspense>
+                        ),
+                    },
+                    {
+                        path: 'programas/novo',
+                        element: (
+                            <Suspense fallback={suspenseFallback}>
+                                <CadastroOcpPage />
+                            </Suspense>
+                        ),
+                    },
+                    {
+                        path: 'programas/:programaId',
+                        element: (
+                            <Suspense fallback={suspenseFallback}>
+                                <DetalheProgramaPage />
+                            </Suspense>
+                        ),
+                    },
+                    {
+                        path: 'programas/:programaId/editar',
+                        element: (
+                            <Suspense fallback={suspenseFallback}>
+                                <EditarProgramaPage />
+                            </Suspense>
+                        ),
+                    },
+                    {
+                        path: 'programas/sessoes/nova',
+                        element: (
+                            <Suspense fallback={suspenseFallback}>
+                                <RegistrarSessaoPage />
+                            </Suspense>
+                        ),
+                    },
+                    {
+                        path: 'programas/relatorios/mensal',
+                        element: (
+                            <Suspense fallback={suspenseFallback}>
+                                <RelatorioMensalPage />
+                            </Suspense>
+                        ),
+                    },
+                    {
+                        path: 'programas/sessoes/:sessaoId',
+                        element: (
+                            <Suspense fallback={suspenseFallback}>
+                                <SessaoPage />
+                            </Suspense>
+                        ),
+                    },
+                ],
             },
-            {
-                path: 'cadastro/terapeuta',
-                element: (
-                    <Suspense fallback={suspenseFallback}>
-                        <CadastroTerapeutaPage />
-                    </Suspense>
-                ),
-            },
-            {
-                path: 'cadastro/cliente',
-                element: (
-                    <Suspense fallback={suspenseFallback}>
-                        <CadastroClientePage />
-                    </Suspense>
-                ),
-            },
-            {
-                path: 'consultas',
-                element: (
-                    <Suspense fallback={suspenseFallback}>
-                        <ConsultaHubPage />
-                    </Suspense>
-                ),
-            },
-            {
-                path: 'consultas/terapeutas',
-                element: (
-                    <Suspense fallback={suspenseFallback}>
-                        <TerapeutasListPage />
-                    </Suspense>
-                ),
-            },
-            {
-                path: 'consultas/pacientes',
-                element: (
-                    <Suspense fallback={suspenseFallback}>
-                        <PacientesListPage />
-                    </Suspense>
-                ),
-            },
-            {
-                path: 'arquivos',
-                element: (
-                    <Suspense fallback={suspenseFallback}>
-                        <ArquivosPage />
-                    </Suspense>
-                ),
-            },
-            {
-                path: 'configuracoes',
-                element: (
-                    <Suspense fallback={suspenseFallback}>
-                        <ConfiguracoesPage />
-                    </Suspense>
-                ),
-            },
-            {
-                path: 'programas',
-                element: (
-                    <Suspense fallback={suspenseFallback}>
-                        <HubPage />
-                    </Suspense>
-                ),
-            },
-            {
-                path: 'programas/lista',
-                element: (
-                    <Suspense fallback={suspenseFallback}>
-                        <ConsultaOcpPage />
-                    </Suspense>
-                ),
-            },
-            {
-                path: 'programas/novo',
-                element: (
-                    <Suspense fallback={suspenseFallback}>
-                        <CadastroOcpPage />
-                    </Suspense>
-                ),
-            },
-            {
-                path: 'programas/:programaId',
-                element: (
-                    <Suspense fallback={suspenseFallback}>
-                        <DetalheProgramaPage />
-                    </Suspense>
-                ),
-            },
-            {
-                path: 'programas/:programaId/editar',
-                element: (
-                    <Suspense fallback={suspenseFallback}>
-                        <EditarProgramaPage />
-                    </Suspense>
-                ),
-            },
-            {
-                path: 'programas/sessoes/nova',
-                element: (
-                    <Suspense fallback={suspenseFallback}>
-                        <RegistrarSessaoPage />
-                    </Suspense>
-                ),
-            },
-            {
-                path: 'programas/relatorios/mensal',
-                element: (
-                    <Suspense fallback={suspenseFallback}>
-                        <RelatorioMensalPage />
-                    </Suspense>
-                ),
-            },
-            {
-                path: 'programas/sessoes/:sessaoId',
-                element: (
-                    <Suspense fallback={suspenseFallback}>
-                        <SessaoPage />
-                    </Suspense>
-                ),
-            },
+            { path: '404', element: <NotFoundPage /> },
+            { path: 'token-not-found', element: <TokenNotFoundPage /> },
+            { path: '*', element: <NotFoundPage /> },
         ],
     },
 ]);
