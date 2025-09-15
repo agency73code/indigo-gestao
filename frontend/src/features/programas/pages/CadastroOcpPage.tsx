@@ -323,7 +323,7 @@ export default function CadastroOcpPage() {
     return (
         <div className="flex flex-col min-h-full w-full p-0 sm:p-6">
             {/* Header */}
-            <div className="px-1 sm:px-6 py-4 sm:py-6">
+            <div className="px-1 sm:px-3 py-4 sm:py-6">
                 <div className="space-y-2">
                     <h1
                         style={{ fontFamily: 'Sora, sans-serif' }}
@@ -338,7 +338,7 @@ export default function CadastroOcpPage() {
             </div>
 
             {/* Conteúdo principal */}
-            <main className="flex-1 px-1 sm:px-6 pb-60 w-full">
+            <main className="flex-1 px-1 sm:px-3 pb-60 sm:pb-30 w-full">
                 <div className="space-y-6 max-w-4xl md:max-w-none mx-auto">
                     {/* Informações do cabeçalho */}
                     <HeaderInfo

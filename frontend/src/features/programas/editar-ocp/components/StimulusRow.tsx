@@ -41,7 +41,7 @@ export default function StimulusRow({
     const stimulusError = errors?.[index];
 
     return (
-        <Card className="rounded-[5px]">
+        <Card className="rounded-[5px] p-1 sm:p-4">
             <CardContent className="p-4 space-y-4">
                 {/* Header com número e controles */}
                 <div className="flex items-center justify-between">

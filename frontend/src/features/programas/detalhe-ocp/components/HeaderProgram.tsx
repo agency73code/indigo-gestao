@@ -34,7 +34,7 @@ export default function HeaderProgram({ program }: HeaderProgramProps) {
     };
 
     return (
-        <Card className="rounded-[5px]">
+        <Card className="rounded-[5px] p-1 sm:p-4">
             <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
                 <div className="flex items-center gap-2 mb-2">
                     <Button

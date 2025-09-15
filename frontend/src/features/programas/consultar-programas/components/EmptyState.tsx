@@ -17,7 +17,7 @@ export default function EmptyState({
 }: EmptyStateProps) {
     if (variant === 'no-patient') {
         return (
-            <Card className="rounded-[5px]">
+            <Card className="rounded-[5px] p-1">
                 <CardContent className="p-8 text-center space-y-4">
                     <User className="h-12 w-12 mx-auto text-muted-foreground" />
                     <div>
@@ -32,7 +32,7 @@ export default function EmptyState({
     }
 
     return (
-        <Card className="rounded-[5px]">
+        <Card className="rounded-[5px] p-1 ">
             <CardContent className="p-8 text-center space-y-4">
                 <Search className="h-12 w-12 mx-auto text-muted-foreground" />
                 <div>

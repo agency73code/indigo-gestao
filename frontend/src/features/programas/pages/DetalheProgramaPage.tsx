@@ -82,8 +82,8 @@ export default function DetalheProgramaPage() {
     const lastSession = sessions.length > 0 ? sessions[0] : null;
 
     return (
-        <div className="min-h-screen bg-background pb-28">
-            <div className="max-w-lg md:max-w-none mx-auto md:mx-4 lg:mx-8 p-4 space-y-6">
+        <div className="min-h-screen bg-background pb-28 p-1 sm:p-4">
+            <div className="max-w-lg md:max-w-none mx-auto md:mx-4 lg:mx-8 space-y-6">
                 {/* Header com informações do paciente e programa */}
                 <HeaderProgram program={program} />
 

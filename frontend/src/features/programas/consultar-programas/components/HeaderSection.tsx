@@ -8,7 +8,7 @@ export default function HeaderSection({
     subtitle = 'Selecione um paciente para ver ou criar programas',
 }: HeaderSectionProps) {
     return (
-        <div className="space-y-2">
+        <div className="space-y-2 p-0">
             <h1
                 style={{ fontFamily: 'Sora, sans-serif' }}
                 className="text-xl sm:text-2xl font-semibold text-primary leading-tight"

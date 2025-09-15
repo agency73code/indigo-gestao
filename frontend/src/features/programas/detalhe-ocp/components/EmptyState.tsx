@@ -21,7 +21,7 @@ export default function EmptyState({
 
     return (
         <Card className="rounded-[5px]">
-            <CardContent className="p-8">
+            <CardContent className="">
                 <div className="flex flex-col items-center text-center space-y-4">
                     {defaultIcon}
 

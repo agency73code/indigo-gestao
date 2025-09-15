@@ -10,17 +10,25 @@ interface SaveBarProps {
     patientName?: string;
 }
 
-export default function SaveBar({
+// Componente reutilizável para os botões de salvamento
+function SaveButtons({
     onSave,
     onSaveAndStart,
     onCancel,
     isSaving,
     canSave,
     patientName,
-}: SaveBarProps) {
+}: {
+    onSave: () => void;
+    onSaveAndStart: () => void;
+    onCancel: () => void;
+    isSaving: boolean;
+    canSave: boolean;
+    patientName?: string;
+}) {
     return (
-        <div className="bg-background border-t z-40 p-4 sm:p-6">
-            <div className="max-w-7xl mx-auto flex flex-col sm:flex-row gap-3 sm:gap-4">
+        <div className="">
+            <div className="max-w-62 mx-auto flex flex-col sm:flex-row gap-3 sm:gap-4">
                 {/* Botões principais */}
                 <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 flex-1">
                     <Button
@@ -85,5 +93,42 @@ export default function SaveBar({
                 </div>
             )}
         </div>
+    );
+}
+
+export default function SaveBar({
+    onSave,
+    onSaveAndStart,
+    onCancel,
+    isSaving,
+    canSave,
+    patientName,
+}: SaveBarProps) {
+    return (
+        <>
+            {/* Variante Mobile - com o comportamento atual de animação */}
+            <div className="bg-background border-t z-50 p-4 sm:p-6 md:hidden">
+                <SaveButtons
+                    onSave={onSave}
+                    onSaveAndStart={onSaveAndStart}
+                    onCancel={onCancel}
+                    isSaving={isSaving}
+                    canSave={canSave}
+                    patientName={patientName}
+                />
+            </div>
+
+            {/* Variante Desktop/Tablet - sticky dentro do container */}
+            <div className="hidden md:block bottom-0 z-30 backdrop-blur p-4 sm:p-6">
+                <SaveButtons
+                    onSave={onSave}
+                    onSaveAndStart={onSaveAndStart}
+                    onCancel={onCancel}
+                    isSaving={isSaving}
+                    canSave={canSave}
+                    patientName={patientName}
+                />
+            </div>
+        </>
     );
 }

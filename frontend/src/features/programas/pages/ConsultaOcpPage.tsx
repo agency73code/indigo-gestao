@@ -62,15 +62,15 @@ export default function ConsultaOcpPage() {
     const selectedFilters = searchState.status === 'all' ? [] : [searchState.status];
 
     return (
-        <div className="flex flex-col min-h-full w-full">
-            <div className="px-4 sm:px-6 py-4 sm:py-6">
+        <div className="flex flex-col min-h-full w-full p-1 sm:p-4">
+            <div className="px-0 sm:px-6 py-4 sm:py-6">
                 <HeaderSection
                     title="Programas de Treino (OCP)"
                     subtitle="Consultar e gerenciar programas terapêuticos dos pacientes"
                 />
             </div>
 
-            <main className="flex-1 px-4 sm:px-6 pb-20 sm:pb-24 w-full">
+            <main className="flex-1 px-0 sm:px-6 pb-20 sm:pb-24 w-full">
                 <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto w-full">
                     {/* Seleção de Paciente */}
                     <PatientSelector

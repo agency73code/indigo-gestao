@@ -287,8 +287,8 @@ export default function EditarProgramaPage() {
     }
 
     return (
-        <div className="min-h-screen bg-background pb-40">
-            <div className="max-w-lg md:max-w-none mx-auto md:mx-4 lg:mx-8 p-4 space-y-6">
+        <div className="min-h-screen bg-background pb-40 p-1 sm:p-4">
+            <div className="max-w-lg md:max-w-none mx-auto md:mx-4 lg:mx-8 space-y-6">
                 {/* Header com informações read-only */}
                 <HeaderInfo program={program} />
 

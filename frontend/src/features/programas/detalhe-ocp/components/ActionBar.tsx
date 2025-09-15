@@ -7,6 +7,38 @@ interface ActionBarProps {
     program: ProgramDetail;
 }
 
+// Componente reutilizável para os botões de ação
+function ActionButtons({
+    onRegisterSession,
+    onEditProgram,
+}: {
+    onRegisterSession: () => void;
+    onEditProgram: () => void;
+}) {
+    return (
+        <div className="flex gap-3 w-full max-w-sm">
+            <Button
+                onClick={onRegisterSession}
+                className="flex-1 h-12 text-sm font-medium"
+                size="lg"
+            >
+                <Plus className="h-4 w-4 mr-2" />
+                Registrar Sessão
+            </Button>
+
+            <Button
+                onClick={onEditProgram}
+                variant="outline"
+                className="flex-1 h-12 text-sm font-medium"
+                size="lg"
+            >
+                <Edit className="h-4 w-4 mr-2" />
+                Editar Programa
+            </Button>
+        </div>
+    );
+}
+
 export default function ActionBar({ program }: ActionBarProps) {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -33,29 +65,26 @@ export default function ActionBar({ program }: ActionBarProps) {
     };
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border z-10">
-            <div className="max-w-lg mx-auto p-4">
-                <div className="flex gap-3">
-                    <Button
-                        onClick={handleRegisterSession}
-                        className="flex-1 h-12 text-sm font-medium"
-                        size="lg"
-                    >
-                        <Plus className="h-4 w-4 mr-2" />
-                        Registrar Sessão
-                    </Button>
-
-                    <Button
-                        onClick={handleEditProgram}
-                        variant="outline"
-                        className="flex-1 h-12 text-sm font-medium"
-                        size="lg"
-                    >
-                        <Edit className="h-4 w-4 mr-2" />
-                        Editar Programa
-                    </Button>
+        <>
+            {/* Variante Mobile - fixa no rodapé */}
+            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border z-50 p-1 sm:p-4 md:hidden">
+                <div className="max-w-lg mx-auto p-4 flex justify-center">
+                    <ActionButtons
+                        onRegisterSession={handleRegisterSession}
+                        onEditProgram={handleEditProgram}
+                    />
                 </div>
             </div>
-        </div>
+
+            {/* Variante Desktop/Tablet - sticky dentro do container */}
+            <div className="hidden md:block sticky bottom-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75 border-t border-border">
+                <div className="max-w-screen-xl mx-auto px-6 py-3 flex items-center justify-center">
+                    <ActionButtons
+                        onRegisterSession={handleRegisterSession}
+                        onEditProgram={handleEditProgram}
+                    />
+                </div>
+            </div>
+        </>
     );
 }

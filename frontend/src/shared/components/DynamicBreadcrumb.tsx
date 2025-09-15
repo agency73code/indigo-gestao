@@ -12,20 +12,18 @@ export default function DynamicBreadcrumb() {
     const breadcrumbItems = useBreadcrumb();
 
     return (
-        <Breadcrumb>
+        <Breadcrumb className="hidden md:block">
             <BreadcrumbList>
                 {breadcrumbItems.map((item, index) => (
                     <div key={index} className="flex items-center">
-                        <BreadcrumbItem className={index === 0 ? 'hidden md:block' : ''}>
+                        <BreadcrumbItem>
                             {item.href && index < breadcrumbItems.length - 1 ? (
                                 <BreadcrumbLink href={item.href}>{item.label}</BreadcrumbLink>
                             ) : (
                                 <BreadcrumbPage>{item.label}</BreadcrumbPage>
                             )}
                         </BreadcrumbItem>
-                        {index < breadcrumbItems.length - 1 && (
-                            <BreadcrumbSeparator className="hidden md:block" />
-                        )}
+                        {index < breadcrumbItems.length - 1 && <BreadcrumbSeparator />}
                     </div>
                 ))}
             </BreadcrumbList>
