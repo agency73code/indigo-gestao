@@ -1,6 +1,7 @@
 import type { PrismaClient } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
 import type { Terapeuta } from "./therapist.types.js";
+import { CARGO_MAP } from './therapist.types.js'
 
 function generateResetToken() {
     const token = uuidv4();
@@ -12,6 +13,10 @@ function generateResetToken() {
 export async function createTherapistBase(prisma: PrismaClient, data: Terapeuta) {
   const id = uuidv4();
   const { token, expiry } = generateResetToken();
+
+  const hasGerente = data.terapeuta_cargo.some(
+    (c) => c.cargo_id === CARGO_MAP['Gerente']
+  );
 
   return prisma.$transaction(async (tx) => {
     const therapist = await tx.terapeuta.create({
@@ -43,7 +48,7 @@ export async function createTherapistBase(prisma: PrismaClient, data: Terapeuta)
         cursos: data.cursos,
         data_entrada: data.data_entrada,
         data_saida: data.data_saida,
-        perfil_acesso: data.perfil_acesso,
+        perfil_acesso: hasGerente ? 'gerente' : data.perfil_acesso,
         atividade: data.atividade,
         senha: null,
         token_redefinicao: token,

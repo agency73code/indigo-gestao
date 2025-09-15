@@ -9,36 +9,9 @@ import {
   type TipoEndereco,
 } from './therapist.types.js';
 
-const TIPO_ENDERECO_MAP = {
-  residencial: 1,
-  institucional: 2,
-  empresarial: 3,
-} as const;
-
-const AREA_MAP = {
-  'Fonoaudiologia': 1,
-  'Psicomotricidade': 2,
-  'Fisioterapia': 3,
-  'Terapia Ocupacional': 4,
-  'Psicopedagogia': 5,
-  'Educador Físico': 6,
-  'Terapia ABA': 7,
-  'Musicoterapia': 8,
-  'Pedagogia': 9,
-  'Neuropsicologia': 10,
-} as const;
-
-const CARGO_MAP = {
-  'Acompanhante Terapeutico': 1,
-  'Coordenador ABA': 2,
-  'Supervisor ABA': 3,
-  'Mediador de Conflitos': 4,
-  'Coordenador Executivo': 5,
-  'Professor UniIndigo': 6,
-  'Terapeuta clinico': 7,
-  'Terapeuta Supervisor': 8,
-  'Gerente': 9,
-} as const;
+import {
+  TIPO_ENDERECO_MAP, AREA_MAP, CARGO_MAP
+} from './therapist.types.js'
 
 type AreaKey  = keyof typeof AREA_MAP;
 type CargoKey = keyof typeof CARGO_MAP;

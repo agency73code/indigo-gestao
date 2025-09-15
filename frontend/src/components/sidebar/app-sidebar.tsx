@@ -27,6 +27,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 const data = {
     user: {
         name: 'shadcn',
@@ -165,7 +166,16 @@ const data = {
         },
     ],
 };
+
+function capitalize(word: string) {
+  if (!word) return "";
+  return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+}
+
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+    const { user } = useAuth();
+    const displayAcesso = capitalize(user?.perfil_acesso ?? '-');
+    const displayAvatar = indigoLogo;
     const ability = useAbility();
 
     // verifica o nome da rota do nav, ajuda a mapear
@@ -185,7 +195,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                             <a className="flex pt-4 flex-col min-h-fit items-center" href="#">
                                 <div className="mb-4">
                                     <img
-                                        src={indigoLogo}
+                                        src={displayAvatar}
                                         alt={data.user.name}
                                         className="w-24 h-24 rounded-full border border-border"
                                     />
@@ -198,7 +208,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                         Instituto Índigo
                                     </span>
                                     <span className="text-xs block text-muted-foreground">
-                                        Administrador
+                                        {displayAcesso}
                                     </span>
                                 </div>
                             </a>

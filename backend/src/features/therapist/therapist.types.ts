@@ -108,3 +108,34 @@ export interface Terapeuta {
   terapeuta_cargo: TerapeutaCargo[];
   terapeuta_endereco: TerapeutaEndereco[];
 }
+
+export const TIPO_ENDERECO_MAP = {
+  residencial: 1,
+  institucional: 2,
+  empresarial: 3,
+} as const;
+
+export const AREA_MAP = {
+  'Fonoaudiologia': 1,
+  'Psicomotricidade': 2,
+  'Fisioterapia': 3,
+  'Terapia Ocupacional': 4,
+  'Psicopedagogia': 5,
+  'Educador Físico': 6,
+  'Terapia ABA': 7,
+  'Musicoterapia': 8,
+  'Pedagogia': 9,
+  'Neuropsicologia': 10,
+} as const;
+
+export const CARGO_MAP = {
+  'Acompanhante Terapeutico': 1,
+  'Coordenador ABA': 2,
+  'Supervisor ABA': 3,
+  'Mediador de Conflitos': 4,
+  'Coordenador Executivo': 5,
+  'Professor UniIndigo': 6,
+  'Terapeuta clinico': 7,
+  'Terapeuta Supervisor': 8,
+  'Gerente': 9,
+} as const;

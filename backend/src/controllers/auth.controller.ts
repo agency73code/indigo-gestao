@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { sendPasswordResetEmail } from '../utils/mail.util.js';
 import { normalizeAccessInfo } from '../utils/normalize.util.js';
 import {
-    findTherapistById, 
+    findUserById, 
     findUserByEmail, 
     findUserByResetToken, 
     loginUserByAccessInformation, 
@@ -22,7 +22,9 @@ export async function me(req: Request, res: Response) {
         return res.status(401).json({ success: false, message: 'Não autenticado' })
     }
 
-    const user = await findTherapistById(userCtx.id as string);
+    const user = 
+        await findUserById(userCtx.id, 'terapeuta') ??
+        await findUserById(userCtx.id, 'cliente');
 
     if(!user) {
         return res.status(404).json({ success: false, message: 'Usuário não encontrado' });
@@ -33,7 +35,7 @@ export async function me(req: Request, res: Response) {
         user: {
             id: user.id,
             name: user.nome,
-            email: user.email_indigo ?? user.email ?? null,
+            email: user.email,
             perfil_acesso: user.perfil_acesso,
         },
     });
@@ -63,7 +65,9 @@ export async function validateToken(req: Request, res: Response, next: NextFunct
             });
         }
 
-        const user = await findUserByResetToken(token, 'terapeuta');
+        const user = 
+            await findUserByResetToken(token, 'terapeuta') ??
+            await findUserByResetToken(token, 'cliente');
 
         if (!user) {
             return res.status(401).json({
@@ -86,13 +90,12 @@ export async function definePassword(req: Request, res: Response, next: NextFunc
         const { token } = req.params;
         const { password } = req.body;
 
-        const result = await newPassword(token!, password, 'terapeuta');
+        const result = 
+            await newPassword(token!, password, 'terapeuta') ?? 
+            await newPassword(token!, password, 'cliente');
 
-        if (!result || (typeof result === 'object' && 'count' in result && result.count === 0)) {
-            return res.status(404).json({
-                success: false,
-                message: 'Token não encontrado ou expirado',
-            });
+        if (!result || result.count === 0) {
+            return res.status(404).json({ success: false, message: 'Token não encontrado ou expirado' });
         }
 
         return res.status(200).json({ success: true, message: "Senha definida com sucesso" });
@@ -104,7 +107,12 @@ export async function definePassword(req: Request, res: Response, next: NextFunc
 export async function validateLogin(req: Request, res: Response, next: NextFunction) {
     try {
         const { accessInfo, password } = req.body;
-        const user = await loginUserByAccessInformation(normalizeAccessInfo(accessInfo), 'terapeuta');
+        const normalized = normalizeAccessInfo(accessInfo);
+
+        const user = 
+            await loginUserByAccessInformation(normalized, 'terapeuta') ??
+            await loginUserByAccessInformation(normalized, 'cliente');
+
         if (!user) return res.status(401).json({ success: false, message: 'Credenciais inválidas' });
         if (!user.senha) return res.status(400).json({ seccess: false, message: 'Você não possui uma senha cadastrada.' });
         
@@ -139,19 +147,18 @@ export async function requestPasswordReset(req: Request, res: Response, next: Ne
     try {
         const { email } = req.body as { email: string };
 
-        const user = await findUserByEmail(email);
+        const user = 
+            await findUserByEmail(email, 'terapeuta') ?? 
+            await findUserByEmail(email, 'cliente');
 
         if (!user) {
-            return res.status(200).json({
-                success: true,
-                message: 'Se o e-mail existir, enviaremos as instruções de recuperação.',
-            });
+            return res.status(200).json({ success: true, message: 'Se o e-mail existir, enviaremos as instruções de recuperação.' });
         }
 
         const token = uuidv4();
         const expiresAt = new Date(Date.now() + RESET_TOKEN_EXPIRATION_MS);
 
-        await passwordResetToken(user.id, token, expiresAt);
+        await passwordResetToken(user.id, token, expiresAt, user.table);
 
         await sendPasswordResetEmail({
             to: user.email,

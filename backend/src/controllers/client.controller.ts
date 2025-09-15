@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import * as clientService from "../features/client/client.service.js";
+import { sendWelcomeEmail } from "../utils/mail.util.js";
 
 export async function getById(req: Request, res: Response, next: NextFunction) {
   try {
@@ -26,8 +27,17 @@ export async function list(req: Request, res: Response, next: NextFunction) {
 
 export async function create(req: Request, res: Response, next: NextFunction) {
   try {
-    await clientService.create(req.body);
-    res.status(201).json({ success: true, message: 'Terapeuta cadastrado com sucesso!' });
+    const client = await clientService.create(req.body);
+
+    await sendWelcomeEmail({
+        to: client.email_contato,
+        name: client.nome,
+        token: client.token_redefinicao!,
+    }).catch((error) => {
+        console.error('Erro ao enviar email de boas-vindas:', error);
+    });
+
+    res.status(201).json({ success: true, message: 'Cliente cadastrado com sucesso!' });
   } catch (err) {
     next(err);
   }

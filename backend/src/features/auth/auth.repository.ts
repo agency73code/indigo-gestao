@@ -2,21 +2,40 @@ import { prisma } from "../../config/database.js";
 import { hashPassword } from "../../utils/hash.util.js";
 import type { Tables, UserRow } from "./auth.types.js";
 
-export async function findUserByEmail(email: string) {
-    return prisma.terapeuta.findUnique({
-        where: { email },
-        select: { id:true, nome: true, email: true },
-    });
+export async function findUserByEmail(email: string, table: Tables) {
+  if (table === 'terapeuta') {
+    const row = await prisma.terapeuta.findFirst({ where: { email_indigo: email } });
+    if (!row) return null;
+    return { id: row.id, nome: row.nome, email: row.email_indigo, table: 'terapeuta' as const };
+  } else {
+    const row = await prisma.cliente.findUnique({ where: { email_contato: email } });
+    if (!row) return null;
+    return { id: row.id, nome: row.nome, email: row.email_contato, table: 'cliente' as const };
+  }
 }
 
-export async function passwordResetToken(userId: string, token: string, expiresAt: Date) {
-  return prisma.terapeuta.update({
-    where: { id: userId },
-    data: {
-      token_redefinicao: token,
-      validade_token: expiresAt,
-    },
-  });
+export async function passwordResetToken(userId: string, token: string, expiresAt: Date, table: Tables) {
+  let result;
+
+  if (table === 'terapeuta') {
+    result = prisma.terapeuta.update({
+      where: { id: userId },
+      data: {
+        token_redefinicao: token,
+        validade_token: expiresAt,
+      },
+    });
+  } else {
+    result = prisma.cliente.update({
+      where: { id: userId },
+      data: {
+        token_redefinicao: token,
+        validade_token: expiresAt,
+      },
+    });
+  }
+
+  return result;
 }
 
 export async function findUserByResetToken(token: string, table: Tables) {
@@ -42,10 +61,7 @@ export async function loginUserByAccessInformation(accessInfo: string, table: Ta
   if (table === 'terapeuta') {
     const row = await prisma.terapeuta.findFirst({
       where: {
-        OR: [
-          { email_indigo: accessInfo },
-          { cpf: accessInfo },
-        ],
+        email_indigo: accessInfo
       },
       select: {
         id: true,
@@ -105,21 +121,40 @@ export async function newPassword(token: string, password: string, table: Tables
   };
 
   if (table === 'terapeuta') {
-    return prisma.terapeuta.updateMany({
-      where,
-      data,
-    });
+    return prisma.terapeuta.updateMany({ where, data, });
   } else {
-    return prisma.cliente.updateMany({
-      where,
-      data,
-    });
+    return prisma.cliente.updateMany({ where, data, });
   }
 }
 
-export async function findTherapistById(id: string) {
-  return prisma.terapeuta.findUnique({
-    where: { id },
-    select: { id: true, nome: true, email_indigo: true, email: true, perfil_acesso: true },
-  });
+export async function findUserById(id: string, table: Tables) {
+  if (table === 'terapeuta') {
+    const row = await prisma.terapeuta.findUnique({
+      where: { id },
+      select: { id: true, nome: true, email_indigo: true, perfil_acesso: true },
+    });
+
+    if (!row) return null;
+
+    return {
+      id: row.id,
+      nome: row.nome,
+      email: row.email_indigo,
+      perfil_acesso: row.perfil_acesso
+    };
+  } else {
+    const row = await prisma.cliente.findUnique({
+      where: { id },
+      select: { id: true, nome: true, email_contato: true, perfil_acesso: true },
+    });
+
+    if (!row) return null;
+
+    return {
+      id: row.id,
+      nome:row.nome,
+      email: row.email_contato,
+      perfil_acesso: row.perfil_acesso,
+    }
+  }
 }
