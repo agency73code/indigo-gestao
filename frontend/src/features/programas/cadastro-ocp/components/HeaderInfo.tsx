@@ -112,7 +112,7 @@ function SelectorModal({
                                 <div className="space-y-2">
                                     {Array.from({ length: 3 }).map((_, i) => (
                                         <Card key={i} className="rounded-[5px]">
-                                            <CardContent className="p-4">
+                                            <CardContent className="p-2 sm:p-4">
                                                 <div className="animate-pulse space-y-2">
                                                     <div className="h-4 bg-muted rounded w-3/4"></div>
                                                     <div className="h-3 bg-muted rounded w-1/2"></div>
@@ -128,7 +128,7 @@ function SelectorModal({
                                         className="cursor-pointer hover:shadow-md transition-shadow rounded-[5px]"
                                         onClick={() => handleSelect(item)}
                                     >
-                                        <CardContent className="p-4">
+                                        <CardContent className="p-2 sm:p-4">
                                             <div className="flex items-center gap-3">
                                                 <div className="flex-shrink-0">
                                                     {item.photoUrl ? (
@@ -211,7 +211,7 @@ export default function HeaderInfo({
         <>
             <div className="space-y-4">
                 {/* Paciente */}
-                <Card className="rounded-[5px]">
+                <Card className="rounded-[5px] p-1 sm:p-4">
                     <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
                         <CardTitle className="text-base flex items-center gap-2">
                             <User className="h-4 w-4" />
@@ -220,7 +220,7 @@ export default function HeaderInfo({
                     </CardHeader>
                     <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
                         {patient ? (
-                            <div className="flex items-center gap-3 p-2 sm:p-3 bg-muted rounded-md">
+                            <div className="flex items-center gap-3 p-2 sm:p-3 bg-muted rounded-[5px]">
                                 <div className="flex-shrink-0">
                                     {patient.photoUrl ? (
                                         <img
@@ -284,7 +284,7 @@ export default function HeaderInfo({
                 </Card>
 
                 {/* Terapeuta */}
-                <Card className="rounded-[5px]">
+                <Card className="rounded-[5px] p-1 sm:p-4">
                     <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
                         <CardTitle className="text-base flex items-center gap-2">
                             <UserCheck className="h-4 w-4" />
@@ -347,7 +347,7 @@ export default function HeaderInfo({
                 </Card>
 
                 {/* Informações do programa */}
-                <Card className="rounded-[5px]">
+                <Card className="rounded-[5px] p-2 sm:p-4">
                     <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
                         <CardTitle className="text-base flex items-center gap-2">
                             <Calendar className="h-4 w-4" />

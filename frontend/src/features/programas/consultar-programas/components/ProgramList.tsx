@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { ProgramListItem } from '../types';
 import { listPrograms } from '../services';
 import ProgramCard from './ProgramCard';
@@ -18,6 +19,7 @@ export default function ProgramList({
     selectedPatientId,
     selectedPatientName,
 }: ProgramListProps) {
+    const navigate = useNavigate();
     const [programs, setPrograms] = useState<ProgramListItem[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -58,13 +60,24 @@ export default function ProgramList({
     }, [selectedPatientId, searchQuery, selectedFilters]);
 
     const handleOpenProgram = (programId: string) => {
-        console.log('Abrindo programa:', programId);
-        // Aqui implementaria navegação para o programa
+        // Preservar patientId quando houver
+        const patientId = selectedPatientId;
+        const path = `/app/programas/${programId}`;
+        const url = patientId ? `${path}?patientId=${patientId}` : path;
+
+        console.log('Abrindo programa:', programId, 'URL:', url);
+        navigate(url);
     };
 
     const handleNewSession = (programId: string) => {
-        console.log('Nova sessão para programa:', programId);
-        // Aqui implementaria criação de nova sessão
+        const patientId = selectedPatientId;
+        const params = new URLSearchParams();
+        params.set('programaId', programId);
+        if (patientId) params.set('patientId', patientId);
+
+        const url = `/app/programas/sessoes/nova?${params.toString()}`;
+        console.log('Nova sessão para programa:', programId, 'URL:', url);
+        navigate(url);
     };
 
     const handleRetry = () => {

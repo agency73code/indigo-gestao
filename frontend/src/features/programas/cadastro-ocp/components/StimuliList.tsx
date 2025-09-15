@@ -86,13 +86,12 @@ export default function StimuliList({ stimuli, onChange, errors }: StimuliListPr
     };
 
     return (
-        <Card className="rounded-[5px]">
+        <Card className="rounded-[5px] p-2 sm:p-4">
             <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
                 <div className="flex items-center justify-between">
                     <CardTitle className="text-base flex items-center gap-2">
                         <Zap className="h-4 w-4" />
                         Estímulos do Programa
-                        <span className="text-xs text-muted-foreground">(mínimo 1)</span>
                     </CardTitle>
                     <Button
                         type="button"
@@ -102,7 +101,7 @@ export default function StimuliList({ stimuli, onChange, errors }: StimuliListPr
                         className="h-8 px-2 gap-1 text-xs sm:text-sm"
                     >
                         <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
-                        Adicionar
+                        
                     </Button>
                 </div>
                 {errors?.stimuli && (

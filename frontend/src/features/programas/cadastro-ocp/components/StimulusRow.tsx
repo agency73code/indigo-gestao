@@ -31,7 +31,7 @@ export default function StimulusRow({
     const canMoveDown = index < totalItems - 1;
 
     return (
-        <div className="border rounded-lg p-3 sm:p-4 space-y-3 bg-background">
+        <div className="p-0 sm:p-4 space-y-3 bg-background">
             {/* Header com número e ações */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
