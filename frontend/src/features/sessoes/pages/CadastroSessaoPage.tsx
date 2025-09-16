@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
     PatientSelector,
@@ -25,6 +25,33 @@ import type {
 } from '../cadastro-sessao/types';
 
 export default function CadastroSessaoPage() {
+    const [showSaveBar, setShowSaveBar] = useState(false);
+
+    const handleSaveBarVisibility = useCallback(() => {
+        const scrollY = window.scrollY;
+        const windowHeight = window.innerHeight;
+        const docHeight = document.documentElement.scrollHeight;
+        const saveBarElement = document.getElementById('save-bar-container');
+        const saveBarHeight = saveBarElement?.offsetHeight ?? 0;
+
+        // Ajusta o calculo para desconsiderar a altura da SaveBar quando ela ja esta visivel
+        const threshold = docHeight - saveBarHeight - 80;
+        setShowSaveBar(scrollY + windowHeight >= threshold);
+    }, []);
+
+    useEffect(() => {
+        window.addEventListener('scroll', handleSaveBarVisibility);
+        window.addEventListener('resize', handleSaveBarVisibility);
+        handleSaveBarVisibility();
+        return () => {
+            window.removeEventListener('scroll', handleSaveBarVisibility);
+            window.removeEventListener('resize', handleSaveBarVisibility);
+        };
+    }, [handleSaveBarVisibility]);
+
+    useEffect(() => {
+        handleSaveBarVisibility();
+    }, [handleSaveBarVisibility, showSaveBar]);
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
 
@@ -240,7 +267,7 @@ export default function CadastroSessaoPage() {
     return (
         <div className="flex flex-col min-h-screen w-full">
             {/* Container principal */}
-            <main className="flex-1 max-w-4xl mx-auto px-4 md:px-6 lg:px-8 py-4 sm:py-6 pb-20 md:pb-4 w-full">
+            <main className="flex-1 max-w-4xl mx-auto px-4 md:px-4 lg:px-2 py-4 sm:py-6 md:pb-4 w-full">
                 <div className="space-y-4 sm:space-y-6">
                     {/* Seleção de Paciente */}
                     {!selectedPatient && (
@@ -304,15 +331,17 @@ export default function CadastroSessaoPage() {
                 </div>
             </main>
 
-            {/* Save Bar - apenas exibir se tiver paciente e programa selecionados */}
-            {selectedPatient && selectedProgram && (
-                <SaveBar
-                    onSave={handleSave}
-                    onCancel={handleCancel}
-                    isSaving={savingSession}
-                    canSave={canSave}
-                    validationMessage={getValidationMessage()}
-                />
+            {/* Save Bar só aparece ao final da página */}
+            {selectedPatient && selectedProgram && showSaveBar && (
+                <div id="save-bar-container">
+                    <SaveBar
+                        onSave={handleSave}
+                        onCancel={handleCancel}
+                        isSaving={savingSession}
+                        canSave={canSave}
+                        validationMessage={getValidationMessage()}
+                    />
+                </div>
             )}
         </div>
     );

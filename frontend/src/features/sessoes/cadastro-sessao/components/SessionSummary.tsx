@@ -11,7 +11,7 @@ export default function SessionSummary({ summary }: SessionSummaryProps) {
 
     if (totalAttempts === 0) {
         return (
-            <Card className="rounded-[5px] p-1 sm:p-4">
+            <Card className="rounded-[5px] mb-24 sm:0 p-1 sm:p-4">
                 <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
                     <CardTitle className="text-base flex items-center gap-2">
                         <TrendingUp className="h-4 w-4" />
@@ -29,7 +29,7 @@ export default function SessionSummary({ summary }: SessionSummaryProps) {
     }
 
     return (
-        <Card className="rounded-[5px] p-1 sm:p-4">
+        <Card className="rounded-[5px] mb-18 sm:0 p-1 sm:p-4">
             <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
                 <CardTitle className="text-base flex items-center gap-2">
                     <TrendingUp className="h-4 w-4" />

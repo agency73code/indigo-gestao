@@ -9,20 +9,11 @@ interface AttemptsRegisterProps {
 export default function AttemptsRegister({ attempts }: AttemptsRegisterProps) {
     const getAttemptIcon = (type: SessionAttempt['type']) => {
         const icons = {
-            error: '✗',
-            prompted: '✋',
-            independent: '✓',
+            error: <span className="text-3xl text-red-600">✗</span>,
+            prompted: <span className="text-3xl text-yellow-600">✋</span>,
+            independent: <span className="text-3xl text-green-600">✓</span>,
         };
         return icons[type];
-    };
-
-    const getAttemptColors = (type: SessionAttempt['type']) => {
-        const colors = {
-            error: 'bg-red-100 text-red-700 border-red-200',
-            prompted: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-            independent: 'bg-green-100 text-green-700 border-green-200',
-        };
-        return colors[type];
     };
 
     if (attempts.length === 0) {
@@ -60,46 +51,30 @@ export default function AttemptsRegister({ attempts }: AttemptsRegisterProps) {
                 <div className="space-y-4">
                     {/* Grid de tentativas */}
                     <div className="grid grid-cols-3 sm:grid-cols-6 lg:grid-cols-8 gap-2 overflow-x-auto">
-                        {attempts.map((attempt, index) => (
-                            <Card
+                        {attempts.map((attempt, idx) => (
+                            <div
                                 key={attempt.id}
-                                className={`relative border-2 rounded-[5px] ${getAttemptColors(attempt.type)} flex-shrink-0`}
+                                className="relative flex items-center justify-center h-20 bg-white border rounded-[5px]"
                             >
-                                <CardContent className="p-3 text-center">
-                                    {/* Número da tentativa */}
-                                    <div className="text-xs font-medium mb-1">#{index + 1}</div>
-
-                                    {/* Ícone do resultado */}
-                                    <div className="text-lg font-bold">
-                                        {getAttemptIcon(attempt.type)}
-                                    </div>
-
-                                    {/* Label do estímulo (opcional, truncado) */}
-                                    <div
-                                        className="text-xs mt-1 truncate"
-                                        title={attempt.stimulusLabel}
-                                    >
-                                        {attempt.stimulusLabel}
-                                    </div>
-                                </CardContent>
-                            </Card>
+                                <span className="absolute top-1 left-2 text-xs text-muted-foreground font-medium">
+                                    {idx + 1}
+                                </span>
+                                {getAttemptIcon(attempt.type)}
+                            </div>
                         ))}
                     </div>
 
                     {/* Legenda */}
                     <div className="flex justify-center gap-4 text-xs text-muted-foreground pt-2 border-t">
-                        <div className="flex items-center gap-1">
-                            <span className="text-red-600">✗</span>
-                            <span>ERRO</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                            <span className="text-yellow-600">✋</span>
-                            <span>AJUDA</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                            <span className="text-green-600">✓</span>
-                            <span>INDEP.</span>
-                        </div>
+                        <span className="flex items-center gap-1">
+                            <span className="text-red-600">✗</span> ERRO
+                        </span>
+                        <span className="flex items-center gap-1">
+                            <span className="text-yellow-600">✋</span> AJUDA
+                        </span>
+                        <span className="flex items-center gap-1">
+                            <span className="text-green-600">✓</span> INDEP.
+                        </span>
                     </div>
                 </div>
             </CardContent>

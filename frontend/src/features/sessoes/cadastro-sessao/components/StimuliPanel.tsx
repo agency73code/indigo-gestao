@@ -12,9 +12,12 @@ interface StimuliPanelProps {
 }
 
 export default function StimuliPanel({ program, attempts, onAddAttempt }: StimuliPanelProps) {
-
     const [expanded, setExpanded] = useState<string | null>(null);
-    const [attemptPicker, setAttemptPicker] = useState<{ isOpen: boolean; stimulusId: string; stimulusLabel: string }>({ isOpen: false, stimulusId: '', stimulusLabel: '' });
+    const [attemptPicker, setAttemptPicker] = useState<{
+        isOpen: boolean;
+        stimulusId: string;
+        stimulusLabel: string;
+    }>({ isOpen: false, stimulusId: '', stimulusLabel: '' });
 
     // Filtrar apenas estímulos ativos
     const activeStimuli = program.stimuli.filter((stimulus) => stimulus.active);
@@ -91,11 +94,29 @@ export default function StimuliPanel({ program, attempts, onAddAttempt }: Stimul
                                         {stimulus.order}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <div className="font-medium text-sm mb-1">{stimulus.label}</div>
-                                        <span className="inline-block px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-medium">Ativo</span>
+                                        <div className="font-medium text-sm mb-1">
+                                            {stimulus.label}
+                                        </div>
+                                        <span className="inline-block px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-medium">
+                                            Ativo
+                                        </span>
                                     </div>
                                     <div className="ml-auto">
-                                        <svg width="20" height="20" fill="none" viewBox="0 0 20 20" className={`transition-transform ${expanded === stimulus.id ? 'rotate-90' : ''}`}><path d="M7 8l3 3 3-3" stroke="#222" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                                        <svg
+                                            width="20"
+                                            height="20"
+                                            fill="none"
+                                            viewBox="0 0 20 20"
+                                            className={`transition-transform ${expanded === stimulus.id ? 'rotate-90' : ''}`}
+                                        >
+                                            <path
+                                                d="M7 8l3 3 3-3"
+                                                stroke="#222"
+                                                strokeWidth="1.5"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                            />
+                                        </svg>
                                     </div>
                                 </button>
                                 {expanded === stimulus.id && (
@@ -108,7 +129,9 @@ export default function StimuliPanel({ program, attempts, onAddAttempt }: Stimul
                                         <div className="flex justify-end">
                                             <Button
                                                 size="sm"
-                                                onClick={() => handleAddAttempt(stimulus.id, stimulus.label)}
+                                                onClick={() =>
+                                                    handleAddAttempt(stimulus.id, stimulus.label)
+                                                }
                                                 className="h-8 px-3 text-xs"
                                             >
                                                 <Play className="h-3 w-3 mr-1" />

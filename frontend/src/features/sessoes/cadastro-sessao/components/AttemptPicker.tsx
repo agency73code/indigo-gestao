@@ -81,13 +81,18 @@ export default function AttemptPicker({
                             >
                                 <CardContent className="p-4">
                                     <div className="flex items-center gap-4">
-                                        <div className={`text-2xl ${attempt.color}`}>{attempt.icon}</div>
+                                        <div className={`text-2xl ${attempt.color}`}>
+                                            {attempt.icon}
+                                        </div>
                                         <div>
                                             <p className="font-semibold text-lg">{attempt.label}</p>
                                             <p className="text-sm opacity-80">
-                                                {attempt.type === 'error' && 'Resposta incorreta ou sem resposta'}
-                                                {attempt.type === 'prompted' && 'Resposta com ajuda ou dica'}
-                                                {attempt.type === 'independent' && 'Resposta independente e correta'}
+                                                {attempt.type === 'error' &&
+                                                    'Resposta incorreta ou sem resposta'}
+                                                {attempt.type === 'prompted' &&
+                                                    'Resposta com ajuda ou dica'}
+                                                {attempt.type === 'independent' &&
+                                                    'Resposta independente e correta'}
                                             </p>
                                         </div>
                                     </div>

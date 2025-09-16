@@ -1,6 +1,5 @@
 import { Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import ValidationHint from './ValidationHint';
 
 interface SaveBarProps {
     onSave: () => void;
@@ -16,29 +15,22 @@ function SaveButtons({
     onCancel,
     isSaving,
     canSave,
-    validationMessage,
 }: {
     onSave: () => void;
     onCancel: () => void;
     isSaving: boolean;
     canSave: boolean;
-    validationMessage?: string;
 }) {
     return (
         <div className="space-y-3">
-            {/* Mensagem de validação */}
-            {!canSave && validationMessage && (
-                <div className="text-center">
-                    <ValidationHint message={validationMessage} />
-                </div>
-            )}
+            
 
             {/* Botões */}
             <div className="max-w-md mx-auto flex flex-col sm:flex-row gap-3">
                 <Button
                     onClick={onSave}
                     disabled={!canSave || isSaving}
-                    className="flex-1 h-12 gap-2 font-medium rounded-[5px]"
+                    className="h-12 sm:w-auto rounded-[5px]"
                     size="lg"
                 >
                     {isSaving ? (
@@ -48,7 +40,7 @@ function SaveButtons({
                         </>
                     ) : (
                         <>
-                            <Save className="h-4 w-4" />
+                            <Save className="h-4 w-4 mr-2" />
                             Salvar Sessão
                         </>
                     )}
@@ -74,7 +66,6 @@ export default function SaveBar({
     onCancel,
     isSaving,
     canSave,
-    validationMessage,
 }: SaveBarProps) {
     return (
         <>
@@ -85,7 +76,6 @@ export default function SaveBar({
                     onCancel={onCancel}
                     isSaving={isSaving}
                     canSave={canSave}
-                    validationMessage={validationMessage}
                 />
             </div>
 
@@ -96,7 +86,6 @@ export default function SaveBar({
                     onCancel={onCancel}
                     isSaving={isSaving}
                     canSave={canSave}
-                    validationMessage={validationMessage}
                 />
             </div>
         </>
