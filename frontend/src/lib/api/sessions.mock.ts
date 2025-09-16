@@ -1,0 +1,128 @@
+import type { SessionRow } from '@/lib/types/sessions';
+
+export async function listSessionsMock(): Promise<SessionRow[]> {
+    const now = new Date();
+    const schedule = (offsetDays: number, hour: number, minute: number) => {
+        const date = new Date(now);
+        date.setDate(date.getDate() + offsetDays);
+        date.setHours(hour, minute, 0, 0);
+        return date.toISOString();
+    };
+
+    return [
+        {
+            id: '1',
+            patientName: 'João Silva',
+            therapistName: 'Dr. Carlos',
+            therapistSpecialty: 'Análise do Comportamento',
+            sessionType: 'Consulta Individual',
+            status: 'scheduled',
+            dateTime: schedule(1, 14, 30),
+            modality: 'online',
+            ocpActive: 2,
+            stimuliAccuracy: 76,
+        },
+        {
+            id: '2',
+            patientName: 'Ana Costa',
+            therapistName: 'Dr. Carlos',
+            therapistSpecialty: 'Terapia em Grupo',
+            sessionType: 'Terapia em Grupo',
+            status: 'in_progress',
+            dateTime: schedule(0, 16, 0),
+            modality: 'presencial',
+            ocpActive: 1,
+            stimuliAccuracy: 82,
+        },
+        {
+            id: '3',
+            patientName: 'Pedro Lima',
+            therapistName: 'Dra. Ana',
+            therapistSpecialty: 'Avaliação Neuropsicológica',
+            sessionType: 'Avaliação Inicial',
+            status: 'completed',
+            dateTime: schedule(-1, 10, 0),
+            ocpActive: 0,
+            stimuliAccuracy: 0,
+        },
+        {
+            id: '4',
+            patientName: 'Carla Mendes',
+            therapistName: 'Dr. Pedro',
+            therapistSpecialty: 'Terapia ABA',
+            sessionType: 'Consulta Individual',
+            status: 'scheduled',
+            dateTime: schedule(2, 9, 0),
+            ocpActive: 3,
+            stimuliAccuracy: 68,
+        },
+        {
+            id: '5',
+            patientName: 'Roberto Santos',
+            therapistName: 'Dr. Carlos',
+            therapistSpecialty: 'Intervenção Familiar',
+            sessionType: 'Consulta Familiar',
+            status: 'pending',
+            dateTime: schedule(3, 11, 30),
+            ocpActive: 1,
+            stimuliAccuracy: 74,
+        },
+        {
+            id: '6',
+            patientName: 'Beatriz Souza',
+            therapistName: 'Dra. Ana',
+            therapistSpecialty: 'Psicoterapia Infantil',
+            sessionType: 'Consulta Individual',
+            status: 'scheduled',
+            dateTime: schedule(4, 8, 30),
+            modality: 'presencial',
+            ocpActive: 2,
+            stimuliAccuracy: 80,
+        },
+        {
+            id: '7',
+            patientName: 'Marcos Vieira',
+            therapistName: 'Dr. Pedro',
+            therapistSpecialty: 'Terapia ABA',
+            sessionType: 'Terapia em Grupo',
+            status: 'in_progress',
+            dateTime: schedule(0, 10, 0),
+            ocpActive: 4,
+            stimuliAccuracy: 71,
+        },
+        {
+            id: '8',
+            patientName: 'Clara Martins',
+            therapistName: 'Dra. Luiza',
+            therapistSpecialty: 'Neuropsicologia',
+            sessionType: 'Avaliação Inicial',
+            status: 'completed',
+            dateTime: schedule(-3, 15, 0),
+            ocpActive: 0,
+            stimuliAccuracy: 0,
+        },
+        {
+            id: '9',
+            patientName: 'Eduardo Albuquerque',
+            therapistName: 'Dr. Carlos',
+            therapistSpecialty: 'Análise do Comportamento',
+            sessionType: 'Consulta Familiar',
+            status: 'scheduled',
+            dateTime: schedule(5, 14, 0),
+            modality: 'online',
+            ocpActive: 1,
+            stimuliAccuracy: 65,
+        },
+        {
+            id: '10',
+            patientName: 'Larissa Prado',
+            therapistName: 'Dra. Ana',
+            therapistSpecialty: 'Psicoterapia Infantil',
+            sessionType: 'Consulta Individual',
+            status: 'cancelled',
+            dateTime: schedule(-2, 13, 0),
+            ocpActive: 2,
+            stimuliAccuracy: 58,
+        },
+    ];
+}

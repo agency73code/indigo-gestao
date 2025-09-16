@@ -3,7 +3,7 @@ import type { Patient, ProgramListItem } from './types';
 // TODO: substituir por serviços reais da API
 const USE_LOCAL_MOCKS = true;
 
-export async function searchPatients(q: string, page = 1): Promise<Patient[]> {
+export async function searchPatients(q: string, _page = 1): Promise<Patient[]> {
     if (USE_LOCAL_MOCKS) {
         const { mockPatients } = await import('./mocks/patients.mock');
         

@@ -1,60 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { AccuracyTrendChart } from '@/components/Dashboard/AccuracyTrendChart';
-import { DataTable } from '@/components/Dashboard/data-table';
 import { DashboardCards } from '@/components/Dashboard/DashboardCards';
+import { SessionsTable } from '@/components/sessions/SessionsTable';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { AccuracyRange, AccuracyView } from '@/components/Dashboard/AccuracyTrendChart';
 import { getDashboardOverview } from '@/lib/api/dashboard';
+import { listSessions } from '@/lib/api/sessions';
 import type { DashboardOverview, TrendPoint } from '@/lib/types/dashboard';
-
-const mockData = [
-    {
-        id: 1,
-        header: 'Consulta - João Silva',
-        type: 'Consulta Individual',
-        status: 'Agendado',
-        target: 'Terapeuta: Maria Santos',
-        limit: '2025-01-15',
-        reviewer: 'Dr. Carlos',
-    },
-    {
-        id: 2,
-        header: 'Terapia - Ana Costa',
-        type: 'Terapia em Grupo',
-        status: 'Em Andamento',
-        target: 'Terapeuta: João Oliveira',
-        limit: '2025-01-20',
-        reviewer: 'Dr. Carlos',
-    },
-    {
-        id: 3,
-        header: 'Avaliação - Pedro Lima',
-        type: 'Avaliação Inicial',
-        status: 'Concluído',
-        target: 'Terapeuta: Maria Santos',
-        limit: '2025-01-10',
-        reviewer: 'Dr. Ana',
-    },
-    {
-        id: 4,
-        header: 'Sessão - Carla Mendes',
-        type: 'Sessão Individual',
-        status: 'Agendado',
-        target: 'Terapeuta: Ana Silva',
-        limit: '2025-01-18',
-        reviewer: 'Dr. Pedro',
-    },
-    {
-        id: 5,
-        header: 'Consulta - Roberto Santos',
-        type: 'Consulta Familiar',
-        status: 'Pendente',
-        target: 'Terapeuta: João Oliveira',
-        limit: '2025-01-22',
-        reviewer: 'Dr. Carlos',
-    },
-];
+import type { SessionRow } from '@/lib/types/sessions';
 
 type RangeDataset = Record<AccuracyRange, TrendPoint[]>;
 
@@ -111,6 +65,8 @@ const buildViewData = (ranges: RangeDataset) => ({
 export default function DashboardPage() {
     const [overview, setOverview] = useState<DashboardOverview | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [sessions, setSessions] = useState<SessionRow[]>([]);
+    const [isLoadingSessions, setIsLoadingSessions] = useState(true);
 
     useEffect(() => {
         let active = true;
@@ -127,6 +83,26 @@ export default function DashboardPage() {
             }
         };
         loadOverview();
+        return () => {
+            active = false;
+        };
+    }, []);
+
+    useEffect(() => {
+        let active = true;
+        const loadSessions = async () => {
+            try {
+                const data = await listSessions();
+                if (active) {
+                    setSessions(data);
+                }
+            } finally {
+                if (active) {
+                    setIsLoadingSessions(false);
+                }
+            }
+        };
+        loadSessions();
         return () => {
             active = false;
         };
@@ -164,7 +140,11 @@ export default function DashboardPage() {
                     </div>
 
                     <div>
-                        <DataTable data={mockData} />
+                        {isLoadingSessions ? (
+                            <Skeleton className="h-[420px] w-full rounded-[6px]" />
+                        ) : (
+                            <SessionsTable rows={sessions} />
+                        )}
                     </div>
                 </section>
             </div>
