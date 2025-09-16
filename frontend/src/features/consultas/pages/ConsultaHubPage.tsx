@@ -1,8 +1,16 @@
 import { Link } from 'react-router-dom';
 import { User, Users, BarChart3 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useEffect, useState } from 'react';
+import { getNovosClientes, getNovosTerapeutas, getTotalClientes, getTotalTerapeutas } from '@/lib/api';
 
 export default function ConsultaHubPage() {
+    const [totalTerapeutas, setTotalTerapeutas] = useState(24);
+    const [totalClientes, setTotalClientes] = useState(156);
+    const [novosTerapeutas, setNovosTerapeutas] = useState(3);
+    const [novosClientes, setNovosClientes] = useState(12);
+    const [totalRegistros, setTotalRegistros] = useState(180);
+
     const mainActions = [
         {
             title: 'Consultar Terapeutas',
@@ -21,6 +29,26 @@ export default function ConsultaHubPage() {
             textColor: 'text-white',
         },
     ];
+
+    useEffect(() => {
+        getTotalTerapeutas()
+            .then((total) => setTotalTerapeutas(total))
+            .catch(() => {});
+
+        getTotalClientes()
+            .then((total) => setTotalClientes(total))
+            .catch(() => {});
+        
+        getNovosTerapeutas()
+            .then((total) => setNovosTerapeutas(total))
+            .catch(() => {});
+
+        getNovosClientes()
+            .then((total) => setNovosClientes(total))
+            .catch(() => {});
+
+        setTotalRegistros(totalTerapeutas + totalClientes);
+    }, [totalTerapeutas, totalClientes]);
 
     return (
         <div className="flex flex-col min-h-full w-full p-1 md:p-4 lg:p-8 space-y-6">
@@ -87,8 +115,8 @@ export default function ConsultaHubPage() {
                             <User className="h-5 w-5 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">24</div>
-                            <p className="text-xs text-muted-foreground">+3 desde o mês passado</p>
+                            <div className="text-2xl font-bold">{totalTerapeutas}</div>
+                            <p className="text-xs text-muted-foreground">{`+${novosTerapeutas} desde o mês passado`}</p>
                         </CardContent>
                     </Card>
 
@@ -98,8 +126,8 @@ export default function ConsultaHubPage() {
                             <Users className="h-5 w-5 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">156</div>
-                            <p className="text-xs text-muted-foreground">+12 novos este mês</p>
+                            <div className="text-2xl font-bold">{totalClientes}</div>
+                            <p className="text-xs text-muted-foreground">{`+${novosClientes} novos este mês`}</p>
                         </CardContent>
                     </Card>
 
@@ -109,7 +137,7 @@ export default function ConsultaHubPage() {
                             <BarChart3 className="h-5 w-5 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">180</div>
+                            <div className="text-2xl font-bold">{totalRegistros}</div>
                             <p className="text-xs text-muted-foreground">
                                 Total de registros ativos
                             </p>

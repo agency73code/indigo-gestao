@@ -42,3 +42,23 @@ export async function create(req: Request, res: Response, next: NextFunction) {
         next(error);
     }
 }
+
+/* Counts para informações */
+
+export async function count(req: Request, res: Response, next: NextFunction) {
+    try {
+        const total = await therapistService.count();
+        res.json({ success: true, data: total });
+    }  catch (error) {
+        next(error);
+    }
+}
+
+export async function countNewTeraphist(req: Request, res: Response, next: NextFunction) {
+  try {
+    const total = await therapistService.countNewTeraphist();
+    res.json({ success: true, data: total });
+  } catch (error) {
+    next(error);
+  }
+}

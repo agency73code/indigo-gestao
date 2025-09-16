@@ -259,3 +259,25 @@ export async function create(data: FrontCliente) {
   const normalized = await normalizer(data);
   return createCliente(prisma, normalized);
 }
+
+/* Counts para informações */
+export async function count() {
+  return prisma.cliente.count();
+}
+
+export async function countNewClients() {
+  const monthStart = new Date();
+  monthStart.setDate(1);
+  monthStart.setHours(0, 0, 0, 0);
+
+  const now = new Date();
+
+  return prisma.cliente.count({
+    where: {
+      data_entrada: {
+        gte: monthStart,
+        lte: now,
+      },
+    },
+  });
+}
