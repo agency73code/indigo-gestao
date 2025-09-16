@@ -281,3 +281,11 @@ export async function countNewClients() {
     },
   });
 }
+
+export async function countActiveClients() {
+  return prisma.cliente.count({
+    where: {
+      status: 'ativo',
+    }
+  });
+}

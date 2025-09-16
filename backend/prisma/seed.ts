@@ -13,7 +13,7 @@ const prisma = new PrismaClient();
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const DELAY_MS = Number('1000');
-const BATCHES = Number(15);
+const BATCHES = Number(5);
 
 async function seedOnce() {
     const TIPO_ENDERECO_MAP = {

@@ -61,3 +61,12 @@ export async function countNewClients(req: Request, res: Response, next: NextFun
     next(error);
   }
 }
+
+export async function countActiveClients(req: Request, res: Response, next: NextFunction) {
+  try {
+    const total = await clientService.countActiveClients();
+    res.json({ success: true, data: total });
+  } catch (error) {
+    next(error);
+  }
+}

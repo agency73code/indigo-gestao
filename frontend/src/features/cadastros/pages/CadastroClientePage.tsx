@@ -148,8 +148,6 @@ export default function CadastroClientePage() {
                     newErrors['enderecos.0.logradouro'] = 'Logradouro é obrigatório';
                 if (!formData.enderecos?.[0]?.numero?.trim())
                     newErrors['enderecos.0.numero'] = 'Número é obrigatório';
-                if (!formData.enderecos?.[0]?.complemento?.trim())
-                    newErrors['enderecos.0.complemento'] = 'Complemento é obrigatório';
                 if (!formData.enderecos?.[0]?.bairro?.trim())
                     newErrors['enderecos.0.bairro'] = 'Bairro é obrigatório';
                 if (!formData.enderecos?.[0]?.cidade?.trim())

@@ -263,3 +263,16 @@ export async function getNovosTerapeutas():Promise<number> {
 
   return data?.data ?? 0;
 }
+
+export async function getClientesAtivos(): Promise<number> {
+  const res = await authFetch('/api/clientes/clientesativos', { method: 'GET' });
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : null;
+
+  if (!res.ok) {
+    const msg = data?.message ?? data?.error ?? `Falha (${res.status})`;
+    throw new Error(msg);
+  }
+
+  return data?.data ?? 0;
+}

@@ -17,15 +17,18 @@ app.use(cors({ origin: env.FRONTEND_URL, credentials: true, }));
 app.use(compression()); // Comprime resposta para economizar banda
 
 // Rate Limiting (proteção contra spam/DDoS)
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutos
-    max: 100, // Limita cada IP a 100 requisições por janela
-    message: {
-        error: 'Too many requests',
-        message: 'Please try again later.',
-    },
-});
-app.use(limiter);
+if (env.NODE_ENV === 'production') {
+    const limiter = rateLimit({
+        windowMs: 15 * 60 * 1000, // 15 minutos
+        max: 100, // Limita cada IP a 100 requisições por janela
+        message: {
+            error: 'Too many requests',
+            message: 'Please try again later.',
+        },
+    });
+
+    app.use(limiter);
+}
 
 app.use(express.json());
 app.use(cookieParser());
