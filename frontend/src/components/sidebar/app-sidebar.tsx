@@ -6,7 +6,6 @@ import {
     Frame,
     LayoutDashboard,
     LifeBuoy,
-    Map,
     PieChart,
     Send,
     Settings2,
@@ -150,20 +149,17 @@ const data = {
     ],
     projects: [
         {
-            name: 'Engineering',
-            url: '#',
+            name: 'Indigo Website',
+            url: 'https://www.indigoinstituto.com.br/',
+            target: '_blank',
             icon: Frame,
         },
         {
-            name: 'Vendas',
+            name: 'Lançamento curso',
             url: '#',
             icon: PieChart,
         },
-        {
-            name: 'Viagens',
-            url: '#',
-            icon: Map,
-        },
+        
     ],
 };
 
