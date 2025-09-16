@@ -20,7 +20,7 @@ app.use(compression()); // Comprime resposta para economizar banda
 if (env.NODE_ENV === 'production') {
     const limiter = rateLimit({
         windowMs: 15 * 60 * 1000, // 15 minutos
-        max: 100, // Limita cada IP a 100 requisições por janela
+        max: 10_000, // Limita cada IP a 10000 requisições por janela
         message: {
             error: 'Too many requests',
             message: 'Please try again later.',
@@ -29,6 +29,15 @@ if (env.NODE_ENV === 'production') {
 
     app.use(limiter);
 }
+
+app.use('/api/auth/login', rateLimit({
+    windowMs: 5 * 60 * 1000,
+    max: 10,
+    message: {
+        error: 'Too many requests',
+        message: 'Please try again later.',
+    },
+}));
 
 app.use(express.json());
 app.use(cookieParser());
