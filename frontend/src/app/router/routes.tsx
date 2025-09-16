@@ -24,7 +24,7 @@ import ConsultaOcpPage from '../../features/programas/pages/ConsultaOcpPage';
 import CadastroOcpPage from '../../features/programas/pages/CadastroOcpPage';
 import DetalheProgramaPage from '../../features/programas/pages/DetalheProgramaPage';
 import EditarProgramaPage from '../../features/programas/pages/EditarProgramaPage';
-import RegistrarSessaoPage from '../../features/programas/pages/RegistrarSessaoPage';
+import { CadastroSessaoPage } from '../../features/sessoes';
 import RelatorioMensalPage from '../../features/programas/pages/RelatorioMensalPage';
 import SessaoPage from '../../features/programas/pages/SessaoPage';
 
@@ -171,7 +171,7 @@ export const router = createBrowserRouter([
                         path: 'programas/sessoes/nova',
                         element: (
                             <Suspense fallback={suspenseFallback}>
-                                <RegistrarSessaoPage />
+                                <CadastroSessaoPage />
                             </Suspense>
                         ),
                     },
