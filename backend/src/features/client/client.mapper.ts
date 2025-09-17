@@ -32,6 +32,7 @@ export function mapClientBase(input: ClientCreateData) {
     email_contato: input.email_contato,
     data_entrada: asDate(input.data_entrada),
     perfil_acesso: input.perfil_acesso,
+    token_redefinicao: uuidv4(),
   };
 }
 
