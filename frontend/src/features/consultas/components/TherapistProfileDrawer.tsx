@@ -49,11 +49,11 @@ export default function TherapistProfileDrawer({
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center rounded-[5px] p-2">
             <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
-            <div className="relative w-full max-w-4xl max-h-[90vh] bg-white rounded-lg shadow-2xl flex flex-col">
+            <div className="relative w-full max-w-4xl max-h-[90vh] bg-white rounded-[5px] shadow-2xl flex flex-col ">
                 {/* Header - fixo */}
-                <div className="flex items-center gap-4 p-6 border-b bg-gray-50 flex-shrink-0">
+                <div className="flex items-center gap-4 border-b bg-gray-50 flex-shrink-0 p-2">
                     <div className="h-16 w-16 bg-blue-100 rounded-full flex items-center justify-center text-lg font-medium text-blue-600">
                         {getInitials(therapist.nome)}
                     </div>
@@ -75,7 +75,7 @@ export default function TherapistProfileDrawer({
 
                 {/* Content - rolável com todos os campos dos cadastros */}
                 <div className="flex-1 min-h-0 overflow-y-auto">
-                    <div className="p-6 space-y-8 pb-16">
+                    <div className="space-y-8 pb-16 p-4">
                         {/* Seção 1: Dados Pessoais (DadosPessoaisStep) */}
                         <div>
                             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">

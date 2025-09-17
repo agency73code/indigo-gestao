@@ -153,8 +153,8 @@ export default function TerapeutasListPage() {
     }
 
     return (
-        <div className="flex flex-col top-0 left-0 w-full h-full">
-            <CardHeader>
+        <div className="flex flex-col top-0 left-0 w-full h-full sm:p-6">
+            <CardHeader className="px-0">
                 <CardTitle className="text-2xl font-semibold text-primary">
                     Consultar Terapeutas
                 </CardTitle>
@@ -162,20 +162,20 @@ export default function TerapeutasListPage() {
                     Visualize e gerencie os terapeutas cadastrados no sistema.
                 </p>
             </CardHeader>
-            <CardContent className="space-y-6">
-                <div className="flex items-center gap-4">
+            <CardContent className="space-y-1 px-0">
+                <div className="flex gap-4">
                     <div className="flex-1">
                         <ToolbarConsulta
                             searchValue={searchTerm}
                             onSearchChange={setSearchTerm}
-                            placeholder="Buscar por nome, e-mail, telefone, registro ou especialidade..."
+                            placeholder="Buscar por nome, e-mail..."
                             showFilters={false}
                         />
                     </div>
                     <Link to="/app/cadastro/terapeuta">
-                        <Button className="flex items-center gap-2">
+                        <Button className="h-12 gap-2">
                             <Plus className="h-4 w-4" />
-                            Adicionar Terapeuta
+                            Adicionar
                         </Button>
                     </Link>
                 </div>
@@ -193,15 +193,15 @@ export default function TerapeutasListPage() {
                 />
 
                 {!loading && filteredAndSortedTherapists.length > 0 && (
-                    <div className="flex justify-between">
-                        <div className="text-sm text-muted-foreground">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="text-sm text-muted-foreground sm:text-left text-center">
                             Mostrando {(pagination.page - 1) * pagination.pageSize + 1} a{' '}
                             {Math.min(pagination.page * pagination.pageSize, pagination.total)} de{' '}
                             {pagination.total} resultados
                         </div>
 
                         {totalPages > 1 && (
-                            <div className="flex items-center space-x-2">
+                            <div className="flex items-center justify-center gap-2 sm:justify-end">
                                 <Button
                                     variant="outline"
                                     size="sm"
@@ -209,10 +209,10 @@ export default function TerapeutasListPage() {
                                         handlePageChange(Math.max(1, pagination.page - 1))
                                     }
                                     disabled={pagination.page === 1}
-                                    className="flex items-center gap-2"
+                                    className="sm:flex items-center gap-2"
                                 >
                                     <ChevronLeft className="w-4 h-4" />
-                                    Anterior
+                                    <span className="hidden sm:inline">Anterior</span>
                                 </Button>
 
                                 <div className="flex items-center space-x-1">
@@ -238,10 +238,10 @@ export default function TerapeutasListPage() {
                                         handlePageChange(Math.min(totalPages, pagination.page + 1))
                                     }
                                     disabled={pagination.page === totalPages}
-                                    className="flex items-center gap-2"
+                                    className="sm:flex items-center gap-2"
                                 >
-                                    Próxima
                                     <ChevronRight className="w-4 h-4" />
+                                    <span className="hidden sm:inline">Próxima</span>
                                 </Button>
                             </div>
                         )}
