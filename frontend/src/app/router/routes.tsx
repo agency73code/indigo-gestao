@@ -120,7 +120,7 @@ export const router = createBrowserRouter([
                         ),
                     },
                     {
-                        path: 'configuracoes',
+                        path: 'configuracoes/*',
                         element: (
                             <Suspense fallback={suspenseFallback}>
                                 <ConfiguracoesPage />
