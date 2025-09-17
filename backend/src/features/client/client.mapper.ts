@@ -9,6 +9,13 @@ import {
 import type { ClientCreateData } from "./client.types.js";
 import { v4 as uuidv4 } from "uuid";
 
+function generateResetToken() {
+    const token = uuidv4();
+    const expiry = new Date();
+    expiry.setDate(expiry.getDate() + 1);
+    return { token, expiry };
+}
+
 function toEnum<T extends Record<string, string>>(e: T, value: string, field: string): T[keyof T] {
   const v = String(value ?? "").trim();
   const match = Object.values(e).find(opt => opt.toLowerCase() === v.toLowerCase());
@@ -25,6 +32,7 @@ function asDate(input: string | Date): Date {
 }
 
 export function mapClientBase(input: ClientCreateData) {
+  const { token, expiry } = generateResetToken();
   return {
     id: uuidv4(),
     nome: input.nome,
@@ -32,7 +40,8 @@ export function mapClientBase(input: ClientCreateData) {
     email_contato: input.email_contato,
     data_entrada: asDate(input.data_entrada),
     perfil_acesso: input.perfil_acesso,
-    token_redefinicao: uuidv4(),
+    token_redefinicao: token,
+    validade_token: expiry
   };
 }
 
