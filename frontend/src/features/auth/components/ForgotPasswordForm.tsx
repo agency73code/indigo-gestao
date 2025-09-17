@@ -33,7 +33,7 @@ export default function ForgotPasswordForm({
     });
 
     return (
-        <Card className="w-full max-w-[550px] mx-auto">
+        <Card className=" max-w-[550px] mx-auto m-4">
             <CardHeader className="space-y-1">
                 <CardTitle className="text-2xl tracking-tight">Esqueci minha senha</CardTitle>
                 <CardDescription className=" text-muted-foreground">
