@@ -148,7 +148,7 @@ export function AccuracyTrendChart({
                     >
                         <AreaChart
                             data={currentData}
-                            margin={{ left: 0, right: 0, top: 16, bottom: 0 }}
+                            margin={{ left: 24, right: 8, top: 16, bottom: 0 }}
                         >
                             <CartesianGrid vertical={false} strokeDasharray="4 4" opacity={0.3} />
                             <XAxis
