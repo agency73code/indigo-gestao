@@ -1,8 +1,16 @@
 import { Link } from 'react-router-dom';
 import { User, Users, UserPlus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useEffect, useState } from 'react';
+import { getCardsOverview } from '@/lib/api';
 
 export default function CadastroHubPage() {
+    const [totalTerapeutas, setTotalTerapeutas] = useState(24);
+    const [totalClientes, setTotalClientes] = useState(156);
+    const [novosTerapeutas, setNovosTerapeutas] = useState(3);
+    const [novosClientes, setNovosClientes] = useState(12);
+    const [totalNovosRegistros, setTotalNovosRegistros] = useState(180);
+
     const mainActions = [
         {
             title: 'Cadastrar Terapeuta',
@@ -21,6 +29,19 @@ export default function CadastroHubPage() {
             textColor: 'text-white',
         },
     ];
+
+    useEffect(() => {
+        console.log(">>> useEffect getCardsOverview");
+        getCardsOverview()
+            .then(({ totalTerapeutas, totalClientes, novosTerapeutas, novosClientes }) => {
+                setTotalTerapeutas(totalTerapeutas);
+                setTotalClientes(totalClientes);
+                setNovosTerapeutas(novosTerapeutas);
+                setNovosClientes(novosClientes);
+                setTotalNovosRegistros(novosTerapeutas + novosClientes);
+            })
+            .catch(() => {});
+    }, []);
 
     return (
         <div className="flex flex-col min-h-full w-full p-1 md:p-4 lg:p-8 space-y-6">
@@ -89,8 +110,8 @@ export default function CadastroHubPage() {
                             <UserPlus className="h-5 w-5 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">15</div>
-                            <p className="text-xs text-muted-foreground">+8 desde o mês passado</p>
+                            <div className="text-2xl font-bold">{totalNovosRegistros}</div>
+                            <p className="text-xs text-muted-foreground">{`+${totalNovosRegistros} desde o mês passado`}</p>
                         </CardContent>
                     </Card>
 
@@ -102,8 +123,8 @@ export default function CadastroHubPage() {
                             <User className="h-5 w-5 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">24</div>
-                            <p className="text-xs text-muted-foreground">3 novos este mês</p>
+                            <div className="text-2xl font-bold">{totalTerapeutas}</div>
+                            <p className="text-xs text-muted-foreground">{`${novosTerapeutas} novos este mês`}</p>
                         </CardContent>
                     </Card>
 
@@ -115,8 +136,8 @@ export default function CadastroHubPage() {
                             <Users className="h-5 w-5 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">156</div>
-                            <p className="text-xs text-muted-foreground">12 novos este mês</p>
+                            <div className="text-2xl font-bold">{totalClientes}</div>
+                            <p className="text-xs text-muted-foreground">{`${novosClientes} novos este mês`}</p>
                         </CardContent>
                     </Card>
                 </div>

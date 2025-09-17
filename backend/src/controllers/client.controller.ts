@@ -43,25 +43,6 @@ export async function create(req: Request, res: Response, next: NextFunction) {
   }
 }
 
-/* Counts para informações */
-export async function count(req: Request, res: Response, next: NextFunction) {
-  try {
-    const total = await clientService.count();
-    res.json({ success: true, data: total });
-  } catch (error) {
-    next(error);
-  }
-}
-
-export async function countNewClients(req: Request, res: Response, next: NextFunction) {
-  try {
-    const total = await clientService.countNewClients();
-    res.json({ success: true, data: total });
-  } catch (error) {
-    next(error);
-  }
-}
-
 export async function countActiveClients(req: Request, res: Response, next: NextFunction) {
   try {
     const total = await clientService.countActiveClients();

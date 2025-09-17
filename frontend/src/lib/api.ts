@@ -212,56 +212,23 @@ export async function apiLogout() {
 
 /* Counts para informações */
 
-export async function getTotalTerapeutas(): Promise<number> {
-  const res = await authFetch('/api/terapeutas/total', { method: 'GET' });
+export async function getCardsOverview() {
+  const res = await authFetch('/api/cards/overview', { method: 'GET' });
   const text = await res.text();
-  const data = text ? JSON.parse(text) : null;
+  const parsed = text ? JSON.parse(text) : null;
 
   if (!res.ok) {
-    const msg = data?.message ?? data?.error ?? `Falha (${res.status})`;
+    const msg = parsed?.message ?? parsed?.error ?? `Falha (${res.status})`;
     throw new Error(msg);
   }
-
-  return data?.data ?? 0;
-}
-
-export async function getTotalClientes():Promise<number> {
-  const res = await authFetch('/api/clientes/total', { method: 'GET' });
-  const text = await res.text();
-  const data = text ? JSON.parse(text) : null;
-
-  if (!res.ok) {
-    const msg = data?.message ?? data?.error ?? `Falha (${res.status})`;
-    throw new Error(msg);
-  }
-
-  return data?.data ?? 0;
-}
-
-export async function getNovosClientes():Promise<number> {
-  const res = await authFetch('/api/clientes/novosclientes', { method: 'GET' });
-  const text = await res.text();
-  const data = text ? JSON.parse(text) : null;
-
-  if (!res.ok) {
-    const msg = data?.message ?? data?.error ?? `Falha (${res.status})`;
-    throw new Error(msg);
-  }
-
-  return data?.data ?? 0;
-}
-
-export async function getNovosTerapeutas():Promise<number> {
-  const res = await authFetch('/api/terapeutas/novosterapeutas', { method: 'GET' });
-  const text = await res.text();
-  const data = text ? JSON.parse(text) : null;
-
-  if (!res.ok) {
-    const msg = data?.message ?? data?.error ?? `Falha (${res.status})`;
-    throw new Error(msg);
-  }
-
-  return data?.data ?? 0;
+  
+  const d = parsed.data ?? {};
+  return { 
+    totalTerapeutas: d.totalTherapists, 
+    totalClientes: d.totalClients, 
+    novosTerapeutas: d.newTherapist, 
+    novosClientes: d.newClients 
+  };
 }
 
 export async function getClientesAtivos(): Promise<number> {
