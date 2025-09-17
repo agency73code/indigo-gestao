@@ -20,7 +20,7 @@ const FooterBreadcrumb: React.FC<FooterBreadcrumbProps> = ({ className = "" }) =
         href="/politica-privacidade" 
         className="text-gray-500 hover:text-gray-700 transition-colors"
       >
-        Política de Privacidade & Termos
+        Política de Privacidade
       </a>
     </nav>
   );

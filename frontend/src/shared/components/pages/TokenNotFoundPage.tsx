@@ -9,7 +9,7 @@ const TokenNotFoundPage: React.FC = () => {
     return (
         <div className="flex flex-col items-center justify-center min-h-screen">
             <AuthBackground />
-            <Card className="w-full max-w-[550px] flex flex-center text-center">
+            <Card className="max-w-[550px] flex flex-center text-center m-4">
                 <CardContent className="">
                     <div className="space-y-6">
                         <div className="flex justify-center">

@@ -76,7 +76,7 @@ interface DashboardCardsProps {
 export function DashboardCards({ overview }: DashboardCardsProps) {
     return (
         <TooltipProvider>
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4 lg:mt-4 sm:mt-3">
                 {metricCards.map((metric) => {
                     const value = overview[metric.key] ?? 0;
                     const isEmpty = value === 0;

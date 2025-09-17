@@ -25,7 +25,7 @@ const FooterBreadcrumb: React.FC<FooterBreadcrumbProps> = ({ className = '' }) =
                 to="/politica-privacidade"
                 className="text-muted-foreground hover:text-muted-foreground/80 transition-colors"
             >
-                Política de Privacidade & Termos
+                Política de Privacidade
             </Link>
         </nav>
     );
