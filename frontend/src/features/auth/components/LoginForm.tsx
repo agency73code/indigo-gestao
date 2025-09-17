@@ -85,7 +85,7 @@ export default function LoginForm({ onSubmit, isLoading = false, error }: LoginF
 
     return (
         <motion.div variants={containerVariants} initial="hidden" animate="visible">
-            <Card className="w-full max-w-[550px] mx-auto overflow-hidden">
+            <Card className=" max-w-[550px] mx-auto overflow-hidden m-4">
                 <motion.div variants={itemVariants}>
                     <CardHeader className="space-y-1">
                         <CardTitle className="text-2xl tracking-tight">
