@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { User, Users, BarChart3 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEffect, useState } from 'react';
-import { getNovosClientes, getNovosTerapeutas, getTotalClientes, getTotalTerapeutas } from '@/lib/api';
+import { getCardsOverview } from '@/lib/api';
 
 export default function ConsultaHubPage() {
     const [totalTerapeutas, setTotalTerapeutas] = useState(24);
@@ -31,24 +31,16 @@ export default function ConsultaHubPage() {
     ];
 
     useEffect(() => {
-        getTotalTerapeutas()
-            .then((total) => setTotalTerapeutas(total))
+        getCardsOverview()
+            .then(({ totalTerapeutas, totalClientes, novosTerapeutas, novosClientes }) => {
+                setTotalTerapeutas(totalTerapeutas);
+                setTotalClientes(totalClientes);
+                setNovosTerapeutas(novosTerapeutas);
+                setNovosClientes(novosClientes);
+                setTotalRegistros(totalTerapeutas + totalClientes);
+            })
             .catch(() => {});
-
-        getTotalClientes()
-            .then((total) => setTotalClientes(total))
-            .catch(() => {});
-        
-        getNovosTerapeutas()
-            .then((total) => setNovosTerapeutas(total))
-            .catch(() => {});
-
-        getNovosClientes()
-            .then((total) => setNovosClientes(total))
-            .catch(() => {});
-
-        setTotalRegistros(totalTerapeutas + totalClientes);
-    }, [totalTerapeutas, totalClientes]);
+    }, []);
 
     return (
         <div className="flex flex-col min-h-full w-full p-1 md:p-4 lg:p-8 space-y-6">
