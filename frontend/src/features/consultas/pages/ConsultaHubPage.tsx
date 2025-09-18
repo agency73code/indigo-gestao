@@ -43,7 +43,7 @@ export default function ConsultaHubPage() {
     }, []);
 
     return (
-        <div className="flex flex-col min-h-full w-full p-1 md:p-4 lg:p-8 space-y-6">
+        <div className="flex flex-col min-h-full w-full px-1 py-4 md:p-4 sm:p-4 lg:p-8 space-y-6">
             {/* Header Section */}
             <div className="space-y-2">
                 <h1

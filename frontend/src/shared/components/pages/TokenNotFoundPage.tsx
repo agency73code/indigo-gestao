@@ -7,9 +7,9 @@ import AuthBackground from '@/features/auth/components/AuthBackground';
 
 const TokenNotFoundPage: React.FC = () => {
     return (
-        <div className="">
+        <div className="flex flex-col items-center justify-center min-h-screen">
             <AuthBackground />
-            <Card className="w-full text-center">
+            <Card className="max-w-[550px] flex flex-center text-center m-4">
                 <CardContent className="">
                     <div className="space-y-6">
                         <div className="flex justify-center">
@@ -19,7 +19,7 @@ const TokenNotFoundPage: React.FC = () => {
                         {/* Título */}
                         <div className="space-y-2">
                             <h3
-                                className="text-2xl font-semibold text-gray-800"
+                                className="text-2xl font-semibold text-primary"
                                 style={{ fontFamily: 'Sora, sans-serif' }}
                             >
                                 Token não encontrado
