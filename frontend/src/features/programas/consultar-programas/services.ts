@@ -65,12 +65,13 @@ export async function listPrograms(params: {
     
     const url = new URL(`/api/ocp/clients/${params.patientId}/programs`, window.location.origin);
     if (params.page) url.searchParams.set('page', params.page.toString());
+    if (params.status) url.searchParams.set('status', params.status);
 
-    const res = await fetch(`/api/ocp/clients/${params.patientId}/programs`, {
+    const res = await fetch(url.toString(), {
         credentials: 'include',
         headers: { Accept: 'application/json' },
     });
-    
+
     if (!res.ok) throw new Error('Erro ao buscar programas');
 
     const json = await res.json();

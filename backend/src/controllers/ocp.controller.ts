@@ -27,9 +27,10 @@ export async function listTherapistClients(req: Request, res: Response) {
 export async function listClientPrograms(req: Request, res: Response) {
     const { clientId } = req.params;
     const page = parseInt(req.query.page as string) || 1;
+    const status = (req.query.status as 'active' | 'archived' | 'all') || 'all';
 
     if (!clientId) return res.status(400).json({ success: false, message: 'ClientId é obrigatório' });
 
-    const rows = await OcpService.listByClientId(clientId, page);
+    const rows = await OcpService.listByClientId(clientId, page, 10, status);
     return res.json({ success: true, data: rows.map(OcpService.mapOcpReturn) });
 }
