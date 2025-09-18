@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { Patient, Therapist } from '../types';
 import { searchPatients, searchTherapists } from '../services';
+import { RequireAbility } from '@/features/auth/abilities/RequireAbility';
 
 interface HeaderInfoProps {
     patient: Patient | null;
@@ -315,22 +316,24 @@ export default function HeaderInfo({
                                 </div>
 
                                 <div className="flex gap-2 flex-shrink-0 flex-col sm:flex-row">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => setShowTherapistSelector(true)}
-                                        className="text-xs sm:text-sm"
-                                    >
-                                        Trocar
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => onTherapistSelect(null)}
-                                        className="text-xs sm:text-sm"
-                                    >
-                                        Limpar
-                                    </Button>
+                                    <RequireAbility action='manage' subject='Terapeutas'>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setShowTherapistSelector(true)}
+                                            className="text-xs sm:text-sm"
+                                        >
+                                            Trocar
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => onTherapistSelect(null)}
+                                            className="text-xs sm:text-sm"
+                                        >
+                                            Limpar
+                                        </Button>
+                                    </RequireAbility>
                                 </div>
                             </div>
                         ) : (

@@ -20,6 +20,7 @@ import type {
     ValidationErrors,
     CreateProgramInput,
 } from '../cadastro-ocp';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 
 export default function CadastroOcpPage() {
     const [searchParams] = useSearchParams();
@@ -27,7 +28,7 @@ export default function CadastroOcpPage() {
 
     // Estado para controlar a visibilidade da SaveBar
     const [showSaveBar, setShowSaveBar] = useState(false);
-
+    const { user } = useAuth();
     // Estados do formulário
     const [formState, setFormState] = useState<FormState>({
         patient: null,
@@ -40,10 +41,23 @@ export default function CadastroOcpPage() {
         notes: '',
         createdAt: new Date().toISOString(),
     });
-
+    
     const [errors, setErrors] = useState<ValidationErrors>({});
     const [isSaving, setIsSaving] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        if (user) {
+            setFormState((prev) => ({
+                ...prev,
+                therapist: {
+                    id: user.id,
+                    name: user.name ?? '',
+                    photoUrl: null,
+                },
+            }));
+        }
+    }, [user]);
 
     // Carregar dados iniciais da URL
     useEffect(() => {
@@ -71,7 +85,7 @@ export default function CadastroOcpPage() {
                 }
 
                 // Pré-selecionar terapeuta se passado na URL
-                if (therapistId) {
+                if (therapistId && !formState.therapist) {
                     try {
                         const therapist = await fetchTherapistById(therapistId);
                         setFormState((prev) => ({ ...prev, therapist }));

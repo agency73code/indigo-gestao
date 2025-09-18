@@ -1,9 +1,10 @@
+import { fetchClients } from '../api';
 import type { Patient, ProgramListItem } from './types';
 
 // TODO: substituir por serviços reais da API
-const USE_LOCAL_MOCKS = true;
+const USE_LOCAL_MOCKS = false;
 
-export async function searchPatients(q: string, _page = 1): Promise<Patient[]> {
+export async function searchPatients(q: string): Promise<Patient[]> {
     if (USE_LOCAL_MOCKS) {
         const { mockPatients } = await import('./mocks/patients.mock');
         
@@ -12,12 +13,11 @@ export async function searchPatients(q: string, _page = 1): Promise<Patient[]> {
         
         return mockPatients.filter(patient =>
             patient.name.toLowerCase().includes(q.toLowerCase()) ||
-            patient.responsible?.toLowerCase().includes(q.toLowerCase())
+            patient.guardianName?.toLowerCase().includes(q.toLowerCase())
         );
     }
-    
-    // TODO: implementar chamada real da API
-    throw new Error('API service not implemented');
+
+    return await fetchClients(q);
 }
 
 export async function listPrograms(params: {
@@ -63,6 +63,17 @@ export async function listPrograms(params: {
         return programs;
     }
     
-    // TODO: implementar chamada real da API
-    throw new Error('API service not implemented');
+    const url = new URL(`/api/ocp/clients/${params.patientId}/programs`, window.location.origin);
+    if (params.page) url.searchParams.set('page', params.page.toString());
+    if (params.status) url.searchParams.set('status', params.status);
+
+    const res = await fetch(url.toString(), {
+        credentials: 'include',
+        headers: { Accept: 'application/json' },
+    });
+
+    if (!res.ok) throw new Error('Erro ao buscar programas');
+
+    const json = await res.json();
+    return (json?.data ?? []) as ProgramListItem[];
 }

@@ -1,3 +1,4 @@
+import { fetchClients } from '../api';
 import type { Patient, Therapist, CreateProgramInput } from './types';
 
 // Flag para usar mocks locais durante desenvolvimento
@@ -78,49 +79,77 @@ export async function fetchTherapistById(id: string): Promise<Therapist> {
 }
 
 export async function createProgram(payload: CreateProgramInput): Promise<{ id: string }> {
-    if (USE_LOCAL_MOCKS) {
-        await delay(1000);
-        
-        // Simula validação básica
-        if (!payload.patientId || !payload.therapistId || !payload.goalTitle) {
-            throw new Error('Campos obrigatórios não preenchidos');
+    try {
+        const res = await fetch('/api/ocp/create', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                clientId: payload.patientId,
+                therapistId: payload.therapistId,
+                name: payload.name,
+                goalTitle: payload.goalTitle,
+                goalDescription: payload.goalDescription,
+                criteria: payload.criteria,
+                notes: payload.notes,
+                stimuli: payload.stimuli,
+            }),
+        });
+
+        if (!res.ok) {
+            const text = await res.text();
+            throw new Error(`Erro ao criar programa (${res.status}): ${text}`);
         }
-        
-        if (payload.stimuli.length === 0) {
-            throw new Error('Pelo menos um estímulo é obrigatório');
+
+        const json = await res.json();
+        return { id: String(json.data.id) };
+    } catch {
+        if (USE_LOCAL_MOCKS) {
+            await delay(1000);
+            
+            // Simula validação básica
+            if (!payload.patientId || !payload.therapistId || !payload.goalTitle) {
+                throw new Error('Campos obrigatórios não preenchidos');
+            }
+            
+            if (payload.stimuli.length === 0) {
+                throw new Error('Pelo menos um estímulo é obrigatório');
+            }
+            
+            // Simula erro ocasional para teste
+            if (Math.random() < 0.1) {
+                throw new Error('Erro interno do servidor. Tente novamente.');
+            }
+            
+            const programId = `programa_${Date.now()}`;
+            console.log('Mock: Programa criado com sucesso:', { id: programId, ...payload });
+            
+            return { id: programId };
         }
-        
-        // Simula erro ocasional para teste
-        if (Math.random() < 0.1) {
-            throw new Error('Erro interno do servidor. Tente novamente.');
-        }
-        
-        const programId = `programa_${Date.now()}`;
-        console.log('Mock: Programa criado com sucesso:', { id: programId, ...payload });
-        
-        return { id: programId };
     }
-    
     // TODO: Implementar chamada real da API
     throw new Error('API integration not implemented yet');
 }
 
 // Função para buscar pacientes (reutilizando da consulta se disponível)
-export async function searchPatients(query?: string): Promise<Patient[]> {
-    if (USE_LOCAL_MOCKS) {
-        await delay(200);
+export async function searchPatients(q?: string): Promise<Patient[]> {
+    try {
+        return await fetchClients(q);
+    } catch {
+        if (USE_LOCAL_MOCKS) {
+            await delay(200);
+            
+            if (!q) return MOCK_PATIENTS;
+            
+            const searchTerm = q.toLowerCase();
+            return MOCK_PATIENTS.filter(patient => 
+                patient.name.toLowerCase().includes(searchTerm) ||
+                patient.guardianName?.toLowerCase().includes(searchTerm)
+            );
+        }
         
-        if (!query) return MOCK_PATIENTS;
-        
-        const searchTerm = query.toLowerCase();
-        return MOCK_PATIENTS.filter(patient => 
-            patient.name.toLowerCase().includes(searchTerm) ||
-            patient.guardianName?.toLowerCase().includes(searchTerm)
-        );
+        throw new Error('Erro ao buscar pacientes');
     }
-    
-    // TODO: Integrar com serviço real de busca de pacientes
-    throw new Error('API integration not implemented yet');
 }
 
 // Função para buscar terapeutas 
