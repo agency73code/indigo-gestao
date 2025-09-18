@@ -20,7 +20,7 @@ model cargo {
 }
 
 model cliente {
-  id                  String                @id @db.Char(36)
+  id                  String                @id @db.Char(36) @unique
   nome                String                @db.VarChar(150)
   data_nascimento     DateTime              @db.Date
   email_contato       String                @unique(map: "email_contato_UNIQUE") @db.VarChar(255)
@@ -326,7 +326,7 @@ model sessao {
 
 model estimulo {
   id                  Int                 @id @default(autoincrement())
-  nome                String
+  nome                String              @unique
   descricao           String?
 
   ocps                estimulo_ocp[]

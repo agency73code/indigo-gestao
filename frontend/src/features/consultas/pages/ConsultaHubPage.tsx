@@ -3,6 +3,8 @@ import { User, Users, BarChart3 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEffect, useState } from 'react';
 import { getCardsOverview } from '@/lib/api';
+import type { Actions, Subjects } from '@/features/auth/abilities/ability';
+import { RequireAbility } from '@/features/auth/abilities/RequireAbility';
 
 export default function ConsultaHubPage() {
     const [totalTerapeutas, setTotalTerapeutas] = useState(24);
@@ -11,7 +13,17 @@ export default function ConsultaHubPage() {
     const [novosClientes, setNovosClientes] = useState(12);
     const [totalRegistros, setTotalRegistros] = useState(180);
 
-    const mainActions = [
+    type ActionConfig = {
+        title: string;
+        description: string;
+        icon: React.ElementType;
+        href: string;
+        bgColor: string;
+        textColor: string;
+        ability: { action: Actions; subject: Subjects };
+    }
+
+    const mainActions: ActionConfig[] = [
         {
             title: 'Consultar Terapeutas',
             description: 'Visualize e gerencie os terapeutas cadastrados no sistema',
@@ -19,6 +31,7 @@ export default function ConsultaHubPage() {
             href: '/app/consultas/terapeutas',
             bgColor: 'bg-[var(--card-primary)]',
             textColor: 'text-white',
+            ability: { action: 'manage', subject: 'all' },
         },
         {
             title: 'Consultar Pacientes',
@@ -27,6 +40,7 @@ export default function ConsultaHubPage() {
             href: '/app/consultas/pacientes',
             bgColor: 'bg-blue-500',
             textColor: 'text-white',
+            ability: { action: 'read', subject: 'all' },
         },
     ];
 
@@ -61,32 +75,34 @@ export default function ConsultaHubPage() {
             <div className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {mainActions.map((action, index) => (
-                        <Card
-                            key={index}
-                            className={`overflow-hidden hover:shadow-md p-1 md:p-4 lg:p-8 transition-shadow rounded-[5px] ${action.bgColor} ${action.textColor}`}
-                        >
-                            <Link
-                                to={action.href}
-                                className="block h-full"
-                                aria-label={`${action.title}: ${action.description}`}
+                        <RequireAbility action={action.ability.action} subject={action.ability.subject}>
+                            <Card
+                                key={index}
+                                className={`overflow-hidden hover:shadow-md p-1 md:p-4 lg:p-8 transition-shadow rounded-[5px] ${action.bgColor} ${action.textColor}`}
                             >
-                                <div className="p-4">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex-1 space-y-1">
-                                            <h3 className="font-medium text-base sm:text-lg">
-                                                {action.title}
-                                            </h3>
-                                            <p className="text-xs sm:text-sm opacity-90">
-                                                {action.description}
-                                            </p>
-                                        </div>
-                                        <div className="bg-white/20 rounded-full p-3 ml-3">
-                                            <action.icon className="h-6 w-6" />
+                                <Link
+                                    to={action.href}
+                                    className="block h-full"
+                                    aria-label={`${action.title}: ${action.description}`}
+                                >
+                                    <div className="p-4">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex-1 space-y-1">
+                                                <h3 className="font-medium text-base sm:text-lg">
+                                                    {action.title}
+                                                </h3>
+                                                <p className="text-xs sm:text-sm opacity-90">
+                                                    {action.description}
+                                                </p>
+                                            </div>
+                                            <div className="bg-white/20 rounded-full p-3 ml-3">
+                                                <action.icon className="h-6 w-6" />
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </Link>
-                        </Card>
+                                </Link>
+                            </Card>
+                    </RequireAbility>
                     ))}
                 </div>
             </div>

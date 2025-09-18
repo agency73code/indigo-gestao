@@ -1,4 +1,39 @@
 import { prisma } from "../../config/database.js";
+import type { createOCP } from "./ocp.normalizer.js";
+
+export async function create(data: createOCP) {
+    return prisma.ocp.create({
+        data: {
+            cliente: {
+                connect: { id: data.clientId }
+            },
+            criador: {
+                connect: { id: data.therapistId },
+            },
+            nome_programa: data.name ?? data.goalTitle,
+            objetivo_programa: data.goalTitle,
+            objetivo_descricao: data.goalDescription ?? null,
+            dominio_criterio: data.criteria ?? null,
+            observacao_geral: data.notes ?? null,
+            estimulo_ocp: {
+                create: data.stimuli.map((s) => ({
+                    nome: s.label,
+                    descricao: s.description ?? null,
+                    status: s.active,
+                    estimulo: {
+                        connectOrCreate: {
+                            where: { nome: s.label },
+                            create: {
+                                nome: s.label,
+                                descricao: s.description ?? null
+                            }
+                        }
+                    },
+                })),
+            },
+        },
+    });
+}
 
 export async function listClientsByTherapist(therapistId: string) {
     return prisma.cliente.findMany({
