@@ -2,26 +2,22 @@ import { fetchClients } from '../api';
 import type { Patient, ProgramListItem } from './types';
 
 // TODO: substituir por serviços reais da API
-const USE_LOCAL_MOCKS = true;
+const USE_LOCAL_MOCKS = false;
 
 export async function searchPatients(q: string): Promise<Patient[]> {
-    try {
-        return await fetchClients(q);
-    } catch {
-        if (USE_LOCAL_MOCKS) {
-            const { mockPatients } = await import('./mocks/patients.mock');
-            
-            // Simular delay da API
-            await new Promise(resolve => setTimeout(resolve, 200));
-            
-            return mockPatients.filter(patient =>
-                patient.name.toLowerCase().includes(q.toLowerCase()) ||
-                patient.guardianName?.toLowerCase().includes(q.toLowerCase())
-            );
-        }
-
-        throw new Error('Erro ao buscar pacientes');
+    if (USE_LOCAL_MOCKS) {
+        const { mockPatients } = await import('./mocks/patients.mock');
+        
+        // Simular delay da API
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        return mockPatients.filter(patient =>
+            patient.name.toLowerCase().includes(q.toLowerCase()) ||
+            patient.guardianName?.toLowerCase().includes(q.toLowerCase())
+        );
     }
+
+    return await fetchClients(q);
 }
 
 export async function listPrograms(params: {
@@ -67,6 +63,16 @@ export async function listPrograms(params: {
         return programs;
     }
     
-    // TODO: implementar chamada real da API
-    throw new Error('API service not implemented');
+    const url = new URL(`/api/ocp/clients/${params.patientId}/programs`, window.location.origin);
+    if (params.page) url.searchParams.set('page', params.page.toString());
+
+    const res = await fetch(`/api/ocp/clients/${params.patientId}/programs`, {
+        credentials: 'include',
+        headers: { Accept: 'application/json' },
+    });
+    
+    if (!res.ok) throw new Error('Erro ao buscar programas');
+
+    const json = await res.json();
+    return (json?.data ?? []) as ProgramListItem[];
 }

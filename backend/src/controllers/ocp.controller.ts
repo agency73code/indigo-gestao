@@ -23,3 +23,13 @@ export async function listTherapistClients(req: Request, res: Response) {
     const rows = await OcpService.listClientsByTherapist(user.id, q);
     return res.json({ success: true, data: rows.map(OcpService.mapClientReturn) })
 }
+
+export async function listClientPrograms(req: Request, res: Response) {
+    const { clientId } = req.params;
+    const page = parseInt(req.query.page as string) || 1;
+
+    if (!clientId) return res.status(400).json({ success: false, message: 'ClientId é obrigatório' });
+
+    const rows = await OcpService.listByClientId(clientId, page);
+    return res.json({ success: true, data: rows.map(OcpService.mapOcpReturn) });
+}
