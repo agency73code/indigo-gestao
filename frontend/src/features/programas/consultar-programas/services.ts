@@ -1,23 +1,27 @@
+import { fetchClients } from '../api';
 import type { Patient, ProgramListItem } from './types';
 
 // TODO: substituir por serviços reais da API
 const USE_LOCAL_MOCKS = true;
 
-export async function searchPatients(q: string, _page = 1): Promise<Patient[]> {
-    if (USE_LOCAL_MOCKS) {
-        const { mockPatients } = await import('./mocks/patients.mock');
-        
-        // Simular delay da API
-        await new Promise(resolve => setTimeout(resolve, 200));
-        
-        return mockPatients.filter(patient =>
-            patient.name.toLowerCase().includes(q.toLowerCase()) ||
-            patient.responsible?.toLowerCase().includes(q.toLowerCase())
-        );
+export async function searchPatients(q: string): Promise<Patient[]> {
+    try {
+        return await fetchClients(q);
+    } catch {
+        if (USE_LOCAL_MOCKS) {
+            const { mockPatients } = await import('./mocks/patients.mock');
+            
+            // Simular delay da API
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+            return mockPatients.filter(patient =>
+                patient.name.toLowerCase().includes(q.toLowerCase()) ||
+                patient.guardianName?.toLowerCase().includes(q.toLowerCase())
+            );
+        }
+
+        throw new Error('Erro ao buscar pacientes');
     }
-    
-    // TODO: implementar chamada real da API
-    throw new Error('API service not implemented');
 }
 
 export async function listPrograms(params: {

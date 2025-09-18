@@ -75,9 +75,8 @@ export default function ConsultaHubPage() {
             <div className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {mainActions.map((action, index) => (
-                        <RequireAbility action={action.ability.action} subject={action.ability.subject}>
+                        <RequireAbility key={index} action={action.ability.action} subject={action.ability.subject}>
                             <Card
-                                key={index}
                                 className={`overflow-hidden hover:shadow-md p-1 md:p-4 lg:p-8 transition-shadow rounded-[5px] ${action.bgColor} ${action.textColor}`}
                             >
                                 <Link

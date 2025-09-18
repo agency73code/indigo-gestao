@@ -1,7 +1,7 @@
 export type Patient = {
     id: string;
     name: string;
-    responsible?: string;
+    guardianName?: string | null;
     age?: number;
     photoUrl?: string | null;
 };

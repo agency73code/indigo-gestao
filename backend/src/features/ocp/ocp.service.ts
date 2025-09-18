@@ -35,10 +35,24 @@ export async function create(data: createOCP) {
     });
 }
 
-export async function listClientsByTherapist(therapistId: string) {
+export async function listClientsByTherapist(therapistId: string, q?: string) {
     return prisma.cliente.findMany({
         where: {
             terapeuta: { some: { terapeuta_id: therapistId } },
+            ...(q
+                ? {
+                    OR: [
+                        { nome: { contains: q } },
+                        {
+                            cliente_responsavel: {
+                                some: {
+                                    responsaveis: { nome: { contains: q } },
+                                },
+                            },
+                        },
+                    ],
+                }
+            : {}),
         },
         select: {
             id: true,

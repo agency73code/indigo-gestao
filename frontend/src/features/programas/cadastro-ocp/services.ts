@@ -1,3 +1,4 @@
+import { fetchClients } from '../api';
 import type { Patient, Therapist, CreateProgramInput } from './types';
 
 // Flag para usar mocks locais durante desenvolvimento
@@ -48,10 +49,6 @@ const MOCK_THERAPISTS: Therapist[] = [
 
 // Simula delay de rede
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-function ageCalc(birthDate: string) {
-    return new Date().getFullYear() - new Date(birthDate).getFullYear();
-}
 
 export async function fetchPatientById(id: string): Promise<Patient> {
     if (USE_LOCAL_MOCKS) {
@@ -135,44 +132,23 @@ export async function createProgram(payload: CreateProgramInput): Promise<{ id: 
 }
 
 // Função para buscar pacientes (reutilizando da consulta se disponível)
-export async function searchPatients(query?: string): Promise<Patient[]> {
+export async function searchPatients(q?: string): Promise<Patient[]> {
     try {
-        const res = await fetch('/api/ocp/clients', {
-            method: 'GET',
-            credentials: 'include',
-            headers: { 'Accept': 'application/json' },
-        });
-
-        if (!res.ok) {
-            const text = await res.text();
-            throw new Error(`Erro ao buscar pacientes (${res.status}): ${text}`);
-        }
-
-        const json = await res.json();
-        const data = (json?.data ?? []) as Array<{
-            id: string;
-            name: string;
-            birthDate: string;
-            guardianName: string | null;
-        }>;
-
-        return data.map(p => ({
-            ...p,
-            age: ageCalc(p.birthDate),
-        })) as Patient[];
-    } catch (err) {
+        return await fetchClients(q);
+    } catch {
         if (USE_LOCAL_MOCKS) {
             await delay(200);
             
-            if (!query) return MOCK_PATIENTS;
+            if (!q) return MOCK_PATIENTS;
             
-            const searchTerm = query.toLowerCase();
+            const searchTerm = q.toLowerCase();
             return MOCK_PATIENTS.filter(patient => 
                 patient.name.toLowerCase().includes(searchTerm) ||
                 patient.guardianName?.toLowerCase().includes(searchTerm)
             );
         }
-        throw err;
+        
+        throw new Error('Erro ao buscar pacientes');
     }
 }
 

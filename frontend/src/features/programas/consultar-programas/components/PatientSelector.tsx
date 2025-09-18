@@ -64,9 +64,6 @@ export default function PatientSelector({
         onSelect(patient);
         setIsOpen(false);
         setSearchQuery('');
-
-        // Telemetria
-        console.log('consult_ocp_patient_selected', { patientId: patient.id });
     };
 
     const handleClearPatient = () => {
@@ -105,9 +102,9 @@ export default function PatientSelector({
                             {/* Informações do paciente */}
                             <div className="flex-1 min-w-0">
                                 <p className="font-medium">{selected.name}</p>
-                                {selected.responsible && (
+                                {selected.guardianName && (
                                     <p className="text-sm text-muted-foreground">
-                                        Responsável: {selected.responsible}
+                                        Responsável: {selected.guardianName}
                                     </p>
                                 )}
                             </div>
@@ -221,10 +218,10 @@ export default function PatientSelector({
                                                             <p className="font-medium truncate">
                                                                 {patient.name}
                                                             </p>
-                                                            {patient.responsible && (
+                                                            {patient.guardianName && (
                                                                 <p className="text-sm text-muted-foreground truncate">
                                                                     Responsável:{' '}
-                                                                    {patient.responsible}
+                                                                    {patient.guardianName}
                                                                 </p>
                                                             )}
                                                         </div>

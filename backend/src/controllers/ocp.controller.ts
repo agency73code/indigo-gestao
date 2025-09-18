@@ -18,6 +18,8 @@ export async function listTherapistClients(req: Request, res: Response) {
     const user = req.user as Express.UserPayload | undefined;
     if (!user) return res.status(401).json({ success: false, message: 'Unauthorized' });
 
-    const rows = await OcpService.listClientsByTherapist(user.id);
+    const q = req.query.q as string | undefined;
+
+    const rows = await OcpService.listClientsByTherapist(user.id, q);
     return res.json({ success: true, data: rows.map(OcpService.mapClientReturn) })
 }

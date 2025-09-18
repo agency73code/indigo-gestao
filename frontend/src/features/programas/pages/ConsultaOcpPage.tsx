@@ -25,12 +25,10 @@ export default function ConsultaOcpPage() {
     // Handlers
     const handlePatientSelect = (patient: Patient) => {
         setSelectedPatient(patient);
-        console.log('Paciente selecionado:', patient.name);
     };
 
     const handlePatientClear = () => {
         setSelectedPatient(null);
-        console.log('Paciente limpo');
     };
 
     const handleSearchChange = (newState: SearchAndFiltersState) => {
@@ -43,17 +41,14 @@ export default function ConsultaOcpPage() {
         if (newState.sort !== 'recent') params.set('sort', newState.sort);
 
         setSearchParams(params);
-        console.log('Filtros alterados:', newState);
     };
 
     const handleCreateProgram = () => {
         if (!selectedPatient) {
-            console.log('Nenhum paciente selecionado para criar programa');
             alert('Por favor, selecione um paciente antes de criar um programa.');
             return;
         }
 
-        console.log('Navegando para criar programa para:', selectedPatient.name);
         // Navegar para página de criação passando o ID do paciente como query param
         navigate(
             `/app/programas/novo?patientId=${selectedPatient.id}&patientName=${encodeURIComponent(selectedPatient.name)}`,
