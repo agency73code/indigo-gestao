@@ -46,6 +46,10 @@ export default function CadastroTerapeutaPage() {
         agencia: '',
         conta: '',
         chavePix: '',
+        valorHoraAcordado: null,
+        professorUnindigo: 'nao' as 'sim' | 'nao',
+        disciplinaUniindigo: '',
+        valorHoraAcordado: null,
 
         // Endereço
         endereco: {
@@ -171,6 +175,16 @@ export default function CadastroTerapeutaPage() {
                 if (!formData.agencia?.trim()) newErrors.agencia = 'Agência é obrigatória';
                 if (!formData.conta?.trim()) newErrors.conta = 'Conta é obrigatória';
                 if (!formData.chavePix?.trim()) newErrors.chavePix = 'Chave Pix é obrigatória';
+                if (
+                    formData.valorHoraAcordado !== null &&
+                    formData.valorHoraAcordado !== undefined &&
+                    formData.valorHoraAcordado !== ''
+                ) {
+                    const numericValue = Number(formData.valorHoraAcordado);
+                    if (!(numericValue > 0)) {
+                        newErrors.valorHoraAcordado = 'Informe um valor maior que zero';
+                    }
+                }
                 break;
 
             case 2: // Endereço
@@ -199,6 +213,12 @@ export default function CadastroTerapeutaPage() {
                 }
                 if (!formData.dadosProfissionais?.[0]?.cargo?.trim()) {
                     newErrors['dadosProfissionais.0.cargo'] = 'Cargo principal é obrigatório';
+                }
+
+                if (formData.professorUnindigo === 'sim') {
+                    if (!formData.disciplinaUniindigo?.trim()) {
+                        newErrors.disciplinaUniindigo = 'Informe a disciplina';
+                    }
                 }
 
                 // Validar conjuntos adicionais (se existirem)
@@ -273,7 +293,16 @@ export default function CadastroTerapeutaPage() {
         // }
 
         try {
-            const payload = formData;
+            const {
+                valorHoraAcordado,
+                professorUnindigo,
+                disciplinaUniindigo,
+                ...rest
+            } = formData;
+            const payload = { ...rest } as typeof formData;
+            // TODO: enviar valorHoraAcordado quando endpoint aceitar.
+            // TODO: enviar professorUnindigo/disciplinaUniindigo quando endpoint aceitar.
+
             await cadastrarTerapeuta(payload);
 
             alert('Terapeuta cadastrado com sucesso!');
@@ -377,3 +406,5 @@ export default function CadastroTerapeutaPage() {
         </div>
     );
 }
+
+

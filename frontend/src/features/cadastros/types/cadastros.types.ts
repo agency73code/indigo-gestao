@@ -1,4 +1,4 @@
-export interface Terapeuta {
+�export interface Terapeuta {
     id?: string;
     // Dados pessoais
     nome: string;
@@ -17,6 +17,10 @@ export interface Terapeuta {
     agencia: string;
     conta: string;
     chavePix: string;
+    valorHoraAcordado?: number | null;
+    professorUnindigo?: 'sim' | 'nao';
+    disciplinaUniindigo?: string | null;
+    valorHoraAcordado?: number | null;
 
     // Endereço pessoal
     endereco: {
@@ -206,3 +210,5 @@ export interface CadastroFormProps<T> {
     isLoading?: boolean;
     initialData?: T;
 }
+
+
