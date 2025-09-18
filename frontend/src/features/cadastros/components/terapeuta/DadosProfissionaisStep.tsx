@@ -21,6 +21,7 @@ const AREAS_ATUACAO = [
     'Musicoterapia',
     'Pedagogia',
     'Neuropsicologia',
+    'Nutrição',
 ];
 
 const CARGOS = [
@@ -200,10 +201,48 @@ export default function DadosProfissionaisStep({
                 className="w-full flex items-center gap-2"
             >
                 <Plus className="w-4 h-4" />
-                Adicionar outra área de atuação
+                Adicionar outra Área de Atuação
             </Button>
 
+
+            <div className="border rounded-[5px] p-4 space-y-3">
+                <div className="space-y-2 md:max-w-sm">
+                    <Label htmlFor="professorUnindigo">Professor UniÍndigo</Label>
+                    <select
+                        id="professorUnindigo"
+                        value={data.professorUnindigo || ''}
+                        onChange={(e) => onUpdate('professorUnindigo', e.target.value)}
+                        aria-describedby="professorUnindigo-help"
+                        className={`flex h-10 w-full rounded-[5px] border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${errors.professorUnindigo ? 'border-destructive' : ''}`}
+                    >
+                        <option value="">Selecione</option>
+                        <option value="sim">Sim</option>
+                        <option value="nao">Não</option>
+                    </select>
+                    <p id="professorUnindigo-help" className="text-xs text-muted-foreground">
+                        Marque se o profissional leciona na UniÍndigo.
+                    </p>
+                </div>
+
+                {data.professorUnindigo === 'sim' && (
+                    <div className="space-y-2 md:max-w-sm">
+                        <Label htmlFor="disciplinaUniindigo">Disciplina</Label>
+                        <Input
+                            id="disciplinaUniindigo"
+                            value={data.disciplinaUniindigo || ''}
+                            onChange={(e) => onUpdate('disciplinaUniindigo', e.target.value)}
+                            placeholder="Informe a disciplina"
+                            className={errors.disciplinaUniindigo ? 'border-destructive' : ''}
+                        />
+                        {errors.disciplinaUniindigo && (
+                            <p className="text-sm text-destructive">{errors.disciplinaUniindigo}</p>
+                        )}
+                    </div>
+                )}
+            </div>
+
             {/* Datas de Início e Fim */}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="dataInicio">Data de Início *</Label>
@@ -234,3 +273,12 @@ export default function DadosProfissionaisStep({
         </div>
     );
 }
+
+
+
+
+
+
+
+
+

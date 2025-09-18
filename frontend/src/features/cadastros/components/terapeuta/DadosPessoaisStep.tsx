@@ -4,7 +4,7 @@ import type { Terapeuta } from '../../types/cadastros.types';
 
 interface DadosPessoaisStepProps {
     data: Partial<Terapeuta>;
-    onUpdate: (field: string, value: string) => void;
+    onUpdate: (field: string, value: any) => void;
     errors: Record<string, string>;
 }
 
@@ -231,7 +231,37 @@ export default function DadosPessoaisStep({ data, onUpdate, errors }: DadosPesso
                         <p className="text-sm text-destructive">{errors.chavePix}</p>
                     )}
                 </div>
+                <div className="space-y-2 md:col-span-1">
+                    <Label htmlFor="valorHoraAcordado">Valor acordado por hora</Label>
+                    <Input
+                        id="valorHoraAcordado"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={
+                            data.valorHoraAcordado !== undefined && data.valorHoraAcordado !== null
+                                ? data.valorHoraAcordado
+                                : ''
+                        }
+                        onChange={(e) =>
+                            onUpdate(
+                                'valorHoraAcordado',
+                                e.target.value === '' ? null : parseFloat(e.target.value),
+                            )
+                        }
+                        placeholder="R$ 0,00"
+                        aria-describedby="valorHoraAcordado-help"
+                        className={errors.valorHoraAcordado ? 'border-destructive' : ''}
+                    />
+                    <p id="valorHoraAcordado-help" className="text-xs text-muted-foreground">
+                        Valor bruto acordado por hora de atendimento.
+                    </p>
+                    {errors.valorHoraAcordado && (
+                        <p className="text-sm text-destructive">{errors.valorHoraAcordado}</p>
+                    )}
+                </div>
             </div>
         </div>
     );
 }
+
