@@ -9,7 +9,10 @@
         "build": "tsc",
         "start": "node dist/server.js",
         "test": "vitest",
-        "test:ui": "vitest --ui"
+        "test:ui": "vitest --ui",
+        "seed": "prisma db seed",
+        "seed:test": "tsx prisma/seed1.ts",
+        "seed:terapeuta-cliente": "tsx prisma/seed-terapeuta-cliente.ts"
     },
     "keywords": [],
     "author": "",

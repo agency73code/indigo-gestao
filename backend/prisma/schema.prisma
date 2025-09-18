@@ -31,14 +31,15 @@ model cliente {
   senha               String?               @db.VarChar(255)
   token_redefinicao   String?               @db.Char(36)
   validade_token      DateTime?             @db.DateTime(0)
-  criado_em           DateTime              @default(now()) @db.Timestamp(0)
-  atualizado_em       DateTime              @updatedAt @db.Timestamp(0)
+  criado_em           DateTime              @default(now())
+  atualizado_em       DateTime              @updatedAt
   cliente_endereco    cliente_endereco[]
   cliente_escola      cliente_escola[]
   cliente_responsavel cliente_responsavel[]
   pagamentos          pagamentos[]
   ocp                 ocp[]
   terapeuta           terapeuta_cliente[]
+  sessao                 sessao[]
 
   @@index([nome], map: "nome_idx")
 }
@@ -49,8 +50,8 @@ model cliente_endereco {
   endereco_id      Int
   tipo_endereco_id Int
   principal        Int           @default(0) @db.TinyInt
-  criado_em        DateTime      @default(now()) @db.Timestamp(0)
-  atualizado_em    DateTime      @updatedAt @db.Timestamp(0)
+  criado_em        DateTime      @default(now())
+  atualizado_em    DateTime      @updatedAt
   tipo_endereco    tipo_endereco @relation(fields: [tipo_endereco_id], references: [id], onUpdate: NoAction, map: "fk_cliente_endereco_tipo_endereco1")
   cliente          cliente       @relation(fields: [cliente_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_cliente_has_endereco_cliente1")
   endereco         endereco      @relation(fields: [endereco_id], references: [id], onUpdate: NoAction, map: "fk_cliente_has_endereco_endereco1")
@@ -108,8 +109,8 @@ model endereco {
   cidade             String               @db.VarChar(100)
   uf                 String               @db.Char(2)
   complemento        String?              @db.VarChar(100)
-  criado_em          DateTime             @default(now()) @db.Timestamp(0)
-  atualizado_em      DateTime             @updatedAt @db.Timestamp(0)
+  criado_em          DateTime             @default(now())
+  atualizado_em      DateTime             @updatedAt
   cliente_endereco   cliente_endereco[]
   escola_endereco    escola_endereco[]
   terapeuta_endereco terapeuta_endereco[]
@@ -124,8 +125,8 @@ model escola {
   nome            String             @db.VarChar(150)
   telefone        String             @db.VarChar(20)
   email           String             @db.VarChar(255)
-  criado_em       DateTime           @default(now()) @db.Timestamp(0)
-  atualizado_em   DateTime           @updatedAt @db.Timestamp(0)
+  criado_em       DateTime           @default(now())
+  atualizado_em   DateTime           @updatedAt
   cliente_escola  cliente_escola[]
   escola_endereco escola_endereco[]
 }
@@ -136,8 +137,8 @@ model escola_endereco {
   endereco_id      Int
   tipo_endereco_id Int
   principal        Int           @default(0) @db.TinyInt
-  criado_em        DateTime      @default(now()) @db.Timestamp(0)
-  atualizado_em    DateTime      @updatedAt @db.Timestamp(0)
+  criado_em        DateTime      @default(now())
+  atualizado_em    DateTime      @updatedAt
   tipo_endereco    tipo_endereco @relation(fields: [tipo_endereco_id], references: [id], onUpdate: NoAction, map: "fk_escola_endereco_tipo_endereco1")
   endereco         endereco      @relation(fields: [endereco_id], references: [id], onUpdate: NoAction, map: "fk_escola_has_endereco_endereco1")
   escola           escola        @relation(fields: [escola_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_escola_has_endereco_escola1")
@@ -170,8 +171,8 @@ model pagamentos {
   numero_processo      String?                 @db.VarChar(50)
   nome_advogado        String?                 @db.VarChar(150)
   valor_sessao         Decimal?                @db.Decimal(10, 2)
-  criado_em            DateTime                @default(now()) @db.Timestamp(0)
-  atualizado_em        DateTime                @updatedAt @db.Timestamp(0)
+  criado_em            DateTime                @default(now())
+  atualizado_em        DateTime                @updatedAt
   pagamento_contatos   pagamento_contatos[]
   cliente              cliente                 @relation(fields: [cliente_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_pagamentos_cliente1")
 
@@ -184,8 +185,8 @@ model responsaveis {
   cpf                 String                @unique(map: "cpf_UNIQUE") @db.Char(11)
   telefone            String?               @db.VarChar(20)
   email               String?               @db.VarChar(255)
-  criado_em           DateTime              @default(now()) @db.Timestamp(0)
-  atualizado_em       DateTime              @updatedAt @db.Timestamp(0)
+  criado_em           DateTime              @default(now())
+  atualizado_em       DateTime              @updatedAt
   cliente_responsavel cliente_responsavel[]
 
   @@index([nome], map: "nome_idx")
@@ -225,8 +226,8 @@ model terapeuta {
   senha                  String?                  @db.VarChar(255)
   token_redefinicao      String?                  @db.Char(36)
   validade_token         DateTime?                @db.DateTime(0)
-  criado_em              DateTime                 @default(now()) @db.Timestamp(0)
-  atualizado_em          DateTime                 @updatedAt @db.Timestamp(0)
+  criado_em              DateTime                 @default(now())
+  atualizado_em          DateTime                 @updatedAt
   documentos_terapeuta   documentos_terapeuta[]
   terapeuta_area_atuacao terapeuta_area_atuacao[]
   terapeuta_cargo        terapeuta_cargo[]
@@ -270,8 +271,8 @@ model terapeuta_endereco {
   endereco_id      Int
   tipo_endereco_id Int
   principal        Int           @default(0) @db.TinyInt
-  criado_em        DateTime      @default(now()) @db.Timestamp(0)
-  atualizado_em    DateTime      @updatedAt @db.Timestamp(0)
+  criado_em        DateTime      @default(now())
+  atualizado_em    DateTime      @updatedAt
   tipo_endereco    tipo_endereco @relation(fields: [tipo_endereco_id], references: [id], onUpdate: NoAction, map: "fk_terapeuta_endereco_tipo_endereco1")
   endereco         endereco      @relation(fields: [endereco_id], references: [id], onUpdate: NoAction, map: "fk_terapeuta_has_endereco_endereco1")
   terapeuta        terapeuta     @relation(fields: [terapeuta_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_terapeuta_has_endereco_terapeuta1")
@@ -308,14 +309,15 @@ model sessao_trial {
 model sessao {
   id                  Int                 @id @default(autoincrement())
   ocp_id              Int
+  cliente_id          String              @db.Char(36)
   terapeuta_id        String              @db.Char(36)
   data_criacao        DateTime            @default(now())
-  resumo              String?
-  criado_em           DateTime            @default(now()) @db.Timestamp(0)
-  atualizado_em       DateTime            @updatedAt @db.Timestamp(0)
+  criado_em           DateTime            @default(now())
+  atualizado_em       DateTime            @updatedAt
 
   ocp                 ocp                 @relation(fields: [ocp_id], references: [id], onDelete: Cascade)
   terapeuta           terapeuta           @relation(fields: [terapeuta_id], references: [id], onDelete: Restrict)
+  cliente             cliente             @relation(fields: [cliente_id], references: [id], onDelete: Restrict)
   trials              sessao_trial[]
 
   @@index([terapeuta_id, data_criacao])
@@ -334,6 +336,9 @@ model estimulo_ocp {
   id                  Int                 @id @default(autoincrement())
   id_estimulo         Int
   id_ocp              Int
+  nome                String?
+  descricao           String?
+  status              Boolean
 
   estimulo            estimulo            @relation(fields: [id_estimulo], references: [id], onDelete: Cascade)
   ocp                 ocp                 @relation(fields: [id_ocp], references: [id], onDelete: Cascade)
@@ -345,12 +350,12 @@ model ocp {
   cliente_id          String              @db.Char(36)
   criador_id          String              @db.Char(36)
   nome_programa       String
-  criado_em           DateTime            @default(now()) @db.Timestamp(0)
+  criado_em           DateTime            @default(now())
   objetivo_programa   String?
   objetivo_descricao  String?
   dominio_criterio    String?
   observacao_geral    String?
-  atualizado_em       DateTime            @updatedAt @db.Timestamp(0)
+  atualizado_em       DateTime            @updatedAt
 
   cliente             cliente             @relation(fields: [cliente_id], references: [id], onDelete: Restrict)
   criador             terapeuta           @relation("CriadorOcp", fields: [criador_id], references: [id], onDelete: Restrict)
