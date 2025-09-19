@@ -130,7 +130,7 @@ export default function ArquivosStep({ data, onUpdate, errors }: ArquivosStepPro
 
                 <FileUploadField field="diplomaPosGraduacao" label="Diploma de Pós-Graduação" />
 
-                <FileUploadField field="registroCRP" label="Registro do CRP" />
+                <FileUploadField field="registroCRP" label="Registro do  Conselho Regional de Psicologia (CRP)" />
 
                 <FileUploadField field="comprovanteEndereco" label="Comprovante de Endereço" />
             </div>
