@@ -2,15 +2,34 @@ import type { Request, Response } from 'express';
 import * as OcpService from '../features/ocp/ocp.service.js';
 import { mapOcpDetail } from '../features/ocp/ocp.normalizer.js';
 
-export async function create(req: Request, res: Response) {
+export async function createProgram(req: Request, res: Response) {
     try {
-        const ocp = await OcpService.create(req.body);
+        const ocp = await OcpService.createProgram(req.body);
         return res.status(201).json({ data: ocp });
     } catch (error) {
         console.error(error);
         return res.status(400).json({
             error: error instanceof Error ? error.message : 'Erro inesperado',
         });
+    }
+}
+
+export async function createSession(req: Request, res: Response) {
+    try {
+        if (!req.params.programId) return res.status(400).json({ success: false, message: 'ID do programa não informado' });
+        const programId = parseInt(req.params.programId, 10);
+
+        const { patientId, attempts } = req.body;
+        if (!patientId || !Array.isArray(attempts)) return res.status(400).json({ error: "Dados inválidos para criar sessão" });
+
+        const therapistId = req.user?.id;
+        if (!therapistId) return res.status(401).json({ error: "Usuário não autenticado" });
+
+        const session = await OcpService.createSession({ programId, patientId, therapistId, attempts });
+        res.status(201).json(session);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Erro ao registrar sessão' })
     }
 }
 

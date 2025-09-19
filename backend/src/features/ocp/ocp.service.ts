@@ -1,7 +1,7 @@
 import { prisma } from "../../config/database.js";
-import type { createOCP } from "./ocp.types.js";
+import * as OcpType from "./ocp.types.js";
 
-export async function create(data: createOCP) {
+export async function createProgram(data: OcpType.createOCP) {
     return prisma.ocp.create({
         data: {
             cliente: { connect: { id: data.clientId } },
@@ -28,6 +28,27 @@ export async function create(data: createOCP) {
                 })),
             },
         },
+    });
+}
+
+export async function createSession(input: OcpType.CreateSessionInput) {
+    const { programId, patientId, therapistId, attempts } = input;
+
+    return await prisma.sessao.create({
+        data: {
+            ocp_id: programId,
+            cliente_id: patientId,
+            terapeuta_id: therapistId,
+            data_criacao: new Date(),
+            trials: {
+                create: attempts.map((a) => ({
+                    estimulos_ocp_id: parseInt(a.stimulusId, 10),
+                    ordem: a.attemptNumber,
+                    resultado: a.type,
+                })),
+            },
+        },
+        select: { id: true },
     });
 }
 
