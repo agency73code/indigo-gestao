@@ -28,5 +28,10 @@ export async function fetchRecentSessions(programId: string, limit = 5): Promise
         return mockRecentSessions.slice(0, limit);
     }
 
+    const res = await fetch(`/api/ocp/programs/${programId}/sessions`, { credentials: 'include' });
+    if (!res.ok) throw new Error(`Erro ao buscar as sessoes: ${res.statusText}`);
+
+    const data = await res.json();
+    return data.data;
     return mockRecentSessions.slice(0, limit);
 }

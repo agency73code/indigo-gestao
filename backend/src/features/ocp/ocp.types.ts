@@ -61,3 +61,14 @@ export type OcpDetailDTO = {
   estimulo_ocp?: OcpStimuloDTO[];
   status: string;
 };
+
+export type CreateSessionInput = {
+  programId: number;
+  patientId: string;
+  therapistId: string;
+  attempts: {
+    stimulusId: string;
+    attemptNumber: number;
+    type: 'error' | 'prompted' | 'independent';
+  }[];
+};
