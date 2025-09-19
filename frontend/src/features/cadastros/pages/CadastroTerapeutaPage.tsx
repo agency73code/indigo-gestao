@@ -13,398 +13,235 @@ import FormacaoStep from '../components/terapeuta/FormacaoStep';
 import ArquivosStep from '../components/terapeuta/ArquivosStep';
 import DadosCNPJStep from '../components/terapeuta/DadosCNPJStep';
 import { cadastrarTerapeuta } from '@/lib/api';
-//import { uploadArquivos } from '@/lib/api';
 
-const STEPS = [
-    'Dados Pessoais',
-    'Endereço',
-    'Dados Profissionais',
-    'Formação',
-    'Arquivos',
-    'Dados CNPJ',
-];
+const STEPS = ['Dados Pessoais', 'Endereço', 'Dados Profissionais', 'Formação', 'Arquivos', 'Dados CNPJ'];
 
 export default function CadastroTerapeutaPage() {
-    const [currentStep, setCurrentStep] = useState(1);
-    const [isLoading, setIsLoading] = useState(false);
-    const [errors, setErrors] = useState<Record<string, string>>({});
-    const [formData, setFormData] = useState<Partial<Terapeuta> & any>({
-        // Dados pessoais
-        nome: '',
-        email: '',
-        emailIndigo: '',
-        telefone: '',
-        celular: '',
-        cpf: '',
-        dataNascimento: '',
-        possuiVeiculo: 'nao' as 'sim' | 'nao',
-        placaVeiculo: '',
-        modeloVeiculo: '',
+  const [currentStep, setCurrentStep] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [formData, setFormData] = useState<Partial<Terapeuta> & any>({
+    // Dados pessoais
+    nome: '',
+    email: '',
+    emailIndigo: '',
+    telefone: '',
+    celular: '',
+    cpf: '',
+    dataNascimento: '',
+    possuiVeiculo: 'nao' as 'sim' | 'nao',
+    placaVeiculo: '',
+    modeloVeiculo: '',
 
-        // Dados bancários
-        banco: '',
-        agencia: '',
-        conta: '',
-        chavePix: '',
-        valorHoraAcordado: null,
-        professorUnindigo: 'nao' as 'sim' | 'nao',
-        disciplinaUniindigo: '',
-        valorHoraAcordado: null,
+    // Dados bancários
+    banco: '',
+    agencia: '',
+    conta: '',
+    chavePix: '',
+    valorHoraAcordado: null,
+    professorUnindigo: 'nao' as 'sim' | 'nao',
+    disciplinaUniindigo: '',
 
-        // Endereço
-        endereco: {
-            cep: '',
-            rua: '',
-            numero: '',
-            complemento: '',
-            bairro: '',
-            cidade: '',
-            estado: '',
-        },
+    // Endereço
+    endereco: {
+      cep: '',
+      rua: '',
+      numero: '',
+      complemento: '',
+      bairro: '',
+      cidade: '',
+      estado: '',
+    },
 
-        // Dados profissionais (temporário - não existe no tipo Terapeuta)
-        // dadosProfissionais: [
-        //     {
-        //         areaAtuacao: '',
-        //         cargo: '',
-        //         numeroConselho: '',
-        //     },
-        // ],
-        numeroConvenio: '',
-        dataEntrada: '',
-        dataSaida: '',
-        crp: '',
-        especialidades: [],
-        dataInicio: '',
-        dataFim: '',
-        valorConsulta: '',
-        formasAtendimento: [],
+    numeroConvenio: '',
+    dataEntrada: '',
+    dataSaida: '',
+    crp: '',
+    especialidades: [],
+    dataInicio: '',
+    dataFim: '',
+    valorConsulta: '',
+    formasAtendimento: [],
 
-        // Formação
-        formacao: {
-            graduacao: '',
-            instituicaoGraduacao: '',
-            anoFormatura: '',
-            posGraduacao: '',
-            instituicaoPosGraduacao: '',
-            anoPosGraduacao: '',
-            cursos: '',
-        },
+    // Formação
+    formacao: {
+      graduacao: '',
+      instituicaoGraduacao: '',
+      anoFormatura: '',
+      posGraduacao: '',
+      instituicaoPosGraduacao: '',
+      anoPosGraduacao: '',
+      cursos: '',
+      // novos (FRONT only)
+      posGraduacoes: [],
+      participacaoCongressosDescricao: '',
+      publicacoesLivrosDescricao: '',
+    },
 
-        // Arquivos
-        arquivos: {
-            fotoPerfil: undefined,
-            diplomaGraduacao: undefined,
-            diplomaPosGraduacao: undefined,
-            registroCRP: undefined,
-            comprovanteEndereco: undefined,
-        },
+    // Arquivos
+    arquivos: {
+      fotoPerfil: undefined,
+      diplomaGraduacao: undefined,
+      diplomaPosGraduacao: undefined,
+      registroCRP: undefined,
+      comprovanteEndereco: undefined,
+    },
 
-        // CNPJ
-        cnpj: {
-            numero: '',
-            razaoSocial: '',
-            nomeFantasia: '',
-            endereco: {
-                cep: '',
-                rua: '',
-                numero: '',
-                complemento: '',
-                bairro: '',
-                cidade: '',
-                estado: '',
-            },
-        },
+    // CNPJ
+    cnpj: {
+      numero: '',
+      razaoSocial: '',
+      nomeFantasia: '',
+      endereco: {
+        cep: '',
+        rua: '',
+        numero: '',
+        complemento: '',
+        bairro: '',
+        cidade: '',
+        estado: '',
+      },
+    },
+  });
+
+  const handleInputChange = (field: string, value: any) => {
+    const keys = field.split('.');
+    setFormData((prev: any) => {
+      const newData = { ...prev };
+      let current: any = newData;
+      for (let i = 0; i < keys.length - 1; i++) {
+        const key = keys[i];
+        if (current[key] === undefined || current[key] === null) current[key] = {};
+        current = current[key];
+      }
+      current[keys[keys.length - 1]] = value;
+      return newData;
     });
+  };
 
-    const handleInputChange = (field: string, value: string | string[] | File | null | any) => {
-        const keys = field.split('.');
+  const validateCurrentStep = () => {
+    const newErrors: Record<string, string> = {};
+    switch (currentStep) {
+      case 1: // Dados Pessoais
+        if (!formData.nome?.trim()) newErrors.nome = 'Campo obrigatório';
+        if (!formData.cpf?.trim()) newErrors.cpf = 'Campo obrigatório';
+        if (!formData.email?.trim()) newErrors.email = 'Campo obrigatório';
+        if (!formData.emailIndigo?.trim()) newErrors.emailIndigo = 'Campo obrigatório';
+        if (!formData.celular?.trim()) newErrors.celular = 'Campo obrigatório';
+        if (!formData.possuiVeiculo?.trim()) newErrors.possuiVeiculo = 'Campo obrigatório';
+        if (formData.possuiVeiculo === 'sim') {
+          if (!formData.placaVeiculo?.trim()) newErrors.placaVeiculo = 'Campo obrigatório';
+          if (!formData.modeloVeiculo?.trim()) newErrors.modeloVeiculo = 'Campo obrigatório';
+        }
+        if (!formData.banco?.trim()) newErrors.banco = 'Campo obrigatório';
+        if (!formData.agencia?.trim()) newErrors.agencia = 'Campo obrigatório';
+        if (!formData.conta?.trim()) newErrors.conta = 'Campo obrigatório';
+        if (!formData.chavePix?.trim()) newErrors.chavePix = 'Campo obrigatório';
+        break;
 
-        setFormData((prev: any) => {
-            const newData = { ...prev };
-            let current: any = newData;
+      case 2: // Endereço
+        if (!formData.endereco?.cep?.trim()) newErrors['endereco.cep'] = 'Campo obrigatório';
+        if (!formData.endereco?.rua?.trim()) newErrors['endereco.rua'] = 'Campo obrigatório';
+        if (!formData.endereco?.numero?.trim()) newErrors['endereco.numero'] = 'Campo obrigatório';
+        if (!formData.endereco?.bairro?.trim()) newErrors['endereco.bairro'] = 'Campo obrigatório';
+        if (!formData.endereco?.cidade?.trim()) newErrors['endereco.cidade'] = 'Campo obrigatório';
+        if (!formData.endereco?.estado?.trim()) newErrors['endereco.estado'] = 'Campo obrigatório';
+        break;
 
-            for (let i = 0; i < keys.length - 1; i++) {
-                const key = keys[i];
-                if (!current[key]) {
-                    current[key] = {};
-                }
-                current = current[key];
-            }
+      case 3: // Dados Profissionais
+        if (!formData.dadosProfissionais?.length || !formData.dadosProfissionais[0]?.areaAtuacao?.trim())
+          newErrors['dadosProfissionais.0.areaAtuacao'] = 'Campo obrigatório';
+        if (!formData.dadosProfissionais?.[0]?.cargo?.trim())
+          newErrors['dadosProfissionais.0.cargo'] = 'Campo obrigatório';
+        if (formData.professorUnindigo === 'sim' && !formData.disciplinaUniindigo?.trim())
+          newErrors['disciplinaUniindigo'] = 'Campo obrigatório';
+        if (!formData.dataInicio?.trim()) newErrors.dataInicio = 'Campo obrigatório';
+        break;
 
-            current[keys[keys.length - 1]] = value;
-            return newData;
+      case 4: // Formação
+        if (!formData.formacao?.graduacao?.trim()) newErrors['formacao.graduacao'] = 'Campo obrigatório';
+        if (!formData.formacao?.instituicaoGraduacao?.trim()) newErrors['formacao.instituicaoGraduacao'] = 'Campo obrigatório';
+        if (!formData.formacao?.anoFormatura?.trim()) newErrors['formacao.anoFormatura'] = 'Campo obrigatório';
+        (formData.formacao?.posGraduacoes || []).forEach((pg: any, idx: number) => {
+          if (!pg?.tipo) newErrors[`formacao.posGraduacoes.${idx}.tipo`] = 'Campo obrigatório';
+          if (!pg?.curso?.trim()) newErrors[`formacao.posGraduacoes.${idx}.curso`] = 'Campo obrigatório';
+          if (!pg?.instituicao?.trim()) newErrors[`formacao.posGraduacoes.${idx}.instituicao`] = 'Campo obrigatório';
+          if (!pg?.conclusao?.trim()) newErrors[`formacao.posGraduacoes.${idx}.conclusao`] = 'Campo obrigatório';
         });
+        break;
+    }
 
-        // Limpar erro do campo quando alterado
-        if (errors[field]) {
-            setErrors((prev) => {
-                const newErrors = { ...prev };
-                delete newErrors[field];
-                return newErrors;
-            });
-        }
-    };
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
-    const validateCurrentStep = (): boolean => {
-        const newErrors: Record<string, string> = {};
+  const nextStep = () => {
+    if (validateCurrentStep() && currentStep < STEPS.length) setCurrentStep((s) => s + 1);
+  };
+  const prevStep = () => { if (currentStep > 1) setCurrentStep((s) => s - 1); };
 
-        switch (currentStep) {
-            case 1: // Dados Pessoais
-                if (!formData.nome?.trim()) newErrors.nome = 'Nome é obrigatório';
-                if (!formData.cpf?.trim()) newErrors.cpf = 'CPF é obrigatório';
-                if (!formData.dataNascimento?.trim())
-                    newErrors.dataNascimento = 'Data de nascimento é obrigatória';
-                if (!formData.email?.trim()) newErrors.email = 'E-mail é obrigatório';
-                if (!formData.emailIndigo?.trim())
-                    newErrors.emailIndigo = 'E-mail Índigo é obrigatório';
-                if (!formData.celular?.trim()) newErrors.celular = 'Celular é obrigatório';
-                if (!formData.possuiVeiculo?.trim())
-                    newErrors.possuiVeiculo = 'Informação sobre veículo é obrigatória';
+  const handleSubmit = async () => {
+    if (!validateCurrentStep()) return;
+    setIsLoading(true);
+    try {
+      const { valorHoraAcordado, professorUnindigo, disciplinaUniindigo, ...rest } = formData;
+      const payload = { ...rest } as typeof formData;
+      // FRONT-only: não enviar campos novos de formação até o back aceitar
+      if (payload.formacao) {
+        const f: any = { ...payload.formacao };
+        delete f.posGraduacoes;
+        delete f.participacaoCongressosDescricao;
+        delete f.publicacoesLivrosDescricao;
+        payload.formacao = f; // TODO: enviar posGraduacoes/participacaoCongressosDescricao/publicacoesLivrosDescricao quando endpoint aceitar.
+      }
+      await cadastrarTerapeuta(payload);
+      alert('Terapeuta cadastrado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao cadastrar terapeuta:', error);
+      alert('Erro ao cadastrar terapeuta. Tente novamente.');
+    } finally { setIsLoading(false); }
+  };
 
-                // Validações condicionais do veículo
-                if (formData.possuiVeiculo === 'sim') {
-                    if (!formData.placaVeiculo?.trim())
-                        newErrors.placaVeiculo = 'Placa do veículo é obrigatória';
-                    if (!formData.modeloVeiculo?.trim())
-                        newErrors.modeloVeiculo = 'Modelo do veículo é obrigatório';
-                }
+  const renderCurrentStep = () => {
+    switch (currentStep) {
+      case 1:
+        return <DadosPessoaisStep data={formData} onUpdate={handleInputChange} errors={errors} />;
+      case 2:
+        return <EnderecoStep data={formData} onUpdate={handleInputChange} errors={errors} />;
+      case 3:
+        return <DadosProfissionaisStep data={formData} onUpdate={handleInputChange} errors={errors} />;
+      case 4:
+        return <FormacaoStep data={formData} onUpdate={handleInputChange} errors={errors} />;
+      case 5:
+        return <ArquivosStep data={formData} onUpdate={handleInputChange} errors={errors} />;
+      case 6:
+        return <DadosCNPJStep data={formData} onUpdate={handleInputChange} errors={errors} />;
+      default:
+        return null;
+    }
+  };
 
-                // Validações dos dados bancários
-                if (!formData.banco?.trim()) newErrors.banco = 'Banco é obrigatório';
-                if (!formData.agencia?.trim()) newErrors.agencia = 'Agência é obrigatória';
-                if (!formData.conta?.trim()) newErrors.conta = 'Conta é obrigatória';
-                if (!formData.chavePix?.trim()) newErrors.chavePix = 'Chave Pix é obrigatória';
-                if (
-                    formData.valorHoraAcordado !== null &&
-                    formData.valorHoraAcordado !== undefined &&
-                    formData.valorHoraAcordado !== ''
-                ) {
-                    const numericValue = Number(formData.valorHoraAcordado);
-                    if (!(numericValue > 0)) {
-                        newErrors.valorHoraAcordado = 'Informe um valor maior que zero';
-                    }
-                }
-                break;
-
-            case 2: // Endereço
-                if (!formData.endereco?.cep?.trim())
-                    newErrors['endereco.cep'] = 'CEP é obrigatório';
-                if (!formData.endereco?.rua?.trim())
-                    newErrors['endereco.rua'] = 'rua é obrigatório';
-                if (!formData.endereco?.numero?.trim())
-                    newErrors['endereco.numero'] = 'Número é obrigatório';
-                if (!formData.endereco?.bairro?.trim())
-                    newErrors['endereco.bairro'] = 'Bairro é obrigatório';
-                if (!formData.endereco?.cidade?.trim())
-                    newErrors['endereco.cidade'] = 'Cidade é obrigatória';
-                if (!formData.endereco?.estado?.trim())
-                    newErrors['endereco.estado'] = 'estado é obrigatório';
-                break;
-
-            case 3: // Dados Profissionais
-                // Validar dados profissionais (primeiro conjunto é obrigatório)
-                if (
-                    !formData.dadosProfissionais?.length ||
-                    !formData.dadosProfissionais[0]?.areaAtuacao?.trim()
-                ) {
-                    newErrors['dadosProfissionais.0.areaAtuacao'] =
-                        'Área de atuação principal é obrigatória';
-                }
-                if (!formData.dadosProfissionais?.[0]?.cargo?.trim()) {
-                    newErrors['dadosProfissionais.0.cargo'] = 'Cargo principal é obrigatório';
-                }
-
-                if (formData.professorUnindigo === 'sim') {
-                    if (!formData.disciplinaUniindigo?.trim()) {
-                        newErrors.disciplinaUniindigo = 'Informe a disciplina';
-                    }
-                }
-
-                // Validar conjuntos adicionais (se existirem)
-                formData.dadosProfissionais?.forEach((dado: any, index: number) => {
-                    if (index > 0) {
-                        // Para conjuntos adicionais
-                        if (dado.areaAtuacao?.trim() && !dado.cargo?.trim()) {
-                            newErrors[`dadosProfissionais.${index}.cargo`] =
-                                'Cargo é obrigatório quando área de atuação é preenchida';
-                        }
-                        if (dado.cargo?.trim() && !dado.areaAtuacao?.trim()) {
-                            newErrors[`dadosProfissionais.${index}.areaAtuacao`] =
-                                'Área de atuação é obrigatória quando cargo é preenchido';
-                        }
-                    }
-                });
-
-                // Validar data de início
-                if (!formData.dataInicio?.trim())
-                    newErrors.dataInicio = 'Data de início é obrigatória';
-                break;
-
-            case 4: // Formação
-                if (!formData.formacao?.graduacao?.trim())
-                    newErrors['formacao.graduacao'] = 'Curso de graduação é obrigatório';
-                if (!formData.formacao?.instituicaoGraduacao?.trim())
-                    newErrors['formacao.instituicaoGraduacao'] = 'Instituição é obrigatória';
-                if (!formData.formacao?.anoFormatura?.trim())
-                    newErrors['formacao.anoFormatura'] = 'Ano de formatura é obrigatório';
-                break;
-
-            case 5: // Arquivos
-                // Arquivos são opcionais - sem validação obrigatória
-                break;
-
-            case 6: // Dados CNPJ (opcional)
-                // Validação opcional - apenas se preencheu algum campo
-                if (formData.cnpj?.numero?.trim()) {
-                    if (!formData.cnpj?.razaoSocial?.trim())
-                        newErrors['cnpj.razaoSocial'] =
-                            'Razão social é obrigatória quando CNPJ é informado';
-                }
-                break;
-        }
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
-    const nextStep = () => {
-        if (validateCurrentStep() && currentStep < STEPS.length) {
-            setCurrentStep((prev) => prev + 1);
-        }
-    };
-
-    const prevStep = () => {
-        if (currentStep > 1) {
-            setCurrentStep((prev) => prev - 1);
-        }
-    };
-
-    const handleSubmit = async () => {
-        if (!validateCurrentStep()) return;
-
-        setIsLoading(true);
-
-        // try {
-        //     const resp = await uploadArquivos(formData.arquivos || {});
-        //     console.log("Arquivos enviados", resp);
-        // } catch (err) {
-        //     console.error("Erro no upload de arquivos", err);
-        // }
-
-        try {
-            const {
-                valorHoraAcordado,
-                professorUnindigo,
-                disciplinaUniindigo,
-                ...rest
-            } = formData;
-            const payload = { ...rest } as typeof formData;
-            // TODO: enviar valorHoraAcordado quando endpoint aceitar.
-            // TODO: enviar professorUnindigo/disciplinaUniindigo quando endpoint aceitar.
-
-            await cadastrarTerapeuta(payload);
-
-            alert('Terapeuta cadastrado com sucesso!');
-        } catch (error) {
-            console.error('Erro ao cadastrar terapeuta:', error);
-            alert('Erro ao cadastrar terapeuta. Tente novamente.');
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    const renderCurrentStep = () => {
-        switch (currentStep) {
-            case 1:
-                return (
-                    <DadosPessoaisStep
-                        data={formData}
-                        onUpdate={handleInputChange}
-                        errors={errors}
-                    />
-                );
-            case 2:
-                return (
-                    <EnderecoStep data={formData} onUpdate={handleInputChange} errors={errors} />
-                );
-            case 3:
-                return (
-                    <DadosProfissionaisStep
-                        data={formData}
-                        onUpdate={handleInputChange}
-                        errors={errors}
-                    />
-                );
-            case 4:
-                return (
-                    <FormacaoStep data={formData} onUpdate={handleInputChange} errors={errors} />
-                );
-            case 5:
-                return (
-                    <ArquivosStep data={formData} onUpdate={handleInputChange} errors={errors} />
-                );
-            case 6:
-                return (
-                    <DadosCNPJStep data={formData} onUpdate={handleInputChange} errors={errors} />
-                );
-            default:
-                return null;
-        }
-    };
-
-    return (
-        <div className="container mx-auto p-8">
-            {/* Header */}
-            <CardHeader>
-                <CardTitle className="text-2xl mb-8 text-primary">Cadastro de Terapeuta</CardTitle>
-                <MultiStepProgress
-                    currentStep={currentStep}
-                    totalSteps={STEPS.length}
-                    steps={STEPS}
-                />
-            </CardHeader>
-
-            {/* Form Content */}
-            <div className="">{renderCurrentStep()}</div>
-
-            {/* Navigation Buttons */}
-            <div className="flex justify-between mt-8 pt-6 border-t">
-                <Button
-                    type="button"
-                    variant="outline"
-                    onClick={prevStep}
-                    disabled={currentStep === 1}
-                    className="flex items-center gap-2"
-                >
-                    <ChevronLeft className="w-4 h-4" />
-                    Anterior
-                </Button>
-
-                {currentStep === STEPS.length ? (
-                    <Button
-                        onClick={handleSubmit}
-                        disabled={isLoading}
-                        className="flex items-center gap-2"
-                    >
-                        {isLoading ? (
-                            <>
-                                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                                Cadastrando...
-                            </>
-                        ) : (
-                            'Finalizar Cadastro'
-                        )}
-                    </Button>
-                ) : (
-                    <Button onClick={nextStep} className="flex items-center gap-2">
-                        Próximo
-                        <ChevronRight className="w-4 h-4" />
-                    </Button>
-                )}
-            </div>
-        </div>
-    );
+  return (
+    <div className="container mx-auto p-8">
+      <CardHeader>
+        <CardTitle className="text-2xl mb-8 text-primary">Cadastro de Terapeuta</CardTitle>
+        <MultiStepProgress currentStep={currentStep} totalSteps={STEPS.length} steps={STEPS} />
+      </CardHeader>
+      <div>{renderCurrentStep()}</div>
+      <div className="flex justify-between mt-8 pt-6 border-t">
+        <Button type="button" variant="outline" onClick={prevStep} disabled={currentStep === 1} className="flex items-center gap-2">
+          <ChevronLeft className="w-4 h-4" /> Anterior
+        </Button>
+        {currentStep === STEPS.length ? (
+          <Button onClick={handleSubmit} disabled={isLoading} className="flex items-center gap-2">
+            {isLoading ? (<><div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div> Cadastrando...</>) : ('Finalizar Cadastro')}
+          </Button>
+        ) : (
+          <Button onClick={nextStep} className="flex items-center gap-2">
+            Próximo <ChevronRight className="w-4 h-4" />
+          </Button>
+        )}
+      </div>
+    </div>
+  );
 }
-
-

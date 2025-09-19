@@ -1,4 +1,4 @@
-�export interface Terapeuta {
+export interface Terapeuta {
     id?: string;
     // Dados pessoais
     nome: string;
@@ -12,7 +12,7 @@
     placaVeiculo?: string;
     modeloVeiculo?: string;
 
-    // Dados bancários
+    // Dados bancÃ¡rios
     banco: string;
     agencia: string;
     conta: string;
@@ -22,7 +22,7 @@
     disciplinaUniindigo?: string | null;
     valorHoraAcordado?: number | null;
 
-    // Endereço pessoal
+    // EndereÃ§o pessoal
     endereco: {
         cep: string;
         rua: string;
@@ -50,8 +50,8 @@
     valorConsulta: string;
     formasAtendimento: string[];
 
-    // Formação
-    formacao: {
+    // FormaÃ§Ã£o
+    Formação: {
         graduacao: string;
         instituicaoGraduacao: string;
         anoFormatura: string;
@@ -59,7 +59,16 @@
         instituicaoPosGraduacao?: string;
         anoPosGraduacao?: string;
         cursos?: string;
-    };
+        // Novos campos FRONT (não enviados ao back por compatibilidade)
+        posGraduacoes?: Array<{
+            tipo: 'lato' | 'stricto';
+            curso: string;
+            instituicao: string;
+            conclusao: string; // AAAA-MM
+            comprovanteUrl?: string | null;
+        }>;
+        participacaoCongressosDescricao?: string | null;
+        publicacoesLivrosDescricao?: string | null;    };
 
     // Arquivos
     arquivos: {
@@ -131,7 +140,7 @@ export interface Cliente {
     cpfPai2?: string;
     telefonePai2?: string;
     
-    // Endereços (cliente pode ter vários)
+    // EndereÃ§os (cliente pode ter vÃ¡rios)
     enderecos: Array<{
         cep: string;
         logradouro: string;
@@ -148,14 +157,14 @@ export interface Cliente {
         nomeTitular: string;
         numeroCarteirinha?: string;
         
-        // Telefones com controle de exibição
+        // Telefones com controle de exibiÃ§Ã£o
         telefone1: string;
         mostrarTelefone2?: boolean;
         telefone2?: string;
         mostrarTelefone3?: boolean;
         telefone3?: string;
         
-        // E-mails com controle de exibição
+        // E-mails com controle de exibiÃ§Ã£o
         email1: string;
         mostrarEmail2?: boolean;
         email2?: string;
@@ -165,10 +174,10 @@ export interface Cliente {
         // Sistema de pagamento (radio button principal)
         sistemaPagamento: 'reembolso' | 'liminar' | 'particular';
         
-        // Campos específicos para Reembolso
+        // Campos especÃ­ficos para Reembolso
         prazoReembolso?: string;
         
-        // Campos específicos para Liminar
+        // Campos especÃ­ficos para Liminar
         numeroProcesso?: string;
         nomeAdvogado?: string;
         telefoneAdvogado1?: string;
@@ -182,7 +191,7 @@ export interface Cliente {
         mostrarEmailAdvogado3?: boolean;
         emailAdvogado3?: string;
         
-        // Campos específicos para Particular
+        // Campos especÃ­ficos para Particular
         houveNegociacao?: 'sim' | 'nao';
         valorSessao?: string;
     };
@@ -210,5 +219,7 @@ export interface CadastroFormProps<T> {
     isLoading?: boolean;
     initialData?: T;
 }
+
+
 
 
