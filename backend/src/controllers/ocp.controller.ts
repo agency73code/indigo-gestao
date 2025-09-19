@@ -29,9 +29,9 @@ export async function listClientPrograms(req: Request, res: Response) {
     const page = parseInt(req.query.page as string) || 1;
     const status = (req.query.status as 'active' | 'archived' | 'all') || 'all';
     const q = req.query.q as string | undefined;
+    const sort = (req.query.sort as 'recent' | 'alphabetic') ?? 'recent';
 
     if (!clientId) return res.status(400).json({ success: false, message: 'ClientId é obrigatório' });
-
-    const rows = await OcpService.listByClientId(clientId, page, 10, status, q);
+    const rows = await OcpService.listByClientId(clientId, page, 10, status, q, sort);
     return res.json({ success: true, data: rows.map(OcpService.mapOcpReturn) });
 }

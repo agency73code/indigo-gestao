@@ -71,7 +71,15 @@ export async function listClientsByTherapist(therapistId: string, q?: string) {
     });
 }
 
-export async function listByClientId(clientId: string, page = 1, pageSize = 10, status: 'active' | 'archived' | 'all' = 'all', q?: string) {
+export async function listByClientId(
+    clientId: string, 
+    page = 1, 
+    pageSize = 10, 
+    status: 'active' | 'archived' | 'all' = 'all', 
+    q?: string, 
+    sort: 'recent' | 'alphabetic' = 'recent'
+) {
+    console.log("sort param:", sort);
     return prisma.ocp.findMany({
         where: { 
             cliente_id: clientId,
@@ -98,7 +106,9 @@ export async function listByClientId(clientId: string, page = 1, pageSize = 10, 
             criado_em: true,
             atualizado_em: true,
         },
-        orderBy: { atualizado_em: 'desc' },
+        orderBy: sort === 'alphabetic'
+            ? { nome_programa: 'asc' }
+            : { atualizado_em: 'desc' },
         skip: (page - 1) * pageSize,
         take: pageSize,
     });

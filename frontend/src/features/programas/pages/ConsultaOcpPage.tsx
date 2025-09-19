@@ -54,7 +54,10 @@ export default function ConsultaOcpPage() {
             `/app/programas/novo?patientId=${selectedPatient.id}&patientName=${encodeURIComponent(selectedPatient.name)}`,
         );
     }; // Transformar filtros para formato esperado pelos componentes
-    const selectedFilters = searchState.status === 'all' ? [] : [searchState.status];
+        const selectedFilters = [
+            ...(searchState.status === 'all' ? [] : [searchState.status]),
+            ...(searchState.sort === 'recent' ? [] : [searchState.sort]),
+        ];
 
     return (
         <div className="flex flex-col min-h-full w-full p-1 sm:p-4">
