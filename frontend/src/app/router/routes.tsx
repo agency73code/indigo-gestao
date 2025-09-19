@@ -1,4 +1,4 @@
-import { Suspense } from 'react';
+import { Suspense, lazy } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 
 import { LoginPage, ForgotPasswordPage } from '../../features/auth';
@@ -26,7 +26,6 @@ import DetalheProgramaPage from '../../features/programas/pages/DetalheProgramaP
 import EditarProgramaPage from '../../features/programas/pages/EditarProgramaPage';
 import { CadastroSessaoPage } from '../../features/sessoes';
 import RelatorioMensalPage from '../../features/programas/pages/RelatorioMensalPage';
-import SessaoPage from '../../features/programas/pages/SessaoPage';
 import NotAccessPage from '@/features/shell/pages/NotAccessPage';
 import NotPermissionPage from '@/features/shell/pages/NotPermissionPage copy';
 
@@ -35,6 +34,9 @@ const suspenseFallback = (
         <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent" />
     </div>
 );
+
+const ConsultarSessaoPage = lazy(() => import('@/features/programas/sessoes/pages/ConsultarSessao'));
+const DetalheSessaoPage = lazy(() => import('@/features/programas/sessoes/pages/DetalheSessao'));
 
 export const router = createBrowserRouter([
     {
@@ -178,6 +180,15 @@ export const router = createBrowserRouter([
                         ),
                     },
                     {
+                        path: 'programas/sessoes/consultar',
+                        element: (
+                            <Suspense fallback={suspenseFallback}>
+                                <ConsultarSessaoPage />
+                            </Suspense>
+                        ),
+                        handle: { breadcrumb: 'Consultar Sessão' },
+                    },
+                    {
                         path: 'programas/relatorios/mensal',
                         element: (
                             <Suspense fallback={suspenseFallback}>
@@ -189,9 +200,10 @@ export const router = createBrowserRouter([
                         path: 'programas/sessoes/:sessaoId',
                         element: (
                             <Suspense fallback={suspenseFallback}>
-                                <SessaoPage />
+                                <DetalheSessaoPage />
                             </Suspense>
                         ),
+                        handle: { breadcrumb: 'Detalhe da Sessão' },
                     },
                 ],
             },

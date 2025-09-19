@@ -30,14 +30,18 @@ export default function SessionsList({ sessions, program }: SessionsListProps) {
         return `${Math.round(value)}%`;
     };
 
-    const handleViewSession = (sessionId: string) => {
-        // Se existir rota de detalhe da sessão, navegar para ela
-        // Caso contrário, pode implementar modal ou outra ação
-        navigate(`/programas/sessoes/${sessionId}`);
+    const handleViewSession = (session: SessionListItem) => {
+        navigate(`/app/programas/sessoes/${session.id}?pacienteId=${program.patientId}`, {
+            state: { sessionDate: session.date },
+        });
     };
 
     const handleNewSession = () => {
-        navigate(`/programas/sessoes/nova?programaId=${program.id}&patientId=${program.patientId}`);
+        navigate(`/app/programas/sessoes/nova?programaId=${program.id}&patientId=${program.patientId}`);
+    };
+
+    const handleSeeAll = () => {
+        navigate(`/app/programas/sessoes/consultar?pacienteId=${program.patientId}`);
     };
 
     if (sessions.length === 0) {
@@ -75,7 +79,7 @@ export default function SessionsList({ sessions, program }: SessionsListProps) {
                         variant="outline"
                         size="sm"
                         className="text-xs"
-                        onClick={() => navigate(`/programas/${program.id}/sessoes`)}
+                        onClick={handleSeeAll}
                     >
                         Ver todas
                     </Button>
@@ -90,9 +94,7 @@ export default function SessionsList({ sessions, program }: SessionsListProps) {
                         >
                             <div className="flex-1 space-y-1">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-sm font-medium">
-                                        {formatDate(session.date)}
-                                    </span>
+                                    <span className="text-sm font-medium">{formatDate(session.date)}</span>
                                     <span className="text-xs text-muted-foreground">
                                         {formatPercentage(session.overallScore)} acerto
                                     </span>
@@ -103,20 +105,18 @@ export default function SessionsList({ sessions, program }: SessionsListProps) {
                                     {session.therapistName}
                                 </div>
 
-                                {session.independenceRate !== null &&
-                                    session.independenceRate !== undefined && (
-                                        <div className="text-xs text-muted-foreground">
-                                            {formatPercentage(session.independenceRate)}{' '}
-                                            independência
-                                        </div>
-                                    )}
+                                {session.independenceRate !== null && session.independenceRate !== undefined && (
+                                    <div className="text-xs text-muted-foreground">
+                                        {formatPercentage(session.independenceRate)} independência
+                                    </div>
+                                )}
                             </div>
 
                             <Button
                                 variant="ghost"
                                 size="sm"
                                 className="h-8 w-8 p-0 ml-3"
-                                onClick={() => handleViewSession(session.id)}
+                                onClick={() => handleViewSession(session)}
                                 aria-label="Ver sessão"
                             >
                                 <Eye className="h-4 w-4" />
@@ -128,3 +128,4 @@ export default function SessionsList({ sessions, program }: SessionsListProps) {
         </Card>
     );
 }
+

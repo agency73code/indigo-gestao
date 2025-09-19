@@ -2,7 +2,7 @@ import { fetchClients } from '../api';
 import type { Patient, ProgramListItem } from './types';
 
 // TODO: substituir por serviços reais da API
-const USE_LOCAL_MOCKS = false;
+const USE_LOCAL_MOCKS = true;
 
 export async function searchPatients(q: string): Promise<Patient[]> {
     if (USE_LOCAL_MOCKS) {
@@ -76,4 +76,21 @@ export async function listPrograms(params: {
     if (!res.ok) throw new Error('Erro ao buscar programas');
     const json = await res.json();
     return (json?.data ?? []) as ProgramListItem[];
+}
+
+export async function getPatientById(patientId: string): Promise<Patient | null> {
+    if (USE_LOCAL_MOCKS) {
+        const { mockPatients } = await import('./mocks/patients.mock');
+
+        await new Promise((resolve) => setTimeout(resolve, 150));
+
+        return mockPatients.find((patient) => patient.id === patientId) ?? null;
+    }
+
+    const patients = await fetchClients(patientId);
+    if (Array.isArray(patients)) {
+        return (patients as Patient[]).find((patient) => patient.id === patientId) ?? null;
+    }
+
+    return null;
 }

@@ -27,6 +27,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+
 const data = {
     user: {
         name: 'shadcn',
@@ -40,18 +41,9 @@ const data = {
             icon: LayoutDashboard,
             isActive: true,
             items: [
-                {
-                    title: 'Atendimentos',
-                    url: '/app/atendimentos',
-                },
-                {
-                    title: 'Planejamento',
-                    url: '/app/planejamento',
-                },
-                {
-                    title: 'Financeiro',
-                    url: '/app/financeiro',
-                },
+                { title: 'Atendimentos', url: '/app/atendimentos' },
+                { title: 'Planejamento', url: '/app/planejamento' },
+                { title: 'Financeiro', url: '/app/financeiro' },
             ],
         },
         {
@@ -59,14 +51,8 @@ const data = {
             url: '/app/cadastros',
             icon: UserPlus,
             items: [
-                {
-                    title: 'Cadastrar Terapeuta',
-                    url: '/app/cadastro/terapeuta',
-                },
-                {
-                    title: 'Cadastrar Cliente',
-                    url: '/app/cadastro/cliente',
-                },
+                { title: 'Cadastrar Terapeuta', url: '/app/cadastro/terapeuta' },
+                { title: 'Cadastrar Cliente', url: '/app/cadastro/cliente' },
             ],
         },
         {
@@ -74,14 +60,8 @@ const data = {
             url: '/app/consultas',
             icon: UserRoundSearchIcon,
             items: [
-                {
-                    title: 'Terapeuta',
-                    url: '/app/consultas/terapeutas',
-                },
-                {
-                    title: 'Paciente',
-                    url: '/app/consultas/pacientes',
-                },
+                { title: 'Terapeuta', url: '/app/consultas/terapeutas' },
+                { title: 'Paciente', url: '/app/consultas/pacientes' },
             ],
         },
         {
@@ -89,22 +69,11 @@ const data = {
             url: '/app/programas',
             icon: Activity,
             items: [
-                {
-                    title: 'Listar Programas',
-                    url: '/app/programas/lista',
-                },
-                {
-                    title: 'Criar Programa',
-                    url: '/app/programas/novo',
-                },
-                {
-                    title: 'Registrar Sessão',
-                    url: '/app/programas/sessoes/nova',
-                },
-                {
-                    title: 'Relatório Mensal',
-                    url: '/app/programas/relatorios/mensal',
-                },
+                { title: 'Listar Programas', url: '/app/programas/lista' },
+                { title: 'Criar Programa', url: '/app/programas/novo' },
+                { title: 'Consultar Sessão', url: '/app/programas/sessoes/consultar' },
+                { title: 'Registrar Sessão', url: '/app/programas/sessoes/nova' },
+                { title: 'Relatório Mensal', url: '/app/programas/relatorios/mensal' },
             ],
         },
         {
@@ -112,40 +81,17 @@ const data = {
             url: '/app/configuracoes',
             icon: Settings2,
             items: [
-                {
-                    title: 'Perfil & Organização',
-                    url: '/app/configuracoes/perfil',
-                },
-                {
-                    title: 'Preferências',
-                    url: '/app/configuracoes/preferencias',
-                },
-                {
-                    title: 'Notificações',
-                    url: '/app/configuracoes/notificacoes',
-                },
-                {
-                    title: 'Segurança',
-                    url: '/app/configuracoes/seguranca',
-                },
-                {
-                    title: 'Integrações',
-                    url: '/app/configuracoes/integracoes',
-                },
+                { title: 'Perfil & Organização', url: '/app/configuracoes/perfil' },
+                { title: 'Preferências', url: '/app/configuracoes/preferencias' },
+                { title: 'Notificações', url: '/app/configuracoes/notificacoes' },
+                { title: 'Segurança', url: '/app/configuracoes/seguranca' },
+                { title: 'Integrações', url: '/app/configuracoes/integracoes' },
             ],
         },
     ],
     navSecondary: [
-        {
-            title: 'Support',
-            url: '#',
-            icon: LifeBuoy,
-        },
-        {
-            title: 'Feedback',
-            url: '#',
-            icon: Send,
-        },
+        { title: 'Support', url: '#', icon: LifeBuoy },
+        { title: 'Feedback', url: '#', icon: Send },
     ],
     projects: [
         {
@@ -154,18 +100,13 @@ const data = {
             target: '_blank',
             icon: Frame,
         },
-        {
-            name: 'Lançamento curso',
-            url: '#',
-            icon: PieChart,
-        },
-        
+        { name: 'Lançamento curso', url: '#', icon: PieChart },
     ],
 };
 
 function capitalize(word: string) {
-  if (!word) return "";
-  return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    if (!word) return '';
+    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -173,9 +114,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const displayAcesso = capitalize(user?.perfil_acesso ?? '-');
     const displayAvatar = indigoLogo;
     const ability = useAbility();
-
-    // verifica o nome da rota do nav, ajuda a mapear
-    //console.log("DEBUG navMain original:", data.navMain.map(i => i.url))
 
     const navMainFiltered = data.navMain.filter((item) => {
         if (item.url === '/app/cadastros' && !ability.can('manage', 'Cadastro')) return false;
@@ -203,9 +141,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                     >
                                         Instituto Índigo
                                     </span>
-                                    <span className="text-xs block text-muted-foreground">
-                                        {displayAcesso}
-                                    </span>
+                                    <span className="text-xs block text-muted-foreground">{displayAcesso}</span>
                                 </div>
                             </a>
                         </SidebarMenuButton>
@@ -215,7 +151,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarContent className="pt-2">
                 <NavMain items={navMainFiltered} />
                 <NavProjects projects={data.projects} />
-                <NavSecondary items={data.navSecondary} className="mt-auto " />
+                <NavSecondary items={data.navSecondary} className="mt-auto" />
             </SidebarContent>
             <SidebarFooter className="md:hidden">
                 <NavUser />
@@ -223,3 +159,4 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </Sidebar>
     );
 }
+
