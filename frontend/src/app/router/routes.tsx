@@ -27,6 +27,8 @@ import EditarProgramaPage from '../../features/programas/pages/EditarProgramaPag
 import { CadastroSessaoPage } from '../../features/sessoes';
 import RelatorioMensalPage from '../../features/programas/pages/RelatorioMensalPage';
 import SessaoPage from '../../features/programas/pages/SessaoPage';
+import NotAccessPage from '@/features/shell/pages/NotAccessPage';
+import NotPermissionPage from '@/features/shell/pages/NotPermissionPage copy';
 
 const suspenseFallback = (
     <div className="flex items-center justify-center h-64">
@@ -193,6 +195,8 @@ export const router = createBrowserRouter([
                     },
                 ],
             },
+            { path: '401', element: <NotAccessPage /> },
+            { path: '403', element: <NotPermissionPage /> },
             { path: '404', element: <NotFoundPage /> },
             { path: 'token-not-found', element: <TokenNotFoundPage /> },
             { path: '*', element: <NotFoundPage /> },
