@@ -35,18 +35,29 @@ export default function ProgramList({
         setError(null);
 
         try {
-            const status =
-                selectedFilters.length === 1
-                    ? (selectedFilters[0] as 'active' | 'archived')
-                    : 'all';
+            type typeStatus = 'active' | 'archived';
+            type typeSort = 'recent' | 'alphabetic';
+            const statusValues = ['active', 'archived'] as const;
+            const sortValues = ['alphabetic', 'recent'] as const;
+
+            const status: 'active' | 'archived' | 'all' =
+            selectedFilters.find((f): f is 'active' | 'archived' => 
+                statusValues.includes(f as typeStatus)
+            ) ?? 'all';
+
+            const sort: 'alphabetic' | 'recent' =
+            selectedFilters.find((f): f is 'alphabetic' | 'recent' => 
+                sortValues.includes(f as typeSort)
+            ) ?? 'recent';
+            
             const result = await listPrograms({
                 patientId: selectedPatientId,
                 q: searchQuery || undefined,
                 status,
-                sort: 'recent',
+                sort,
             });
             setPrograms(result);
-        } catch (err) {
+        } catch {
             setError('Erro ao carregar programas. Tente novamente.');
             setPrograms([]);
         } finally {

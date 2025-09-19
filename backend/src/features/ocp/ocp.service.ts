@@ -1,5 +1,5 @@
 import { prisma } from "../../config/database.js";
-import type { createOCP } from "./ocp.normalizer.js";
+import type { createOCP } from "./ocp.types.js";
 
 export async function create(data: createOCP) {
     return prisma.ocp.create({
@@ -32,6 +32,51 @@ export async function create(data: createOCP) {
                 })),
             },
         },
+    });
+}
+
+export async function get(programId: string) {
+    return prisma.ocp.findUnique({
+        where: { id: Number(programId) },
+        select: {
+            id: true,
+            nome_programa: true,
+            cliente_id: true,
+            cliente: {
+                select: {
+                    nome: true,
+                    cliente_responsavel: {
+                        select: {
+                            prioridade: true,
+                            responsaveis: { select: { nome: true, } }
+                        },
+                        orderBy: { prioridade: 'asc' },
+                        take: 1
+                    },
+                    data_nascimento: true,
+
+                }
+            },
+            criador_id: true,
+            criador: {
+                select: {
+                    nome: true,
+                }
+            },
+            criado_em: true,
+            objetivo_programa: true,
+            objetivo_descricao: true,
+            estimulo_ocp: {
+                select: {
+                    id_estimulo: true,
+                    nome: true,
+                    descricao: true,
+                    status: true,
+                },
+                orderBy: { id: 'asc' }
+            },
+            status: true,
+        }
     });
 }
 
@@ -71,7 +116,13 @@ export async function listClientsByTherapist(therapistId: string, q?: string) {
     });
 }
 
-export async function listByClientId(clientId: string, page = 1, pageSize = 10, status: 'active' | 'archived' | 'all' = 'all', q?: string) {
+export async function listByClientId(
+    clientId: string, 
+    page = 1,  pageSize = 10, 
+    status: 'active' | 'archived' | 'all' = 'all', 
+    q?: string, 
+    sort: 'recent' | 'alphabetic' = 'recent'
+) {
     return prisma.ocp.findMany({
         where: { 
             cliente_id: clientId,
@@ -98,7 +149,9 @@ export async function listByClientId(clientId: string, page = 1, pageSize = 10, 
             criado_em: true,
             atualizado_em: true,
         },
-        orderBy: { atualizado_em: 'desc' },
+        orderBy: sort === 'alphabetic'
+            ? { nome_programa: 'asc' }
+            : { atualizado_em: 'desc' },
         skip: (page - 1) * pageSize,
         take: pageSize,
     });

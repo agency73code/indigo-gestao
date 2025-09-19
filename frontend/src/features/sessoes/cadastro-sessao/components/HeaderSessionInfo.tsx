@@ -78,9 +78,9 @@ export default function HeaderSessionInfo({ patient, program }: HeaderSessionInf
 
                     <div className="flex-1 min-w-0">
                         <p className="font-medium text-sm sm:text-base">{patient.name}</p>
-                        {patient.responsible && (
+                        {patient.guardianName && (
                             <p className="text-xs sm:text-sm text-muted-foreground">
-                                Responsável: {patient.responsible}
+                                Responsável: {patient.guardianName}
                             </p>
                         )}
                         {patient.age && (
