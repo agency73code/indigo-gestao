@@ -71,11 +71,19 @@ export async function listClientsByTherapist(therapistId: string, q?: string) {
     });
 }
 
-export async function listByClientId(clientId: string, page = 1, pageSize = 10, status: 'active' | 'archived' | 'all' = 'all') {
+export async function listByClientId(clientId: string, page = 1, pageSize = 10, status: 'active' | 'archived' | 'all' = 'all', q?: string) {
     return prisma.ocp.findMany({
         where: { 
             cliente_id: clientId,
-            ...(status !== 'all' ? { status: status === 'active' ? 'active' : 'archived' }
+            ...(status !== 'all' ? { status } : {}),
+            ...(q
+                ? {
+                    OR: [
+                        { nome_programa: { contains: q } },
+                        { objetivo_programa: { contains: q } },
+                        { objetivo_descricao: { contains: q } },
+                    ],
+                }
                 : {}),
         },
         select: {
@@ -86,6 +94,7 @@ export async function listByClientId(clientId: string, page = 1, pageSize = 10, 
             objetivo_descricao: true,
             dominio_criterio: true,
             observacao_geral: true,
+            status: true,
             criado_em: true,
             atualizado_em: true,
         },
@@ -110,7 +119,7 @@ export function mapOcpReturn(dto: Awaited<ReturnType<typeof listByClientId>>[num
         id: dto.id.toString(),
         title: dto.nome_programa,
         objective: dto.objetivo_programa,
-        status: 'active',
+        status: dto.status as 'active' | 'archived',
         lastSession: dto.atualizado_em.toISOString(),
         patiendId: dto.cliente_id,
     };

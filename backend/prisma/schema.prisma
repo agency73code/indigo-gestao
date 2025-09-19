@@ -356,6 +356,7 @@ model ocp {
   dominio_criterio    String?
   observacao_geral    String?
   atualizado_em       DateTime            @updatedAt
+  status              String              @default("active")
 
   cliente             cliente             @relation(fields: [cliente_id], references: [id], onDelete: Restrict)
   criador             terapeuta           @relation("CriadorOcp", fields: [criador_id], references: [id], onDelete: Restrict)
