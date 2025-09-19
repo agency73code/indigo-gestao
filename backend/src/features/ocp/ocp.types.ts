@@ -19,7 +19,7 @@ export type getOCP = {
     name?: string | null;
     patientId: string;
     patientName: string;
-    patientGuardian?: string | null;
+    patientGuardian: string | undefined;
     patientAge?: number | null;
     patientPhotoUrl?: string | null;
     therapistId: string;
@@ -36,3 +36,28 @@ export type getOCP = {
     }[];
     status: 'active' | 'archived';
 }
+
+export type OcpStimuloDTO = {
+  id_estimulo: number;
+  nome: string | null;
+  descricao: string | null;
+  status: boolean;
+};
+
+export type OcpDetailDTO = {
+  id: number;
+  nome_programa: string;
+  cliente_id: string;
+  cliente: {
+    nome: string;
+    data_nascimento: Date;
+    cliente_responsavel?: { responsaveis: { nome: string } }[];
+  };
+  criador_id: string;
+  criador: { nome: string };
+  criado_em: Date;
+  objetivo_programa: string | null;
+  objetivo_descricao: string | null;
+  estimulo_ocp?: OcpStimuloDTO[];
+  status: string;
+};

@@ -20,6 +20,8 @@ export async function getProgramById(req: Request, res: Response) {
         if (!programId) return res.status(400).json({ success: false, message: 'ID do programa não informado' });
 
         const ocp = await OcpService.get(programId);
+        if (!ocp) return res.status(404).json({ message: 'OCP not found' });
+        
         return res.status(201).json({ data: mapOcpDetail(ocp) });
     } catch (error) {
         console.error(error);
