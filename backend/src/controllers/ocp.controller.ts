@@ -19,13 +19,26 @@ export async function getProgramById(req: Request, res: Response) {
         const { programId } = req.params;
         if (!programId) return res.status(400).json({ success: false, message: 'ID do programa não informado' });
 
-        const ocp = await OcpService.get(programId);
-        if (!ocp) return res.status(404).json({ message: 'OCP not found' });
+        const ocp = await OcpService.getProgramById(programId);
+        if (!ocp) return res.status(404).json({ message: 'OCP não encontrado' });
         
         return res.status(201).json({ data: mapOcpDetail(ocp) });
     } catch (error) {
         console.error(error);
         return res.status(400).json({ success: false, message: 'Erro programa não encontrado' });
+    }
+}
+
+export async function getSessionByProgram(req: Request, res: Response) {
+    try {
+        if (!req.params.programId) return res.status(400).json({ success: false, message: 'programId é obrigatório' });
+        const programId = parseInt(req.params.programId, 10);
+        const limit = parseInt(req.query.limit as string, 10) || 5;
+        const sessions = await OcpService.getSessionsByProgram(programId, limit);
+        res.json({ data: sessions });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Erro ao buscar sessões' });
     }
 }
 
