@@ -30,7 +30,7 @@ export default function HeaderProgram({ program }: HeaderProgramProps) {
     };
 
     const handleGoBack = () => {
-        navigate('/programas');
+        navigate('/app/programas/lista');
     };
 
     return (

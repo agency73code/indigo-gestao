@@ -1,8 +1,8 @@
 import type { Request, Response } from 'express';
 import * as OcpService from '../features/ocp/ocp.service.js';
+import { mapOcpDetail } from '../features/ocp/ocp.normalizer.js';
 
 export async function create(req: Request, res: Response) {
-    console.log("Body recebido no createOcpHandler:", req.body);
     try {
         const ocp = await OcpService.create(req.body);
         return res.status(201).json({ data: ocp });
@@ -11,6 +11,19 @@ export async function create(req: Request, res: Response) {
         return res.status(400).json({
             error: error instanceof Error ? error.message : 'Erro inesperado',
         });
+    }
+}
+
+export async function getProgramById(req: Request, res: Response) {
+    try {
+        const { programId } = req.params;
+        if (!programId) return res.status(400).json({ success: false, message: 'ID do programa não informado' });
+
+        const ocp = await OcpService.get(programId);
+        return res.status(201).json({ data: mapOcpDetail(ocp) });
+    } catch (error) {
+        console.error(error);
+        return res.status(400).json({ success: false, message: 'Erro programa não encontrado' });
     }
 }
 
