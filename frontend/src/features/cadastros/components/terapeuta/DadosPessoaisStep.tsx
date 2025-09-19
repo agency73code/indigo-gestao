@@ -21,15 +21,15 @@ interface DadosPessoaisStepProps {
 
 export default function DadosPessoaisStep({ data, onUpdate, onBlurField, errors }: DadosPessoaisStepProps) {
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
             <div>
-                <h3 className="text-lg font-semibold text-primary">Dados Pessoais</h3>
-                <p className="text-sm text-muted-foreground mt-1">
+                <h3 className="text-base sm:text-base sm:text-lg font-semibold text-primary">Dados Pessoais</h3>
+                <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground mt-1">
                     Informe os dados pessoais do terapeuta. Campos marcados com * são obrigatórios.
                 </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 md:gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="nome">Nome Completo *</Label>
                     <Input
@@ -74,7 +74,7 @@ export default function DadosPessoaisStep({ data, onUpdate, onBlurField, errors 
             </div>
 
             {/* Primeira linha - Email e Email Índigo */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="email">E-mail *</Label>
                     <Input
@@ -111,7 +111,7 @@ export default function DadosPessoaisStep({ data, onUpdate, onBlurField, errors 
             </div>
 
             {/* Segunda linha - Celular e CPF */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="celular">Celular *</Label>
                     <Input
@@ -140,7 +140,7 @@ export default function DadosPessoaisStep({ data, onUpdate, onBlurField, errors 
             </div>
 
             {/* Seção Veículo */}
-            <div className="space-y-4 border-t pt-6">
+            <div className="space-y-4 md:space-y-6 border-t pt-6">
                 <div className="space-y-2">
                     <Label htmlFor="possuiVeiculo">Possui Veículo? *</Label>
                     <select
@@ -162,7 +162,7 @@ export default function DadosPessoaisStep({ data, onUpdate, onBlurField, errors 
 
                 {/* Campos condicionais do veículo */}
                 {data.possuiVeiculo === 'sim' && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="placaVeiculo">Placa do Veículo *</Label>
                             <Input
@@ -196,14 +196,14 @@ export default function DadosPessoaisStep({ data, onUpdate, onBlurField, errors 
                 )}
             </div>
             <div>
-                <h3 className="text-lg font-semibold text-primary font-sora">
+                <h3 className="text-base sm:text-lg font-semibold text-primary font-sora">
                     Dados para pagamento
                 </h3>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                     Informe os dados necessários para cadastro bancário do terapeuta.
                 </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 md:gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="banco">Banco *</Label>
                     <Input
@@ -278,3 +278,8 @@ export default function DadosPessoaisStep({ data, onUpdate, onBlurField, errors 
         </div>
     );
 }
+
+
+
+
+

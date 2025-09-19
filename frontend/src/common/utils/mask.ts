@@ -165,3 +165,38 @@ export function isValidEmail(v: string) {
   // cada label do domínio não pode começar/terminar com hífen
   return domain.split(".").every(lbl => lbl && !lbl.startsWith("-") && !lbl.endsWith("-"));
 }
+
+// --------- CNPJ ----------
+export function maskCNPJ(v: string) {
+  const d = String(v ?? "").replace(/\D/g, "").slice(0, 14);
+  const a = d.slice(0, 2);
+  const b = d.slice(2, 5);
+  const c = d.slice(5, 8);
+  const d4 = d.slice(8, 12);
+  const e = d.slice(12, 14);
+  let out = a;
+  if (b) out += "." + b;
+  if (c) out += "." + c;
+  if (d4) out += "/" + d4;
+  if (e) out += "-" + e;
+  return out;
+}
+
+export function isValidCNPJ(value: string) {
+  const cnpj = String(value ?? "").replace(/\D/g, "");
+  if (cnpj.length !== 14) return false;
+  if (/^(\d)\1+$/.test(cnpj)) return false;
+
+  const calc = (base: string) => {
+    const pesos = base.length === 12
+      ? [5,4,3,2,9,8,7,6,5,4,3,2]
+      : [6,5,4,3,2,9,8,7,6,5,4,3,2];
+    const soma = base.split("").reduce((acc, n, i) => acc + Number(n) * pesos[i], 0);
+    const resto = soma % 11;
+    return resto < 2 ? 0 : 11 - resto;
+  };
+
+  const dv1 = calc(cnpj.slice(0, 12));
+  const dv2 = calc(cnpj.slice(0, 12) + dv1);
+  return dv1 === Number(cnpj[12]) && dv2 === Number(cnpj[13]);
+}

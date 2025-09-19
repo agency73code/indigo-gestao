@@ -37,14 +37,14 @@ export default function FormacaoStep({ data, onUpdate, errors }: FormacaoStepPro
     };
 
     return (
-        <div className="space-y-6">
-            <h3 className="text-lg font-semibold">Formação Acadêmica</h3>
+        <div className="space-y-4 md:space-y-6">
+            <h3 className="text-base sm:text-lg font-semibold">Formação Acadêmica</h3>
 
             {/* Graduação */}
             <div className="space-y-4">
                 <h4 className="text-md font-medium text-primary">Graduação</h4>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4">
                     <div className="space-y-2">
                         <Label htmlFor="graduacao">Curso de Graduação *</Label>
                         <Input
@@ -83,7 +83,7 @@ export default function FormacaoStep({ data, onUpdate, errors }: FormacaoStepPro
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+                <div className="grid grid-cols-1 gap-3 md:gap-4">
                     <div className="space-y-2">
                         <Label htmlFor="instituicaoGraduacao">Instituição *</Label>
                         <Input
@@ -125,7 +125,7 @@ export default function FormacaoStep({ data, onUpdate, errors }: FormacaoStepPro
                             </Button>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 md:gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor={`pos-tipo-${index}`}>Tipo *</Label>
                                 <select
@@ -161,7 +161,7 @@ export default function FormacaoStep({ data, onUpdate, errors }: FormacaoStepPro
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 md:gap-4">
                             <div className="space-y-2 md:max-w-xs">
                                 <Label htmlFor={`pos-conclusao-${index}`}>Conclusão *</Label>
                                 <Input
@@ -209,3 +209,8 @@ export default function FormacaoStep({ data, onUpdate, errors }: FormacaoStepPro
         </div>
     );
 }
+
+
+
+
+

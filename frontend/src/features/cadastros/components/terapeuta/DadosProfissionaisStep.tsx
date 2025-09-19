@@ -68,9 +68,9 @@ export default function DadosProfissionaisStep({
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
             <div>
-                <h3 className="text-lg font-semibold">Dados Profissionais</h3>
+                <h3 className="text-base sm:text-lg font-semibold">Dados Profissionais</h3>
                 <p className="text-sm text-muted-foreground mt-1">
                     Informe os dados profissionais do terapeuta. Campos marcados com * são
                     obrigatórios.
@@ -99,7 +99,7 @@ export default function DadosProfissionaisStep({
                         )}
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 md:gap-4">
                         {/* Área de Atuação */}
                         <div className="space-y-2">
                             <Label htmlFor={`areaAtuacao-${index}`}>
@@ -205,10 +205,9 @@ export default function DadosProfissionaisStep({
                 Adicionar outra Área de Atuação
             </Button>
 
-
             <div className="border rounded-[5px] p-4 space-y-3">
                 <div className="space-y-2 md:max-w-sm">
-                    <Label htmlFor="professorUnindigo">Professor UniÍndigo</Label>
+                    <Label htmlFor="professorUnindigo">É um professor(a) UniÍndigo?</Label>
                     <select
                         id="professorUnindigo"
                         value={data.professorUnindigo || ''}
@@ -220,8 +219,12 @@ export default function DadosProfissionaisStep({
                         <option value="sim">Sim</option>
                         <option value="nao">Não</option>
                     </select>
-                    <p id="professorUnindigo-help" className="text-xs text-muted-foreground">
-                        Marque se o profissional leciona na UniÍndigo.
+                    <p className="text-xs text-muted-foreground mt-1">
+                        {data.professorUnindigo === 'sim'
+                            ? 'Informe a disciplina no campo abaixo.'
+                            : data.professorUnindigo === 'nao'
+                              ? 'Marque “Sim” apenas se o profissional leciona na UniÍndigo.'
+                              : 'Selecione uma opção.'}
                     </p>
                 </div>
 
@@ -244,7 +247,7 @@ export default function DadosProfissionaisStep({
 
             {/* Datas de Início e Fim */}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="dataInicio">Data de Início *</Label>
                     <DateField
@@ -272,12 +275,3 @@ export default function DadosProfissionaisStep({
         </div>
     );
 }
-
-
-
-
-
-
-
-
-
