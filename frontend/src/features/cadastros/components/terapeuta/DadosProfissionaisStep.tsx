@@ -1,5 +1,6 @@
 import { Input } from '@/ui/input';
 import { Label } from '@/ui/label';
+import { DateField } from '@/common/components/layout/DateField';
 import { Button } from '@/ui/button';
 import { Plus, X } from 'lucide-react';
 import type { Terapeuta } from '../../types/cadastros.types';
@@ -246,12 +247,11 @@ export default function DadosProfissionaisStep({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="dataInicio">Data de Início *</Label>
-                    <Input
-                        id="dataInicio"
-                        type="date"
+                    <DateField
                         value={data.dataInicio || ''}
-                        onChange={(e) => onUpdate('dataInicio', e.target.value)}
-                        className={errors.dataInicio ? 'border-destructive' : ''}
+                        onChange={(iso) => onUpdate('dataInicio', iso)}
+                        placeholder="dd/mm/aaaa"
+                        error={errors.dataInicio}
                     />
                     {errors.dataInicio && (
                         <p className="text-sm text-destructive">{errors.dataInicio}</p>
@@ -260,12 +260,11 @@ export default function DadosProfissionaisStep({
 
                 <div className="space-y-2">
                     <Label htmlFor="dataFim">Data de Fim</Label>
-                    <Input
-                        id="dataFim"
-                        type="date"
+                    <DateField
                         value={data.dataFim || ''}
-                        onChange={(e) => onUpdate('dataFim', e.target.value)}
-                        className={errors.dataFim ? 'border-destructive' : ''}
+                        onChange={(iso) => onUpdate('dataFim', iso)}
+                        placeholder="dd/mm/aaaa"
+                        error={errors.dataFim}
                     />
                     {errors.dataFim && <p className="text-sm text-destructive">{errors.dataFim}</p>}
                 </div>

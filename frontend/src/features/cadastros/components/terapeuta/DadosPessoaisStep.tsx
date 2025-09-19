@@ -1,14 +1,25 @@
 import { Input } from '@/ui/input';
 import { Label } from '@/ui/label';
 import type { Terapeuta } from '../../types/cadastros.types';
+import { DateField } from '@/common/components/layout/DateField';
+
+import {
+    maskCPF,
+    maskBRPhone,
+    onlyDigits,
+    maskPlate,
+    maskPersonName,
+    maskBRL,
+} from '@/common/utils/mask';
 
 interface DadosPessoaisStepProps {
-    data: Partial<Terapeuta>;
-    onUpdate: (field: string, value: any) => void;
-    errors: Record<string, string>;
+  data: Partial<Terapeuta>;
+  onUpdate: (field: string, value: any) => void;
+  onBlurField?: (field: string) => void; // <- novo
+  errors: Record<string, string>;
 }
 
-export default function DadosPessoaisStep({ data, onUpdate, errors }: DadosPessoaisStepProps) {
+export default function DadosPessoaisStep({ data, onUpdate, onBlurField, errors }: DadosPessoaisStepProps) {
     return (
         <div className="space-y-6">
             <div>
@@ -24,7 +35,8 @@ export default function DadosPessoaisStep({ data, onUpdate, errors }: DadosPesso
                     <Input
                         id="nome"
                         value={data.nome || ''}
-                        onChange={(e) => onUpdate('nome', e.target.value)}
+                        onChange={(e) => onUpdate('nome', maskPersonName(e.target.value))}
+                        onBlur={(e) => onUpdate('nome', maskPersonName(e.target.value).trim())}
                         placeholder="Digite o nome completo"
                         className={errors.nome ? 'border-destructive' : ''}
                     />
@@ -36,21 +48,24 @@ export default function DadosPessoaisStep({ data, onUpdate, errors }: DadosPesso
                     <Input
                         id="cpf"
                         value={data.cpf || ''}
-                        onChange={(e) => onUpdate('cpf', e.target.value)}
+                        onChange={(e) => onUpdate('cpf', maskCPF(e.target.value))}
                         placeholder="000.000.000-00"
                         className={errors.cpf ? 'border-destructive' : ''}
+                        ria-invalid={!!errors.cpf}
+                        aria-describedby={errors.cpf ? 'cpf-error' : undefined}
                     />
-                    {errors.cpf && <p className="text-sm text-destructive">{errors.cpf}</p>}
+                    <p id="cpf-error" className="text-sm text-destructive">
+                        {errors.cpf}
+                    </p>
                 </div>
 
                 <div className="space-y-2">
                     <Label htmlFor="dataNascimento">Data de Nascimento *</Label>
-                    <Input
-                        id="dataNascimento"
-                        type="date"
+                    <DateField
                         value={data.dataNascimento || ''}
-                        onChange={(e) => onUpdate('dataNascimento', e.target.value)}
-                        className={errors.dataNascimento ? 'border-destructive' : ''}
+                        onChange={(iso) => onUpdate('dataNascimento', iso)}
+                        placeholder="dd/mm/aaaa"
+                        error={errors.dataNascimento}
                     />
                     {errors.dataNascimento && (
                         <p className="text-sm text-destructive">{errors.dataNascimento}</p>
@@ -67,8 +82,11 @@ export default function DadosPessoaisStep({ data, onUpdate, errors }: DadosPesso
                         type="email"
                         value={data.email || ''}
                         onChange={(e) => onUpdate('email', e.target.value)}
+                         onBlur={() => onBlurField?.('email')}  
                         placeholder="email@exemplo.com"
                         className={errors.email ? 'border-destructive' : ''}
+                        aria-invalid={!!errors.email}
+                        aria-describedby={errors.email ? 'email-error' : undefined}
                     />
                     {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                 </div>
@@ -80,8 +98,11 @@ export default function DadosPessoaisStep({ data, onUpdate, errors }: DadosPesso
                         type="email"
                         value={data.emailIndigo || ''}
                         onChange={(e) => onUpdate('emailIndigo', e.target.value)}
+                         onBlur={() => onBlurField?.('email')}  
                         placeholder="email@indigo.com"
                         className={errors.emailIndigo ? 'border-destructive' : ''}
+                        aria-invalid={!!errors.emailIndigo}
+                        aria-describedby={errors.emailIndigo ? 'emailIndigo-error' : undefined}
                     />
                     {errors.emailIndigo && (
                         <p className="text-sm text-destructive">{errors.emailIndigo}</p>
@@ -96,7 +117,7 @@ export default function DadosPessoaisStep({ data, onUpdate, errors }: DadosPesso
                     <Input
                         id="celular"
                         value={data.celular || ''}
-                        onChange={(e) => onUpdate('celular', e.target.value)}
+                        onChange={(e) => onUpdate('celular', maskBRPhone(e.target.value))}
                         placeholder="(11) 99999-9999"
                         className={errors.celular ? 'border-destructive' : ''}
                     />
@@ -108,7 +129,7 @@ export default function DadosPessoaisStep({ data, onUpdate, errors }: DadosPesso
                     <Input
                         id="telefone"
                         value={data.telefone || ''}
-                        onChange={(e) => onUpdate('telefone', e.target.value)}
+                        onChange={(e) => onUpdate('telefone', maskBRPhone(e.target.value))}
                         placeholder="(11) 3333-4444"
                         className={errors.telefone ? 'border-destructive' : ''}
                     />
@@ -147,7 +168,9 @@ export default function DadosPessoaisStep({ data, onUpdate, errors }: DadosPesso
                             <Input
                                 id="placaVeiculo"
                                 value={data.placaVeiculo || ''}
-                                onChange={(e) => onUpdate('placaVeiculo', e.target.value)}
+                                onChange={(e) =>
+                                    onUpdate('placaVeiculo', maskPlate(e.target.value))
+                                }
                                 placeholder="ABC-1234"
                                 className={errors.placaVeiculo ? 'border-destructive' : ''}
                             />
@@ -180,7 +203,7 @@ export default function DadosPessoaisStep({ data, onUpdate, errors }: DadosPesso
                     Informe os dados necessários para cadastro bancário do terapeuta.
                 </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="banco">Banco *</Label>
                     <Input
@@ -198,7 +221,7 @@ export default function DadosPessoaisStep({ data, onUpdate, errors }: DadosPesso
                     <Input
                         id="agencia"
                         value={data.agencia || ''}
-                        onChange={(e) => onUpdate('agencia', e.target.value)}
+                        onChange={(e) => onUpdate('agencia', onlyDigits(e.target.value))}
                         placeholder="Digite o número da agência"
                         className={errors.agencia ? 'border-destructive' : ''}
                     />
@@ -210,14 +233,14 @@ export default function DadosPessoaisStep({ data, onUpdate, errors }: DadosPesso
                     <Input
                         id="conta"
                         value={data.conta || ''}
-                        onChange={(e) => onUpdate('conta', e.target.value)}
+                        onChange={(e) => onUpdate('conta', onlyDigits(e.target.value))}
                         placeholder="Digite o número da conta"
                         className={errors.conta ? 'border-destructive' : ''}
                     />
                     {errors.conta && <p className="text-sm text-destructive">{errors.conta}</p>}
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="chavePix">Chave Pix *</Label>
                     <Input
                         id="chavePix"
@@ -235,20 +258,11 @@ export default function DadosPessoaisStep({ data, onUpdate, errors }: DadosPesso
                     <Label htmlFor="valorHoraAcordado">Valor acordado por hora</Label>
                     <Input
                         id="valorHoraAcordado"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={
-                            data.valorHoraAcordado !== undefined && data.valorHoraAcordado !== null
-                                ? data.valorHoraAcordado
-                                : ''
-                        }
-                        onChange={(e) =>
-                            onUpdate(
-                                'valorHoraAcordado',
-                                e.target.value === '' ? null : parseFloat(e.target.value),
-                            )
-                        }
+                        // [-] era type="number"
+                        type="text"
+                        inputMode="numeric"
+                        value={data.valorHoraAcordado ?? ''} // pode ser string mascarada no estado
+                        onChange={(e) => onUpdate('valorHoraAcordado', maskBRL(e.target.value))}
                         placeholder="R$ 0,00"
                         aria-describedby="valorHoraAcordado-help"
                         className={errors.valorHoraAcordado ? 'border-destructive' : ''}
@@ -264,4 +278,3 @@ export default function DadosPessoaisStep({ data, onUpdate, errors }: DadosPesso
         </div>
     );
 }
-

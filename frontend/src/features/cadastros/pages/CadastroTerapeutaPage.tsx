@@ -3,6 +3,7 @@ import { CardHeader, CardTitle } from '@/ui/card';
 import { Button } from '@/ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Terapeuta } from '../types/cadastros.types';
+import { maskCPF, isValidCPF, onlyDigits, isValidEmail, normalizeEmail } from '@/common/utils/mask';
 
 // Componentes dos steps
 import MultiStepProgress from '../components/MultiStepProgress';
@@ -14,7 +15,14 @@ import ArquivosStep from '../components/terapeuta/ArquivosStep';
 import DadosCNPJStep from '../components/terapeuta/DadosCNPJStep';
 import { cadastrarTerapeuta } from '@/lib/api';
 
-const STEPS = ['Dados Pessoais', 'Endereço', 'Dados Profissionais', 'Formação', 'Arquivos', 'Dados CNPJ'];
+const STEPS = [
+  'Dados Pessoais',
+  'Endereço',
+  'Dados Profissionais',
+  'Formação',
+  'Arquivos',
+  'Dados CNPJ',
+];
 
 export default function CadastroTerapeutaPage() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -105,6 +113,31 @@ export default function CadastroTerapeutaPage() {
   });
 
   const handleInputChange = (field: string, value: any) => {
+    // [CPF] máscara + validação em tempo real
+    if (field === 'cpf') {
+      const masked = maskCPF(String(value ?? ''));
+      setFormData((prev: any) => ({ ...prev, cpf: masked }));
+
+      // mostra erro quando tiver 11 dígitos (14 chars com máscara) e for inválido
+      const showError = masked.replace(/\D/g, '').length === 11 && !isValidCPF(masked);
+      setErrors((prev) => ({ ...prev, cpf: showError ? 'CPF inválido' : '' }));
+      return;
+    }
+
+    // [E-MAIL] normaliza em tempo real, mas NÃO valida aqui (valida no onBlur)
+    if (field === 'email') {
+      const norm = normalizeEmail(value);
+      setFormData((prev: any) => ({ ...prev, email: norm }));
+      return;
+    }
+
+    if (field === 'emailIndigo') {
+      const norm = normalizeEmail(value);
+      setFormData((prev: any) => ({ ...prev, emailIndigo: norm }));
+      return;
+    }
+
+    // [restante] mantém sua lógica original para campos com dot-notation
     const keys = field.split('.');
     setFormData((prev: any) => {
       const newData = { ...prev };
@@ -119,20 +152,50 @@ export default function CadastroTerapeutaPage() {
     });
   };
 
+  // valida e-mail SOMENTE no blur (UX melhor)
+  const handleBlurField = (field: string) => {
+    if (field === 'email' || field === 'emailIndigo') {
+      const v = String(formData[field] ?? '');
+      if (!v.trim()) {
+        setErrors((prev) => ({ ...prev, [field]: 'Campo obrigatório' }));
+      } else {
+        setErrors((prev) => ({ ...prev, [field]: isValidEmail(v) ? '' : 'E-mail inválido' }));
+      }
+    }
+  };
+
   const validateCurrentStep = () => {
     const newErrors: Record<string, string> = {};
     switch (currentStep) {
       case 1: // Dados Pessoais
         if (!formData.nome?.trim()) newErrors.nome = 'Campo obrigatório';
-        if (!formData.cpf?.trim()) newErrors.cpf = 'Campo obrigatório';
-        if (!formData.email?.trim()) newErrors.email = 'Campo obrigatório';
-        if (!formData.emailIndigo?.trim()) newErrors.emailIndigo = 'Campo obrigatório';
+
+        if (!formData.cpf?.trim()) {
+          newErrors.cpf = 'Campo obrigatório';
+        } else if (!isValidCPF(formData.cpf)) {
+          newErrors.cpf = 'CPF inválido';
+        }
+
+        if (!formData.email?.trim()) {
+          newErrors.email = 'Campo obrigatório';
+        } else if (!isValidEmail(formData.email)) {
+          newErrors.email = 'E-mail inválido';
+        }
+
+        if (!formData.emailIndigo?.trim()) {
+          newErrors.emailIndigo = 'Campo obrigatório';
+        } else if (!isValidEmail(formData.emailIndigo)) {
+          newErrors.emailIndigo = 'E-mail inválido';
+        }
+
         if (!formData.celular?.trim()) newErrors.celular = 'Campo obrigatório';
         if (!formData.possuiVeiculo?.trim()) newErrors.possuiVeiculo = 'Campo obrigatório';
+
         if (formData.possuiVeiculo === 'sim') {
           if (!formData.placaVeiculo?.trim()) newErrors.placaVeiculo = 'Campo obrigatório';
           if (!formData.modeloVeiculo?.trim()) newErrors.modeloVeiculo = 'Campo obrigatório';
         }
+
         if (!formData.banco?.trim()) newErrors.banco = 'Campo obrigatório';
         if (!formData.agencia?.trim()) newErrors.agencia = 'Campo obrigatório';
         if (!formData.conta?.trim()) newErrors.conta = 'Campo obrigatório';
@@ -149,7 +212,10 @@ export default function CadastroTerapeutaPage() {
         break;
 
       case 3: // Dados Profissionais
-        if (!formData.dadosProfissionais?.length || !formData.dadosProfissionais[0]?.areaAtuacao?.trim())
+        if (
+          !formData.dadosProfissionais?.length ||
+          !formData.dadosProfissionais[0]?.areaAtuacao?.trim()
+        )
           newErrors['dadosProfissionais.0.areaAtuacao'] = 'Campo obrigatório';
         if (!formData.dadosProfissionais?.[0]?.cargo?.trim())
           newErrors['dadosProfissionais.0.cargo'] = 'Campo obrigatório';
@@ -159,14 +225,19 @@ export default function CadastroTerapeutaPage() {
         break;
 
       case 4: // Formação
-        if (!formData.formacao?.graduacao?.trim()) newErrors['formacao.graduacao'] = 'Campo obrigatório';
-        if (!formData.formacao?.instituicaoGraduacao?.trim()) newErrors['formacao.instituicaoGraduacao'] = 'Campo obrigatório';
-        if (!formData.formacao?.anoFormatura?.trim()) newErrors['formacao.anoFormatura'] = 'Campo obrigatório';
+        if (!formData.formacao?.graduacao?.trim())
+          newErrors['formacao.graduacao'] = 'Campo obrigatório';
+        if (!formData.formacao?.instituicaoGraduacao?.trim())
+          newErrors['formacao.instituicaoGraduacao'] = 'Campo obrigatório';
+        if (!formData.formacao?.anoFormatura?.trim())
+          newErrors['formacao.anoFormatura'] = 'Campo obrigatório';
         (formData.formacao?.posGraduacoes || []).forEach((pg: any, idx: number) => {
           if (!pg?.tipo) newErrors[`formacao.posGraduacoes.${idx}.tipo`] = 'Campo obrigatório';
           if (!pg?.curso?.trim()) newErrors[`formacao.posGraduacoes.${idx}.curso`] = 'Campo obrigatório';
-          if (!pg?.instituicao?.trim()) newErrors[`formacao.posGraduacoes.${idx}.instituicao`] = 'Campo obrigatório';
-          if (!pg?.conclusao?.trim()) newErrors[`formacao.posGraduacoes.${idx}.conclusao`] = 'Campo obrigatório';
+          if (!pg?.instituicao?.trim())
+            newErrors[`formacao.posGraduacoes.${idx}.instituicao`] = 'Campo obrigatório';
+          if (!pg?.conclusao?.trim())
+            newErrors[`formacao.posGraduacoes.${idx}.conclusao`] = 'Campo obrigatório';
         });
         break;
     }
@@ -178,7 +249,9 @@ export default function CadastroTerapeutaPage() {
   const nextStep = () => {
     if (validateCurrentStep() && currentStep < STEPS.length) setCurrentStep((s) => s + 1);
   };
-  const prevStep = () => { if (currentStep > 1) setCurrentStep((s) => s - 1); };
+  const prevStep = () => {
+    if (currentStep > 1) setCurrentStep((s) => s - 1);
+  };
 
   const handleSubmit = async () => {
     if (!validateCurrentStep()) return;
@@ -186,6 +259,7 @@ export default function CadastroTerapeutaPage() {
     try {
       const { valorHoraAcordado, professorUnindigo, disciplinaUniindigo, ...rest } = formData;
       const payload = { ...rest } as typeof formData;
+
       // FRONT-only: não enviar campos novos de formação até o back aceitar
       if (payload.formacao) {
         const f: any = { ...payload.formacao };
@@ -194,28 +268,57 @@ export default function CadastroTerapeutaPage() {
         delete f.publicacoesLivrosDescricao;
         payload.formacao = f; // TODO: enviar posGraduacoes/participacaoCongressosDescricao/publicacoesLivrosDescricao quando endpoint aceitar.
       }
+
+      // limpar campos numéricos para a API
+      if (payload.cpf) payload.cpf = onlyDigits(payload.cpf);
+      if (payload.celular) payload.celular = String(payload.celular).replace(/\D/g, '');
+      if (payload.telefone) payload.telefone = String(payload.telefone).replace(/\D/g, '');
+
       await cadastrarTerapeuta(payload);
       alert('Terapeuta cadastrado com sucesso!');
     } catch (error) {
       console.error('Erro ao cadastrar terapeuta:', error);
       alert('Erro ao cadastrar terapeuta. Tente novamente.');
-    } finally { setIsLoading(false); }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
-        return <DadosPessoaisStep data={formData} onUpdate={handleInputChange} errors={errors} />;
+        return (
+          <DadosPessoaisStep
+            data={formData}
+            onUpdate={handleInputChange}
+            onBlurField={handleBlurField}
+            errors={errors}
+          />
+        );
       case 2:
-        return <EnderecoStep data={formData} onUpdate={handleInputChange} errors={errors} />;
+        return (
+          <EnderecoStep data={formData} onUpdate={handleInputChange} errors={errors} />
+        );
       case 3:
-        return <DadosProfissionaisStep data={formData} onUpdate={handleInputChange} errors={errors} />;
+        return (
+          <DadosProfissionaisStep
+            data={formData}
+            onUpdate={handleInputChange}
+            errors={errors}
+          />
+        );
       case 4:
-        return <FormacaoStep data={formData} onUpdate={handleInputChange} errors={errors} />;
+        return (
+          <FormacaoStep data={formData} onUpdate={handleInputChange} errors={errors} />
+        );
       case 5:
-        return <ArquivosStep data={formData} onUpdate={handleInputChange} errors={errors} />;
+        return (
+          <ArquivosStep data={formData} onUpdate={handleInputChange} errors={errors} />
+        );
       case 6:
-        return <DadosCNPJStep data={formData} onUpdate={handleInputChange} errors={errors} />;
+        return (
+          <DadosCNPJStep data={formData} onUpdate={handleInputChange} errors={errors} />
+        );
       default:
         return null;
     }
@@ -225,16 +328,37 @@ export default function CadastroTerapeutaPage() {
     <div className="container mx-auto p-8">
       <CardHeader>
         <CardTitle className="text-2xl mb-8 text-primary">Cadastro de Terapeuta</CardTitle>
-        <MultiStepProgress currentStep={currentStep} totalSteps={STEPS.length} steps={STEPS} />
+        <MultiStepProgress
+          currentStep={currentStep}
+          totalSteps={STEPS.length}
+          steps={STEPS}
+        />
       </CardHeader>
       <div>{renderCurrentStep()}</div>
       <div className="flex justify-between mt-8 pt-6 border-t">
-        <Button type="button" variant="outline" onClick={prevStep} disabled={currentStep === 1} className="flex items-center gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={prevStep}
+          disabled={currentStep === 1}
+          className="flex items-center gap-2"
+        >
           <ChevronLeft className="w-4 h-4" /> Anterior
         </Button>
         {currentStep === STEPS.length ? (
-          <Button onClick={handleSubmit} disabled={isLoading} className="flex items-center gap-2">
-            {isLoading ? (<><div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div> Cadastrando...</>) : ('Finalizar Cadastro')}
+          <Button
+            onClick={handleSubmit}
+            disabled={isLoading}
+            className="flex items-center gap-2"
+          >
+            {isLoading ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>{' '}
+                Cadastrando...
+              </>
+            ) : (
+              'Finalizar Cadastro'
+            )}
           </Button>
         ) : (
           <Button onClick={nextStep} className="flex items-center gap-2">
