@@ -7,6 +7,8 @@ import { fileURLToPath, URL } from "node:url"
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
+    // Prevent multiple React copies (monorepos/linked deps)
+    dedupe: ["react", "react-dom"],
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
     },

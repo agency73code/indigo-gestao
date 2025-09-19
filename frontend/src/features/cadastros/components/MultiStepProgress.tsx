@@ -13,8 +13,8 @@ export default function MultiStepProgress({
     steps,
 }: MultiStepProgressProps) {
     return (
-        <div className="w-full mb-8">
-            <div className="flex items-center justify-between">
+        <div className="w-full mb-6 md:mb-8">
+            <div className="flex items-center justify-between gap-1 sm:gap-3 md:gap-4">
                 {steps.map((step, index) => {
                     const stepNumber = index + 1;
                     const isCompleted = stepNumber < currentStep;
@@ -25,7 +25,7 @@ export default function MultiStepProgress({
                             {/* Step Circle */}
                             <div className="flex flex-col items-center">
                                 <motion.div
-                                    className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors duration-200 ${
+                                    className={`w-10 h-10 sm:w-7 sm:h-7 md:w-10 md:h-10 rounded-full flex items-center justify-center border-2 transition-colors duration-200 ${
                                         isCompleted
                                             ? 'bg-primary border-primary text-primary-foreground'
                                             : isCurrent
@@ -37,15 +37,15 @@ export default function MultiStepProgress({
                                     transition={{ duration: 0.2 }}
                                 >
                                     {isCompleted ? (
-                                        <Check className="w-5 h-5" />
+                                        <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5" />
                                     ) : (
-                                        <span className="text-sm font-medium">{stepNumber}</span>
+                                        <span className="text-[10px] sm:text-xs font-medium">{stepNumber}</span>
                                     )}
                                 </motion.div>
 
                                 {/* Step Label */}
                                 <span
-                                    className={`mt-2 text-xs text-center max-w-[120px] ${
+                                    className={`hidden sm:block mt-2 text-xs md:text-sm text-center truncate max-w-[80px] sm:max-w-[120px] md:max-w-none ${
                                         isCurrent
                                             ? 'text-primary font-medium'
                                             : isCompleted
@@ -59,9 +59,9 @@ export default function MultiStepProgress({
 
                             {/* Connector Line */}
                             {index < totalSteps - 1 && (
-                                <div className="flex-1 mx-4">
+                                <div className="hidden sm:block sm:flex-1 sm:mx-3 md:mx-4">
                                     <div
-                                        className={`h-0.5 transition-colors duration-200 ${
+                                        className={`h-[2px] sm:h-[3px] md:h-2 transition-colors duration-200 ${
                                             isCompleted ? 'bg-primary' : 'bg-muted-foreground/20'
                                         }`}
                                     />
@@ -73,16 +73,16 @@ export default function MultiStepProgress({
             </div>
 
             {/* Progress Bar */}
-            <div className="mt-6">
-                <div className="w-full bg-muted-foreground/20 rounded-full h-2">
+            <div className="mt-4 md:mt-6">
+                <div className="w-full bg-muted-foreground/20 rounded-full h-[2px] sm:h-[3px] md:h-2 overflow-hidden">
                     <motion.div
-                        className="bg-primary h-2 rounded-full"
+                        className="bg-primary h-full rounded-full"
                         initial={{ width: 0 }}
                         animate={{ width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%` }}
                         transition={{ duration: 0.3, ease: 'easeInOut' }}
                     />
                 </div>
-                <div className="flex justify-between mt-2 text-sm text-muted-foreground">
+                <div className="flex justify-between mt-2 text-xs sm:text-sm text-muted-foreground">
                     <span>
                         Etapa {currentStep} de {totalSteps}
                     </span>

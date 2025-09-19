@@ -40,12 +40,11 @@ export default function DadosPessoaisStep({ data, onUpdate, errors }: DadosPesso
                 {/* Data de Nascimento */}
                 <div className="space-y-2">
                     <Label htmlFor="dataNascimento">Data de nascimento *</Label>
-                    <Input
-                        id="dataNascimento"
-                        type="date"
+                    <DateField
                         value={data.dataNascimento || ''}
-                        onChange={(e) => onUpdate('dataNascimento', e.target.value)}
-                        className={errors.dataNascimento ? 'border-destructive' : ''}
+                        onChange={(iso) => onUpdate('dataNascimento', iso)}
+                        placeholder="dd/mm/aaaa"
+                        error={errors.dataNascimento}
                     />
                     {errors.dataNascimento && (
                         <p className="text-sm text-destructive">{errors.dataNascimento}</p>
@@ -138,12 +137,11 @@ export default function DadosPessoaisStep({ data, onUpdate, errors }: DadosPesso
                 {/* Data Entrada */}
                 <div className="space-y-2">
                     <Label htmlFor="dataEntrada">Data Entrada *</Label>
-                    <Input
-                        id="dataEntrada"
-                        type="date"
+                    <DateField
                         value={data.dataEntrada || ''}
-                        onChange={(e) => onUpdate('dataEntrada', e.target.value)}
-                        className={errors.dataEntrada ? 'border-destructive' : ''}
+                        onChange={(iso) => onUpdate('dataEntrada', iso)}
+                        placeholder="dd/mm/aaaa"
+                        error={errors.dataEntrada}
                     />
                     {errors.dataEntrada && (
                         <p className="text-sm text-destructive">{errors.dataEntrada}</p>
@@ -153,12 +151,11 @@ export default function DadosPessoaisStep({ data, onUpdate, errors }: DadosPesso
                 {/* Data Saída */}
                 <div className="space-y-2">
                     <Label htmlFor="dataSaida">Data Saída</Label>
-                    <Input
-                        id="dataSaida"
-                        type="date"
+                    <DateField
                         value={data.dataSaida || ''}
-                        onChange={(e) => onUpdate('dataSaida', e.target.value)}
-                        className={errors.dataSaida ? 'border-destructive' : ''}
+                        onChange={(iso) => onUpdate('dataSaida', iso)}
+                        placeholder="dd/mm/aaaa"
+                        error={errors.dataSaida}
                     />
                     {errors.dataSaida && (
                         <p className="text-sm text-destructive">{errors.dataSaida}</p>

@@ -52,8 +52,8 @@ export default function DadosCNPJStep({ data, onUpdate, errors }: DadosCNPJStepP
     }, [cepData]);
 
     return (
-        <div className="space-y-6">
-            <h3 className="text-lg font-semibold">Dados do CNPJ (Opcional)</h3>
+        <div className="space-y-4 md:space-y-4 md:space-y-6">
+            <h3 className="text-base sm:text-base sm:text-lg font-semibold">Dados do CNPJ (Opcional)</h3>
 
             <div className="bg-muted/50 p-4 rounded-lg">
                 <p className="text-sm text-muted-foreground mb-4">
@@ -87,12 +87,12 @@ export default function DadosCNPJStep({ data, onUpdate, errors }: DadosCNPJStepP
             </div>
 
             {temCNPJ && (
-                <div className="space-y-6">
+                <div className="space-y-4 md:space-y-4 md:space-y-6">
                     {/* Dados básicos do CNPJ */}
                     <div className="space-y-4">
                         <h4 className="text-md font-medium text-primary">Dados da Empresa</h4>
 
-                        <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+                        <div className="grid grid-cols-1 gap-3 md:gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="cnpjNumero">CNPJ</Label>
                                 <Input
@@ -110,7 +110,7 @@ export default function DadosCNPJStep({ data, onUpdate, errors }: DadosCNPJStepP
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+                        <div className="grid grid-cols-1 gap-3 md:gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="razaoSocial">Razão Social</Label>
                                 <Input
@@ -137,7 +137,7 @@ export default function DadosCNPJStep({ data, onUpdate, errors }: DadosCNPJStepP
                     <div className="space-y-4">
                         <h4 className="text-md font-medium text-primary">Endereço da Empresa</h4>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 md:gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="cnpjCep">CEP</Label>
                                 <Input
@@ -165,7 +165,7 @@ export default function DadosCNPJStep({ data, onUpdate, errors }: DadosCNPJStepP
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 md:gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="cnpjNumero">Número</Label>
                                 <Input
@@ -215,7 +215,7 @@ export default function DadosCNPJStep({ data, onUpdate, errors }: DadosCNPJStepP
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+                        <div className="grid grid-cols-1 gap-3 md:gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="cnpjEstado">Estado</Label>
                                 <select
@@ -264,3 +264,13 @@ export default function DadosCNPJStep({ data, onUpdate, errors }: DadosCNPJStepP
         </div>
     );
 }
+
+
+
+
+
+
+
+
+
+

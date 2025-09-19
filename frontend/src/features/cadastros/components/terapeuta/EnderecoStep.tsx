@@ -42,7 +42,7 @@ export default function EnderecoStep({ data, onUpdate, errors }: EnderecoStepPro
     }, [cepData, data.endereco?.rua, data.endereco?.bairro, data.endereco?.cidade, data.endereco?.estado, onUpdate]);
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
             <div>
                 <h3 className="text-lg font-semibold text-primary font-sora">Endereço Pessoal</h3>
                 <p className="text-sm text-muted-foreground mt-1">
@@ -50,7 +50,7 @@ export default function EnderecoStep({ data, onUpdate, errors }: EnderecoStepPro
                 </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 md:gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="cep">CEP *</Label>
                     <Input
@@ -83,7 +83,7 @@ export default function EnderecoStep({ data, onUpdate, errors }: EnderecoStepPro
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 md:gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="numero">Número *</Label>
                     <Input
@@ -137,7 +137,7 @@ export default function EnderecoStep({ data, onUpdate, errors }: EnderecoStepPro
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 gap-3 md:gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="estado">Estado *</Label>
                     <select
