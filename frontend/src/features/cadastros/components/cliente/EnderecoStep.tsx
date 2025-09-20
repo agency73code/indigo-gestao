@@ -8,42 +8,64 @@ interface EnderecoStepProps {
     data: Partial<Cliente>;
     onUpdate: (field: string, value: any) => void;
     errors: Record<string, string>;
+    onBlur: (field: string) => void;
 }
 
-export default function EnderecoStep({ data, onUpdate, errors }: EnderecoStepProps) {
+export default function EnderecoStep({ data, onUpdate, errors, onBlur }: EnderecoStepProps) {
     const enderecos = data.enderecos || [
-        { cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '', },
+        {
+            cep: '',
+            logradouro: '',
+            numero: '',
+            complemento: '',
+            bairro: '',
+            cidade: '',
+            uf: '',
+            residenciaDe: '',
+        },
     ];
 
     const handleEnderecoChange = useCallback(
         (index: number, field: string, value: string) => {
             const current = data.enderecos && data.enderecos.length ? data.enderecos : enderecos;
             const updated = [...current];
-            updated[index] = { ...updated[index], [field]: value};
+            updated[index] = { ...updated[index], [field]: value };
             onUpdate('enderecos', updated);
         },
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        [data.enderecos, onUpdate]
-    )
+        [data.enderecos, onUpdate],
+    );
 
     const adicionarEndereco = useCallback(() => {
         const current = data.enderecos && data.enderecos.length ? data.enderecos : enderecos;
         const updated = [
             ...current,
-            { cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '' },
+            {
+                cep: '',
+                logradouro: '',
+                numero: '',
+                complemento: '',
+                bairro: '',
+                cidade: '',
+                uf: '',
+                residenciaDe: '',
+            },
         ];
         onUpdate('enderecos', updated);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [data.enderecos, onUpdate]);
 
-    const removerEndereco = useCallback((index: number) => {
-    const current = data.enderecos && data.enderecos.length ? data.enderecos : enderecos;
-    if (current.length > 1) {
-      const updated = current.filter((_, i) => i !== index);
-      onUpdate('enderecos', updated);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data.enderecos, onUpdate]);
+    const removerEndereco = useCallback(
+        (index: number) => {
+            const current = data.enderecos && data.enderecos.length ? data.enderecos : enderecos;
+            if (current.length > 1) {
+                const updated = current.filter((_, i) => i !== index);
+                onUpdate('enderecos', updated);
+            }
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+        },
+        [data.enderecos, onUpdate],
+    );
 
     return (
         <div className="space-y-6">
@@ -63,6 +85,8 @@ export default function EnderecoStep({ data, onUpdate, errors }: EnderecoStepPro
                     onUpdate={handleEnderecoChange}
                     onRemove={removerEndereco}
                     errors={errors}
+                    cuidadores={data.cuidadores}
+                    onBlur={onBlur}
                 />
             ))}
 

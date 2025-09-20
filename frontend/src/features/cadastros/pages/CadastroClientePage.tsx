@@ -12,6 +12,7 @@ import type { Cliente } from '../types/cadastros.types';
 import { CardTitle } from '@/ui/card';
 import { CardHeader } from '@/components/ui/card';
 import { cadastrarCliente } from '@/lib/api';
+import { isValidCPF, onlyDigits, isValidEmail, isValidCEP } from '@/common/utils/mask';
 
 const STEPS = ['Dados Pessoais', 'Endereço', 'Dados Pagamento', 'Dados Escola'];
 
@@ -23,19 +24,14 @@ export default function CadastroClientePage() {
     const [formData, setFormData] = useState<Partial<Cliente>>({
         // Dados pessoais
         nome: '',
+        cpf: '',
         dataNascimento: '',
-        nomeMae: '',
-        cpfMae: '',
-        nomePai: '',
-        cpfPai: '',
-        telefonePai: '',
         emailContato: '',
         dataEntrada: '',
         dataSaida: '',
-        maisDeUmPai: 'nao',
-        nomePai2: '',
-        cpfPai2: '',
-        telefonePai2: '',
+
+        // Cuidadores - inicializado vazio, será preenchido pelo useEffect do DadosPessoaisStep
+        cuidadores: [],
 
         // Endereços
         enderecos: [
@@ -80,12 +76,12 @@ export default function CadastroClientePage() {
             mostrarEmailAdvogado3: false,
             emailAdvogado3: '',
             houveNegociacao: 'nao' as 'sim' | 'nao',
-            valorSessao: '',
+            valorAcordado: '',
         },
 
         // Dados escola
         dadosEscola: {
-            tipoEscola: 'particular',
+            tipoEscola: 'particular' as any,
             nome: '',
             telefone: '',
             email: '',
@@ -98,6 +94,7 @@ export default function CadastroClientePage() {
                 cidade: '',
                 uf: '',
             },
+            contatos: [],
         },
     });
 
@@ -123,39 +120,261 @@ export default function CadastroClientePage() {
         });
     };
 
+    const handleBlurField = (field: string) => {
+        setErrors((prev) => ({ ...prev, [field]: '' })); // Limpa erro anterior
+
+        // Validação de CPF do cliente
+        if (field === 'cpf') {
+            const value = formData?.cpf ?? '';
+
+            if (!String(value).trim()) {
+                setErrors((prev) => ({ ...prev, [field]: 'CPF é obrigatório' }));
+                return;
+            }
+
+            const has11 = onlyDigits(value).length === 11;
+            const valid = isValidCPF(value);
+
+            if (has11 && !valid) {
+                setErrors((prev) => ({ ...prev, [field]: 'CPF inválido' }));
+            }
+            return;
+        }
+
+        // Validação de CPF dos cuidadores
+        if (field.startsWith('cuidadores.') && field.endsWith('.cpf')) {
+            const parts = field.split('.');
+            const idx = Number(parts[1] ?? -1);
+            const value = formData?.cuidadores?.[idx]?.cpf ?? '';
+
+            if (!String(value).trim()) {
+                setErrors((prev) => ({ ...prev, [field]: 'CPF é obrigatório' }));
+                return;
+            }
+
+            const has11 = onlyDigits(value).length === 11;
+            const valid = isValidCPF(value);
+
+            if (has11 && !valid) {
+                setErrors((prev) => ({ ...prev, [field]: 'CPF inválido' }));
+            }
+            return;
+        }
+
+        // Validação de email dos cuidadores
+        if (field.startsWith('cuidadores.') && field.endsWith('.email')) {
+            const parts = field.split('.');
+            const idx = Number(parts[1] ?? -1);
+            const value = formData?.cuidadores?.[idx]?.email ?? '';
+
+            if (value.trim() && !isValidEmail(value)) {
+                setErrors((prev) => ({ ...prev, [field]: 'E-mail inválido' }));
+            }
+            return;
+        }
+
+        // Validação de telefone dos cuidadores
+        if (field.startsWith('cuidadores.') && field.endsWith('.telefone')) {
+            const parts = field.split('.');
+            const idx = Number(parts[1] ?? -1);
+            const value = formData?.cuidadores?.[idx]?.telefone ?? '';
+
+            if (value.trim()) {
+                const digits = onlyDigits(value);
+                if (digits.length < 10 || digits.length > 11) {
+                    setErrors((prev) => ({
+                        ...prev,
+                        [field]: 'Telefone deve ter 10 ou 11 dígitos',
+                    }));
+                }
+            }
+            return;
+        }
+
+        // Validação de CEP dos endereços
+        if (field.startsWith('enderecos.') && field.endsWith('.cep')) {
+            const parts = field.split('.');
+            const idx = Number(parts[1] ?? -1);
+            const value = formData?.enderecos?.[idx]?.cep ?? '';
+
+            if (value.trim() && !isValidCEP(value)) {
+                setErrors((prev) => ({ ...prev, [field]: 'CEP inválido' }));
+            }
+            return;
+        }
+
+        // Validação de emails dos dados de pagamento
+        if (field.startsWith('dadosPagamento.') && field.includes('email')) {
+            const value = getNestedValue(formData, field) as string;
+            if (value?.trim() && !isValidEmail(value)) {
+                setErrors((prev) => ({ ...prev, [field]: 'E-mail inválido' }));
+            }
+            return;
+        }
+
+        // Validação de telefones dos dados de pagamento
+        if (field.startsWith('dadosPagamento.') && field.includes('telefone')) {
+            const value = getNestedValue(formData, field) as string;
+            if (value?.trim()) {
+                const digits = onlyDigits(value);
+                if (digits.length < 10 || digits.length > 11) {
+                    setErrors((prev) => ({
+                        ...prev,
+                        [field]: 'Telefone deve ter 10 ou 11 dígitos',
+                    }));
+                }
+            }
+            return;
+        }
+
+        // Validação de email da escola
+        if (field === 'dadosEscola.email') {
+            const value = formData?.dadosEscola?.email ?? '';
+            if (value.trim() && !isValidEmail(value)) {
+                setErrors((prev) => ({ ...prev, [field]: 'E-mail inválido' }));
+            }
+            return;
+        }
+
+        // Validação de telefone da escola
+        if (field === 'dadosEscola.telefone') {
+            const value = formData?.dadosEscola?.telefone ?? '';
+            if (value.trim()) {
+                const digits = onlyDigits(value);
+                if (digits.length < 10 || digits.length > 11) {
+                    setErrors((prev) => ({
+                        ...prev,
+                        [field]: 'Telefone deve ter 10 ou 11 dígitos',
+                    }));
+                }
+            }
+            return;
+        }
+
+        // Validação de contatos da escola
+        if (field.startsWith('dadosEscola.contatos.')) {
+            const parts = field.split('.');
+            const idx = Number(parts[2] ?? -1);
+            const fieldType = parts[3];
+            const contato = formData?.dadosEscola?.contatos?.[idx];
+
+            if (fieldType === 'email' && contato?.email?.trim()) {
+                if (!isValidEmail(contato.email)) {
+                    setErrors((prev) => ({ ...prev, [field]: 'E-mail inválido' }));
+                }
+            } else if (fieldType === 'telefone' && contato?.telefone?.trim()) {
+                const digits = onlyDigits(contato.telefone);
+                if (digits.length < 10 || digits.length > 11) {
+                    setErrors((prev) => ({
+                        ...prev,
+                        [field]: 'Telefone deve ter 10 ou 11 dígitos',
+                    }));
+                }
+            }
+            return;
+        }
+
+        // Validação de CEP da escola
+        if (field === 'dadosEscola.endereco.cep') {
+            const value = formData?.dadosEscola?.endereco?.cep ?? '';
+            if (value.trim() && !isValidCEP(value)) {
+                setErrors((prev) => ({ ...prev, [field]: 'CEP inválido' }));
+            }
+            return;
+        }
+    };
+
+    // Função auxiliar para acessar valores aninhados
+    const getNestedValue = (obj: any, path: string): any => {
+        return path.split('.').reduce((current, key) => current?.[key], obj);
+    };
+
     const validateCurrentStep = (): boolean => {
         const newErrors: Record<string, string> = {};
 
         switch (currentStep) {
             case 1: // Dados Pessoais
                 if (!formData.nome?.trim()) newErrors.nome = 'Nome é obrigatório';
+                if (!formData.cpf?.trim()) {
+                    newErrors.cpf = 'CPF é obrigatório';
+                } else if (!isValidCPF(formData.cpf)) {
+                    newErrors.cpf = 'CPF inválido';
+                }
                 if (!formData.dataNascimento?.trim())
                     newErrors.dataNascimento = 'Data de nascimento é obrigatória';
-                if (!formData.nomeMae?.trim()) newErrors.nomeMae = 'Nome da mãe é obrigatório';
-                if (!formData.cpfMae?.trim()) newErrors.cpfMae = 'CPF da mãe é obrigatório';
                 if (!formData.emailContato?.trim())
                     newErrors.emailContato = 'E-mail de contato é obrigatório';
                 if (!formData.dataEntrada?.trim())
                     newErrors.dataEntrada = 'Data de entrada é obrigatória';
-                if (!formData.maisDeUmPai)
-                    newErrors.maisDeUmPai = 'Campo "Mais de um Pai?" é obrigatório';
+
+                // Validação dos cuidadores
+
+                if (!formData.cuidadores?.length) {
+                    newErrors.cuidadores = 'Pelo menos um cuidador é obrigatório';
+                } else {
+                    formData.cuidadores.forEach((cuidador, index) => {
+                        if (!cuidador.relacao?.trim()) {
+                            newErrors[`cuidadores.${index}.relacao`] = 'Relação é obrigatória';
+                        }
+                        if (cuidador.relacao === 'outro' && !cuidador.descricaoRelacao?.trim()) {
+                            newErrors[`cuidadores.${index}.descricaoRelacao`] =
+                                'Descrição é obrigatória quando "Outro" é selecionado';
+                        }
+                        if (!cuidador.nome?.trim()) {
+                            newErrors[`cuidadores.${index}.nome`] = 'Nome é obrigatório';
+                        }
+                        if (!cuidador.telefone?.trim()) {
+                            newErrors[`cuidadores.${index}.telefone`] = 'Telefone é obrigatório';
+                        }
+                        if (!cuidador.email?.trim()) {
+                            newErrors[`cuidadores.${index}.email`] = 'E-mail é obrigatório';
+                        }
+                        if (!cuidador.cpf?.trim()) {
+                            newErrors[`cuidadores.${index}.cpf`] = 'CPF é obrigatório';
+                        } else if (!isValidCPF(cuidador.cpf)) {
+                            newErrors[`cuidadores.${index}.cpf`] = 'CPF inválido';
+                        }
+                    });
+                }
                 break;
 
             case 2: // Endereço
-                if (!formData.enderecos?.length || !formData.enderecos[0]?.cep?.trim())
-                    newErrors['enderecos.0.cep'] = 'CEP é obrigatório';
-                if (!formData.enderecos?.[0]?.logradouro?.trim())
-                    newErrors['enderecos.0.logradouro'] = 'Logradouro é obrigatório';
-                if (!formData.enderecos?.[0]?.numero?.trim())
-                    newErrors['enderecos.0.numero'] = 'Número é obrigatório';
-                if (!formData.enderecos?.[0]?.bairro?.trim())
-                    newErrors['enderecos.0.bairro'] = 'Bairro é obrigatório';
-                if (!formData.enderecos?.[0]?.cidade?.trim())
-                    newErrors['enderecos.0.cidade'] = 'Cidade é obrigatória';
-                if (!formData.enderecos?.[0]?.uf?.trim())
-                    newErrors['enderecos.0.uf'] = 'UF é obrigatório';
-                if (!formData.maisDeUmEndereco)
-                    newErrors.maisDeUmEndereco = 'Campo "Mais de um Endereço?" é obrigatório';
+                if (!formData.enderecos?.length) {
+                    newErrors.enderecos = 'Pelo menos um endereço é obrigatório';
+                } else {
+                    formData.enderecos.forEach((endereco, index) => {
+                        if (!endereco.residenciaDe?.trim()) {
+                            newErrors[`enderecos.${index}.residenciaDe`] =
+                                'Residência de é obrigatório';
+                        }
+                        if (
+                            endereco.residenciaDe === 'outro' &&
+                            !endereco.outroResidencia?.trim()
+                        ) {
+                            newErrors[`enderecos.${index}.outroResidencia`] =
+                                'Especificação é obrigatória quando "Outro" é selecionado';
+                        }
+                        // CEP obrigatório apenas para endereço principal (index 0)
+                        if (index === 0 && !endereco.cep?.trim()) {
+                            newErrors[`enderecos.${index}.cep`] = 'CEP é obrigatório';
+                        }
+                        if (index === 0 && !endereco.logradouro?.trim()) {
+                            newErrors[`enderecos.${index}.logradouro`] = 'Logradouro é obrigatório';
+                        }
+                        if (index === 0 && !endereco.numero?.trim()) {
+                            newErrors[`enderecos.${index}.numero`] = 'Número é obrigatório';
+                        }
+                        if (index === 0 && !endereco.bairro?.trim()) {
+                            newErrors[`enderecos.${index}.bairro`] = 'Bairro é obrigatório';
+                        }
+                        if (index === 0 && !endereco.cidade?.trim()) {
+                            newErrors[`enderecos.${index}.cidade`] = 'Cidade é obrigatória';
+                        }
+                        if (index === 0 && !endereco.uf?.trim()) {
+                            newErrors[`enderecos.${index}.uf`] = 'UF é obrigatório';
+                        }
+                    });
+                }
                 break;
 
             case 3: // Dados Pagamento
@@ -184,19 +403,43 @@ export default function CadastroClientePage() {
                     formData.dadosPagamento?.sistemaPagamento === 'particular' &&
                     formData.dadosPagamento?.houveNegociacao === 'sim'
                 ) {
-                    if (!formData.dadosPagamento?.valorSessao?.trim())
-                        newErrors['dadosPagamento.valorSessao'] = 'Valor da sessão é obrigatório';
+                    if (!formData.dadosPagamento?.valorAcordado?.trim())
+                        newErrors['dadosPagamento.valorAcordado'] = 'Valor acordado é obrigatório';
                 }
                 break;
 
-            case 4: // Dados Escola
-                if (!formData.dadosEscola?.tipoEscola)
-                    newErrors['dadosEscola.tipoEscola'] = 'Tipo da escola é obrigatório';
-                if (!formData.dadosEscola?.nome?.trim())
-                    newErrors['dadosEscola.nome'] = 'Nome da escola é obrigatório';
-                if (!formData.dadosEscola?.telefone?.trim())
-                    newErrors['dadosEscola.telefone'] = 'Telefone da escola é obrigatório';
+            case 4: {
+                // Dados Escola
+                const tipo = formData.dadosEscola?.tipoEscola;
+                if (!tipo) newErrors['dadosEscola.tipoEscola'] = 'Tipo da escola é obrigatório';
+
+                const isAfastado = tipo === 'afastado';
+                if (!isAfastado) {
+                    if (!formData.dadosEscola?.nome?.trim())
+                        newErrors['dadosEscola.nome'] = 'Nome da escola é obrigatório';
+                    if (!formData.dadosEscola?.telefone?.trim())
+                        newErrors['dadosEscola.telefone'] = 'Telefone da escola é obrigatório';
+                    if (formData.dadosEscola?.email && !isValidEmail(formData.dadosEscola.email))
+                        newErrors['dadosEscola.email'] = 'E-mail inválido';
+                }
+
+                // Contatos da escola (mantém como está)
+                if (formData.dadosEscola?.contatos?.length) {
+                    formData.dadosEscola.contatos.forEach((contato, index) => {
+                        if (!contato.nome?.trim())
+                            newErrors[`dadosEscola.contatos.${index}.nome`] = 'Nome é obrigatório';
+                        if (!contato.telefone?.trim())
+                            newErrors[`dadosEscola.contatos.${index}.telefone`] =
+                                'Telefone é obrigatório';
+                        if (!contato.funcao?.trim())
+                            newErrors[`dadosEscola.contatos.${index}.funcao`] =
+                                'Função é obrigatória';
+                        if (contato.email && !isValidEmail(contato.email))
+                            newErrors[`dadosEscola.contatos.${index}.email`] = 'E-mail inválido';
+                    });
+                }
                 break;
+            }
         }
 
         setErrors(newErrors);
@@ -204,8 +447,17 @@ export default function CadastroClientePage() {
     };
 
     const nextStep = () => {
-        if (validateCurrentStep() && currentStep < STEPS.length) {
+        console.log('Tentando avançar para próximo passo. Passo atual:', currentStep);
+        console.log('Dados do formulário:', formData);
+
+        const isValid = validateCurrentStep();
+        console.log('Validação passou?', isValid);
+        console.log('Erros encontrados:', errors);
+
+        if (isValid && currentStep < STEPS.length) {
             setCurrentStep((prev) => prev + 1);
+        } else {
+            console.log('Não foi possível avançar. Validação falhou ou chegou ao último passo.');
         }
     };
 
@@ -238,6 +490,7 @@ export default function CadastroClientePage() {
             data: formData,
             onUpdate: updateField,
             errors,
+            onBlur: handleBlurField,
         };
 
         switch (currentStep) {

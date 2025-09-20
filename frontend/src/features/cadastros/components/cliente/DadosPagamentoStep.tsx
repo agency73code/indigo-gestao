@@ -1,14 +1,22 @@
 import { Input } from '@/ui/input';
 import { Label } from '@/ui/label';
 import type { Cliente } from '../../types/cadastros.types';
+import * as mask from '@/common/utils/mask';
+import { toTitleCaseSimple } from '@/common/utils/mask';
 
 interface DadosPagamentoStepProps {
     data: Partial<Cliente>;
     onUpdate: (field: string, value: unknown) => void;
     errors: Record<string, string>;
+    onBlur: (field: string) => void;
 }
 
-export default function DadosPagamentoStep({ data, onUpdate, errors }: DadosPagamentoStepProps) {
+export default function DadosPagamentoStep({
+    data,
+    onUpdate,
+    errors,
+    onBlur,
+}: DadosPagamentoStepProps) {
     const updateDadosPagamento = (field: string, value: unknown) => {
         onUpdate(`dadosPagamento.${field}`, value);
     };
@@ -33,7 +41,9 @@ export default function DadosPagamentoStep({ data, onUpdate, errors }: DadosPaga
                         name="nomeTitular"
                         autoComplete="name"
                         value={dadosPagamento.nomeTitular || ''}
-                        onChange={(e) => updateDadosPagamento('nomeTitular', e.target.value)}
+                        onChange={(e) =>
+                            updateDadosPagamento('nomeTitular', toTitleCaseSimple(e.target.value))
+                        }
                         className={errors['dadosPagamento.nomeTitular'] ? 'border-destructive' : ''}
                         placeholder="Nome completo do titular"
                     />
@@ -75,7 +85,10 @@ export default function DadosPagamentoStep({ data, onUpdate, errors }: DadosPaga
                         <Input
                             id="telefone1"
                             value={dadosPagamento.telefone1 || ''}
-                            onChange={(e) => updateDadosPagamento('telefone1', e.target.value)}
+                            onChange={(e) =>
+                                updateDadosPagamento('telefone1', mask.maskBRPhone(e.target.value))
+                            }
+                            onBlur={() => onBlur('dadosPagamento.telefone1')}
                             className={
                                 errors['dadosPagamento.telefone1'] ? 'border-destructive' : ''
                             }
@@ -157,7 +170,10 @@ export default function DadosPagamentoStep({ data, onUpdate, errors }: DadosPaga
                             id="email1"
                             type="email"
                             value={dadosPagamento.email1 || ''}
-                            onChange={(e) => updateDadosPagamento('email1', e.target.value)}
+                            onChange={(e) =>
+                                updateDadosPagamento('email1', mask.normalizeEmail(e.target.value))
+                            }
+                            onBlur={() => onBlur('dadosPagamento.email1')}
                             className={errors['dadosPagamento.email1'] ? 'border-destructive' : ''}
                             placeholder="exemplo@email.com"
                         />
@@ -569,29 +585,28 @@ export default function DadosPagamentoStep({ data, onUpdate, errors }: DadosPaga
                         </div>
                     </div>
 
-                    {dadosPagamento.houveNegociacao === 'sim' && (
-                        <div className="space-y-2">
-                            <Label htmlFor="valorSessao">Valor da sessão *</Label>
-                            <Input
-                                id="valorSessao"
-                                type="number"
-                                step="0.01"
-                                value={dadosPagamento.valorSessao || ''}
-                                onChange={(e) =>
-                                    updateDadosPagamento('valorSessao', e.target.value)
-                                }
-                                className={
-                                    errors['dadosPagamento.valorSessao'] ? 'border-destructive' : ''
-                                }
-                                placeholder="0,00"
-                            />
-                            {errors['dadosPagamento.valorSessao'] && (
-                                <p className="text-sm text-destructive">
-                                    {errors['dadosPagamento.valorSessao']}
-                                </p>
-                            )}
-                        </div>
-                    )}
+                    {/* Valor acordado */}
+                    <div className="space-y-2">
+                        <Label htmlFor="valorAcordado">
+                            Valor acordado {dadosPagamento.houveNegociacao === 'sim' ? '*' : ''}
+                        </Label>
+                        <Input
+                            id="valorAcordado"
+                            value={dadosPagamento.valorAcordado || ''}
+                            onChange={(e) =>
+                                updateDadosPagamento('valorAcordado', mask.maskBRL(e.target.value))
+                            }
+                            className={
+                                errors['dadosPagamento.valorAcordado'] ? 'border-destructive' : ''
+                            }
+                            placeholder="R$ 0,00"
+                        />
+                        {errors['dadosPagamento.valorAcordado'] && (
+                            <p className="text-sm text-destructive">
+                                {errors['dadosPagamento.valorAcordado']}
+                            </p>
+                        )}
+                    </div>
                 </div>
             )}
         </div>

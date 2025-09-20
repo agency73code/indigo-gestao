@@ -20,7 +20,6 @@ export interface Terapeuta {
     valorHoraAcordado?: number | null;
     professorUnindigo?: 'sim' | 'nao';
     disciplinaUniindigo?: string | null;
-    valorHoraAcordado?: number | null;
 
     // EndereÃ§o pessoal
     endereco: {
@@ -121,24 +120,39 @@ export interface Paciente {
     observacoes?: string;
 }
 
+export interface Cuidador {
+    relacao: 'mae' | 'pai' | 'avo' | 'tio' | 'responsavel' | 'tutor' | 'outro' | '';
+    descricaoRelacao?: string;
+    nome: string;
+    cpf: string;
+    profissao?: string;
+    escolaridade?: string;
+    telefone: string;
+    email: string;
+    endereco?: {
+        cep?: string;
+        logradouro?: string;
+        numero?: string;
+        complemento?: string;
+        bairro?: string;
+        cidade?: string;
+        uf?: string;
+    };
+}
+
 export interface Cliente {
     id?: string;
     
     // Dados pessoais
     nome: string;
+    cpf: string;
     dataNascimento: string;
-    nomeMae: string;
-    cpfMae: string;
-    nomePai?: string;
-    cpfPai?: string;
-    telefonePai?: string;
     emailContato: string;
     dataEntrada: string;
     dataSaida?: string;
-    maisDeUmPai: 'sim' | 'nao';
-    nomePai2?: string;
-    cpfPai2?: string;
-    telefonePai2?: string;
+    
+    // Cuidadores (substitui os campos de pai/mãe)
+    cuidadores?: Cuidador[];
     
     // EndereÃ§os (cliente pode ter vÃ¡rios)
     enderecos: Array<{
@@ -149,6 +163,8 @@ export interface Cliente {
         bairro: string;
         cidade: string;
         uf: string;
+        residenciaDe?: string; // Novo campo para quem reside nesse endereço
+        outroResidencia?: string; // Para quando residenciaDe for "outro"
     }>;
     maisDeUmEndereco: 'sim' | 'nao';
     
@@ -193,12 +209,12 @@ export interface Cliente {
         
         // Campos especÃ­ficos para Particular
         houveNegociacao?: 'sim' | 'nao';
-        valorSessao?: string;
+        valorAcordado?: string; // Renomeado de valorSessao para valorAcordado
     };
     
     // Dados escola
     dadosEscola: {
-        tipoEscola: 'particular' | 'publica';
+        tipoEscola: 'particular' | 'publica' | 'afastado' | 'clinica-escola';
         nome: string;
         telefone: string;
         email?: string;
@@ -211,6 +227,12 @@ export interface Cliente {
             cidade?: string;
             uf?: string;
         };
+        contatos?: Array<{
+            nome: string;
+            telefone: string;
+            email?: string;
+            funcao: string;
+        }>;
     };
 }
 
