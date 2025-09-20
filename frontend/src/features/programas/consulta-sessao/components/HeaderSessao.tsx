@@ -74,12 +74,12 @@ export default function HeaderSessao({ sessao, paciente, programa, onBack }: Hea
 
         {/* Terapeuta e Data */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">Terapeuta:</span>
+          <div className="flex items-center">
+            <span className="text-muted-foreground mr-2">Terapeuta:</span>
             <span className="font-medium">{sessao.terapeutaNome || programa.therapistName}</span>
           </div>
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground flex items-center gap-1">
+          <div className="flex items-center justify sm:justify-end">
+            <span className="text-muted-foreground flex items-center gap-1 mr-2">
               <Calendar className="h-3 w-3" /> Data da sessão:
             </span>
             <span className="font-medium">{formatDate(sessao.data)}</span>

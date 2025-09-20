@@ -72,7 +72,7 @@ export default function PatientSelector({
 
     return (
         <>
-            <Card className="rounded-[5px] p-1 sm:p-4">
+            <Card padding="none" className="rounded-[5px] p-1 sm:p-0">
                 <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
                     <CardTitle className="text-base flex items-center gap-2">
                         <User className="h-4 w-4" />
@@ -177,11 +177,11 @@ export default function PatientSelector({
                                     {isLoading ? (
                                         <div className="space-y-2">
                                             {Array.from({ length: 3 }).map((_, i) => (
-                                                <Card key={i} className="rounded-[5px]">
+                                                <Card padding="none" key={i} className="rounded-[5px]">
                                                     <CardContent className="p-4">
                                                         <div className="animate-pulse space-y-2">
                                                             <div className="h-4 bg-muted rounded w-3/4"></div>
-                                                            <div className="h-3 bg-muted rounded w-1/2"></div>
+                                                            <div className="h-3 bg-muted rounded w-1/2"></div> 
                                                         </div>
                                                     </CardContent>
                                                 </Card>
@@ -190,6 +190,7 @@ export default function PatientSelector({
                                     ) : (
                                         patients.map((patient) => (
                                             <Card
+                                                padding="none"
                                                 key={patient.id}
                                                 className="cursor-pointer hover:shadow-md transition-shadow rounded-[5px]"
                                                 onClick={() => handleSelectPatient(patient)}

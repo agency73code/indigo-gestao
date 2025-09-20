@@ -54,7 +54,7 @@ export default function DetalheSessao({ sessao, paciente, programa, onBack }: De
                   {tentativas.length > 0 && (
                     <div className="flex gap-1 flex-wrap mt-2">
                       {tentativas.map((t) => {
-                        const icon = t.resultado === 'acerto' ? '✅' : t.resultado === 'ajuda' ? '🖐️' : '❌';
+                        const icon = t.resultado === 'acerto' ? '✓' : t.resultado === 'ajuda' ? '✋' : '✗';
                         const color = t.resultado === 'acerto' ? 'text-green-600' : t.resultado === 'ajuda' ? 'text-yellow-600' : 'text-red-600';
                         return (
                           <span key={`${stim.id}-${t.tentativa}`} className={`text-sm ${color}`} title={`Tentativa ${t.tentativa}`}>

@@ -8,9 +8,9 @@ interface RegistrosSessaoProps {
 
 const iconFor = (resultado: RegistroTentativa['resultado']) => {
   const icons = {
-    erro: <span className="text-2xl sm:text-3xl text-red-600">❌</span>,
-    ajuda: <span className="text-2xl sm:text-3xl text-yellow-600">🖐️</span>,
-    acerto: <span className="text-2xl sm:text-3xl text-green-600">✅</span>,
+    erro: <span className="text-2xl sm:text-3xl text-red-600">✗</span>,
+    ajuda: <span className="text-2xl sm:text-3xl text-yellow-600">✋</span>,
+    acerto: <span className="text-2xl sm:text-3xl text-green-600">✓</span>,
   } as const;
   return icons[resultado];
 };
@@ -46,7 +46,7 @@ export default function RegistrosSessao({ registros }: RegistrosSessaoProps) {
         <div className="space-y-4">
           <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-2">
             {registros.map((r, idx) => (
-              <div key={`${r.tentativa}-${idx}`} className="relative flex items-center justify-center h-16 bg-white border rounded-[5px]">
+              <div key={`${r.tentativa}-${idx}`} className="relative flex items-center justify-center h-20 bg-white border rounded-[5px]">
                 <span className="absolute top-1 left-2 text-[10px] sm:text-xs text-muted-foreground font-medium">
                   {r.tentativa}
                 </span>
@@ -56,13 +56,13 @@ export default function RegistrosSessao({ registros }: RegistrosSessaoProps) {
           </div>
           <div className="flex justify-center gap-4 text-xs text-muted-foreground pt-2 border-t">
             <span className="flex items-center gap-1">
-              <span className="text-red-600">❌</span> ERRO
+              <span className="text-red-600">✗</span> ERRO
             </span>
             <span className="flex items-center gap-1">
-              <span className="text-yellow-600">🖐️</span> AJUDA
+              <span className="text-yellow-600">✋</span> AJUDA
             </span>
             <span className="flex items-center gap-1">
-              <span className="text-green-600">✅</span> INDEP.
+              <span className="text-green-600">✓</span> INDEP.
             </span>
           </div>
         </div>

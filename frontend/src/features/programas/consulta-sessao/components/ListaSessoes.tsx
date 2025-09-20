@@ -29,11 +29,11 @@ export default function ListaSessoes({ sessoes, onVerDetalhes }: ListaSessoesPro
       <Card className="rounded-[5px]">
         <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
           <CardTitle className="text-base flex items-center gap-2">
-            <Calendar className="h-4 w-4" /> SessÃµes
+            <Calendar className="h-4 w-4" /> Sessões
           </CardTitle>
         </CardHeader>
         <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
-          <div className="text-center py-6 text-sm text-muted-foreground">Nenhuma sessÃ£o encontrada.</div>
+          <div className="text-center py-6 text-sm text-muted-foreground">Nenhuma sessão encontrada.</div>
         </CardContent>
       </Card>
     );
@@ -44,7 +44,7 @@ export default function ListaSessoes({ sessoes, onVerDetalhes }: ListaSessoesPro
       <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
-            <Calendar className="h-4 w-4" /> SessÃµes recentes
+            <Calendar className="h-4 w-4" /> Sessões recentes
           </CardTitle>
         </div>
       </CardHeader>

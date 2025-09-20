@@ -39,6 +39,7 @@ export default function ProgramCard({ program, onOpen, onNewSession }: ProgramCa
 
     return (
         <Card
+            padding="sm"
             className="cursor-pointer hover:shadow-md transition-shadow rounded-[5px]"
             onClick={handleOpen}
             aria-label={`Abrir programa ${program.title} do paciente ${program.patientName}`}
