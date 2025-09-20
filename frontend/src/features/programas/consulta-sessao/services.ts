@@ -79,9 +79,7 @@ export async function getPatientById(patientId: string): Promise<Patient | null>
       credentials: 'include',
   });
 
-  if (!res.ok) {
-      throw new Error(`Erro ao buscar paciente: ${res.statusText}`);
-  }
+  if (!res.ok) throw new Error(`Erro ao buscar paciente: ${res.statusText}`);
 
   const json = await res.json();
   return json.data as Patient;
@@ -93,16 +91,28 @@ export async function getSessionById(patientId: string, sessionId: string): Prom
 }
 
 export async function findSessionById(sessionId: string): Promise<Sessao | null> {
-  if (USE_LOCAL_MOCKS) {
-    const { mockProgramDetail } = await import(
-      '@/features/programas/detalhe-ocp/mocks/program.mock'
-    );
-    const sessions = await listSessionsByPatient(mockProgramDetail.patientId);
-    return sessions.find((s) => s.id === sessionId) ?? null;
+  console.log('teste')
+  try {
+    const res = await fetch(`/api/ocp/sessions/${sessionId}`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+    
+    if (!res.ok) throw new Error(`Erro ao buscar a sessão: ${res.statusText}`);
+    
+    const data = await res.json();
+    console.log(data);
+    return data.data;
+  } catch (error) {
+    if (USE_LOCAL_MOCKS) {
+      const { mockProgramDetail } = await import(
+        '@/features/programas/detalhe-ocp/mocks/program.mock'
+      );
+      const sessions = await listSessionsByPatient(mockProgramDetail.patientId);
+      return sessions.find((s) => s.id === sessionId) ?? null;
+    }
+    throw error;
   }
-
-  // TODO: Integrate real API when available
-  return null;
 }
 
 export function resumirSessao(sessao: Sessao): ResumoSessao {

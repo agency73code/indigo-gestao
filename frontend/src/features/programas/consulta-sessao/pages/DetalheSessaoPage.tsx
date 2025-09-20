@@ -101,7 +101,7 @@ export default function DetalheSessaoPage() {
             state: { sessionDate: sessionData.data },
           });
         }
-      } catch (err) {
+      } catch {
         if (!cancelled) {
           setError('Erro ao carregar sessão');
           setSession(null);

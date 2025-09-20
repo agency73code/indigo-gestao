@@ -1,5 +1,6 @@
 import { prisma } from "../../config/database.js";
 import * as OcpType from "./ocp.types.js";
+import * as OcpNormalizer from './ocp.normalizer.js';
 
 export async function createProgram(data: OcpType.createOCP) {
     return prisma.ocp.create({
@@ -163,20 +164,7 @@ export async function getSessionsByProgram(programId: number, limit: number) {
         },
     });
     
-    return sessions.map(s => {
-        const total = s.trials.length;
-        const acertos = s.trials.filter(t => t.resultado !== 'error').length;
-        const independents = s.trials.filter(t => t.resultado === 'independent').length;
-
-        return {
-            id: s.id.toString(),
-            date: s.data_criacao.toISOString(),
-            therapistName: s.terapeuta?.nome,
-            overallScore: total > 0 ? Math.round((acertos / total) * 100) : null,
-            independenceRate: total > 0 ? Math.round((independents / total) * 100) : null,
-            preview: s.trials.map(t => t.resultado as 'error' | 'prompted' | 'independent'),
-        };
-    });
+    return sessions.map(OcpNormalizer.mapSessionReturn);
 }
 
 export async function getClientById(clientId: string) {
@@ -202,6 +190,19 @@ export async function getClientById(clientId: string) {
         age: currentYear - birthYear,
         photoUrl: null,
     }
+}
+
+export async function getSessionById(sessionId: string) {
+    const session = await prisma.sessao.findUnique({
+        where: { id: Number(sessionId) },
+        include: {
+            terapeuta: { select: { nome: true } },
+            trials: { select: { resultado: true, ordem: true } },
+        },
+    });
+
+    if (!session) return null;
+    return OcpNormalizer.mapSessionReturn(session)
 }
 
 export async function listClientsByTherapist(therapistId: string, q?: string) {
