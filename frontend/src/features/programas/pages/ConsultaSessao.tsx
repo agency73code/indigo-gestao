@@ -1,13 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { startTransition, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import HeaderSection from '@/features/programas/consultar-programas/components/HeaderSection';
 import PatientSelector from '@/features/programas/consultar-programas/components/PatientSelector';
 import type { Patient } from '@/features/programas/consultar-programas/types';
-import { getPatientById } from '@/features/programas/consultar-programas/services';
 import ListaSessoes from '../consulta-sessao/components/ListaSessoes';
 import SearchAndFilters from '../consulta-sessao/components/SearchAndFilters';
-import { listSessionsByPatient, resumirSessao } from '../consulta-sessao/services';
+import * as services from '../consulta-sessao/services';
 import type { Sessao, SessaoFiltersState } from '../consulta-sessao/types';
 
 const DAY_IN_MS = 1000 * 60 * 60 * 24;
@@ -20,33 +19,33 @@ const DEFAULT_FILTERS: SessaoFiltersState = {
   sort: 'date-desc',
 };
 
-const VALID_DATE_RANGES = new Set(['all', 'last7', 'last30', 'year']);
-const VALID_SORTS = new Set(['date-desc', 'date-asc', 'accuracy-desc', 'accuracy-asc']);
+// const VALID_DATE_RANGES = new Set(['all', 'last7', 'last30', 'year']);
+// const VALID_SORTS = new Set(['date-desc', 'date-asc', 'accuracy-desc', 'accuracy-asc']);
 
-function parseFiltersFromParams(params: URLSearchParams): SessaoFiltersState {
-  const dateRangeParam = params.get('dateRange');
-  const sortParam = params.get('sort');
-  const programParam = params.get('program');
-  const therapistParam = params.get('therapist');
+// function parseFiltersFromParams(params: URLSearchParams): SessaoFiltersState {
+//   const dateRangeParam = params.get('dateRange');
+//   const sortParam = params.get('sort');
+//   const programParam = params.get('program');
+//   const therapistParam = params.get('therapist');
 
-  return {
-    q: params.get('q') ?? '',
-    dateRange: VALID_DATE_RANGES.has(dateRangeParam ?? '')
-      ? (dateRangeParam as SessaoFiltersState['dateRange'])
-      : 'all',
-    program:
-      programParam && programParam.trim().length > 0
-        ? programParam
-        : 'all',
-    therapist:
-      therapistParam && therapistParam.trim().length > 0
-        ? therapistParam
-        : 'all',
-    sort: VALID_SORTS.has(sortParam ?? '')
-      ? (sortParam as SessaoFiltersState['sort'])
-      : 'date-desc',
-  };
-}
+//   return {
+//     q: params.get('q') ?? '',
+//     dateRange: VALID_DATE_RANGES.has(dateRangeParam ?? '')
+//       ? (dateRangeParam as SessaoFiltersState['dateRange'])
+//       : 'all',
+//     program:
+//       programParam && programParam.trim().length > 0
+//         ? programParam
+//         : 'all',
+//     therapist:
+//       therapistParam && therapistParam.trim().length > 0
+//         ? therapistParam
+//         : 'all',
+//     sort: VALID_SORTS.has(sortParam ?? '')
+//       ? (sortParam as SessaoFiltersState['sort'])
+//       : 'date-desc',
+//   };
+// }
 
 function getSessionTime(sessao: Sessao): number {
   const timestamp = new Date(sessao.data).getTime();
@@ -57,9 +56,7 @@ export default function ConsultaSessao() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const [filters, setFilters] = useState<SessaoFiltersState>(() =>
-    parseFiltersFromParams(searchParams),
-  );
+  const [filters, setFilters] = useState<SessaoFiltersState>(DEFAULT_FILTERS);
   const [patient, setPatient] = useState<Patient | null>(null);
   const [sessions, setSessions] = useState<Sessao[]>([]);
   const [loading, setLoading] = useState(false);
@@ -86,14 +83,18 @@ export default function ConsultaSessao() {
 
   const applyFilters = useCallback(
     (updater: (prev: SessaoFiltersState) => SessaoFiltersState) => {
-      setFilters((prev) => {
-        const next = updater(prev);
-        syncFiltersToParams(next, patient?.id ?? null);
-        return next;
-      });
+      setFilters((prev) => updater(prev));
     },
-    [patient, syncFiltersToParams],
+    [],
   );
+
+  useEffect(() => {
+    if (patient) {
+      startTransition(() => {
+        syncFiltersToParams(filters, patient.id);
+      });
+    }
+  }, [filters, patient, syncFiltersToParams]);
 
   useEffect(() => {
     let cancelled = false;
@@ -111,7 +112,7 @@ export default function ConsultaSessao() {
       setError(null);
 
       try {
-        const fetched = await getPatientById(pacienteIdFromQuery);
+        const fetched = await services.getPatientById(pacienteIdFromQuery);
         if (cancelled) return;
 
         if (fetched) {
@@ -121,7 +122,7 @@ export default function ConsultaSessao() {
           setPatient(null);
           setSessions([]);
         }
-      } catch (err) {
+      } catch {
         if (!cancelled) {
           setError('Erro ao carregar paciente');
           setPatient(null);
@@ -155,11 +156,11 @@ export default function ConsultaSessao() {
       setError(null);
 
       try {
-        const items = await listSessionsByPatient(patient.id);
+        const items = await services.listSessionsByPatient(patient.id);
         if (!cancelled) {
           setSessions(items);
         }
-      } catch (err) {
+      } catch {
         if (!cancelled) {
           setError('Erro ao carregar sessoes');
         }
@@ -285,7 +286,7 @@ export default function ConsultaSessao() {
         matchesQuery(sessao),
     );
 
-    const getAccuracy = (sessao: Sessao) => resumirSessao(sessao).acerto;
+    const getAccuracy = (sessao: Sessao) => services.resumirSessao(sessao).acerto;
 
     return filtered.sort((a, b) => {
       switch (filters.sort) {
@@ -315,7 +316,7 @@ export default function ConsultaSessao() {
     <div className="flex flex-col min-h-full w-full p-1 sm:p-4">
       <div className="px-0 sm:px-6 py-4 sm:py-6">
         <HeaderSection
-          title="Consultar Sessao"
+          title="Consultar Sessão"
           subtitle="Selecione um paciente para visualizar o historico e os resultados das sessoes."
         />
       </div>

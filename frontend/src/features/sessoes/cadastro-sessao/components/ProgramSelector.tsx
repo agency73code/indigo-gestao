@@ -71,8 +71,6 @@ export default function ProgramSelector({
         onSelect(program);
         setIsOpen(false);
         setSearchQuery('');
-
-        console.log('program_selected', { programId: program.id, patientId: patient?.id });
     };
 
     const handleClearProgram = () => {

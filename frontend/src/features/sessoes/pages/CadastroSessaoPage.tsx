@@ -78,7 +78,7 @@ export default function CadastroSessaoPage() {
     // Extrair parâmetros da URL na inicialização
     useEffect(() => {
         const patientId = searchParams.get('patientId');
-        const programId = searchParams.get('programId');
+        const programId = searchParams.get('programaId');
 
         if (patientId) {
             // Buscar dados do paciente se patientId estiver na URL
@@ -152,8 +152,6 @@ export default function CadastroSessaoPage() {
                 programId: null,
             }));
         }
-
-        console.log('Paciente selecionado:', patient.name);
     };
 
     const handlePatientClear = () => {
@@ -179,7 +177,6 @@ export default function CadastroSessaoPage() {
             programId: program.id,
         }));
 
-        // Carregar detalhes do programa
         await loadProgramData(program.id);
     };
 
@@ -203,8 +200,6 @@ export default function CadastroSessaoPage() {
                 summary: newSummary,
             };
         });
-
-        console.log('Tentativa registrada:', attempt);
     };
 
     const handleSave = async () => {
@@ -214,15 +209,12 @@ export default function CadastroSessaoPage() {
         setError(null);
 
         try {
-            const result = await saveSession({
+            await saveSession({
                 patientId: sessionState.patientId!,
                 programId: sessionState.programId!,
                 attempts: sessionState.attempts,
             });
 
-            console.log('Sessão salva:', result);
-
-            // Redirecionar para o detalhe do programa
             const redirectUrl = `/app/programas/${sessionState.programId}?patientId=${sessionState.patientId}`;
             navigate(redirectUrl);
         } catch (err) {

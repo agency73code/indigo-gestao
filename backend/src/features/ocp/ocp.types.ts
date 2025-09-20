@@ -93,3 +93,44 @@ export type UpdateProgramInput = {
     notes?: string | null;
     status?: 'active' | 'archived';
 };
+
+export interface SessionTrialDTO {
+  id: number;
+  ordem: number;
+  resultado: string;
+  estimulosOcp: {
+    id: number;
+    nome: string | null;
+  } | null;
+}
+
+export interface SessionDTO {
+  id: number;
+  cliente_id: string;
+  terapeuta_id: string;
+  data_criacao: Date;
+  ocp: {
+    id: number;
+    nome_programa: string;
+    objetivo_programa: string | null;
+    criado_em: Date;
+  };
+  trials: SessionTrialDTO[];
+}
+
+export interface Session {
+  id: string;
+  pacienteId: string;
+  terapeutaId: string;
+  data: string;
+  programa: string;
+  objetivo: string;
+  prazoInicio: string;
+  prazoFim: string | null;
+  registros: {
+    tentativa: number;
+    resultado: 'acerto' | 'erro' | 'ajuda';
+    stimulusId: string | undefined;
+    stimulusLabel: string | undefined;
+  }[];
+}

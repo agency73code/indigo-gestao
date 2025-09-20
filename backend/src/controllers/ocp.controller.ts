@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import * as OcpService from '../features/ocp/ocp.service.js';
-import { mapOcpDetail } from '../features/ocp/ocp.normalizer.js';
+import * as OcpNormalizer from '../features/ocp/ocp.normalizer.js';
 
 export async function createProgram(req: Request, res: Response) {
     try {
@@ -36,9 +36,12 @@ export async function createSession(req: Request, res: Response) {
 export async function updateProgram(req: Request, res: Response) {
     try {
         if (!req.params.programId) return res.status(400).json({ success: false, message: 'ID do programa não informado' });
-        //const programId = parseInt(req.params.programId, 10);
+        const programId = parseInt(req.params.programId, 10);
 
-        //const session = await 
+        const ocp = await OcpService.updateProgram(programId, req.body);
+        if (!ocp) return res.status(404).json({ success: false, message: 'OCP não encontrado' });
+
+        return res.status(201).json({ data: ocp });
     } catch (error) {
         console.error(error);
         return res.status(400).json({ success: false, message: 'Erro programa não encontrado' });
@@ -51,9 +54,9 @@ export async function getProgramById(req: Request, res: Response) {
         if (!programId) return res.status(400).json({ success: false, message: 'ID do programa não informado' });
 
         const ocp = await OcpService.getProgramById(programId);
-        if (!ocp) return res.status(404).json({ message: 'OCP não encontrado' });
+        if (!ocp) return res.status(404).json({ success: false, message: 'OCP não encontrado' });
         
-        return res.status(201).json({ data: mapOcpDetail(ocp) });
+        return res.status(201).json({ data: OcpNormalizer.mapOcpDetail(ocp) });
     } catch (error) {
         console.error(error);
         return res.status(400).json({ success: false, message: 'Erro programa não encontrado' });
@@ -104,3 +107,16 @@ export async function listClientPrograms(req: Request, res: Response) {
     const rows = await OcpService.listByClientId(clientId, page, 10, status, q, sort);
     return res.json({ success: true, data: rows.map(OcpService.mapOcpReturn) });
 }
+
+export async function listSessionsByClient(req: Request, res: Response) {
+    try {
+        const { clientId } = req.params;
+        if (!clientId) return res.status(400).json({ sucess: false, message: 'ID do paciente é obrigatório' });
+
+        const sessions = await OcpService.listSessionsByClient(clientId);
+        return res.json ({ data: OcpNormalizer.mapSessionList(sessions) });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ success: false, message: 'Erro ao  buscar sessões do cliente' });
+    }
+} 

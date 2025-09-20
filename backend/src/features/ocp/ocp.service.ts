@@ -52,27 +52,58 @@ export async function createSession(input: OcpType.CreateSessionInput) {
     });
 }
 
-// export async function updateProgram(programId: number, input: OcpType.UpdateProgramInput) {
-//     return prisma.ocp.update({
-//         where: { id: programId },
-//         data: {
-//             objetivo_programa: input.goalTitle ?? undefined,
-//             objetivo_descricao: input.goalDescription ?? undefined,
-//             dominio_criterio: input.criteria ?? undefined,
-//             observacao_geral: input.notes ?? undefined,
-//             estimulo_ocp: input.stimuli ? {
-//                 update: input.stimuli?.map((s) => ({
-//                     where: { id: Number(s.id) },
-//                     data: {
-//                         nome: s.label,
-//                         descricao: s.description ?? undefined,
-//                         status: s.active,
-//                     }
-//                 })),
-//             } : undefined,
-//         },
-//     });
-// }
+export async function updateProgram(programId: number, input: OcpType.UpdateProgramInput) {
+    await prisma.ocp.update({
+        where: { id: programId },
+        data: {
+            ...(input.goalTitle !== undefined && { objetivo_programa: input.goalTitle }),
+            ...(input.goalDescription !== undefined && { objetivo_descricao: input.goalDescription }),
+            ...(input.criteria !== undefined && { dominio_criterio: input.criteria }),
+            ...(input.notes !== undefined && { observacao_geral: input.notes }),
+            ...(input.status !== undefined && { status: input.status }),
+        },
+        include: { estimulo_ocp: true },
+    });
+
+    if (input.stimuli) {
+        await Promise.all(
+            input.stimuli.map(async (s) =>{
+                if (s.id) {
+                    return prisma.estimulo_ocp.update({
+                        where: { id: Number(s.id) },
+                        data: {
+                            ...(s.label !== undefined && { nome: s.label }),
+                            ...(s.description !== undefined && { descricao: s.description }),
+                            ...(s.active !== undefined && { status: s.active }),
+                        },
+                    });
+                } else {
+                    const newStimuli = await prisma.estimulo.create({
+                        data: {
+                            nome: s.label,
+                            descricao: s.description ?? null,
+                        },
+                    });
+
+                    return prisma.estimulo_ocp.create({
+                        data: {
+                            id_estimulo: newStimuli.id,
+                            id_ocp: programId,
+                            nome: s.label,
+                            descricao: s.description ?? null,
+                            status : s.active ?? true,
+                        },
+                    });
+                }
+            })
+        );
+    }
+
+    return prisma.ocp.findUnique({
+        where: { id: programId },
+        include: { estimulo_ocp: true },
+    });
+}
 
 export async function getProgramById(programId: string) {
     return prisma.ocp.findUnique({
@@ -247,6 +278,40 @@ export async function listByClientId(
             : { atualizado_em: 'desc' },
         skip: (page - 1) * pageSize,
         take: pageSize,
+    });
+}
+
+export async function listSessionsByClient(clientId: string) {
+    return prisma.sessao.findMany({
+        where: { cliente_id: clientId },
+        select: {
+            id: true,
+            cliente_id: true,
+            terapeuta_id: true,
+            data_criacao: true,
+            ocp: {
+                select: {
+                    id: true,
+                    nome_programa: true,
+                    objetivo_programa: true,
+                    criado_em: true,
+                },
+            },
+            trials: {
+                select: {
+                    id: true,
+                    ordem: true,
+                    resultado: true,
+                    estimulosOcp: {
+                        select: {
+                            id: true,
+                            nome: true,
+                        },
+                    },
+                },
+                orderBy: { ordem: 'asc' },
+            },
+        },
     });
 }
 

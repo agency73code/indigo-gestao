@@ -23,13 +23,15 @@ export async function fetchProgramById(programaId: string): Promise<ProgramDetai
 
 export async function updateProgram(input: UpdateProgramInput): Promise<void> {
     try {
-        const response = await fetch(`/api/ocp/programs/${input.id}`, {
+        console.log(input);
+        const res = await fetch(`/api/ocp/programs/${input.id}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(input)
         });
 
-        if (!response.ok) throw new Error(`Erro ao atualizar programa: ${response.statusText}`);
+        if (!res.ok) throw new Error(`Erro ao atualizar programa: ${res.statusText}`);
+        console.log(res);
     } catch (err) {
         if (USE_LOCAL_MOCKS) {
             await new Promise(resolve => setTimeout(resolve, 1000));
