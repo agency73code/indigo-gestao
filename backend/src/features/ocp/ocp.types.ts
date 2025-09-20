@@ -134,3 +134,10 @@ export interface Session {
     stimulusLabel: string | undefined;
   }[];
 }
+
+export interface UnmappedSession {
+  id: number;
+  data_criacao: Date;
+  terapeuta?: { nome: string | null } | null;
+  trials: { resultado: string; ordem: number }[];
+}

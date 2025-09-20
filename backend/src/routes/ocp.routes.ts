@@ -11,6 +11,7 @@ router.get('/clients/:clientId/programs', OcpController.listClientPrograms);
 router.get('/clients/:clientId/sessions', auth, OcpController.listSessionsByClient);
 router.get('/programs/:programId', OcpController.getProgramById);
 router.get('/programs/:programId/sessions', OcpController.getSessionByProgram);
+router.get('/sessions/:sessionId', auth, OcpController.getSessionById);
 router.post('/create', OcpController.createProgram);
 router.post('/programs/:programId/sessions', auth, OcpController.createSession);
 router.patch('/programs/:programId', OcpController.updateProgram);
