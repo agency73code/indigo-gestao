@@ -104,17 +104,49 @@ export async function getSessionsByProgram(programId: number, limit: number) {
         take: limit,
         include: {
             terapeuta: { select: { nome: true } },
+            trials: { select: { resultado: true, ordem: true } },
         },
     });
     
-    return sessions.map(s => ({
-        id: s.id.toString(),
-        date: s.data_criacao.toISOString(),
-        therapistName: s.terapeuta?.nome,
-        overallScore: null,
-        independenceRate: null,
-        preview: [],
-    }))
+    return sessions.map(s => {
+        const total = s.trials.length;
+        const acertos = s.trials.filter(t => t.resultado !== 'error').length;
+        const independents = s.trials.filter(t => t.resultado === 'independent').length;
+
+        return {
+            id: s.id.toString(),
+            date: s.data_criacao.toISOString(),
+            therapistName: s.terapeuta?.nome,
+            overallScore: total > 0 ? Math.round((acertos / total) * 100) : null,
+            independenceRate: total > 0 ? Math.round((independents / total) * 100) : null,
+            preview: s.trials.map(t => t.resultado as 'error' | 'prompted' | 'independent'),
+        };
+    });
+}
+
+export async function getClientById(clientId: string) {
+    const client = await prisma.cliente.findUnique({
+        where: { id: clientId },
+        include: {
+            cliente_responsavel: {
+                take: 1,
+                include: { responsaveis: true },
+            },
+        },
+    });
+
+    if (!client) return null;
+
+    const birthYear = client.data_nascimento.getFullYear();
+    const currentYear = new Date().getFullYear();
+
+    return {
+        id: client.id,
+        name: client.nome,
+        guardianName: client.cliente_responsavel[0]?.responsaveis?.nome ?? null,
+        age: currentYear - birthYear,
+        photoUrl: null,
+    }
 }
 
 export async function listClientsByTherapist(therapistId: string, q?: string) {
