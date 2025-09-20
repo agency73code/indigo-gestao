@@ -75,8 +75,6 @@ export default function ProgramList({
         const patientId = selectedPatientId;
         const path = `/app/programas/${programId}`;
         const url = patientId ? `${path}?patientId=${patientId}` : path;
-
-        console.log('Abrindo programa:', programId, 'URL:', url);
         navigate(url);
     };
 
@@ -87,7 +85,6 @@ export default function ProgramList({
         if (patientId) params.set('patientId', patientId);
 
         const url = `/app/programas/sessoes/nova?${params.toString()}`;
-        console.log('Nova sessão para programa:', programId, 'URL:', url);
         navigate(url);
     };
 

@@ -52,6 +52,28 @@ export async function createSession(input: OcpType.CreateSessionInput) {
     });
 }
 
+// export async function updateProgram(programId: number, input: OcpType.UpdateProgramInput) {
+//     return prisma.ocp.update({
+//         where: { id: programId },
+//         data: {
+//             objetivo_programa: input.goalTitle ?? undefined,
+//             objetivo_descricao: input.goalDescription ?? undefined,
+//             dominio_criterio: input.criteria ?? undefined,
+//             observacao_geral: input.notes ?? undefined,
+//             estimulo_ocp: input.stimuli ? {
+//                 update: input.stimuli?.map((s) => ({
+//                     where: { id: Number(s.id) },
+//                     data: {
+//                         nome: s.label,
+//                         descricao: s.description ?? undefined,
+//                         status: s.active,
+//                     }
+//                 })),
+//             } : undefined,
+//         },
+//     });
+// }
+
 export async function getProgramById(programId: string) {
     return prisma.ocp.findUnique({
         where: { id: Number(programId) },
@@ -92,6 +114,8 @@ export async function getProgramById(programId: string) {
                 },
                 orderBy: { id: 'asc' }
             },
+            dominio_criterio: true,
+            observacao_geral: true,
             status: true,
         }
     });

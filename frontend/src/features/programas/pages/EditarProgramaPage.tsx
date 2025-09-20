@@ -68,8 +68,8 @@ export default function EditarProgramaPage() {
                     order: s.order,
                 })),
             );
-            setCriteria(''); // Não temos criteria no ProgramDetail, deixar vazio
-            setNotes(''); // Não temos notes no ProgramDetail, deixar vazio
+            setCriteria(programData.criteria ?? '');
+            setNotes(programData.notes ?? '');
             setStatus(programData.status);
         } catch (err) {
             console.error('Erro ao carregar programa:', err);

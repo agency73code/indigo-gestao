@@ -22,19 +22,10 @@ export default function ProgramCard({ program, onOpen, onNewSession }: ProgramCa
     const handleNewSession = (e: React.MouseEvent) => {
         e.stopPropagation();
         onNewSession(program.id);
-
-        // Telemetria
-        console.log('consult_ocp_new_session_clicked', {
-            programId: program.id,
-            patientId: program.patientId,
-        });
     };
 
     const handleOpen = () => {
         onOpen(program.id);
-
-        // Telemetria
-        console.log('consult_ocp_card_opened', { programId: program.id });
     };
 
     return (

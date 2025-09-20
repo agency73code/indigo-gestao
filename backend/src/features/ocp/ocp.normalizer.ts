@@ -22,6 +22,8 @@ export function mapOcpDetail(dto: ocpTypes.OcpDetailDTO): ocpTypes.getOCP {
             description: s.descricao ?? '',
             active: s.status,
         })) ?? [],
+        criteria: dto.dominio_criterio ?? '',
+        notes: dto.observacao_geral ?? '',
         status: dto.status as "active" | "archived",
     }
 }

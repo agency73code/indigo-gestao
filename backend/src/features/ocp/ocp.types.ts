@@ -15,26 +15,28 @@ export type createOCP = {
 }
 
 export type getOCP = {
-    id: string;
-    name?: string | null;
-    patientId: string;
-    patientName: string;
-    patientGuardian: string | undefined;
-    patientAge?: number | null;
-    patientPhotoUrl?: string | null;
-    therapistId: string;
-    therapistName: string;
-    createdAt: string; // ISO
-    goalTitle: string;
-    goalDescription?: string | null;
-    stimuli: { 
-        id: string; 
-        order: number; 
-        label: string; 
-        description?: string | null; 
-        active: boolean 
-    }[];
-    status: 'active' | 'archived';
+  id: string;
+  name?: string | null;
+  patientId: string;
+  patientName: string;
+  patientGuardian: string | undefined;
+  patientAge?: number | null;
+  patientPhotoUrl?: string | null;
+  therapistId: string;
+  therapistName: string;
+  createdAt: string; // ISO
+  goalTitle: string;
+  goalDescription?: string | null;
+  stimuli: { 
+    id: string; 
+    order: number; 
+    label: string; 
+    description?: string | null; 
+    active: boolean 
+  }[];
+  criteria?: string | null;
+  notes?: string | null;
+  status: 'active' | 'archived';
 }
 
 export type OcpStimuloDTO = {
@@ -59,6 +61,8 @@ export type OcpDetailDTO = {
   objetivo_programa: string | null;
   objetivo_descricao: string | null;
   estimulo_ocp?: OcpStimuloDTO[];
+  dominio_criterio?: string | null;
+  observacao_geral?: string | null;
   status: string;
 };
 
@@ -71,4 +75,21 @@ export type CreateSessionInput = {
     attemptNumber: number;
     type: 'error' | 'prompted' | 'independent';
   }[];
+};
+
+export type UpdateProgramInput = {
+    id: string;
+    name?: string | null;
+    goalTitle?: string;
+    goalDescription?: string | null;
+    stimuli?: { 
+        id?: string; 
+        label: string; 
+        description?: string | null; 
+        active: boolean; 
+        order: number 
+    }[];
+    criteria?: string | null;
+    notes?: string | null;
+    status?: 'active' | 'archived';
 };

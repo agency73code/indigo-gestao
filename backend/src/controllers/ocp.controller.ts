@@ -33,6 +33,18 @@ export async function createSession(req: Request, res: Response) {
     }
 }
 
+export async function updateProgram(req: Request, res: Response) {
+    try {
+        if (!req.params.programId) return res.status(400).json({ success: false, message: 'ID do programa não informado' });
+        //const programId = parseInt(req.params.programId, 10);
+
+        //const session = await 
+    } catch (error) {
+        console.error(error);
+        return res.status(400).json({ success: false, message: 'Erro programa não encontrado' });
+    }
+}
+
 export async function getProgramById(req: Request, res: Response) {
     try {
         const { programId } = req.params;

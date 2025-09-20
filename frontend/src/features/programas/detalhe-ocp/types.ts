@@ -18,6 +18,8 @@ export type ProgramDetail = {
         description?: string | null; 
         active: boolean 
     }[];
+    criteria?: string | null;
+    notes?: string | null;
     status: 'active' | 'archived';
 };
 

@@ -1,10 +1,6 @@
-// Reutilizando tipos do cadastro-ocp
 export type { Patient, Therapist, StimulusInput, ProgramStatus } from '../cadastro-ocp/types';
-
-// Importando tipos do detalhe-ocp
 export type { ProgramDetail } from '../detalhe-ocp/types';
 
-// Tipo específico para edição
 export type UpdateProgramInput = {
     id: string;
     name?: string | null;
@@ -22,7 +18,6 @@ export type UpdateProgramInput = {
     status?: 'active' | 'archived';
 };
 
-// Validação
 export type ValidationErrors = {
     goalTitle?: string;
     stimuli?: { [index: number]: { label?: string; description?: string } };
