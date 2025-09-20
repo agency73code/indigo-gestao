@@ -21,7 +21,7 @@ export default function GoalSection({
     errors,
 }: GoalSectionProps) {
     return (
-        <Card className="rounded-[5px] p-2 sm:p-4">
+        <Card padding="none" className="rounded-[5px] p-2 sm:p-4">
             <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
                 <CardTitle className="text-base flex items-center gap-2">
                     <Target className="h-4 w-4" />

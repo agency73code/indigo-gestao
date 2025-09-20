@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Plus, Search, FileText, BarChart3 } from 'lucide-react';
+import { Plus, Search, FileText, BarChart3, Eye } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function HubPage() {
@@ -21,7 +21,15 @@ export default function HubPage() {
             textColor: 'text-white',
         },
         {
-            title: 'Nova Sessão',
+            title: 'Consultar Sessão',
+            description: 'Visualizar e acompanhar sessões registradas',
+            icon: Eye,
+            href: '/app/programas/sessoes/consultar',
+            bgColor: 'bg-teal-500',
+            textColor: 'text-white',
+        },
+        {
+            title: 'Registrar Sessão',
             description: 'Registrar uma nova sessão de treino',
             icon: Search,
             href: '/app/programas/sessoes/nova',
@@ -49,8 +57,7 @@ export default function HubPage() {
                     Programas de Treino (OCP)
                 </h1>
                 <p className="text-sm sm:text-base text-muted-foreground">
-                    Gerencie programas de treino personalizados e acompanhe o progresso dos
-                    pacientes
+                    Gerencie programas de treino personalizados e acompanhe o progresso dos pacientes
                 </p>
             </div>
 
@@ -116,9 +123,7 @@ export default function HubPage() {
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">8</div>
-                            <p className="text-xs text-muted-foreground">
-                                4 concluídas, 4 pendentes
-                            </p>
+                            <p className="text-xs text-muted-foreground">4 concluídas, 4 pendentes</p>
                         </CardContent>
                     </Card>
 
@@ -137,3 +142,4 @@ export default function HubPage() {
         </div>
     );
 }
+

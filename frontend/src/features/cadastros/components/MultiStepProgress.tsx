@@ -14,7 +14,7 @@ export default function MultiStepProgress({
 }: MultiStepProgressProps) {
     return (
         <div className="w-full mb-6 md:mb-8">
-            <div className="flex items-center justify-between gap-1 sm:gap-3 md:gap-4">
+            <div className="flex items-center justify-between gap-0.5 sm:gap-2 md:gap-2">
                 {steps.map((step, index) => {
                     const stepNumber = index + 1;
                     const isCompleted = stepNumber < currentStep;
@@ -39,7 +39,9 @@ export default function MultiStepProgress({
                                     {isCompleted ? (
                                         <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5" />
                                     ) : (
-                                        <span className="text-[10px] sm:text-xs font-medium">{stepNumber}</span>
+                                        <span className="text-[10px] sm:text-xs font-medium">
+                                            {stepNumber}
+                                        </span>
                                     )}
                                 </motion.div>
 
