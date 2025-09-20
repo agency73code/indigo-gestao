@@ -1,3 +1,5 @@
+import type { ProgramDetail } from './detalhe-ocp/types';
+
 type Patient = {
     id: string;
     name: string;
@@ -8,6 +10,14 @@ type Patient = {
 
 function ageCalc(birthDate: string) {
     return new Date().getFullYear() - new Date(birthDate).getFullYear();
+}
+
+export async function fetchProgram(programId: string): Promise<ProgramDetail> {
+    const res = await fetch(`/api/ocp/programs/${programId}`, { credentials: 'include' });
+    if (!res.ok) throw new Error(`Erro ao buscar programas: ${res.statusText}`);
+
+    const data = await res.json();
+    return data.data;
 }
 
 export async function fetchClients(q?: string): Promise<Patient[]> {

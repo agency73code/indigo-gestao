@@ -6,6 +6,7 @@ import { auth } from '../middleware/auth.middleware.js';
 const router: ExpressRouter = Router();
 
 router.get('/clients', auth, OcpController.listTherapistClients);
+router.get("/clients/:clientId", auth, OcpController.getClientById);
 router.get('/clients/:clientId/programs', OcpController.listClientPrograms);
 router.get('/programs/:programId', OcpController.getProgramById);
 router.get('/programs/:programId/sessions', OcpController.getSessionByProgram);

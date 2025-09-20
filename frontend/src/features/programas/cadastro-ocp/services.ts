@@ -51,17 +51,29 @@ const MOCK_THERAPISTS: Therapist[] = [
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export async function fetchPatientById(id: string): Promise<Patient> {
-    if (USE_LOCAL_MOCKS) {
-        await delay(300);
-        const patient = MOCK_PATIENTS.find(p => p.id === id);
-        if (!patient) {
-            throw new Error(`Paciente com ID ${id} não encontrado`);
+    try {
+        const res = await fetch(`/api/ocp/clients/${id}`, {
+            method: 'GET',
+            credentials: 'include',
+        });
+
+        if (!res.ok) {
+            throw new Error(`Erro ao buscar paciente: ${res.statusText}`);
         }
-        return patient;
+
+        const json = await res.json();
+        return json.data as Patient;
+    } catch (err) {
+        if (USE_LOCAL_MOCKS) {
+            await delay(300);
+            const patient = MOCK_PATIENTS.find(p => p.id === id);
+            if (!patient) {
+                throw new Error(`Paciente com ID ${id} não encontrado`);
+            }
+            return patient;
+        }
+        throw err;
     }
-    
-    // TODO: Implementar chamada real da API
-    throw new Error('API integration not implemented yet');
 }
 
 export async function fetchTherapistById(id: string): Promise<Therapist> {

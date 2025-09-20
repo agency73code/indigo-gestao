@@ -61,6 +61,16 @@ export async function getSessionByProgram(req: Request, res: Response) {
     }
 }
 
+export async function getClientById(req: Request, res: Response) {
+    const { clientId } = req.params;
+    if (!clientId) return res.status(400).json({ success: false, message: 'clientId é obrigatório' });
+
+    const patient = await OcpService.getClientById(clientId);
+    if (!patient) return res.status(404).json({ success: false, message: 'Paciente não encontrado' });
+
+    res.json({ data: patient });
+}
+
 export async function listTherapistClients(req: Request, res: Response) {
     const user = req.user as Express.UserPayload | undefined;
     if (!user) return res.status(401).json({ success: false, message: 'Unauthorized' });
