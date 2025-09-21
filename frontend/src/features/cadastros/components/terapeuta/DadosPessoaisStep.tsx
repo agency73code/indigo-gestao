@@ -23,8 +23,8 @@ export default function DadosPessoaisStep({ data, onUpdate, onBlurField, errors 
     return (
         <div className="space-y-4 md:space-y-6">
             <div>
-                <h3 className="text-base sm:text-base sm:text-lg font-semibold text-primary">Dados Pessoais</h3>
-                <p className="text-xs sm:text-xs sm:text-sm text-muted-foreground mt-1">
+                <h3 className="text-base  sm:text-lg font-semibold text-primary">Dados Pessoais</h3>
+                <p className="text-xs sm:text-xs  text-muted-foreground mt-1">
                     Informe os dados pessoais do terapeuta. Campos marcados com * são obrigatórios.
                 </p>
             </div>

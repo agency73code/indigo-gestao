@@ -1,27 +1,44 @@
 import { Input } from '@/ui/input';
 import { Label } from '@/ui/label';
+import { Button } from '@/ui/button';
+import { Plus, X } from 'lucide-react';
 import { useEffect } from 'react';
 import { useCepLookup } from '../../hooks/useCepLookup';
 import type { Cliente } from '../../types/cadastros.types';
+import * as mask from '@/common/utils/mask';
 
 interface DadosEscolaStepProps {
     data: Partial<Cliente>;
     onUpdate: (field: string, value: any) => void;
     errors: Record<string, string>;
+    onBlur: (field: string) => void;
 }
 
-export default function DadosEscolaStep({ data, onUpdate, errors }: DadosEscolaStepProps) {
+export default function DadosEscolaStep({ data, onUpdate, errors, onBlur }: DadosEscolaStepProps) {
     const updateDadosEscola = (field: string, value: any) => {
         onUpdate(`dadosEscola.${field}`, value);
     };
+
+    // Inicializar com pelo menos um contato se não existir
+    useEffect(() => {
+        if (!data.dadosEscola?.contatos || data.dadosEscola.contatos.length === 0) {
+            updateDadosEscola('contatos', [
+                {
+                    nome: '',
+                    telefone: '',
+                    email: '',
+                    funcao: '',
+                },
+            ]);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [data.dadosEscola?.contatos]);
 
     const updateEnderecoEscola = (field: string, value: any) => {
         onUpdate(`dadosEscola.endereco.${field}`, value);
     };
 
-    const { data: cepData, error: cepError } = useCepLookup(
-        data.dadosEscola?.endereco?.cep || ''
-    );
+    const { data: cepData, error: cepError } = useCepLookup(data.dadosEscola?.endereco?.cep || '');
 
     useEffect(() => {
         if (cepData) {
@@ -58,6 +75,8 @@ export default function DadosEscolaStep({ data, onUpdate, errors }: DadosEscolaS
                         <option value="">Selecione o tipo</option>
                         <option value="particular">Particular</option>
                         <option value="publica">Pública</option>
+                        <option value="afastado">Afastado da escola</option>
+                        <option value="clinica-escola">Clínica-escola</option>
                     </select>
                     {errors['dadosEscola.tipoEscola'] && (
                         <p className="text-sm text-destructive">
@@ -87,7 +106,10 @@ export default function DadosEscolaStep({ data, onUpdate, errors }: DadosEscolaS
                     <Input
                         id="telefoneEscola"
                         value={data.dadosEscola?.telefone || ''}
-                        onChange={(e) => updateDadosEscola('telefone', e.target.value)}
+                        onChange={(e) =>
+                            updateDadosEscola('telefone', mask.maskBRPhone(e.target.value))
+                        }
+                        onBlur={() => onBlur('dadosEscola.telefone')}
                         placeholder="(11) 99999-9999"
                         className={errors['dadosEscola.telefone'] ? 'border-destructive' : ''}
                     />
@@ -103,7 +125,10 @@ export default function DadosEscolaStep({ data, onUpdate, errors }: DadosEscolaS
                         id="emailEscola"
                         type="email"
                         value={data.dadosEscola?.email || ''}
-                        onChange={(e) => updateDadosEscola('email', e.target.value)}
+                        onChange={(e) =>
+                            updateDadosEscola('email', mask.normalizeEmail(e.target.value))
+                        }
+                        onBlur={() => onBlur('dadosEscola.email')}
                         placeholder="escola@exemplo.com"
                         className={errors['dadosEscola.email'] ? 'border-destructive' : ''}
                     />
@@ -111,6 +136,176 @@ export default function DadosEscolaStep({ data, onUpdate, errors }: DadosEscolaS
                         <p className="text-sm text-destructive">{errors['dadosEscola.email']}</p>
                     )}
                 </div>
+            </div>
+
+            {/* Contatos da Escola */}
+            <div className="space-y-4">
+                <h4 className="font-medium text-muted-foreground border-b pb-2">
+                    Contatos da Escola
+                </h4>
+
+                {/* Lista de contatos */}
+                {(data.dadosEscola?.contatos || []).map((contato, index) => (
+                    <div key={index} className="border rounded-lg p-4 space-y-4 relative">
+                        <div className="flex items-center justify-between">
+                            <h4 className="font-medium">Contato {index + 1}</h4>
+                            {(data.dadosEscola?.contatos || []).length > 1 && (
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                        const contatos = [...(data.dadosEscola?.contatos || [])];
+                                        contatos.splice(index, 1);
+                                        updateDadosEscola('contatos', contatos);
+                                    }}
+                                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                >
+                                    <X className="w-4 h-4" />
+                                </Button>
+                            )}
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Nome */}
+                            <div className="space-y-2">
+                                <Label htmlFor={`nomeContato-${index}`}>Nome *</Label>
+                                <Input
+                                    id={`nomeContato-${index}`}
+                                    value={contato.nome || ''}
+                                    onChange={(e) => {
+                                        const contatos = [...(data.dadosEscola?.contatos || [])];
+                                        contatos[index] = {
+                                            ...contatos[index],
+                                            nome: mask.maskPersonName(e.target.value),
+                                        };
+                                        updateDadosEscola('contatos', contatos);
+                                    }}
+                                    placeholder="Nome do contato"
+                                    className={
+                                        errors[`dadosEscola.contatos.${index}.nome`]
+                                            ? 'border-destructive'
+                                            : ''
+                                    }
+                                />
+                                {errors[`dadosEscola.contatos.${index}.nome`] && (
+                                    <p className="text-sm text-destructive">
+                                        {errors[`dadosEscola.contatos.${index}.nome`]}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Telefone */}
+                            <div className="space-y-2">
+                                <Label htmlFor={`telefoneContato-${index}`}>Telefone *</Label>
+                                <Input
+                                    id={`telefoneContato-${index}`}
+                                    value={contato.telefone || ''}
+                                    onChange={(e) => {
+                                        const contatos = [...(data.dadosEscola?.contatos || [])];
+                                        contatos[index] = {
+                                            ...contatos[index],
+                                            telefone: mask.maskBRPhone(e.target.value),
+                                        };
+                                        updateDadosEscola('contatos', contatos);
+                                    }}
+                                    onBlur={() => onBlur(`dadosEscola.contatos.${index}.telefone`)}
+                                    placeholder="(11) 99999-9999"
+                                    className={
+                                        errors[`dadosEscola.contatos.${index}.telefone`]
+                                            ? 'border-destructive'
+                                            : ''
+                                    }
+                                />
+                                {errors[`dadosEscola.contatos.${index}.telefone`] && (
+                                    <p className="text-sm text-destructive">
+                                        {errors[`dadosEscola.contatos.${index}.telefone`]}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* E-mail */}
+                            <div className="space-y-2">
+                                <Label htmlFor={`emailContato-${index}`}>E-mail</Label>
+                                <Input
+                                    id={`emailContato-${index}`}
+                                    type="email"
+                                    value={contato.email || ''}
+                                    onChange={(e) => {
+                                        const contatos = [...(data.dadosEscola?.contatos || [])];
+                                        contatos[index] = {
+                                            ...contatos[index],
+                                            email: mask.normalizeEmail(e.target.value),
+                                        };
+                                        updateDadosEscola('contatos', contatos);
+                                    }}
+                                    onBlur={() => onBlur(`dadosEscola.contatos.${index}.email`)}
+                                    placeholder="contato@exemplo.com"
+                                    className={
+                                        errors[`dadosEscola.contatos.${index}.email`]
+                                            ? 'border-destructive'
+                                            : ''
+                                    }
+                                />
+                                {errors[`dadosEscola.contatos.${index}.email`] && (
+                                    <p className="text-sm text-destructive">
+                                        {errors[`dadosEscola.contatos.${index}.email`]}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Função */}
+                            <div className="space-y-2">
+                                <Label htmlFor={`funcaoContato-${index}`}>
+                                    Função/Relacionamento *
+                                </Label>
+                                <Input
+                                    id={`funcaoContato-${index}`}
+                                    value={contato.funcao || ''}
+                                    onChange={(e) => {
+                                        const contatos = [...(data.dadosEscola?.contatos || [])];
+                                        contatos[index] = {
+                                            ...contatos[index],
+                                            funcao: e.target.value,
+                                        };
+                                        updateDadosEscola('contatos', contatos);
+                                    }}
+                                    placeholder="Ex: Coordenadora, Professora, Secretária"
+                                    className={
+                                        errors[`dadosEscola.contatos.${index}.funcao`]
+                                            ? 'border-destructive'
+                                            : ''
+                                    }
+                                />
+                                {errors[`dadosEscola.contatos.${index}.funcao`] && (
+                                    <p className="text-sm text-destructive">
+                                        {errors[`dadosEscola.contatos.${index}.funcao`]}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                ))}
+
+                {/* Botão para adicionar contato */}
+                <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                        const contatos = [...(data.dadosEscola?.contatos || [])];
+                        contatos.push({
+                            nome: '',
+                            telefone: '',
+                            email: '',
+                            funcao: '',
+                        });
+                        updateDadosEscola('contatos', contatos);
+                    }}
+                    className="w-full flex items-center gap-2 mb-8"
+                >
+                    <Plus className="w-4 h-4" />
+                    Adicionar contato
+                </Button>
             </div>
 
             {/* Endereço da escola */}
@@ -126,7 +321,40 @@ export default function DadosEscolaStep({ data, onUpdate, errors }: DadosEscolaS
                         <Input
                             id="cepEscola"
                             value={data.dadosEscola?.endereco?.cep || ''}
-                            onChange={(e) => updateEnderecoEscola('cep', e.target.value)}
+                            onChange={async (e) => {
+                                const masked = mask.maskCEP(e.target.value);
+                                const digits = masked.replace(/\D/g, '');
+
+                                // Atualiza CEP
+                                onUpdate('dadosEscola.endereco.cep', masked);
+
+                                // Lookup quando tiver 8 dígitos
+                                if (digits.length === 8) {
+                                    try {
+                                        const resp = await fetch(
+                                            `https://viacep.com.br/ws/${digits}/json/`,
+                                        );
+                                        const json = await resp.json();
+                                        if (!json.erro) {
+                                            onUpdate(
+                                                'dadosEscola.endereco.logradouro',
+                                                json.logradouro || '',
+                                            );
+                                            onUpdate(
+                                                'dadosEscola.endereco.bairro',
+                                                json.bairro || '',
+                                            );
+                                            onUpdate(
+                                                'dadosEscola.endereco.cidade',
+                                                json.localidade || json.cidade || '',
+                                            );
+                                            onUpdate('dadosEscola.endereco.uf', json.uf || '');
+                                        }
+                                    } catch {
+                                        // silencioso
+                                    }
+                                }
+                            }}
                             placeholder="00000-000"
                             className={
                                 errors['dadosEscola.endereco.cep'] ? 'border-destructive' : ''
@@ -137,9 +365,7 @@ export default function DadosEscolaStep({ data, onUpdate, errors }: DadosEscolaS
                                 {errors['dadosEscola.endereco.cep']}
                             </p>
                         )}
-                        {cepError && (
-                            <p className="text-sm text-destructive">{cepError}</p>
-                        )}
+                        {cepError && <p className="text-sm text-destructive">{cepError}</p>}
                     </div>
 
                     {/* Logradouro */}

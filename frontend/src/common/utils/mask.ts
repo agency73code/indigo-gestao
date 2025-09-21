@@ -2,9 +2,9 @@ export const onlyDigits = (v: string) => v.replace(/\D/g, "");
 
 export function toTitleCaseSimple(name: string) {
   return name
-    .trim()
     .toLowerCase()
-    .replace(/(^|\s)\S/g, (c) => c.toUpperCase());
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+    .replace(/\s+/g, ' '); // Normaliza espaços múltiplos para um único espaço
 }
 
 export function maskCPF(v: string) {
@@ -199,4 +199,45 @@ export function isValidCNPJ(value: string) {
   const dv1 = calc(cnpj.slice(0, 12));
   const dv2 = calc(cnpj.slice(0, 12) + dv1);
   return dv1 === Number(cnpj[12]) && dv2 === Number(cnpj[13]);
+}
+
+// --------- CEP ----------
+export function maskCEP(v: string) {
+  const d = String(v ?? "").replace(/\D/g, "").slice(0, 8);
+  if (d.length <= 5) {
+    return d;
+  }
+  return `${d.slice(0, 5)}-${d.slice(5)}`;
+}
+
+export function isValidCEP(value: string) {
+  const cep = String(value ?? "").replace(/\D/g, "");
+  return cep.length === 8;
+}
+
+// --------- CURRENCY BRL ----------
+export function maskCurrencyBR(v: string | number) {
+  let value = String(v ?? "");
+  
+  // Remove tudo que não é dígito
+  const digits = value.replace(/\D/g, "");
+  
+  if (!digits) return "";
+  
+  // Converte para centavos e depois para reais
+  const cents = parseInt(digits, 10);
+  const reais = cents / 100;
+  
+  // Formata como moeda brasileira
+  return reais.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    minimumFractionDigits: 2,
+  });
+}
+
+export function parseCurrencyBR(value: string): number {
+  // Remove símbolos de moeda e converte para número
+  const digits = String(value ?? "").replace(/[^\d,]/g, "").replace(",", ".");
+  return parseFloat(digits) || 0;
 }
