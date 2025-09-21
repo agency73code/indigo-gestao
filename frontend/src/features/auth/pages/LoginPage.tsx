@@ -5,7 +5,6 @@ import type { LoginCredentials } from '../types/auth.types';
 
 export default function LoginPage() {
     const { login, isLoading, error } = useAuth();
-
     const handleSubmit = async (data: LoginCredentials) => {
         await login(data);
     };

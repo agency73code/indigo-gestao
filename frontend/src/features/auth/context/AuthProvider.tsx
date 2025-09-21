@@ -84,6 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const logout = useCallback(async () => {
         try {
+            sessionStorage.setItem('auth:justLoggedOut', '1');
             await apiLogout();
         } finally {
             setAuthState({
@@ -92,7 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 isLoading: false,
                 error: null,
             });
-            navigate('/login');
+            navigate('/login', { replace: true });
         }
     }, [navigate]);
 
