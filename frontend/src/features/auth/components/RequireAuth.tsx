@@ -5,7 +5,7 @@ export default function RequireAuth() {
     const { user, isLoading } = useAuth()
 
     if (isLoading) {
-        return <div>Carregando...</div>
+        return null;
     }
 
     if (!user) {
