@@ -24,7 +24,6 @@ interface EnderecoFormProps {
     onUpdate: (index: number, field: string, value: string) => void;
     onRemove: (index: number) => void;
     errors: Record<string, string>;
-    cuidadores?: Array<{ nome: string }>;
     onBlur: (field: string) => void;
 }
 
@@ -34,7 +33,6 @@ export default function EnderecoForm({
     onUpdate,
     onRemove,
     errors,
-    cuidadores,
     onBlur,
 }: EnderecoFormProps) {
     const { data, error } = useCepLookup(endereco.cep || '');
@@ -87,11 +85,8 @@ export default function EnderecoForm({
                     >
                         <option value="">Selecione quem reside neste endereço</option>
                         <option value="paciente">Paciente</option>
-                        {(cuidadores || []).map((cuidador, cuidadorIndex) => (
-                            <option key={cuidadorIndex} value={cuidador.nome}>
-                                {cuidador.nome}
-                            </option>
-                        ))}
+                        <option value="mae">Mãe</option>
+                        <option value="pai">Pai</option>
                         <option value="outro">Outro (especificar)</option>
                     </select>
                     {errors[`enderecos.${index}.residenciaDe`] && (
