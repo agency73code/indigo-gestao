@@ -8,9 +8,9 @@ import { auth } from "../middleware/auth.middleware.js";
 
 const router: ExpressRouter = Router();
 
-router.get('/', list);
-router.get('/clientesativos', countActiveClients);
-router.get('/:id', getById);
+router.get('/', auth,  list);
+router.get('/clientesativos', auth, countActiveClients);
+router.get('/:id', auth, getById);
 router.post("/cadastrar", auth, requireAbility('manage', 'Cadastro'), create);
 
 export default router;

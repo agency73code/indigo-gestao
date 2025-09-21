@@ -27,7 +27,7 @@ import EditarProgramaPage from '../../features/programas/pages/EditarProgramaPag
 import { CadastroSessaoPage } from '../../features/sessoes';
 import RelatorioMensalPage from '../../features/programas/pages/RelatorioMensalPage';
 import NotAccessPage from '@/features/shell/pages/NotAccessPage';
-import NotPermissionPage from '@/features/shell/pages/NotPermissionPage copy';
+import NotPermissionPage from '@/features/shell/pages/NotPermissionPage';
 
 const suspenseFallback = (
     <div className="flex items-center justify-center h-64">
