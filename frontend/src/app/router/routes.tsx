@@ -47,13 +47,11 @@ export const router = createBrowserRouter([
             { path: 'sign-in', element: <LoginPage /> },
             { path: 'login', element: <LoginPage /> },
             { path: 'forgot-password', element: <ForgotPasswordPage /> },
-            {
-                path: 'forgot-password/email-sent',
-                element: <ForgotPasswordEmailSend />,
-            },
+            { path: 'forgot-password/email-sent', element: <ForgotPasswordEmailSend /> },
             { path: 'reset-password', element: <ResetPasswordPage /> },
             { path: 'reset-success', element: <ResetSuccessPage /> },
             {
+
                 path: 'app',
                 element: <AppLayout />,
                 children: [
@@ -78,17 +76,21 @@ export const router = createBrowserRouter([
                     {
                         path: 'cadastro/terapeuta',
                         element: (
-                            <Suspense fallback={suspenseFallback}>
-                                <CadastroTerapeutaPage />
-                            </Suspense>
+                            <RequireAbility action="manage" subject="Cadastro">
+                                <Suspense fallback={suspenseFallback}>
+                                    <CadastroTerapeutaPage />
+                                </Suspense>
+                            </RequireAbility>
                         ),
                     },
                     {
                         path: 'cadastro/cliente',
                         element: (
-                            <Suspense fallback={suspenseFallback}>
-                                <CadastroClientePage />
-                            </Suspense>
+                            <RequireAbility action="manage" subject="Cadastro">
+                                <Suspense fallback={suspenseFallback}>
+                                    <CadastroClientePage />
+                                </Suspense>
+                            </RequireAbility>
                         ),
                     },
                     {

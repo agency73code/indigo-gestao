@@ -13,7 +13,7 @@ export function RequireAbility({ action, subject, children }: RequireAbilityProp
     const ability = useAbility()
 
     if (!ability.can(action, subject)) {
-        return <Navigate to='/app' replace />
+        return <Navigate to='/403' replace />
     }
 
     return <>{children}</>
