@@ -333,6 +333,6 @@ export function mapOcpReturn(dto: Awaited<ReturnType<typeof listByClientId>>[num
         objective: dto.objetivo_programa,
         status: dto.status as 'active' | 'archived',
         lastSession: dto.atualizado_em.toISOString(),
-        patiendId: dto.cliente_id,
+        patientId: dto.cliente_id,
     };
 }
