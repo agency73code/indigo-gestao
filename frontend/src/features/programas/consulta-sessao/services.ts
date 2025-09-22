@@ -118,7 +118,7 @@ export async function findSessionById(sessionId: string): Promise<Sessao | null>
 export function resumirSessao(sessao: Sessao): ResumoSessao {
   const total = sessao.registros.length;
   const acertos = sessao.registros.filter((r) => r.resultado === 'acerto').length;
-  const independentes = acertos; // acerto representa independência neste contexto
+  const independentes = acertos;
   return {
     acerto: total > 0 ? Math.round((acertos / total) * 100) : 0,
     independencia: total > 0 ? Math.round((independentes / total) * 100) : 0,
