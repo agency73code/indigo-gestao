@@ -41,7 +41,7 @@ function SaveButtons({
                 >
                     {isSaving ? (
                         <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground mr-2" />
                             Salvando...
                         </>
                     ) : (
@@ -110,7 +110,7 @@ export default function SaveBar({
     return (
         <>
             {/* Variante Mobile - fixa no rodapé */}
-            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border z-50 md:hidden">
+            <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75 border-t border-border z-50 md:hidden">
                 <div className="max-w-lg mx-auto p-4">
                     <SaveButtons
                         onSave={onSave}

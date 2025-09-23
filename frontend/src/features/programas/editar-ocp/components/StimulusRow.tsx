@@ -1,4 +1,4 @@
-import { ChevronUp, ChevronDown, Trash2, ToggleLeft } from 'lucide-react';
+import { ChevronUp, ChevronDown, ToggleLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -35,14 +35,13 @@ export default function StimulusRow({
     onActiveChange,
     onMoveUp,
     onMoveDown,
-    onRemove,
     errors,
 }: StimulusRowProps) {
     const stimulusError = errors?.[index];
 
     return (
-        <Card className="rounded-[5px] p-1 sm:p-4">
-            <CardContent className="p-4 space-y-4">
+        <Card padding="small" className="rounded-[5px]">
+            <CardContent className="py-4 space-y-4">
                 {/* Header com número e controles */}
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -87,15 +86,7 @@ export default function StimulusRow({
                             <ChevronDown className="h-4 w-4" />
                         </Button>
 
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => onRemove(index)}
-                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                            aria-label={`Remover estímulo ${index + 1}`}
-                        >
-                            <Trash2 className="h-4 w-4" />
-                        </Button>
+                        
                     </div>
                 </div>
 

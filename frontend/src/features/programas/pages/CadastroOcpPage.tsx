@@ -339,10 +339,10 @@ export default function CadastroOcpPage() {
     }
 
     return (
-        <div className="flex flex-col min-h-full w-full p-0 sm:p-6">
+        <div className="flex flex-col min-h-full w-full p-0 sm:p-0 py-2 sm:py-4">
             {/* Header */}
-            <div className="px-1 sm:px-3 py-4 sm:py-6">
-                <div className="space-y-2">
+            <div className="py-2">
+                <div className="space-y-2 px-2 lg:px-4">
                     <h1
                         style={{ fontFamily: 'Sora, sans-serif' }}
                         className="text-xl sm:text-2xl font-semibold text-primary leading-tight"
@@ -357,7 +357,7 @@ export default function CadastroOcpPage() {
 
             {/* Conteúdo principal */}
             <main className="flex-1 px-1 sm:px-3 pb-60 sm:pb-30 w-full">
-                <div className="space-y-6 max-w-4xl md:max-w-none mx-auto">
+                <div className="space-y-6 md:max-w-none mx-auto">
                     {/* Informações do cabeçalho */}
                     <HeaderInfo
                         patient={formState.patient}

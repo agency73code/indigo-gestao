@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
     HeaderInfo,
+    DateSection,
     GoalSection,
     StimuliEditor,
     CriteriaSection,
@@ -35,6 +37,8 @@ export default function EditarProgramaPage() {
     const [criteria, setCriteria] = useState('');
     const [notes, setNotes] = useState('');
     const [status, setStatus] = useState<'active' | 'archived'>('active');
+    const [prazoInicio, setPrazoInicio] = useState('');
+    const [prazoFim, setPrazoFim] = useState('');
 
     // Estados de controle
     const [validationErrors, setValidationErrors] = useState<ValidationErrorsType>({});
@@ -71,6 +75,8 @@ export default function EditarProgramaPage() {
             setCriteria(programData.criteria ?? '');
             setNotes(programData.notes ?? '');
             setStatus(programData.status);
+            setPrazoInicio(programData.prazoInicio || '');
+            setPrazoFim(programData.prazoFim || '');
         } catch (err) {
             console.error('Erro ao carregar programa:', err);
             setError(err instanceof Error ? err.message : 'Erro desconhecido');
@@ -126,6 +132,7 @@ export default function EditarProgramaPage() {
         setValidationErrors(errors);
 
         if (Object.keys(errors).length > 0) {
+            toast.error('Preencha todos os campos obrigatórios');
             return;
         }
 
@@ -143,22 +150,25 @@ export default function EditarProgramaPage() {
                 criteria: criteria || null,
                 notes: notes || null,
                 status,
+                prazoInicio: prazoInicio || undefined,
+                prazoFim: prazoFim || undefined,
             };
 
             await updateProgram(updateData);
 
-            // Toast/notificação (seria implementado com biblioteca de toast)
-            console.log('Programa atualizado com sucesso!');
+            toast.success('Programa atualizado com sucesso!');
 
             // Navegar de volta para o detalhe
             const detailUrl = patientId
-                ? `/programas/${programaId}?patientId=${patientId}`
-                : `/programas/${programaId}`;
+                ? `/app/programas/${programaId}?patientId=${patientId}`
+                : `/app/programas/${programaId}`;
             navigate(detailUrl);
         } catch (err) {
             console.error('Erro ao salvar programa:', err);
+            const errorMessage = err instanceof Error ? err.message : 'Erro ao salvar programa';
+            toast.error(errorMessage);
             setValidationErrors({
-                general: err instanceof Error ? err.message : 'Erro ao salvar programa',
+                general: errorMessage,
             });
         } finally {
             setIsSaving(false);
@@ -170,6 +180,7 @@ export default function EditarProgramaPage() {
         setValidationErrors(errors);
 
         if (Object.keys(errors).length > 0) {
+            toast.error('Preencha todos os campos obrigatórios');
             return;
         }
 
@@ -187,22 +198,25 @@ export default function EditarProgramaPage() {
                 criteria: criteria || null,
                 notes: notes || null,
                 status,
+                prazoInicio: prazoInicio || undefined,
+                prazoFim: prazoFim || undefined,
             };
 
             const { id: newProgramId } = await createProgramVersion(updateData);
 
-            // Toast/notificação
-            console.log('Nova versão criada com sucesso!');
+            toast.success('Nova versão do programa criada com sucesso!');
 
             // Navegar para o detalhe da nova versão
             const detailUrl = patientId
-                ? `/programas/${newProgramId}?patientId=${patientId}`
-                : `/programas/${newProgramId}`;
+                ? `/app/programas/${newProgramId}?patientId=${patientId}`
+                : `/app/programas/${newProgramId}`;
             navigate(detailUrl);
         } catch (err) {
             console.error('Erro ao criar nova versão:', err);
+            const errorMessage = err instanceof Error ? err.message : 'Erro ao criar nova versão';
+            toast.error(errorMessage);
             setValidationErrors({
-                general: err instanceof Error ? err.message : 'Erro ao criar nova versão',
+                general: errorMessage,
             });
         } finally {
             setIsCreatingVersion(false);
@@ -213,8 +227,8 @@ export default function EditarProgramaPage() {
         if (!program) return;
 
         const detailUrl = patientId
-            ? `/programas/${program.id}?patientId=${patientId}`
-            : `/programas/${program.id}`;
+            ? `/app/programas/${program.id}?patientId=${patientId}`
+            : `/app/programas/${program.id}`;
         navigate(detailUrl);
     };
 
@@ -242,14 +256,28 @@ export default function EditarProgramaPage() {
         const hasCriteriaChanges = criteria !== '';
         const hasNotesChanges = notes !== '';
 
+        const hasDateChanges =
+            prazoInicio !== (program.prazoInicio || '') || prazoFim !== (program.prazoFim || '');
+
         setHasChanges(
             hasGoalChanges ||
                 hasStatusChanges ||
                 hasStimuliChanges ||
                 hasCriteriaChanges ||
-                hasNotesChanges,
+                hasNotesChanges ||
+                hasDateChanges,
         );
-    }, [program, goalTitle, goalDescription, stimuli, criteria, notes, status]);
+    }, [
+        program,
+        goalTitle,
+        goalDescription,
+        stimuli,
+        criteria,
+        notes,
+        status,
+        prazoInicio,
+        prazoFim,
+    ]);
 
     useEffect(() => {
         loadProgram();
@@ -287,10 +315,19 @@ export default function EditarProgramaPage() {
     }
 
     return (
-        <div className="min-h-screen bg-background pb-40 p-1 sm:p-4">
-            <div className="max-w-lg md:max-w-none mx-auto md:mx-4 lg:mx-8 space-y-6">
+        <div className="min-h-screen bg-background pb-4">
+            <div className="max-w-lg md:max-w-none p-0 lg:p-4 space-y-6">
                 {/* Header com informações read-only */}
                 <HeaderInfo program={program} />
+
+                {/* Seção de datas do programa */}
+                <DateSection
+                    prazoInicio={prazoInicio}
+                    prazoFim={prazoFim}
+                    onPrazoInicioChange={setPrazoInicio}
+                    onPrazoFimChange={setPrazoFim}
+                    hasChanges={hasChanges}
+                />
 
                 {/* Erros de validação */}
                 <ValidationErrors errors={validationErrors} />

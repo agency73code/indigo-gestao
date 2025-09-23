@@ -31,11 +31,11 @@ export default function DetalheSessao({ sessao, paciente, programa, onBack }: De
       <HeaderSessao sessao={sessao} paciente={paciente} programa={programa} onBack={onBack} />
 
       {/* Estímulos em treino */}
-      <Card className="rounded-[5px] p-1 sm:p-4">
-        <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
+      <Card className="rounded-[5px] px-6 py-2 md:px-8 md:py-10 lg:px-8 lg:py-0">
+        <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
           <CardTitle className="text-base">Estímulos em treino</CardTitle>
         </CardHeader>
-        <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+        <CardContent className="pb-3 sm:pb-6">
           <div className="space-y-3">
             {programa.stimuli.map((stim) => {
               const grupo = registrosPorEstimulo[stim.id];

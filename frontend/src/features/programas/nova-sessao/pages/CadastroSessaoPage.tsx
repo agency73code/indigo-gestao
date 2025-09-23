@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import {
     PatientSelector,
     ProgramSelector,
@@ -215,11 +216,25 @@ export default function CadastroSessaoPage() {
                 attempts: sessionState.attempts,
             });
 
+            // Toast de confirmação com mensagem focada na experiência do usuário
+            toast.success('Sessão registrada com sucesso! 🎉', {
+                description:
+                    'Os dados da sessão foram salvos e estão disponíveis no histórico do paciente.',
+                duration: 4000,
+            });
+
             const redirectUrl = `/app/programas/${sessionState.programId}?patientId=${sessionState.patientId}`;
             navigate(redirectUrl);
         } catch (err) {
             console.error('Erro ao salvar sessão:', err);
             setError('Erro ao salvar sessão. Tente novamente.');
+
+            // Toast de erro para melhor feedback
+            toast.error('Erro ao salvar sessão', {
+                description:
+                    'Não foi possível registrar a sessão. Verifique sua conexão e tente novamente.',
+                duration: 5000,
+            });
         } finally {
             setSavingSession(false);
         }
@@ -257,9 +272,9 @@ export default function CadastroSessaoPage() {
     };
 
     return (
-        <div className="flex flex-col min-h-screen w-full">
+        <div className="flex flex-col w-full">
             {/* Container principal */}
-            <main className="flex-1 max-w-4xl mx-auto px-4 md:px-4 lg:px-2 py-4 sm:py-6 md:pb-4 w-full">
+            <main className="flex-1 px-0 py-4  lg:p-4 sm:py-6 md:pb-4 w-full">
                 <div className="space-y-4 sm:space-y-6">
                     {/* Seleção de Paciente */}
                     {!selectedPatient && (

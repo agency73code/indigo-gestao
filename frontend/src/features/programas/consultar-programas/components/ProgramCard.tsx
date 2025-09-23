@@ -30,8 +30,8 @@ export default function ProgramCard({ program, onOpen, onNewSession }: ProgramCa
 
     return (
         <Card
-            padding="sm"
-            className="cursor-pointer hover:shadow-md transition-shadow rounded-[5px]"
+            padding="small"
+            className="cursor-pointer hover:shadow-md transition-shadow rounded-[5px] px-4 lg:px-6 py-4 lg:py-4"
             onClick={handleOpen}
             aria-label={`Abrir programa ${program.title} do paciente ${program.patientName}`}
         >
