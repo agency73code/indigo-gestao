@@ -19,34 +19,6 @@ const DEFAULT_FILTERS: SessaoFiltersState = {
   sort: 'date-desc',
 };
 
-// const VALID_DATE_RANGES = new Set(['all', 'last7', 'last30', 'year']);
-// const VALID_SORTS = new Set(['date-desc', 'date-asc', 'accuracy-desc', 'accuracy-asc']);
-
-// function parseFiltersFromParams(params: URLSearchParams): SessaoFiltersState {
-//   const dateRangeParam = params.get('dateRange');
-//   const sortParam = params.get('sort');
-//   const programParam = params.get('program');
-//   const therapistParam = params.get('therapist');
-
-//   return {
-//     q: params.get('q') ?? '',
-//     dateRange: VALID_DATE_RANGES.has(dateRangeParam ?? '')
-//       ? (dateRangeParam as SessaoFiltersState['dateRange'])
-//       : 'all',
-//     program:
-//       programParam && programParam.trim().length > 0
-//         ? programParam
-//         : 'all',
-//     therapist:
-//       therapistParam && therapistParam.trim().length > 0
-//         ? therapistParam
-//         : 'all',
-//     sort: VALID_SORTS.has(sortParam ?? '')
-//       ? (sortParam as SessaoFiltersState['sort'])
-//       : 'date-desc',
-//   };
-// }
-
 function getSessionTime(sessao: Sessao): number {
   const timestamp = new Date(sessao.data).getTime();
   return Number.isNaN(timestamp) ? 0 : timestamp;
@@ -61,6 +33,7 @@ export default function ConsultaSessao() {
   const [sessions, setSessions] = useState<Sessao[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isUpdatingUrl, setIsUpdatingUrl] = useState(false);
 
   const pacienteIdFromQuery = useMemo(
     () => searchParams.get('pacienteId'),
@@ -69,6 +42,7 @@ export default function ConsultaSessao() {
 
   const syncFiltersToParams = useCallback(
     (nextFilters: SessaoFiltersState, patientId: string | null) => {
+      setIsUpdatingUrl(true);
       const params = new URLSearchParams();
       if (patientId) params.set('pacienteId', patientId);
       if (nextFilters.q) params.set('q', nextFilters.q);
@@ -77,6 +51,7 @@ export default function ConsultaSessao() {
       if (nextFilters.therapist !== 'all') params.set('therapist', nextFilters.therapist);
       if (nextFilters.sort !== 'date-desc') params.set('sort', nextFilters.sort);
       setSearchParams(params);
+      setTimeout(() => setIsUpdatingUrl(false), 50);
     },
     [setSearchParams],
   );
@@ -97,10 +72,17 @@ export default function ConsultaSessao() {
   }, [filters, patient, syncFiltersToParams]);
 
   useEffect(() => {
+    if (isUpdatingUrl) return;
     let cancelled = false;
 
     const loadPatientFromQuery = async () => {
       if (!pacienteIdFromQuery) {
+        if (patient) {
+          setPatient(null);
+          setSessions([]);
+          setError(null);
+          setLoading(false);
+        }
         return;
       }
 
@@ -140,7 +122,7 @@ export default function ConsultaSessao() {
     return () => {
       cancelled = true;
     };
-  }, [pacienteIdFromQuery, patient]);
+  }, [pacienteIdFromQuery, patient, isUpdatingUrl]);
 
   useEffect(() => {
     let cancelled = false;

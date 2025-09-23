@@ -68,8 +68,10 @@ export default function DetalheSessaoPage() {
           patientData = await getPatientById(patientId);
         }
 
-        const { mockProgramDetail } = await import('@/features/programas/detalhe-ocp/mocks/program.mock');
-        console.log(await findProgramSessionById(sessaoId));
+        const mockProgramDetail: ProgramDetail = 
+        (await findProgramSessionById(sessaoId)) ??
+        (await import('@/features/programas/detalhe-ocp/mocks/program.mock')).mockProgramDetail;
+
         const derivedProgram: ProgramDetail = {
           ...mockProgramDetail,
           patientId: sessionData.pacienteId,

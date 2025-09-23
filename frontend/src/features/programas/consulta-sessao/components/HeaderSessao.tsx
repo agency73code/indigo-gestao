@@ -31,8 +31,8 @@ export default function HeaderSessao({ sessao, paciente, programa, onBack }: Hea
 
   const daysLeftInfo = () => {
     const now = new Date();
-    const end = new Date(sessao.prazoFim);
-    const start = new Date(sessao.prazoInicio);
+    const end = new Date(programa.prazoFim!);
+    const start = new Date(programa.prazoInicio!);
     const diff = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     if (isNaN(diff)) return null;
     const status = now > end ? 'finalizado' : `restam ${diff} dias`;

@@ -108,7 +108,8 @@ export async function findProgramSessionById(sessionId: string): Promise<Program
   if (!res.ok) throw new Error(`Erro ao buscar a sessão: ${res.statusText}`);
   
   const data = await res.json();
-  return data;
+  if (!data) return null
+  return data.data;
 }
 
 export function resumirSessao(sessao: Sessao): ResumoSessao {
