@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { CardHeader, CardTitle } from '@/ui/card';
 import { Button } from '@/ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle, XCircle, X } from 'lucide-react';
 import type { Terapeuta } from '../types/cadastros.types';
 import {
     maskCPF,
@@ -33,6 +35,7 @@ const STEPS = [
 ];
 
 export default function CadastroTerapeutaPage() {
+    const navigate = useNavigate();
     const [currentStep, setCurrentStep] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -337,10 +340,39 @@ export default function CadastroTerapeutaPage() {
                 payload.cnpj.razaoSocial = toTitleCaseSimple(payload.cnpj.razaoSocial);
 
             await cadastrarTerapeuta(payload);
-            alert('Terapeuta cadastrado com sucesso!');
+            toast.success('Terapeuta cadastrado com sucesso!', {
+                description: 'O cadastro foi realizado e o terapeuta foi adicionado ao sistema.',
+                duration: 3000,
+                icon: <CheckCircle className="h-4 w-4" />,
+                action: {
+                    label: <X className="h-4 w-4" />,
+                    onClick: () => {},
+                },
+                cancel: {
+                    label: 'Fechar',
+                    onClick: () => {},
+                },
+            });
+
+            // Redireciona para a página inicial após um breve delay
+            setTimeout(() => {
+                navigate('/');
+            }, 1000);
         } catch (error) {
             console.error('Erro ao cadastrar terapeuta:', error);
-            alert('Erro ao cadastrar terapeuta. Tente novamente.');
+            toast.error('Erro ao cadastrar terapeuta', {
+                description: 'Ocorreu um erro durante o cadastro. Tente novamente.',
+                duration: 4000,
+                icon: <XCircle className="h-4 w-4" />,
+                action: {
+                    label: <X className="h-4 w-4" />,
+                    onClick: () => {},
+                },
+                cancel: {
+                    label: 'Fechar',
+                    onClick: () => {},
+                },
+            });
         } finally {
             setIsLoading(false);
         }

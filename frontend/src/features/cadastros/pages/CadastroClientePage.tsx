@@ -1,11 +1,14 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { Button } from '@/ui/button';
-import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, CheckCircle, XCircle, X } from 'lucide-react';
 import {
     DadosPessoaisStep,
     EnderecoStep,
     DadosPagamentoStep,
     DadosEscolaStep,
+    ArquivosStep,
 } from '../components/cliente';
 import MultiStepProgress from '../components/MultiStepProgress';
 import type { Cliente } from '../types/cadastros.types';
@@ -14,9 +17,10 @@ import { CardHeader } from '@/components/ui/card';
 import { cadastrarCliente } from '@/lib/api';
 import { isValidCPF, onlyDigits, isValidEmail, isValidCEP } from '@/common/utils/mask';
 
-const STEPS = ['Dados Pessoais', 'Endereço', 'Dados Pagamento', 'Dados Escola'];
+const STEPS = ['Dados Pessoais', 'Endereço', 'Arquivos', 'Dados Pagamento', 'Dados Escola'];
 
 export default function CadastroClientePage() {
+    const navigate = useNavigate();
     const [currentStep, setCurrentStep] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -95,6 +99,17 @@ export default function CadastroClientePage() {
                 uf: '',
             },
             contatos: [],
+        },
+
+        // Arquivos
+        arquivos: {
+            fotoPerfil: null,
+            documentoIdentidade: null,
+            comprovanteCpf: null,
+            comprovanteResidencia: null,
+            carterinhaPlano: null,
+            relatoriosMedicos: null,
+            prescricaoMedica: null,
         },
     });
 
@@ -377,7 +392,12 @@ export default function CadastroClientePage() {
                 }
                 break;
 
-            case 3: // Dados Pagamento
+            case 3: // Arquivos
+                // Validação opcional - apenas a foto de perfil pode ter validação se necessário
+                // Por enquanto, não há campos obrigatórios no step de arquivos
+                break;
+
+            case 4: // Dados Pagamento
                 // Campos obrigatórios básicos
                 if (!formData.dadosPagamento?.nomeTitular?.trim())
                     newErrors['dadosPagamento.nomeTitular'] = 'Nome do titular é obrigatório';
@@ -408,7 +428,7 @@ export default function CadastroClientePage() {
                 }
                 break;
 
-            case 4: {
+            case 5: {
                 // Dados Escola
                 const tipo = formData.dadosEscola?.tipoEscola;
                 if (!tipo) newErrors['dadosEscola.tipoEscola'] = 'Tipo da escola é obrigatório';
@@ -476,10 +496,39 @@ export default function CadastroClientePage() {
             const payload = formData;
             await cadastrarCliente(payload);
 
-            alert('Cliente cadastrado com sucesso!');
+            toast.success('Cliente cadastrado com sucesso!', {
+                description: 'O cadastro foi realizado e o cliente foi adicionado ao sistema.',
+                duration: 3000,
+                icon: <CheckCircle className="h-4 w-4" />,
+                action: {
+                    label: <X className="h-4 w-4" />,
+                    onClick: () => {},
+                },
+                cancel: {
+                    label: 'Fechar',
+                    onClick: () => {},
+                },
+            });
+
+            // Redireciona para a página inicial após um breve delay
+            setTimeout(() => {
+                navigate('/');
+            }, 1000);
         } catch (error) {
             console.error('Erro ao cadastrar cliente:', error);
-            alert('Erro ao cadastrar cliente. Tente novamente.');
+            toast.error('Erro ao cadastrar cliente', {
+                description: 'Ocorreu um erro durante o cadastro. Tente novamente.',
+                duration: 4000,
+                icon: <XCircle className="h-4 w-4" />,
+                action: {
+                    label: <X className="h-4 w-4" />,
+                    onClick: () => {},
+                },
+                cancel: {
+                    label: 'Fechar',
+                    onClick: () => {},
+                },
+            });
         } finally {
             setIsLoading(false);
         }
@@ -499,8 +548,10 @@ export default function CadastroClientePage() {
             case 2:
                 return <EnderecoStep {...commonProps} />;
             case 3:
-                return <DadosPagamentoStep {...commonProps} />;
+                return <ArquivosStep {...commonProps} />;
             case 4:
+                return <DadosPagamentoStep {...commonProps} />;
+            case 5:
                 return <DadosEscolaStep {...commonProps} />;
             default:
                 return null;

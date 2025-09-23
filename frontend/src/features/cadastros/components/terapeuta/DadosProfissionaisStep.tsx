@@ -2,6 +2,7 @@ import { Input } from '@/ui/input';
 import { Label } from '@/ui/label';
 import { DateField } from '@/common/components/layout/DateField';
 import { Button } from '@/ui/button';
+import { Combobox } from '@/ui/combobox';
 import { Plus, X } from 'lucide-react';
 import type { Terapeuta } from '../../types/cadastros.types';
 
@@ -11,30 +12,30 @@ interface DadosProfissionaisStepProps {
     errors: Record<string, string>;
 }
 
-const AREAS_ATUACAO = [
-    'Fonoaudiologia',
-    'Psicomotricidade',
-    'Fisioterapia',
-    'Terapia Ocupacional',
-    'Psicopedagogia',
-    'Educador Físico',
-    'Terapia ABA',
-    'Musicoterapia',
-    'Pedagogia',
-    'Neuropsicologia',
-    'Nutrição',
+const AREAS_ATUACAO_OPTIONS = [
+    { value: 'Fonoaudiologia', label: 'Fonoaudiologia' },
+    { value: 'Psicomotricidade', label: 'Psicomotricidade' },
+    { value: 'Fisioterapia', label: 'Fisioterapia' },
+    { value: 'Terapia Ocupacional', label: 'Terapia Ocupacional' },
+    { value: 'Psicopedagogia', label: 'Psicopedagogia' },
+    { value: 'Educador Físico', label: 'Educador Físico' },
+    { value: 'Terapia ABA', label: 'Terapia ABA' },
+    { value: 'Musicoterapia', label: 'Musicoterapia' },
+    { value: 'Pedagogia', label: 'Pedagogia' },
+    { value: 'Neuropsicologia', label: 'Neuropsicologia' },
+    { value: 'Nutrição', label: 'Nutrição' },
 ];
 
-const CARGOS = [
-    'Acompanhante Terapeutico',
-    'Coordenador ABA',
-    'Supervisor ABA',
-    'Mediador de Conflitos',
-    'Coordenador Executivo',
-    'Professor UniIndigo',
-    'Terapeuta clinico',
-    'Terapeuta Supervisor',
-    'Gerente',
+const CARGOS_OPTIONS = [
+    { value: 'Acompanhante Terapeutico', label: 'Acompanhante Terapeutico' },
+    { value: 'Coordenador ABA', label: 'Coordenador ABA' },
+    { value: 'Supervisor ABA', label: 'Supervisor ABA' },
+    { value: 'Mediador de Conflitos', label: 'Mediador de Conflitos' },
+    { value: 'Coordenador Executivo', label: 'Coordenador Executivo' },
+    { value: 'Professor UniIndigo', label: 'Professor UniIndigo' },
+    { value: 'Terapeuta clinico', label: 'Terapeuta clinico' },
+    { value: 'Terapeuta Supervisor', label: 'Terapeuta Supervisor' },
+    { value: 'Gerente', label: 'Gerente' },
 ];
 
 export default function DadosProfissionaisStep({
@@ -105,29 +106,17 @@ export default function DadosProfissionaisStep({
                             <Label htmlFor={`areaAtuacao-${index}`}>
                                 Área de Atuação {index === 0 ? '*' : ''}
                             </Label>
-                            <select
-                                id={`areaAtuacao-${index}`}
+                            <Combobox
+                                options={AREAS_ATUACAO_OPTIONS}
                                 value={dadoProfissional.areaAtuacao || ''}
-                                onChange={(e) =>
-                                    handleDadoProfissionalChange(
-                                        index,
-                                        'areaAtuacao',
-                                        e.target.value,
-                                    )
+                                onValueChange={(value) =>
+                                    handleDadoProfissionalChange(index, 'areaAtuacao', value)
                                 }
-                                className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
-                                    errors[`dadosProfissionais.${index}.areaAtuacao`]
-                                        ? 'border-destructive'
-                                        : ''
-                                }`}
-                            >
-                                <option value="">Selecione a área de atuação</option>
-                                {AREAS_ATUACAO.map((area) => (
-                                    <option key={area} value={area}>
-                                        {area}
-                                    </option>
-                                ))}
-                            </select>
+                                placeholder="Selecione a área de atuação"
+                                searchPlaceholder="Buscar área de atuação..."
+                                emptyMessage="Nenhuma área de atuação encontrada."
+                                error={!!errors[`dadosProfissionais.${index}.areaAtuacao`]}
+                            />
                             {errors[`dadosProfissionais.${index}.areaAtuacao`] && (
                                 <p className="text-sm text-destructive">
                                     {errors[`dadosProfissionais.${index}.areaAtuacao`]}
@@ -138,25 +127,17 @@ export default function DadosProfissionaisStep({
                         {/* Cargo */}
                         <div className="space-y-2">
                             <Label htmlFor={`cargo-${index}`}>Cargo {index === 0 ? '*' : ''}</Label>
-                            <select
-                                id={`cargo-${index}`}
+                            <Combobox
+                                options={CARGOS_OPTIONS}
                                 value={dadoProfissional.cargo || ''}
-                                onChange={(e) =>
-                                    handleDadoProfissionalChange(index, 'cargo', e.target.value)
+                                onValueChange={(value) =>
+                                    handleDadoProfissionalChange(index, 'cargo', value)
                                 }
-                                className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
-                                    errors[`dadosProfissionais.${index}.cargo`]
-                                        ? 'border-destructive'
-                                        : ''
-                                }`}
-                            >
-                                <option value="">Selecione o cargo</option>
-                                {CARGOS.map((cargo) => (
-                                    <option key={cargo} value={cargo}>
-                                        {cargo}
-                                    </option>
-                                ))}
-                            </select>
+                                placeholder="Selecione o cargo"
+                                searchPlaceholder="Buscar cargo..."
+                                emptyMessage="Nenhum cargo encontrado."
+                                error={!!errors[`dadosProfissionais.${index}.cargo`]}
+                            />
                             {errors[`dadosProfissionais.${index}.cargo`] && (
                                 <p className="text-sm text-destructive">
                                     {errors[`dadosProfissionais.${index}.cargo`]}
