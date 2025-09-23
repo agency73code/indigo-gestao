@@ -1,246 +1,122 @@
-import {
-  TerapeutaAtividade,
-  TerapeutaPossuiVeiculo,
-  type TerapeutaAreaAtuacao,
-  type TerapeutaCargo,
-  type TerapeutaEndereco,
-  type Terapeuta,
-  type Endereco,
-  type TipoEndereco,
-} from './therapist.types.js';
+import * as TherapistTypes from "./therapist.types.js";
 
-import {
-  TIPO_ENDERECO_MAP, AREA_MAP, CARGO_MAP
-} from './therapist.types.js'
-
-type AreaKey  = keyof typeof AREA_MAP;
-type CargoKey = keyof typeof CARGO_MAP;
-
-export interface FrontTerapeuta {
-    nome: string;
-    email: string;
-    emailIndigo: string;
-    telefone: string;
-    celular: string;
-    cpf: string;
-    dataNascimento: string;
-    possuiVeiculo: 'sim' | 'nao';
-    placaVeiculo?: string;
-    modeloVeiculo?: string;
-
-    // Dados bancários
-    banco: string;
-    agencia: string;
-    conta: string;
-    chavePix: string;
-
-    // Endereço pessoal
-    endereco: {
-        cep: string;
-        rua: string;
-        numero: string;
-        complemento?: string;
-        bairro: string;
-        cidade: string;
-        estado: string;
-    };
-
-    // Dados profissionais
-    dadosProfissionais: Array<{
-        areaAtuacao: AreaKey;
-        cargo: CargoKey;
-        numeroConselho?: string;
-    }>;
-    numeroConvenio?: string;
-    dataEntrada: string;
-    dataSaida?: string;
-    crp: string;
-    especialidades: string[];
-    dataInicio: string;
-    dataFim?: string;
-    valorConsulta: string;
-    formasAtendimento: string[];
-
-    // Formação
-    formacao: {
-        graduacao: string;
-        instituicaoGraduacao: string;
-        anoFormatura: string;
-        posGraduacao?: string;
-        instituicaoPosGraduacao?: string;
-        anoPosGraduacao?: string;
-        cursos?: string;
-    };
-
-    // Arquivos
-    arquivos: {
-        fotoPerfil?: File | string;
-        diplomaGraduacao?: File | string;
-        diplomaPosGraduacao?: File | string;
-        registroCRP?: File | string;
-        comprovanteEndereco?: File | string;
-    };
-
-    // Dados CNPJ (opcional)
-    cnpj?: {
-        numero: string;
-        razaoSocial: string;
-        nomeFantasia: string;
+export function normalizeTherapistForm(db: TherapistTypes.TherapistDB): TherapistTypes.TherapistDetails {
+    return {
+        nome: db.nome,
+        email: db.email,
+        emailIndigo: db.email_indigo,
+        telefone: db.telefone ?? '',
+        celular: db.celular,
+        cpf: db.cpf,
+        dataNascimento: db.data_nascimento.toISOString(),
+        possuiVeiculo: db.possui_veiculo ? 'Sim' : 'Não',
+        placaVeiculo: db.placa_veiculo ?? '',
+        modeloVeiculo: db.modelo_veiculo ?? '',
+        banco: db.banco ?? '',
+        agencia: db.agencia ?? '',
+        conta: db.conta ?? '',
+        chavePix: db.chave_pix ?? '',
+        valorHoraAcordado: db.valor_hora?.toString() ?? '',
+        professorUnindigo: db.professor_uni ? 'Sim' : 'Não',
+        disciplinaUniindigo: 'teste',
         endereco: {
-            cep: string;
-            rua: string;
-            numero: string;
-            complemento?: string;
-            bairro: string;
-            cidade: string;
-            estado: string;
-        };
-    };
+            cep: db.endereco?.cep ?? '',
+            rua: db.endereco?.rua ?? '',
+            numero: db.endereco?.numero ?? '',
+            complemento: db.endereco?.numero ?? '',
+            bairro: db.endereco?.bairro ?? '',
+            cidade: db.endereco?.cidade ?? '',
+            estado: db.endereco?.uf ?? '',
+        },
+        dataInicio: db.data_entrada!,
+        dataFim: db.data_saida ?? null,
+        formacao: {
+            graduacao: db.formacao?.[0]?.graduacao ?? '',
+            instituicaoGraduacao: db.formacao?.[0]?.instituicao_graduacao ?? '',
+            anoFormatura: db.formacao?.[0]?.ano_formatura ?? 0,
+            posGraduacoes: db.formacao?.[0]?.pos_graduacao?.map((p) => ({
+                tipo: p.tipo!,
+                curso: p.curso!,
+                instituicao: p.instituicao!,
+                conclusao: p.conclusao!,
+            })) ?? [],
+            participacaoCongressosDescricao: db.formacao?.[0]?.participacao_congressos ?? '',
+            publicacoesLivrosDescricao: db.formacao?.[0]?.participacao_congressos ?? '',
+        },
+        cnpj: {
+            numero: db.pessoa_juridica?.cnpj ?? '',
+            razaoSocial: db.pessoa_juridica?.razao_social ?? '',
+            nomeFantasia: '',
+            endereco: {
+                cep: db.pessoa_juridica?.endereco?.cep ?? '',
+                rua: db.pessoa_juridica?.endereco?.rua ?? '',
+                numero: db.pessoa_juridica?.endereco?.numero ?? '',
+                complemento: db.pessoa_juridica?.endereco?.complemento ?? '',
+                bairro: db.pessoa_juridica?.endereco?.bairro ?? '',
+                cidade: db.pessoa_juridica?.endereco?.cidade ?? '',
+                estado: db.pessoa_juridica?.endereco?.uf ?? '',
+            }
+        },
+        dadosProfissionais: db.registro_profissional?.map((r) => ({
+            areaAtuacao: r.area_atuacao ?? '',
+            cargo: r.cargo ?? '',
+            numeroConselho: r.numero_conselho ?? '',
+        })) ?? [],
+        arquivos: db.documentos_terapeuta?.map((d) => ({
+            id: d.id.toString() ?? '',
+            nome: d.view_url ?? '',
+            tipo: d.tipo_documento ?? '',
+            tamanho: 0,
+            data: d.data_upload?.toISOString(),
+        })) ?? [],
+    }
 }
 
-export interface TherapistCreateData extends Omit<
-  Terapeuta,
-  'id' | 'documentos_terapeuta' | 'terapeuta_area_atuacao' |
-  'terapeuta_cargo' | 'terapeuta_endereco' | 'criado_em' | 'atualizado_em'
-> {
-  documentos_terapeuta: never[];
-  terapeuta_area_atuacao: TerapeutaAreaAtuacao[];
-  terapeuta_cargo: TerapeutaCargo[];
-  terapeuta_endereco: TerapeutaEndereco[];
-}
-
-export async function normalizer(input: FrontTerapeuta): Promise<TherapistCreateData> {
-  const enderecoPrincipal: Endereco = {
-    id: 0,
-    cep: input.endereco.cep,
-    logradouro: input.endereco.rua,
-    numero: input.endereco.numero,
-    bairro: input.endereco.bairro,
-    cidade: input.endereco.cidade,
-    uf: input.endereco.estado,
-    complemento: input.endereco.complemento ?? null,
-    criado_em: new Date(),
-    atualizado_em: new Date(),
-  };
-
-  const tipoEndereco: TipoEndereco = { 
-    id: TIPO_ENDERECO_MAP.residencial,
-    tipo: 'pessoal',
-  };
-
-  const areaAtuacao: TerapeutaAreaAtuacao[] = input.dadosProfissionais.map(
-    (dp) => ({
-      terapeuta_id: '',
-      area_atuacao_id: AREA_MAP[dp.areaAtuacao],
-      area_atuacao: {
-        id: AREA_MAP[dp.areaAtuacao],
-        nome: dp.areaAtuacao,
-      },
-    }),
-  );
-
-  const cargos: TerapeutaCargo[] = input.dadosProfissionais.map((dp) => ({
-    terapeuta_id: '',
-    cargo_id: CARGO_MAP[dp.cargo],
-    numero_conselho: dp.numeroConselho ?? null,
-    data_entrada: new Date(input.dataInicio),
-    data_saida: input.dataSaida ? new Date(input.dataSaida) : null,
-    cargo: { id: CARGO_MAP[dp.cargo], nome: dp.cargo },
-  }));
-
-  const enderecos: TerapeutaEndereco[] = [
-    {
-      id: 0,
-      terapeuta_id: '',
-      endereco_id: 0,
-      tipo_endereco_id: tipoEndereco.id,
-      principal: 1,
-      criado_em: new Date(),
-      atualizado_em: new Date(),
-      endereco: enderecoPrincipal,
-      tipo_endereco: tipoEndereco,
-    },
-  ];
-
-  if (input.cnpj?.endereco) {
-    const enderecoCnpj: Endereco = {
-      id: 0,
-      cep: input.cnpj.endereco.cep,
-      logradouro: input.cnpj.endereco.rua,
-      numero: input.cnpj.endereco.numero,
-      bairro: input.cnpj.endereco.bairro,
-      cidade: input.cnpj.endereco.cidade,
-      uf: input.cnpj.endereco.estado,
-      complemento: input.cnpj.endereco.complemento ?? null,
-      criado_em: new Date(),
-      atualizado_em: new Date(),
+export function normalizeTherapistSession(db: TherapistTypes.TherapistDB): TherapistTypes.TherapistSession {
+    return {
+        id: db.id,
+        nome: db.nome,
+        email: db.email,
+        telefone: db.telefone ?? db.celular,
+        status: db.atividade ? 'ATIVO' : 'INATIVO',
+        especialidade: db.registro_profissional?.[0]?.area_atuacao ?? '',
+        conselho: 'CRP',
+        registroConselho: db.registro_profissional?.[0]?.numero_conselho ?? '',
+        avatarUrl: '',
+        pessoa: {
+            cpf: db.cpf,
+            dataNascimento: db.data_nascimento?.toISOString(),
+            genero: '',
+            observacoes: '',
+        },
+        endereco: {
+            cep: db.endereco?.cep ?? '',
+            rua: db.endereco?.rua ?? '',
+            numero: db.endereco?.numero ?? '',
+            complemento: db.endereco?.complemento ?? '',
+            bairro: db.endereco?.bairro ?? '',
+            cidade: db.endereco?.cidade ?? '',
+            uf: db.endereco?.uf ?? '',
+        },
+        profissional: {
+            cargaHorariaSemanal: 0,
+            atendeConvenio: false,
+            especialidades: db.registro_profissional?.map(d => d.area_atuacao) ?? ['Presencial'],
+            valorConsulta: Number(db.valor_hora),
+            formasAtendimento: ['Presencial'],
+        },
+        formacao: db.formacao?.map(f => ({
+            curso: f.graduacao ?? '',
+            instituicao: f.instituicao_graduacao ?? '',
+            ano: f.ano_formatura ?? 2020,
+        })) ?? [],
+        arquivos: db.documentos_terapeuta?.map(doc => ({
+            id: doc.id,
+            nome: doc.tipo_documento,
+            data: doc.data_upload.toISOString(),
+            tipo: "",
+            tamanho: 1,
+        })) ?? [],
+        cnpj: db.pessoa_juridica?.cnpj ?? '',
     };
-  
-
-    const tipoEnderecoCnpj: TipoEndereco = {
-      id: TIPO_ENDERECO_MAP.empresarial,
-      tipo: 'empresarial',
-    };
-
-    enderecos.push({
-        id: 0,
-        terapeuta_id: '',
-        endereco_id: 0,
-        tipo_endereco_id: tipoEnderecoCnpj.id,
-        principal: 0,
-        criado_em: new Date(),
-        atualizado_em: new Date(),
-        endereco: enderecoCnpj,
-        tipo_endereco: tipoEnderecoCnpj,
-    });
-  }
-
-
-  return {
-    nome: input.nome,
-    cpf: input.cpf,
-    data_nascimento: new Date(input.dataNascimento),
-    telefone: input.telefone || null,
-    celular: input.celular,
-    foto_perfil: typeof input.arquivos.fotoPerfil === 'string'
-      ? input.arquivos.fotoPerfil
-      : null,
-    email: input.email,
-    email_indigo: input.emailIndigo,
-    possui_veiculo:
-      input.possuiVeiculo === 'sim'
-        ? TerapeutaPossuiVeiculo.Sim
-        : TerapeutaPossuiVeiculo.Nao,
-    placa_veiculo: input.placaVeiculo ?? null,
-    modelo_veiculo: input.modeloVeiculo ?? null,
-
-    banco: input.banco,
-    agencia: input.agencia,
-    conta: input.conta,
-    chave_pix: input.chavePix || null,
-
-    cnpj_empresa: input.cnpj?.numero ?? null,
-    razao_social: input.cnpj?.razaoSocial ?? null,
-
-    graduacao: input.formacao.graduacao,
-    grad_instituicao: input.formacao.instituicaoGraduacao,
-    ano_formatura: input.formacao.anoFormatura,
-    pos_graduacao: input.formacao.posGraduacao ?? null,
-    pos_grad_instituicao: input.formacao.instituicaoPosGraduacao ?? null,
-    ano_pos_graduacao: input.formacao.anoPosGraduacao ?? null,
-    cursos: input.formacao.cursos ?? null,
-
-    data_entrada: new Date(input.dataInicio),
-    data_saida: input.dataSaida ? new Date(input.dataSaida) : null,
-    perfil_acesso: 'terapeuta',
-    atividade: TerapeutaAtividade.Ativo,
-    senha: null,
-    token_redefinicao: null,
-    validade_token: null,
-
-    documentos_terapeuta: [],
-    terapeuta_area_atuacao: areaAtuacao,
-    terapeuta_cargo: cargos,
-    terapeuta_endereco: enderecos,
-  };
 }

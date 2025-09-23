@@ -1,5 +1,4 @@
 export interface Terapeuta {
-    id?: string;
     // Dados pessoais
     nome: string;
     email: string;
@@ -39,31 +38,19 @@ export interface Terapeuta {
         numeroConselho?: string;
     }>;
 
-    numeroConvenio?: string;
-    dataEntrada: string;
-    dataSaida?: string;
-    crp: string;
-    especialidades: string[];
     dataInicio: string;
     dataFim?: string;
-    valorConsulta: string;
-    formasAtendimento: string[];
 
     // FormaÃ§Ã£o
     Formação: {
         graduacao: string;
         instituicaoGraduacao: string;
         anoFormatura: string;
-        posGraduacao?: string;
-        instituicaoPosGraduacao?: string;
-        anoPosGraduacao?: string;
-        cursos?: string;
-        // Novos campos FRONT (não enviados ao back por compatibilidade)
         posGraduacoes?: Array<{
             tipo: 'lato' | 'stricto';
             curso: string;
             instituicao: string;
-            conclusao: string; // AAAA-MM
+            conclusao: string;
             comprovanteUrl?: string | null;
         }>;
         participacaoCongressosDescricao?: string | null;
@@ -82,7 +69,6 @@ export interface Terapeuta {
     cnpj?: {
         numero: string;
         razaoSocial: string;
-        nomeFantasia: string;
         endereco: {
             cep: string;
             rua: string;

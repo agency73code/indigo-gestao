@@ -7,7 +7,7 @@ export interface ClientCreateData {
 
     enderecos?: {
         cep: string;
-        logradouro: string;
+        rua: string;
         numero: string;
         bairro: string;
         cidade: string;
@@ -24,7 +24,7 @@ export interface ClientCreateData {
         email: string;
         enderecos?:{
             cep: string;
-            logradouro: string;
+            rua: string;
             numero: string;
             bairro: string;
             cidade: string;

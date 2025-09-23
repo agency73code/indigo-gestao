@@ -108,7 +108,7 @@ export async function listTherapistClients(req: Request, res: Response) {
     const q = req.query.q as string | undefined;
 
     const rows = await OcpService.listClientsByTherapist(user.id, q);
-    return res.json({ success: true, data: rows.map(OcpService.mapClientReturn) })
+    return res.json({ success: true, data: rows.map(OcpNormalizer.mapClientReturn) })
 }
 
 export async function listClientPrograms(req: Request, res: Response) {
@@ -120,7 +120,7 @@ export async function listClientPrograms(req: Request, res: Response) {
 
     if (!clientId) return res.status(400).json({ success: false, message: 'ClientId é obrigatório' });
     const rows = await OcpService.listByClientId(clientId, page, 10, status, q, sort);
-    return res.json({ success: true, data: rows.map(OcpService.mapOcpReturn) });
+    return res.json({ success: true, data: rows.map(OcpNormalizer.mapOcpReturn) });
 }
 
 export async function listSessionsByClient(req: Request, res: Response) {

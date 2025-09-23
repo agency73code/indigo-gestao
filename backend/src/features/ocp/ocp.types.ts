@@ -94,6 +94,20 @@ export type UpdateProgramInput = {
     status?: 'active' | 'archived';
 };
 
+export type ClientRowDTO = {
+  id: string; nome: string; data_nascimento: Date;
+  cliente_responsavel?: { responsaveis: { nome: string } }[];
+};
+
+export type ProgramRowDTO = {
+  id: number;
+  cliente_id: string;
+  nome_programa: string | null; 
+  objetivo_programa: string | null;
+  atualizado_em: Date; 
+  status: string;
+};
+
 export interface SessionTrialDTO {
   id: number;
   ordem: number;

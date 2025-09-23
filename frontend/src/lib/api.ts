@@ -15,8 +15,7 @@ export async function buscarTerapeutaPorId(id: string): Promise<Terapeuta> {
       const msg = data?.message ?? data?.error ?? `Falha (${res.status})`;
       throw new Error(msg);
     }
-
-    return data.data as Terapeuta;
+    return data as Terapeuta;
 }
 
 export async function listarTerapeutas(): Promise<TerapeutaConsulta[]> {
@@ -28,8 +27,8 @@ export async function listarTerapeutas(): Promise<TerapeutaConsulta[]> {
     const msg = data?.message ?? data?.error ?? `Falha (${res.status})`;
     throw new Error(msg);
   }
-
-  return (data?.data ?? []) as TerapeutaConsulta[];
+  
+  return (data ?? []) as TerapeutaConsulta[];
 }
 
 export async function listarClientes(): Promise<Patient[]> {

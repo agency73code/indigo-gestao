@@ -316,23 +316,3 @@ export async function listSessionsByClient(clientId: string) {
     });
 }
 
-export function mapClientReturn(dto: Awaited<ReturnType<typeof listClientsByTherapist>>[number]) {
-    const guardianName = dto.cliente_responsavel?.[0]?.responsaveis?.nome ?? null;
-    return {
-        id: dto.id,
-        name: dto.nome,
-        birthDate: dto.data_nascimento,
-        guardianName,
-    };
-}
-
-export function mapOcpReturn(dto: Awaited<ReturnType<typeof listByClientId>>[number]) {
-    return {
-        id: dto.id.toString(),
-        title: dto.nome_programa,
-        objective: dto.objetivo_programa,
-        status: dto.status as 'active' | 'archived',
-        lastSession: dto.atualizado_em.toISOString(),
-        patientId: dto.cliente_id,
-    };
-}

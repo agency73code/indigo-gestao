@@ -1,141 +1,274 @@
-export enum TerapeutaPossuiVeiculo {
-  Sim = 'sim',
-  Nao = 'nao',
+import type { Decimal } from "@prisma/client/runtime/library"
+
+export type TherapistForm = {
+  nome: string
+  email: string
+  emailIndigo: string
+  telefone: string
+  celular: string
+  cpf: string
+  dataNascimento: string
+  possuiVeiculo: string
+  placaVeiculo: string
+  modeloVeiculo: string
+  banco: string
+  agencia: string
+  conta: string
+  chavePix: string
+  valorHoraAcordado: string
+  professorUnindigo: string
+  disciplinaUniindigo: string
+  endereco: {
+    cep: string
+    rua: string
+    numero: string
+    complemento: string
+    bairro: string
+    cidade: string
+    estado: string
+  }
+  dataInicio: Date
+  dataFim: Date | null
+  formacao: {
+    graduacao: string
+    instituicaoGraduacao: string
+    anoFormatura: number
+    posGraduacoes: {
+      tipo: string
+      curso: string
+      instituicao: string
+      conclusao: string
+    }[]
+    participacaoCongressosDescricao: string
+    publicacoesLivrosDescricao: string
+  }
+  cnpj: {
+    numero: string
+    razaoSocial: string
+    nomeFantasia: string
+    endereco: {
+      cep: string
+      rua: string
+      numero: string
+      complemento: string
+      bairro: string
+      cidade: string
+      estado: string
+    }
+  }
+  dadosProfissionais: {
+    areaAtuacao: string
+    cargo: string
+    numeroConselho: string
+  }[],
+  documentos: {
+    tipo_documento: string,
+    view_url: string,
+    download_url: string,
+    data_upload: Date,
+  }[],
+  arquivos?: {
+    id?: string
+    nome?: string
+    tipo?: string
+    tamanho?: number
+    data?: string
+  }[]
 }
 
-export enum TerapeutaAtividade {
-  Ativo = 'ativo',
-  Inativo = 'inativo',
+export type TherapistDetails = {
+  nome: string
+  email: string
+  emailIndigo: string
+  telefone: string
+  celular: string
+  cpf: string
+  dataNascimento: string
+  possuiVeiculo: string
+  placaVeiculo: string
+  modeloVeiculo: string
+  banco: string
+  agencia: string
+  conta: string
+  chavePix: string
+  valorHoraAcordado: string
+  professorUnindigo: string
+  disciplinaUniindigo: string
+  endereco: {
+    cep: string
+    rua: string
+    numero: string
+    complemento: string
+    bairro: string
+    cidade: string
+    estado: string
+  }
+  dataInicio: Date
+  dataFim: Date | null
+  formacao: {
+    graduacao: string
+    instituicaoGraduacao: string
+    anoFormatura: number
+    posGraduacoes: {
+      tipo: string
+      curso: string
+      instituicao: string
+      conclusao: string
+    }[]
+    participacaoCongressosDescricao: string
+    publicacoesLivrosDescricao: string
+  }
+  cnpj: {
+    numero: string
+    razaoSocial: string
+    nomeFantasia: string
+    endereco: {
+      cep: string
+      rua: string
+      numero: string
+      complemento: string
+      bairro: string
+      cidade: string
+      estado: string
+    }
+  }
+  dadosProfissionais: {
+    areaAtuacao: string
+    cargo: string
+    numeroConselho: string
+  }[],
+  arquivos?: {
+    id?: string
+    nome?: string
+    tipo?: string
+    tamanho?: number
+    data?: string
+  }[]
 }
 
-export interface AreaAtuacao {
-  id: number;
+export type TherapistSession = {
+  id: string;
   nome: string;
+  email?: string;
+  telefone?: string;
+  status: 'ATIVO' | 'INATIVO';
+  especialidade?: string;
+  conselho?: string;
+  registroConselho?: string;
+  avatarUrl?: string;
+  pessoa?: {
+      cpf?: string;
+      dataNascimento?: string;
+      genero?: string;
+      observacoes?: string;
+  };
+  endereco?: {
+      cep?: string;
+      rua?: string;
+      numero?: string;
+      complemento?: string;
+      bairro?: string;
+      cidade?: string;
+      uf?: string;
+  };
+  profissional?: {
+      cargaHorariaSemanal?: number;
+      atendeConvenio?: boolean;
+      especialidades?: string[] | undefined;
+      valorConsulta?: number;
+      formasAtendimento?: string[] | undefined;
+  };
+  formacao?: {
+      curso: string;
+      instituicao: string;
+      ano?: number;
+  }[];
+  arquivos?: {
+      id: number;
+      nome: string;
+      tipo?: string;
+      tamanho?: number;
+      data?: string;
+  }[];
+  cnpj?: string;
 }
 
-export interface Cargo {
-  id: number;
-  nome: string;
+export interface TherapistDB {
+    id: string;
+    nome: string;
+    email: string;
+    email_indigo: string;
+    celular: string;
+    telefone?: string | null;
+    cpf: string;
+    data_nascimento: Date;
+    possui_veiculo: boolean;
+    placa_veiculo?: string | null;
+    modelo_veiculo?: string | null;
+    banco?: string | null;
+    agencia?: string | null;
+    conta?: string | null;
+    chave_pix?: string | null;
+    valor_hora?: Decimal | null;
+    professor_uni: boolean;
+    endereco_id?: number | null;
+    data_entrada: Date | null;
+    data_saida?: Date | null;
+    perfil_acesso: string;
+    atividade: boolean;
+    endereco?: {
+        cep?: string | null;
+        rua?: string | null;
+        numero?: string | null;
+        complemento?: string | null;
+        bairro?: string | null;
+        cidade?: string | null;
+        uf?: string | null;
+    } | null;
+    formacao?: {
+        id: number;
+        graduacao?: string | null;
+        instituicao_graduacao?: string | null;
+        ano_formatura?: number | null;
+        participacao_congressos?: string | null;
+        publicacoes_descricao?: string | null;
+        pos_graduacao?: {
+            id: number;
+            tipo?: string | null
+            curso?: string | null
+            instituicao?: string | null
+            conclusao?: string | null
+        }[];
+    }[];
+    registro_profissional?: {
+        id: number;
+        area_atuacao: string;
+        cargo?: string | null;
+        numero_conselho?: string | null;
+    }[];
+    documentos_terapeuta?: {
+        id: number;
+        tipo_documento: string;
+        view_url: string;
+        download_url: string;
+        data_upload: Date;
+    }[];
+    pessoa_juridica?: {
+      id: number;
+      cnpj?: string;
+      razao_social?: string | null;
+      endereco?: {
+        cep?: string | null;
+        rua?: string | null;
+        numero?: string | null;
+        complemento?: string | null;
+        bairro?: string | null;
+        cidade?: string | null;
+        uf?: string | null;
+      } | null;
+    } | null;
+    disciplina?: {
+        id: number;
+        nome: string;
+    }[];
 }
-
-export interface TipoEndereco {
-  id: number;
-  tipo: string;
-}
-
-export interface Endereco {
-  id: number;
-  cep: string;
-  logradouro: string;
-  numero: string;
-  bairro: string;
-  cidade: string;
-  uf: string;
-  complemento: string | null;
-  criado_em: Date;
-  atualizado_em: Date;
-}
-
-export interface TerapeutaEndereco {
-  id: number;
-  terapeuta_id: string;
-  endereco_id: number;
-  tipo_endereco_id: number;
-  principal: number;
-  criado_em: Date;
-  atualizado_em: Date;
-  endereco: Endereco;
-  tipo_endereco: TipoEndereco;
-}
-
-export interface TerapeutaCargo {
-  terapeuta_id: string;
-  cargo_id: number;
-  numero_conselho: string | null;
-  data_entrada: Date;
-  data_saida: Date | null;
-  cargo: Cargo;
-}
-
-export interface TerapeutaAreaAtuacao {
-  terapeuta_id: string;
-  area_atuacao_id: number;
-  area_atuacao: AreaAtuacao;
-}
-
-export interface DocumentoTerapeuta {
-  id: number;
-  terapeuta_id: string;
-  tipo_documento: string;
-  caminho_arquivo: string;
-  data_upload: Date;
-}
-
-export interface Terapeuta {
-  nome: string;
-  cpf: string;
-  data_nascimento: Date;
-  telefone: string | null;
-  celular: string;
-  foto_perfil: string | null;
-  email: string;
-  email_indigo: string;
-  possui_veiculo: TerapeutaPossuiVeiculo;
-  placa_veiculo: string | null;
-  modelo_veiculo: string | null;
-  banco: string;
-  agencia: string;
-  conta: string;
-  chave_pix: string | null;
-  cnpj_empresa: string | null;
-  razao_social: string | null;
-  graduacao: string | null;
-  grad_instituicao: string | null;
-  ano_formatura: string | null;
-  pos_graduacao: string | null;
-  pos_grad_instituicao: string | null;
-  ano_pos_graduacao: string | null;
-  cursos: string | null;
-  data_entrada: Date;
-  data_saida: Date | null;
-  perfil_acesso: string;
-  atividade: TerapeutaAtividade;
-  senha: string | null;
-  token_redefinicao: string | null;
-  validade_token: Date | null;
-  documentos_terapeuta: DocumentoTerapeuta[];
-  terapeuta_area_atuacao: TerapeutaAreaAtuacao[];
-  terapeuta_cargo: TerapeutaCargo[];
-  terapeuta_endereco: TerapeutaEndereco[];
-}
-
-export const TIPO_ENDERECO_MAP = {
-  residencial: 1,
-  institucional: 2,
-  empresarial: 3,
-} as const;
-
-export const AREA_MAP = {
-  'Fonoaudiologia': 1,
-  'Psicomotricidade': 2,
-  'Fisioterapia': 3,
-  'Terapia Ocupacional': 4,
-  'Psicopedagogia': 5,
-  'Educador Físico': 6,
-  'Terapia ABA': 7,
-  'Musicoterapia': 8,
-  'Pedagogia': 9,
-  'Neuropsicologia': 10,
-} as const;
-
-export const CARGO_MAP = {
-  'Acompanhante Terapeutico': 1,
-  'Coordenador ABA': 2,
-  'Supervisor ABA': 3,
-  'Mediador de Conflitos': 4,
-  'Coordenador Executivo': 5,
-  'Professor UniIndigo': 6,
-  'Terapeuta clinico': 7,
-  'Terapeuta Supervisor': 8,
-  'Gerente': 9,
-} as const;

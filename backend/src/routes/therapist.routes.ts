@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import type { Router as ExpressRouter } from 'express';
-import { create, list, getById } from '../controllers/therapist.controller.js';
+import * as TherapistController  from '../controllers/therapist.controller.js';
 // import { validateBody } from '../middleware/validation.middleware.js';
 // import { therapistSchema } from '../schemas/therapist.schema.js';
 import { requireAbility } from '../middleware/requireAbility.js';
@@ -8,8 +8,9 @@ import { auth } from '../middleware/auth.middleware.js';
 
 const router: ExpressRouter = Router();
 
-router.get('/', auth, list);
-router.get('/:id', auth, getById);
-router.post('/cadastrar', auth, requireAbility('manage', 'Cadastro'), create);
+router.get('/', auth, TherapistController.list);
+router.get('/:therapistId', auth, TherapistController.getById);
+router.post('/cadastrar', auth, requireAbility('manage', 'Cadastro'), TherapistController.create);
+router.post('/teste', TherapistController.create);
 
 export default router;

@@ -69,26 +69,14 @@ export default function CadastroTerapeutaPage() {
             estado: '',
         },
 
-        numeroConvenio: '',
-        dataEntrada: '',
-        dataSaida: '',
-        crp: '',
-        especialidades: [],
         dataInicio: '',
         dataFim: '',
-        valorConsulta: '',
-        formasAtendimento: [],
 
         // Formação
         formacao: {
             graduacao: '',
             instituicaoGraduacao: '',
             anoFormatura: '',
-            posGraduacao: '',
-            instituicaoPosGraduacao: '',
-            anoPosGraduacao: '',
-            cursos: '',
-            // novos (FRONT only)
             posGraduacoes: [],
             participacaoCongressosDescricao: '',
             publicacoesLivrosDescricao: '',
@@ -107,7 +95,6 @@ export default function CadastroTerapeutaPage() {
         cnpj: {
             numero: '',
             razaoSocial: '',
-            nomeFantasia: '',
             endereco: {
                 cep: '',
                 rua: '',
@@ -314,25 +301,28 @@ export default function CadastroTerapeutaPage() {
         if (!validateCurrentStep()) return;
         setIsLoading(true);
         try {
-            const { valorHoraAcordado, professorUnindigo, disciplinaUniindigo, ...rest } = formData;
-            const payload = { ...rest } as typeof formData;
-
-            // FRONT-only: não enviar campos novos de formação até o back aceitar
-            if (payload.formacao) {
-                const f: any = { ...payload.formacao };
-                delete f.posGraduacoes;
-                delete f.participacaoCongressosDescricao;
-                delete f.publicacoesLivrosDescricao;
-                payload.formacao = f; // TODO: enviar posGraduacoes/participacaoCongressosDescricao/publicacoesLivrosDescricao quando endpoint aceitar.
-            }
-
+            const payload = { ...formData }
             // limpar campos numéricos para a API + normalizar razão social
             if (payload.cpf) payload.cpf = onlyDigits(payload.cpf);
             if (payload.celular) payload.celular = String(payload.celular).replace(/\D/g, '');
             if (payload.telefone) payload.telefone = String(payload.telefone).replace(/\D/g, '');
             if (payload.cnpj?.numero) payload.cnpj.numero = onlyDigits(payload.cnpj.numero);
-            if (payload.cnpj?.razaoSocial)
-                payload.cnpj.razaoSocial = toTitleCaseSimple(payload.cnpj.razaoSocial);
+            if (payload.cnpj?.razaoSocial) payload.cnpj.razaoSocial = toTitleCaseSimple(payload.cnpj.razaoSocial);
+
+            const formDataUpload = new FormData();
+            formDataUpload.append("cpf", payload.cpf);
+            if (payload.arquivos?.fotoPerfil) formDataUpload.append("fotoPerfil", payload.arquivos?.fotoPerfil);
+            if (payload.arquivos?.diplomaGraduacao) formDataUpload.append("diplomaGraduacao", payload.arquivos?.diplomaGraduacao);
+            if (payload.arquivos?.diplomaPosGraduacao) formDataUpload.append("diplomaPosGraduacao", payload.arquivos?.diplomaPosGraduacao);
+            if (payload.arquivos?.registroCRP) formDataUpload.append("registroCRP", payload.arquivos?.registroCRP);
+            if (payload.arquivos?.comprovanteEndereco) formDataUpload.append("comprovanteEndereco", payload.arquivos?.comprovanteEndereco);
+
+            const uploadResp = await fetch("/api/arquivos/upload", {
+                method: "POST",
+                body: formDataUpload,
+            }).then(r => r.json());
+
+            payload.documentos = uploadResp.documentos;
 
             await cadastrarTerapeuta(payload);
             alert('Terapeuta cadastrado com sucesso!');

@@ -3,15 +3,6 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
-    await prisma.tipo_endereco.createMany({
-        data: [
-            { tipo: 'residencial' },
-            { tipo: 'institucional' },
-            { tipo: 'empresarial' },
-        ],
-        skipDuplicates: true,
-    });
-
     await prisma.area_atuacao.createMany({
         data: [
         { nome: 'Fonoaudiologia' },

@@ -62,6 +62,27 @@ export function mapSessionReturn(session: OcpTypes.UnmappedSession) {
     };
 }
 
+export function mapClientReturn(dto: OcpTypes.ClientRowDTO) {
+    const guardianName = dto.cliente_responsavel?.[0]?.responsaveis?.nome ?? null;
+    return {
+        id: dto.id,
+        name: dto.nome,
+        birthDate: dto.data_nascimento,
+        guardianName,
+    };
+}
+
+export function mapOcpReturn(dto: OcpTypes.ProgramRowDTO) {
+    return {
+        id: dto.id.toString(),
+        title: dto.nome_programa,
+        objective: dto.objetivo_programa,
+        status: dto.status as 'active' | 'archived',
+        lastSession: dto.atualizado_em.toISOString(),
+        patientId: dto.cliente_id,
+    };
+}
+
 function translateResult(result: string): 'acerto' | 'erro' | 'ajuda' {
     switch (result) {
         case 'independent':

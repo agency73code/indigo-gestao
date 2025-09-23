@@ -28,7 +28,7 @@ export async function getById(id: string) {
           endereco: {
             select: {
               cep: true,
-              logradouro: true,
+              rua: true,
               numero: true,
               complemento: true,
               bairro: true,
@@ -68,7 +68,7 @@ export async function getById(id: string) {
                   endereco: {
                     select: {
                       cep: true,
-                      logradouro: true,
+                      rua: true,
                       numero: true,
                       complemento: true,
                       bairro: true,
@@ -97,7 +97,7 @@ export async function getById(id: string) {
 
   const enderecos = client.cliente_endereco.map((e) => ({
     cep: e.endereco.cep,
-    logradouro: e.endereco.logradouro,
+    rua: e.endereco.rua,
     numero: e.endereco.numero,
     complemento: e.endereco.complemento ?? undefined,
     bairro: e.endereco.bairro,
@@ -177,7 +177,7 @@ export async function getById(id: string) {
         endereco: escolaEnd
           ? {
               cep: escolaEnd.endereco.cep,
-              logradouro: escolaEnd.endereco.logradouro,
+              rua: escolaEnd.endereco.rua,
               numero: escolaEnd.endereco.numero,
               complemento: escolaEnd.endereco.complemento ?? undefined,
               bairro: escolaEnd.endereco.bairro,
