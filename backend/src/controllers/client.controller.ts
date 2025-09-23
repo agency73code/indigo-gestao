@@ -16,6 +16,15 @@ export async function getById(req: Request, res: Response, next: NextFunction) {
   }
 }
 
+export async function getClientReport(req: Request, res: Response, next: NextFunction) {
+  try {
+    const data = await clientService.getClientReport();
+    res.json({ data })
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function list(req: Request, res: Response, next: NextFunction) {
   try {
     const data = await clientService.list();

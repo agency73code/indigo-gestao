@@ -9,6 +9,7 @@ import { auth } from '../middleware/auth.middleware.js';
 const router: ExpressRouter = Router();
 
 router.get('/', auth, TherapistController.list);
+router.get('/relatorio', auth, TherapistController.getTherapistReport);
 router.get('/:therapistId', auth, TherapistController.getById);
 router.post('/cadastrar', auth, requireAbility('manage', 'Cadastro'), TherapistController.create);
 router.post('/teste', TherapistController.create);

@@ -494,6 +494,7 @@ export default function CadastroClientePage() {
 
         try {
             const payload = formData;
+            console.log(payload);
             await cadastrarCliente(payload);
 
             toast.success('Cliente cadastrado com sucesso!', {

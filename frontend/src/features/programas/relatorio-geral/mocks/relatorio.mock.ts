@@ -24,9 +24,6 @@ export const mockSerieLinha: SerieLinha[] = [
   { x: '15/09', acerto: 95, independencia: 95 }
 ];
 
-
-
-
 export const mockPrazoPrograma: PrazoPrograma = {
   percent: 68,
   label: '15 dias restantes • 68% do período decorrido',

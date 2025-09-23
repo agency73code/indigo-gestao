@@ -350,3 +350,50 @@ export async function listSessionsByClient(clientId: string) {
     });
 }
 
+export async function getKpis(filtros: OcpType.KpisFilters) {
+  const where: any = {};
+
+  if (filtros.pacienteId) where.cliente_id = filtros.pacienteId;
+  if (filtros.programaId) where.ocp_id = filtros.programaId;
+  if (filtros.estimuloId) where.estimulo.id = filtros.estimuloId;
+  if (filtros.terapeutaId) where.terapeuta_id = filtros.terapeutaId;
+
+  if (filtros.periodo.mode === "30d") {
+    where.data_criacao = { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) };
+  }
+  if (filtros.periodo.mode === "90d") {
+    where.data_criacao = { gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) };
+  }
+  if (filtros.periodo.mode === "custom" && filtros.periodo.start && filtros.periodo.end) {
+    where.data_criacao = {
+      gte: new Date(filtros.periodo.start),
+      lte: new Date(filtros.periodo.end),
+    };
+  }
+
+  // Exemplo de query
+  return prisma.sessao.findMany({ where });
+}
+
+export async function getStimulusReport() {
+  return prisma.estimulo_ocp.findMany({
+    select: {
+      id: true,
+      nome: true,
+    }
+  })
+}
+
+export async function getProgramsReport() {
+  const ocps = await prisma.ocp.findMany({
+    select: {
+      id: true,
+      nome_programa: true,
+    }
+  })
+
+  return ocps.map((o) => ({
+    id: o.id,
+    nome: o.nome_programa,
+  }))
+}

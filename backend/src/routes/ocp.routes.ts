@@ -12,6 +12,9 @@ router.get('/clients/:clientId/sessions', auth, OcpController.listSessionsByClie
 router.get('/programs/:programId', auth, OcpController.getProgramById);
 router.get('/programs/:programId/sessions', auth, OcpController.getSessionByProgram);
 router.get('/sessions/:programId', auth, OcpController.getProgramId);
+router.get('/reports/kpis/:filters', OcpController.getKpis);
+router.get('/reports/filters/programs', OcpController.getProgramsReport);
+router.get('/reports/filters/stimulus', OcpController.getStimulusReport);
 router.post('/create', auth, OcpController.createProgram);
 router.post('/programs/:programId/sessions', auth, OcpController.createSession);
 router.patch('/programs/:programId', auth, OcpController.updateProgram);

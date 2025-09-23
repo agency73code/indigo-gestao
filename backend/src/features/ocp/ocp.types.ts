@@ -188,3 +188,25 @@ export type ProgramSelectResult = {
   }[];
   status: string;
 };
+
+export type KpisFilters = {
+  pacienteId?: string;
+  periodo: { 
+    mode: '30d'|'90d'|'custom'; 
+    start?: string; 
+    end?: string; 
+  };
+  programaId?: string;
+  estimuloId?: string;
+  terapeutaId?: string;
+  comparar?: boolean;
+};
+
+export type KpisReport = {
+  acerto: number;          // %
+  independencia: number;   // %
+  tentativas: number;
+  sessoes: number;
+  assiduidade?: number;    // %
+  gapIndependencia?: number; // acerto - independencia
+};

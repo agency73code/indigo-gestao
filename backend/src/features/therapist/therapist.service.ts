@@ -40,16 +40,20 @@ export async function create(dto: TherapistTypes.TherapistForm) {
       perfil_acesso: 'terapeuta',
       token_redefinicao: token,
       validade_token: expiry,
-      documentos_terapeuta: { 
-        createMany: { 
-          data: dto.documentos.map((doc) => ({
-            tipo_documento: doc.tipo_documento,
-            view_url: doc.view_url,
-            download_url: doc.download_url,
-            data_upload: new Date(doc.data_upload),
-          })),
-        },
-      },
+      ...(dto.documentos?.length
+        ? {
+            documentos_terapeuta: {
+              createMany: {
+                data: dto.documentos.map((doc) => ({
+                  tipo_documento: doc.tipo_documento,
+                  view_url: doc.view_url,
+                  download_url: doc.download_url,
+                  data_upload: new Date(doc.data_upload),
+                })),
+              },
+            },
+          }
+        : {}),
       registro_profissional: {
         createMany: {
           data: dto.dadosProfissionais.map((d) => ({
@@ -131,4 +135,13 @@ export async function getById(therapistId: string) {
       disciplina: true,
     },
   });
+}
+
+export async function getTherapistReport() {
+  return prisma.terapeuta.findMany({
+    select: {
+      id: true,
+      nome: true,
+    }
+  })
 }

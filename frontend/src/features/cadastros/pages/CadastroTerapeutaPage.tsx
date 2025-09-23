@@ -314,20 +314,20 @@ export default function CadastroTerapeutaPage() {
             if (payload.cnpj?.numero) payload.cnpj.numero = onlyDigits(payload.cnpj.numero);
             if (payload.cnpj?.razaoSocial) payload.cnpj.razaoSocial = toTitleCaseSimple(payload.cnpj.razaoSocial);
 
-            const formDataUpload = new FormData();
-            formDataUpload.append("cpf", payload.cpf);
-            if (payload.arquivos?.fotoPerfil) formDataUpload.append("fotoPerfil", payload.arquivos?.fotoPerfil);
-            if (payload.arquivos?.diplomaGraduacao) formDataUpload.append("diplomaGraduacao", payload.arquivos?.diplomaGraduacao);
-            if (payload.arquivos?.diplomaPosGraduacao) formDataUpload.append("diplomaPosGraduacao", payload.arquivos?.diplomaPosGraduacao);
-            if (payload.arquivos?.registroCRP) formDataUpload.append("registroCRP", payload.arquivos?.registroCRP);
-            if (payload.arquivos?.comprovanteEndereco) formDataUpload.append("comprovanteEndereco", payload.arquivos?.comprovanteEndereco);
+            // const formDataUpload = new FormData();
+            // formDataUpload.append("cpf", payload.cpf);
+            // if (payload.arquivos?.fotoPerfil) formDataUpload.append("fotoPerfil", payload.arquivos?.fotoPerfil);
+            // if (payload.arquivos?.diplomaGraduacao) formDataUpload.append("diplomaGraduacao", payload.arquivos?.diplomaGraduacao);
+            // if (payload.arquivos?.diplomaPosGraduacao) formDataUpload.append("diplomaPosGraduacao", payload.arquivos?.diplomaPosGraduacao);
+            // if (payload.arquivos?.registroCRP) formDataUpload.append("registroCRP", payload.arquivos?.registroCRP);
+            // if (payload.arquivos?.comprovanteEndereco) formDataUpload.append("comprovanteEndereco", payload.arquivos?.comprovanteEndereco);
 
-            const uploadResp = await fetch("/api/arquivos/upload", {
-                method: "POST",
-                body: formDataUpload,
-            }).then(r => r.json());
+            // const uploadResp = await fetch("/api/arquivos/upload", {
+            //     method: "POST",
+            //     body: formDataUpload,
+            // }).then(r => r.json());
 
-            payload.documentos = uploadResp.documentos;
+            // payload.documentos = uploadResp.documentos;
 
             await cadastrarTerapeuta(payload);
             toast.success('Terapeuta cadastrado com sucesso!', {

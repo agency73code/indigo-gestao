@@ -134,4 +134,46 @@ export async function listSessionsByClient(req: Request, res: Response) {
         console.error(error);
         return res.status(500).json({ success: false, message: 'Erro ao  buscar sessões do cliente' });
     }
-} 
+}
+
+export async function getKpis(req: Request, res: Response) {
+    try {
+        const raw = decodeURIComponent(req.params.filters);
+        const filtros = JSON.parse(raw);
+        const data = await OcpService.getKpis(filtros);
+
+        return res.json(data);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ 
+            success: false, 
+            message: 'Erro ao buscar informações do relatório' 
+        });
+    }
+}
+
+export async function getProgramsReport(req: Request, res: Response) {
+    try {
+        const data = await OcpService.getProgramsReport();
+        res.json({ data })
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ 
+            success: false, 
+            message: 'Erro ao buscar informações do relatório' 
+        });
+    }
+}
+
+export async function getStimulusReport(req: Request, res: Response) {
+    try {
+        const data = await OcpService.getStimulusReport();
+        res.json({ data })
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ 
+            success: false, 
+            message: 'Erro ao buscar informações do relatório' 
+        });
+    }
+}

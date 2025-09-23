@@ -32,10 +32,6 @@ export type SerieLinha = {
   independencia: number; 
 };
 
-
-
-
-
 export type Filters = {
   pacienteId?: string;
   periodo: { 

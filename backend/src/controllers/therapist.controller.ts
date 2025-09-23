@@ -21,6 +21,15 @@ export async function create(req: Request, res: Response, next: NextFunction) {
     }
 }
 
+export async function getTherapistReport(req: Request, res: Response, next: NextFunction) {
+  try {
+    const data = await TherapistService.getTherapistReport();
+    res.json({ data })
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function getById(req: Request, res: Response, next: NextFunction) {
     try {
         const { therapistId } = req.params;

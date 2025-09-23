@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
 import { Button } from '@/ui/button';
 import { Label } from '@/ui/label';
@@ -14,6 +14,86 @@ interface FiltersBarProps {
 
 export function FiltersBar({ value, onChange }: FiltersBarProps) {
     const [isExpanded, setIsExpanded] = useState(false);
+    const [terapeutas, setTerapeutas] = useState<{ id: string; nome: string }[]>([
+        // mock inicial
+        { id: "ter-1", nome: "Dr. Ana Silva" },
+        { id: "ter-2", nome: "Dr. Carlos Mendes" },
+    ]);
+    const [pacientes, setPacientes] = useState<{ id: string; nome: string }[]>([
+        { id: "pac-1", nome: "João Silva" },
+        { id: "pac-2", nome: "Maria Santos" },
+        { id: "pac-3", nome: "Pedro Oliveira" },
+    ]);
+    const [programas, setProgramas] = useState<{ id: string; nome: string }[]>([
+        { id: "prog-1", nome: "Desenvolvimento Cognitivo" },
+        { id: "prog-2", nome: "Habilidades Sociais" },
+        { id: "prog-3", nome: "Comunicação" },
+    ]);
+    const [estimulos, setEstimulos] = useState<{ id: string; nome: string }[]>([
+        { id: "est-1", nome: "Contar até 10" },
+        { id: "est-2", nome: "Identificar cores" },
+        { id: "est-3", nome: "Formar palavras" },
+    ]);
+
+    useEffect(() => {
+        const load = async () => {
+            try {
+            const res = await fetch("/api/terapeutas/relatorio", { credentials: "include" });
+            if (!res.ok) throw new Error("Erro de API");
+            const data = await res.json();
+            setTerapeutas(data.data);
+            } catch (err) {
+            console.warn("Usando mock de terapeutas:", err);
+            // mantém os mocks que já estavam no estado inicial
+            }
+        };
+        load();
+    }, []);
+
+    useEffect(() => {
+        const load = async () => {
+            try {
+            const res = await fetch("/api/clientes/relatorios", { credentials: "include" });
+            if (!res.ok) throw new Error("Erro de API");
+            const data = await res.json();
+            setPacientes(data.data);
+            } catch (err) {
+            console.warn("Usando mock de pacientes:", err);
+            // mantém os mocks que já estavam no estado inicial
+            }
+        };
+        load();
+    }, []);
+
+    useEffect(() => {
+        const load = async () => {
+            try {
+            const res = await fetch("/api/ocp/reports/filters/programs", { credentials: "include" });
+            if (!res.ok) throw new Error("Erro de API");
+            const data = await res.json();
+            setProgramas(data.data);
+            } catch (err) {
+            console.warn("Usando mock de programas:", err);
+            // mantém os mocks que já estavam no estado inicial
+            }
+        };
+        load();
+    }, []);
+
+    useEffect(() => {
+        const load = async () => {
+            try {
+            const res = await fetch("/api/ocp/reports/filters/stimulus", { credentials: "include" });
+            if (!res.ok) throw new Error("Erro de API");
+            const data = await res.json();
+            setEstimulos(data.data);
+            } catch (err) {
+            console.warn("Usando mock de estimulos:", err);
+            // mantém os mocks que já estavam no estado inicial
+            }
+        };
+        load();
+    }, []);
 
     const updateFilter = (key: keyof Filters, newValue: any) => {
         onChange({ ...value, [key]: newValue });
@@ -61,9 +141,9 @@ export function FiltersBar({ value, onChange }: FiltersBarProps) {
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         >
                             <option value="">Selecione o paciente</option>
-                            <option value="pac-1">João Silva</option>
-                            <option value="pac-2">Maria Santos</option>
-                            <option value="pac-3">Pedro Oliveira</option>
+                            {pacientes.map((p) => (
+                                <option key={p.id} value={p.id}>{p.nome}</option>
+                            ))}
                         </select>
                     </div>
 
@@ -92,9 +172,9 @@ export function FiltersBar({ value, onChange }: FiltersBarProps) {
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         >
                             <option value="">Todos os programas</option>
-                            <option value="prog-1">Desenvolvimento Cognitivo</option>
-                            <option value="prog-2">Habilidades Sociais</option>
-                            <option value="prog-3">Comunicação</option>
+                            {programas.map((p) => (
+                                <option key={p.id} value={p.id}>{p.nome}</option>
+                            ))}
                         </select>
                     </div>
                 </div>
@@ -136,9 +216,9 @@ export function FiltersBar({ value, onChange }: FiltersBarProps) {
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         >
                             <option value="">Todos os estímulos</option>
-                            <option value="est-1">Contar até 10</option>
-                            <option value="est-2">Identificar cores</option>
-                            <option value="est-3">Formar palavras</option>
+                            {estimulos.map((e) => (
+                                <option key={e.id} value={e.id}>{e.nome}</option>
+                            ))}
                         </select>
                     </div>
 
@@ -152,8 +232,9 @@ export function FiltersBar({ value, onChange }: FiltersBarProps) {
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         >
                             <option value="">Todos os terapeutas</option>
-                            <option value="ter-1">Dr. Ana Silva</option>
-                            <option value="ter-2">Dr. Carlos Mendes</option>
+                            {terapeutas.map((t) => (
+                                <option key={t.id} value={t.id}>{t.nome}</option>
+                            ))}
                         </select>
                     </div>
 

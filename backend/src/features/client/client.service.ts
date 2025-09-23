@@ -255,6 +255,15 @@ export async function list() {
   });
 }
 
+export async function getClientReport() {
+  return prisma.cliente.findMany({
+    select: {
+      id: true,
+      nome: true,
+    }
+  })
+}
+
 export async function create(data: FrontCliente) {
   const normalized = await normalizer(data);
   return createCliente(prisma, normalized);
