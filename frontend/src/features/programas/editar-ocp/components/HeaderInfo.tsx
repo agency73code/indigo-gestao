@@ -30,14 +30,14 @@ export default function HeaderInfo({ program }: HeaderInfoProps) {
     };
 
     const handleGoBack = () => {
-        navigate(`/programas/${program.id}`);
+        navigate(`/app/programas/${program.id}`);
     };
 
     return (
         <div className="space-y-4 ">
             {/* Header com botão voltar */}
-            <Card className="rounded-[5px] p-1 sm:p-4">
-                <CardHeader className="pb-2 sm:pb-3 px-0 sm:px-6 pt-3 sm:pt-6">
+            <Card padding="small" className="rounded-[5px]">
+                <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                     <div className="flex items-center gap-2 mb-2">
                         <Button
                             variant="ghost"
@@ -54,14 +54,14 @@ export default function HeaderInfo({ program }: HeaderInfoProps) {
             </Card>
 
             {/* Informações do Paciente */}
-            <Card className="rounded-[5px]">
-                <CardHeader className="pb-2 sm:pb-3 px-0 sm:px-6 pt-3 sm:pt-6">
+            <Card padding="small" className="rounded-[5px]">
+                <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                     <CardTitle className="text-base flex items-center gap-2">
                         <User className="h-4 w-4" />
                         Paciente
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="px-0 sm:px-6 pb-3 sm:pb-6">
+                <CardContent className="pb-3 sm:pb-6">
                     <div className="flex items-center gap-3 p-2 sm:p-3 bg-muted rounded-md">
                         <div className="flex-shrink-0">
                             <Avatar className="w-12 h-12">
@@ -95,14 +95,14 @@ export default function HeaderInfo({ program }: HeaderInfoProps) {
             </Card>
 
             {/* Informações do Terapeuta */}
-            <Card className="rounded-[5px]">
-                <CardHeader className="pb-2 sm:pb-3 px-0 sm:px-6 pt-3 sm:pt-6">
+            <Card padding="small" className="rounded-[5px]">
+                <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                     <CardTitle className="text-base flex items-center gap-2">
                         <UserCheck className="h-4 w-4" />
                         Terapeuta
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="px-0 sm:px-6 pb-3 sm:pb-6">
+                <CardContent className="pb-3 sm:pb-6">
                     <div className="flex items-center gap-3 p-2 sm:p-3 bg-muted rounded-md">
                         <div className="flex-1 min-w-0">
                             <p className="font-medium">{program.therapistName}</p>
@@ -112,14 +112,14 @@ export default function HeaderInfo({ program }: HeaderInfoProps) {
             </Card>
 
             {/* Data de criação */}
-            <Card className="rounded-[5px]">
-                <CardHeader className="pb-2 sm:pb-3 px-0 sm:px-6 pt-3 sm:pt-6">
+            <Card padding="small" className="rounded-[5px]">
+                <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                     <CardTitle className="text-base flex items-center gap-2">
                         <Calendar className="h-4 w-4" />
                         Informações do Programa
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="px-0 sm:px-6 pb-3 sm:pb-6">
+                <CardContent className="pb-3 sm:pb-6">
                     <div className="space-y-3">
                         <div className="flex items-center justify-between text-sm">
                             <span className="text-muted-foreground">Criado em:</span>

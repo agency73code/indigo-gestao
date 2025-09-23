@@ -52,14 +52,14 @@ export default function StimuliPanel({ program, attempts, onAddAttempt }: Stimul
 
     if (activeStimuli.length === 0) {
         return (
-            <Card className="rounded-[5px] p-1 sm:p-4">
-                <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
+            <Card className="rounded-[5px] Estímulos em treino">
+                <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                     <CardTitle className="text-base flex items-center gap-2">
                         <Brain className="h-4 w-4" />
                         Estímulos em treino
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+                <CardContent className="pb-3 sm:pb-6">
                     <div className="text-center py-8 text-muted-foreground">
                         <Brain className="h-12 w-12 mx-auto mb-4 opacity-50" />
                         <p>Nenhum estímulo ativo encontrado para este programa</p>
@@ -71,8 +71,8 @@ export default function StimuliPanel({ program, attempts, onAddAttempt }: Stimul
 
     return (
         <>
-            <Card className="rounded-[5px] p-1 sm:p-4">
-                <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
+            <Card className="rounded-[5px] px-6 py-2 md:px-8 md:py-10 lg:px-8 lg:py-0">
+                <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                     <CardTitle className="text-base flex items-center gap-2">
                         <Brain className="h-4 w-4" />
                         Estímulos em treino
@@ -81,23 +81,23 @@ export default function StimuliPanel({ program, attempts, onAddAttempt }: Stimul
                         </span>
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+                <CardContent className="pb-3 sm:pb-6">
                     <div className="space-y-3">
                         {activeStimuli.map((stimulus) => (
                             <div key={stimulus.id}>
                                 <button
                                     type="button"
-                                    className={`w-full text-left rounded-[8px] border bg-white hover:bg-muted transition flex items-center px-4 py-3 gap-4 ${expanded === stimulus.id ? 'bg-muted' : ''}`}
+                                    className={`w-full text-left rounded-[8px] border bg-card hover:bg-muted/50 transition flex items-center px-4 py-3 gap-4 ${expanded === stimulus.id ? 'bg-muted/50' : ''}`}
                                     onClick={() => handleExpand(stimulus.id)}
                                 >
                                     <div className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm">
                                         {stimulus.order}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <div className="font-medium text-sm mb-1">
+                                        <div className="font-medium text-sm text-foreground mb-1">
                                             {stimulus.label}
                                         </div>
-                                        <span className="inline-block px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-medium">
+                                        <span className="inline-block px-2 py-0.5 rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 text-xs font-medium">
                                             Ativo
                                         </span>
                                     </div>
@@ -107,11 +107,10 @@ export default function StimuliPanel({ program, attempts, onAddAttempt }: Stimul
                                             height="20"
                                             fill="none"
                                             viewBox="0 0 20 20"
-                                            className={`transition-transform ${expanded === stimulus.id ? 'rotate-90' : ''}`}
+                                            className={`transition-transform stroke-foreground ${expanded === stimulus.id ? 'rotate-90' : ''}`}
                                         >
                                             <path
                                                 d="M7 8l3 3 3-3"
-                                                stroke="#222"
                                                 strokeWidth="1.5"
                                                 strokeLinecap="round"
                                                 strokeLinejoin="round"

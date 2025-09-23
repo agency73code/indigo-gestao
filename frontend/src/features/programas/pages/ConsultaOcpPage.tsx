@@ -61,14 +61,14 @@ export default function ConsultaOcpPage() {
 
     return (
         <div className="flex flex-col min-h-full w-full p-1 sm:p-4">
-            <div className="px-0 sm:px-6 py-4 sm:py-6">
+            <div className="py-4 lg:py-0">
                 <HeaderSection
                     title="Programas de Treino (OCP)"
                     subtitle="Consultar e gerenciar programas terapêuticos dos pacientes"
                 />
             </div>
 
-            <main className="flex-1 px-0 sm:px-6 pb-20 sm:pb-24">
+            <main className="flex-1 pb-20 sm:pb-24">
                 <div className="space-y-4 sm:space-y-6 max-w-full">
                     {/* Seleção de Paciente */}
                     <PatientSelector

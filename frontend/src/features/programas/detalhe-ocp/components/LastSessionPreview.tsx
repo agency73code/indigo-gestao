@@ -50,7 +50,7 @@ export default function LastSessionPreview({ lastSession }: LastSessionPreviewPr
     };
 
     return (
-        <Card padding="md" className="rounded-[5px]">
+        <Card  className="rounded-[5px] px-6 py-2 md:px-8 md:py-10 lg:px-8 lg:py-2">
             <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                 <CardTitle className="text-base flex items-center gap-2">
                     <Clock className="h-4 w-4" />
@@ -60,7 +60,7 @@ export default function LastSessionPreview({ lastSession }: LastSessionPreviewPr
             <CardContent className=" pb-3 sm:pb-6">
                 {/* Grade de resultados */}
                 <div className="space-y-3">
-                    <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
+                    <div className="grid grid-cols-4 sm:grid-cols-12 gap-2">
                         {lastSession.preview.map((result, index) => (
                             <div
                                 key={index}
