@@ -38,7 +38,9 @@ export default function PatientProfileDrawer({
     const getStatusBadge = (status: string) => {
         const baseClasses = 'px-2 py-1 text-xs font-medium rounded-full';
         const statusClasses =
-            status === 'ATIVO' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
+            status === 'ATIVO'
+                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300';
 
         return <span className={`${baseClasses} ${statusClasses}`}>{status}</span>;
     };
@@ -46,18 +48,18 @@ export default function PatientProfileDrawer({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
-            <div className="relative w-full max-w-4xl max-h-[90vh] bg-white rounded-lg shadow-2xl flex flex-col">
+            <div className="relative w-full max-w-4xl max-h-[90vh] bg-background border rounded-lg shadow-2xl flex flex-col">
                 {/* Header - flex-shrink-0 mantém fixo */}
-                <div className="flex items-center gap-4 p-6 border-b bg-gray-50 flex-shrink-0">
-                    <div className="h-16 w-16 bg-purple-100 rounded-full flex items-center justify-center text-lg font-medium text-purple-600">
+                <div className="flex items-center gap-4 p-6 border-b bg-muted/30 flex-shrink-0">
+                    <div className="h-16 w-16 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center text-lg font-medium text-purple-600 dark:text-purple-300">
                         {getInitials(patient.nome)}
                     </div>
                     <div className="flex-1">
-                        <h2 className="text-xl font-semibold">{patient.nome}</h2>
+                        <h2 className="text-xl font-semibold text-foreground">{patient.nome}</h2>
                         <div className="flex items-center gap-2 mt-2">
                             {getStatusBadge(patient.status)}
                             {patient.responsavel && (
-                                <span className="text-sm text-gray-600">
+                                <span className="text-sm text-muted-foreground">
                                     Responsável: {patient.responsavel}
                                 </span>
                             )}
@@ -83,14 +85,7 @@ export default function PatientProfileDrawer({
                                     label="Data de nascimento *"
                                     value={formatDate(clienteData.dataNascimento)}
                                 />
-                                <ReadOnlyField label="Nome da mãe *" value={clienteData.nomeMae} />
-                                <ReadOnlyField label="CPF da mãe *" value={clienteData.cpfMae} />
-                                <ReadOnlyField label="Nome do pai" value={clienteData.nomePai} />
-                                <ReadOnlyField label="CPF do pai" value={clienteData.cpfPai} />
-                                <ReadOnlyField
-                                    label="Telefone Pai"
-                                    value={clienteData.telefonePai}
-                                />
+                                <ReadOnlyField label="CPF *" value={clienteData.cpf} />
                                 <ReadOnlyField
                                     label="E-mail de contato *"
                                     value={clienteData.emailContato}
@@ -105,35 +100,79 @@ export default function PatientProfileDrawer({
                                 />
                             </div>
 
-                            {/* Seção Mais de um Pai */}
-                            <div className="mt-6">
-                                <ReadOnlyField
-                                    label="Mais de um Pai? *"
-                                    value={clienteData.maisDeUmPai === 'sim' ? 'Sim' : 'Não'}
-                                />
-
-                                {clienteData.maisDeUmPai === 'sim' && (
-                                    <div className="mt-4 p-4 border rounded-lg bg-muted/30">
-                                        <h4 className="text-sm font-medium mb-3 text-muted-foreground">
-                                            Dados do Pai 2
-                                        </h4>
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                            <ReadOnlyField
-                                                label="Nome Pai 2 *"
-                                                value={clienteData.nomePai2}
-                                            />
-                                            <ReadOnlyField
-                                                label="CPF Pai 2 *"
-                                                value={clienteData.cpfPai2}
-                                            />
-                                            <ReadOnlyField
-                                                label="Telefone Pai 2"
-                                                value={clienteData.telefonePai2}
-                                            />
-                                        </div>
+                            {/* Seção Cuidadores */}
+                            {clienteData.cuidadores && clienteData.cuidadores.length > 0 && (
+                                <div className="mt-6">
+                                    <h4 className="font-medium mb-4">Cuidadores</h4>
+                                    <div className="space-y-4">
+                                        {clienteData.cuidadores.map((cuidador, index) => (
+                                            <div
+                                                key={index}
+                                                className="p-4 border rounded-lg bg-muted/30"
+                                            >
+                                                <h5 className="font-medium mb-3 text-sm">
+                                                    Cuidador {index + 1} -{' '}
+                                                    {cuidador.relacao === 'outro'
+                                                        ? cuidador.descricaoRelacao
+                                                        : cuidador.relacao}
+                                                </h5>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <ReadOnlyField
+                                                        label="Nome"
+                                                        value={cuidador.nome}
+                                                    />
+                                                    <ReadOnlyField
+                                                        label="CPF"
+                                                        value={cuidador.cpf}
+                                                    />
+                                                    <ReadOnlyField
+                                                        label="Profissão"
+                                                        value={cuidador.profissao}
+                                                    />
+                                                    <ReadOnlyField
+                                                        label="Escolaridade"
+                                                        value={cuidador.escolaridade}
+                                                    />
+                                                    <ReadOnlyField
+                                                        label="Telefone"
+                                                        value={cuidador.telefone}
+                                                    />
+                                                    <ReadOnlyField
+                                                        label="Email"
+                                                        value={cuidador.email}
+                                                    />
+                                                </div>
+                                                {/* Endereço do cuidador, se existir */}
+                                                {cuidador.endereco && (
+                                                    <div className="mt-4">
+                                                        <h6 className="font-medium mb-2 text-xs text-muted-foreground">
+                                                            Endereço
+                                                        </h6>
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                                            <ReadOnlyField
+                                                                label="CEP"
+                                                                value={cuidador.endereco.cep}
+                                                            />
+                                                            <ReadOnlyField
+                                                                label="Logradouro"
+                                                                value={cuidador.endereco.logradouro}
+                                                            />
+                                                            <ReadOnlyField
+                                                                label="Número"
+                                                                value={cuidador.endereco.numero}
+                                                            />
+                                                            <ReadOnlyField
+                                                                label="Cidade"
+                                                                value={cuidador.endereco.cidade}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
                                     </div>
-                                )}
-                            </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Separador */}
@@ -178,12 +217,142 @@ export default function PatientProfileDrawer({
                                                 label="Cidade *"
                                                 value={endereco.cidade}
                                             />
+                                            {endereco.residenciaDe && (
+                                                <ReadOnlyField
+                                                    label="Residência de"
+                                                    value={
+                                                        endereco.residenciaDe === 'outro'
+                                                            ? endereco.outroResidencia
+                                                            : endereco.residenciaDe
+                                                    }
+                                                    className="md:col-span-2"
+                                                />
+                                            )}
                                         </div>
                                     </div>
                                 ))
                             ) : (
                                 <p className="text-muted-foreground">Nenhum endereço informado</p>
                             )}
+                        </div>
+
+                        {/* Separador */}
+                        <div className="border-t border-gray-200"></div>
+
+                        {/* Dados da Escola */}
+                        <div>
+                            <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
+                                <GraduationCap className="w-5 h-5" />
+                                Dados da Escola
+                            </h3>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <ReadOnlyField
+                                    label="Tipo de escola *"
+                                    value={
+                                        clienteData.dadosEscola?.tipoEscola === 'particular'
+                                            ? 'Particular'
+                                            : clienteData.dadosEscola?.tipoEscola === 'publica'
+                                              ? 'Pública'
+                                              : clienteData.dadosEscola?.tipoEscola === 'afastado'
+                                                ? 'Afastado'
+                                                : clienteData.dadosEscola?.tipoEscola ===
+                                                    'clinica-escola'
+                                                  ? 'Clínica Escola'
+                                                  : clienteData.dadosEscola?.tipoEscola
+                                    }
+                                />
+                                <ReadOnlyField
+                                    label="Nome da escola *"
+                                    value={clienteData.dadosEscola?.nome}
+                                />
+                                <ReadOnlyField
+                                    label="Telefone *"
+                                    value={clienteData.dadosEscola?.telefone}
+                                />
+                                <ReadOnlyField
+                                    label="Email"
+                                    value={clienteData.dadosEscola?.email}
+                                />
+                            </div>
+
+                            {/* Endereço da escola */}
+                            {clienteData.dadosEscola?.endereco && (
+                                <div className="mt-6">
+                                    <h4 className="font-medium mb-3">Endereço da Escola</h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <ReadOnlyField
+                                            label="CEP"
+                                            value={clienteData.dadosEscola.endereco.cep}
+                                        />
+                                        <ReadOnlyField
+                                            label="UF"
+                                            value={clienteData.dadosEscola.endereco.uf}
+                                        />
+                                        <ReadOnlyField
+                                            label="Logradouro"
+                                            value={clienteData.dadosEscola.endereco.logradouro}
+                                            className="md:col-span-2"
+                                        />
+                                        <ReadOnlyField
+                                            label="Número"
+                                            value={clienteData.dadosEscola.endereco.numero}
+                                        />
+                                        <ReadOnlyField
+                                            label="Complemento"
+                                            value={clienteData.dadosEscola.endereco.complemento}
+                                        />
+                                        <ReadOnlyField
+                                            label="Bairro"
+                                            value={clienteData.dadosEscola.endereco.bairro}
+                                        />
+                                        <ReadOnlyField
+                                            label="Cidade"
+                                            value={clienteData.dadosEscola.endereco.cidade}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Contatos da escola */}
+                            {clienteData.dadosEscola?.contatos &&
+                                clienteData.dadosEscola.contatos.length > 0 && (
+                                    <div className="mt-6">
+                                        <h4 className="font-medium mb-3">Contatos da Escola</h4>
+                                        <div className="space-y-4">
+                                            {clienteData.dadosEscola.contatos.map(
+                                                (contato, index) => (
+                                                    <div
+                                                        key={index}
+                                                        className="p-4 border rounded-lg bg-muted/30"
+                                                    >
+                                                        <h5 className="font-medium mb-3 text-sm">
+                                                            Contato {index + 1}
+                                                        </h5>
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                            <ReadOnlyField
+                                                                label="Nome"
+                                                                value={contato.nome}
+                                                            />
+                                                            <ReadOnlyField
+                                                                label="Função"
+                                                                value={contato.funcao}
+                                                            />
+                                                            <ReadOnlyField
+                                                                label="Telefone"
+                                                                value={contato.telefone}
+                                                            />
+                                                            <ReadOnlyField
+                                                                label="Email"
+                                                                value={contato.email}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                ),
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
                         </div>
 
                         {/* Separador */}
@@ -405,7 +574,9 @@ export default function PatientProfileDrawer({
                                                 'sim' && (
                                                 <ReadOnlyField
                                                     label="Valor da sessão *"
-                                                    value={clienteData.dadosPagamento?.valorSessao}
+                                                    value={
+                                                        clienteData.dadosPagamento?.valorAcordado
+                                                    }
                                                 />
                                             )}
                                         </div>
@@ -486,6 +657,72 @@ export default function PatientProfileDrawer({
                                     </div>
                                 </div>
                             )}
+                        </div>
+
+                        {/* Separador */}
+                        <div className="border-t border-gray-200"></div>
+
+                        {/* Arquivos */}
+                        <div>
+                            <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
+                                📎 Arquivos
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <ReadOnlyField
+                                    label="Foto do perfil"
+                                    value={
+                                        clienteData.arquivos?.fotoPerfil ? 'Enviado' : 'Não enviado'
+                                    }
+                                />
+                                <ReadOnlyField
+                                    label="Documento de identidade"
+                                    value={
+                                        clienteData.arquivos?.documentoIdentidade
+                                            ? 'Enviado'
+                                            : 'Não enviado'
+                                    }
+                                />
+                                <ReadOnlyField
+                                    label="Comprovante de CPF"
+                                    value={
+                                        clienteData.arquivos?.comprovanteCpf
+                                            ? 'Enviado'
+                                            : 'Não enviado'
+                                    }
+                                />
+                                <ReadOnlyField
+                                    label="Comprovante de residência"
+                                    value={
+                                        clienteData.arquivos?.comprovanteResidencia
+                                            ? 'Enviado'
+                                            : 'Não enviado'
+                                    }
+                                />
+                                <ReadOnlyField
+                                    label="Carteirinha do plano"
+                                    value={
+                                        clienteData.arquivos?.carterinhaPlano
+                                            ? 'Enviado'
+                                            : 'Não enviado'
+                                    }
+                                />
+                                <ReadOnlyField
+                                    label="Relatórios médicos"
+                                    value={
+                                        clienteData.arquivos?.relatoriosMedicos
+                                            ? 'Enviado'
+                                            : 'Não enviado'
+                                    }
+                                />
+                                <ReadOnlyField
+                                    label="Prescrição médica"
+                                    value={
+                                        clienteData.arquivos?.prescricaoMedica
+                                            ? 'Enviado'
+                                            : 'Não enviado'
+                                    }
+                                />
+                            </div>
                         </div>
 
                         {/* Espaço extra para garantir scroll completo */}

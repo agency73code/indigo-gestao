@@ -59,7 +59,9 @@ export default function TherapistTable({
     const getStatusBadge = (status: string) => {
         const baseClasses = 'px-2 py-1 text-xs font-medium rounded-full';
         const statusClasses =
-            status === 'ATIVO' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
+            status === 'ATIVO'
+                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300';
 
         return <span className={`${baseClasses} ${statusClasses}`}>{status}</span>;
     };
@@ -155,44 +157,51 @@ export default function TherapistTable({
 
             <div className="hidden md:block overflow-x-auto">
                 <table className="w-full">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-muted/50">
                         <tr>
                             <th
-                                className="text-left p-4 cursor-pointer hover:bg-gray-100 transition-colors"
+                                className="text-left p-4 cursor-pointer hover:bg-muted/70 transition-colors"
                                 onClick={() => onSort('nome')}
                             >
                                 <div className="flex items-center gap-2 font-medium">
-                                Nome
-                                {getSortIcon('nome')}
-                            </div>
+                                    Nome
+                                    {getSortIcon('nome')}
+                                </div>
                             </th>
                             <th
-                                className="text-left p-4 cursor-pointer hover:bg-gray-100 transition-colors"
+                                className="text-left p-4 cursor-pointer hover:bg-muted/70 transition-colors"
                                 onClick={() => onSort('especialidade')}
                             >
                                 <div className="flex items-center gap-2 font-medium">
-                                Especialidade
-                                {getSortIcon('especialidade')}
-                            </div>
+                                    Especialidade
+                                    {getSortIcon('especialidade')}
+                                </div>
                             </th>
                             <th className="text-left p-4 font-medium">Conselho/Registro</th>
-                            <th className="text-left p-4 font-medium hidden lg:table-cell">E-mail</th>
-                            <th className="text-left p-4 font-medium hidden xl:table-cell">Telefone</th>
+                            <th className="text-left p-4 font-medium hidden lg:table-cell">
+                                E-mail
+                            </th>
+                            <th className="text-left p-4 font-medium hidden xl:table-cell">
+                                Telefone
+                            </th>
                             <th
-                                className="text-left p-4 cursor-pointer hover:bg-gray-100 transition-colors"
+                                className="text-left p-4 cursor-pointer hover:bg-muted/70 transition-colors"
                                 onClick={() => onSort('status')}
                             >
                                 <div className="flex items-center gap-2 font-medium">
-                                Status
-                                {getSortIcon('status')}
-                            </div>
-                        </th>
+                                    Status
+                                    {getSortIcon('status')}
+                                </div>
+                            </th>
                             <th className="text-right p-4 font-medium">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
                         {therapists.map((therapist) => (
-                            <tr key={therapist.id} className="border-t hover:bg-gray-50">
+                            <tr
+                                key={therapist.id}
+                                className="border-t hover:bg-muted/50 transition-colors"
+                            >
                                 <td className="p-4 align-top">
                                     <div className="flex items-center gap-3">
                                         <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center text-xs font-medium text-blue-600">
@@ -228,20 +237,22 @@ export default function TherapistTable({
                                         {therapist.telefone || 'Não informado'}
                                     </span>
                                 </td>
-                                <td className="p-4 align-top">{getStatusBadge(therapist.status)}</td>
+                                <td className="p-4 align-top">
+                                    {getStatusBadge(therapist.status)}
+                                </td>
                                 <td className="p-4 text-right align-top">
                                     <Button
                                         variant="ghost"
                                         size="sm"
-                                    onClick={() => onViewProfile(therapist)}
-                                    className="flex items-center gap-2"
-                                >
-                                    <Eye className="w-4 h-4" />
-                                    <span className="hidden sm:inline">Visualizar</span>
-                                </Button>
-                            </td>
-                        </tr>
-                    ))}
+                                        onClick={() => onViewProfile(therapist)}
+                                        className="flex items-center gap-2"
+                                    >
+                                        <Eye className="w-4 h-4" />
+                                        <span className="hidden sm:inline">Visualizar</span>
+                                    </Button>
+                                </td>
+                            </tr>
+                        ))}
                     </tbody>
                 </table>
             </div>

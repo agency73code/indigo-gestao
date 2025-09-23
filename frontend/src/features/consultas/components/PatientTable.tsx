@@ -58,7 +58,9 @@ export default function PatientTable({
     const getStatusBadge = (status: string) => {
         const baseClasses = 'px-2 py-1 text-xs font-medium rounded-full';
         const statusClasses =
-            status === 'ATIVO' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
+            status === 'ATIVO'
+                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300';
 
         return <span className={`${baseClasses} ${statusClasses}`}>{status}</span>;
     };
@@ -91,7 +93,9 @@ export default function PatientTable({
                                     {getInitials(patient.nome)}
                                 </div>
                                 <div>
-                                    <p className="font-medium text-sm text-foreground">{patient.nome}</p>
+                                    <p className="font-medium text-sm text-foreground">
+                                        {patient.nome}
+                                    </p>
                                 </div>
                             </div>
                             <div className="text-right">
@@ -148,10 +152,10 @@ export default function PatientTable({
 
             <div className="hidden md:block overflow-x-auto">
                 <table className="w-full">
-                    <thead className="bg-gray-50">
+                    <thead className="bg-muted/50">
                         <tr>
                             <th
-                                className="text-left p-4 cursor-pointer hover:bg-gray-100 transition-colors"
+                                className="text-left p-4 cursor-pointer hover:bg-muted/70 transition-colors"
                                 onClick={() => onSort('nome')}
                             >
                                 <div className="flex items-center gap-2 font-medium">
@@ -159,11 +163,15 @@ export default function PatientTable({
                                     {getSortIcon('nome')}
                                 </div>
                             </th>
-                            <th className="text-left p-4 font-medium hidden md:table-cell">E-mail</th>
-                            <th className="text-left p-4 font-medium hidden lg:table-cell">Telefone</th>
+                            <th className="text-left p-4 font-medium hidden md:table-cell">
+                                E-mail
+                            </th>
+                            <th className="text-left p-4 font-medium hidden lg:table-cell">
+                                Telefone
+                            </th>
                             <th className="text-left p-4 font-medium">Responsável</th>
                             <th
-                                className="text-left p-4 cursor-pointer hover:bg-gray-100 transition-colors"
+                                className="text-left p-4 cursor-pointer hover:bg-muted/70 transition-colors"
                                 onClick={() => onSort('status')}
                             >
                                 <div className="flex items-center gap-2 font-medium">
@@ -176,7 +184,10 @@ export default function PatientTable({
                     </thead>
                     <tbody>
                         {patients.map((patient) => (
-                            <tr key={patient.id} className="border-t hover:bg-gray-50">
+                            <tr
+                                key={patient.id}
+                                className="border-t hover:bg-muted/50 transition-colors"
+                            >
                                 <td className="p-4 align-top">
                                     <div className="flex items-center gap-3">
                                         <div className="h-8 w-8 bg-purple-100 rounded-full flex items-center justify-center text-xs font-medium text-purple-600">

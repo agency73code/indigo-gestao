@@ -43,7 +43,9 @@ export default function TherapistProfileDrawer({
     const getStatusBadge = (status: string) => {
         const baseClasses = 'px-2 py-1 text-xs font-medium rounded-full';
         const statusClasses =
-            status === 'ATIVO' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
+            status === 'ATIVO'
+                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300';
 
         return <span className={`${baseClasses} ${statusClasses}`}>{status}</span>;
     };
@@ -51,18 +53,18 @@ export default function TherapistProfileDrawer({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center rounded-[5px] p-2">
             <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
-            <div className="relative w-full max-w-4xl max-h-[90vh] bg-white rounded-[5px] shadow-2xl flex flex-col ">
+            <div className="relative w-full max-w-4xl max-h-[90vh] bg-background border rounded-[5px] shadow-2xl flex flex-col ">
                 {/* Header - fixo */}
-                <div className="flex items-center gap-4 border-b bg-gray-50 flex-shrink-0 p-2">
-                    <div className="h-16 w-16 bg-blue-100 rounded-full flex items-center justify-center text-lg font-medium text-blue-600">
+                <div className="flex items-center gap-4 border-b bg-muted/30 flex-shrink-0 p-2">
+                    <div className="h-16 w-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-lg font-medium text-blue-600 dark:text-blue-300">
                         {getInitials(therapist.nome)}
                     </div>
                     <div className="flex-1">
-                        <h2 className="text-xl font-semibold">{therapist.nome}</h2>
+                        <h2 className="text-xl font-semibold text-foreground">{therapist.nome}</h2>
                         <div className="flex items-center gap-2 mt-2">
                             {getStatusBadge(therapist.status)}
                             {therapist.especialidade && (
-                                <span className="text-sm text-gray-600">
+                                <span className="text-sm text-muted-foreground">
                                     {therapist.especialidade}
                                 </span>
                             )}
@@ -144,7 +146,7 @@ export default function TherapistProfileDrawer({
                         </div>
 
                         {/* Separador */}
-                        <div className="border-t border-gray-200"></div>
+                        <div className="border-t border-border"></div>
 
                         {/* Seção 2: Endereço (EnderecoStep) */}
                         <div>
@@ -223,21 +225,8 @@ export default function TherapistProfileDrawer({
                                     </div>
                                 )}
 
-                            {/* Outras informações profissionais */}
+                            {/* Dados profissionais */}
                             <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <ReadOnlyField
-                                    label="Número do convênio"
-                                    value={terapeutaData.numeroConvenio}
-                                />
-                                <ReadOnlyField label="CRP *" value={terapeutaData.crp} />
-                                <ReadOnlyField
-                                    label="Data de entrada *"
-                                    value={formatDate(terapeutaData.dataEntrada)}
-                                />
-                                <ReadOnlyField
-                                    label="Data de saída"
-                                    value={formatDate(terapeutaData.dataSaida)}
-                                />
                                 <ReadOnlyField
                                     label="Data início *"
                                     value={formatDate(terapeutaData.dataInicio)}
@@ -247,36 +236,26 @@ export default function TherapistProfileDrawer({
                                     value={formatDate(terapeutaData.dataFim)}
                                 />
                                 <ReadOnlyField
-                                    label="Valor da consulta *"
+                                    label="Valor hora acordado"
                                     value={
-                                        terapeutaData.valorConsulta
-                                            ? `R$ ${terapeutaData.valorConsulta}`
+                                        terapeutaData.valorHoraAcordado
+                                            ? `R$ ${terapeutaData.valorHoraAcordado}`
                                             : undefined
                                     }
                                 />
+                                <ReadOnlyField
+                                    label="Professor Uniindigo"
+                                    value={
+                                        terapeutaData.professorUnindigo === 'sim' ? 'Sim' : 'Não'
+                                    }
+                                />
+                                {terapeutaData.disciplinaUniindigo && (
+                                    <ReadOnlyField
+                                        label="Disciplina Uniindigo"
+                                        value={terapeutaData.disciplinaUniindigo}
+                                    />
+                                )}
                             </div>
-
-                            {/* Especialidades */}
-                            {terapeutaData.especialidades &&
-                                terapeutaData.especialidades.length > 0 && (
-                                    <div className="mt-4">
-                                        <ReadOnlyField
-                                            label="Especialidades *"
-                                            value={terapeutaData.especialidades.join(', ')}
-                                        />
-                                    </div>
-                                )}
-
-                            {/* Formas de atendimento */}
-                            {terapeutaData.formasAtendimento &&
-                                terapeutaData.formasAtendimento.length > 0 && (
-                                    <div className="mt-4">
-                                        <ReadOnlyField
-                                            label="Formas de atendimento *"
-                                            value={terapeutaData.formasAtendimento.join(', ')}
-                                        />
-                                    </div>
-                                )}
                         </div>
 
                         {/* Separador */}
@@ -291,45 +270,82 @@ export default function TherapistProfileDrawer({
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <ReadOnlyField
                                     label="Graduação *"
-                                    value={terapeutaData.formacao?.graduacao}
+                                    value={terapeutaData.Formação?.graduacao}
                                 />
                                 <ReadOnlyField
                                     label="Instituição graduação *"
-                                    value={terapeutaData.formacao?.instituicaoGraduacao}
+                                    value={terapeutaData.Formação?.instituicaoGraduacao}
                                 />
                                 <ReadOnlyField
                                     label="Ano formatura *"
-                                    value={terapeutaData.formacao?.anoFormatura}
+                                    value={terapeutaData.Formação?.anoFormatura}
                                 />
                             </div>
 
-                            {/* Pós-graduação - Condicional */}
-                            {terapeutaData.formacao?.posGraduacao && (
-                                <div className="mt-4 p-4 border rounded-lg bg-muted/30">
-                                    <h4 className="font-medium mb-3">Pós-graduação</h4>
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <ReadOnlyField
-                                            label="Pós-graduação"
-                                            value={terapeutaData.formacao.posGraduacao}
-                                        />
-                                        <ReadOnlyField
-                                            label="Instituição pós-graduação"
-                                            value={terapeutaData.formacao.instituicaoPosGraduacao}
-                                        />
-                                        <ReadOnlyField
-                                            label="Ano pós-graduação"
-                                            value={terapeutaData.formacao.anoPosGraduacao}
-                                        />
+                            {/* Pós-graduações - Múltiplas */}
+                            {terapeutaData.Formação?.posGraduacoes &&
+                                terapeutaData.Formação.posGraduacoes.length > 0 && (
+                                    <div className="mt-4 space-y-4">
+                                        <h4 className="font-medium">Pós-graduações</h4>
+                                        {terapeutaData.Formação.posGraduacoes.map((pos, index) => (
+                                            <div
+                                                key={index}
+                                                className="p-4 border rounded-lg bg-muted/30"
+                                            >
+                                                <h5 className="font-medium mb-3 text-sm">
+                                                    Pós-graduação {index + 1}
+                                                </h5>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <ReadOnlyField
+                                                        label="Tipo"
+                                                        value={
+                                                            pos.tipo === 'lato'
+                                                                ? 'Lato Sensu (Especialização)'
+                                                                : 'Stricto Sensu (Mestrado/Doutorado)'
+                                                        }
+                                                    />
+                                                    <ReadOnlyField
+                                                        label="Curso"
+                                                        value={pos.curso}
+                                                    />
+                                                    <ReadOnlyField
+                                                        label="Instituição"
+                                                        value={pos.instituicao}
+                                                    />
+                                                    <ReadOnlyField
+                                                        label="Conclusão"
+                                                        value={pos.conclusao}
+                                                    />
+                                                    {pos.comprovanteUrl && (
+                                                        <ReadOnlyField
+                                                            label="Comprovante"
+                                                            value="Arquivo enviado"
+                                                        />
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
+                                )}
+
+                            {/* Participação em congressos */}
+                            {terapeutaData.Formação?.participacaoCongressosDescricao && (
+                                <div className="mt-4">
+                                    <ReadOnlyField
+                                        label="Participação em Congressos"
+                                        value={
+                                            terapeutaData.Formação.participacaoCongressosDescricao
+                                        }
+                                    />
                                 </div>
                             )}
 
-                            {/* Cursos adicionais */}
-                            {terapeutaData.formacao?.cursos && (
+                            {/* Publicações de livros */}
+                            {terapeutaData.Formação?.publicacoesLivrosDescricao && (
                                 <div className="mt-4">
                                     <ReadOnlyField
-                                        label="Cursos"
-                                        value={terapeutaData.formacao.cursos}
+                                        label="Publicações de Livros"
+                                        value={terapeutaData.Formação.publicacoesLivrosDescricao}
                                     />
                                 </div>
                             )}
@@ -408,11 +424,6 @@ export default function TherapistProfileDrawer({
                                             label="Razão Social"
                                             value={terapeutaData.cnpj.razaoSocial}
                                         />
-                                        <ReadOnlyField
-                                            label="Nome Fantasia"
-                                            value={terapeutaData.cnpj.nomeFantasia}
-                                            className="md:col-span-2"
-                                        />
                                     </div>
 
                                     {/* Endereço da empresa */}
@@ -451,7 +462,7 @@ export default function TherapistProfileDrawer({
                                         </div>
                                     </div>
 
-                                    <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                                    <div className="mt-4 p-4 bg-muted/30 rounded-lg">
                                         <p className="text-sm text-gray-600">
                                             <strong>Nota:</strong> Por questões de segurança, o CNPJ
                                             é exibido de forma mascarada.
