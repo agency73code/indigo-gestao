@@ -35,7 +35,7 @@ export default function ProgramCard({ program, onOpen, onNewSession }: ProgramCa
             onClick={handleOpen}
             aria-label={`Abrir programa ${program.title} do paciente ${program.patientName}`}
         >
-            <CardContent className="p-4">
+            <CardContent className="">
                 <div className="space-y-3">
                     <div className="flex justify-between items-start">
                         <div className="flex-1">

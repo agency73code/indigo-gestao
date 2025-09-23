@@ -56,3 +56,9 @@ export type PrazoPrograma = {
   fim?: string;
 };
 
+export type LinhaBarras = {
+  sessao: string;
+  acerto: number;
+  ajuda: number;
+};
+

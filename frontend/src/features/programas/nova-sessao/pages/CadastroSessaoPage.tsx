@@ -9,20 +9,20 @@ import {
     AttemptsRegister,
     SessionSummary,
     SaveBar,
-} from '../cadastro-sessao/components';
+} from '../components/index.ts';
 import {
     searchPatientsForSession,
     getProgramDetail,
     saveSession,
     calculateSessionSummary,
-} from '../cadastro-sessao/services';
+} from '../services.ts';
 import type {
     Patient,
     ProgramListItem,
     ProgramDetail,
     SessionAttempt,
     SessionState,
-} from '../cadastro-sessao/types';
+} from '../types.ts';
 
 export default function CadastroSessaoPage() {
     const [showSaveBar, setShowSaveBar] = useState(false);
@@ -95,7 +95,7 @@ export default function CadastroSessaoPage() {
     const loadPatientData = async (patientId: string) => {
         try {
             const patients = await searchPatientsForSession('');
-            const patient = patients.find((p) => p.id === patientId);
+            const patient = patients.find((p: Patient) => p.id === patientId);
             if (patient) {
                 handlePatientSelect(patient);
             }
@@ -123,7 +123,7 @@ export default function CadastroSessaoPage() {
             };
             setSelectedProgram(programListItem);
 
-            setSessionState((prev) => ({
+            setSessionState((prev: SessionState) => ({
                 ...prev,
                 programId: detail.id,
             }));
@@ -138,7 +138,7 @@ export default function CadastroSessaoPage() {
     // Handlers
     const handlePatientSelect = (patient: Patient) => {
         setSelectedPatient(patient);
-        setSessionState((prev) => ({
+        setSessionState((prev: SessionState) => ({
             ...prev,
             patientId: patient.id,
         }));
@@ -147,7 +147,7 @@ export default function CadastroSessaoPage() {
         if (selectedProgram && selectedProgram.patientId !== patient.id) {
             setSelectedProgram(null);
             setProgramDetail(null);
-            setSessionState((prev) => ({
+            setSessionState((prev: SessionState) => ({
                 ...prev,
                 programId: null,
             }));
@@ -172,7 +172,7 @@ export default function CadastroSessaoPage() {
 
     const handleProgramSelect = async (program: ProgramListItem) => {
         setSelectedProgram(program);
-        setSessionState((prev) => ({
+        setSessionState((prev: SessionState) => ({
             ...prev,
             programId: program.id,
         }));
@@ -183,14 +183,14 @@ export default function CadastroSessaoPage() {
     const handleProgramClear = () => {
         setSelectedProgram(null);
         setProgramDetail(null);
-        setSessionState((prev) => ({
+        setSessionState((prev: SessionState) => ({
             ...prev,
             programId: null,
         }));
     };
 
     const handleAddAttempt = (attempt: SessionAttempt) => {
-        setSessionState((prev) => {
+        setSessionState((prev: SessionState) => {
             const newAttempts = [...prev.attempts, attempt];
             const newSummary = calculateSessionSummary(newAttempts);
 

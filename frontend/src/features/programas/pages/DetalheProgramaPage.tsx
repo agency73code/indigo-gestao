@@ -104,7 +104,9 @@ export default function DetalheProgramaPage() {
             </div>
 
             {/* Barra de ações fixa no rodapé */}
+            <div className='mt-4'>
             <ActionBar program={program} />
+            </div>
         </div>
     );
 }

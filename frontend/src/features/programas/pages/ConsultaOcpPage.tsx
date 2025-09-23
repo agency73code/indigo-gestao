@@ -68,8 +68,8 @@ export default function ConsultaOcpPage() {
                 />
             </div>
 
-            <main className="flex-1 px-0 sm:px-6 pb-20 sm:pb-24 w-full">
-                <div className="space-y-4 sm:space-y-6 max-w-7xl mx-auto w-full">
+            <main className="flex-1 px-0 sm:px-6 pb-20 sm:pb-24">
+                <div className="space-y-4 sm:space-y-6 max-w-full">
                     {/* Seleção de Paciente */}
                     <PatientSelector
                         selected={selectedPatient}

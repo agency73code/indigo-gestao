@@ -24,7 +24,7 @@ import ConsultaOcpPage from '../../features/programas/pages/ConsultaOcpPage';
 import CadastroOcpPage from '../../features/programas/pages/CadastroOcpPage';
 import DetalheProgramaPage from '../../features/programas/pages/DetalheProgramaPage';
 import EditarProgramaPage from '../../features/programas/pages/EditarProgramaPage';
-import { CadastroSessaoPage } from '../../features/sessoes';
+import { CadastroSessaoPage } from '../../features/programas/nova-sessao';
 import RelatorioMensalPage from '../../features/programas/pages/RelatorioMensalPage';
 import NotAccessPage from '@/features/shell/pages/NotAccessPage';
 import NotPermissionPage from '@/features/shell/pages/NotPermissionPage';
@@ -36,7 +36,9 @@ const suspenseFallback = (
     </div>
 );
 
-const ConsultarSessaoPage = lazy(() => import('@/features/programas/sessoes/pages/ConsultarSessao'));
+const ConsultarSessaoPage = lazy(
+    () => import('@/features/programas/sessoes/pages/ConsultarSessao'),
+);
 const DetalheSessaoPage = lazy(() => import('@/features/programas/sessoes/pages/DetalheSessao'));
 
 export const router = createBrowserRouter([
