@@ -21,14 +21,14 @@ export default function GoalSection({
     errors,
 }: GoalSectionProps) {
     return (
-        <Card padding="none" className="rounded-[5px] p-2 sm:p-4">
-            <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
+        <Card padding="none" className="rounded-[5px] px-6 py-8 md:px-8 md:py-10 lg:px-8 lg:py-0">
+            <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                 <CardTitle className="text-base flex items-center gap-2">
                     <Target className="h-4 w-4" />
                     Objetivo do Programa
                 </CardTitle>
             </CardHeader>
-            <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6 space-y-4">
+            <CardContent className="pb-3 sm:pb-6 space-y-4">
                 <div className="space-y-2">
                     <Label htmlFor="goal-title" className="text-sm font-medium">
                         Título do objetivo <span className="text-destructive">*</span>

@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { CardHeader, CardTitle } from '@/ui/card';
 import { Button } from '@/ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle, XCircle, X } from 'lucide-react';
 import type { Terapeuta } from '../types/cadastros.types';
 import {
     maskCPF,
@@ -33,6 +35,7 @@ const STEPS = [
 ];
 
 export default function CadastroTerapeutaPage() {
+    const navigate = useNavigate();
     const [currentStep, setCurrentStep] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -84,11 +87,11 @@ export default function CadastroTerapeutaPage() {
 
         // Arquivos
         arquivos: {
-            fotoPerfil: undefined,
-            diplomaGraduacao: undefined,
-            diplomaPosGraduacao: undefined,
-            registroCRP: undefined,
-            comprovanteEndereco: undefined,
+            fotoPerfil: null,
+            diplomaGraduacao: null,
+            diplomaPosGraduacao: null,
+            registroCRP: null,
+            comprovanteEndereco: null,
         },
 
         // CNPJ
@@ -108,6 +111,8 @@ export default function CadastroTerapeutaPage() {
     });
 
     const handleInputChange = (field: string, value: any) => {
+        console.log('CadastroTerapeutaPage - handleInputChange called:', field, value);
+
         // [CPF] máscara + validação em tempo real
         if (field === 'cpf') {
             const masked = maskCPF(String(value ?? ''));
@@ -272,7 +277,7 @@ export default function CadastroTerapeutaPage() {
                         newErrors[`formacao.posGraduacoes.${idx}.conclusao`] = 'Campo obrigatório';
                 });
                 break;
-                
+
             case 6: {
                 // Dados CNPJ (opcional)
                 const num = formData.cnpj?.numero?.trim();
@@ -325,10 +330,39 @@ export default function CadastroTerapeutaPage() {
             payload.documentos = uploadResp.documentos;
 
             await cadastrarTerapeuta(payload);
-            alert('Terapeuta cadastrado com sucesso!');
+            toast.success('Terapeuta cadastrado com sucesso!', {
+                description: 'O cadastro foi realizado e o terapeuta foi adicionado ao sistema.',
+                duration: 3000,
+                icon: <CheckCircle className="h-4 w-4" />,
+                action: {
+                    label: <X className="h-4 w-4" />,
+                    onClick: () => {},
+                },
+                cancel: {
+                    label: 'Fechar',
+                    onClick: () => {},
+                },
+            });
+
+            // Redireciona para a página inicial após um breve delay
+            setTimeout(() => {
+                navigate('/');
+            }, 1000);
         } catch (error) {
             console.error('Erro ao cadastrar terapeuta:', error);
-            alert('Erro ao cadastrar terapeuta. Tente novamente.');
+            toast.error('Erro ao cadastrar terapeuta', {
+                description: 'Ocorreu um erro durante o cadastro. Tente novamente.',
+                duration: 4000,
+                icon: <XCircle className="h-4 w-4" />,
+                action: {
+                    label: <X className="h-4 w-4" />,
+                    onClick: () => {},
+                },
+                cancel: {
+                    label: 'Fechar',
+                    onClick: () => {},
+                },
+            });
         } finally {
             setIsLoading(false);
         }
@@ -376,8 +410,10 @@ export default function CadastroTerapeutaPage() {
 
     return (
         <div className="container mx-auto px-1 sm:px-6 md:px-8 py-6 md:py-8">
-            <CardHeader className='p-0'>
-                <CardTitle className="text-xl sm:text-2xl mb-6 md:mb-8 text-primary">Cadastro de Terapeuta</CardTitle>
+            <CardHeader className="p-0">
+                <CardTitle className="text-xl sm:text-2xl mb-6 md:mb-8 text-primary">
+                    Cadastro de Terapeuta
+                </CardTitle>
                 <MultiStepProgress
                     currentStep={currentStep}
                     totalSteps={STEPS.length}
@@ -411,7 +447,10 @@ export default function CadastroTerapeutaPage() {
                         )}
                     </Button>
                 ) : (
-                    <Button onClick={nextStep} className="flex items-center gap-2 whitespace-nowrap">
+                    <Button
+                        onClick={nextStep}
+                        className="flex items-center gap-2 whitespace-nowrap"
+                    >
                         Próximo <ChevronRight className="w-4 h-4" />
                     </Button>
                 )}
@@ -419,4 +458,3 @@ export default function CadastroTerapeutaPage() {
         </div>
     );
 }
-

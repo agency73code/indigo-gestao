@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { DateField } from '@/common/components/layout/DateField';
 import type { Patient, Therapist } from '../types';
 import { searchPatients, searchTherapists } from '../services';
 import { RequireAbility } from '@/features/auth/abilities/RequireAbility';
@@ -13,9 +14,13 @@ interface HeaderInfoProps {
     therapist: Therapist | null;
     programName: string;
     createdAt: string;
+    prazoInicio: string;
+    prazoFim: string;
     onPatientSelect: (patient: Patient | null) => void;
     onTherapistSelect: (therapist: Therapist | null) => void;
     onProgramNameChange: (name: string) => void;
+    onPrazoInicioChange: (prazo: string) => void;
+    onPrazoFimChange: (prazo: string) => void;
 }
 
 interface SelectorModalProps {
@@ -183,9 +188,13 @@ export default function HeaderInfo({
     therapist,
     programName,
     createdAt,
+    prazoInicio,
+    prazoFim,
     onPatientSelect,
     onTherapistSelect,
     onProgramNameChange,
+    onPrazoInicioChange,
+    onPrazoFimChange,
 }: HeaderInfoProps) {
     const [showPatientSelector, setShowPatientSelector] = useState(false);
     const [showTherapistSelector, setShowTherapistSelector] = useState(false);
@@ -212,14 +221,14 @@ export default function HeaderInfo({
         <>
             <div className="space-y-4">
                 {/* Paciente */}
-                <Card className="rounded-[5px] p-1 sm:p-4">
-                    <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
+                <Card  className="rounded-[5px] px-6 py-8 md:px-8 md:py-10 lg:px-8 lg:py-0">
+                    <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                         <CardTitle className="text-base flex items-center gap-2">
                             <User className="h-4 w-4" />
                             Paciente
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+                    <CardContent className=" pb-3 sm:pb-6">
                         {patient ? (
                             <div className="flex items-center gap-3 p-2 sm:p-3 bg-muted rounded-[5px]">
                                 <div className="flex-shrink-0">
@@ -285,14 +294,14 @@ export default function HeaderInfo({
                 </Card>
 
                 {/* Terapeuta */}
-                <Card className="rounded-[5px] p-1 sm:p-4">
-                    <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
+                <Card className="rounded-[5px] p-1 sm:p-4 px-6 py-8 md:px-8 md:py-10 lg:px-8 lg:py-0">
+                    <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                         <CardTitle className="text-base flex items-center gap-2">
                             <UserCheck className="h-4 w-4" />
                             Terapeuta
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+                    <CardContent className="pb-3 sm:pb-6">
                         {therapist ? (
                             <div className="flex items-center gap-3 p-2 sm:p-3 bg-muted rounded-md">
                                 <div className="flex-shrink-0">
@@ -316,7 +325,7 @@ export default function HeaderInfo({
                                 </div>
 
                                 <div className="flex gap-2 flex-shrink-0 flex-col sm:flex-row">
-                                    <RequireAbility action='manage' subject='Terapeutas'>
+                                    <RequireAbility action="manage" subject="Terapeutas">
                                         <Button
                                             variant="outline"
                                             size="sm"
@@ -350,14 +359,14 @@ export default function HeaderInfo({
                 </Card>
 
                 {/* Informações do programa */}
-                <Card className="rounded-[5px] p-2 sm:p-4">
-                    <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
+                <Card className="rounded-[5px] px-6 py-8 md:px-8 md:py-10 lg:px-8 lg:py-0">
+                    <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                         <CardTitle className="text-base flex items-center gap-2">
                             <Calendar className="h-4 w-4" />
                             Informações do Programa
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6 space-y-4">
+                    <CardContent className="pb-3 sm:pb-6 space-y-4">
                         <div className="space-y-2">
                             <Label htmlFor="program-name">Nome do programa (opcional)</Label>
                             <Input
@@ -378,6 +387,26 @@ export default function HeaderInfo({
                                 disabled
                                 className="bg-muted"
                             />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="prazo-inicio">Data de início</Label>
+                                <DateField
+                                    value={prazoInicio}
+                                    onChange={onPrazoInicioChange}
+                                    placeholder="Selecione a data de início"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="prazo-fim">Data de fim</Label>
+                                <DateField
+                                    value={prazoFim}
+                                    onChange={onPrazoFimChange}
+                                    placeholder="Selecione a data de fim"
+                                    minDate={prazoInicio ? new Date(prazoInicio) : undefined}
+                                />
+                            </div>
                         </div>
                     </CardContent>
                 </Card>

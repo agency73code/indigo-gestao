@@ -1,4 +1,4 @@
-import { ArrowLeft, Calendar } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -29,13 +29,28 @@ export default function HeaderProgram({ program }: HeaderProgramProps) {
         }
     };
 
-    const handleGoBack = () => {
-        navigate('/app/programas/lista');
+    const daysLeftInfo = () => {
+        if (!program.prazoInicio || !program.prazoFim) return null;
+
+        const now = new Date();
+        const end = new Date(program.prazoFim);
+        const start = new Date(program.prazoInicio);
+        const diff = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        if (isNaN(diff)) return null;
+        const status = now > end ? 'finalizado' : `restam ${diff} dias`;
+        const period = `${formatDate(start.toISOString())} — ${formatDate(end.toISOString())}`;
+        return { status, period };
     };
 
+    const handleGoBack = () => {
+        navigate(-1); // Volta para a página anterior
+    };
+
+    const prazo = daysLeftInfo();
+
     return (
-        <Card className="rounded-[5px] p-1 sm:p-4">
-            <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
+        <Card padding="md" className="rounded-[5px]">
+            <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                 <div className="flex items-center gap-2 mb-2">
                     <Button
                         variant="ghost"
@@ -51,7 +66,7 @@ export default function HeaderProgram({ program }: HeaderProgramProps) {
                     </CardTitle>
                 </div>
             </CardHeader>
-            <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6 space-y-4">
+            <CardContent className="pb-3 sm:pb-6 space-y-4">
                 {/* Informações do Paciente */}
                 <div className="flex items-center gap-3 p-3 bg-muted rounded-md">
                     <div className="flex-shrink-0">
@@ -83,17 +98,15 @@ export default function HeaderProgram({ program }: HeaderProgramProps) {
                     </div>
                 </div>
 
-                {/* Informações do Terapeuta e Data */}
-                <div className="grid grid-cols-1 gap-3">
-                    <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Terapeuta:</span>
+                {/* Terapeuta e Data */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                    <div className="flex items-center">
+                        <span className="text-muted-foreground mr-2">Terapeuta:</span>
                         <span className="font-medium">{program.therapistName}</span>
                     </div>
-
-                    <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            Criado em:
+                    <div className="flex items-center justify sm:justify-end">
+                        <span className="text-muted-foreground flex items-center gap-1 mr-2">
+                            <Calendar className="h-3 w-3" /> Criado em:
                         </span>
                         <span className="font-medium">{formatDate(program.createdAt)}</span>
                     </div>
@@ -101,9 +114,24 @@ export default function HeaderProgram({ program }: HeaderProgramProps) {
 
                 {/* Nome do Programa */}
                 {program.name && (
-                    <div className="pt-2 border-t">
-                        <p className="text-sm text-muted-foreground mb-1">Nome do programa:</p>
+                    <div className="space-y-1">
+                        <p className="text-sm text-muted-foreground">Nome do programa:</p>
                         <p className="font-medium text-sm">{program.name}</p>
+                    </div>
+                )}
+
+                {/* Prazo */}
+                {prazo && (
+                    <div className="pt-2 border-t flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground flex items-center gap-1">
+                            <Clock className="h-3 w-3" /> Prazo do programa
+                        </span>
+                        <span className="font-medium text-right">
+                            {prazo.period}
+                            <span className="block text-xs text-muted-foreground">
+                                {prazo.status}
+                            </span>
+                        </span>
                     </div>
                 )}
             </CardContent>

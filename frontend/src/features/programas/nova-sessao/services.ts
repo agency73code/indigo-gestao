@@ -1,5 +1,5 @@
 import type { ProgramDetail, SessionState } from './types';
-import * as Api from '../../programas/api';
+import * as Api from '../api';
 
 const USE_LOCAL_MOCKS = true;
 

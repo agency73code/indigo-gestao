@@ -9,6 +9,8 @@ export type ProgramDetail = {
     therapistId: string;
     therapistName: string;
     createdAt: string; // ISO
+    prazoInicio?: string; // ISO
+    prazoFim?: string; // ISO
     goalTitle: string;
     goalDescription?: string | null;
     stimuli: { 

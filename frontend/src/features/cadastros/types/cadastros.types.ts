@@ -220,6 +220,17 @@ export interface Cliente {
             funcao: string;
         }>;
     };
+
+    // Arquivos
+    arquivos?: {
+        fotoPerfil?: File | string | null;
+        documentoIdentidade?: File | string | null;
+        comprovanteCpf?: File | string | null;
+        comprovanteResidencia?: File | string | null;
+        carterinhaPlano?: File | string | null;
+        relatoriosMedicos?: File | string | null;
+        prescricaoMedica?: File | string | null;
+    };
 }
 
 export interface CadastroFormProps<T> {

@@ -86,8 +86,8 @@ export default function StimuliList({ stimuli, onChange, errors }: StimuliListPr
     };
 
     return (
-        <Card padding="none" className="rounded-[5px] p-2 sm:p-4">
-            <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
+        <Card padding="none" className="rounded-[5px] px-6 py-8 md:px-8 md:py-10 lg:px-8 lg:py-0">
+            <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                 <div className="flex items-center justify-between">
                     <CardTitle className="text-base flex items-center gap-2">
                         <Zap className="h-4 w-4" />
@@ -108,7 +108,7 @@ export default function StimuliList({ stimuli, onChange, errors }: StimuliListPr
                     <p className="text-sm text-destructive mt-2">{errors.stimuli}</p>
                 )}
             </CardHeader>
-            <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+            <CardContent className="pb-3 sm:pb-6">
                 <div className="space-y-4">
                     {stimuli.length === 0 ? (
                         <div className="text-center py-8 text-muted-foreground">

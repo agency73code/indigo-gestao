@@ -10,7 +10,7 @@ const cardVariants = cva(
     variants: {
       padding: {
         none: "p-0", // Login compacto, páginas cheias etc.
-        sm: "px-3 py-4",
+        sm: "px-6 py-8 md:px-8 md:py-10 lg:px-12 lg:py-10",
         md: "px-4 py-8 md:px-10 md:py-8 lg:px-10 lg:py-8", // default (compat)
         lg: "px-6 py-12 md:px-12 md:py-12 lg:px-16 lg:py-16",
       },
@@ -46,7 +46,7 @@ const CardHeader = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("flex flex-col space-y-1.5", className)} {...props} />
+  <div ref={ref} className={cn("flex flex-col space-y-1.5 text-primary", className)} {...props} />
 ));
 CardHeader.displayName = "CardHeader";
 

@@ -11,6 +11,8 @@ export const mockProgramDetail: ProgramDetail = {
     therapistId: 'ther-789',
     therapistName: 'Dra. Juliana Oliveira',
     createdAt: '2025-01-15T10:30:00.000Z',
+    prazoInicio: '2025-01-15T10:30:00.000Z',
+    prazoFim: '2025-04-15T10:30:00.000Z',
     goalTitle: 'Desenvolvimento da comunicação verbal e não-verbal',
     goalDescription: 'O objetivo principal é desenvolver as habilidades de comunicação da paciente, trabalhando expressão verbal, compreensão de comandos simples e uso de gestos funcionais para comunicação básica.',
     stimuli: [

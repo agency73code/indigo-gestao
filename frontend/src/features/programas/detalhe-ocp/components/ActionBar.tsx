@@ -67,7 +67,7 @@ export default function ActionBar({ program }: ActionBarProps) {
     return (
         <>
             {/* Variante Mobile - fixa no rodapé */}
-            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border z-50 p-1 sm:p-4 md:hidden">
+            <div className="md:hidden fixed bottom-0 left-0 w-full z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75 border-t border-border py-3">
                 <div className="max-w-lg mx-auto p-4 flex justify-center">
                     <ActionButtons
                         onRegisterSession={handleRegisterSession}

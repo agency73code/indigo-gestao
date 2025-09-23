@@ -27,7 +27,7 @@ const routeToTitleMap: Record<string, string> = {
     '/app/programas/novo': 'Criar Programa',
     '/app/programas/sessoes/nova': 'Registrar Sessão',
     '/app/programas/sessoes/consultar': 'Consultar Sessão',
-    '/app/programas/relatorios/mensal': 'Relatório Mensal',
+    '/app/programas/relatorios/mensal': 'Relatório Geral',
 };
 
 export function useBreadcrumb(): BreadcrumbItem[] {
