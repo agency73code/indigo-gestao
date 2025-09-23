@@ -105,6 +105,8 @@ export async function createProgram(payload: CreateProgramInput): Promise<{ id: 
                 criteria: payload.criteria,
                 notes: payload.notes,
                 stimuli: payload.stimuli,
+                prazoInicio: payload.prazoInicio,
+                prazoFim: payload.prazoFim,
             }),
         });
 

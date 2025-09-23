@@ -4,27 +4,14 @@ import { CardHeader, CardTitle } from '@/ui/card';
 import { FiltersBar } from '../relatorio-geral/components/FiltersBar';
 import { KpiCards } from '../relatorio-geral/components/KpiCards';
 import { DualLineProgress } from '../relatorio-geral/components/DualLineProgress';
-import { SessionStackedBars } from '../relatorio-geral/components/SessionStackedBars';
-import { StimuliHeatmap } from '../relatorio-geral/components/StimuliHeatmap';
-import { StimuliSparklineList } from '../relatorio-geral/components/StimuliSparklineList';
-import { OcpDeadlineGauge } from '../relatorio-geral/components/OcpDeadlineGauge';
+
+import { OcpDeadlineCard } from '../relatorio-geral/components/OcpDeadlineCard';
 import {
     fetchKpis,
     fetchSerieLinha,
-    fetchBarrasDistribuicao,
-    fetchHeatmap,
-    fetchSparklines,
     fetchPrazoPrograma,
 } from '../relatorio-geral/services/relatorio.service';
-import type {
-    Filters,
-    KpisRelatorio,
-    SerieLinha,
-    LinhaBarras,
-    HeatmapData,
-    SparkItem,
-    PrazoPrograma,
-} from '../relatorio-geral/types';
+import type { Filters, KpisRelatorio, SerieLinha, PrazoPrograma } from '../relatorio-geral/types';
 
 export default function RelatorioMensalPage() {
     const [searchParams] = useSearchParams();
@@ -32,9 +19,6 @@ export default function RelatorioMensalPage() {
     // Estados para os dados
     const [kpis, setKpis] = useState<KpisRelatorio | null>(null);
     const [serieLinha, setSerieLinha] = useState<SerieLinha[]>([]);
-    const [barras, setBarras] = useState<LinhaBarras[]>([]);
-    const [heatmap, setHeatmap] = useState<HeatmapData | null>(null);
-    const [sparklines, setSparklines] = useState<SparkItem[]>([]);
     const [prazoPrograma, setPrazoPrograma] = useState<PrazoPrograma | null>(null);
 
     // Estados de loading
@@ -62,19 +46,12 @@ export default function RelatorioMensalPage() {
 
             // Carregar gráficos em paralelo
             setLoadingCharts(true);
-            const [serieLinhaData, barrasData, heatmapData, sparklinesData, prazoProgramaData] =
-                await Promise.all([
-                    fetchSerieLinha(currentFilters),
-                    fetchBarrasDistribuicao(currentFilters),
-                    fetchHeatmap(currentFilters),
-                    fetchSparklines(currentFilters),
-                    fetchPrazoPrograma(currentFilters),
-                ]);
+            const [serieLinhaData, prazoProgramaData] = await Promise.all([
+                fetchSerieLinha(currentFilters),
+                fetchPrazoPrograma(currentFilters),
+            ]);
 
             setSerieLinha(serieLinhaData);
-            setBarras(barrasData);
-            setHeatmap(heatmapData);
-            setSparklines(sparklinesData);
             setPrazoPrograma(prazoProgramaData);
             setLoadingCharts(false);
         } catch (error) {
@@ -95,7 +72,7 @@ export default function RelatorioMensalPage() {
     };
 
     return (
-        <div className="flex flex-col w-full h-full sm:px-6">
+        <div className="flex flex-col w-full h-full">
             <CardHeader className="px-6 py-6">
                 <CardTitle
                     className="text-2xl font-semibold text-primary"
@@ -108,7 +85,7 @@ export default function RelatorioMensalPage() {
                 </p>
             </CardHeader>
 
-            <div className="space-y-4 px-6 pb-6">
+            <div className="space-y-4 md:space-y-6 px-6 pb-6">
                 {/* Filtros */}
                 <FiltersBar value={filters} onChange={handleFiltersChange} />
 
@@ -118,19 +95,14 @@ export default function RelatorioMensalPage() {
                 {/* Linha dupla */}
                 <DualLineProgress data={serieLinha} loading={loadingCharts} />
 
-                {/* Grid 1 col (md:2 col) */}
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    <SessionStackedBars data={barras} loading={loadingCharts} />
-                    {heatmap && <StimuliHeatmap data={heatmap} loading={loadingCharts} />}
-                </div>
-
-                {/* Grid 1 col (md:2 col) */}
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    {prazoPrograma && (
-                        <OcpDeadlineGauge data={prazoPrograma} loading={loadingCharts} />
-                    )}
-                    <StimuliSparklineList data={sparklines} loading={loadingCharts} />
-                </div>
+                {/* Prazo do Programa (OCP) - Full Width */}
+                <OcpDeadlineCard
+                    inicio={prazoPrograma?.inicio}
+                    fim={prazoPrograma?.fim}
+                    percent={prazoPrograma?.percent}
+                    label={prazoPrograma?.label}
+                    loading={loadingCharts}
+                />
             </div>
         </div>
     );

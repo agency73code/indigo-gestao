@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
-import { TrendingUp, TrendingDown, BarChart3, Target, Calendar } from 'lucide-react';
+import { TrendingUp, BarChart3, Target, Calendar } from 'lucide-react';
 import type { KpisRelatorio } from '../types';
 
 interface KpiCardProps {
@@ -13,7 +13,7 @@ interface KpiCardProps {
 
 function KpiCard({ title, value, hint, icon, trend, trendValue }: KpiCardProps) {
     return (
-        <Card>
+        <Card className='px-1 py-4 md:px-8 md:py-10 lg:px-0 lg:py-2'>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
                 <div className="h-4 w-4 text-muted-foreground">{icon}</div>
@@ -27,19 +27,8 @@ function KpiCard({ title, value, hint, icon, trend, trendValue }: KpiCardProps) 
                 {hint && <p className="text-xs text-muted-foreground mt-1">{hint}</p>}
                 {trend && trendValue && (
                     <div className="flex items-center mt-2">
-                        {trend === 'up' && <TrendingUp className="h-3 w-3 text-green-500 mr-1" />}
-                        {trend === 'down' && <TrendingDown className="h-3 w-3 text-red-500 mr-1" />}
-                        <span
-                            className={`text-xs font-medium px-2 py-1 rounded ${
-                                trend === 'up'
-                                    ? 'bg-green-100 text-green-700'
-                                    : trend === 'down'
-                                      ? 'bg-red-100 text-red-700'
-                                      : 'bg-gray-100 text-gray-700'
-                            }`}
-                        >
-                            {trendValue}
-                        </span>
+                        
+                        
                     </div>
                 )}
             </CardContent>

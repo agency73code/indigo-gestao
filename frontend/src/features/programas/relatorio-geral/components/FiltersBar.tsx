@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
 import { Button } from '@/ui/button';
-import { Input } from '@/ui/input';
 import { Label } from '@/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { DateField } from '@/common/components/layout/DateField';
 import { ChevronDown, ChevronUp, Filter } from 'lucide-react';
 import type { Filters } from '../types';
 
@@ -27,10 +27,10 @@ export function FiltersBar({ value, onChange }: FiltersBarProps) {
     };
 
     return (
-        <Card>
+        <Card className="px-1 py-0 md:px-8 md:py-10 lg:px-0 lg:py-0">
             <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2">
+                    <CardTitle className="flex items-center gap-2 text-primary">
                         <Filter className="h-4 w-4" />
                         Filtros
                     </CardTitle>
@@ -104,20 +104,21 @@ export function FiltersBar({ value, onChange }: FiltersBarProps) {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t">
                         <div className="space-y-2">
                             <Label htmlFor="dataInicio">Data início</Label>
-                            <Input
-                                id="dataInicio"
-                                type="date"
+                            <DateField
                                 value={value.periodo.start || ''}
-                                onChange={(e) => updatePeriodo('start', e.target.value)}
+                                onChange={(iso) => updatePeriodo('start', iso)}
+                                placeholder="Selecione a data início"
                             />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="dataFim">Data fim</Label>
-                            <Input
-                                id="dataFim"
-                                type="date"
+                            <DateField
                                 value={value.periodo.end || ''}
-                                onChange={(e) => updatePeriodo('end', e.target.value)}
+                                onChange={(iso) => updatePeriodo('end', iso)}
+                                placeholder="Selecione a data fim"
+                                minDate={
+                                    value.periodo.start ? new Date(value.periodo.start) : undefined
+                                }
                             />
                         </div>
                     </div>

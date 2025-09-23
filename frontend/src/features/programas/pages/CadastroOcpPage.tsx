@@ -40,8 +40,10 @@ export default function CadastroOcpPage() {
         criteria: '',
         notes: '',
         createdAt: new Date().toISOString(),
+        prazoInicio: '',
+        prazoFim: '',
     });
-    
+
     const [errors, setErrors] = useState<ValidationErrors>({});
     const [isSaving, setIsSaving] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
@@ -260,6 +262,8 @@ export default function CadastroOcpPage() {
                 stimuli: formState.stimuli.filter((s) => s.label.trim()), // Remove estímulos vazios
                 criteria: formState.criteria.trim() || null,
                 notes: formState.notes.trim() || null,
+                prazoInicio: formState.prazoInicio.trim() || undefined,
+                prazoFim: formState.prazoFim.trim() || undefined,
             };
 
             const result = await createProgram(payload);
@@ -360,9 +364,17 @@ export default function CadastroOcpPage() {
                         therapist={formState.therapist}
                         programName={formState.programName}
                         createdAt={formState.createdAt}
+                        prazoInicio={formState.prazoInicio}
+                        prazoFim={formState.prazoFim}
                         onPatientSelect={handlePatientSelect}
                         onTherapistSelect={handleTherapistSelect}
                         onProgramNameChange={handleProgramNameChange}
+                        onPrazoInicioChange={(date) =>
+                            setFormState((prev) => ({ ...prev, prazoInicio: date }))
+                        }
+                        onPrazoFimChange={(date) =>
+                            setFormState((prev) => ({ ...prev, prazoFim: date }))
+                        }
                     />
 
                     {/* Seção de objetivos */}

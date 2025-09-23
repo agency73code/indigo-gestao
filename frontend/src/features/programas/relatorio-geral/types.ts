@@ -32,23 +32,9 @@ export type SerieLinha = {
   independencia: number; 
 };
 
-export type LinhaBarras = { 
-  sessao: string; 
-  acerto: number; 
-  ajuda: number; 
-  erro: number; 
-};
 
-export type HeatmapRow = { 
-  estimulo: string; 
-  valores: ('acerto'|'ajuda'|'erro'|null)[]; 
-};
 
-export type SparkItem = { 
-  estimulo: string; 
-  serie: { x: number; y: number }[]; 
-  status: 'manutencao'|'aprendizagem'|'dominar'; 
-};
+
 
 export type Filters = {
   pacienteId?: string;
@@ -66,9 +52,7 @@ export type Filters = {
 export type PrazoPrograma = {
   percent: number;
   label: string;
+  inicio?: string;
+  fim?: string;
 };
 
-export type HeatmapData = {
-  sessoes: string[];
-  linhas: HeatmapRow[];
-};

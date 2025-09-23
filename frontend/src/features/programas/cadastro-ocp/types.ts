@@ -32,6 +32,8 @@ export type CreateProgramInput = {
     criteria?: string | null;
     notes?: string | null;
     createdAt?: string; // preenchido no backend; aqui só exibição
+    prazoInicio?: string; // Data de início do programa
+    prazoFim?: string; // Data de fim do programa
 };
 
 // Tipos para validação
@@ -54,4 +56,6 @@ export type FormState = {
     criteria: string;
     notes: string;
     createdAt: string;
+    prazoInicio: string;
+    prazoFim: string;
 };

@@ -2,6 +2,8 @@ import { Label } from '@/ui/label';
 import { Upload, FileText, X } from 'lucide-react';
 import { useRef } from 'react';
 import type { Terapeuta } from '../../types/cadastros.types';
+import ProfilePhotoFieldSimple from '@/components/profile/ProfilePhotoFieldSimple';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 
 interface ArquivosStepProps {
     data: Partial<Terapeuta>;
@@ -10,8 +12,9 @@ interface ArquivosStepProps {
 }
 
 export default function ArquivosStep({ data, onUpdate, errors }: ArquivosStepProps) {
+    const { user } = useAuth();
+
     const fileInputRefs = {
-        fotoPerfil: useRef<HTMLInputElement>(null),
         diplomaGraduacao: useRef<HTMLInputElement>(null),
         diplomaPosGraduacao: useRef<HTMLInputElement>(null),
         registroCRP: useRef<HTMLInputElement>(null),
@@ -120,17 +123,28 @@ export default function ArquivosStep({ data, onUpdate, errors }: ArquivosStepPro
     };
 
     return (
-        <div className="space-y-4 md:space-y-4 md:space-y-6">
-            <h3 className="text-base sm:text-base sm:text-lg font-semibold">Documentos e Arquivos</h3>
+        <div className="space-y-4 md:space-y-6">
+            <h3 className="text-base sm:text-lg font-semibold">Documentos e Arquivos</h3>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
-                <FileUploadField field="fotoPerfil" label="Foto de Perfil" accept="image/*" />
+                <ProfilePhotoFieldSimple
+                    userId={user?.id || ''}
+                    value={data.arquivos?.fotoPerfil}
+                    onChange={(file) => {
+                        console.log('ArquivosStep - onChange called with file:', file);
+                        onUpdate('arquivos.fotoPerfil', file);
+                    }}
+                    error={errors['arquivos.fotoPerfil']}
+                />
 
                 <FileUploadField field="diplomaGraduacao" label="Diploma de Graduação" />
 
                 <FileUploadField field="diplomaPosGraduacao" label="Diploma de Pós-Graduação" />
 
-                <FileUploadField field="registroCRP" label="Registro do  Conselho Regional de Psicologia (CRP)" />
+                <FileUploadField
+                    field="registroCRP"
+                    label="Registro do  Conselho Regional de Psicologia (CRP)"
+                />
 
                 <FileUploadField field="comprovanteEndereco" label="Comprovante de Endereço" />
             </div>
@@ -147,10 +161,3 @@ export default function ArquivosStep({ data, onUpdate, errors }: ArquivosStepPro
         </div>
     );
 }
-
-
-
-
-
-
-
