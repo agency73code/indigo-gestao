@@ -57,7 +57,7 @@ export async function createCliente(prisma: PrismaClient, data: ClientCreateData
           const endereco = await tx.endereco.create({
             data: {
               cep: enderecoData.cep,
-              logradouro: enderecoData.logradouro,
+              rua: enderecoData.rua,
               numero: enderecoData.numero,
               bairro: enderecoData.bairro,
               cidade: enderecoData.cidade,
@@ -100,7 +100,7 @@ export async function createCliente(prisma: PrismaClient, data: ClientCreateData
               const endereco = await tx.endereco.create({
                 data: {
                   cep: enderecoData.cep,
-                  logradouro: enderecoData.logradouro,
+                  rua: enderecoData.rua,
                   numero: enderecoData.numero,
                   bairro: enderecoData.bairro,
                   cidade: enderecoData.cidade,

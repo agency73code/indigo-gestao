@@ -4,6 +4,7 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient()
 
 async function main() {
+    const quantidade = 2000;
     const terapeutas = await prisma.terapeuta.findMany({ select: { id: true } })
     const clientes = await prisma.cliente.findMany({ select: { id: true } })
 
@@ -12,7 +13,7 @@ async function main() {
         return
     }
 
-    const vinculos = Array.from({ length: 70 }).map(() => ({
+    const vinculos = Array.from({ length: quantidade }).map(() => ({
         terapeuta_id: faker.helpers.arrayElement(terapeutas).id,
         cliente_id: faker.helpers.arrayElement(clientes).id,
     }))
@@ -22,7 +23,7 @@ async function main() {
         skipDuplicates: true,
     })
 
-    console.log('✅ 70 vínculos terapeuta_cliente criados com sucesso!')
+    console.log('✅ 2000 vínculos terapeuta_cliente criados com sucesso!')
 }
 
 main()

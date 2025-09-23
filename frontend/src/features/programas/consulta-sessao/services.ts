@@ -1,5 +1,5 @@
 import type { Patient } from '@/features/programas/consultar-programas/types';
-import type { Sessao, ResumoSessao } from './types';
+import type { Sessao, ResumoSessao, ProgramDetail } from './types';
 
 // Toggle local mocks (follow existing pattern)
 const USE_LOCAL_MOCKS = true;
@@ -91,28 +91,24 @@ export async function getSessionById(patientId: string, sessionId: string): Prom
 }
 
 export async function findSessionById(sessionId: string): Promise<Sessao | null> {
-  console.log('teste')
-  try {
-    const res = await fetch(`/api/ocp/sessions/${sessionId}`, {
-      method: 'GET',
-      credentials: 'include',
-    });
-    
-    if (!res.ok) throw new Error(`Erro ao buscar a sessão: ${res.statusText}`);
-    
-    const data = await res.json();
-    console.log(data);
-    return data.data;
-  } catch (error) {
-    if (USE_LOCAL_MOCKS) {
-      const { mockProgramDetail } = await import(
-        '@/features/programas/detalhe-ocp/mocks/program.mock'
-      );
-      const sessions = await listSessionsByPatient(mockProgramDetail.patientId);
-      return sessions.find((s) => s.id === sessionId) ?? null;
-    }
-    throw error;
+  if (USE_LOCAL_MOCKS) {
+    const { mockProgramDetail } = await import('@/features/programas/detalhe-ocp/mocks/program.mock');
+    const sessions = await listSessionsByPatient(mockProgramDetail.patientId);
+    return sessions.find((s) => s.id === sessionId) ?? null;
   }
+  return null;
+}
+
+export async function findProgramSessionById(sessionId: string): Promise<ProgramDetail | null> {
+  const res = await fetch(`/api/ocp/sessions/${sessionId}`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+  
+  if (!res.ok) throw new Error(`Erro ao buscar a sessão: ${res.statusText}`);
+  
+  const data = await res.json();
+  return data;
 }
 
 export function resumirSessao(sessao: Sessao): ResumoSessao {

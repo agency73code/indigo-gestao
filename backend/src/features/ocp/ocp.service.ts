@@ -8,6 +8,8 @@ export async function createProgram(data: OcpType.createOCP) {
             cliente: { connect: { id: data.clientId } },
             criador: { connect: { id: data.therapistId } },
             nome_programa: data.name ?? data.goalTitle,
+            data_inicio: new Date(data.prazoInicio),
+            data_fim: new Date (data.prazoFim),
             objetivo_programa: data.goalTitle,
             objetivo_descricao: data.goalDescription ?? null,
             dominio_criterio: data.criteria ?? null,
@@ -192,17 +194,49 @@ export async function getClientById(clientId: string) {
     }
 }
 
-export async function getSessionById(sessionId: string) {
-    const session = await prisma.sessao.findUnique({
-        where: { id: Number(sessionId) },
-        include: {
-            terapeuta: { select: { nome: true } },
-            trials: { select: { resultado: true, ordem: true } },
-        },
+export async function getProgramId(programId: string) {
+    const session = await prisma.ocp.findUnique({
+        where: { id: Number(programId) },
+        select: {
+            id: true,
+            nome_programa: true,
+            cliente: {
+                select: {
+                    id: true,
+                    nome: true,
+                    cliente_responsavel: {
+                        select: {
+                            responsaveis: { select: { nome: true } },
+                        },
+                    },
+                    data_nascimento: true,
+                },
+            },
+            criador: {
+                select: {
+                    id: true,
+                    nome: true
+                },
+            },
+            criado_em: true,
+            data_inicio: true,
+            data_fim: true,
+            objetivo_programa: true,
+            objetivo_descricao: true,
+            estimulo_ocp: {
+                select: {
+                    id: true,
+                    nome: true,
+                    descricao: true,
+                    status: true,
+                },
+            },
+            status: true,
+        }
     });
 
     if (!session) return null;
-    return OcpNormalizer.mapSessionReturn(session)
+    return OcpNormalizer.mapOcpProgramSession(session);
 }
 
 export async function listClientsByTherapist(therapistId: string, q?: string) {

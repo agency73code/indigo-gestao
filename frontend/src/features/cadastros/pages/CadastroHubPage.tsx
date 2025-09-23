@@ -31,7 +31,6 @@ export default function CadastroHubPage() {
     ];
 
     useEffect(() => {
-        console.log(">>> useEffect getCardsOverview");
         getCardsOverview()
             .then(({ totalTerapeutas, totalClientes, novosTerapeutas, novosClientes }) => {
                 setTotalTerapeutas(totalTerapeutas);

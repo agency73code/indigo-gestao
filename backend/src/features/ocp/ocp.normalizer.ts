@@ -83,6 +83,33 @@ export function mapOcpReturn(dto: OcpTypes.ProgramRowDTO) {
     };
 }
 
+export function mapOcpProgramSession(dto: OcpTypes.ProgramSelectResult) {
+    return {
+        id: String(dto.id),
+        name: dto.nome_programa,
+        patientId: dto.cliente.id,
+        patientName: dto.cliente.nome,
+        patientGuardian: dto.cliente.cliente_responsavel[0]?.responsaveis.nome,
+        patientAge: new Date().getFullYear() - dto.cliente.data_nascimento.getFullYear(),
+        patientPhotoUrl: null,
+        therapistId: dto.criador.id,
+        therapistName: dto.criador.nome,
+        createdAt: dto.criado_em.toISOString(),
+        prazoInicio: dto.data_inicio.toISOString(),
+        prazoFim: dto.data_fim.toISOString(),
+        goalTitle: dto.objetivo_programa,
+        goalDescription: dto.objetivo_descricao,
+        stimuli: dto.estimulo_ocp.map((e, idx) => ({
+        id: String(e.id),
+        order: idx + 1,
+        label: e.nome ?? '',
+        description: e.descricao ?? '',
+        active: e.status,
+        })),
+        status: dto.status,
+    }
+}
+
 function translateResult(result: string): 'acerto' | 'erro' | 'ajuda' {
     switch (result) {
         case 'independent':

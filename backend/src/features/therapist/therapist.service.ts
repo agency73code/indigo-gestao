@@ -1,9 +1,12 @@
 import { prisma } from "../../config/database.js";
 import * as TherapistTypes from './therapist.types.js';
 import { brMoneyToNumber } from '../../utils/brMoney.js';
+import { generateResetToken } from "../../utils/resetToken.js";
 
 export async function create(dto: TherapistTypes.TherapistForm) {
-  await prisma.terapeuta.create ({
+  const { token, expiry } = generateResetToken();
+
+  const therapist = await prisma.terapeuta.create ({
     data: {
       nome: dto.nome,
       email: dto.email,
@@ -35,6 +38,8 @@ export async function create(dto: TherapistTypes.TherapistForm) {
       data_entrada: new Date(dto.dataInicio),
       data_saida: dto.dataFim ? new Date(dto.dataFim) : null,
       perfil_acesso: 'terapeuta',
+      token_redefinicao: token,
+      validade_token: expiry,
       documentos_terapeuta: { 
         createMany: { 
           data: dto.documentos.map((doc) => ({
@@ -91,8 +96,14 @@ export async function create(dto: TherapistTypes.TherapistForm) {
         },
       },
       disciplina: { create: { nome: dto.disciplinaUniindigo } },
+    },
+    select: {
+      email: true,
+      nome: true,
+      token_redefinicao: true,
     }
   });
+  return therapist
 };
 
 export async function list():Promise<TherapistTypes.TherapistDB[]> {

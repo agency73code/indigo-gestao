@@ -86,13 +86,13 @@ export async function getClientById(req: Request, res: Response) {
     res.json({ data: patient });
 }
 
-export async function getSessionById(req: Request, res: Response) {
+export async function getProgramId(req: Request, res: Response) {
     try {
-        const { sessionId } = req.params;
-        if (!sessionId) return res.status(400).json({ success: false, message: 'sessionId é obrigatório' });
+        const { programId } = req.params;
+        if (!programId) return res.status(400).json({ success: false, message: 'programId é obrigatório' });
         
-        const session = await OcpService.getSessionById(sessionId);
-        if (!session) return res.status(404).json({ success: false, message: 'Sessão não encontrada' });
+        const session = await OcpService.getProgramId(programId);
+        if (!session) return res.status(404).json({ success: false, message: 'Programa não encontrada' });
 
         res.json({ data: session });
     } catch (err) {

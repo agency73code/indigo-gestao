@@ -2,6 +2,8 @@ export type createOCP = {
     clientId: string;
     therapistId: string;
     name: string | null;
+    prazoInicio: string;
+    prazoFim: string;
     goalTitle: string;
     goalDescription?: string | null;
     criteria?: string | null;
@@ -155,3 +157,34 @@ export interface UnmappedSession {
   terapeuta?: { nome: string | null } | null;
   trials: { resultado: string; ordem: number }[];
 }
+
+export type ProgramSelectResult = {
+  id: number;
+  nome_programa: string;
+  cliente: {
+    id: string;
+    nome: string;
+    cliente_responsavel: {
+      responsaveis: {
+        nome: string;
+      };
+    }[];
+    data_nascimento: Date;
+  };
+  criador: {
+    id: string;
+    nome: string;
+  };
+  criado_em: Date;
+  data_inicio: Date;
+  data_fim: Date;
+  objetivo_programa: string | null;
+  objetivo_descricao: string | null;
+  estimulo_ocp: {
+    id: number;
+    nome: string | null;
+    descricao: string | null;
+    status: boolean;
+  }[];
+  status: string;
+};

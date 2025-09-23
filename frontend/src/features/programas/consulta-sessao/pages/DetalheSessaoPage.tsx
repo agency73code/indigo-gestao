@@ -6,7 +6,7 @@ import { getPatientById } from '@/features/programas/consultar-programas/service
 import type { ProgramDetail } from '@/features/programas/detalhe-ocp/types';
 import DetalheSessaoView from '../components/DetalheSessao';
 import type { Sessao } from '../types';
-import { findSessionById, getSessionById } from '../services';
+import { findSessionById, getSessionById, findProgramSessionById } from '../services';
 
 type LocationState = {
   sessionDate?: string;
@@ -69,7 +69,7 @@ export default function DetalheSessaoPage() {
         }
 
         const { mockProgramDetail } = await import('@/features/programas/detalhe-ocp/mocks/program.mock');
-
+        console.log(await findProgramSessionById(sessaoId));
         const derivedProgram: ProgramDetail = {
           ...mockProgramDetail,
           patientId: sessionData.pacienteId,

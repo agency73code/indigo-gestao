@@ -1,19 +1,19 @@
 import type { Request, Response, NextFunction } from 'express';
 import * as TherapistService from '../features/therapist/therapist.service.js';
 import * as TherapistNormalizer from '../features/therapist/therapist.normalizer.js'
-// import { sendWelcomeEmail } from '../utils/mail.util.js';
+import { sendWelcomeEmail } from '../utils/mail.util.js';
 
 export async function create(req: Request, res: Response, next: NextFunction) {
     try {
         const therapist = await TherapistService.create(req.body);
-        console.log(therapist);
-        // await sendWelcomeEmail({
-        //     to: therapist.email,
-        //     name: therapist.nome,
-        //     token: therapist.token_redefinicao!,
-        // }).catch((error) => {
-        //     console.error('Erro ao enviar email de boas-vindas:', error);
-        // });
+
+        await sendWelcomeEmail({
+            to: therapist.email,
+            name: therapist.nome,
+            token: therapist.token_redefinicao!,
+        }).catch((error) => {
+            console.error('Erro ao enviar email de boas-vindas:', error);
+        });
 
         res.status(201).json({ success: true, message: 'Terapeuta cadastrado com sucesso!' });  
     } catch (error) {
