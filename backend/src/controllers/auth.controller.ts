@@ -37,6 +37,7 @@ export async function me(req: Request, res: Response) {
             name: user.nome,
             email: user.email,
             perfil_acesso: user.perfil_acesso,
+            avatar_url: user.avatar_url ?? null,
         },
     });
 }
@@ -138,7 +139,13 @@ export async function validateLogin(req: Request, res: Response, next: NextFunct
             success: true,
             message: 'Login realizado com sucesso',
             token,
-            user: { id: user.id, name: user.nome, email: user.email, perfil_acesso: user.perfil_acesso }
+            user: { 
+                id: user.id,
+                name: user.nome,
+                email: user.email,
+                perfil_acesso: user.perfil_acesso,
+                avatar_url: user.avatar_url ?? null,
+            }
         });
     } catch (error) {
         next(error);

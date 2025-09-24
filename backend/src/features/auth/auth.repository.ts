@@ -68,7 +68,13 @@ export async function loginUserByAccessInformation(accessInfo: string, table: Ta
         senha: true,
         nome: true,
         email_indigo: true,
-        perfil_acesso: true
+        perfil_acesso: true,
+        documentos_terapeuta: {
+          where: { tipo_documento: 'fotoPerfil' },
+          orderBy: { data_upload: 'desc' },
+          take: 1,
+          select: { view_url: true },
+        }
       },
     });
 
@@ -78,7 +84,8 @@ export async function loginUserByAccessInformation(accessInfo: string, table: Ta
       senha: row.senha,
       nome: row.nome,
       email: row.email_indigo ?? null,
-      perfil_acesso: row.perfil_acesso
+      perfil_acesso: row.perfil_acesso,
+      avatar_url: row.documentos_terapeuta?.[0]?.view_url ?? null,
     };
   } else {
     const row = await prisma.cliente.findFirst({
@@ -97,7 +104,7 @@ export async function loginUserByAccessInformation(accessInfo: string, table: Ta
         senha: true,
         nome: true,
         email_contato: true,
-        perfil_acesso: true
+        perfil_acesso: true,
       },
     });
 
@@ -107,7 +114,8 @@ export async function loginUserByAccessInformation(accessInfo: string, table: Ta
       senha: row.senha,
       nome: row.nome,
       email: row.email_contato ?? null,
-      perfil_acesso: row.perfil_acesso
+      perfil_acesso: row.perfil_acesso,
+      avatar_url: null,
     };
   }
 }
@@ -131,7 +139,18 @@ export async function findUserById(id: string, table: Tables) {
   if (table === 'terapeuta') {
     const row = await prisma.terapeuta.findUnique({
       where: { id },
-      select: { id: true, nome: true, email_indigo: true, perfil_acesso: true },
+      select: { 
+        id: true,
+        nome: true,
+        email_indigo: true,
+        perfil_acesso: true,
+        documentos_terapeuta: {
+          where: { tipo_documento: 'fotoPerfil' },
+          orderBy: { data_upload: 'desc' },
+          take: 1,
+          select: { view_url: true },
+        }
+      },
     });
 
     if (!row) return null;
@@ -140,7 +159,8 @@ export async function findUserById(id: string, table: Tables) {
       id: row.id,
       nome: row.nome,
       email: row.email_indigo,
-      perfil_acesso: row.perfil_acesso
+      perfil_acesso: row.perfil_acesso,
+      avatar_url: row.documentos_terapeuta?.[0]?.view_url ?? null,
     };
   } else {
     const row = await prisma.cliente.findUnique({
@@ -155,6 +175,7 @@ export async function findUserById(id: string, table: Tables) {
       nome:row.nome,
       email: row.email_contato,
       perfil_acesso: row.perfil_acesso,
+      avatar_url: null,
     }
   }
 }

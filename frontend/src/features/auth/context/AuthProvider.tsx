@@ -25,6 +25,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     email: 'dev-uid@dev.com',
                     name: 'dev-uid',
                     perfil_acesso: 'gerente',
+                    avatar_url: null,
                 },
                 isAuthenticated: true,
                 isLoading: false,
@@ -42,7 +43,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
 
             setAuthState({
-                user: { id: String(me.user.id), email: me.user.email ?? '', name: me.user.name ?? '', perfil_acesso: me.user.perfil_acesso, },
+                user: { 
+                    id: String(me.user.id), 
+                    email: me.user.email ?? '', 
+                    name: me.user.name ?? '', 
+                    perfil_acesso: me.user.perfil_acesso, 
+                    avatar_url: me.user.avatar_url ?? null,
+                },
                 isAuthenticated: true,
                 isLoading: false,
                 error: null,

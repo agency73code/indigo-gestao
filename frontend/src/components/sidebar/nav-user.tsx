@@ -23,8 +23,10 @@ export function NavUser() {
         .map((n) => n[0]?.toUpperCase() ?? '')
         .slice(0, 2)
         .join('') : '?';
-    const displayAvatar = '/avatars/shadcn.jpg';
-
+    const displayAvatar = user?.avatar_url
+  ? `http://localhost:3000/api/arquivos/view/${user.avatar_url}`
+  : "/avatars/shadcn.jpg";
+    console.log(displayAvatar);
     return (
         <SidebarMenu>
             <SidebarMenuItem>

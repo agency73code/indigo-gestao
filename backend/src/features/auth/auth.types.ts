@@ -5,6 +5,7 @@ export interface AuthUser {
   nome: string;
   email: string | null
   perfil_acesso: string;
+  avatar_url?: string | null;
 }
 
 export interface UserRow extends AuthUser {

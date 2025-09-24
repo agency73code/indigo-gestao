@@ -5,6 +5,7 @@ export interface User {
   firstName?: string;
   lastName?: string;
   perfil_acesso: string;
+  avatar_url?: string | null 
 }
 
 export interface LoginCredentials {

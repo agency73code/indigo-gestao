@@ -88,8 +88,8 @@ export async function uploadFile(req: Request, res: Response) {
         };
         uploads.push({
             tipo_documento: campo,
-            view_url: `https://drive.google.com/uc?export=view&id=${fileId}`,
-            download_url: `https://drive.google.com/uc?export=download&id=${fileId}`,
+            view_url: fileId,
+            download_url: fileId,
             data_upload: new Date().toISOString(),
         });
       }
@@ -99,5 +99,36 @@ export async function uploadFile(req: Request, res: Response) {
   } catch (err) {
     console.error("Erro upload:", err);
     res.status(500).json({ error: "Falha no upload" });
+  }
+}
+
+export async function viewImg(req: Request, res: Response) {
+  console.log('teste')
+  try {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ message: "File ID obrigatório" });
+
+    const metadata = await drive.files.get({
+      fileId: id,
+      fields: "mimeType",
+      supportsAllDrives: true,
+    });
+
+    const file = await drive.files.get(
+      { fileId: id, alt: 'media', supportsAllDrives: true },
+      { responseType: 'stream' }
+    );
+
+    res.setHeader('Content-Type', metadata.data.mimeType || 'application/octet-stream');
+    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+    res.setHeader("Cross-Origin-Embedder-Policy", "unsafe-none");
+    file.data.on('error', (err) => {
+      console.error('Erro ao streamar arquivo:', err);
+      res.sendStatus(500);
+    });
+    file.data.pipe(res);
+  } catch (err) {
+    console.error('Erro ao buscar arquivo:', err);
+    res.sendStatus(404);
   }
 }

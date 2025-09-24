@@ -1,6 +1,7 @@
-export function brMoneyToNumber(valor: string): number {
+export function brMoneyToNumber(value: string): number | null {
+  if (!value) return null;
   return Number(
-    valor
+    value
       .replace(/[^\d,.-]/g, '')
       .replace(/\./g, '')
       .replace(',', '.')

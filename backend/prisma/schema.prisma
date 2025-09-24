@@ -272,7 +272,7 @@ model registro_profissional {
 
 model pessoa_juridica {
   id                    Int                       @id @default(autoincrement())
-  cnpj                  String                    @unique
+  cnpj                  String?                    @unique
   razao_social          String?
   
   endereco_id           Int

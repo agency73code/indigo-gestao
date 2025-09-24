@@ -82,23 +82,27 @@ export async function create(dto: TherapistTypes.TherapistForm) {
           }
         }
       },
-      pessoa_juridica: {
-        create: {
-          cnpj: dto.cnpj.numero,
-          razao_social: dto.cnpj.razaoSocial,
-          endereco: {
-            create: {
-              cep: dto.cnpj.endereco.cep,
-              rua: dto.cnpj.endereco.rua,
-              numero: dto.cnpj.endereco.numero,
-              bairro: dto.cnpj.endereco.bairro,
-              complemento: dto.cnpj.endereco.complemento,
-              cidade: dto.cnpj.endereco.cidade,
-              uf: dto.cnpj.endereco.estado,
+      ...(dto.cnpj?.numero?.trim()
+        ? {
+            pessoa_juridica: {
+              create: {
+                cnpj: dto.cnpj.numero.trim(),
+                razao_social: dto.cnpj.razaoSocial,
+                endereco: {
+                  create: {
+                    cep: dto.cnpj.endereco.cep,
+                    rua: dto.cnpj.endereco.rua,
+                    numero: dto.cnpj.endereco.numero,
+                    bairro: dto.cnpj.endereco.bairro,
+                    complemento: dto.cnpj.endereco.complemento,
+                    cidade: dto.cnpj.endereco.cidade,
+                    uf: dto.cnpj.endereco.estado,
+                  },
+                },
+              },
             },
-          },
-        },
-      },
+          }
+        : {}),
       disciplina: { create: { nome: dto.disciplinaUniindigo } },
     },
     select: {
