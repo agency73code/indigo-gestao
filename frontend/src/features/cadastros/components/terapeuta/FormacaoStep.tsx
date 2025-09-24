@@ -32,7 +32,7 @@ export default function FormacaoStep({ data, onUpdate, errors }: FormacaoStepPro
     };
 
     const removePos = (index: number) => {
-        const list = posGraduacoes.filter((_, i) => i !== index);
+        const list = posGraduacoes.filter((_: any, i: number) => i !== index);
         handleFormacaoChange('posGraduacoes', list);
     };
 
@@ -116,7 +116,7 @@ export default function FormacaoStep({ data, onUpdate, errors }: FormacaoStepPro
                     <p className="text-sm text-muted-foreground">Nenhuma pós-graduação adicionada.</p>
                 )}
 
-                {posGraduacoes.map((pos, index) => (
+                {posGraduacoes.map((pos: any, index: number) => (
                     <div key={index} className="border rounded-lg p-4 space-y-4 relative">
                         <div className="flex items-center justify-between">
                             <h5 className="font-medium">Pós-graduação {index + 1}</h5>

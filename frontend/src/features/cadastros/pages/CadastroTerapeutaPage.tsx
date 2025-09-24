@@ -202,6 +202,10 @@ export default function CadastroTerapeutaPage() {
                     newErrors.cpf = 'CPF inválido';
                 }
 
+                if (!formData.dataNascimento?.trim()) {
+                    newErrors.dataNascimento = 'Data de nascimento é obrigatória';
+                }
+
                 if (!formData.email?.trim()) {
                     newErrors.email = 'Campo obrigatório';
                 } else if (!isValidEmail(formData.email)) {
@@ -306,13 +310,14 @@ export default function CadastroTerapeutaPage() {
         if (!validateCurrentStep()) return;
         setIsLoading(true);
         try {
-            const payload = { ...formData }
+            const payload = { ...formData };
             // limpar campos numéricos para a API + normalizar razão social
             if (payload.cpf) payload.cpf = onlyDigits(payload.cpf);
             if (payload.celular) payload.celular = String(payload.celular).replace(/\D/g, '');
             if (payload.telefone) payload.telefone = String(payload.telefone).replace(/\D/g, '');
             if (payload.cnpj?.numero) payload.cnpj.numero = onlyDigits(payload.cnpj.numero);
-            if (payload.cnpj?.razaoSocial) payload.cnpj.razaoSocial = toTitleCaseSimple(payload.cnpj.razaoSocial);
+            if (payload.cnpj?.razaoSocial)
+                payload.cnpj.razaoSocial = toTitleCaseSimple(payload.cnpj.razaoSocial);
 
             // const formDataUpload = new FormData();
             // formDataUpload.append("cpf", payload.cpf);

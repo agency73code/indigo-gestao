@@ -1,4 +1,6 @@
 export interface Terapeuta {
+    id?: string;
+    
     // Dados pessoais
     nome: string;
     email: string;
@@ -42,7 +44,7 @@ export interface Terapeuta {
     dataFim?: string;
 
     // FormaÃ§Ã£o
-    Formação: {
+    formacao: {
         graduacao: string;
         instituicaoGraduacao: string;
         anoFormatura: string;
@@ -54,7 +56,8 @@ export interface Terapeuta {
             comprovanteUrl?: string | null;
         }>;
         participacaoCongressosDescricao?: string | null;
-        publicacoesLivrosDescricao?: string | null;    };
+        publicacoesLivrosDescricao?: string | null;
+    };
 
     // Arquivos
     arquivos: {
@@ -69,6 +72,7 @@ export interface Terapeuta {
     cnpj?: {
         numero: string;
         razaoSocial: string;
+        nomeFantasia: string;
         endereco: {
             cep: string;
             rua: string;
@@ -196,6 +200,7 @@ export interface Cliente {
         // Campos especÃ­ficos para Particular
         houveNegociacao?: 'sim' | 'nao';
         valorAcordado?: string; // Renomeado de valorSessao para valorAcordado
+        valorSessao?: string; // Para compatibilidade com mock data
     };
     
     // Dados escola

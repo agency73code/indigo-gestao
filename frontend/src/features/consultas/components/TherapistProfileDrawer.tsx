@@ -270,24 +270,24 @@ export default function TherapistProfileDrawer({
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <ReadOnlyField
                                     label="Graduação *"
-                                    value={terapeutaData.Formação?.graduacao}
+                                    value={terapeutaData.formacao?.graduacao}
                                 />
                                 <ReadOnlyField
                                     label="Instituição graduação *"
-                                    value={terapeutaData.Formação?.instituicaoGraduacao}
+                                    value={terapeutaData.formacao?.instituicaoGraduacao}
                                 />
                                 <ReadOnlyField
                                     label="Ano formatura *"
-                                    value={terapeutaData.Formação?.anoFormatura}
+                                    value={terapeutaData.formacao?.anoFormatura}
                                 />
                             </div>
 
                             {/* Pós-graduações - Múltiplas */}
-                            {terapeutaData.Formação?.posGraduacoes &&
-                                terapeutaData.Formação.posGraduacoes.length > 0 && (
+                            {terapeutaData.formacao?.posGraduacoes &&
+                                terapeutaData.formacao.posGraduacoes.length > 0 && (
                                     <div className="mt-4 space-y-4">
                                         <h4 className="font-medium">Pós-graduações</h4>
-                                        {terapeutaData.Formação.posGraduacoes.map((pos, index) => (
+                                        {terapeutaData.formacao.posGraduacoes.map((pos: any, index: number) => (
                                             <div
                                                 key={index}
                                                 className="p-4 border rounded-lg bg-muted/30"
@@ -329,23 +329,23 @@ export default function TherapistProfileDrawer({
                                 )}
 
                             {/* Participação em congressos */}
-                            {terapeutaData.Formação?.participacaoCongressosDescricao && (
+                            {terapeutaData.formacao?.participacaoCongressosDescricao && (
                                 <div className="mt-4">
                                     <ReadOnlyField
                                         label="Participação em Congressos"
                                         value={
-                                            terapeutaData.Formação.participacaoCongressosDescricao
+                                            terapeutaData.formacao.participacaoCongressosDescricao
                                         }
                                     />
                                 </div>
                             )}
 
                             {/* Publicações de livros */}
-                            {terapeutaData.Formação?.publicacoesLivrosDescricao && (
+                            {terapeutaData.formacao?.publicacoesLivrosDescricao && (
                                 <div className="mt-4">
                                     <ReadOnlyField
                                         label="Publicações de Livros"
-                                        value={terapeutaData.Formação.publicacoesLivrosDescricao}
+                                        value={terapeutaData.formacao.publicacoesLivrosDescricao}
                                     />
                                 </div>
                             )}

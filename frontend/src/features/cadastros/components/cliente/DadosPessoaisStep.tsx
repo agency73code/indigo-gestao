@@ -95,7 +95,6 @@ export default function DadosPessoaisStep({
                         value={data.dataNascimento || ''}
                         onChange={(iso) => onUpdate('dataNascimento', iso)}
                         placeholder="dd/mm/aaaa"
-                        error={errors.dataNascimento}
                     />
                     {errors.dataNascimento && (
                         <p className="text-sm text-destructive">{errors.dataNascimento}</p>
@@ -127,7 +126,6 @@ export default function DadosPessoaisStep({
                         value={data.dataEntrada || ''}
                         onChange={(iso) => onUpdate('dataEntrada', iso)}
                         placeholder="dd/mm/aaaa"
-                        error={errors.dataEntrada}
                     />
                     {errors.dataEntrada && (
                         <p className="text-sm text-destructive">{errors.dataEntrada}</p>

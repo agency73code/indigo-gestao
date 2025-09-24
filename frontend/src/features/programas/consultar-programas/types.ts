@@ -2,6 +2,7 @@ export type Patient = {
     id: string;
     name: string;
     guardianName?: string | null;
+    responsible?: string; // For mock compatibility
     age?: number;
     photoUrl?: string | null;
 };

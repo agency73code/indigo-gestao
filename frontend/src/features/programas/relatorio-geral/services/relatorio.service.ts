@@ -14,8 +14,8 @@ import {
 // Por enquanto usando mocks, mas no jeito para integração com API - Diga se é assim que gosta ;)
 export async function fetchKpis(_filtros: Filters): Promise<KpisRelatorio> {
   // TODO: integrar com endpoint real
-  const filtersParam = encodeURIComponent(JSON.stringify(_filtros));
-  const res = await fetch(`/api/ocp/reports/kpis/${filtersParam}`, { method: 'GET', credentials: 'include' });
+  // const filtersParam = encodeURIComponent(JSON.stringify(_filtros));
+  // const res = await fetch(`/api/ocp/reports/kpis/${filtersParam}`, { method: 'GET', credentials: 'include' });
   
   // Simula delay da API ignora daqui pra baixo
   await new Promise(resolve => setTimeout(resolve, 500));
