@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
     HeaderProgram,
@@ -16,11 +16,13 @@ import type { ProgramDetail, SessionListItem } from '../detalhe-ocp/types';
 
 export default function DetalheProgramaPage() {
     const { programaId } = useParams<{ programaId: string }>();
+    const location = useLocation();
 
     const [program, setProgram] = useState<ProgramDetail | null>(null);
     const [sessions, setSessions] = useState<SessionListItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [refreshKey, setRefreshKey] = useState<number>(Date.now());
 
     const loadData = async () => {
         if (!programaId) {
@@ -41,6 +43,7 @@ export default function DetalheProgramaPage() {
 
             setProgram(programData);
             setSessions(sessionsData);
+            setRefreshKey(Date.now()); // Força re-renderização do header
         } catch (err) {
             console.error('Erro ao carregar dados do programa:', err);
             setError(err instanceof Error ? err.message : 'Erro desconhecido');
@@ -52,6 +55,11 @@ export default function DetalheProgramaPage() {
     useEffect(() => {
         loadData();
     }, [programaId]);
+
+    // Recarregar dados quando a rota muda (incluindo retorno da edição)
+    useEffect(() => {
+        loadData();
+    }, [location.pathname, programaId]);
 
     // Loading state
     if (loading) {
@@ -82,10 +90,10 @@ export default function DetalheProgramaPage() {
     const lastSession = sessions.length > 0 ? sessions[0] : null;
 
     return (
-        <div className="min-h-screen bg-background pb-28 p-1 sm:p-4">
-            <div className="max-w-lg md:max-w-none mx-auto md:mx-4 lg:mx-8 space-y-6">
+        <div className="min-h-screen bg-background pb-28 sm:p-0 my-4">
+            <div className="max-w-lg md:max-w-none mx-auto md:mx-4 lg:mx-4 space-y-6">
                 {/* Header com informações do paciente e programa */}
-                <HeaderProgram program={program} />
+                <HeaderProgram key={refreshKey} program={program} />
 
                 {/* Objetivo do programa */}
                 <GoalSection program={program} />
@@ -104,8 +112,8 @@ export default function DetalheProgramaPage() {
             </div>
 
             {/* Barra de ações fixa no rodapé */}
-            <div className='mt-4'>
-            <ActionBar program={program} />
+            <div className="mt-4">
+                <ActionBar program={program} />
             </div>
         </div>
     );

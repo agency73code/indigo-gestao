@@ -43,13 +43,18 @@ export default function HeaderProgram({ program }: HeaderProgramProps) {
     };
 
     const handleGoBack = () => {
-        navigate(-1); // Volta para a página anterior
+        // Tenta voltar para a página anterior, se não conseguir vai para a lista de programas
+        if (window.history.length > 1) {
+            navigate(-1);
+        } else {
+            navigate('/app/programas/lista');
+        }
     };
 
     const prazo = daysLeftInfo();
 
     return (
-        <Card padding="md" className="rounded-[5px]">
+        <Card className="rounded-[5px] px-6 py-2 md:px-8 md:py-10 lg:px-8 lg:py-0">
             <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                 <div className="flex items-center gap-2 mb-2">
                     <Button
@@ -120,20 +125,29 @@ export default function HeaderProgram({ program }: HeaderProgramProps) {
                     </div>
                 )}
 
-                {/* Prazo */}
-                {prazo && (
-                    <div className="pt-2 border-t flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground flex items-center gap-1">
-                            <Clock className="h-3 w-3" /> Prazo do programa
-                        </span>
-                        <span className="font-medium text-right">
-                            {prazo.period}
-                            <span className="block text-xs text-muted-foreground">
-                                {prazo.status}
-                            </span>
-                        </span>
-                    </div>
-                )}
+                {/* Prazo do Programa */}
+                <div className="pt-2 border-t flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground flex items-center gap-1">
+                        <Clock className="h-3 w-3" /> Prazo do programa
+                    </span>
+                    <span className="font-medium text-right">
+                        {program.prazoInicio && program.prazoFim && prazo ? (
+                            <>
+                                {prazo.period}
+                                <span className="block text-xs text-muted-foreground">
+                                    {prazo.status}
+                                </span>
+                            </>
+                        ) : (
+                            <>
+                                <span className="text-muted-foreground">Não definido</span>
+                                <span className="block text-xs text-muted-foreground">
+                                    Configure nas edições do programa
+                                </span>
+                            </>
+                        )}
+                    </span>
+                </div>
             </CardContent>
         </Card>
     );

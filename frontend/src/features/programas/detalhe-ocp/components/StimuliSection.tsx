@@ -35,7 +35,7 @@ export default function StimuliSection({ program }: StimuliSectionProps) {
     };
 
     return (
-        <Card padding="md" className="rounded-[5px]">
+        <Card className="rounded-[5px] px-6 py-2 md:px-8 md:py-10 lg:px-8 lg:py-2">
             <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                 <CardTitle className="text-base flex items-center gap-2">
                     <Brain className="h-4 w-4" />

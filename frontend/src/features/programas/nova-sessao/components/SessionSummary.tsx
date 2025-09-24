@@ -29,14 +29,14 @@ export default function SessionSummary({ summary }: SessionSummaryProps) {
     }
 
     return (
-        <Card className="rounded-[5px] mb-18 sm:0 p-1 sm:p-4">
-            <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
+        <Card className="rounded-[5px] mb-32 lg:mb-0 px-6 py-2 md:px-8 md:py-10 lg:px-8 lg:py-0">
+            <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                 <CardTitle className="text-base flex items-center gap-2">
                     <TrendingUp className="h-4 w-4" />
                     Resumo da Sessão
                 </CardTitle>
             </CardHeader>
-            <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+            <CardContent className="pb-3 sm:pb-6">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     {/* Acerto Geral */}
                     <div className="text-center p-3 bg-muted/30 rounded-[5px]">

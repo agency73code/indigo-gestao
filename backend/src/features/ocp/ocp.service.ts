@@ -64,6 +64,8 @@ export async function updateProgram(programId: number, input: OcpType.UpdateProg
             ...(input.criteria !== undefined && { dominio_criterio: input.criteria }),
             ...(input.notes !== undefined && { observacao_geral: input.notes }),
             ...(input.status !== undefined && { status: input.status }),
+            ...(input.prazoInicio !== undefined && { data_inicio: new Date(input.prazoInicio) }),
+            ...(input.prazoFim !== undefined && { data_fim: new Date(input.prazoFim) }),
         },
         include: { estimulo_ocp: true },
     });

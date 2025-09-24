@@ -43,8 +43,8 @@ export default function HeaderSessao({ sessao, paciente, programa, onBack }: Hea
   const prazo = daysLeftInfo();
 
   return (
-    <Card className="rounded-[5px] p-1 sm:p-4">
-      <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
+    <Card className="rounded-[5px] px-6 py-2 md:px-8 md:py-10 lg:px-8 lg:py-0">
+      <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
         <div className="flex items-center gap-2 mb-2">
           {onBack && (
             <Button variant="ghost" size="sm" onClick={onBack} className="h-8 w-8 p-0" aria-label="Voltar">
@@ -57,7 +57,7 @@ export default function HeaderSessao({ sessao, paciente, programa, onBack }: Hea
           </CardTitle>
         </div>
       </CardHeader>
-      <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6 space-y-4">
+      <CardContent className="pb-3 sm:pb-6 space-y-4">
         {/* Paciente */}
         <div className="flex items-center gap-3 p-3 bg-muted rounded-md">
           <div className="flex-shrink-0">

@@ -40,15 +40,15 @@ export default function ListaSessoes({ sessoes, onVerDetalhes }: ListaSessoesPro
   }
 
   return (
-    <Card className="rounded-[5px] p-1 sm:p-4">
-      <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
+    <Card className="rounded-[5px] px-6 py-2 md:px-8 md:py-10 lg:px-6 lg:py-0">
+      <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
             <Calendar className="h-4 w-4" /> Sessões recentes
           </CardTitle>
         </div>
       </CardHeader>
-      <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+      <CardContent className="pb-3 sm:pb-6">
         <div className="space-y-3">
           {sessoes.map((sessao) => {
             const resumo = resumirSessao(sessao);

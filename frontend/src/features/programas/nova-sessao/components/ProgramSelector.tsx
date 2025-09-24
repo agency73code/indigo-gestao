@@ -83,14 +83,14 @@ export default function ProgramSelector({
 
     return (
         <>
-            <Card className="rounded-[5px] p-1 sm:p-4">
-                <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
+            <Card className="rounded-[5px] px-6 py-2 md:px-8 md:py-10 lg:px-8 lg:py-0">
+                <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                     <CardTitle className="text-base flex items-center gap-2">
                         <FolderOpen className="h-4 w-4" />
                         Programa (OCP)
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+                <CardContent className="pb-3 sm:pb-6">
                     {selected ? (
                         <div className="flex items-center gap-3 p-2 sm:p-3 bg-muted rounded-[5px]">
                             {/* Status do programa */}
@@ -205,6 +205,7 @@ export default function ProgramSelector({
                                     ) : (
                                         programs.map((program) => (
                                             <Card
+                                                padding="none"
                                                 key={program.id}
                                                 className="cursor-pointer hover:shadow-md transition-shadow rounded-[5px]"
                                                 onClick={() => handleSelectProgram(program)}

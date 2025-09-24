@@ -15,8 +15,8 @@ export default function StatusToggle({ status, onStatusChange }: StatusTogglePro
     };
 
     return (
-        <Card className="rounded-[5px] p-1 sm:p-4">
-            <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
+        <Card padding="small" className="rounded-[5px] mb-36 lg:mb-2">
+            <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                 <CardTitle className="text-base flex items-center gap-2">
                     {isActive ? (
                         <CheckCircle className="h-4 w-4 text-green-600" />
@@ -26,7 +26,7 @@ export default function StatusToggle({ status, onStatusChange }: StatusTogglePro
                     Status do Programa
                 </CardTitle>
             </CardHeader>
-            <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+            <CardContent className=" pb-3 sm:pb-6">
                 <div className="flex items-center justify-between">
                     <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">

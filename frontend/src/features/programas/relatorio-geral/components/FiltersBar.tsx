@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
 import { Button } from '@/ui/button';
 import { Label } from '@/ui/label';
@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { DateField } from '@/common/components/layout/DateField';
 import { ChevronDown, ChevronUp, Filter } from 'lucide-react';
 import type { Filters } from '../types';
+import SearchableSelect from './SearchableSelect';
 
 interface FiltersBarProps {
     value: Filters;
@@ -14,86 +15,6 @@ interface FiltersBarProps {
 
 export function FiltersBar({ value, onChange }: FiltersBarProps) {
     const [isExpanded, setIsExpanded] = useState(false);
-    const [terapeutas, setTerapeutas] = useState<{ id: string; nome: string }[]>([
-        // mock inicial
-        { id: "ter-1", nome: "Dr. Ana Silva" },
-        { id: "ter-2", nome: "Dr. Carlos Mendes" },
-    ]);
-    const [pacientes, setPacientes] = useState<{ id: string; nome: string }[]>([
-        { id: "pac-1", nome: "João Silva" },
-        { id: "pac-2", nome: "Maria Santos" },
-        { id: "pac-3", nome: "Pedro Oliveira" },
-    ]);
-    const [programas, setProgramas] = useState<{ id: string; nome: string }[]>([
-        { id: "prog-1", nome: "Desenvolvimento Cognitivo" },
-        { id: "prog-2", nome: "Habilidades Sociais" },
-        { id: "prog-3", nome: "Comunicação" },
-    ]);
-    const [estimulos, setEstimulos] = useState<{ id: string; nome: string }[]>([
-        { id: "est-1", nome: "Contar até 10" },
-        { id: "est-2", nome: "Identificar cores" },
-        { id: "est-3", nome: "Formar palavras" },
-    ]);
-
-    useEffect(() => {
-        const load = async () => {
-            try {
-            const res = await fetch("/api/terapeutas/relatorio", { credentials: "include" });
-            if (!res.ok) throw new Error("Erro de API");
-            const data = await res.json();
-            setTerapeutas(data.data);
-            } catch (err) {
-            console.warn("Usando mock de terapeutas:", err);
-            // mantém os mocks que já estavam no estado inicial
-            }
-        };
-        load();
-    }, []);
-
-    useEffect(() => {
-        const load = async () => {
-            try {
-            const res = await fetch("/api/clientes/relatorios", { credentials: "include" });
-            if (!res.ok) throw new Error("Erro de API");
-            const data = await res.json();
-            setPacientes(data.data);
-            } catch (err) {
-            console.warn("Usando mock de pacientes:", err);
-            // mantém os mocks que já estavam no estado inicial
-            }
-        };
-        load();
-    }, []);
-
-    useEffect(() => {
-        const load = async () => {
-            try {
-            const res = await fetch("/api/ocp/reports/filters/programs", { credentials: "include" });
-            if (!res.ok) throw new Error("Erro de API");
-            const data = await res.json();
-            setProgramas(data.data);
-            } catch (err) {
-            console.warn("Usando mock de programas:", err);
-            // mantém os mocks que já estavam no estado inicial
-            }
-        };
-        load();
-    }, []);
-
-    useEffect(() => {
-        const load = async () => {
-            try {
-            const res = await fetch("/api/ocp/reports/filters/stimulus", { credentials: "include" });
-            if (!res.ok) throw new Error("Erro de API");
-            const data = await res.json();
-            setEstimulos(data.data);
-            } catch (err) {
-            console.warn("Usando mock de estimulos:", err);
-            // mantém os mocks que já estavam no estado inicial
-            }
-        };
-        load();
-    }, []);
 
     const updateFilter = (key: keyof Filters, newValue: any) => {
         onChange({ ...value, [key]: newValue });
@@ -134,17 +55,17 @@ export function FiltersBar({ value, onChange }: FiltersBarProps) {
                     {/* Paciente */}
                     <div className="space-y-2">
                         <Label htmlFor="paciente">Paciente *</Label>
-                        <select
-                            id="paciente"
+                        <SearchableSelect
                             value={value.pacienteId || ''}
-                            onChange={(e) => updateFilter('pacienteId', e.target.value)}
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                        >
-                            <option value="">Selecione o paciente</option>
-                            {pacientes.map((p) => (
-                                <option key={p.id} value={p.id}>{p.nome}</option>
-                            ))}
-                        </select>
+                            options={[
+                                { id: 'pac-1', nome: 'João Silva' },
+                                { id: 'pac-2', nome: 'Maria Santos' },
+                                { id: 'pac-3', nome: 'Pedro Oliveira' },
+                            ]}
+                            placeholder="Selecione o paciente"
+                            emptyMessage="Nenhum paciente encontrado"
+                            onSelect={(id) => updateFilter('pacienteId', id)}
+                        />
                     </div>
 
                     {/* Período */}
@@ -165,17 +86,17 @@ export function FiltersBar({ value, onChange }: FiltersBarProps) {
                     {/* Programa */}
                     <div className="space-y-2">
                         <Label htmlFor="programa">Programa (OCP)</Label>
-                        <select
-                            id="programa"
+                        <SearchableSelect
                             value={value.programaId || ''}
-                            onChange={(e) => updateFilter('programaId', e.target.value)}
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                        >
-                            <option value="">Todos os programas</option>
-                            {programas.map((p) => (
-                                <option key={p.id} value={p.id}>{p.nome}</option>
-                            ))}
-                        </select>
+                            options={[
+                                { id: 'prog-1', nome: 'Desenvolvimento Cognitivo' },
+                                { id: 'prog-2', nome: 'Habilidades Sociais' },
+                                { id: 'prog-3', nome: 'Comunicação' },
+                            ]}
+                            placeholder="Todos os programas"
+                            emptyMessage="Nenhum programa encontrado"
+                            onSelect={(id) => updateFilter('programaId', id)}
+                        />
                     </div>
                 </div>
 
@@ -209,33 +130,32 @@ export function FiltersBar({ value, onChange }: FiltersBarProps) {
                     {/* Estímulo */}
                     <div className="space-y-2">
                         <Label htmlFor="estimulo">Estímulo</Label>
-                        <select
-                            id="estimulo"
+                        <SearchableSelect
                             value={value.estimuloId || ''}
-                            onChange={(e) => updateFilter('estimuloId', e.target.value)}
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                        >
-                            <option value="">Todos os estímulos</option>
-                            {estimulos.map((e) => (
-                                <option key={e.id} value={e.id}>{e.nome}</option>
-                            ))}
-                        </select>
+                            options={[
+                                { id: 'est-1', nome: 'Contar até 10' },
+                                { id: 'est-2', nome: 'Identificar cores' },
+                                { id: 'est-3', nome: 'Formar palavras' },
+                            ]}
+                            placeholder="Todos os estímulos"
+                            emptyMessage="Nenhum estímulo encontrado"
+                            onSelect={(id) => updateFilter('estimuloId', id)}
+                        />
                     </div>
 
                     {/* Terapeuta */}
                     <div className="space-y-2">
                         <Label htmlFor="terapeuta">Terapeuta</Label>
-                        <select
-                            id="terapeuta"
+                        <SearchableSelect
                             value={value.terapeutaId || ''}
-                            onChange={(e) => updateFilter('terapeutaId', e.target.value)}
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                        >
-                            <option value="">Todos os terapeutas</option>
-                            {terapeutas.map((t) => (
-                                <option key={t.id} value={t.id}>{t.nome}</option>
-                            ))}
-                        </select>
+                            options={[
+                                { id: 'ter-1', nome: 'Dr. Ana Silva' },
+                                { id: 'ter-2', nome: 'Dr. Carlos Mendes' },
+                            ]}
+                            placeholder="Todos os terapeutas"
+                            emptyMessage="Nenhum terapeuta encontrado"
+                            onSelect={(id) => updateFilter('terapeutaId', id)}
+                        />
                     </div>
 
                     {/* Comparar */}

@@ -63,7 +63,9 @@ export default function AttemptPicker({
             <div className="bg-background w-full max-w-md rounded-t-lg md:rounded-lg shadow-lg animate-in slide-in-from-bottom md:fade-in duration-300">
                 <div className="flex items-center justify-between p-4 sm:p-6 border-b">
                     <div>
-                        <h2 className="text-lg font-semibold">Registrar Tentativa</h2>
+                        <h2 className="text-lg font-semibold text-foreground">
+                            Registrar Tentativa
+                        </h2>
                         <p className="text-sm text-muted-foreground mt-1">{stimulusLabel}</p>
                     </div>
                     <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0">
@@ -85,8 +87,10 @@ export default function AttemptPicker({
                                             {attempt.icon}
                                         </div>
                                         <div>
-                                            <p className="font-semibold text-lg">{attempt.label}</p>
-                                            <p className="text-sm opacity-80">
+                                            <p className="font-semibold text-lg text-foreground">
+                                                {attempt.label}
+                                            </p>
+                                            <p className="text-sm text-muted-foreground opacity-80">
                                                 {attempt.type === 'error' &&
                                                     'Resposta incorreta ou sem resposta'}
                                                 {attempt.type === 'prompted' &&

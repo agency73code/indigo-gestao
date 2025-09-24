@@ -37,7 +37,9 @@ export default function StimulusItem({ stimulus, attempts, onAddAttempt }: Stimu
                     <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-3">
                             <div className="flex-1 min-w-0">
-                                <h3 className="font-medium text-sm mb-1">{stimulus.label}</h3>
+                                <h3 className="font-medium text-sm text-foreground mb-1">
+                                    {stimulus.label}
+                                </h3>
                                 {stimulus.description && (
                                     <p className="text-xs text-muted-foreground mb-2 leading-relaxed">
                                         {stimulus.description}

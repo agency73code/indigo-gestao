@@ -1,5 +1,6 @@
 // Components exports
 export { default as HeaderInfo } from './components/HeaderInfo';
+export { default as DateSection } from './components/DateSection';
 export { default as GoalSection } from './components/GoalSection';
 export { default as StimuliEditor } from './components/StimuliEditor';
 export { default as StimulusRow } from './components/StimulusRow';
