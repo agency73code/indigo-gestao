@@ -89,9 +89,13 @@ export default function FormacaoStep({ data, onUpdate, errors }: FormacaoStepPro
                         <Input
                             id="instituicaoGraduacao"
                             value={data.formacao?.instituicaoGraduacao || ''}
-                            onChange={(e) => handleFormacaoChange('instituicaoGraduacao', e.target.value)}
+                            onChange={(e) =>
+                                handleFormacaoChange('instituicaoGraduacao', e.target.value)
+                            }
                             placeholder="Ex: Universidade de São Paulo"
-                            className={errors['formacao.instituicaoGraduacao'] ? 'border-destructive' : ''}
+                            className={
+                                errors['formacao.instituicaoGraduacao'] ? 'border-destructive' : ''
+                            }
                             aria-describedby="instituicaoGraduacao-error"
                         />
                         {errors['formacao.instituicaoGraduacao'] && (
@@ -107,20 +111,34 @@ export default function FormacaoStep({ data, onUpdate, errors }: FormacaoStepPro
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
                     <h4 className="text-md font-medium text-primary">Pós-graduação</h4>
-                    <Button type="button" variant="outline" size="sm" onClick={addPos} className="flex items-center gap-2">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={addPos}
+                        className="flex items-center gap-2"
+                    >
                         <Plus className="w-4 h-4" /> Adicionar pós-graduação
                     </Button>
                 </div>
 
                 {posGraduacoes.length === 0 && (
-                    <p className="text-sm text-muted-foreground">Nenhuma pós-graduação adicionada.</p>
+                    <p className="text-sm text-muted-foreground">
+                        Nenhuma pós-graduação adicionada.
+                    </p>
                 )}
 
                 {posGraduacoes.map((pos: any, index: number) => (
                     <div key={index} className="border rounded-lg p-4 space-y-4 relative">
                         <div className="flex items-center justify-between">
                             <h5 className="font-medium">Pós-graduação {index + 1}</h5>
-                            <Button type="button" variant="ghost" size="sm" onClick={() => removePos(index)} className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removePos(index)}
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            >
                                 <X className="w-4 h-4" />
                             </Button>
                         </div>
@@ -131,7 +149,13 @@ export default function FormacaoStep({ data, onUpdate, errors }: FormacaoStepPro
                                 <select
                                     id={`pos-tipo-${index}`}
                                     value={pos.tipo || ''}
-                                    onChange={(e) => handlePosChange(index, 'tipo', e.target.value as 'lato' | 'stricto')}
+                                    onChange={(e) =>
+                                        handlePosChange(
+                                            index,
+                                            'tipo',
+                                            e.target.value as 'lato' | 'stricto',
+                                        )
+                                    }
                                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                                 >
                                     <option value="">Selecione</option>
@@ -145,7 +169,9 @@ export default function FormacaoStep({ data, onUpdate, errors }: FormacaoStepPro
                                 <Input
                                     id={`pos-curso-${index}`}
                                     value={pos.curso || ''}
-                                    onChange={(e) => handlePosChange(index, 'curso', e.target.value)}
+                                    onChange={(e) =>
+                                        handlePosChange(index, 'curso', e.target.value)
+                                    }
                                     placeholder="Ex: Especialização em TCC"
                                 />
                             </div>
@@ -155,7 +181,9 @@ export default function FormacaoStep({ data, onUpdate, errors }: FormacaoStepPro
                                 <Input
                                     id={`pos-instituicao-${index}`}
                                     value={pos.instituicao || ''}
-                                    onChange={(e) => handlePosChange(index, 'instituicao', e.target.value)}
+                                    onChange={(e) =>
+                                        handlePosChange(index, 'instituicao', e.target.value)
+                                    }
                                     placeholder="Ex: Instituto de Psicologia"
                                 />
                             </div>
@@ -168,7 +196,9 @@ export default function FormacaoStep({ data, onUpdate, errors }: FormacaoStepPro
                                     id={`pos-conclusao-${index}`}
                                     type="month"
                                     value={pos.conclusao || ''}
-                                    onChange={(e) => handlePosChange(index, 'conclusao', e.target.value)}
+                                    onChange={(e) =>
+                                        handlePosChange(index, 'conclusao', e.target.value)
+                                    }
                                     placeholder="AAAA-MM"
                                 />
                             </div>
@@ -187,7 +217,9 @@ export default function FormacaoStep({ data, onUpdate, errors }: FormacaoStepPro
                         id="participacaoCongressosDescricao"
                         className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         value={data.formacao?.participacaoCongressosDescricao || ''}
-                        onChange={(e) => handleFormacaoChange('participacaoCongressosDescricao', e.target.value)}
+                        onChange={(e) =>
+                            handleFormacaoChange('participacaoCongressosDescricao', e.target.value)
+                        }
                         placeholder="Descreva participações relevantes, datas/eventos"
                     />
                 </div>
@@ -201,7 +233,9 @@ export default function FormacaoStep({ data, onUpdate, errors }: FormacaoStepPro
                         id="publicacoesLivrosDescricao"
                         className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         value={data.formacao?.publicacoesLivrosDescricao || ''}
-                        onChange={(e) => handleFormacaoChange('publicacoesLivrosDescricao', e.target.value)}
+                        onChange={(e) =>
+                            handleFormacaoChange('publicacoesLivrosDescricao', e.target.value)
+                        }
                         placeholder="Liste publicações, livros, veículos/ano"
                     />
                 </div>
@@ -209,8 +243,3 @@ export default function FormacaoStep({ data, onUpdate, errors }: FormacaoStepPro
         </div>
     );
 }
-
-
-
-
-

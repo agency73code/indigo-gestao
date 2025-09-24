@@ -349,9 +349,9 @@ export default function CadastroTerapeutaPage() {
                 },
             });
 
-            // Redireciona para a página inicial após um breve delay
+            // Redireciona para a página de cadastros (hub) após um breve delay
             setTimeout(() => {
-                navigate('/');
+                navigate('/app/cadastros');
             }, 1000);
         } catch (error) {
             console.error('Erro ao cadastrar terapeuta:', error);
