@@ -37,9 +37,9 @@ export async function listPrograms(params: {
             credentials: 'include',
             headers: { Accept: 'application/json' },
         });
-        
         if (!res.ok) throw new Error('Erro ao buscar programas');
         const json = await res.json();
+        console.log(json)
         return (json?.data ?? []) as ProgramListItem[];
     } catch (error) {
         if (USE_LOCAL_MOCKS) {

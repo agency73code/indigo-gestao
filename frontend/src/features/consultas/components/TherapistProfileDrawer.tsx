@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { X, User, MapPin, Briefcase, Building, GraduationCap, FileText, Car } from 'lucide-react';
 import { Button } from '@/ui/button';
 import ReadOnlyField from './ReadOnlyField';
@@ -30,6 +31,14 @@ export default function TherapistProfileDrawer({
             .slice(0, 2);
     };
 
+    const fotoPerfil = Array.isArray(terapeutaData.arquivos)
+        ? terapeutaData.arquivos.find((doc: any) => doc.tipo === "fotoPerfil")
+        : null;
+    const API_URL = import.meta.env.VITE_API_URL;
+    const displayAvatar = fotoPerfil
+      ? `${API_URL}/arquivos/view/${fotoPerfil.nome}`
+      : null;
+
     const formatDate = (dateString?: string) => {
         if (!dateString) return 'Não informado';
         return new Date(dateString).toLocaleDateString('pt-BR');
@@ -57,7 +66,15 @@ export default function TherapistProfileDrawer({
                 {/* Header - fixo */}
                 <div className="flex items-center gap-4 border-b bg-muted/30 flex-shrink-0 p-2">
                     <div className="h-16 w-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-lg font-medium text-blue-600 dark:text-blue-300">
-                        {getInitials(therapist.nome)}
+                        {displayAvatar ? (
+                            <img
+                            src={displayAvatar}
+                            alt={therapist.nome}
+                            className="h-full w-full object-cover rounded-full"
+                            />
+                        ) : (
+                            getInitials(therapist.nome)
+                        )}
                     </div>
                     <div className="flex-1">
                         <h2 className="text-xl font-semibold text-foreground">{therapist.nome}</h2>
@@ -104,10 +121,10 @@ export default function TherapistProfileDrawer({
                             <div className="mt-6">
                                 <ReadOnlyField
                                     label="Possui Veículo? *"
-                                    value={terapeutaData.possuiVeiculo === 'sim' ? 'Sim' : 'Não'}
+                                    value={terapeutaData.possuiVeiculo?.toLowerCase() === 'sim' ? 'Sim' : 'Não'}
                                 />
 
-                                {terapeutaData.possuiVeiculo === 'sim' && (
+                                {terapeutaData.possuiVeiculo?.toLowerCase() === 'sim' && (
                                     <div className="mt-4 p-4 border rounded-lg bg-muted/30">
                                         <h4 className="font-medium mb-3 flex items-center gap-2">
                                             <Car className="w-4 h-4" />
@@ -246,7 +263,7 @@ export default function TherapistProfileDrawer({
                                 <ReadOnlyField
                                     label="Professor Uniindigo"
                                     value={
-                                        terapeutaData.professorUnindigo === 'sim' ? 'Sim' : 'Não'
+                                        terapeutaData.professorUnindigo?.toLowerCase() === 'sim' ? 'Sim' : 'Não'
                                     }
                                 />
                                 {terapeutaData.disciplinaUniindigo && (
@@ -366,41 +383,47 @@ export default function TherapistProfileDrawer({
                                 <ReadOnlyField
                                     label="Foto de perfil"
                                     value={
-                                        terapeutaData.arquivos?.fotoPerfil
-                                            ? 'Enviado'
-                                            : 'Não enviado'
+                                        Array.isArray(terapeutaData.arquivos) &&
+                                        terapeutaData.arquivos.some((doc: any) => doc.tipo === "fotoPerfil")
+                                            ? "Enviado"
+                                            : "Não enviado"
                                     }
+                                    
                                 />
                                 <ReadOnlyField
                                     label="Diploma graduação *"
                                     value={
-                                        terapeutaData.arquivos?.diplomaGraduacao
-                                            ? 'Enviado'
-                                            : 'Não enviado'
+                                        Array.isArray(terapeutaData.arquivos) &&
+                                        terapeutaData.arquivos.some((doc: any) => doc.tipo === "diplomaGraduacao")
+                                            ? "Enviado"
+                                            : "Não enviado"
                                     }
                                 />
                                 <ReadOnlyField
                                     label="Diploma pós-graduação"
                                     value={
-                                        terapeutaData.arquivos?.diplomaPosGraduacao
-                                            ? 'Enviado'
-                                            : 'Não enviado'
+                                        Array.isArray(terapeutaData.arquivos) &&
+                                        terapeutaData.arquivos.some((doc: any) => doc.tipo === "diplomaPosGraduacao")
+                                            ? "Enviado"
+                                            : "Não enviado"
                                     }
                                 />
                                 <ReadOnlyField
                                     label="Registro CRP *"
                                     value={
-                                        terapeutaData.arquivos?.registroCRP
-                                            ? 'Enviado'
-                                            : 'Não enviado'
+                                        Array.isArray(terapeutaData.arquivos) &&
+                                        terapeutaData.arquivos.some((doc: any) => doc.tipo === "registroCRP")
+                                            ? "Enviado"
+                                            : "Não enviado"
                                     }
                                 />
                                 <ReadOnlyField
                                     label="Comprovante endereço *"
                                     value={
-                                        terapeutaData.arquivos?.comprovanteEndereco
-                                            ? 'Enviado'
-                                            : 'Não enviado'
+                                        Array.isArray(terapeutaData.arquivos) &&
+                                        terapeutaData.arquivos.some((doc: any) => doc.tipo === "comprovanteEndereco")
+                                            ? "Enviado"
+                                            : "Não enviado"
                                     }
                                 />
                             </div>

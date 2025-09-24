@@ -64,11 +64,12 @@ export function calculateSessionSummary(attempts: SessionState['attempts']): Ses
             totalAttempts: 0,
         };
     }
-    
+    console.log('teste')
+    const promptedAttempts = attempts.filter(attempt => attempt.type === 'prompted').length
     const independentAttempts = attempts.filter(attempt => attempt.type === 'independent').length;
     
     return {
-        overallAccuracy: Math.round((independentAttempts / totalAttempts) * 100),
+        overallAccuracy: Math.round(((independentAttempts + promptedAttempts) / totalAttempts) * 100),
         independenceRate: Math.round((independentAttempts / totalAttempts) * 100),
         totalAttempts,
     };

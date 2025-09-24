@@ -80,7 +80,6 @@ export default function CadastroSessaoPage() {
     useEffect(() => {
         const patientId = searchParams.get('patientId');
         const programId = searchParams.get('programaId');
-
         if (patientId) {
             // Buscar dados do paciente se patientId estiver na URL
             loadPatientData(patientId);
@@ -111,7 +110,7 @@ export default function CadastroSessaoPage() {
             setLoadingProgram(true);
             const detail = await getProgramDetail(programId);
             setProgramDetail(detail);
-
+            
             // Criar um ProgramListItem mock para o seletor
             const programListItem: ProgramListItem = {
                 id: detail.id,

@@ -24,7 +24,7 @@ export interface FrontCliente {
 
     enderecos: Array<{
         cep: string;
-        rua: string;
+        logradouro: string;
         numero: string;
         complemento?: string;
         bairro: string;
@@ -40,7 +40,7 @@ export interface FrontCliente {
         email?: string;
         endereco?: {
         cep?: string;
-        rua?: string;
+        logradouro?: string;
         numero?: string;
         complemento?: string;
         bairro?: string;
@@ -87,7 +87,7 @@ export interface FrontCliente {
 export async function normalizer(input: FrontCliente): Promise<ClientCreateData> {
     const enderecos = input.enderecos?.map((e, idx) => ({
         cep: e.cep,
-        rua: e.rua,
+        rua: e.logradouro,
         numero: e.numero,
         bairro: e.bairro,
         cidade: e.cidade,
@@ -105,7 +105,7 @@ export async function normalizer(input: FrontCliente): Promise<ClientCreateData>
     ...(input.dadosEscola.endereco ? {
         enderecos: [{
         cep: input.dadosEscola.endereco.cep || '',
-        rua: input.dadosEscola.endereco.rua || '',
+        rua: input.dadosEscola.endereco.logradouro || '',
         numero: input.dadosEscola.endereco.numero || '',
         bairro: input.dadosEscola.endereco.bairro || '',
         cidade: input.dadosEscola.endereco.cidade || '',

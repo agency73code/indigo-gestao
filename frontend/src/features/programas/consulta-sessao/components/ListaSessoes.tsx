@@ -67,7 +67,7 @@ export default function ListaSessoes({ sessoes, onVerDetalhes }: ListaSessoesPro
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <User className="h-3 w-3" /> {sessao.terapeutaNome}
                   </div>
-                  <div className="text-xs text-muted-foreground">{formatPercentage(resumo.independencia)} independÃªncia</div>
+                  <div className="text-xs text-muted-foreground">{formatPercentage(resumo.independencia)} independência</div>
                 </div>
                 <Button
                   variant="ghost"

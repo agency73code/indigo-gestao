@@ -255,7 +255,7 @@ export interface TherapistDB {
     }[];
     pessoa_juridica?: {
       id: number;
-      cnpj?: string;
+      cnpj?: string | null;
       razao_social?: string | null;
       endereco?: {
         cep?: string | null;

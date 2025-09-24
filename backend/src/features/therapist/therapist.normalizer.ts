@@ -18,7 +18,7 @@ export function normalizeTherapistForm(db: TherapistTypes.TherapistDB): Therapis
         chavePix: db.chave_pix ?? '',
         valorHoraAcordado: db.valor_hora?.toString() ?? '',
         professorUnindigo: db.professor_uni ? 'Sim' : 'Não',
-        disciplinaUniindigo: 'teste',
+        disciplinaUniindigo: db.disciplina?.map((d) => d.nome).join(", ") ?? "",
         endereco: {
             cep: db.endereco?.cep ?? '',
             rua: db.endereco?.rua ?? '',
@@ -41,7 +41,7 @@ export function normalizeTherapistForm(db: TherapistTypes.TherapistDB): Therapis
                 conclusao: p.conclusao!,
             })) ?? [],
             participacaoCongressosDescricao: db.formacao?.[0]?.participacao_congressos ?? '',
-            publicacoesLivrosDescricao: db.formacao?.[0]?.participacao_congressos ?? '',
+            publicacoesLivrosDescricao: db.formacao?.[0]?.publicacoes_descricao ?? '',
         },
         cnpj: {
             numero: db.pessoa_juridica?.cnpj ?? '',

@@ -7,6 +7,7 @@ interface ResumoSessaoProps {
 }
 
 export default function ResumoSessaoCard({ resumo }: ResumoSessaoProps) {
+    console.log(resumo)
     return (
         <Card className="rounded-[5px] px-6 py-2 md:px-8 md:py-10 lg:px-8 lg:py-0">
             <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">

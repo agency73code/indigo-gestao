@@ -29,7 +29,6 @@ export default function DetalheSessaoPage() {
 
   useEffect(() => {
     let cancelled = false;
-
     const loadSession = async () => {
       if (!sessaoId) {
         setError('Sessão inválida');

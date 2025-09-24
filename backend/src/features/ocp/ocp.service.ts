@@ -293,7 +293,7 @@ export async function listByClientId(
     q?: string, 
     sort: 'recent' | 'alphabetic' = 'recent'
 ) {
-    return prisma.ocp.findMany({
+    return await prisma.ocp.findMany({
         where: { 
             cliente_id: clientId,
             ...(status !== 'all' ? { status } : {}),
