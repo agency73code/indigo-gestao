@@ -94,6 +94,8 @@ export type UpdateProgramInput = {
     criteria?: string | null;
     notes?: string | null;
     status?: 'active' | 'archived';
+    prazoInicio?: string; // Data de início do programa
+    prazoFim?: string; // Data de fim do programa
 };
 
 export type ClientRowDTO = {
