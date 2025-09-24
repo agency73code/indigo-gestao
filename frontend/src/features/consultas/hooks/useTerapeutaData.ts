@@ -55,25 +55,30 @@ export function useTerapeutaData(therapist: Therapist | null): Partial<Terapeuta
                     numeroConselho: therapist.registroConselho || 'CRP 12345-SP',
                 }
             ],
-            numeroConvenio: '123456789', // Mock
-            dataEntrada: '2024-01-15', // Mock
-            dataSaida: '', // Mock
-            crp: therapist.registroConselho || 'CRP 12345-SP',
-            especialidades: therapist.profissional?.especialidades || ['Terapia Cognitivo-Comportamental'], // Mock
+            // numeroConvenio: '123456789', // Mock - property doesn't exist in Terapeuta type
+            // dataEntrada: '2024-01-15', // Mock - property doesn't exist in Terapeuta type
+            // dataSaida: '', // Mock - property doesn't exist in Terapeuta type
+            // crp: therapist.registroConselho || 'CRP 12345-SP', // Mock - property doesn't exist
+            // especialidades: therapist.profissional?.especialidades || ['Terapia Cognitivo-Comportamental'], // Mock - property doesn't exist
             dataInicio: '2024-01-15', // Mock
             dataFim: '', // Mock
-            valorConsulta: therapist.profissional?.valorConsulta?.toString() || '150.00',
-            formasAtendimento: therapist.profissional?.formasAtendimento || ['Presencial', 'Online'], // Mock
+            // valorConsulta: therapist.profissional?.valorConsulta?.toString() || '150.00', // Mock - property doesn't exist
+            // formasAtendimento: therapist.profissional?.formasAtendimento || ['Presencial', 'Online'], // Mock - property doesn't exist
 
             // Formação - Seção 4 (FormacaoStep)
             formacao: {
                 graduacao: 'Graduação em Psicologia', // Mock
                 instituicaoGraduacao: 'Universidade de São Paulo', // Mock
                 anoFormatura: '2008', // Mock
-                posGraduacao: 'Mestrado em Psicologia Clínica', // Mock - demonstrar condicional
-                instituicaoPosGraduacao: 'PUC-SP', // Mock
-                anoPosGraduacao: '2011', // Mock
-                cursos: 'Curso de Especialização em TCC', // Mock
+                posGraduacoes: [{ // Mock - array de pós-graduações
+                    tipo: 'stricto' as const,
+                    curso: 'Mestrado em Psicologia Clínica',
+                    instituicao: 'PUC-SP',
+                    conclusao: '2011',
+                    comprovanteUrl: null
+                }],
+                participacaoCongressosDescricao: 'Participação em diversos congressos de psicologia', // Mock
+                publicacoesLivrosDescricao: 'Autor do livro "Terapia Cognitivo-Comportamental"' // Mock
             },
 
             // Arquivos - Seção 5 (ArquivosStep)

@@ -3,6 +3,7 @@ import { Label } from '@/ui/label';
 import type { Terapeuta } from '../../types/cadastros.types';
 import { useCepLookup } from '../../hooks/useCepLookup';
 import { useCallback, useEffect } from 'react';
+import { maskCEP } from '@/common/utils/mask';
 
 interface EnderecoStepProps {
     data: Partial<Terapeuta>;
@@ -22,7 +23,7 @@ export default function EnderecoStep({ data, onUpdate, errors }: EnderecoStepPro
 
     useEffect(() => {
         if (!cepData) return;
-        
+
         const nextRua = cepData.logradouro ?? '';
         const nextBairro = cepData.bairro ?? '';
         const nextCidade = cepData.cidade ?? '';
@@ -39,7 +40,14 @@ export default function EnderecoStep({ data, onUpdate, errors }: EnderecoStepPro
         onUpdate('endereco.bairro', nextBairro);
         onUpdate('endereco.cidade', nextCidade);
         onUpdate('endereco.estado', nextEstado);
-    }, [cepData, data.endereco?.rua, data.endereco?.bairro, data.endereco?.cidade, data.endereco?.estado, onUpdate]);
+    }, [
+        cepData,
+        data.endereco?.rua,
+        data.endereco?.bairro,
+        data.endereco?.cidade,
+        data.endereco?.estado,
+        onUpdate,
+    ]);
 
     return (
         <div className="space-y-4 md:space-y-6">
@@ -56,11 +64,11 @@ export default function EnderecoStep({ data, onUpdate, errors }: EnderecoStepPro
                     <Input
                         id="cep"
                         value={data.endereco?.cep || ''}
-                        onChange={(e) => handleEnderecoChange('cep', e.target.value)}
+                        onChange={(e) => handleEnderecoChange('cep', maskCEP(e.target.value))}
                         placeholder="00000-000"
                         className={errors['endereco.cep'] ? 'border-destructive' : ''}
                     />
-                    {cepError && <p className='text-sm text-destructive'>{cepError}</p>}
+                    {cepError && <p className="text-sm text-destructive">{cepError}</p>}
                     {errors['endereco.cep'] && (
                         <p className="text-sm text-destructive">{errors['endereco.cep']}</p>
                     )}
@@ -76,9 +84,7 @@ export default function EnderecoStep({ data, onUpdate, errors }: EnderecoStepPro
                         className={errors['endereco.rua'] ? 'border-destructive' : ''}
                     />
                     {errors['endereco.rua'] && (
-                        <p className="text-sm text-destructive">
-                            {errors['endereco.rua']}
-                        </p>
+                        <p className="text-sm text-destructive">{errors['endereco.rua']}</p>
                     )}
                 </div>
             </div>

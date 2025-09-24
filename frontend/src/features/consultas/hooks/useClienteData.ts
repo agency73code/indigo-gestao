@@ -19,18 +19,30 @@ export function useClienteData(patient: Patient | null): Partial<Cliente> | null
             id: patient.id,
             nome: patient.nome,
             dataNascimento: patient.pessoa?.dataNascimento || '',
-            nomeMae: 'Maria Silva Santos', // Mock - em produção viria da API
-            cpfMae: '123.456.789-00', // Mock
-            nomePai: 'João Santos Silva', // Mock
-            cpfPai: '987.654.321-00', // Mock
-            telefonePai: '(11) 99999-8888', // Mock
+            // Mock para cuidadores (substitui os campos de pai/mãe)
+            cuidadores: [
+                {
+                    relacao: 'mae',
+                    nome: 'Maria Silva Santos',
+                    cpf: '123.456.789-00',
+                    telefone: '(11) 99999-8888',
+                    email: 'mae@email.com',
+                    profissao: 'Enfermeira',
+                    escolaridade: 'Superior'
+                },
+                {
+                    relacao: 'pai',
+                    nome: 'João Santos Silva',
+                    cpf: '987.654.321-00',
+                    telefone: '(11) 99999-7777',
+                    email: 'pai@email.com',
+                    profissao: 'Engenheiro',
+                    escolaridade: 'Superior'
+                }
+            ],
             emailContato: patient.email || 'cliente@email.com',
             dataEntrada: '2024-01-15', // Mock
             dataSaida: '', // Mock
-            maisDeUmPai: 'nao',
-            nomePai2: '',
-            cpfPai2: '',
-            telefonePai2: '',
             
             // Endereços - reutilizando estrutura do cadastro
             enderecos: patient.endereco ? [{

@@ -13,13 +13,18 @@ import {
 } from '@/common/utils/mask';
 
 interface DadosPessoaisStepProps {
-  data: Partial<Terapeuta>;
-  onUpdate: (field: string, value: any) => void;
-  onBlurField?: (field: string) => void; // <- novo
-  errors: Record<string, string>;
+    data: Partial<Terapeuta>;
+    onUpdate: (field: string, value: any) => void;
+    onBlurField?: (field: string) => void; // <- novo
+    errors: Record<string, string>;
 }
 
-export default function DadosPessoaisStep({ data, onUpdate, onBlurField, errors }: DadosPessoaisStepProps) {
+export default function DadosPessoaisStep({
+    data,
+    onUpdate,
+    onBlurField,
+    errors,
+}: DadosPessoaisStepProps) {
     return (
         <div className="space-y-4 md:space-y-6">
             <div>
@@ -59,13 +64,13 @@ export default function DadosPessoaisStep({ data, onUpdate, onBlurField, errors 
                     </p>
                 </div>
 
+                {/* Data de Nascimento */}
                 <div className="space-y-2">
-                    <Label htmlFor="dataNascimento">Data de Nascimento *</Label>
+                    <Label htmlFor="dataNascimento">Data de nascimento *</Label>
                     <DateField
                         value={data.dataNascimento || ''}
                         onChange={(iso) => onUpdate('dataNascimento', iso)}
                         placeholder="dd/mm/aaaa"
-                        error={errors.dataNascimento}
                     />
                     {errors.dataNascimento && (
                         <p className="text-sm text-destructive">{errors.dataNascimento}</p>
@@ -82,7 +87,7 @@ export default function DadosPessoaisStep({ data, onUpdate, onBlurField, errors 
                         type="email"
                         value={data.email || ''}
                         onChange={(e) => onUpdate('email', e.target.value)}
-                         onBlur={() => onBlurField?.('email')}  
+                        onBlur={() => onBlurField?.('email')}
                         placeholder="email@exemplo.com"
                         className={errors.email ? 'border-destructive' : ''}
                         aria-invalid={!!errors.email}
@@ -98,7 +103,7 @@ export default function DadosPessoaisStep({ data, onUpdate, onBlurField, errors 
                         type="email"
                         value={data.emailIndigo || ''}
                         onChange={(e) => onUpdate('emailIndigo', e.target.value)}
-                         onBlur={() => onBlurField?.('email')}  
+                        onBlur={() => onBlurField?.('email')}
                         placeholder="email@indigo.com"
                         className={errors.emailIndigo ? 'border-destructive' : ''}
                         aria-invalid={!!errors.emailIndigo}
@@ -278,8 +283,3 @@ export default function DadosPessoaisStep({ data, onUpdate, onBlurField, errors 
         </div>
     );
 }
-
-
-
-
-

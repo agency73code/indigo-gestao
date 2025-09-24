@@ -235,7 +235,6 @@ export default function DadosProfissionaisStep({
                         value={data.dataInicio || ''}
                         onChange={(iso) => onUpdate('dataInicio', iso)}
                         placeholder="dd/mm/aaaa"
-                        error={errors.dataInicio}
                     />
                     {errors.dataInicio && (
                         <p className="text-sm text-destructive">{errors.dataInicio}</p>
@@ -249,6 +248,7 @@ export default function DadosProfissionaisStep({
                         onChange={(iso) => onUpdate('dataFim', iso)}
                         placeholder="dd/mm/aaaa"
                         error={errors.dataFim}
+                        clearable={true}
                     />
                     {errors.dataFim && <p className="text-sm text-destructive">{errors.dataFim}</p>}
                 </div>

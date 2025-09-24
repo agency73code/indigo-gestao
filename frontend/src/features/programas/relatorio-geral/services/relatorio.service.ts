@@ -11,6 +11,7 @@ import {
   mockPrazoPrograma
 } from '../mocks/relatorio.mock';
 
+
 async function callKpiReportsApi(_filtros: Filters) {
   const filtersParam = encodeURIComponent(JSON.stringify(_filtros));
   return await fetch(`/api/ocp/reports/kpis/${filtersParam}`, {

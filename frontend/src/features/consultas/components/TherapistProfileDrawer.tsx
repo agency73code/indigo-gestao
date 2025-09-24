@@ -270,82 +270,84 @@ export default function TherapistProfileDrawer({
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <ReadOnlyField
                                     label="Graduação *"
-                                    value={terapeutaData.Formação?.graduacao}
+                                    value={terapeutaData.formacao?.graduacao}
                                 />
                                 <ReadOnlyField
                                     label="Instituição graduação *"
-                                    value={terapeutaData.Formação?.instituicaoGraduacao}
+                                    value={terapeutaData.formacao?.instituicaoGraduacao}
                                 />
                                 <ReadOnlyField
                                     label="Ano formatura *"
-                                    value={terapeutaData.Formação?.anoFormatura}
+                                    value={terapeutaData.formacao?.anoFormatura}
                                 />
                             </div>
 
                             {/* Pós-graduações - Múltiplas */}
-                            {terapeutaData.Formação?.posGraduacoes &&
-                                terapeutaData.Formação.posGraduacoes.length > 0 && (
+                            {terapeutaData.formacao?.posGraduacoes &&
+                                terapeutaData.formacao.posGraduacoes.length > 0 && (
                                     <div className="mt-4 space-y-4">
                                         <h4 className="font-medium">Pós-graduações</h4>
-                                        {terapeutaData.Formação.posGraduacoes.map((pos, index) => (
-                                            <div
-                                                key={index}
-                                                className="p-4 border rounded-lg bg-muted/30"
-                                            >
-                                                <h5 className="font-medium mb-3 text-sm">
-                                                    Pós-graduação {index + 1}
-                                                </h5>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                    <ReadOnlyField
-                                                        label="Tipo"
-                                                        value={
-                                                            pos.tipo === 'lato'
-                                                                ? 'Lato Sensu (Especialização)'
-                                                                : 'Stricto Sensu (Mestrado/Doutorado)'
-                                                        }
-                                                    />
-                                                    <ReadOnlyField
-                                                        label="Curso"
-                                                        value={pos.curso}
-                                                    />
-                                                    <ReadOnlyField
-                                                        label="Instituição"
-                                                        value={pos.instituicao}
-                                                    />
-                                                    <ReadOnlyField
-                                                        label="Conclusão"
-                                                        value={pos.conclusao}
-                                                    />
-                                                    {pos.comprovanteUrl && (
+                                        {terapeutaData.formacao.posGraduacoes.map(
+                                            (pos: any, index: number) => (
+                                                <div
+                                                    key={index}
+                                                    className="p-4 border rounded-lg bg-muted/30"
+                                                >
+                                                    <h5 className="font-medium mb-3 text-sm">
+                                                        Pós-graduação {index + 1}
+                                                    </h5>
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                         <ReadOnlyField
-                                                            label="Comprovante"
-                                                            value="Arquivo enviado"
+                                                            label="Tipo"
+                                                            value={
+                                                                pos.tipo === 'lato'
+                                                                    ? 'Lato Sensu (Especialização)'
+                                                                    : 'Stricto Sensu (Mestrado/Doutorado)'
+                                                            }
                                                         />
-                                                    )}
+                                                        <ReadOnlyField
+                                                            label="Curso"
+                                                            value={pos.curso}
+                                                        />
+                                                        <ReadOnlyField
+                                                            label="Instituição"
+                                                            value={pos.instituicao}
+                                                        />
+                                                        <ReadOnlyField
+                                                            label="Conclusão"
+                                                            value={pos.conclusao}
+                                                        />
+                                                        {pos.comprovanteUrl && (
+                                                            <ReadOnlyField
+                                                                label="Comprovante"
+                                                                value="Arquivo enviado"
+                                                            />
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            ),
+                                        )}
                                     </div>
                                 )}
 
                             {/* Participação em congressos */}
-                            {terapeutaData.Formação?.participacaoCongressosDescricao && (
+                            {terapeutaData.formacao?.participacaoCongressosDescricao && (
                                 <div className="mt-4">
                                     <ReadOnlyField
                                         label="Participação em Congressos"
                                         value={
-                                            terapeutaData.Formação.participacaoCongressosDescricao
+                                            terapeutaData.formacao.participacaoCongressosDescricao
                                         }
                                     />
                                 </div>
                             )}
 
                             {/* Publicações de livros */}
-                            {terapeutaData.Formação?.publicacoesLivrosDescricao && (
+                            {terapeutaData.formacao?.publicacoesLivrosDescricao && (
                                 <div className="mt-4">
                                     <ReadOnlyField
                                         label="Publicações de Livros"
-                                        value={terapeutaData.Formação.publicacoesLivrosDescricao}
+                                        value={terapeutaData.formacao.publicacoesLivrosDescricao}
                                     />
                                 </div>
                             )}
