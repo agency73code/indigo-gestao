@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { DateField } from '@/common/components/layout/DateField';
 import { ChevronDown, ChevronUp, Filter } from 'lucide-react';
 import type { Filters } from '../types';
+import { fetchAndSet } from '../utils/fetchAndSet';
 
 interface FiltersBarProps {
     value: Filters;
@@ -36,63 +37,10 @@ export function FiltersBar({ value, onChange }: FiltersBarProps) {
     ]);
 
     useEffect(() => {
-        const load = async () => {
-            try {
-            const res = await fetch("/api/terapeutas/relatorio", { credentials: "include" });
-            if (!res.ok) throw new Error("Erro de API");
-            const data = await res.json();
-            setTerapeutas(data.data);
-            } catch (err) {
-            console.warn("Usando mock de terapeutas:", err);
-            // mantém os mocks que já estavam no estado inicial
-            }
-        };
-        load();
-    }, []);
-
-    useEffect(() => {
-        const load = async () => {
-            try {
-            const res = await fetch("/api/clientes/relatorios", { credentials: "include" });
-            if (!res.ok) throw new Error("Erro de API");
-            const data = await res.json();
-            setPacientes(data.data);
-            } catch (err) {
-            console.warn("Usando mock de pacientes:", err);
-            // mantém os mocks que já estavam no estado inicial
-            }
-        };
-        load();
-    }, []);
-
-    useEffect(() => {
-        const load = async () => {
-            try {
-            const res = await fetch("/api/ocp/reports/filters/programs", { credentials: "include" });
-            if (!res.ok) throw new Error("Erro de API");
-            const data = await res.json();
-            setProgramas(data.data);
-            } catch (err) {
-            console.warn("Usando mock de programas:", err);
-            // mantém os mocks que já estavam no estado inicial
-            }
-        };
-        load();
-    }, []);
-
-    useEffect(() => {
-        const load = async () => {
-            try {
-            const res = await fetch("/api/ocp/reports/filters/stimulus", { credentials: "include" });
-            if (!res.ok) throw new Error("Erro de API");
-            const data = await res.json();
-            setEstimulos(data.data);
-            } catch (err) {
-            console.warn("Usando mock de estimulos:", err);
-            // mantém os mocks que já estavam no estado inicial
-            }
-        };
-        load();
+        fetchAndSet("/api/terapeutas/relatorio", setTerapeutas, "terapeutas");
+        fetchAndSet("/api/clientes/relatorios", setPacientes, "pacientes");
+        fetchAndSet("/api/ocp/reports/filters/programs", setProgramas, "programas");
+        fetchAndSet("/api/ocp/reports/filters/stimulus", setEstimulos, "estimulos");
     }, []);
 
     const updateFilter = (key: keyof Filters, newValue: any) => {

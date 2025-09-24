@@ -138,7 +138,7 @@ export async function listSessionsByClient(req: Request, res: Response) {
 
 export async function getKpis(req: Request, res: Response) {
     try {
-        const raw = decodeURIComponent(req.params.filters);
+        const raw = decodeURIComponent(req.params.filters ?? "");
         const filtros = JSON.parse(raw);
         const data = await OcpService.getKpis(filtros);
 
