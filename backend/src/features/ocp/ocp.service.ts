@@ -1,6 +1,9 @@
 import { prisma } from "../../config/database.js";
+import { Prisma } from '@prisma/client'
 import * as OcpType from "./ocp.types.js";
 import * as OcpNormalizer from './ocp.normalizer.js';
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 export async function createProgram(data: OcpType.createOCP) {
     return prisma.ocp.create({
@@ -177,7 +180,13 @@ export async function getClientById(clientId: string) {
         include: {
             cliente_responsavel: {
                 take: 1,
-                include: { responsaveis: true },
+                select: {
+                    responsaveis: { 
+                        select: { 
+                            nome: true 
+                        } ,
+                    },
+                },
             },
         },
     });
@@ -353,12 +362,22 @@ export async function listSessionsByClient(clientId: string) {
 }
 
 export async function getKpis(filtros: OcpType.KpisFilters) {
-  const where: any = {};
+  const where: Prisma.sessaoWhereInput = {};
 
-  if (filtros.pacienteId) where.cliente_id = filtros.pacienteId;
-  if (filtros.programaId) where.ocp_id = filtros.programaId;
-  if (filtros.estimuloId) where.estimulo.id = filtros.estimuloId;
-  if (filtros.terapeutaId) where.terapeuta_id = filtros.terapeutaId;
+    if (filtros.pacienteId) where.cliente_id = filtros.pacienteId;
+    if (filtros.programaId) where.ocp_id = Number(filtros.programaId);
+    if (filtros.estimuloId) {
+        where.trials = {
+            some: {
+                estimulosOcp: {
+                    estimulo: {
+                        id: Number(filtros.estimuloId),
+                    },
+                },
+            },
+        };
+    };
+    if (filtros.terapeutaId) where.terapeuta_id = filtros.terapeutaId;
 
   if (filtros.periodo.mode === "30d") {
     where.data_criacao = { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) };
@@ -373,8 +392,52 @@ export async function getKpis(filtros: OcpType.KpisFilters) {
     };
   }
 
-  // Exemplo de query
-  return prisma.sessao.findMany({ where });
+  const sessions = await prisma.sessao.findMany({
+    where,
+    include: { trials: true },
+  });
+
+    const totalSessions = sessions.length;
+    const allTrials = sessions.flatMap(s => s.trials);
+
+    const totalAttempts = allTrials.length;
+    const correctAnswers = allTrials.filter(t => t.resultado === "prompted").length;
+    const independentAnswers = allTrials.filter(t => t.resultado === "independent").length;
+
+    const accuracyPct = totalAttempts ? ((correctAnswers + independentAnswers) / totalAttempts) * 100 : 0;
+    const independencyPct = totalAttempts ? (independentAnswers / totalAttempts) * 100 : 0;
+
+    const cards = {
+        acerto: Math.round(accuracyPct),
+        independencia: Math.round(independencyPct),
+        tentativas: totalAttempts,
+        sessoes: totalSessions,
+        gapIndependencia: Math.round(accuracyPct - independencyPct),
+    };
+
+    const graphic = sessions.map(s => {
+        const totalAttempts = s.trials.length;
+        const correctAnswers = s.trials.filter(t => t.resultado === "prompted").length;
+        const independentAnswers = s.trials.filter(t => t.resultado === "independent").length;
+
+        const accuracyPct = totalAttempts
+            ? Math.round(((correctAnswers + independentAnswers) / totalAttempts) * 100)
+            : 0;
+
+        const independencyPct = totalAttempts
+            ? Math.round((independentAnswers / totalAttempts) * 100)
+            : 0;
+
+        return {
+            x: format(new Date(s.data_criacao), "dd/MM", { locale: ptBR }),
+            acerto: accuracyPct,
+            independencia: independencyPct,
+        };
+    });
+
+    return {
+        cards, graphic 
+    };
 }
 
 export async function getStimulusReport() {

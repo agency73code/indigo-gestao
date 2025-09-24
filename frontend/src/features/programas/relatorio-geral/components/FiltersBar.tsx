@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
 import { Button } from '@/ui/button';
 import { Label } from '@/ui/label';
@@ -7,6 +7,7 @@ import { DateField } from '@/common/components/layout/DateField';
 import { ChevronDown, ChevronUp, Filter } from 'lucide-react';
 import type { Filters } from '../types';
 import SearchableSelect from './SearchableSelect';
+import { fetchAndSet } from '../utils/fetchAndSet';
 
 interface FiltersBarProps {
     value: Filters;
@@ -15,6 +16,33 @@ interface FiltersBarProps {
 
 export function FiltersBar({ value, onChange }: FiltersBarProps) {
     const [isExpanded, setIsExpanded] = useState(false);
+    const [terapeutas, setTerapeutas] = useState<{ id: string; nome: string }[]>([
+        // mock inicial
+        { id: "ter-1", nome: "Dr. Ana Silva" },
+        { id: "ter-2", nome: "Dr. Carlos Mendes" },
+    ]);
+    const [pacientes, setPacientes] = useState<{ id: string; nome: string }[]>([
+        { id: "pac-1", nome: "João Silva" },
+        { id: "pac-2", nome: "Maria Santos" },
+        { id: "pac-3", nome: "Pedro Oliveira" },
+    ]);
+    const [programas, setProgramas] = useState<{ id: string; nome: string }[]>([
+        { id: "prog-1", nome: "Desenvolvimento Cognitivo" },
+        { id: "prog-2", nome: "Habilidades Sociais" },
+        { id: "prog-3", nome: "Comunicação" },
+    ]);
+    const [estimulos, setEstimulos] = useState<{ id: string; nome: string }[]>([
+        { id: "est-1", nome: "Contar até 10" },
+        { id: "est-2", nome: "Identificar cores" },
+        { id: "est-3", nome: "Formar palavras" },
+    ]);
+
+    useEffect(() => {
+        fetchAndSet("/api/terapeutas/relatorio", setTerapeutas, "terapeutas");
+        fetchAndSet("/api/clientes/relatorios", setPacientes, "pacientes");
+        fetchAndSet("/api/ocp/reports/filters/programs", setProgramas, "programas");
+        fetchAndSet("/api/ocp/reports/filters/stimulus", setEstimulos, "estimulos");
+    }, []);
 
     const updateFilter = (key: keyof Filters, newValue: any) => {
         onChange({ ...value, [key]: newValue });
@@ -57,11 +85,10 @@ export function FiltersBar({ value, onChange }: FiltersBarProps) {
                         <Label htmlFor="paciente">Paciente *</Label>
                         <SearchableSelect
                             value={value.pacienteId || ''}
-                            options={[
-                                { id: 'pac-1', nome: 'João Silva' },
-                                { id: 'pac-2', nome: 'Maria Santos' },
-                                { id: 'pac-3', nome: 'Pedro Oliveira' },
-                            ]}
+                            options={pacientes.map((p) => ({
+                                id: p.id,
+                                nome: p.nome,
+                            }))}
                             placeholder="Selecione o paciente"
                             emptyMessage="Nenhum paciente encontrado"
                             onSelect={(id) => updateFilter('pacienteId', id)}
@@ -88,11 +115,10 @@ export function FiltersBar({ value, onChange }: FiltersBarProps) {
                         <Label htmlFor="programa">Programa (OCP)</Label>
                         <SearchableSelect
                             value={value.programaId || ''}
-                            options={[
-                                { id: 'prog-1', nome: 'Desenvolvimento Cognitivo' },
-                                { id: 'prog-2', nome: 'Habilidades Sociais' },
-                                { id: 'prog-3', nome: 'Comunicação' },
-                            ]}
+                            options={programas.map((p) => ({
+                                id: p.id,
+                                nome: p.nome,
+                            }))}
                             placeholder="Todos os programas"
                             emptyMessage="Nenhum programa encontrado"
                             onSelect={(id) => updateFilter('programaId', id)}
@@ -132,11 +158,10 @@ export function FiltersBar({ value, onChange }: FiltersBarProps) {
                         <Label htmlFor="estimulo">Estímulo</Label>
                         <SearchableSelect
                             value={value.estimuloId || ''}
-                            options={[
-                                { id: 'est-1', nome: 'Contar até 10' },
-                                { id: 'est-2', nome: 'Identificar cores' },
-                                { id: 'est-3', nome: 'Formar palavras' },
-                            ]}
+                            options={estimulos.map((e) => ({
+                                id: e.id,
+                                nome: e.nome,
+                            }))}
                             placeholder="Todos os estímulos"
                             emptyMessage="Nenhum estímulo encontrado"
                             onSelect={(id) => updateFilter('estimuloId', id)}
@@ -148,10 +173,10 @@ export function FiltersBar({ value, onChange }: FiltersBarProps) {
                         <Label htmlFor="terapeuta">Terapeuta</Label>
                         <SearchableSelect
                             value={value.terapeutaId || ''}
-                            options={[
-                                { id: 'ter-1', nome: 'Dr. Ana Silva' },
-                                { id: 'ter-2', nome: 'Dr. Carlos Mendes' },
-                            ]}
+                            options={terapeutas.map((t) => ({
+                                id: t.id,
+                                nome: t.nome,
+                            }))}
                             placeholder="Todos os terapeutas"
                             emptyMessage="Nenhum terapeuta encontrado"
                             onSelect={(id) => updateFilter('terapeutaId', id)}

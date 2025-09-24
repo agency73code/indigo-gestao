@@ -143,5 +143,5 @@ export async function getTherapistReport() {
       id: true,
       nome: true,
     }
-  })
+  });
 }
