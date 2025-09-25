@@ -54,14 +54,6 @@ export const therapistSchema = z.object({
     publicacoesLivrosDescricao: z.string().nullable().optional().default(null),
   }),
 
-  arquivos: z.object({
-    fotoPerfil: z.string().url().nullable(),
-    diplomaGraduacao: z.string().url().nullable(),
-    diplomaPosGraduacao: z.string().url().nullable(),
-    registroCRP: z.string().url().nullable(),
-    comprovanteEndereco: z.string().url().nullable(),
-  }),
-
   cnpj: z.object({
     numero: z.string()
       .nullable()

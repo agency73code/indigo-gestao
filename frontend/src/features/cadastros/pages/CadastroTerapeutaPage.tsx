@@ -335,6 +335,7 @@ export default function CadastroTerapeutaPage() {
             }).then(r => r.json());
 
             payload.documentos = uploadResp.documentos;
+            delete payload.arquivos;
             console.log(payload);
             await cadastrarTerapeuta(payload);
             toast.success('Terapeuta cadastrado com sucesso!', {
