@@ -15,7 +15,7 @@ export const therapistSchema = z.object({
     .refine((val) => cpf.isValid(val), "CPF inválido"),
   dataNascimento: z.coerce.date(),
   possuiVeiculo: z.enum(["sim", "nao"]),
-  placaVeiculo: z.string().regex(/^[A-Z]{3}-\d{4}$/).nullable().optional().default(null),
+  placaVeiculo: z.string().regex(/^([A-Z]{3}-\d{4}|[A-Z]{3}\d[A-Z]\d{2})$/).transform(strip).nullable().optional().default(null),
   modeloVeiculo: z.string().min(2).nullable().optional().default(null),
   banco: z.string().min(2),
   agencia: z.string().transform(strip),
@@ -56,6 +56,7 @@ export const therapistSchema = z.object({
 
   cnpj: z.object({
     numero: z.string()
+      .transform(strip)
       .nullable()
       .default(null)
       .refine(
@@ -64,7 +65,7 @@ export const therapistSchema = z.object({
       ),
     razaoSocial: z.string().nullable().default(null),
     endereco: z.object({
-      cep: z.string().nullable().default(null),
+      cep: z.string().transform(strip).nullable().default(null),
       rua: z.string().nullable().default(null),
       numero: z.string().nullable().default(null),
       complemento: z.string().nullable().default(null),
