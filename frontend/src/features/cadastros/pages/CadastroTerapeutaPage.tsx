@@ -43,48 +43,48 @@ export default function CadastroTerapeutaPage() {
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [formData, setFormData] = useState<Partial<Terapeuta> & any>({
         // Dados pessoais
-        nome: '',
-        email: '',
-        emailIndigo: '',
-        telefone: '',
-        celular: '',
-        cpf: '',
-        dataNascimento: '',
+        nome: null,
+        email: null,
+        emailIndigo: null,
+        telefone: null,
+        celular: null,
+        cpf: null,
+        dataNascimento: null,
         possuiVeiculo: 'nao' as 'sim' | 'nao',
-        placaVeiculo: '',
-        modeloVeiculo: '',
+        placaVeiculo: null,
+        modeloVeiculo: null,
 
         // Dados bancários
-        banco: '',
-        agencia: '',
-        conta: '',
-        chavePix: '',
+        banco: null,
+        agencia: null,
+        conta: null,
+        chavePix: null,
         valorHoraAcordado: null,
         professorUnindigo: 'nao' as 'sim' | 'nao',
-        disciplinaUniindigo: '',
+        disciplinaUniindigo: null,
 
         // Endereço
         endereco: {
-            cep: '',
-            rua: '',
-            numero: '',
-            complemento: '',
-            bairro: '',
-            cidade: '',
-            estado: '',
+            cep: null,
+            rua: null,
+            numero: null,
+            complemento: null,
+            bairro: null,
+            cidade: null,
+            estado: null,
         },
 
-        dataInicio: '',
-        dataFim: '',
+        dataInicio: null,
+        dataFim: null,
 
         // Formação
         formacao: {
-            graduacao: '',
-            instituicaoGraduacao: '',
-            anoFormatura: '',
+            graduacao: null,
+            instituicaoGraduacao: null,
+            anoFormatura: null,
             posGraduacoes: [],
-            participacaoCongressosDescricao: '',
-            publicacoesLivrosDescricao: '',
+            participacaoCongressosDescricao: null,
+            publicacoesLivrosDescricao: null,
         },
 
         // Arquivos
@@ -98,16 +98,16 @@ export default function CadastroTerapeutaPage() {
 
         // CNPJ
         cnpj: {
-            numero: '',
-            razaoSocial: '',
+            numero: null,
+            razaoSocial: null,
             endereco: {
-                cep: '',
-                rua: '',
-                numero: '',
-                complemento: '',
-                bairro: '',
-                cidade: '',
-                estado: '',
+                cep: null,
+                rua: null,
+                numero: null,
+                complemento: null,
+                bairro: null,
+                cidade: null,
+                estado: null,
             },
         },
     });
@@ -335,7 +335,7 @@ export default function CadastroTerapeutaPage() {
             }).then(r => r.json());
 
             payload.documentos = uploadResp.documentos;
-
+            console.log(payload);
             await cadastrarTerapeuta(payload);
             toast.success('Terapeuta cadastrado com sucesso!', {
                 description: 'O cadastro foi realizado e o terapeuta foi adicionado ao sistema.',

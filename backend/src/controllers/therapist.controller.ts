@@ -2,10 +2,12 @@ import type { Request, Response, NextFunction } from 'express';
 import * as TherapistService from '../features/therapist/therapist.service.js';
 import * as TherapistNormalizer from '../features/therapist/therapist.normalizer.js'
 import { sendWelcomeEmail } from '../utils/mail.util.js';
+import { therapistSchema } from '../schemas/therapist.schema.js';
 
 export async function create(req: Request, res: Response, next: NextFunction) {
     try {
-        const therapist = await TherapistService.create(req.body);
+        const parsed = therapistSchema.parse(req.body);
+        const therapist = await TherapistService.create(parsed);
 
         await sendWelcomeEmail({
             to: therapist.email,

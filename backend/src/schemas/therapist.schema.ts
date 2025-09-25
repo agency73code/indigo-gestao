@@ -1,99 +1,101 @@
-import z from 'zod';
-import { cpf, cnpj } from 'cpf-cnpj-validator';
+import z from "zod";
+import { cpf, cnpj } from "cpf-cnpj-validator";
 
-// helpers
-const coerceDate = z.preprocess((v) => (typeof v === 'string' || v instanceof Date ? new Date(v) : v), z.date());
-const cpfField = z.string().refine((val) => cpf.isValid(val), { message: 'CPF inválido' });
-const cnpjOptionalField = z.string().refine((val) => cnpj.isValid(val), { message: 'CNPJ inválido' });
-const phone11orLess = z.string().length(11, 'Telefone/Celular deve ter 11 dígitos');
-const emailField = z.string().email();
+const strip = (val: string) => val.replace(/[^\dA-Za-z]/g, "");
 
-// --- Schemas de blocos ---
-const personalSchema = z.object({
-  nome: z.string().min(3).max(255),
-  cpf: cpfField,
-  data_nascimento: coerceDate,
-  telefone: phone11orLess.optional(),
-  celular: phone11orLess,
-  foto_perfil: z.string().url().optional(),
-  email: emailField,
-  email_indigo: emailField,
-  possui_veiculo: z.enum(['sim', 'nao']),
-  placa_veiculo: z.string().max(20).optional(),
-  modelo_veiculo: z.string().max(50).optional(),
-});
+export const therapistSchema = z.object({
+  nome: z.string().min(3),
+  email: z.string().email(),
+  emailIndigo: z.string().email(),
+  telefone: z.string().transform(strip).optional().nullable().default(null),
+  celular: z.string().transform(strip),
+  cpf: z
+    .string()
+    .transform(strip)
+    .refine((val) => cpf.isValid(val), "CPF inválido"),
+  dataNascimento: z.coerce.date(),
+  possuiVeiculo: z.enum(["sim", "nao"]),
+  placaVeiculo: z.string().regex(/^[A-Z]{3}-\d{4}$/).nullable().optional().default(null),
+  modeloVeiculo: z.string().min(2).nullable().optional().default(null),
+  banco: z.string().min(2),
+  agencia: z.string().transform(strip),
+  conta: z.string().transform(strip),
+  chavePix: z.string().transform(strip),
+  valorHoraAcordado: z.string(),
+  professorUnindigo: z.enum(["sim", "nao"]),
+  disciplinaUniindigo: z.string().nullable().optional().default(null),
 
-const bankSchema = z.object({
-  banco: z.string().max(50),
-  agencia: z.string().max(20),
-  conta: z.string().max(50),
-  chave_pix: z.string().max(255).optional(),
-});
+  endereco: z.object({
+    cep: z.string().transform(strip),
+    rua: z.string(),
+    numero: z.string(),
+    complemento: z.string().nullable().optional(),
+    bairro: z.string(),
+    cidade: z.string(),
+    estado: z.string().length(2),
+  }),
 
-const addressItemSchema = z.object({
-  cep: z.string().length(8),
-  logradouro: z.string().max(255),
-  numero: z.string().max(10),
-  bairro: z.string().max(100),
-  cidade: z.string().max(100),
-  uf: z.string().toUpperCase().length(2),
-  complemento: z.string().max(100).optional(),
-  tipo_endereco_id: z.number().int().positive(),
-  principal: z.number().default(1),
-});
+  dataInicio: z.coerce.date(),
+  dataFim: z.coerce.date().nullable().default(null),
 
-const cnpjAddressSchema = z.object({
-  cep: z.string().length(8),
-  rua: z.string().max(255),
-  numero: z.string().max(10),
-  bairro: z.string().max(100),
-  cidade: z.string().max(100),
-  estado: z.string().toUpperCase().length(2),
-  complemento: z.string().max(100).optional(),
-});
-
-const companySchema = z.object({
-  cnpj: z
-    .object({
-      numero: cnpjOptionalField,
-      razaoSocial: z.string().max(255),
-      nomeFantasia: z.string().max(255),
-      endereco: cnpjAddressSchema,
-    })
-    .optional(),
-});
-
-const jobSchema = z.object({
-  data_entrada: coerceDate,
-  perfil_acesso: z.string().max(20),
-});
-
-const relationsSchema = z.object({
-  enderecos: z.array(addressItemSchema).min(1, 'Informe pelo menos um endereço').optional(),
-  areas_atuacao: z.number().optional(),
-  cargos: z
-    .array(
+  formacao: z.object({
+    graduacao: z.string(),
+    instituicaoGraduacao: z.string(),
+    anoFormatura: z.string().regex(/^\d{4}$/),
+    posGraduacoes: z.array(
       z.object({
-        cargo_id: z.number().int().positive(),
-        numero_conselho: z.string().max(50).optional(),
-        data_entrada: coerceDate,
-      }),
-    )
-    .optional(),
+        tipo: z.enum(["lato", "stricto"]),
+        curso: z.string(),
+        instituicao: z.string(),
+        conclusao: z.string().regex(/^\d{4}-\d{2}$/),
+      })
+    ).default([]),
+    participacaoCongressosDescricao: z.string().nullable().optional().default(null),
+    publicacoesLivrosDescricao: z.string().nullable().optional().default(null),
+  }),
+
+  arquivos: z.object({
+    fotoPerfil: z.string().url().nullable(),
+    diplomaGraduacao: z.string().url().nullable(),
+    diplomaPosGraduacao: z.string().url().nullable(),
+    registroCRP: z.string().url().nullable(),
+    comprovanteEndereco: z.string().url().nullable(),
+  }),
+
+  cnpj: z.object({
+    numero: z.string()
+      .nullable()
+      .default(null)
+      .refine(
+        (val) => val === null || cnpj.isValid(val),
+        { message: "CNPJ inválido" }
+      ),
+    razaoSocial: z.string().nullable().default(null),
+    endereco: z.object({
+      cep: z.string().nullable().default(null),
+      rua: z.string().nullable().default(null),
+      numero: z.string().nullable().default(null),
+      complemento: z.string().nullable().default(null),
+      bairro: z.string().nullable().default(null),
+      cidade: z.string().nullable().default(null),
+      estado: z.string().nullable().default(null),
+    }).nullable().default(null),
+  }).nullable().default(null),
+
+  dadosProfissionais: z.array(
+    z.object({
+      areaAtuacao: z.string(),
+      cargo: z.string(),
+      numeroConselho: z.string(),
+    })
+  ),
+
+  documentos: z
+  .array(z.object({
+    tipo_documento: z.string(),
+    view_url: z.string(),
+    download_url: z.string(),
+    data_upload: z.coerce.date(),
+  }))
+  .default([]),
 });
-
-export const therapistSchema = personalSchema
-  .merge(bankSchema)
-  .merge(companySchema)
-  .merge(jobSchema)
-  .merge(relationsSchema);
-
-export const therapistIdSchema = z.object({
-  id: z.string().uuid({ message: 'ID deve ser um UUID válido' }),
-});
-
-export const therapistUpdateSchema = therapistSchema.partial();
-
-export type TherapistSchema = z.infer<typeof therapistSchema>;
-export type TherapistUpdateSchema = z.infer<typeof therapistUpdateSchema>;
-export type therapistIdSchema = z.infer<typeof therapistIdSchema>;

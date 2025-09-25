@@ -12,12 +12,12 @@ export async function create(dto: TherapistTypes.TherapistForm) {
       email: dto.email,
       email_indigo: dto.emailIndigo,
       celular: dto.celular,
-      telefone: dto.telefone,
+      telefone: dto.telefone ?? null,
       cpf: dto.cpf,
       data_nascimento: new Date(dto.dataNascimento),
       possui_veiculo: dto.possuiVeiculo === 'sim',
-      placa_veiculo: dto.placaVeiculo,
-      modelo_veiculo: dto.modeloVeiculo,
+      placa_veiculo: dto.placaVeiculo ?? null,
+      modelo_veiculo: dto.modeloVeiculo ?? null,
       banco: dto.banco,
       agencia: dto.agencia,
       conta: dto.conta,
@@ -30,7 +30,7 @@ export async function create(dto: TherapistTypes.TherapistForm) {
           rua: dto.endereco.rua,
           numero: dto.endereco.numero,
           bairro: dto.endereco.bairro,
-          complemento: dto.endereco.complemento,
+          complemento: dto.endereco.complemento ?? null,
           cidade: dto.endereco.cidade,
           uf: dto.endereco.estado,
         },
@@ -68,8 +68,8 @@ export async function create(dto: TherapistTypes.TherapistForm) {
           graduacao: dto.formacao.graduacao,
           instituicao_graduacao: dto.formacao.instituicaoGraduacao,
           ano_formatura: Number(dto.formacao.anoFormatura),
-          participacao_congressos: dto.formacao.participacaoCongressosDescricao,
-          publicacoes_descricao: dto.formacao.publicacoesLivrosDescricao,
+          participacao_congressos: dto.formacao.participacaoCongressosDescricao ?? null,
+          publicacoes_descricao: dto.formacao.publicacoesLivrosDescricao ?? null,
           pos_graduacao: {
             createMany: {
               data: dto.formacao.posGraduacoes.map((d) => ({
@@ -87,23 +87,25 @@ export async function create(dto: TherapistTypes.TherapistForm) {
             pessoa_juridica: {
               create: {
                 cnpj: dto.cnpj.numero.trim(),
-                razao_social: dto.cnpj.razaoSocial,
+                razao_social: dto.cnpj.razaoSocial ?? null,
                 endereco: {
                   create: {
-                    cep: dto.cnpj.endereco.cep,
-                    rua: dto.cnpj.endereco.rua,
-                    numero: dto.cnpj.endereco.numero,
-                    bairro: dto.cnpj.endereco.bairro,
-                    complemento: dto.cnpj.endereco.complemento,
-                    cidade: dto.cnpj.endereco.cidade,
-                    uf: dto.cnpj.endereco.estado,
+                    cep: dto.cnpj.endereco?.cep ?? null,
+                    rua: dto.cnpj.endereco?.rua ?? null,
+                    numero: dto.cnpj.endereco?.numero ?? null,
+                    bairro: dto.cnpj.endereco?.bairro ?? null,
+                    complemento: dto.cnpj.endereco?.complemento ?? null,
+                    cidade: dto.cnpj.endereco?.cidade ?? null,
+                    uf: dto.cnpj.endereco?.estado ?? null,
                   },
                 },
               },
             },
           }
         : {}),
-      disciplina: { create: { nome: dto.disciplinaUniindigo } },
+      ...(dto.disciplinaUniindigo
+        ? { disciplina: { create: { nome: dto.disciplinaUniindigo } } }
+        : {}),
     },
     select: {
       email: true,

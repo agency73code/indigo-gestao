@@ -101,12 +101,12 @@ model documentos_terapeuta {
 
 model endereco {
   id                        Int                  @id @default(autoincrement())
-  cep                       String               @db.Char(8)
-  rua                       String               @db.VarChar(255)
-  numero                    String               @db.VarChar(10)
-  bairro                    String               @db.VarChar(100)
-  cidade                    String               @db.VarChar(100)
-  uf                        String               @db.Char(2)
+  cep                       String?              @db.Char(8)
+  rua                       String?              @db.VarChar(255)
+  numero                    String?              @db.VarChar(10)
+  bairro                    String?              @db.VarChar(100)
+  cidade                    String?              @db.VarChar(100)
+  uf                        String?              @db.Char(2)
   complemento               String?              @db.VarChar(100)
   criado_em                 DateTime             @default(now())
   atualizado_em             DateTime             @updatedAt
@@ -284,7 +284,7 @@ model pessoa_juridica {
 
 model disciplina {
   id          Int         @id @default(autoincrement())
-  nome        String
+  nome        String?
   terapeuta   terapeuta[]
 }
 

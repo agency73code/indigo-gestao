@@ -4,58 +4,57 @@ export type TherapistForm = {
   nome: string
   email: string
   emailIndigo: string
-  telefone: string
+  telefone?: string | null
   celular: string
   cpf: string
-  dataNascimento: string
+  dataNascimento: Date
   possuiVeiculo: string
-  placaVeiculo: string
-  modeloVeiculo: string
+  placaVeiculo?: string | null
+  modeloVeiculo?: string | null
   banco: string
   agencia: string
   conta: string
   chavePix: string
   valorHoraAcordado: string
   professorUnindigo: string
-  disciplinaUniindigo: string
+  disciplinaUniindigo?: string | null | undefined
   endereco: {
     cep: string
     rua: string
     numero: string
-    complemento: string
+    complemento?: string | null | undefined
     bairro: string
     cidade: string
     estado: string
   }
   dataInicio: Date
-  dataFim: Date | null
+  dataFim: Date | null | undefined
   formacao: {
     graduacao: string
     instituicaoGraduacao: string
-    anoFormatura: number
+    anoFormatura: string
     posGraduacoes: {
       tipo: string
       curso: string
       instituicao: string
       conclusao: string
     }[]
-    participacaoCongressosDescricao: string
-    publicacoesLivrosDescricao: string
+    participacaoCongressosDescricao?: string | null
+    publicacoesLivrosDescricao?: string | null
   }
-  cnpj: {
-    numero: string
-    razaoSocial: string
-    nomeFantasia: string
-    endereco: {
-      cep: string
-      rua: string
-      numero: string
-      complemento: string
-      bairro: string
-      cidade: string
-      estado: string
-    }
-  }
+  cnpj?: {
+    numero?: string | null
+    razaoSocial?: string | null
+    endereco?: {
+      cep?: string | null
+      rua?: string | null
+      numero?: string | null
+      complemento?: string | null
+      bairro?: string | null
+      cidade?: string | null
+      estado?: string | null
+    } | null
+  } | null
   dadosProfissionais: {
     areaAtuacao: string
     cargo: string
@@ -67,13 +66,6 @@ export type TherapistForm = {
     download_url: string,
     data_upload: Date,
   }[],
-  arquivos?: {
-    id?: string
-    nome?: string
-    tipo?: string
-    tamanho?: number
-    data?: string
-  }[]
 }
 
 export type TherapistDetails = {
@@ -269,6 +261,6 @@ export interface TherapistDB {
     } | null;
     disciplina?: {
         id: number;
-        nome: string;
+        nome: string | null;
     }[];
 }
