@@ -1,0 +1,569 @@
+import { useState, useEffect } from 'react';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { CalendarIcon, User, Users, Search, Loader2 } from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { cn } from '@/lib/utils';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import type { CreateLinkInput, UpdateLinkInput, LinkFormModalProps } from '../types';
+import type { Paciente, Terapeuta } from '../../types/cadastros.types';
+import { searchPatientsByName, searchTherapistsByName } from '../mocks/links.mock';
+
+export default function LinkFormModal({
+    open,
+    onClose,
+    onSubmit,
+    initialData = null,
+    patients,
+    therapists,
+    loading = false,
+}: LinkFormModalProps) {
+    // Estados do formulário
+    const [patientId, setPatientId] = useState<string>('');
+    const [therapistId, setTherapistId] = useState<string>('');
+    const [role, setRole] = useState<'responsible' | 'co'>('responsible');
+    const [startDate, setStartDate] = useState<Date>();
+    const [notes, setNotes] = useState('');
+
+    // Estados para busca de pacientes/terapeutas
+    const [patientSearch, setPatientSearch] = useState('');
+    const [therapistSearch, setTherapistSearch] = useState('');
+    const [patientResults, setPatientResults] = useState<Paciente[]>([]);
+    const [therapistResults, setTherapistResults] = useState<Terapeuta[]>([]);
+    const [selectedPatient, setSelectedPatient] = useState<Paciente | null>(null);
+    const [selectedTherapist, setSelectedTherapist] = useState<Terapeuta | null>(null);
+    const [showPatientSearch, setShowPatientSearch] = useState(false);
+    const [showTherapistSearch, setShowTherapistSearch] = useState(false);
+    const [showCalendar, setShowCalendar] = useState(false);
+
+    // Estados de validação
+    const [errors, setErrors] = useState<Record<string, string>>({});
+
+    // Determinar se é edição ou criação de novo terapeuta
+    const isEdit = !!initialData && !!(initialData as any)?.id;
+    const isNewTherapistCreation = !!initialData && !!(initialData as any)?._isNewTherapistCreation;
+
+    // Efeito para carregar dados iniciais no modo edição
+    useEffect(() => {
+        if (open && initialData && isEdit) {
+            setPatientId(initialData.patientId);
+            setTherapistId(initialData.therapistId);
+            setRole(initialData.role);
+            setStartDate(new Date(initialData.startDate));
+            setNotes(initialData.notes || '');
+
+            // Buscar dados completos do paciente e terapeuta
+            const patient = patients.find((p) => p.id === initialData.patientId);
+            const therapist = therapists.find((t) => t.id === initialData.therapistId);
+
+            if (patient) {
+                setSelectedPatient(patient);
+                setPatientSearch(patient.nome);
+            }
+            if (therapist) {
+                setSelectedTherapist(therapist);
+                setTherapistSearch(therapist.nome);
+            }
+        } else if (open && initialData && isNewTherapistCreation) {
+            // Modo criação de novo terapeuta - pré-preencher paciente
+            setPatientId(initialData.patientId);
+            setTherapistId('');
+            setRole('co');
+            setStartDate(undefined);
+            setNotes('');
+            setSelectedTherapist(null);
+            setTherapistSearch('');
+            setErrors({});
+
+            // Buscar e pré-preencher dados do paciente
+            const patient = patients.find((p) => p.id === initialData.patientId);
+            if (patient) {
+                setSelectedPatient(patient);
+                setPatientSearch(patient.nome);
+            }
+        } else if (open && (!initialData || (!isEdit && !isNewTherapistCreation))) {
+            // Limpar formulário para criação normal
+            setPatientId('');
+            setTherapistId('');
+            setRole('responsible');
+            setStartDate(undefined);
+            setNotes('');
+            setSelectedPatient(null);
+            setSelectedTherapist(null);
+            setPatientSearch('');
+            setTherapistSearch('');
+            setErrors({});
+        }
+    }, [open, initialData, isEdit, isNewTherapistCreation, patients, therapists]);
+
+    // Efeito para busca de pacientes
+    useEffect(() => {
+        const searchPatients = async () => {
+            if (patientSearch.length >= 2) {
+                const results = searchPatientsByName(patients, patientSearch);
+                setPatientResults(results.slice(0, 10)); // Limitar a 10 resultados
+            } else {
+                setPatientResults([]);
+            }
+        };
+
+        const timeoutId = setTimeout(searchPatients, 300);
+        return () => clearTimeout(timeoutId);
+    }, [patientSearch, patients]);
+
+    // Efeito para busca de terapeutas
+    useEffect(() => {
+        const searchTherapists = async () => {
+            if (therapistSearch.length >= 2) {
+                const results = searchTherapistsByName(therapists, therapistSearch);
+                setTherapistResults(results.slice(0, 10)); // Limitar a 10 resultados
+            } else {
+                setTherapistResults([]);
+            }
+        };
+
+        const timeoutId = setTimeout(searchTherapists, 300);
+        return () => clearTimeout(timeoutId);
+    }, [therapistSearch, therapists]);
+
+    const validateForm = () => {
+        const newErrors: Record<string, string> = {};
+
+        if (!patientId) {
+            newErrors.patient = 'Selecione um paciente';
+        }
+
+        if (!therapistId) {
+            newErrors.therapist = 'Selecione um terapeuta';
+        }
+
+        if (!startDate) {
+            newErrors.startDate = 'Selecione a data de início';
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleSubmit = () => {
+        if (!validateForm()) return;
+
+        if (!isEdit) {
+            const createData: CreateLinkInput = {
+                patientId: patientId,
+                therapistId: therapistId,
+                role,
+                startDate: startDate!.toISOString(),
+                notes: notes.trim() || undefined,
+            };
+            onSubmit(createData);
+        } else {
+            const updateData: UpdateLinkInput = {
+                id: initialData!.id,
+                role,
+                startDate: startDate!.toISOString(),
+                notes: notes.trim() || undefined,
+            };
+            onSubmit(updateData);
+        }
+    };
+
+    const handlePatientSelect = (patient: Paciente) => {
+        setSelectedPatient(patient);
+        setPatientId(patient.id || '');
+        setPatientSearch(patient.nome);
+        setShowPatientSearch(false);
+
+        // Limpar erro se existir
+        if (errors.patient) {
+            setErrors((prev) => ({ ...prev, patient: '' }));
+        }
+    };
+
+    const handleTherapistSelect = (therapist: Terapeuta) => {
+        setSelectedTherapist(therapist);
+        setTherapistId(therapist.id || '');
+        setTherapistSearch(therapist.nome);
+        setShowTherapistSearch(false);
+
+        // Limpar erro se existir
+        if (errors.therapist) {
+            setErrors((prev) => ({ ...prev, therapist: '' }));
+        }
+    };
+
+    const getInitials = (name: string) => {
+        return name
+            .split(' ')
+            .slice(0, 2)
+            .map((word) => word[0])
+            .join('')
+            .toUpperCase();
+    };
+
+    const title = isEdit
+        ? 'Editar Vínculo'
+        : isNewTherapistCreation
+          ? 'Adicionar Terapeuta'
+          : 'Novo Vínculo';
+
+    return (
+        <Dialog open={open} onOpenChange={onClose}>
+            <DialogContent className="max-w-lg w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto mx-auto rounded-[5px]">
+                <DialogHeader>
+                    <DialogTitle
+                        style={{ fontFamily: 'Sora, sans-serif' }}
+                        className="text-lg sm:text-xl font-semibold">
+                        {title}
+                    </DialogTitle>
+                </DialogHeader>
+
+                <div className="space-y-4 sm:space-y-6 py-2 sm:py-4">
+                    {/* Seleção de Paciente */}
+                    <div className="space-y-2">
+                        <Label className="text-sm font-medium">Paciente *</Label>
+                        <div className="relative">
+                            <div
+                                className={cn(
+                                    'flex items-center gap-3 p-3 border rounded-[5px] cursor-pointer',
+                                    'hover:bg-muted/50 transition-colors',
+                                    errors.patient ? 'border-destructive' : 'border-input',
+                                    isEdit && 'opacity-60 cursor-not-allowed',
+                                )}
+                                onClick={() => !isEdit && setShowPatientSearch(true)}
+                            >
+                                {selectedPatient ? (
+                                    <>
+                                        <Avatar className="h-8 w-8">
+                                            <AvatarFallback className="text-xs">
+                                                {getInitials(selectedPatient.nome)}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-medium truncate">
+                                                {selectedPatient.nome}
+                                            </p>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="h-8 w-8 bg-muted rounded-full flex items-center justify-center">
+                                            <User className="h-4 w-4 text-muted-foreground" />
+                                        </div>
+                                        <span className="text-sm text-muted-foreground">
+                                            Selecione um paciente
+                                        </span>
+                                    </>
+                                )}
+                                {!isEdit && <Search className="h-4 w-4 text-muted-foreground" />}
+                            </div>
+                            {errors.patient && (
+                                <p className="text-sm text-destructive mt-1">{errors.patient}</p>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Seleção de Terapeuta */}
+                    <div className="space-y-2">
+                        <Label className="text-sm font-medium">Terapeuta *</Label>
+                        <div className="relative">
+                            <div
+                                className={cn(
+                                    'flex items-center gap-3 p-3 border rounded-[5px] cursor-pointer',
+                                    'hover:bg-muted/50 transition-colors',
+                                    errors.therapist ? 'border-destructive' : 'border-input',
+                                    isEdit && 'opacity-60 cursor-not-allowed',
+                                )}
+                                onClick={() => !isEdit && setShowTherapistSearch(true)}
+                            >
+                                {selectedTherapist ? (
+                                    <>
+                                        <Avatar className="h-8 w-8">
+                                            <AvatarFallback className="text-xs">
+                                                {getInitials(selectedTherapist.nome)}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-medium truncate">
+                                                {selectedTherapist.nome}
+                                            </p>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="h-8 w-8 bg-muted rounded-full flex items-center justify-center">
+                                            <Users className="h-4 w-4 text-muted-foreground" />
+                                        </div>
+                                        <span className="text-sm text-muted-foreground">
+                                            Selecione um terapeuta
+                                        </span>
+                                    </>
+                                )}
+                                {!isEdit && <Search className="h-4 w-4 text-muted-foreground" />}
+                            </div>
+                            {errors.therapist && (
+                                <p className="text-sm text-destructive mt-1">{errors.therapist}</p>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Tipo de Vínculo */}
+                    <div className="space-y-3">
+                        <Label className="text-sm font-medium">Tipo de Vínculo *</Label>
+                        <div className="space-y-3">
+                            <div className="flex items-center space-x-2">
+                                <input
+                                    type="radio"
+                                    id="responsible"
+                                    name="role"
+                                    value="responsible"
+                                    checked={role === 'responsible'}
+                                    onChange={(e) =>
+                                        setRole(e.target.value as 'responsible' | 'co')
+                                    }
+                                    className="w-4 h-4 text-primary bg-gray-100 border-gray-300 focus:ring-primary/20"
+                                />
+                                <Label htmlFor="responsible" className="cursor-pointer">
+                                    Terapeuta Responsável
+                                </Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <input
+                                    type="radio"
+                                    id="co"
+                                    name="role"
+                                    value="co"
+                                    checked={role === 'co'}
+                                    onChange={(e) =>
+                                        setRole(e.target.value as 'responsible' | 'co')
+                                    }
+                                    className="w-4 h-4 text-primary bg-gray-100 border-gray-300 focus:ring-primary/20"
+                                />
+                                <Label htmlFor="co" className="cursor-pointer">
+                                    Co-terapeuta
+                                </Label>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Data de Início */}
+                    <div className="space-y-2">
+                        <Label className="text-sm font-medium">Data de Início *</Label>
+                        <Popover open={showCalendar} onOpenChange={setShowCalendar}>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    className={cn(
+                                        'w-full justify-start text-left font-normal',
+                                        !startDate && 'text-muted-foreground',
+                                        errors.startDate && 'border-destructive',
+                                    )}
+                                >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {startDate
+                                        ? format(startDate, "dd 'de' MMMM 'de' yyyy", {
+                                              locale: ptBR,
+                                          })
+                                        : 'Selecione uma data'}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="p-0" align="start">
+                                <Calendar
+                                    mode="single"
+                                    selected={startDate}
+                                    onSelect={(date) => {
+                                        setStartDate(date);
+                                        setShowCalendar(false);
+
+                                        // Limpar erro se existir
+                                        if (errors.startDate) {
+                                            setErrors((prev) => ({ ...prev, startDate: '' }));
+                                        }
+                                    }}
+                                    locale={ptBR}
+                                    initialFocus
+                                />
+                            </PopoverContent>
+                        </Popover>
+                        {errors.startDate && (
+                            <p className="text-sm text-destructive">{errors.startDate}</p>
+                        )}
+                    </div>
+
+                    {/* Observações */}
+                    <div className="space-y-2">
+                        <Label className="text-sm font-medium">Observações</Label>
+                        <textarea
+                            className="w-full p-3 border border-input rounded-[5px] resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
+                            placeholder="Observações sobre o vínculo (opcional)"
+                            rows={3}
+                            value={notes}
+                            onChange={(e) => setNotes(e.target.value)}
+                            maxLength={500}
+                        />
+                        <p className="text-xs text-muted-foreground text-right">
+                            {notes.length}/500
+                        </p>
+                    </div>
+                </div>
+
+                <DialogFooter className="gap-2 sm:gap-3 flex-col sm:flex-row">
+                    <Button
+                        variant="outline"
+                        onClick={onClose}
+                        disabled={loading}
+                        className="w-full sm:w-auto order-2 sm:order-1"
+                    >
+                        Cancelar
+                    </Button>
+                    <Button
+                        onClick={handleSubmit}
+                        disabled={loading}
+                        className="w-full sm:w-auto gap-2 order-1 sm:order-2"
+                    >
+                        {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+                        <span className="sm:hidden">
+                            {isEdit ? 'Salvar' : isNewTherapistCreation ? 'Adicionar' : 'Criar'}
+                        </span>
+                        <span className="hidden sm:inline">
+                            {isEdit
+                                ? 'Salvar Alterações'
+                                : isNewTherapistCreation
+                                  ? 'Adicionar Terapeuta'
+                                  : 'Criar Vínculo'}
+                        </span>
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+
+            {/* Modal de busca de pacientes */}
+            {showPatientSearch && (
+                <Dialog open={showPatientSearch} onOpenChange={setShowPatientSearch}>
+                    <DialogContent className="max-w-md w-[95vw] sm:w-full mx-auto rounded-[5px]">
+                        <DialogHeader>
+                            <DialogTitle className="text-base sm:text-lg">
+                                Selecionar Paciente
+                            </DialogTitle>
+                        </DialogHeader>
+
+                        <div className="space-y-4">
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    placeholder="Buscar paciente..."
+                                    value={patientSearch}
+                                    onChange={(e) => setPatientSearch(e.target.value)}
+                                    className="pl-10"
+                                    autoFocus
+                                />
+                            </div>
+
+                            <div className="max-h-60 overflow-y-auto">
+                                {patientResults.length > 0 ? (
+                                    <div className="space-y-2">
+                                        {patientResults.map((patient) => (
+                                            <div
+                                                key={patient.id}
+                                                className="flex items-center gap-3 p-3 hover:bg-muted/50 cursor-pointer rounded-[5px]"
+                                                onClick={() => handlePatientSelect(patient)}
+                                            >
+                                                <Avatar className="h-8 w-8">
+                                                    <AvatarFallback className="text-xs">
+                                                        {getInitials(patient.nome)}
+                                                    </AvatarFallback>
+                                                </Avatar>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-medium truncate">
+                                                        {patient.nome}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : patientSearch.length >= 2 ? (
+                                    <p className="text-sm text-muted-foreground text-center py-8">
+                                        Nenhum paciente encontrado
+                                    </p>
+                                ) : (
+                                    <p className="text-sm text-muted-foreground text-center py-8">
+                                        Digite pelo menos 2 caracteres para buscar
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            )}
+
+            {/* Modal de busca de terapeutas */}
+            {showTherapistSearch && (
+                <Dialog open={showTherapistSearch} onOpenChange={setShowTherapistSearch}>
+                    <DialogContent className="max-w-md w-[95vw] sm:w-full mx-auto rounded-[5px]">
+                        <DialogHeader>
+                            <DialogTitle className="text-base sm:text-lg">
+                                Selecionar Terapeuta
+                            </DialogTitle>
+                        </DialogHeader>
+
+                        <div className="space-y-4">
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    placeholder="Buscar terapeuta..."
+                                    value={therapistSearch}
+                                    onChange={(e) => setTherapistSearch(e.target.value)}
+                                    className="pl-10"
+                                    autoFocus
+                                />
+                            </div>
+
+                            <div className="max-h-60 overflow-y-auto">
+                                {therapistResults.length > 0 ? (
+                                    <div className="space-y-2">
+                                        {therapistResults.map((therapist) => (
+                                            <div
+                                                key={therapist.id}
+                                                className="flex items-center gap-3 p-3 hover:bg-muted/50 cursor-pointer rounded-[5px]"
+                                                onClick={() => handleTherapistSelect(therapist)}
+                                            >
+                                                <Avatar className="h-8 w-8">
+                                                    <AvatarFallback className="text-xs">
+                                                        {getInitials(therapist.nome)}
+                                                    </AvatarFallback>
+                                                </Avatar>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-medium truncate">
+                                                        {therapist.nome}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : therapistSearch.length >= 2 ? (
+                                    <p className="text-sm text-muted-foreground text-center py-8">
+                                        Nenhum terapeuta encontrado
+                                    </p>
+                                ) : (
+                                    <p className="text-sm text-muted-foreground text-center py-8">
+                                        Digite pelo menos 2 caracteres para buscar
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            )}
+        </Dialog>
+    );
+}

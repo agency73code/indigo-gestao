@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { User, Users, UserPlus } from 'lucide-react';
+import { User, Users, UserPlus, Link2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEffect, useState } from 'react';
 import { getCardsOverview } from '@/lib/api';
@@ -26,6 +26,14 @@ export default function CadastroHubPage() {
             icon: Users,
             href: '/app/cadastro/cliente',
             bgColor: 'bg-blue-500',
+            textColor: 'text-white',
+        },
+        {
+            title: 'Vínculos',
+            description: 'Gerencie vínculos entre pacientes e terapeutas no sistema',
+            icon: Link2,
+            href: '/app/cadastros/vinculos',
+            bgColor: 'bg-green-500',
             textColor: 'text-white',
         },
     ];
@@ -100,7 +108,7 @@ export default function CadastroHubPage() {
                     Visão Geral
                 </h2>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     <Card className="rounded-[5px]">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">
@@ -139,6 +147,8 @@ export default function CadastroHubPage() {
                             <p className="text-xs text-muted-foreground">{`${novosClientes} novos este mês`}</p>
                         </CardContent>
                     </Card>
+
+                    
                 </div>
             </div>
         </div>
