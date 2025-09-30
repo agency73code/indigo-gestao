@@ -18,6 +18,7 @@ import ConfiguracoesPage from '../../features/configuracoes/pages/ConfiguracoesP
 import CadastroHubPage from '../../features/cadastros/pages/CadastroHubPage';
 import CadastroTerapeutaPage from '../../features/cadastros/pages/CadastroTerapeutaPage';
 import CadastroClientePage from '../../features/cadastros/pages/CadastroClientePage';
+import { VinculosPage } from '../../features/cadastros/links';
 import ConsultaHubPage from '../../features/consultas/pages/ConsultaHubPage';
 import HubPage from '../../features/programas/pages/HubPage';
 import ConsultaOcpPage from '../../features/programas/pages/ConsultaOcpPage';
@@ -94,6 +95,16 @@ export const router = createBrowserRouter([
                                     <RequireAbility action="manage" subject="Cadastro">
                                         <Suspense fallback={suspenseFallback}>
                                             <CadastroClientePage />
+                                        </Suspense>
+                                    </RequireAbility>
+                                ),
+                            },
+                            {
+                                path: 'cadastros/vinculos',
+                                element: (
+                                    <RequireAbility action="manage" subject="Cadastro">
+                                        <Suspense fallback={suspenseFallback}>
+                                            <VinculosPage />
                                         </Suspense>
                                     </RequireAbility>
                                 ),

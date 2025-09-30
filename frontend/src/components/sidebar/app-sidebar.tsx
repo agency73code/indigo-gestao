@@ -53,6 +53,7 @@ const data = {
             items: [
                 { title: 'Cadastrar Terapeuta', url: '/app/cadastro/terapeuta' },
                 { title: 'Cadastrar Cliente', url: '/app/cadastro/cliente' },
+                { title: 'Vínculos', url: '/app/cadastros/vinculos' },
             ],
         },
         {
@@ -141,7 +142,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                     >
                                         Instituto Índigo
                                     </span>
-                                    <span className="text-xs block text-muted-foreground">{displayAcesso}</span>
+                                    <span className="text-xs block text-muted-foreground">
+                                        {displayAcesso}
+                                    </span>
                                 </div>
                             </a>
                         </SidebarMenuButton>
@@ -159,4 +162,3 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </Sidebar>
     );
 }
-
