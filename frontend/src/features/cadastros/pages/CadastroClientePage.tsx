@@ -560,7 +560,7 @@ export default function CadastroClientePage() {
     };
 
     return (
-        <div className="container mx-auto p-8">
+        <div className="container mx-auto p-6">
             {/* Header */}
             <CardHeader className="p-0">
                 <CardTitle className="text-2xl mb-8 text-primary">Cadastro de Paciente</CardTitle>

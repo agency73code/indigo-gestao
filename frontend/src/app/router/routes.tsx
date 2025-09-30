@@ -27,6 +27,7 @@ import DetalheProgramaPage from '../../features/programas/pages/DetalheProgramaP
 import EditarProgramaPage from '../../features/programas/pages/EditarProgramaPage';
 import { CadastroSessaoPage } from '../../features/programas/nova-sessao';
 import RelatorioMensalPage from '../../features/programas/pages/RelatorioMensalPage';
+import { HubFaturamentoPage } from '../../features/faturamento';
 import NotAccessPage from '@/features/shell/pages/NotAccessPage';
 import NotPermissionPage from '@/features/shell/pages/NotPermissionPage';
 import RequireAuth from '@/features/auth/components/RequireAuth';
@@ -222,6 +223,15 @@ export const router = createBrowserRouter([
                                     </Suspense>
                                 ),
                                 handle: { breadcrumb: 'Detalhe da Sessão' },
+                            },
+                            {
+                                path: 'faturamento',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <HubFaturamentoPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Faturamento', title: 'Faturamento' },
                             },
                         ],
                     },

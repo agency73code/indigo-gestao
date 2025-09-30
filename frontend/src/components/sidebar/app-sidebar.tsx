@@ -12,6 +12,7 @@ import {
     UserPlus,
     UserRoundSearchIcon,
     Activity,
+    ReceiptText,
 } from 'lucide-react';
 import { NavMain } from '@/components/sidebar/nav-main';
 import { NavProjects } from '@/components/sidebar/nav-projects';
@@ -75,6 +76,17 @@ const data = {
                 { title: 'Consultar Sessão', url: '/app/programas/sessoes/consultar' },
                 { title: 'Registrar Sessão', url: '/app/programas/sessoes/nova' },
                 { title: 'Relatório Mensal', url: '/app/programas/relatorios/mensal' },
+            ],
+        },
+        {
+            title: 'Faturamento',
+            url: '/app/faturamento',
+            icon: ReceiptText,
+            items: [
+                { title: 'Registrar Lançamento', url: '/app/faturamento/novo' },
+                { title: 'Minhas Horas', url: '/app/faturamento/minhas-horas' },
+                { title: 'Gestão (gerente)', url: '/app/faturamento/gestao' },
+                { title: 'Relatórios/Exportar', url: '/app/faturamento/relatorios' },
             ],
         },
         {

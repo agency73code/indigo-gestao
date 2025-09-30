@@ -1,0 +1,1 @@
+export { default as HubFaturamentoPage } from './pages/HubFaturamentoPage';

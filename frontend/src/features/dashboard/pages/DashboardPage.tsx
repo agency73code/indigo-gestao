@@ -112,7 +112,7 @@ export default function DashboardPage() {
     const viewData = useMemo(() => (rangeData ? buildViewData(rangeData) : null), [rangeData]);
 
     return (
-        <div className="flex min-h-screen flex-1 flex-col space-y-6 p-1 md:p-4 lg:p-8">
+        <div className="flex min-h-screen flex-1 flex-col space-y-6 p-1 md:p-2 lg:p-4">
             <div className="@container/main flex flex-1 flex-col gap-6">
                 <section className="flex flex-col gap-6">
                     {isLoading && (
