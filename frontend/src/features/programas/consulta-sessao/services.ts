@@ -1,4 +1,3 @@
-import type { Patient } from '@/features/programas/consultar-programas/types';
 import type { Sessao, ResumoSessao, ProgramDetail } from './types';
 
 // Toggle local mocks (follow existing pattern)
@@ -73,18 +72,6 @@ export async function listSessionsByPatient(patientId: string): Promise<Sessao[]
   }
 }
 
-export async function getPatientById(patientId: string): Promise<Patient | null> {
-  const res = await fetch(`/api/ocp/clients/${patientId}`, {
-      method: 'GET',
-      credentials: 'include',
-  });
-
-  if (!res.ok) throw new Error(`Erro ao buscar paciente: ${res.statusText}`);
-
-  const json = await res.json();
-  return json.data as Patient;
-}
-
 export async function getSessionById(patientId: string, sessionId: string): Promise<Sessao | null> {
   const list = await listSessionsByPatient(patientId);
   return list.find((s) => s.id === sessionId) ?? null;
@@ -100,16 +87,28 @@ export async function findSessionById(sessionId: string): Promise<Sessao | null>
 }
 
 export async function findProgramSessionById(sessionId: string): Promise<ProgramDetail | null> {
-  const res = await fetch(`/api/ocp/sessions/${sessionId}`, {
-    method: 'GET',
-    credentials: 'include',
-  });
-  
-  if (!res.ok) throw new Error(`Erro ao buscar a sessão: ${res.statusText}`);
-  
-  const data = await res.json();
-  if (!data) return null
-  return data.data;
+  try {
+    const res = await fetch(`/api/ocp/sessions/${sessionId}`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+    
+    if (!res.ok) throw new Error(`Erro ao buscar a sessão: ${res.statusText}`);
+    
+    const data = await res.json();
+    if (!data) return null;
+    return data.data;
+  } catch (error) {
+    console.warn('Erro ao buscar programa da sessão da API, usando mock:', error);
+    
+    // Fallback para mock quando a API não responder
+    if (USE_LOCAL_MOCKS) {
+      const { mockProgramDetail } = await import('@/features/programas/detalhe-ocp/mocks/program.mock');
+      return mockProgramDetail;
+    }
+    
+    return null;
+  }
 }
 
 export function resumirSessao(sessao: Sessao): ResumoSessao {
