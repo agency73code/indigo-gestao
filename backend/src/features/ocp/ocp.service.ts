@@ -123,16 +123,13 @@ export async function getProgramById(programId: string) {
             cliente: {
                 select: {
                     nome: true,
-                    cliente_responsavel: {
+                    cuidadores: {
                         select: {
-                            prioridade: true,
-                            responsaveis: { select: { nome: true, } }
+                            nome: true,
                         },
-                        orderBy: { prioridade: 'asc' },
-                        take: 1
+                        take: 1,
                     },
-                    data_nascimento: true,
-
+                    dataNascimento: true,
                 }
             },
             criador_id: true,
@@ -178,14 +175,10 @@ export async function getClientById(clientId: string) {
     const client = await prisma.cliente.findUnique({
         where: { id: clientId },
         include: {
-            cliente_responsavel: {
+            cuidadores: {
                 take: 1,
                 select: {
-                    responsaveis: { 
-                        select: { 
-                            nome: true 
-                        } ,
-                    },
+                    nome: true,
                 },
             },
         },
@@ -193,13 +186,13 @@ export async function getClientById(clientId: string) {
 
     if (!client) return null;
 
-    const birthYear = client.data_nascimento.getFullYear();
+    const birthYear = client.dataNascimento!.getFullYear();
     const currentYear = new Date().getFullYear();
 
     return {
         id: client.id,
         name: client.nome,
-        guardianName: client.cliente_responsavel[0]?.responsaveis?.nome ?? null,
+        guardianName: client.cuidadores[0]?.nome ?? null,
         age: currentYear - birthYear,
         photoUrl: null,
     }
@@ -215,12 +208,12 @@ export async function getProgramId(programId: string) {
                 select: {
                     id: true,
                     nome: true,
-                    cliente_responsavel: {
+                    cuidadores: {
                         select: {
-                            responsaveis: { select: { nome: true } },
-                        },
+                            nome: true,
+                        }
                     },
-                    data_nascimento: true,
+                    dataNascimento: true,
                 },
             },
             criador: {
@@ -259,9 +252,9 @@ export async function listClientsByTherapist(therapistId: string, q?: string) {
                     OR: [
                         { nome: { contains: q } },
                         {
-                            cliente_responsavel: {
+                            cuidadores: {
                                 some: {
-                                    responsaveis: { nome: { contains: q } },
+                                    nome: { contains: q },
                                 },
                             },
                         },
@@ -272,13 +265,11 @@ export async function listClientsByTherapist(therapistId: string, q?: string) {
         select: {
             id: true,
             nome: true,
-            data_nascimento: true,
-            cliente_responsavel: {
+            dataNascimento: true,
+            cuidadores: {
                 select: {
-                    prioridade: true,
-                    responsaveis: { select: { nome: true } },
+                    nome: true,
                 },
-                orderBy: { prioridade: "desc" },
                 take: 1,
             },
         },

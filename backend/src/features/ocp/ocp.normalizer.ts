@@ -1,14 +1,14 @@
 import type * as OcpTypes from "./ocp.types.js";
 import { differenceInYears } from 'date-fns';
 
-export function mapOcpDetail(dto: OcpTypes.OcpDetailDTO): OcpTypes.getOCP {
+export function mapOcpDetail(dto: OcpTypes.OcpDetailDTO) {
     return {
         id: dto.id.toString(),
         name: dto.nome_programa,
         patientId: dto.cliente_id,
         patientName: dto.cliente.nome,
-        patientGuardian: dto.cliente.cliente_responsavel?.[0]?.responsaveis.nome,
-        patientAge: differenceInYears(new Date(), dto.cliente.data_nascimento),
+        patientGuardian: dto.cliente.cuidadores?.[0]?.nome,
+        patientAge: differenceInYears(new Date(), dto.cliente.dataNascimento!),
         patientPhotoUrl: null,
         therapistId: dto.criador_id,
         therapistName: dto.criador.nome,
@@ -63,11 +63,11 @@ export function mapSessionReturn(session: OcpTypes.UnmappedSession) {
 }
 
 export function mapClientReturn(dto: OcpTypes.ClientRowDTO) {
-    const guardianName = dto.cliente_responsavel?.[0]?.responsaveis?.nome ?? null;
+    const guardianName = dto.cuidadores?.[0]?.nome ?? null;
     return {
         id: dto.id,
         name: dto.nome,
-        birthDate: dto.data_nascimento,
+        birthDate: dto.dataNascimento,
         guardianName,
     };
 }
@@ -89,8 +89,8 @@ export function mapOcpProgramSession(dto: OcpTypes.ProgramSelectResult) {
         name: dto.nome_programa,
         patientId: dto.cliente.id,
         patientName: dto.cliente.nome,
-        patientGuardian: dto.cliente.cliente_responsavel[0]?.responsaveis.nome,
-        patientAge: new Date().getFullYear() - dto.cliente.data_nascimento.getFullYear(),
+        patientGuardian: dto.cliente.cuidadores[0]?.nome,
+        patientAge: new Date().getFullYear() - dto.cliente.dataNascimento!.getFullYear(),
         patientPhotoUrl: null,
         therapistId: dto.criador.id,
         therapistName: dto.criador.nome,
@@ -100,11 +100,11 @@ export function mapOcpProgramSession(dto: OcpTypes.ProgramSelectResult) {
         goalTitle: dto.objetivo_programa,
         goalDescription: dto.objetivo_descricao,
         stimuli: dto.estimulo_ocp.map((e, idx) => ({
-        id: String(e.id),
-        order: idx + 1,
-        label: e.nome ?? '',
-        description: e.descricao ?? '',
-        active: e.status,
+            id: String(e.id),
+            order: idx + 1,
+            label: e.nome ?? '',
+            description: e.descricao ?? '',
+            active: e.status,
         })),
         status: dto.status,
     }
