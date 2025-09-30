@@ -113,8 +113,6 @@ export default function CadastroTerapeutaPage() {
     });
 
     const handleInputChange = (field: string, value: any) => {
-        console.log('CadastroTerapeutaPage - handleInputChange called:', field, value);
-
         // [CPF] máscara + validação em tempo real
         if (field === 'cpf') {
             const masked = maskCPF(String(value ?? ''));
@@ -313,7 +311,7 @@ export default function CadastroTerapeutaPage() {
         setIsLoading(true);
         try {
             const payload = { ...formData };
-            // limpar campos numéricos para a API + normalizar razão social
+
             if (payload.cpf) payload.cpf = onlyDigits(payload.cpf);
             if (payload.celular) payload.celular = String(payload.celular).replace(/\D/g, '');
             if (payload.telefone) payload.telefone = String(payload.telefone).replace(/\D/g, '');
@@ -323,6 +321,7 @@ export default function CadastroTerapeutaPage() {
 
             const formDataUpload = new FormData();
             formDataUpload.append("cpf", payload.cpf);
+            formDataUpload.append("tipo", 'terapeutas');
             if (payload.arquivos?.fotoPerfil) formDataUpload.append("fotoPerfil", payload.arquivos?.fotoPerfil);
             if (payload.arquivos?.diplomaGraduacao) formDataUpload.append("diplomaGraduacao", payload.arquivos?.diplomaGraduacao);
             if (payload.arquivos?.diplomaPosGraduacao) formDataUpload.append("diplomaPosGraduacao", payload.arquivos?.diplomaPosGraduacao);
@@ -334,10 +333,23 @@ export default function CadastroTerapeutaPage() {
                 body: formDataUpload,
             }).then(r => r.json());
 
-            payload.documentos = uploadResp.documentos;
-            delete payload.arquivos;
+            payload.arquivos = uploadResp.arquivos;
             console.log(payload);
-            await cadastrarTerapeuta(payload);
+            const result = await cadastrarTerapeuta(payload);
+
+            if (!result.ok) {
+                if (result.code === 'VALIDATION_ERROR') {
+                    result.errors.forEach((e: any) => toast.error(`${e.path}: ${e.message}`));
+                } else if (result.code === 'CPF_DUPLICADO') {
+                    toast.error('CPF já cadastrado!');
+                } else if (result.code === 'EMAIL_DUPLICADO') {
+                    toast.error('E-mail já cadastrado!');
+                } else {
+                    toast.error(result.message ?? 'Erro inesperado');
+                }
+                return;
+            }
+
             toast.success('Terapeuta cadastrado com sucesso!', {
                 description: 'O cadastro foi realizado e o terapeuta foi adicionado ao sistema.',
                 duration: 3000,
@@ -352,7 +364,6 @@ export default function CadastroTerapeutaPage() {
                 },
             });
 
-            // Redireciona para a página de cadastros (hub) após um breve delay
             setTimeout(() => {
                 navigate('/app/cadastros');
             }, 1000);

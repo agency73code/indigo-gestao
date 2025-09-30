@@ -1,6 +1,31 @@
 import type { Request, Response, NextFunction } from "express";
 import * as clientService from "../features/client/client.service.js";
+import * as clientNormalize from "../features/client/client.normalizer.js"
 import { sendWelcomeEmail } from "../utils/mail.util.js";
+import { ClientSchema } from "../schemas/client.schema.js";
+
+export async function create(req: Request, res: Response, next: NextFunction) {
+  try {
+    const parsed = ClientSchema.parse(req.body);
+    const client = await clientService.create(parsed);
+
+    if (!client) return res.status(500).json({ success: false, message: 'Erro ao cadastrar cliente' });
+    if (!client.emailContato) return res.status(422).json({ success: false, message: 'Email de contato é obrigatório!' });
+    if (!client.nome) return res.status(422).json({ success: false, message: 'Nome do cliente é obrigatório!' });
+
+    await sendWelcomeEmail({
+        to: client.emailContato,
+        name: client.nome,
+        token: client.token_redefinicao!,
+    }).catch((error) => {
+        console.error('Erro ao enviar email de boas-vindas:', error);
+    });
+
+    res.status(201).json({ success: true, message: 'Cliente cadastrado com sucesso!' });
+  } catch (err) {
+    next(err);
+  }
+}
 
 export async function getById(req: Request, res: Response, next: NextFunction) {
   try {
@@ -28,25 +53,9 @@ export async function getClientReport(req: Request, res: Response, next: NextFun
 export async function list(req: Request, res: Response, next: NextFunction) {
   try {
     const data = await clientService.list();
-    res.json({ success: true, data });
-  } catch (err) {
-    next(err);
-  }
-}
+    const normalized = await clientNormalize.normalizeList(data);
 
-export async function create(req: Request, res: Response, next: NextFunction) {
-  try {
-    const client = await clientService.create(req.body);
-
-    await sendWelcomeEmail({
-        to: client.email_contato,
-        name: client.nome,
-        token: client.token_redefinicao!,
-    }).catch((error) => {
-        console.error('Erro ao enviar email de boas-vindas:', error);
-    });
-
-    res.status(201).json({ success: true, message: 'Cliente cadastrado com sucesso!' });
+    res.json({ success: true, normalized });
   } catch (err) {
     next(err);
   }
@@ -55,6 +64,7 @@ export async function create(req: Request, res: Response, next: NextFunction) {
 export async function countActiveClients(req: Request, res: Response, next: NextFunction) {
   try {
     const total = await clientService.countActiveClients();
+
     res.json({ success: true, data: total });
   } catch (error) {
     next(error);

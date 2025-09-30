@@ -1,25 +1,31 @@
-/*
-
-Captura todos os erros da aplicação
-Padroniza respostas de erro
-Evita crashes do servidor
-Logs organizados para debugging
-
-*/
-
 import { Prisma } from '@prisma/client';
-import type { Request, Response, NextFunction } from 'express';
+import type { NextFunction, Request, Response } from 'express';
 import { ZodError } from 'zod';
+import { AppError } from '../errors/AppError.js';
 
-export const errorHandler = (error: Error, req: Request, res: Response, next: NextFunction) => {
+export const errorHandler = (error: Error, req: Request, res: Response, _next: NextFunction) => {
     console.error('Error:', error); // Log detalhado do erro para debugging
 
     if (error instanceof ZodError) {
-        return res.status(400).json({
+        const formatted = error.issues.map(issue => ({
+            path: issue.path.join('.'),
+            code: 'VALIDATION_ERROR',
+            message: issue.message,
+        }));
+
+        return res.status(422).json({
             success: false,
-            error: 'Validation Error',
-            details: error.issues,
+            code: 'VALIDATION_ERROR',
+            errors: formatted,
         });
+    }
+
+    if (error instanceof AppError) {
+        return res.status(error.status).json({
+            success: false,
+            code: error.code,
+            message: error.message,
+        })
     }
 
     if (

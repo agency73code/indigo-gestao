@@ -18,85 +18,137 @@ model cargo {
 }
 
 model cliente {
-  id                  String                @id @db.Char(36) @unique
-  nome                String                @db.VarChar(150)
-  data_nascimento     DateTime              @db.Date
-  email_contato       String                @unique(map: "email_contato_UNIQUE") @db.VarChar(255)
-  data_entrada        DateTime              @db.Date
-  data_saida          DateTime?             @db.Date
-  status              cliente_status        @default(ativo)
-  perfil_acesso       String                @db.VarChar(20)
-  senha               String?               @db.VarChar(255)
-  token_redefinicao   String?               @db.Char(36)
-  validade_token      DateTime?             @db.DateTime(0)
+  id                  String                @id @default(uuid())
+  nome                String?
+  cpf                 String?
+  dataNascimento      DateTime?
+  emailContato        String?               @unique
+  dataEntrada         DateTime?
+  dataSaida           DateTime?
+  status              String?
+  perfil_acesso       String?
+  senha               String?
+  token_redefinicao   String?
+  validade_token      DateTime?
   criado_em           DateTime              @default(now())
   atualizado_em       DateTime              @updatedAt
-  cliente_endereco    cliente_endereco[]
-  cliente_escola      cliente_escola[]
-  cliente_responsavel cliente_responsavel[]
-  pagamentos          pagamentos[]
+
+  cuidadores          cuidador[]
+  enderecos           cliente_endereco[]
+  dadosPagamento      dados_pagamento?
+  dadosEscola         dados_escola?
+  arquivos            arquivos[]
   ocp                 ocp[]
   terapeuta           terapeuta_cliente[]
-  sessao                 sessao[]
+  sessao              sessao[]
 
   @@index([nome], map: "nome_idx")
 }
 
+model cuidador {
+  id                  Int                   @id @default(autoincrement())
+  relacao             String?
+  descricaoRelacao    String?
+  nome                String?
+  cpf                 String?               @db.Char(11)
+  profissao           String?
+  escolaridade        String?
+  telefone            String?
+  email               String?
+
+  clienteId           String
+  cliente             cliente               @relation(fields: [clienteId], references: [id])
+
+  enderecoId          Int
+  endereco            endereco?             @relation(fields: [enderecoId], references: [id])
+}
+
 model cliente_endereco {
-  id               Int           @id @default(autoincrement())
-  cliente_id       String        @db.Char(36)
-  endereco_id      Int
-  tipo_endereco_id Int
-  principal        Int           @default(0) @db.TinyInt
-  criado_em        DateTime      @default(now())
-  atualizado_em    DateTime      @updatedAt
-  tipo_endereco    tipo_endereco @relation(fields: [tipo_endereco_id], references: [id], onUpdate: NoAction, map: "fk_cliente_endereco_tipo_endereco1")
-  cliente          cliente       @relation(fields: [cliente_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_cliente_has_endereco_cliente1")
-  endereco         endereco      @relation(fields: [endereco_id], references: [id], onUpdate: NoAction, map: "fk_cliente_has_endereco_endereco1")
+  id             Int                        @id @default(autoincrement())
 
-  @@unique([cliente_id, endereco_id, tipo_endereco_id], map: "uk_cli_end_tipo")
-  @@index([cliente_id, principal], map: "cliente_principal_idx")
-  @@index([tipo_endereco_id], map: "fk_cliente_endereco_tipo_endereco1_idx")
-  @@index([cliente_id], map: "fk_cliente_has_endereco_cliente1_idx")
-  @@index([endereco_id], map: "fk_cliente_has_endereco_endereco1_idx")
+  clienteId      String
+  cliente        cliente                    @relation(fields: [clienteId], references: [id])
+
+  enderecoId     Int
+  endereco       endereco                   @relation(fields: [enderecoId], references: [id])
+
+  residenciaDe   String?
+  outroResidencia String?
 }
 
-model cliente_escola {
-  id         Int     @id @default(autoincrement())
-  cliente_id String  @db.Char(36)
-  escola_id  Int
-  cliente    cliente @relation(fields: [cliente_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_cliente_has_escola_cliente1")
-  escola     escola  @relation(fields: [escola_id], references: [id], onUpdate: NoAction, map: "fk_cliente_has_escola_escola1")
+model dados_pagamento {
+  id                  Int                   @id @default(autoincrement())
+  clienteId           String                   @unique
+  cliente             cliente               @relation(fields: [clienteId], references: [id])
 
-  @@unique([cliente_id, escola_id], map: "cliente_escola")
-  @@index([cliente_id], map: "fk_cliente_has_escolas_cliente1_idx")
-  @@index([escola_id], map: "fk_cliente_has_escolas_escola1_idx")
+  nomeTitular         String?
+  numeroCarteirinha   String?
+  telefone1           String?
+  telefone2           String?
+  telefone3           String?
+  email1              String?
+  email2              String?
+  email3              String?
+  sistemaPagamento    String
+  prazoReembolso      String?
+  numeroProcesso      String?
+  nomeAdvogado        String?
+  telefoneAdvogado1   String?
+  telefoneAdvogado2   String?
+  telefoneAdvogado3   String?
+  emailAdvogado1      String?
+  emailAdvogado2      String?
+  emailAdvogado3      String?
+  houveNegociacao     String?
+  valorAcordado       String?
+
+  criado_em           DateTime              @default(now())
+  atualizado_em       DateTime              @updatedAt
 }
 
-model cliente_responsavel {
-  cliente_id      String                         @db.Char(36)
-  responsaveis_id Int
-  parentesco      cliente_responsavel_parentesco
-  prioridade      Int                            @default(1) @db.TinyInt
-  cliente         cliente                        @relation(fields: [cliente_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_cliente_has_responsaveis_cliente1")
-  responsaveis    responsaveis                   @relation(fields: [responsaveis_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_cliente_has_responsaveis_responsaveis1")
+model dados_escola {
+  id                  Int                   @id @default(autoincrement())
+  clienteId           String                @unique
+  cliente             cliente               @relation(fields: [clienteId], references: [id])
 
-  @@id([cliente_id, responsaveis_id])
-  @@index([cliente_id], map: "fk_cliente_has_responsaveis_cliente1_idx")
-  @@index([responsaveis_id], map: "fk_cliente_has_responsaveis_responsaveis1_idx")
-  @@index([parentesco], map: "parentesco_idx")
+  tipoEscola          String
+  nome                String?
+  telefone            String?
+  email               String?
+  enderecoId          Int?
+  endereco            endereco?             @relation(fields: [enderecoId], references: [id])
+
+  contatos            escola_contato[]
 }
 
-model documentos_terapeuta {
-  id              Int       @id @default(autoincrement())
-  terapeuta_id    String    
-  tipo_documento  String    
-  view_url        String
-  download_url    String
-  data_upload     DateTime  @db.Date
-  terapeuta       terapeuta @relation(fields: [terapeuta_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_documentos_terapeuta_terapeuta1")
+model escola_contato {
+  id                  Int                   @id @default(autoincrement())
+  dadosEscolaId       Int
+  dadosEscola         dados_escola          @relation(fields: [dadosEscolaId], references: [id])
 
-  @@index([terapeuta_id], map: "fk_documentos_terapeuta_terapeuta1_idx")
+  nome                String?
+  telefone            String?
+  email               String?
+  funcao              String?
+}
+
+model arquivos {
+  id           Int                         @id @default(autoincrement())
+
+  clienteId    String?
+  cliente      cliente?  @relation(fields: [clienteId], references: [id])
+
+  terapeutaId  String?
+  terapeuta    terapeuta? @relation(fields: [terapeutaId], references: [id])
+  
+  tipo         String?                     // ex: "documentoIdentidade", "comprovanteCpf" etc.
+  arquivo_id   String?                     // id retornado pelo serviço de storage (ex: Google Drive, S3)
+  mime_type    String?                     // tipo MIME, ex: "image/png", "application/pdf"
+  tamanho      Int?                        // tamanho em bytes
+  data_upload  DateTime                    @default(now())
+
+  // índices recomendados
+  @@index([tipo])
 }
 
 model endereco {
@@ -112,84 +164,13 @@ model endereco {
   atualizado_em             DateTime             @updatedAt
   terapeuta_endereco        terapeuta[]
   pessoa_juridica           pessoa_juridica[]
-  cliente_endereco          cliente_endereco[]
-  escola_endereco           escola_endereco[]
+  cuidador                  cuidador[]
+  escola                    dados_escola[]
+  cliente_endereco cliente_endereco[]
+  
 
   @@index([cep])
   @@index([cidade, uf])
-}
-
-model escola {
-  id              Int                @id @default(autoincrement())
-  tipo_escola     escola_tipo_escola
-  nome            String             @db.VarChar(150)
-  telefone        String             @db.VarChar(20)
-  email           String             @db.VarChar(255)
-  criado_em       DateTime           @default(now())
-  atualizado_em   DateTime           @updatedAt
-  cliente_escola  cliente_escola[]
-  escola_endereco escola_endereco[]
-}
-
-model escola_endereco {
-  id               Int           @id @default(autoincrement())
-  escola_id        Int
-  endereco_id      Int
-  tipo_endereco_id Int
-  principal        Int           @default(0) @db.TinyInt
-  criado_em        DateTime      @default(now())
-  atualizado_em    DateTime      @updatedAt
-  tipo_endereco    tipo_endereco @relation(fields: [tipo_endereco_id], references: [id], onUpdate: NoAction, map: "fk_escola_endereco_tipo_endereco1")
-  endereco         endereco      @relation(fields: [endereco_id], references: [id], onUpdate: NoAction, map: "fk_escola_has_endereco_endereco1")
-  escola           escola        @relation(fields: [escola_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_escola_has_endereco_escola1")
-
-  @@unique([escola_id, endereco_id, tipo_endereco_id], map: "uk_esc_end_tipo")
-  @@index([escola_id, principal], map: "escola_principal_idx")
-  @@index([tipo_endereco_id], map: "fk_escola_endereco_tipo_endereco1_idx")
-  @@index([endereco_id], map: "fk_escola_has_endereco_endereco1_idx")
-  @@index([escola_id], map: "fk_escola_has_endereco_escola1_idx")
-}
-
-model pagamento_contatos {
-  contato_id    Int                          @id @default(autoincrement())
-  pagamentos_id Int
-  categoria     pagamento_contatos_categoria @default(geral)
-  tipo          pagamento_contatos_tipo
-  valor         String                       @db.VarChar(45)
-  pagamentos    pagamentos                   @relation(fields: [pagamentos_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_pagamento_contatos_pagamentos1")
-
-  @@index([pagamentos_id], map: "fk_pagamento_contatos_pagamentos1_idx")
-}
-
-model pagamentos {
-  id                   Int                     @id @default(autoincrement())
-  cliente_id           String                  @db.Char(36)
-  nome                 String?                 @db.VarChar(150)
-  numero_carteirinha   String?                 @db.VarChar(50)
-  tipo_sistema         pagamentos_tipo_sistema
-  prazo_reembolso_dias Int?
-  numero_processo      String?                 @db.VarChar(50)
-  nome_advogado        String?                 @db.VarChar(150)
-  valor_sessao         Decimal?                @db.Decimal(10, 2)
-  criado_em            DateTime                @default(now())
-  atualizado_em        DateTime                @updatedAt
-  pagamento_contatos   pagamento_contatos[]
-  cliente              cliente                 @relation(fields: [cliente_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_pagamentos_cliente1")
-
-  @@index([cliente_id], map: "fk_pagamentos_cliente1_idx")
-}
-
-model responsaveis {
-  id                  Int                   @id @default(autoincrement())
-  nome                String                @db.VarChar(150)
-  cpf                 String                @unique(map: "cpf_UNIQUE") @db.Char(11)
-  telefone            String?               @db.VarChar(20)
-  email               String?               @db.VarChar(255)
-  criado_em           DateTime              @default(now())
-  atualizado_em       DateTime              @updatedAt
-  cliente_responsavel cliente_responsavel[]
-
-  @@index([nome], map: "nome_idx")
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
@@ -221,7 +202,7 @@ model terapeuta {
   validade_token         DateTime?
   criado_em              DateTime                 @default(now())
   atualizado_em          DateTime                 @updatedAt
-  documentos_terapeuta   documentos_terapeuta[]
+  arquivos               arquivos[]
   registro_profissional  registro_profissional[]
   formacao               formacao[]
   endereco               endereco?                @relation(fields: [endereco_id], references: [id])
@@ -288,13 +269,6 @@ model disciplina {
   terapeuta   terapeuta[]
 }
 
-model tipo_endereco {
-  id                 Int                  @id @default(autoincrement())
-  tipo               String               @unique(map: "tipo_UNIQUE") @db.VarChar(30)
-  cliente_endereco   cliente_endereco[]
-  escola_endereco    escola_endereco[]
-}
-
 model sessao_trial {
   id                  Int                 @id @default(autoincrement())
   sessao_id           Int
@@ -312,8 +286,8 @@ model sessao_trial {
 model sessao {
   id                  Int                 @id @default(autoincrement())
   ocp_id              Int
-  cliente_id          String              @db.Char(36)
-  terapeuta_id        String              @db.Char(36)
+  cliente_id          String
+  terapeuta_id        String
   data_criacao        DateTime            @default(now())
   criado_em           DateTime            @default(now())
   atualizado_em       DateTime            @updatedAt
@@ -350,8 +324,8 @@ model estimulo_ocp {
 
 model ocp {
   id                  Int                 @id @default(autoincrement())
-  cliente_id          String              @db.Char(36)
-  criador_id          String              @db.Char(36)
+  cliente_id          String
+  criador_id          String
   nome_programa       String
   criado_em           DateTime            @default(now())
   data_inicio         DateTime
@@ -374,45 +348,11 @@ model ocp {
 
 model terapeuta_cliente {
   id                  Int                 @id @default(autoincrement())
-  terapeuta_id        String              @db.Char(36)
-  cliente_id          String              @db.Char(36)
+  terapeuta_id        String
+  cliente_id          String
 
   terapeuta           terapeuta           @relation(fields: [terapeuta_id], references: [id], onDelete: Cascade)
   cliente             cliente             @relation(fields: [cliente_id], references: [id], onDelete: Cascade)
 
   @@unique([terapeuta_id, cliente_id])
-}
-
-enum escola_tipo_escola {
-  particular
-  publica
-}
-
-enum cliente_responsavel_parentesco {
-  mae
-  pai
-  responsavel_legal
-  outro
-}
-
-enum pagamento_contatos_categoria {
-  geral
-  advogado
-  outro
-}
-
-enum pagamento_contatos_tipo {
-  telefone
-  email
-}
-
-enum pagamentos_tipo_sistema {
-  reembolso
-  liminar
-  particular
-}
-
-enum cliente_status {
-  ativo
-  inativo
 }

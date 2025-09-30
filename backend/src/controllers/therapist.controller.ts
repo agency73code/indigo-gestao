@@ -39,7 +39,7 @@ export async function getById(req: Request, res: Response, next: NextFunction) {
 
         const therapist = await TherapistService.getById(therapistId);
         if (!therapist) return res.status(400).json({ success: false, message: 'Terapeuta não encontrado!' });
-        console.log(therapist);
+
         const normalized = TherapistNormalizer.normalizeTherapistForm(therapist);
         
         res.json(normalized);

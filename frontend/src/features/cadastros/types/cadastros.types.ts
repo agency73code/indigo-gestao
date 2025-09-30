@@ -134,95 +134,95 @@ export interface Cliente {
     id?: string;
     
     // Dados pessoais
-    nome: string;
-    cpf: string;
-    dataNascimento: string;
-    emailContato: string;
-    dataEntrada: string;
-    dataSaida?: string;
+    nome: string | null;
+    cpf: string | null;
+    dataNascimento: string | null;
+    emailContato: string | null;
+    dataEntrada: string | null;
+    dataSaida?: string | null;
     
     // Cuidadores (substitui os campos de pai/mãe)
     cuidadores?: Cuidador[];
     
     // EndereÃ§os (cliente pode ter vÃ¡rios)
     enderecos: Array<{
-        cep: string;
-        logradouro: string;
-        numero: string;
-        complemento: string;
-        bairro: string;
-        cidade: string;
-        uf: string;
-        residenciaDe?: string; // Novo campo para quem reside nesse endereço
-        outroResidencia?: string; // Para quando residenciaDe for "outro"
+        cep: string | null;
+        logradouro: string | null;
+        numero: string | null;
+        complemento: string | null;
+        bairro: string | null;
+        cidade: string | null;
+        uf: string | null;
+        residenciaDe?: string | null; // Novo campo para quem reside nesse endereço
+        outroResidencia?: string | null; // Para quando residenciaDe for "outro"
     }>;
     maisDeUmEndereco: 'sim' | 'nao';
     
     // Dados pagamento
     dadosPagamento: {
-        nomeTitular: string;
-        numeroCarteirinha?: string;
+        nomeTitular: string | null;
+        numeroCarteirinha?: string | null;
         
         // Telefones com controle de exibiÃ§Ã£o
-        telefone1: string;
+        telefone1: string | null;
         mostrarTelefone2?: boolean;
-        telefone2?: string;
+        telefone2?: string | null;
         mostrarTelefone3?: boolean;
-        telefone3?: string;
+        telefone3?: string | null;
         
         // E-mails com controle de exibiÃ§Ã£o
-        email1: string;
+        email1: string | null;
         mostrarEmail2?: boolean;
-        email2?: string;
+        email2?: string | null;
         mostrarEmail3?: boolean;
-        email3?: string;
+        email3?: string | null;
         
         // Sistema de pagamento (radio button principal)
         sistemaPagamento: 'reembolso' | 'liminar' | 'particular';
         
         // Campos especÃ­ficos para Reembolso
-        prazoReembolso?: string;
+        prazoReembolso?: string | null;
         
         // Campos especÃ­ficos para Liminar
-        numeroProcesso?: string;
-        nomeAdvogado?: string;
-        telefoneAdvogado1?: string;
+        numeroProcesso?: string | null;
+        nomeAdvogado?: string | null;
+        telefoneAdvogado1?: string | null;
         mostrarTelefoneAdvogado2?: boolean;
-        telefoneAdvogado2?: string;
+        telefoneAdvogado2?: string | null;
         mostrarTelefoneAdvogado3?: boolean;
-        telefoneAdvogado3?: string;
-        emailAdvogado1?: string;
+        telefoneAdvogado3?: string | null;
+        emailAdvogado1?: string | null;
         mostrarEmailAdvogado2?: boolean;
-        emailAdvogado2?: string;
+        emailAdvogado2?: string | null;
         mostrarEmailAdvogado3?: boolean;
-        emailAdvogado3?: string;
+        emailAdvogado3?: string | null;
         
         // Campos especÃ­ficos para Particular
         houveNegociacao?: 'sim' | 'nao';
-        valorAcordado?: string; // Renomeado de valorSessao para valorAcordado
-        valorSessao?: string; // Para compatibilidade com mock data
+        valorAcordado?: string | null; // Renomeado de valorSessao para valorAcordado
+        valorSessao?: string | null; // Para compatibilidade com mock data
     };
     
     // Dados escola
     dadosEscola: {
         tipoEscola: 'particular' | 'publica' | 'afastado' | 'clinica-escola';
-        nome: string;
-        telefone: string;
-        email?: string;
+        nome: string | null;
+        telefone: string | null;
+        email?: string | null;
         endereco: {
-            cep?: string;
-            logradouro?: string;
-            numero?: string;
-            complemento?: string;
-            bairro?: string;
-            cidade?: string;
-            uf?: string;
+            cep?: string | null;
+            logradouro?: string | null;
+            numero?: string | null;
+            complemento?: string | null;
+            bairro?: string | null;
+            cidade?: string | null;
+            uf?: string | null;
         };
         contatos?: Array<{
-            nome: string;
-            telefone: string;
-            email?: string;
-            funcao: string;
+            nome: string | null;
+            telefone: string | null;
+            email?: string | null;
+            funcao: string | null;
         }>;
     };
 

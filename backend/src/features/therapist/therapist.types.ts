@@ -18,6 +18,7 @@ export type TherapistForm = {
   valorHoraAcordado: string
   professorUnindigo: string
   disciplinaUniindigo?: string | null | undefined
+
   endereco: {
     cep: string
     rua: string
@@ -27,6 +28,7 @@ export type TherapistForm = {
     cidade: string
     estado: string
   }
+
   dataInicio: Date
   dataFim: Date | null | undefined
   formacao: {
@@ -42,6 +44,7 @@ export type TherapistForm = {
     participacaoCongressosDescricao?: string | null
     publicacoesLivrosDescricao?: string | null
   }
+
   cnpj?: {
     numero?: string | null
     razaoSocial?: string | null
@@ -60,129 +63,15 @@ export type TherapistForm = {
     cargo: string
     numeroConselho: string
   }[],
-  documentos: {
-    tipo_documento: string,
-    view_url: string,
-    download_url: string,
-    data_upload: Date,
-  }[],
-}
 
-export type TherapistDetails = {
-  nome: string
-  email: string
-  emailIndigo: string
-  telefone: string
-  celular: string
-  cpf: string
-  dataNascimento: string
-  possuiVeiculo: string
-  placaVeiculo: string
-  modeloVeiculo: string
-  banco: string
-  agencia: string
-  conta: string
-  chavePix: string
-  valorHoraAcordado: string
-  professorUnindigo: string
-  disciplinaUniindigo: string
-  endereco: {
-    cep: string
-    rua: string
-    numero: string
-    complemento: string
-    bairro: string
-    cidade: string
-    estado: string
-  }
-  dataInicio: Date
-  dataFim: Date | null
-  formacao: {
-    graduacao: string
-    instituicaoGraduacao: string
-    anoFormatura: number
-    posGraduacoes: {
-      tipo: string
-      curso: string
-      instituicao: string
-      conclusao: string
-    }[]
-    participacaoCongressosDescricao: string
-    publicacoesLivrosDescricao: string
-  }
-  cnpj: {
-    numero: string
-    razaoSocial: string
-    nomeFantasia: string
-    endereco: {
-      cep: string
-      rua: string
-      numero: string
-      complemento: string
-      bairro: string
-      cidade: string
-      estado: string
-    }
-  }
-  dadosProfissionais: {
-    areaAtuacao: string
-    cargo: string
-    numeroConselho: string
-  }[],
-  arquivos?: {
-    id?: string
-    nome?: string
-    tipo?: string
-    tamanho?: number
-    data?: string
-  }[]
-}
-
-export type TherapistSession = {
-  id: string;
-  nome: string;
-  email?: string;
-  telefone?: string;
-  status: 'ATIVO' | 'INATIVO';
-  especialidade?: string;
-  conselho?: string;
-  registroConselho?: string;
-  avatarUrl?: string;
-  pessoa?: {
-      cpf?: string;
-      dataNascimento?: string;
-      genero?: string;
-      observacoes?: string;
-  };
-  endereco?: {
-      cep?: string;
-      rua?: string;
-      numero?: string;
-      complemento?: string;
-      bairro?: string;
-      cidade?: string;
-      uf?: string;
-  };
-  profissional?: {
-      cargaHorariaSemanal?: number;
-      atendeConvenio?: boolean;
-      especialidades?: string[] | undefined;
-      valorConsulta?: number;
-      formasAtendimento?: string[] | undefined;
-  };
-  formacao?: {
-      curso: string;
-      instituicao: string;
-      ano?: number;
-  }[];
-  arquivos?: {
-      id: number;
-      nome: string;
-      tipo?: string;
-      tamanho?: number;
-      data?: string;
-  }[];
-  cnpj?: string;
+  // Arquivos
+  arquivos?: Array<{
+      tipo: string | null,
+      arquivo_id: string | null,
+      mime_type: string | null,
+      tamanho: number | null,
+      data_upload: Date,
+  }>;
 }
 
 export interface TherapistDB {
@@ -238,13 +127,6 @@ export interface TherapistDB {
         cargo?: string | null;
         numero_conselho?: string | null;
     }[];
-    documentos_terapeuta?: {
-        id: number;
-        tipo_documento: string;
-        view_url: string;
-        download_url: string;
-        data_upload: Date;
-    }[];
     pessoa_juridica?: {
       id: number;
       cnpj?: string | null;
@@ -263,4 +145,12 @@ export interface TherapistDB {
         id: number;
         nome: string | null;
     }[];
+    // Arquivos
+    arquivos?: Array<{
+        tipo: string | null,
+        arquivo_id: string | null,
+        mime_type: string | null,
+        tamanho: number | null,
+        data_upload: Date,
+    }>;
 }

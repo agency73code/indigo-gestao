@@ -8,9 +8,9 @@ export async function findUserByEmail(email: string, table: Tables) {
     if (!row) return null;
     return { id: row.id, nome: row.nome, email: row.email_indigo, table: 'terapeuta' as const };
   } else {
-    const row = await prisma.cliente.findUnique({ where: { email_contato: email } });
+    const row = await prisma.cliente.findUnique({ where: { emailContato: email } });
     if (!row) return null;
-    return { id: row.id, nome: row.nome, email: row.email_contato, table: 'cliente' as const };
+    return { id: row.id, nome: row.nome, email: row.emailContato, table: 'cliente' as const };
   }
 }
 
@@ -52,7 +52,7 @@ export async function findUserByResetToken(token: string, table: Tables) {
   } else {
     return prisma.cliente.findFirst({
       where,
-      select: { nome: true, email_contato: true },
+      select: { nome: true, emailContato: true },
     });
   }
 }
@@ -69,12 +69,11 @@ export async function loginUserByAccessInformation(accessInfo: string, table: Ta
         nome: true,
         email_indigo: true,
         perfil_acesso: true,
-        documentos_terapeuta: {
-          where: { tipo_documento: 'fotoPerfil' },
-          orderBy: { data_upload: 'desc' },
+        arquivos: {
+          where: { tipo: 'fotoPerfil' },
+          select: { arquivo_id: true },
           take: 1,
-          select: { view_url: true },
-        }
+        },
       },
     });
 
@@ -85,17 +84,19 @@ export async function loginUserByAccessInformation(accessInfo: string, table: Ta
       nome: row.nome,
       email: row.email_indigo ?? null,
       perfil_acesso: row.perfil_acesso,
-      avatar_url: row.documentos_terapeuta?.[0]?.view_url ?? null,
+      avatar_url: row.arquivos[0] 
+        ? `${process.env.API_URL}/api/arquivos/view/${row.arquivos[0].arquivo_id}` 
+        : null,
     };
   } else {
     const row = await prisma.cliente.findFirst({
       where: {
         OR: [
-            { email_contato: accessInfo },
+            { emailContato: accessInfo },
             {
-                cliente_responsavel: {
-                    some: { responsaveis: { cpf: accessInfo } },
-                },
+              cuidadores: {
+                some: { cpf: accessInfo }
+              },
             },
         ],
        },
@@ -103,8 +104,13 @@ export async function loginUserByAccessInformation(accessInfo: string, table: Ta
         id: true,
         senha: true,
         nome: true,
-        email_contato: true,
+        emailContato: true,
         perfil_acesso: true,
+        arquivos: {
+          where: { tipo: 'fotoPerfil' },
+          select: { arquivo_id: true },
+          take: 1,
+        },
       },
     });
 
@@ -112,10 +118,12 @@ export async function loginUserByAccessInformation(accessInfo: string, table: Ta
     return {
       id: row.id,
       senha: row.senha,
-      nome: row.nome,
-      email: row.email_contato ?? null,
-      perfil_acesso: row.perfil_acesso,
-      avatar_url: null,
+      nome: row.nome!,
+      email: row.emailContato ?? null,
+      perfil_acesso: row.perfil_acesso!,
+      avatar_url: row.arquivos[0] 
+        ? `${process.env.API_URL}/api/arquivos/view/${row.arquivos[0].arquivo_id}` 
+        : null,
     };
   }
 }
@@ -144,12 +152,11 @@ export async function findUserById(id: string, table: Tables) {
         nome: true,
         email_indigo: true,
         perfil_acesso: true,
-        documentos_terapeuta: {
-          where: { tipo_documento: 'fotoPerfil' },
-          orderBy: { data_upload: 'desc' },
+        arquivos: { 
+          where: { tipo: 'fotoPerfil' }, 
+          select: { arquivo_id: true },
           take: 1,
-          select: { view_url: true },
-        }
+        },
       },
     });
 
@@ -160,12 +167,26 @@ export async function findUserById(id: string, table: Tables) {
       nome: row.nome,
       email: row.email_indigo,
       perfil_acesso: row.perfil_acesso,
-      avatar_url: row.documentos_terapeuta?.[0]?.view_url ?? null,
+      avatar_url: row.arquivos[0] 
+        ? `${process.env.API_URL}/api/arquivos/view/${row.arquivos[0].arquivo_id}` 
+        : null,
     };
   } else {
     const row = await prisma.cliente.findUnique({
       where: { id },
-      select: { id: true, nome: true, email_contato: true, perfil_acesso: true },
+      select: { 
+        id: true, 
+        nome: true, 
+        emailContato: true, 
+        perfil_acesso: true,
+        arquivos: { 
+          where: { 
+            tipo: 'fotoPerfil' 
+          }, 
+          select: { arquivo_id: true },
+          take: 1,
+        },
+      },
     });
 
     if (!row) return null;
@@ -173,9 +194,11 @@ export async function findUserById(id: string, table: Tables) {
     return {
       id: row.id,
       nome:row.nome,
-      email: row.email_contato,
+      email: row.emailContato,
       perfil_acesso: row.perfil_acesso,
-      avatar_url: null,
+      avatar_url: row.arquivos[0] 
+        ? `${process.env.API_URL}/api/arquivos/view/${row.arquivos[0].arquivo_id}` 
+        : null,
     }
   }
 }

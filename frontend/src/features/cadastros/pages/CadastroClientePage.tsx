@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -27,12 +28,12 @@ export default function CadastroClientePage() {
 
     const [formData, setFormData] = useState<Partial<Cliente>>({
         // Dados pessoais
-        nome: '',
-        cpf: '',
-        dataNascimento: '',
-        emailContato: '',
-        dataEntrada: '',
-        dataSaida: '',
+        nome: null,
+        cpf: null,
+        dataNascimento: null,
+        emailContato: null,
+        dataEntrada: null,
+        dataSaida: null,
 
         // Cuidadores - inicializado vazio, será preenchido pelo useEffect do DadosPessoaisStep
         cuidadores: [],
@@ -40,63 +41,63 @@ export default function CadastroClientePage() {
         // Endereços
         enderecos: [
             {
-                cep: '',
-                logradouro: '',
-                numero: '',
-                complemento: '',
-                bairro: '',
-                cidade: '',
-                uf: '',
+                cep: null,
+                logradouro: null,
+                numero: null,
+                complemento: null,
+                bairro: null,
+                cidade: null,
+                uf: null,
             },
         ],
         maisDeUmEndereco: 'nao',
 
         // Dados pagamento
         dadosPagamento: {
-            nomeTitular: '',
-            numeroCarteirinha: '',
-            telefone1: '',
+            nomeTitular: null,
+            numeroCarteirinha: null,
+            telefone1: null,
             mostrarTelefone2: false,
-            telefone2: '',
+            telefone2: null,
             mostrarTelefone3: false,
-            telefone3: '',
-            email1: '',
+            telefone3: null,
+            email1: null,
             mostrarEmail2: false,
-            email2: '',
+            email2: null,
             mostrarEmail3: false,
-            email3: '',
+            email3: null,
             sistemaPagamento: 'particular' as 'reembolso' | 'liminar' | 'particular',
-            prazoReembolso: '',
-            numeroProcesso: '',
-            nomeAdvogado: '',
-            telefoneAdvogado1: '',
+            prazoReembolso: null,
+            numeroProcesso: null,
+            nomeAdvogado: null,
+            telefoneAdvogado1: null,
             mostrarTelefoneAdvogado2: false,
-            telefoneAdvogado2: '',
+            telefoneAdvogado2: null,
             mostrarTelefoneAdvogado3: false,
-            telefoneAdvogado3: '',
-            emailAdvogado1: '',
+            telefoneAdvogado3: null,
+            emailAdvogado1: null,
             mostrarEmailAdvogado2: false,
-            emailAdvogado2: '',
+            emailAdvogado2: null,
             mostrarEmailAdvogado3: false,
-            emailAdvogado3: '',
+            emailAdvogado3: null,
             houveNegociacao: 'nao' as 'sim' | 'nao',
-            valorAcordado: '',
+            valorAcordado: null,
         },
 
         // Dados escola
         dadosEscola: {
-            tipoEscola: 'particular' as any,
-            nome: '',
-            telefone: '',
-            email: '',
+            tipoEscola: 'particular',
+            nome: null,
+            telefone: null,
+            email: null,
             endereco: {
-                cep: '',
-                logradouro: '',
-                numero: '',
-                complemento: '',
-                bairro: '',
-                cidade: '',
-                uf: '',
+                cep: null,
+                logradouro: null,
+                numero: null,
+                complemento: null,
+                bairro: null,
+                cidade: null,
+                uf: null,
             },
             contatos: [],
         },
@@ -439,6 +440,8 @@ export default function CadastroClientePage() {
                         newErrors['dadosEscola.nome'] = 'Nome da escola é obrigatório';
                     if (!formData.dadosEscola?.telefone?.trim())
                         newErrors['dadosEscola.telefone'] = 'Telefone da escola é obrigatório';
+                    if (!formData.dadosEscola?.email?.trim())
+                        newErrors['dadosEscola.email'] = 'E-mail é obrigatório';
                     if (formData.dadosEscola?.email && !isValidEmail(formData.dadosEscola.email))
                         newErrors['dadosEscola.email'] = 'E-mail inválido';
                 }
@@ -454,6 +457,9 @@ export default function CadastroClientePage() {
                         if (!contato.funcao?.trim())
                             newErrors[`dadosEscola.contatos.${index}.funcao`] =
                                 'Função é obrigatória';
+                        if (!contato.email?.trim())
+                            newErrors[`dadosEscola.contatos.${index}.email`] = 
+                                'E-mail é obrigatório';
                         if (contato.email && !isValidEmail(contato.email))
                             newErrors[`dadosEscola.contatos.${index}.email`] = 'E-mail inválido';
                     });
@@ -494,8 +500,39 @@ export default function CadastroClientePage() {
 
         try {
             const payload = formData;
-            console.log(payload);
-            await cadastrarCliente(payload);
+            
+            const formDataUpload = new FormData();
+            formDataUpload.append('cpf', payload.cpf!);
+            formDataUpload.append('tipo', 'clientes');
+
+            if (payload.arquivos?.fotoPerfil) formDataUpload.append("fotoPerfil", payload.arquivos.fotoPerfil);
+            if (payload.arquivos?.carterinhaPlano) formDataUpload.append("carterinhaPlano", payload.arquivos.carterinhaPlano);
+            if (payload.arquivos?.comprovanteCpf) formDataUpload.append("comprovanteCpf", payload.arquivos.comprovanteCpf);
+            if (payload.arquivos?.comprovanteResidencia) formDataUpload.append("comprovanteResidencia", payload.arquivos.comprovanteResidencia);
+            if (payload.arquivos?.documentoIdentidade) formDataUpload.append("documentoIdentidade", payload.arquivos.documentoIdentidade);
+            if (payload.arquivos?.prescricaoMedica) formDataUpload.append("prescricaoMedica", payload.arquivos.prescricaoMedica);
+            if (payload.arquivos?.relatoriosMedicos) formDataUpload.append("relatoriosMedicos", payload.arquivos.relatoriosMedicos);
+
+            const uploadResp = await fetch('/api/arquivos/upload', {
+                method: 'POST',
+                body: formDataUpload,
+            }).then((r) => r.json());
+
+            payload.arquivos = uploadResp.arquivos;
+            const result = await cadastrarCliente(payload);
+
+            if (!result.ok) {
+                if (result.code === 'VALIDATION_ERROR') {
+                    result.errors.forEach((e: any) => toast.error(`${e.path}: ${e.message}`));
+                } else if (result.code === 'CPF_DUPLICADO') {
+                    toast.error('CPF já cadastrado!');
+                } else if (result.code === 'EMAIL_DUPLICADO') {
+                    toast.error('E-mail já cadastrado!');
+                } else {
+                    toast.error(result.message ?? 'Erro inesperado');
+                }
+                return;
+            }
 
             toast.success('Cliente cadastrado com sucesso!', {
                 description: 'O cadastro foi realizado e o cliente foi adicionado ao sistema.',

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { X, User, MapPin, Briefcase, Building, GraduationCap, FileText, Car } from 'lucide-react';
 import { Button } from '@/ui/button';
 import ReadOnlyField from './ReadOnlyField';
@@ -16,8 +15,6 @@ export default function TherapistProfileDrawer({
     open,
     onClose,
 }: TherapistProfileDrawerProps) {
-    // Usar hook para obter dados completos do terapeuta
-    // Reutiliza tipos/schemas dos cadastros
     const terapeutaData = useTerapeuta(therapist?.id);
 
     if (!therapist || !open || !terapeutaData) return null;
@@ -32,12 +29,12 @@ export default function TherapistProfileDrawer({
     };
 
     const fotoPerfil = Array.isArray(terapeutaData.arquivos)
-        ? terapeutaData.arquivos.find((doc: any) => doc.tipo === "fotoPerfil")
+        ? terapeutaData.arquivos.find((doc) => doc.nome === 'fotoPerfil')
         : null;
-    const API_URL = import.meta.env.VITE_API_URL;
+
     const displayAvatar = fotoPerfil
-      ? `${API_URL}/arquivos/view/${fotoPerfil.nome}`
-      : null;
+        ? `${import.meta.env.VITE_API_URL}/arquivos/view/${fotoPerfil.arquivo_id}`
+        : null;
 
     const formatDate = (dateString?: string) => {
         if (!dateString) return 'Não informado';
@@ -384,7 +381,7 @@ export default function TherapistProfileDrawer({
                                     label="Foto de perfil"
                                     value={
                                         Array.isArray(terapeutaData.arquivos) &&
-                                        terapeutaData.arquivos.some((doc: any) => doc.tipo === "fotoPerfil")
+                                        terapeutaData.arquivos.some((doc: any) => doc.nome === "fotoPerfil")
                                             ? "Enviado"
                                             : "Não enviado"
                                     }
@@ -394,7 +391,7 @@ export default function TherapistProfileDrawer({
                                     label="Diploma graduação *"
                                     value={
                                         Array.isArray(terapeutaData.arquivos) &&
-                                        terapeutaData.arquivos.some((doc: any) => doc.tipo === "diplomaGraduacao")
+                                        terapeutaData.arquivos.some((doc: any) => doc.nome === "diplomaGraduacao")
                                             ? "Enviado"
                                             : "Não enviado"
                                     }
@@ -403,7 +400,7 @@ export default function TherapistProfileDrawer({
                                     label="Diploma pós-graduação"
                                     value={
                                         Array.isArray(terapeutaData.arquivos) &&
-                                        terapeutaData.arquivos.some((doc: any) => doc.tipo === "diplomaPosGraduacao")
+                                        terapeutaData.arquivos.some((doc: any) => doc.nome === "diplomaPosGraduacao")
                                             ? "Enviado"
                                             : "Não enviado"
                                     }
@@ -412,7 +409,7 @@ export default function TherapistProfileDrawer({
                                     label="Registro CRP *"
                                     value={
                                         Array.isArray(terapeutaData.arquivos) &&
-                                        terapeutaData.arquivos.some((doc: any) => doc.tipo === "registroCRP")
+                                        terapeutaData.arquivos.some((doc: any) => doc.nome === "registroCRP")
                                             ? "Enviado"
                                             : "Não enviado"
                                     }
@@ -421,7 +418,7 @@ export default function TherapistProfileDrawer({
                                     label="Comprovante endereço *"
                                     value={
                                         Array.isArray(terapeutaData.arquivos) &&
-                                        terapeutaData.arquivos.some((doc: any) => doc.tipo === "comprovanteEndereco")
+                                        terapeutaData.arquivos.some((doc: any) => doc.nome === "comprovanteEndereco")
                                             ? "Enviado"
                                             : "Não enviado"
                                     }

@@ -37,7 +37,7 @@ export async function me(req: Request, res: Response) {
             name: user.nome,
             email: user.email,
             perfil_acesso: user.perfil_acesso,
-            avatar_url: user.avatar_url ?? null,
+            avatar_url: user.avatar_url,
         },
     });
 }
@@ -144,7 +144,7 @@ export async function validateLogin(req: Request, res: Response, next: NextFunct
                 name: user.nome,
                 email: user.email,
                 perfil_acesso: user.perfil_acesso,
-                avatar_url: user.avatar_url ?? null,
+                avatar_url: user.avatar_url,
             }
         });
     } catch (error) {
@@ -170,8 +170,8 @@ export async function requestPasswordReset(req: Request, res: Response, next: Ne
         await passwordResetToken(user.id, token, expiresAt, user.table);
 
         await sendPasswordResetEmail({
-            to: user.email,
-            name: user.nome,
+            to: user.email!,
+            name: user.nome!,
             token,
         });
 
