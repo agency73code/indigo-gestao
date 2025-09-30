@@ -46,12 +46,12 @@ export default function ConsultaHubPage() {
 
     useEffect(() => {
         getCardsOverview()
-            .then(({ totalTerapeutas, totalClientes, novosTerapeutas, novosClientes }) => {
+            .then(({ totalTerapeutas, totalClientes, novosTerapeutas, novosClientes, TerapeutasAtivos, ClientesAtivos }) => {
                 setTotalTerapeutas(totalTerapeutas);
                 setTotalClientes(totalClientes);
                 setNovosTerapeutas(novosTerapeutas);
                 setNovosClientes(novosClientes);
-                setTotalRegistros(totalTerapeutas + totalClientes);
+                setTotalRegistros(TerapeutasAtivos + ClientesAtivos);
             })
             .catch(() => {});
     }, []);

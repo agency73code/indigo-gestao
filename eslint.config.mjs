@@ -62,6 +62,11 @@ export default [
         require: 'readonly',
       },
     },
-    rules: {},
-  },
+    rules: {
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_' },
+      ],
+    },
+  }
 ]

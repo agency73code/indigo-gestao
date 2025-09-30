@@ -15,7 +15,14 @@ export const therapistSchema = z.object({
     .refine((val) => cpf.isValid(val), "CPF inválido"),
   dataNascimento: z.coerce.date(),
   possuiVeiculo: z.enum(["sim", "nao"]),
-  placaVeiculo: z.string().regex(/^([A-Z]{3}-\d{4}|[A-Z]{3}\d[A-Z]\d{2})$/).transform(strip).nullable().optional().default(null),
+  placaVeiculo: z
+    .string()
+    .toUpperCase()
+    .regex(/^([A-Z]{3}-\d{4}|[A-Z]{3}-?\d[A-Z]\d{2})$/, 'Placa inválida. Use o formato ABC-1234 ou ABC-1D23.')
+    .transform(strip)
+    .nullable()
+    .optional()
+    .default(null),
   modeloVeiculo: z.string().min(2).nullable().optional().default(null),
   banco: z.string().min(2),
   agencia: z.string().transform(strip),
@@ -83,12 +90,13 @@ export const therapistSchema = z.object({
     })
   ),
 
-  documentos: z
-  .array(z.object({
-    tipo_documento: z.string(),
-    view_url: z.string(),
-    download_url: z.string(),
-    data_upload: z.coerce.date(),
-  }))
-  .default([]),
+  arquivos: z.array(
+    z.object({
+      tipo: z.string().nullable().default(null),
+      arquivo_id: z.string().nullable().default(null),
+      mime_type: z.string().nullable().default(null),
+      tamanho: z.number().nullable().default(null),
+      data_upload: z.coerce.date(), 
+    })
+  ).optional().default([]),
 });

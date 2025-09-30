@@ -120,7 +120,7 @@ export default function DadosEscolaStep({ data, onUpdate, errors, onBlur }: Dado
 
                 {/* E-mail */}
                 <div className="space-y-2">
-                    <Label htmlFor="emailEscola">E-mail</Label>
+                    <Label htmlFor="emailEscola">E-mail *</Label>
                     <Input
                         id="emailEscola"
                         type="email"
@@ -226,7 +226,7 @@ export default function DadosEscolaStep({ data, onUpdate, errors, onBlur }: Dado
 
                             {/* E-mail */}
                             <div className="space-y-2">
-                                <Label htmlFor={`emailContato-${index}`}>E-mail</Label>
+                                <Label htmlFor={`emailContato-${index}`}>E-mail *</Label>
                                 <Input
                                     id={`emailContato-${index}`}
                                     type="email"

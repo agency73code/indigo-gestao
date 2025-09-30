@@ -23,10 +23,7 @@ export function NavUser() {
         .map((n) => n[0]?.toUpperCase() ?? '')
         .slice(0, 2)
         .join('') : '?';
-    const API_URL = import.meta.env.VITE_API_URL;
-    const displayAvatar = user?.avatar_url
-  ? `${API_URL}/arquivos/view/${user.avatar_url}`
-  : "/avatars/shadcn.jpg";
+    const displayAvatar = user?.avatar_url ? user?.avatar_url : initials;
   
     return (
         <SidebarMenu>

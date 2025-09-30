@@ -1,6 +1,6 @@
 import * as TherapistTypes from "./therapist.types.js";
 
-export function normalizeTherapistForm(db: TherapistTypes.TherapistDB): TherapistTypes.TherapistDetails {
+export function normalizeTherapistForm(db: TherapistTypes.TherapistDB) {
     return {
         nome: db.nome,
         email: db.email,
@@ -28,6 +28,7 @@ export function normalizeTherapistForm(db: TherapistTypes.TherapistDB): Therapis
             cidade: db.endereco?.cidade ?? '',
             estado: db.endereco?.uf ?? '',
         },
+        
         dataInicio: db.data_entrada!,
         dataFim: db.data_saida ?? null,
         formacao: {
@@ -43,6 +44,7 @@ export function normalizeTherapistForm(db: TherapistTypes.TherapistDB): Therapis
             participacaoCongressosDescricao: db.formacao?.[0]?.participacao_congressos ?? '',
             publicacoesLivrosDescricao: db.formacao?.[0]?.publicacoes_descricao ?? '',
         },
+
         cnpj: {
             numero: db.pessoa_juridica?.cnpj ?? '',
             razaoSocial: db.pessoa_juridica?.razao_social ?? '',
@@ -57,22 +59,24 @@ export function normalizeTherapistForm(db: TherapistTypes.TherapistDB): Therapis
                 estado: db.pessoa_juridica?.endereco?.uf ?? '',
             }
         },
+
         dadosProfissionais: db.registro_profissional?.map((r) => ({
             areaAtuacao: r.area_atuacao ?? '',
             cargo: r.cargo ?? '',
             numeroConselho: r.numero_conselho ?? '',
         })) ?? [],
-        arquivos: db.documentos_terapeuta?.map((d) => ({
-            id: d.id.toString() ?? '',
-            nome: d.view_url ?? '',
-            tipo: d.tipo_documento ?? '',
-            tamanho: 0,
-            data: d.data_upload?.toISOString(),
-        })) ?? [],
+
+        arquivos: db.arquivos?.map((a) => ({
+            nome: a.tipo,
+            arquivo_id: a.arquivo_id,
+            mime_type: a.mime_type,
+            tamanho: Number(a.tamanho ?? 0),
+            data: a.data_upload ? a.data_upload.toISOString() : null,
+        })),
     }
 }
 
-export function normalizeTherapistSession(db: TherapistTypes.TherapistDB): TherapistTypes.TherapistSession {
+export function normalizeTherapistSession(db: TherapistTypes.TherapistDB) {
     return {
         id: db.id,
         nome: db.nome,
@@ -83,12 +87,14 @@ export function normalizeTherapistSession(db: TherapistTypes.TherapistDB): Thera
         conselho: 'CRP',
         registroConselho: db.registro_profissional?.[0]?.numero_conselho ?? '',
         avatarUrl: '',
+
         pessoa: {
             cpf: db.cpf,
             dataNascimento: db.data_nascimento?.toISOString(),
             genero: '',
             observacoes: '',
         },
+
         endereco: {
             cep: db.endereco?.cep ?? '',
             rua: db.endereco?.rua ?? '',
@@ -98,6 +104,7 @@ export function normalizeTherapistSession(db: TherapistTypes.TherapistDB): Thera
             cidade: db.endereco?.cidade ?? '',
             uf: db.endereco?.uf ?? '',
         },
+
         profissional: {
             cargaHorariaSemanal: 0,
             atendeConvenio: false,
@@ -105,18 +112,19 @@ export function normalizeTherapistSession(db: TherapistTypes.TherapistDB): Thera
             valorConsulta: Number(db.valor_hora),
             formasAtendimento: ['Presencial'],
         },
+
         formacao: db.formacao?.map(f => ({
             curso: f.graduacao ?? '',
             instituicao: f.instituicao_graduacao ?? '',
             ano: f.ano_formatura ?? 2020,
         })) ?? [],
-        arquivos: db.documentos_terapeuta?.map(doc => ({
-            id: doc.id,
-            nome: doc.tipo_documento,
-            data: doc.data_upload.toISOString(),
-            tipo: "",
-            tamanho: 1,
-        })) ?? [],
+
+        arquivos: db.arquivos?.map((a) => ({
+            nome: a.tipo,
+            tipo: a.mime_type,
+            tamanho: Number(a.tamanho ?? 0),
+            data: a.data_upload ? a.data_upload.toISOString() : null,
+        })),
         cnpj: db.pessoa_juridica?.cnpj ?? '',
     };
 }

@@ -2,8 +2,15 @@ import { prisma } from "../../config/database.js";
 import * as TherapistTypes from './therapist.types.js';
 import { brMoneyToNumber } from '../../utils/brMoney.js';
 import { generateResetToken } from "../../utils/resetToken.js";
+import { AppError } from "../../errors/AppError.js";
 
 export async function create(dto: TherapistTypes.TherapistForm) {
+  const existsCpf = await prisma.terapeuta.findUnique({ where: { cpf: dto.cpf } });
+  if (existsCpf) throw new AppError('CPF_DUPLICADO', 'CPF já cadastrado!', 409);
+
+  const existsEmail = await prisma.terapeuta.findUnique({ where: { email_indigo: dto.emailIndigo } });
+  if (existsEmail) throw new AppError('EMAIL_DUPLICADO', 'E-mail já cadastrado', 409);
+
   const { token, expiry } = generateResetToken();
 
   const therapist = await prisma.terapeuta.create ({
@@ -24,6 +31,7 @@ export async function create(dto: TherapistTypes.TherapistForm) {
       chave_pix: dto.chavePix,
       valor_hora: brMoneyToNumber(dto.valorHoraAcordado),
       professor_uni: dto.professorUnindigo === 'sim',
+      
       endereco: {
         create: {
           cep: dto.endereco.cep,
@@ -35,25 +43,23 @@ export async function create(dto: TherapistTypes.TherapistForm) {
           uf: dto.endereco.estado,
         },
       },
+
       data_entrada: new Date(dto.dataInicio),
       data_saida: dto.dataFim ? new Date(dto.dataFim) : null,
       perfil_acesso: 'gerente',
       token_redefinicao: token,
       validade_token: expiry,
-      ...(dto.documentos?.length
-        ? {
-            documentos_terapeuta: {
-              createMany: {
-                data: dto.documentos.map((doc) => ({
-                  tipo_documento: doc.tipo_documento,
-                  view_url: doc.view_url,
-                  download_url: doc.download_url,
-                  data_upload: new Date(doc.data_upload),
-                })),
-              },
-            },
-          }
-        : {}),
+
+      arquivos: {
+        create: dto.arquivos?.map((a) => ({
+          tipo: a.tipo,
+          arquivo_id: a.arquivo_id,
+          mime_type: a.mime_type,
+          tamanho: a.tamanho,
+          data_upload: new Date(a.data_upload),
+        })) ?? [],
+      },
+
       registro_profissional: {
         createMany: {
           data: dto.dadosProfissionais.map((d) => ({
@@ -63,6 +69,7 @@ export async function create(dto: TherapistTypes.TherapistForm) {
           })),
         },
       },
+
       formacao: {
         create: {
           graduacao: dto.formacao.graduacao,
@@ -82,6 +89,7 @@ export async function create(dto: TherapistTypes.TherapistForm) {
           }
         }
       },
+
       ...(dto.cnpj?.numero?.trim()
         ? {
             pessoa_juridica: {
@@ -103,6 +111,7 @@ export async function create(dto: TherapistTypes.TherapistForm) {
             },
           }
         : {}),
+
       ...(dto.disciplinaUniindigo
         ? { disciplina: { create: { nome: dto.disciplinaUniindigo } } }
         : {}),
@@ -122,7 +131,7 @@ export async function list():Promise<TherapistTypes.TherapistDB[]> {
       endereco: true,
       formacao: { include: { pos_graduacao: true } },
       registro_profissional: true,
-      documentos_terapeuta: true,
+      arquivos: true,
       pessoa_juridica: { include: { endereco: true } },
       disciplina: true,
     },
@@ -136,7 +145,7 @@ export async function getById(therapistId: string) {
       endereco: true,
       formacao: { include: { pos_graduacao: true } },
       registro_profissional: true,
-      documentos_terapeuta: true,
+      arquivos: true,
       pessoa_juridica: { include: { endereco: true } },
       disciplina: true,
     },

@@ -41,7 +41,7 @@ export async function listarClientes(): Promise<Patient[]> {
       throw new Error(msg);
     }
 
-    return (data?.data ?? []) as Patient[];
+    return (data?.normalized ?? []) as Patient[];
 }
 
 export async function buscarClientePorId(id: string): Promise<Cliente> {
@@ -67,12 +67,7 @@ export async function cadastrarCliente(payload: Partial<Cliente>) {
   const text = await res.text();
   const data = text ? JSON.parse(text) : null;
 
-  if (!res.ok) {
-    const msg = data?.message ?? data?.error ?? `Falha (${res.status})`;
-    throw new Error(msg);
-  }
-
-  return data as { success: true; message?: string };
+  return { ok: res.ok, ...data };
 }
 
 export async function cadastrarTerapeuta(payload: Terapeuta) {
@@ -85,12 +80,7 @@ export async function cadastrarTerapeuta(payload: Terapeuta) {
   const text = await res.text();
   const data = text ? JSON.parse(text) : null;
 
-  if (!res.ok) {
-    const msg = data?.message ?? data?.error ?? `Falha (${res.status})`;
-    throw new Error(msg);
-  }
-
-  return data as { success: true; message?: string };
+  return { ok: res.ok, ...data };
 }
 
 export async function uploadArquivos(arquivos: Record<string, File | undefined>) {
@@ -212,10 +202,12 @@ export async function getCardsOverview() {
   
   const d = parsed.data ?? {};
   return { 
-    totalTerapeutas: d.totalTherapists, 
-    totalClientes: d.totalClients, 
-    novosTerapeutas: d.newTherapist, 
-    novosClientes: d.newClients 
+    totalTerapeutas: d.totalTherapists ?? 0, 
+    totalClientes: d.totalClients ?? 0, 
+    novosTerapeutas: d.newTherapists ?? 0, 
+    novosClientes: d.newClients ?? 0,
+    TerapeutasAtivos: d.activeTherapists ?? 0,
+    ClientesAtivos: d.activeClients ?? 0,
   };
 }
 

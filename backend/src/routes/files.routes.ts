@@ -13,6 +13,12 @@ router.post("/upload", upload.fields([
     { name: "diplomaPosGraduacao", maxCount: 1 },
     { name: "registroCRP", maxCount: 1 },
     { name: "comprovanteEndereco", maxCount: 1 },
+    { name: "carterinhaPlano", maxCount: 1 },
+    { name: "comprovanteCpf", maxCount: 1 },
+    { name: "comprovanteResidencia", maxCount: 1 },
+    { name: "documentoIdentidade", maxCount: 1 },
+    { name: "prescricaoMedica", maxCount: 1 },
+    { name: "relatoriosMedicos", maxCount: 1 },
 ]), FileController.uploadFile);
 
 export default router;

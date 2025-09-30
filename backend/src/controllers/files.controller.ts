@@ -3,99 +3,28 @@ import { drive } from "../config/googleDrive.js";
 import { Readable } from "stream";
 
 export async function uploadFile(req: Request, res: Response) {
-  const FOLDER_ID = process.env.GOOGLE_DRIVE_FOLDER_ID!;
   try {
-    const { cpf } = req.body as { cpf?: string };
+    const { cpf, tipo } = req.body as { cpf?: string; tipo?: string };
     if (!cpf) return res.status(400).json({ error: "CPF é obrigatório para upload" });
+    if (!tipo) return res.status(400).json({ error: "Tipo é obrigatório" });
 
-    const normalizedCpf = cpf.replace(/[^\d]/g, '');
+    const normalizedCpf = normalizeCpf(cpf);
+    const rootFolderId  = process.env.GOOGLE_DRIVE_FOLDER_ID!;
+
+    const typeFolderId = await getOrCreateTypeFolder(tipo, rootFolderId);
+    const cpfFolderId = await getOrCreateCpfFolder(normalizedCpf, typeFolderId, rootFolderId);
 
     const files = req.files as Record<string, Express.Multer.File[]>;
-    const uploads: { tipo_documento: string; view_url: string; download_url: string; data_upload: string }[] = [];
-
-    const existing = await drive.files.list({
-      corpora: 'drive',
-      driveId: FOLDER_ID,
-      includeItemsFromAllDrives: true,
-      supportsAllDrives: true,
-      q: `name = '${cpf}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
-      fields: 'files(id, name, parents)',
-    });
-
-    let cpfFolderId: string;
-    if (existing.data.files && existing.data.files.length > 0) {
-      console.log(`Pasta existente encontrada para CPF ${normalizedCpf}: ${existing.data.files[0]!.id}`);
-      cpfFolderId = existing.data.files[0]!.id!;
-    } else {
-      console.log(`Criando nova pasta para CPF ${normalizedCpf}`);
-      const folderResponse = await drive.files.create({
-        requestBody: {
-          name: normalizedCpf,
-          mimeType: 'application/vnd.google-apps.folder',
-          parents: [FOLDER_ID],
-        },
-        fields: 'id',
-        supportsAllDrives: true,
-      });
-      cpfFolderId = folderResponse.data.id!;
-    }
-
+    const uploads = [];
 
     for (const [campo, lista] of Object.entries(files)) {
-      if (!lista?.length) continue;
-      
-      for (const file of lista) {
-        const fileName = campo + '_' + normalizedCpf;
-        const existingFile = await drive.files.list({
-          corpora: 'drive',
-          driveId: FOLDER_ID,
-          includeItemsFromAllDrives: true,
-          supportsAllDrives: true,
-          q: `name = '${fileName}' and '${cpfFolderId}' in parents and trashed = false`,
-          fields: 'files(id, name, createdTime)'
-        });
-
-        let fileId: string;
-
-        if (existingFile.data.files && existingFile.data.files.length > 0) {
-          fileId = existingFile.data.files[0]!.id!;
-          console.log(`Atualizando arquivo existente: ${fileName}`);
-
-          await drive.files.update({
-            fileId: fileId,
-            media: {
-              mimeType: file.mimetype,
-              body: Readable.from(file.buffer),
-            },
-            supportsAllDrives: true,
-          });
-        } else {
-          console.log(`Criando novo arquivo: ${fileName}`);
-          const response = await drive.files.create({
-            requestBody: {
-                name: fileName,
-                parents: [cpfFolderId],
-            },
-            media: {
-                mimeType: file.mimetype,
-                body: Readable.from(file.buffer),
-            },
-            fields: "id, webViewLink",
-            supportsAllDrives: true,
-          });
-
-          fileId = response.data.id!;
-        };
-        uploads.push({
-            tipo_documento: campo,
-            view_url: fileId,
-            download_url: fileId,
-            data_upload: new Date().toISOString(),
-        });
+      for (const file of lista ?? []) {
+        const meta = await uploadOrUpdateFile(campo, normalizedCpf, file, cpfFolderId, rootFolderId);
+        uploads.push(meta);
       }
     }
 
-    res.json({ documentos: uploads });
+    res.json({ arquivos: uploads });
   } catch (err) {
     console.error("Erro upload:", err);
     res.status(500).json({ error: "Falha no upload" });
@@ -103,7 +32,6 @@ export async function uploadFile(req: Request, res: Response) {
 }
 
 export async function viewImg(req: Request, res: Response) {
-  console.log('teste')
   try {
     const { id } = req.params;
     if (!id) return res.status(400).json({ message: "File ID obrigatório" });
@@ -131,4 +59,100 @@ export async function viewImg(req: Request, res: Response) {
     console.error('Erro ao buscar arquivo:', err);
     res.sendStatus(404);
   }
+}
+
+async function uploadOrUpdateFile(campo: string, cpf: string, file: Express.Multer.File, cpfFolderId: string, driveId: string) {
+  const fileName = `${campo}_${cpf}`;
+  const existingFile = await drive.files.list({
+    corpora: "drive",
+    driveId: driveId,
+    includeItemsFromAllDrives: true,
+    supportsAllDrives: true,
+    q: `name = '${fileName}' and '${cpfFolderId}' in parents and trashed = false`,
+    fields: "files(id, name, createdTime)",
+  });
+
+  let fileId: string;
+  if (existingFile.data.files?.length) {
+    fileId = existingFile.data.files[0]!.id!;
+    await drive.files.update({
+      fileId,
+      media: { mimeType: file.mimetype, body: Readable.from(file.buffer) },
+      supportsAllDrives: true,
+    });
+  } else {
+    const response = await drive.files.create({
+      requestBody: { name: fileName, parents: [cpfFolderId] },
+      media: { mimeType: file.mimetype, body: Readable.from(file.buffer) },
+      fields: "id, webViewLink",
+      supportsAllDrives: true,
+    });
+    fileId = response.data.id!;
+  }
+
+  return {
+    tipo: campo,
+    arquivo_id: fileId,
+    mime_type: file.mimetype,
+    tamanho: file.size,
+    data_upload: new Date().toISOString(),
+  };
+}
+
+async function getOrCreateTypeFolder(tipo: string, parentFolderId: string) {
+  const existing = await drive.files.list({
+    corpora: "drive",
+    driveId: parentFolderId,
+    includeItemsFromAllDrives: true,
+    supportsAllDrives: true,
+    q: `name = '${tipo}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
+    fields: "files(id, name)",
+  });
+
+  if (existing.data.files?.length) {
+    return existing.data.files[0]!.id!;
+  }
+
+  const folderResponse = await drive.files.create({
+    requestBody: {
+      name: tipo,
+      mimeType: "application/vnd.google-apps.folder",
+      parents: [parentFolderId],
+    },
+    fields: "id",
+    supportsAllDrives: true,
+  });
+
+  return folderResponse.data.id!;
+}
+
+async function getOrCreateCpfFolder(normalizedCpf: string, parentFolderId: string, driveId: string) {
+  const existing = await drive.files.list({
+    corpora: "drive",
+    driveId: driveId,
+    includeItemsFromAllDrives: true,
+    supportsAllDrives: true,
+    q: `name = '${normalizedCpf}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
+    fields: "files(id, name, parents)",
+  });
+
+  if (existing.data.files?.length) {
+    return existing.data.files[0]!.id!;
+  }
+
+  const folderResponse = await drive.files.create({
+    requestBody: {
+      name: normalizedCpf,
+      mimeType: "application/vnd.google-apps.folder",
+      parents: [parentFolderId],
+    },
+    fields: "id",
+    supportsAllDrives: true,
+  });
+
+  return folderResponse.data.id!;
+}
+
+function normalizeCpf(cpf: string): string {
+  return cpf.replace(/[^\d]/g, "");
 }

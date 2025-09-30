@@ -1,258 +1,318 @@
 import { prisma } from "../../config/database.js";
-import { createCliente } from "./client.mapper.js";
-import { normalizer, type FrontCliente } from "./client.normalizer.js";
+import { AppError } from "../../errors/AppError.js";
+import * as ClientType from "./client.types.js";
+import { v4 as uuidv4 } from "uuid";
 
-export async function getById(id: string) {
-  const client = await prisma.cliente.findUnique({
-    where: { id },
-    select: {
-      id: true,
-      nome: true,
-      data_nascimento: true,
-      email_contato: true,
-      data_entrada: true,
-      data_saida: true,
-      cliente_responsavel: {
-        orderBy: { prioridade: "asc" },
-        select: {
-          prioridade: true,
-          parentesco: true,
-          responsaveis: {
-            select: { nome: true, cpf: true, telefone: true },
-          },
-        },
-      },
-      cliente_endereco: {
-        select: {
-          principal: true,
+export async function create(dto: ClientType.Client) {
+
+  const existsCpf = await prisma.cliente.findFirst({ where: { cpf: dto.cpf } });
+  if (existsCpf) throw new AppError('CPF_DUPLICADO', 'CPF já cadastrado', 409);
+
+  const existsEmail = await prisma.cliente.findUnique({ where: { emailContato: dto.emailContato } });
+  if (existsEmail) throw new AppError('EMAIL_DUPLICADO', 'E-mail já cadastrado', 409);
+
+  const { token, expiry } = generateResetToken();
+  const now = new Date();
+  const dataSaida = dto.dataSaida ? new Date(dto.dataSaida) : null;
+
+  const dtoStatus =
+    !dataSaida || dataSaida > now
+      ? 'ativo'
+      : 'inativo';
+
+  return await prisma.cliente.create({
+    data: {
+      nome: dto.nome,
+      cpf: dto.cpf,
+      dataNascimento: dto.dataNascimento,
+      emailContato: dto.emailContato,
+      dataEntrada: dto.dataEntrada,
+      dataSaida: dto.dataSaida ? new Date(dto.dataSaida) : null,
+      status: dtoStatus,
+      perfil_acesso: 'user',
+      senha: null,
+      token_redefinicao: token,
+      validade_token: expiry,
+
+      cuidadores: {
+        create: dto.cuidadores.map((c) => ({
+          relacao: c.relacao ?? null,
+          descricaoRelacao: c.descricaoRelacao ?? null,
+          nome: c.nome,
+          cpf: c.cpf,
+          profissao: c.profissao ?? null,
+          escolaridade: c.escolaridade ?? null,
+          telefone: c.telefone,
+          email: c.email,
+          
           endereco: {
-            select: {
-              cep: true,
-              rua: true,
-              numero: true,
-              complemento: true,
-              bairro: true,
-              cidade: true,
-              uf: true,
+            create: {
+              cep: c.endereco?.cep,
+              rua: c.endereco?.logradouro,
+              numero: c.endereco?.numero,
+              bairro: c.endereco?.bairro,
+              cidade: c.endereco?.cidade,
+              uf: c.endereco?.uf,
+              complemento: c.endereco?.complemento ?? null,
             },
+          }
+        })),
+      },
+
+      enderecos: {
+        create: dto.enderecos.map((e) => ({
+          endereco: {
+            create: {
+              cep: e.cep,
+              rua: e.logradouro,
+              numero: e.numero,
+              bairro: e.bairro,
+              cidade: e.cidade,
+              uf: e.uf,
+              complemento: e.complemento ?? null,
+            },
+          },
+
+          residenciaDe: e.residenciaDe ?? null,
+          outroResidencia: e.outroResidencia ?? null,
+        })),
+      },
+
+      dadosPagamento: {
+        create: {
+          nomeTitular: dto.dadosPagamento.nomeTitular,
+          numeroCarteirinha: dto.dadosPagamento.numeroCarteirinha,
+          telefone1: dto.dadosPagamento.telefone1,
+          telefone2: dto.dadosPagamento.telefone2 ?? null,
+          telefone3: dto.dadosPagamento.telefone3 ?? null,
+          email1: dto.dadosPagamento.email1,
+          email2: dto.dadosPagamento.email2 ?? null,
+          email3: dto.dadosPagamento.email3 ?? null,
+          sistemaPagamento: dto.dadosPagamento.sistemaPagamento,
+          numeroProcesso: dto.dadosPagamento.numeroProcesso ?? null,
+          nomeAdvogado: dto.dadosPagamento.nomeAdvogado ?? null,
+          telefoneAdvogado1: dto.dadosPagamento.telefoneAdvogado1 ?? null,
+          telefoneAdvogado2: dto.dadosPagamento.telefoneAdvogado2 ?? null,
+          telefoneAdvogado3: dto.dadosPagamento.telefoneAdvogado3 ?? null,
+          emailAdvogado1: dto.dadosPagamento.emailAdvogado1 ?? null,
+          emailAdvogado2: dto.dadosPagamento.emailAdvogado2 ?? null,
+          emailAdvogado3: dto.dadosPagamento.emailAdvogado3 ?? null,
+          houveNegociacao: dto.dadosPagamento.houveNegociacao ?? null,
+          valorAcordado: dto.dadosPagamento.valorAcordado ?? null,
+        },
+      },
+
+      dadosEscola: {
+        create: {
+          tipoEscola: dto.dadosEscola.tipoEscola,
+          nome: dto.dadosEscola.nome ?? null,
+          telefone: dto.dadosEscola.telefone ?? null,
+          email: dto.dadosEscola.email ?? null,
+          endereco: {
+            create: {
+              cep: dto.dadosEscola.endereco.cep ?? null,
+              rua: dto.dadosEscola.endereco.logradouro ?? null,
+              numero: dto.dadosEscola.endereco.numero ?? null,
+              bairro: dto.dadosEscola.endereco.bairro ?? null,
+              cidade: dto.dadosEscola.endereco.cidade ?? null,
+              uf: dto.dadosEscola.endereco.uf ?? null,
+              complemento: dto.dadosEscola.endereco.complemento ?? null,
+            },
+          },
+
+          contatos: {
+            create: dto.dadosEscola.contatos.map((c) => ({
+              nome: c.nome,
+              telefone: c.telefone,
+              email: c.email,
+              funcao: c.funcao,
+            }))
           },
         },
       },
-      pagamentos: {
-        take: 1,
-        select: {
-          nome: true,
-          numero_carteirinha: true,
-          tipo_sistema: true,
-          prazo_reembolso_dias: true,
-          numero_processo: true,
-          nome_advogado: true,
-          valor_sessao: true,
-          pagamento_contatos: {
-            select: { categoria: true, tipo: true, valor: true },
-          },
-        },
+
+      arquivos: {
+        create: dto.arquivos?.map((a) => ({
+          tipo: a.tipo,
+          arquivo_id: a.arquivo_id,
+          mime_type: a.mime_type,
+          tamanho: a.tamanho,
+          data_upload: new Date(a.data_upload),
+        })) ?? [],
       },
-      cliente_escola: {
-        take: 1,
-        select: {
-          escola: {
-            select: {
-              tipo_escola: true,
-              nome: true,
-              telefone: true,
-              email: true,
-              escola_endereco: {
-                take: 1,
-                select: {
-                  endereco: {
-                    select: {
-                      cep: true,
-                      rua: true,
-                      numero: true,
-                      complemento: true,
-                      bairro: true,
-                      cidade: true,
-                      uf: true,
-                    },
-                  },
-                },
-              },
-            },
+    }
+  });
+}
+
+export async function getById(clientId: string) {
+ return prisma.cliente.findUnique({
+  where: {
+    id: clientId,
+  },
+  select: {
+    id: true,
+    nome: true,
+    cpf: true,
+    dataNascimento: true,
+    emailContato: true,
+    dataEntrada: true,
+    dataSaida: true,
+
+    cuidadores: {
+      select: {
+        relacao: true,
+        descricaoRelacao: true,
+        nome: true,
+        cpf: true,
+        profissao: true,
+        escolaridade: true,
+        telefone: true,
+        email: true,
+        endereco: {
+          select: {
+            cep: true,
+            rua: true,
+            numero: true,
+            complemento: true,
+            bairro: true,
+            cidade: true,
+            uf: true,
           },
         },
       },
     },
-  });
 
-  if (!client) return null;
+    enderecos: {
+      select: {
+        endereco: {
+          select: {
+            cep: true,
+            rua: true,
+            numero: true,
+            bairro: true,
+            cidade: true,
+            uf: true,
+            complemento: true,
+          },
+        },
+      },
+    },
 
-  const responsaveisOrdenados = client.cliente_responsavel.sort(
-    (a, b) => a.prioridade - b.prioridade,
-  );
-  const mae = responsaveisOrdenados.find((r) => r.parentesco === "mae");
-  const pais = responsaveisOrdenados.filter((r) => r.parentesco === "pai");
-  const pai = pais[0];
-  const pai2 = pais[1];
+    dadosPagamento: {
+      select: {
+        nomeTitular: true,
+        numeroCarteirinha: true,
 
-  const enderecos = client.cliente_endereco.map((e) => ({
-    cep: e.endereco.cep,
-    rua: e.endereco.rua,
-    numero: e.endereco.numero,
-    complemento: e.endereco.complemento ?? undefined,
-    bairro: e.endereco.bairro,
-    cidade: e.endereco.cidade,
-    uf: e.endereco.uf,
-  }));
+        telefone1: true,
+        telefone2: true,
+        telefone3: true,
 
-  const pagamento = client.pagamentos[0];
-  const contatosGerais =
-    pagamento?.pagamento_contatos.filter((c) => c.categoria === "geral") ?? [];
-  const contatosAdv =
-    pagamento?.pagamento_contatos.filter((c) => c.categoria === "advogado") ?? [];
+        email1: true,
+        email2: true,
+        email3: true,
 
-  const telsGerais = contatosGerais
-    .filter((c) => c.tipo === "telefone")
-    .map((c) => c.valor);
-  const emailsGerais = contatosGerais
-    .filter((c) => c.tipo === "email")
-    .map((c) => c.valor);
+        sistemaPagamento: true,
+        prazoReembolso: true,
 
-  const telsAdv = contatosAdv.filter((c) => c.tipo === "telefone").map((c) => c.valor);
-  const emailsAdv = contatosAdv.filter((c) => c.tipo === "email").map((c) => c.valor);
+        numeroProcesso: true,
+        nomeAdvogado: true,
+        telefoneAdvogado1: true,
+        telefoneAdvogado2: true,
+        telefoneAdvogado3: true,
+        emailAdvogado1: true,
+        emailAdvogado2: true,
+        emailAdvogado3: true,
 
-  const dadosPagamento = pagamento
-    ? {
-        nomeTitular: pagamento.nome ?? "",
-        numeroCarteirinha: pagamento.numero_carteirinha ?? undefined,
-        telefone1: telsGerais[0] ?? "",
-        mostrarTelefone2: !!telsGerais[1],
-        telefone2: telsGerais[1],
-        mostrarTelefone3: !!telsGerais[2],
-        telefone3: telsGerais[2],
-        email1: emailsGerais[0] ?? "",
-        mostrarEmail2: !!emailsGerais[1],
-        email2: emailsGerais[1],
-        mostrarEmail3: !!emailsGerais[2],
-        email3: emailsGerais[2],
-        sistemaPagamento: pagamento.tipo_sistema,
-        prazoReembolso:
-          pagamento.tipo_sistema === "reembolso"
-            ? pagamento.prazo_reembolso_dias?.toString()
-            : undefined,
-        numeroProcesso:
-          pagamento.tipo_sistema === "liminar"
-            ? pagamento.numero_processo ?? undefined
-            : undefined,
-        nomeAdvogado:
-          pagamento.tipo_sistema === "liminar"
-            ? pagamento.nome_advogado ?? undefined
-            : undefined,
-        telefoneAdvogado1: telsAdv[0],
-        mostrarTelefoneAdvogado2: !!telsAdv[1],
-        telefoneAdvogado2: telsAdv[1],
-        mostrarTelefoneAdvogado3: !!telsAdv[2],
-        telefoneAdvogado3: telsAdv[2],
-        emailAdvogado1: emailsAdv[0],
-        mostrarEmailAdvogado2: !!emailsAdv[1],
-        emailAdvogado2: emailsAdv[1],
-        mostrarEmailAdvogado3: !!emailsAdv[2],
-        emailAdvogado3: emailsAdv[2],
-        houveNegociacao:
-          pagamento.tipo_sistema === "particular" ? "nao" : undefined,
-        valorSessao: pagamento.valor_sessao
-          ? pagamento.valor_sessao.toString()
-          : undefined,
-      }
-    : undefined;
+        houveNegociacao: true,
+        valorAcordado: true,
+      },
+    },
 
-  const escola = client.cliente_escola[0]?.escola;
-  const escolaEnd = escola?.escola_endereco[0];
-  const dadosEscola = escola
-    ? {
-        tipoEscola: escola.tipo_escola,
-        nome: escola.nome,
-        telefone: escola.telefone,
-        email: escola.email ?? undefined,
-        endereco: escolaEnd
-          ? {
-              cep: escolaEnd.endereco.cep,
-              rua: escolaEnd.endereco.rua,
-              numero: escolaEnd.endereco.numero,
-              complemento: escolaEnd.endereco.complemento ?? undefined,
-              bairro: escolaEnd.endereco.bairro,
-              cidade: escolaEnd.endereco.cidade,
-              uf: escolaEnd.endereco.uf,
-            }
-          : {},
-      }
-    : undefined;
+    dadosEscola: {
+      select: {
+        tipoEscola: true,
+        nome: true,
+        telefone: true,
+        email: true,
 
-  return {
-    id: client.id,
-    nome: client.nome,
-    dataNascimento: client.data_nascimento.toISOString(),
-    nomeMae: mae?.responsaveis.nome ?? "",
-    cpfMae: mae?.responsaveis.cpf ?? "",
-    nomePai: pai?.responsaveis.nome ?? undefined,
-    cpfPai: pai?.responsaveis.cpf ?? undefined,
-    telefonePai: pai?.responsaveis.telefone ?? undefined,
-    emailContato: client.email_contato,
-    dataEntrada: client.data_entrada.toISOString(),
-    dataSaida: client.data_saida?.toISOString(),
-    maisDeUmPai: pai2 ? "sim" : "nao",
-    nomePai2: pai2?.responsaveis.nome ?? undefined,
-    cpfPai2: pai2?.responsaveis.cpf ?? undefined,
-    telefonePai2: pai2?.responsaveis.telefone ?? undefined,
-    enderecos,
-    maisDeUmEndereco: enderecos.length > 1 ? "sim" : "nao",
-    dadosPagamento,
-    dadosEscola,
-  };
+        endereco: {
+          select: {
+            cep: true,
+            rua: true,
+            numero: true,
+            complemento: true,
+            bairro: true,
+            cidade: true,
+            uf: true,
+          },
+        },
+
+        contatos: {
+          select: {
+            nome: true,
+            telefone: true,
+            email: true,
+            funcao: true,
+          },
+        },
+      },
+    },
+
+    arquivos: {
+      select: {
+        tipo: true,
+        mime_type: true,
+        arquivo_id: true,
+        tamanho: true,
+        data_upload: true,
+      },
+    },
+  }
+ });
 }
 
 export async function list() {
-  const clients = await prisma.cliente.findMany({
-    select: {
-      id: true,
-      nome: true,
-      email_contato: true,
-      status: true,
-      cliente_responsavel: {
-        orderBy: { prioridade: "asc" },
-        take: 1,
-        select: {
-          responsaveis: { select: { nome: true, telefone: true } },
-        },
+ return prisma.cliente.findMany({
+  select: {
+    id:true,
+    nome: true,
+    emailContato: true,
+    cuidadores: {
+      select: {
+        telefone: true,
+        nome: true,
+        cpf: true,
       },
-      pagamentos: {
-        take: 1,
-        select: {
-          pagamento_contatos: {
-            select: { tipo: true, valor: true, categoria: true },
+      take: 1,
+    },
+    status: true,
+    dataNascimento: true,
+    enderecos: {
+      select: {
+        endereco: {
+          select: {
+            cep: true,
+            rua: true,
+            numero: true,
+            bairro: true,
+            cidade: true,
+            uf: true,
+            complemento: true,
           },
         },
       },
     },
-  });
-
-  return clients.map((c) => {
-    const resp = c.cliente_responsavel[0];
-    const contatos =
-      c.pagamentos[0]?.pagamento_contatos.filter(
-        (p) => p.categoria === "geral" && p.tipo === "telefone",
-      ) ?? [];
-    const telefone = contatos[0]?.valor ?? resp?.responsaveis.telefone ?? undefined;
-
-    return {
-      id: c.id,
-      nome: c.nome,
-      email: c.email_contato ?? undefined,
-      telefone,
-      responsavel: resp?.responsaveis.nome ?? undefined,
-      status: c.status === "ativo" ? "ATIVO" : "INATIVO",
-    };
-  });
+    arquivos: {
+      select: {
+        tipo: true,
+        mime_type: true,
+        arquivo_id: true,
+        tamanho: true,
+        data_upload: true,
+      },
+    },
+  }
+ });
 }
 
 export async function getClientReport() {
@@ -264,15 +324,17 @@ export async function getClientReport() {
   })
 }
 
-export async function create(data: FrontCliente) {
-  const normalized = await normalizer(data);
-  return createCliente(prisma, normalized);
-}
-
 export async function countActiveClients() {
   return prisma.cliente.count({
     where: {
       status: 'ativo',
     }
   });
+}
+
+function generateResetToken() {
+  const token = uuidv4();
+  const expiry = new Date();
+  expiry.setDate(expiry.getDate() + 1);
+  return { token, expiry };
 }
