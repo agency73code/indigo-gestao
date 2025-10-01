@@ -104,18 +104,24 @@ export default function HubFaturamentoPage() {
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">45h</div>
-                            <p className="text-xs text-muted-foreground">+8h desde a semana passada</p>
+                            <p className="text-xs text-muted-foreground">
+                                +8h desde a semana passada
+                            </p>
                         </CardContent>
                     </Card>
 
                     <Card className="rounded-[5px]">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Total de Lançamentos</CardTitle>
+                            <CardTitle className="text-sm font-medium">
+                                Total de Lançamentos
+                            </CardTitle>
                             <FilePlus className="h-5 w-5 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">28</div>
-                            <p className="text-xs text-muted-foreground">12 pendentes, 16 aprovados</p>
+                            <p className="text-xs text-muted-foreground">
+                                12 pendentes, 16 aprovados
+                            </p>
                         </CardContent>
                     </Card>
 
@@ -126,7 +132,9 @@ export default function HubFaturamentoPage() {
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">R$ 2.250</div>
-                            <p className="text-xs text-muted-foreground">+12% desde o mês passado</p>
+                            <p className="text-xs text-muted-foreground">
+                                +12% desde o mês passado
+                            </p>
                         </CardContent>
                     </Card>
                 </div>
