@@ -7,7 +7,7 @@ export type TherapistId = NonNullable<Terapeuta['id']>;
 
 // Domínio do vínculo
 export type LinkId = string;
-export type LinkRole = string;
+export type LinkRole = 'responsible' | 'co';
 export type LinkStatus = 'active' | 'ended' | 'archived';
 
 // ISO date string (reusar se já existir algo similar; senão, declare local)
