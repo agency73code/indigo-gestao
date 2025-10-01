@@ -9,7 +9,6 @@ export function mapOcpDetail(dto: OcpTypes.OcpDetailDTO) {
         patientName: dto.cliente.nome,
         patientGuardian: dto.cliente.cuidadores?.[0]?.nome,
         patientAge: differenceInYears(new Date(), dto.cliente.dataNascimento!),
-        patientPhotoUrl: null,
         therapistId: dto.criador_id,
         therapistName: dto.criador.nome,
         createdAt: dto.criado_em.toISOString(),
@@ -25,6 +24,9 @@ export function mapOcpDetail(dto: OcpTypes.OcpDetailDTO) {
         criteria: dto.dominio_criterio ?? '',
         notes: dto.observacao_geral ?? '',
         status: dto.status as "active" | "archived",
+        patientPhotoUrl: dto.cliente.arquivos[0]?.arquivo_id,
+        prazoInicio: dto.data_inicio,
+        prazoFim: dto.data_fim,
     }
 }
 

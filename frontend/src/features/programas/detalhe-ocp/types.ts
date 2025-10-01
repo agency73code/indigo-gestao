@@ -6,11 +6,11 @@ export type ProgramDetail = {
     patientGuardian?: string | null;
     patientAge?: number | null;
     patientPhotoUrl?: string | null;
+    prazoInicio?: string; // ISO
+    prazoFim?: string; // ISO
     therapistId: string;
     therapistName: string;
     createdAt: string; // ISO
-    prazoInicio?: string; // ISO
-    prazoFim?: string; // ISO
     goalTitle: string;
     goalDescription?: string | null;
     stimuli: { 

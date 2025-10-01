@@ -26,7 +26,6 @@ export default function DetalheSessaoPage() {
   const [program, setProgram] = useState<ProgramDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   useEffect(() => {
     let cancelled = false;
     const loadSession = async () => {

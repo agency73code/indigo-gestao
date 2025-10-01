@@ -17,6 +17,7 @@ export async function fetchProgram(programId: string): Promise<ProgramDetail> {
     if (!res.ok) throw new Error(`Erro ao buscar programas: ${res.statusText}`);
 
     const data = await res.json();
+    console.log(data.data);
     return data.data;
 }
 

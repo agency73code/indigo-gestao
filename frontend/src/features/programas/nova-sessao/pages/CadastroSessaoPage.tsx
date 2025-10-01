@@ -78,8 +78,11 @@ export default function CadastroSessaoPage() {
 
     // Extrair parâmetros da URL na inicialização
     useEffect(() => {
-        const patientId = searchParams.get('patientId');
+        let patientId = searchParams.get('pacienteId');
+        if (!patientId) patientId = searchParams.get('patientId');
+
         const programId = searchParams.get('programaId');
+
         if (patientId) {
             // Buscar dados do paciente se patientId estiver na URL
             loadPatientData(patientId);

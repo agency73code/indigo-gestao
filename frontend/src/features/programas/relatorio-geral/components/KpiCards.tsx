@@ -64,7 +64,7 @@ export function KpiCards({ data, loading = false }: KpiCardsProps) {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <KpiCard
                 title="Acerto geral"
-                value={data.acerto}
+                value={data.acerto + '%'}
                 hint="Percentual de respostas corretas"
                 icon={<Target className="h-4 w-4" />}
                 trend="up"
@@ -73,7 +73,7 @@ export function KpiCards({ data, loading = false }: KpiCardsProps) {
 
             <KpiCard
                 title="Independência"
-                value={data.independencia}
+                value={data.independencia + '%'}
                 hint="Respostas sem ajuda"
                 icon={<TrendingUp className="h-4 w-4" />}
                 trend="up"

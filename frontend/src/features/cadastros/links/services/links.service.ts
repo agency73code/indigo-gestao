@@ -24,6 +24,7 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
  */
 export async function searchPatients(q: string): Promise<Paciente[]> {
   await delay(300);
+  console.log('teste')
   return searchPatientsByName(mockPatients, q);
 }
 
@@ -229,6 +230,7 @@ export async function archiveLink(id: string): Promise<void> {
  */
 export async function getAllPatients(): Promise<Paciente[]> {
   await delay(200);
+  console.log(mockPatients)
   return [...mockPatients];
 }
 

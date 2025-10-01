@@ -130,6 +130,14 @@ export async function getProgramById(programId: string) {
                         take: 1,
                     },
                     dataNascimento: true,
+                    arquivos: {
+                        where: {
+                            tipo: 'fotoPerfil'
+                        },
+                        select: {
+                            arquivo_id: true,
+                        }
+                    }
                 }
             },
             criador_id: true,
@@ -153,6 +161,8 @@ export async function getProgramById(programId: string) {
             dominio_criterio: true,
             observacao_geral: true,
             status: true,
+            data_fim: true,
+            data_inicio: true,
         }
     });
 }
@@ -181,6 +191,12 @@ export async function getClientById(clientId: string) {
                     nome: true,
                 },
             },
+            arquivos: {
+                where: {
+                    tipo: 'fotoPerfil',
+                },
+                select: { arquivo_id: true, }
+            }
         },
     });
 
@@ -194,53 +210,58 @@ export async function getClientById(clientId: string) {
         name: client.nome,
         guardianName: client.cuidadores[0]?.nome ?? null,
         age: currentYear - birthYear,
-        photoUrl: null,
+        photoUrl: client.arquivos[0]?.arquivo_id 
+            ? `${process.env.API_URL}/api/arquivos/view/${client.arquivos[0].arquivo_id}` 
+            : null,
     }
 }
 
 export async function getProgramId(programId: string) {
-    const session = await prisma.ocp.findUnique({
+    const session = await prisma.sessao.findUnique({
         where: { id: Number(programId) },
         select: {
-            id: true,
-            nome_programa: true,
-            cliente: {
+            ocp: {
                 select: {
                     id: true,
-                    nome: true,
-                    cuidadores: {
+                    nome_programa: true,
+                    cliente: {
                         select: {
+                            id: true,
                             nome: true,
-                        }
+                            cuidadores: {
+                                select: {
+                                    nome: true,
+                                }
+                            },
+                            dataNascimento: true,
+                        },
                     },
-                    dataNascimento: true,
-                },
-            },
-            criador: {
-                select: {
-                    id: true,
-                    nome: true
-                },
-            },
-            criado_em: true,
-            data_inicio: true,
-            data_fim: true,
-            objetivo_programa: true,
-            objetivo_descricao: true,
-            estimulo_ocp: {
-                select: {
-                    id: true,
-                    nome: true,
-                    descricao: true,
+                    criador: {
+                        select: {
+                            id: true,
+                            nome: true
+                        },
+                    },
+                    criado_em: true,
+                    data_inicio: true,
+                    data_fim: true,
+                    objetivo_programa: true,
+                    objetivo_descricao: true,
+                    estimulo_ocp: {
+                        select: {
+                            id: true,
+                            nome: true,
+                            descricao: true,
+                            status: true,
+                        },
+                    },
                     status: true,
-                },
-            },
-            status: true,
+                }
+            }
         }
     });
-
-    if (!session) return null;
-    return OcpNormalizer.mapOcpProgramSession(session);
+    if (!session?.ocp) return null;
+    return OcpNormalizer.mapOcpProgramSession(session?.ocp);
 }
 
 export async function listClientsByTherapist(therapistId: string, q?: string) {
@@ -354,7 +375,6 @@ export async function listSessionsByClient(clientId: string) {
 
 export async function getKpis(filtros: OcpType.KpisFilters) {
   const where: Prisma.sessaoWhereInput = {};
-
     if (filtros.pacienteId) where.cliente_id = filtros.pacienteId;
     if (filtros.programaId) where.ocp_id = Number(filtros.programaId);
     if (filtros.estimuloId) {
@@ -426,8 +446,43 @@ export async function getKpis(filtros: OcpType.KpisFilters) {
         };
     });
 
+    const ocpId = where.ocp_id;
+    const register = await prisma.ocp.findMany({
+        where: {
+            ...(ocpId ? { id: Number(ocpId) } : {}),
+        },
+        select: {
+            data_inicio: true,
+            data_fim: true,
+        }
+    })
+    
+    let init: Date;
+    let end: Date;
+
+    if (ocpId) {
+        init = register[0]!.data_inicio;
+        end = register[0]!.data_fim;
+    } else {
+        init = new Date(Math.min(...register.map(r => r.data_inicio.getTime())));
+        end = new Date(Math.max(...register.map(r => r.data_fim.getTime())));
+    }
+
+    const total = end.getTime() - init.getTime();
+    const actual = Date.now() - init.getTime();
+    const percent = total > 0 ? Math.min(100, Math.max(0, (actual / total) * 100)) : 0;
+    const remainingDays = Math.max(0, Math.ceil((end.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+    const label = `${remainingDays} dias restantes • ${Math.round(percent)}% do período decorrido`;
+
+    const programDeadline = {
+        percent: Math.round(percent),
+        label,
+        inicio: init.toISOString().split('T')[0],
+        fim: end.toISOString().split('T')[0],
+    };
+
     return {
-        cards, graphic 
+        cards, graphic, programDeadline
     };
 }
 

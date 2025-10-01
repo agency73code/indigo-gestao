@@ -39,7 +39,6 @@ export async function listPrograms(params: {
         });
         if (!res.ok) throw new Error('Erro ao buscar programas');
         const json = await res.json();
-        console.log(json)
         return (json?.data ?? []) as ProgramListItem[];
     } catch (error) {
         if (USE_LOCAL_MOCKS) {
@@ -83,10 +82,14 @@ export async function listPrograms(params: {
 
 export async function getPatientById(patientId: string): Promise<Patient | null> {
     try {
-        const patients = await fetchClients(patientId);
-        if (Array.isArray(patients)) {
-            return (patients as Patient[]).find((patient) => patient.id === patientId) ?? null;
-        }
+        const res = await fetch(`/api/ocp/clients/${patientId}`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: { 'Accept': 'application/json' },
+        });
+
+        const json = await res.json();
+        return json.data;
     } catch (error) {
         if (USE_LOCAL_MOCKS) {
             const { mockPatients } = await import('./mocks/patients.mock');

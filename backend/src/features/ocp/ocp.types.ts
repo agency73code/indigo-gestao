@@ -56,6 +56,7 @@ export type OcpDetailDTO = {
     nome: string | null;
     dataNascimento: Date | null;
     cuidadores?: { nome: string | null }[];
+    arquivos: { arquivo_id: string | null }[];
   };
   criador_id: string;
   criador: { nome: string };
@@ -66,6 +67,8 @@ export type OcpDetailDTO = {
   dominio_criterio?: string | null;
   observacao_geral?: string | null;
   status: string;
+  data_inicio: Date;
+  data_fim: Date;
 };
 
 export type CreateSessionInput = {
