@@ -1,5 +1,5 @@
 export interface Caregiver {
-    relacao?: string;
+    relacao: string;
     descricaoRelacao?: string | null;
     nome: string;
     cpf: string;

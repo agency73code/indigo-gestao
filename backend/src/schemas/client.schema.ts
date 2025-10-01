@@ -14,6 +14,7 @@ export const ClientSchema = z.object({
 
   cuidadores: z.array(
     z.object({
+      relacao: z.string().min(1, 'Relação é obrigatória'),
       descricaoRelacao: z.string().optional().nullable().default(null),
       nome: z.string().min(3, 'Nome é obrigatório'),
       cpf: z.string().transform(strip).refine((val) => cpf.isValid(val), { message: 'CPF inválido' }),

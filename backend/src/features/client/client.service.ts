@@ -4,7 +4,6 @@ import * as ClientType from "./client.types.js";
 import { v4 as uuidv4 } from "uuid";
 
 export async function create(dto: ClientType.Client) {
-
   const existsCpf = await prisma.cliente.findFirst({ where: { cpf: dto.cpf } });
   if (existsCpf) throw new AppError('CPF_DUPLICADO', 'CPF já cadastrado', 409);
 
@@ -36,7 +35,7 @@ export async function create(dto: ClientType.Client) {
 
       cuidadores: {
         create: dto.cuidadores.map((c) => ({
-          relacao: c.relacao ?? null,
+          relacao: c.relacao,
           descricaoRelacao: c.descricaoRelacao ?? null,
           nome: c.nome,
           cpf: c.cpf,
@@ -55,26 +54,38 @@ export async function create(dto: ClientType.Client) {
               uf: c.endereco?.uf,
               complemento: c.endereco?.complemento ?? null,
             },
-          }
+          },
         })),
       },
 
       enderecos: {
         create: dto.enderecos.map((e) => ({
-          endereco: {
-            create: {
-              cep: e.cep,
-              rua: e.logradouro,
-              numero: e.numero,
-              bairro: e.bairro,
-              cidade: e.cidade,
-              uf: e.uf,
-              complemento: e.complemento ?? null,
-            },
-          },
-
           residenciaDe: e.residenciaDe ?? null,
           outroResidencia: e.outroResidencia ?? null,
+          endereco: {
+            connectOrCreate: {
+              where: {
+                unique_endereco: {
+                  cep: e.cep ?? '',
+                  rua: e.logradouro ?? '',
+                  numero: e.numero ?? '',
+                  bairro: e.bairro ?? '',
+                  cidade: e.cidade ?? '',
+                  uf: e.uf ?? '',
+                  complemento: e.complemento ?? '',
+                },
+              },
+              create: {
+                cep: e.cep,
+                rua: e.logradouro,
+                numero: e.numero,
+                bairro: e.bairro,
+                cidade: e.cidade,
+                uf: e.uf,
+                complemento: e.complemento ?? null,
+              }
+            },
+          },
         })),
       },
 
