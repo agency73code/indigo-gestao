@@ -28,6 +28,8 @@ const routeToTitleMap: Record<string, string> = {
     '/app/programas/sessoes/nova': 'Registrar Sessão',
     '/app/programas/sessoes/consultar': 'Consultar Sessão',
     '/app/programas/relatorios/mensal': 'Relatório Geral',
+    '/app/faturamento': 'Faturamento',
+    '/app/faturamento/novo': 'Registrar Lançamento',
 };
 
 export function useBreadcrumb(): BreadcrumbItem[] {
@@ -73,6 +75,13 @@ export function useBreadcrumb(): BreadcrumbItem[] {
             if (pathname.includes('/programas/')) {
                 return [
                     { label: 'Programas', href: preservePacienteId('/app/programas') },
+                    { label: exactTitle },
+                ];
+            }
+
+            if (pathname.includes('/faturamento/')) {
+                return [
+                    { label: 'Faturamento', href: '/app/faturamento' },
                     { label: exactTitle },
                 ];
             }

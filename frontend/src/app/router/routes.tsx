@@ -28,6 +28,7 @@ import EditarProgramaPage from '../../features/programas/pages/EditarProgramaPag
 import { CadastroSessaoPage } from '../../features/programas/nova-sessao';
 import RelatorioMensalPage from '../../features/programas/pages/RelatorioMensalPage';
 import { HubFaturamentoPage } from '../../features/faturamento';
+import RegistrarLancamentoPage from '../../features/faturamento/registrar-lancamento/pages/RegistrarLancamentoPage';
 import NotAccessPage from '@/features/shell/pages/NotAccessPage';
 import NotPermissionPage from '@/features/shell/pages/NotPermissionPage';
 import RequireAuth from '@/features/auth/components/RequireAuth';
@@ -232,6 +233,18 @@ export const router = createBrowserRouter([
                                     </Suspense>
                                 ),
                                 handle: { breadcrumb: 'Faturamento', title: 'Faturamento' },
+                            },
+                            {
+                                path: 'faturamento/novo',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <RegistrarLancamentoPage />
+                                    </Suspense>
+                                ),
+                                handle: {
+                                    breadcrumb: 'Registrar Lançamento',
+                                    title: 'Registrar Lançamento',
+                                },
                             },
                         ],
                     },
