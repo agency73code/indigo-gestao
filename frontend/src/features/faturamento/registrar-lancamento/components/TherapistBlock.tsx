@@ -1,7 +1,7 @@
-import { UserCheck, X } from 'lucide-react';
+import { UserCheck } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import type { Therapist } from '../types';
+import type { Therapist } from '../../types';
 
 interface TherapistBlockProps {
     therapist: Therapist | null;
@@ -19,10 +19,10 @@ const getInitials = (name: string) => {
         .slice(0, 2);
 };
 
-export default function TherapistBlock({ 
-    therapist, 
-    onTherapistSelect, 
-    onShowTherapistSelector 
+export default function TherapistBlock({
+    therapist,
+    onTherapistSelect,
+    onShowTherapistSelector,
 }: TherapistBlockProps) {
     return (
         <Card className="rounded-[5px] px-6 py-8 md:px-8 md:py-10 lg:px-8 lg:py-0">
@@ -55,16 +55,6 @@ export default function TherapistBlock({
                         {/* Informações do terapeuta */}
                         <div className="flex-1 min-w-0">
                             <p className="font-medium">{therapist.name}</p>
-                            {therapist.specialization && (
-                                <p className="text-sm text-muted-foreground">
-                                    {therapist.specialization}
-                                </p>
-                            )}
-                            {therapist.email && (
-                                <p className="text-xs text-muted-foreground">
-                                    {therapist.email}
-                                </p>
-                            )}
                         </div>
 
                         <div className="flex gap-2 flex-shrink-0 flex-col sm:flex-row">
@@ -87,11 +77,7 @@ export default function TherapistBlock({
                         </div>
                     </div>
                 ) : (
-                    <Button
-                        className="w-full h-12"
-                        size="lg"
-                        onClick={onShowTherapistSelector}
-                    >
+                    <Button className="w-full h-12" size="lg" onClick={onShowTherapistSelector}>
                         <UserCheck className="h-4 w-4 mr-2" />
                         Selecionar terapeuta
                     </Button>
