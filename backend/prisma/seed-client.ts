@@ -10,9 +10,9 @@ async function main() {
             data: {
             id: faker.string.uuid(),
             nome: faker.person.fullName(),
-            data_nascimento: faker.date.birthdate({ min: 18, max: 80, mode: 'age' }),
-            email_contato: faker.internet.email(),
-            data_entrada: faker.date.recent({ days: 30 }),
+            dataNascimento: faker.date.birthdate({ min: 18, max: 80, mode: 'age' }),
+            emailContato: faker.internet.email(),
+            dataEntrada: faker.date.recent({ days: 30 }),
             perfil_acesso: 'user', // valor fixo só para atender constraint
             },
         })

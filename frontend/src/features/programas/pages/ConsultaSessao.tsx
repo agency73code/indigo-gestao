@@ -6,6 +6,7 @@ import PatientSelector from '@/features/programas/consultar-programas/components
 import type { Patient } from '@/features/programas/consultar-programas/types';
 import { ListaSessoes, SearchAndFilters, CreateSessionFab } from '../consulta-sessao/components';
 import * as services from '../consulta-sessao/services';
+import { getPatientById } from '../consultar-programas/services';
 import type { Sessao, SessaoFiltersState } from '../consulta-sessao/types';
 
 const DAY_IN_MS = 1000 * 60 * 60 * 24;
@@ -90,7 +91,7 @@ export default function ConsultaSessao() {
             setError(null);
 
             try {
-                const fetched = await services.getPatientById(pacienteIdFromQuery);
+                const fetched = await getPatientById(pacienteIdFromQuery);
                 if (cancelled) return;
 
                 if (fetched) {

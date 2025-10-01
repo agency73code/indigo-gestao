@@ -53,9 +53,9 @@ export type OcpDetailDTO = {
   nome_programa: string;
   cliente_id: string;
   cliente: {
-    nome: string;
-    data_nascimento: Date;
-    cliente_responsavel?: { responsaveis: { nome: string } }[];
+    nome: string | null;
+    dataNascimento: Date | null;
+    cuidadores?: { nome: string | null }[];
   };
   criador_id: string;
   criador: { nome: string };
@@ -99,8 +99,10 @@ export type UpdateProgramInput = {
 };
 
 export type ClientRowDTO = {
-  id: string; nome: string; data_nascimento: Date;
-  cliente_responsavel?: { responsaveis: { nome: string } }[];
+  id: string; 
+  nome: string | null; 
+  dataNascimento: Date | null;
+  cuidadores?: { nome: string | null }[];
 };
 
 export type ProgramRowDTO = {
@@ -165,13 +167,11 @@ export type ProgramSelectResult = {
   nome_programa: string;
   cliente: {
     id: string;
-    nome: string;
-    cliente_responsavel: {
-      responsaveis: {
-        nome: string;
-      };
+    nome: string | null;
+    cuidadores: {
+      nome: string | null;
     }[];
-    data_nascimento: Date;
+    dataNascimento: Date | null;
   };
   criador: {
     id: string;

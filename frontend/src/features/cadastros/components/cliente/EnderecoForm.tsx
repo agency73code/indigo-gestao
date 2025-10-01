@@ -7,15 +7,15 @@ import { useCepLookup } from '../../hooks/useCepLookup';
 import { maskCEP } from '@/common/utils/mask';
 
 interface Endereco {
-    cep: string;
-    logradouro: string;
-    numero: string;
-    complemento: string;
-    bairro: string;
-    cidade: string;
-    uf: string;
-    residenciaDe?: string;
-    outroResidencia?: string;
+    cep: string | null;
+    logradouro: string | null;
+    numero: string | null;
+    complemento: string | null;
+    bairro: string | null;
+    cidade: string | null;
+    uf: string | null;
+    residenciaDe?: string | null;
+    outroResidencia?: string | null;
 }
 
 interface EnderecoFormProps {
