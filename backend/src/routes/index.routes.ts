@@ -6,30 +6,16 @@ import clientRoutes from './client.routes.js';
 import filesRoutes from './files.routes.js';
 import cardsRoutes from './cards.routes.js';
 import ocpRoutes from './ocp.routes.js';
+import linksRoutes from './links.routes.js';
 
 const router: ExpressRouter = Router();
 
 router.use('/terapeutas', therapistRoutes);
 router.use('/clientes', clientRoutes);
-// router.use('/agendamentos', appointmentRouter);
 router.use('/auth', authRoutes);
 router.use('/arquivos', filesRoutes);
 router.use('/cards', cardsRoutes);
 router.use('/ocp', ocpRoutes);
-
-router.get('/', (req, res) => {
-    res.json({
-        message: 'API Indigo Gestão',
-        version: '1.0.0',
-        status: 'online',
-        routes: {
-            terapeutas: '/api/terapeutas',
-            clientes: '/api/clientes',
-            // agendamentos: '/api/agendamentos',
-            auth: '/api/auth',
-            health: '/health',
-        },
-    });
-});
+router.use('/links', linksRoutes);
 
 export default router;
