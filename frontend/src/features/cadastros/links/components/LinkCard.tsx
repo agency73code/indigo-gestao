@@ -277,6 +277,7 @@ function TherapistChip({
     onArchive: (link: PatientTherapistLink) => void;
 }) {
     const isResponsible = link.role === 'responsible';
+    const isCo = link.role === 'co';
 
     return (
         <div className="flex items-center justify-between p-2 bg-muted/30 rounded">
@@ -292,10 +293,17 @@ function TherapistChip({
                     )}
                     {getRoleLabel(link.role)}
                 </Badge>
-                <span className="text-sm font-medium">
-                    {/* Aqui deveria buscar o nome do terapeuta pelo therapistId */}
-                    Terapeuta {link.therapistId}
-                </span>
+                <div className="flex flex-col">
+                    <span className="text-sm font-medium">
+                        {/* Aqui deveria buscar o nome do terapeuta pelo therapistId */}
+                        Terapeuta {link.therapistId}
+                    </span>
+                    {isCo && link.coTherapistActuation && (
+                        <span className="text-xs text-muted-foreground">
+                            Atuação: {link.coTherapistActuation}
+                        </span>
+                    )}
+                </div>
             </div>
 
             <DropdownMenu>

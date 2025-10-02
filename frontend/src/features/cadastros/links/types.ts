@@ -22,6 +22,7 @@ export interface PatientTherapistLink {
   endDate?: IsoDate | null;         // >= startDate, opcional
   status: LinkStatus;               // active | ended | archived
   notes?: string | null;
+  coTherapistActuation?: string | null;  // Atuação específica para co-terapeuta
   createdAt: IsoDate;
   updatedAt: IsoDate;
 }
@@ -33,6 +34,7 @@ export interface CreateLinkInput {
   startDate: IsoDate;
   endDate?: IsoDate | null;
   notes?: string | null;
+  coTherapistActuation?: string;   // Atuação específica para co-terapeuta
 }
 
 export interface UpdateLinkInput {
@@ -42,6 +44,7 @@ export interface UpdateLinkInput {
   endDate?: IsoDate | null;
   notes?: string | null;
   status?: LinkStatus;
+  coTherapistActuation?: string;   // Atuação específica para co-terapeuta
 }
 
 export interface TransferResponsibleInput {
@@ -49,6 +52,7 @@ export interface TransferResponsibleInput {
   fromTherapistId: TherapistId;
   toTherapistId: TherapistId;
   effectiveDate: IsoDate;
+  oldResponsibleActuation: string;  // Atuação do antigo responsável (agora co-terapeuta)
 }
 
 export interface LinkFilters {

@@ -17,9 +17,25 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
+import { Combobox } from '@/ui/combobox';
 import type { TransferResponsibleDialogProps, TransferResponsibleInput } from '../types';
 import type { Terapeuta } from '../../types/cadastros.types';
 import { searchTherapistsByName } from '../mocks/links.mock';
+
+// Opções de atuação para o antigo responsável que se tornará co-terapeuta
+const AREAS_ATUACAO_OPTIONS = [
+    { value: 'Fonoaudiologia', label: 'Fonoaudiologia' },
+    { value: 'Psicomotricidade', label: 'Psicomotricidade' },
+    { value: 'Fisioterapia', label: 'Fisioterapia' },
+    { value: 'Terapia Ocupacional', label: 'Terapia Ocupacional' },
+    { value: 'Psicopedagogia', label: 'Psicopedagogia' },
+    { value: 'Educador Físico', label: 'Educador Físico' },
+    { value: 'Terapia ABA', label: 'Terapia ABA' },
+    { value: 'Musicoterapia', label: 'Musicoterapia' },
+    { value: 'Pedagogia', label: 'Pedagogia' },
+    { value: 'Neuropsicologia', label: 'Neuropsicologia' },
+    { value: 'Nutrição', label: 'Nutrição' },
+];
 
 export default function TransferResponsibleDialog({
     open,
@@ -34,6 +50,7 @@ export default function TransferResponsibleDialog({
     // Estados do formulário
     const [toTherapistId, setToTherapistId] = useState<string>('');
     const [effectiveDate, setEffectiveDate] = useState<Date>(new Date());
+    const [oldResponsibleActuation, setOldResponsibleActuation] = useState<string>('');
 
     // Estados para busca de terapeutas
     const [therapistSearch, setTherapistSearch] = useState('');
@@ -50,6 +67,7 @@ export default function TransferResponsibleDialog({
         if (open) {
             setToTherapistId('');
             setEffectiveDate(new Date());
+            setOldResponsibleActuation('');
             setTherapistSearch('');
             setSelectedTherapist(null);
             setErrors({});
@@ -84,6 +102,10 @@ export default function TransferResponsibleDialog({
             newErrors.therapist = 'Selecione um terapeuta diferente do atual';
         }
 
+        if (!oldResponsibleActuation) {
+            newErrors.oldResponsibleActuation = 'Selecione a atuação para o antigo responsável';
+        }
+
         if (!effectiveDate) {
             newErrors.effectiveDate = 'Selecione a data de transferência';
         } else if (link?.startDate && effectiveDate < new Date(link.startDate)) {
@@ -102,6 +124,7 @@ export default function TransferResponsibleDialog({
             fromTherapistId: link.therapistId,
             toTherapistId: toTherapistId,
             effectiveDate: effectiveDate.toISOString(),
+            oldResponsibleActuation: oldResponsibleActuation,
         };
 
         onConfirm(transferData);
@@ -200,6 +223,30 @@ export default function TransferResponsibleDialog({
                                     </p>
                                 )}
                             </div>
+                        </div>
+
+                        {/* Atuação do Antigo Responsável (agora Co-terapeuta) */}
+                        <div className="space-y-2">
+                            <Label className="text-sm font-medium">
+                                Atuação do Antigo Responsável (Co-terapeuta) *
+                            </Label>
+                            <Combobox
+                                options={AREAS_ATUACAO_OPTIONS}
+                                value={oldResponsibleActuation}
+                                onValueChange={setOldResponsibleActuation}
+                                placeholder="Selecione a área de atuação"
+                                searchPlaceholder="Buscar atuação..."
+                                emptyMessage="Nenhuma atuação encontrada."
+                                error={!!errors.oldResponsibleActuation}
+                            />
+                            {errors.oldResponsibleActuation && (
+                                <p className="text-sm text-destructive">
+                                    {errors.oldResponsibleActuation}
+                                </p>
+                            )}
+                            <p className="text-xs text-muted-foreground">
+                                O terapeuta atual se tornará co-terapeuta com esta atuação específica.
+                            </p>
                         </div>
 
                         {/* Data Efetiva da Transferência */}

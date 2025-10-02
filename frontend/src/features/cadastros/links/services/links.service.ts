@@ -81,6 +81,7 @@ export async function createLink(input: CreateLinkInput): Promise<PatientTherapi
     endDate: input.endDate,
     status: 'active',
     notes: input.notes,
+    coTherapistActuation: input.coTherapistActuation,
     createdAt: new Date().toISOString().split('T')[0],
     updatedAt: new Date().toISOString().split('T')[0]
   };
@@ -172,6 +173,7 @@ export async function transferResponsible(input: TransferResponsibleInput): Prom
       endDate: null,
       status: 'active',
       notes: `Transferido de ${input.fromTherapistId} em ${input.effectiveDate}`,
+      coTherapistActuation: null,
       createdAt: input.effectiveDate,
       updatedAt: input.effectiveDate
     };
@@ -184,6 +186,7 @@ export async function transferResponsible(input: TransferResponsibleInput): Prom
   mockLinks[currentResponsibleIndex] = {
     ...oldLink,
     role: 'co',
+    coTherapistActuation: input.oldResponsibleActuation,
     updatedAt: input.effectiveDate
   };
 }

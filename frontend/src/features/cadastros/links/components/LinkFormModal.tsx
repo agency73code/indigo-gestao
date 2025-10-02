@@ -16,9 +16,25 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
+import { Combobox } from '@/ui/combobox';
 import type { CreateLinkInput, UpdateLinkInput, LinkFormModalProps } from '../types';
 import type { Paciente, Terapeuta } from '../../types/cadastros.types';
 import { searchPatientsByName, searchTherapistsByName } from '../mocks/links.mock';
+
+// Opções de atuação para co-terapeuta
+const AREAS_ATUACAO_OPTIONS = [
+    { value: 'Fonoaudiologia', label: 'Fonoaudiologia' },
+    { value: 'Psicomotricidade', label: 'Psicomotricidade' },
+    { value: 'Fisioterapia', label: 'Fisioterapia' },
+    { value: 'Terapia Ocupacional', label: 'Terapia Ocupacional' },
+    { value: 'Psicopedagogia', label: 'Psicopedagogia' },
+    { value: 'Educador Físico', label: 'Educador Físico' },
+    { value: 'Terapia ABA', label: 'Terapia ABA' },
+    { value: 'Musicoterapia', label: 'Musicoterapia' },
+    { value: 'Pedagogia', label: 'Pedagogia' },
+    { value: 'Neuropsicologia', label: 'Neuropsicologia' },
+    { value: 'Nutrição', label: 'Nutrição' },
+];
 
 export default function LinkFormModal({
     open,
@@ -33,6 +49,7 @@ export default function LinkFormModal({
     const [patientId, setPatientId] = useState<string>('');
     const [therapistId, setTherapistId] = useState<string>('');
     const [role, setRole] = useState<'responsible' | 'co'>('responsible');
+    const [coTherapistActuation, setCoTherapistActuation] = useState<string>('');
     const [startDate, setStartDate] = useState<Date>();
     const [notes, setNotes] = useState('');
 
@@ -60,6 +77,7 @@ export default function LinkFormModal({
             setPatientId(initialData.patientId);
             setTherapistId(initialData.therapistId);
             setRole(initialData.role);
+            setCoTherapistActuation(initialData.coTherapistActuation || '');
             setStartDate(new Date(initialData.startDate));
             setNotes(initialData.notes || '');
 
@@ -80,6 +98,7 @@ export default function LinkFormModal({
             setPatientId(initialData.patientId);
             setTherapistId('');
             setRole('co');
+            setCoTherapistActuation('');
             setStartDate(undefined);
             setNotes('');
             setSelectedTherapist(null);
@@ -97,6 +116,7 @@ export default function LinkFormModal({
             setPatientId('');
             setTherapistId('');
             setRole('responsible');
+            setCoTherapistActuation('');
             setStartDate(undefined);
             setNotes('');
             setSelectedPatient(null);
@@ -148,6 +168,10 @@ export default function LinkFormModal({
             newErrors.therapist = 'Selecione um terapeuta';
         }
 
+        if (role === 'co' && !coTherapistActuation) {
+            newErrors.coTherapistActuation = 'Selecione a atuação do co-terapeuta';
+        }
+
         if (!startDate) {
             newErrors.startDate = 'Selecione a data de início';
         }
@@ -166,6 +190,7 @@ export default function LinkFormModal({
                 role,
                 startDate: startDate!.toISOString(),
                 notes: notes.trim() || undefined,
+                coTherapistActuation: role === 'co' ? coTherapistActuation : undefined,
             };
             onSubmit(createData);
         } else {
@@ -174,6 +199,7 @@ export default function LinkFormModal({
                 role,
                 startDate: startDate!.toISOString(),
                 notes: notes.trim() || undefined,
+                coTherapistActuation: role === 'co' ? coTherapistActuation : undefined,
             };
             onSubmit(updateData);
         }
@@ -329,9 +355,13 @@ export default function LinkFormModal({
                                     name="role"
                                     value="responsible"
                                     checked={role === 'responsible'}
-                                    onChange={(e) =>
-                                        setRole(e.target.value as 'responsible' | 'co')
-                                    }
+                                    onChange={(e) => {
+                                        setRole(e.target.value as 'responsible' | 'co');
+                                        // Limpar atuação quando muda para responsável
+                                        if (e.target.value === 'responsible') {
+                                            setCoTherapistActuation('');
+                                        }
+                                    }}
                                     className="w-4 h-4 text-primary bg-gray-100 border-gray-300 focus:ring-primary/20"
                                 />
                                 <Label htmlFor="responsible" className="cursor-pointer">
@@ -355,6 +385,25 @@ export default function LinkFormModal({
                                 </Label>
                             </div>
                         </div>
+
+                        {/* Campo de Atuação do Co-terapeuta - aparece apenas quando Co-terapeuta está selecionado */}
+                        {role === 'co' && (
+                            <div className="space-y-2 pt-2 border-t border-border">
+                                <Label className="text-sm font-medium">Atuação do Co-terapeuta *</Label>
+                                <Combobox
+                                    options={AREAS_ATUACAO_OPTIONS}
+                                    value={coTherapistActuation}
+                                    onValueChange={setCoTherapistActuation}
+                                    placeholder="Selecione a área de atuação"
+                                    searchPlaceholder="Buscar atuação..."
+                                    emptyMessage="Nenhuma atuação encontrada."
+                                    error={!!errors.coTherapistActuation}
+                                />
+                                {errors.coTherapistActuation && (
+                                    <p className="text-sm text-destructive">{errors.coTherapistActuation}</p>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     {/* Data de Início */}

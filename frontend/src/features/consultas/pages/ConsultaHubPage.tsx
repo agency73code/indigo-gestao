@@ -21,7 +21,7 @@ export default function ConsultaHubPage() {
         bgColor: string;
         textColor: string;
         ability: { action: Actions; subject: Subjects };
-    }
+    };
 
     const mainActions: ActionConfig[] = [
         {
@@ -46,13 +46,22 @@ export default function ConsultaHubPage() {
 
     useEffect(() => {
         getCardsOverview()
-            .then(({ totalTerapeutas, totalClientes, novosTerapeutas, novosClientes, TerapeutasAtivos, ClientesAtivos }) => {
-                setTotalTerapeutas(totalTerapeutas);
-                setTotalClientes(totalClientes);
-                setNovosTerapeutas(novosTerapeutas);
-                setNovosClientes(novosClientes);
-                setTotalRegistros(TerapeutasAtivos + ClientesAtivos);
-            })
+            .then(
+                ({
+                    totalTerapeutas,
+                    totalClientes,
+                    novosTerapeutas,
+                    novosClientes,
+                    TerapeutasAtivos,
+                    ClientesAtivos,
+                }) => {
+                    setTotalTerapeutas(totalTerapeutas);
+                    setTotalClientes(totalClientes);
+                    setNovosTerapeutas(novosTerapeutas);
+                    setNovosClientes(novosClientes);
+                    setTotalRegistros(TerapeutasAtivos + ClientesAtivos);
+                },
+            )
             .catch(() => {});
     }, []);
 
@@ -75,7 +84,11 @@ export default function ConsultaHubPage() {
             <div className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {mainActions.map((action, index) => (
-                        <RequireAbility key={index} action={action.ability.action} subject={action.ability.subject}>
+                        <RequireAbility
+                            key={index}
+                            action={action.ability.action}
+                            subject={action.ability.subject}
+                        >
                             <Card
                                 className={`overflow-hidden hover:shadow-md p-1 md:p-4 lg:p-8 transition-shadow rounded-[5px] ${action.bgColor} ${action.textColor}`}
                             >
@@ -101,7 +114,7 @@ export default function ConsultaHubPage() {
                                     </div>
                                 </Link>
                             </Card>
-                    </RequireAbility>
+                        </RequireAbility>
                     ))}
                 </div>
             </div>
