@@ -54,7 +54,7 @@ export default function HubPage() {
                     style={{ fontFamily: 'Sora, sans-serif' }}
                     className="text-2xl sm:text-2xl font-semibold text-primary"
                 >
-                    Programas de Treino (OCP)
+                    Programas / Objetivos
                 </h1>
                 <p className="text-sm sm:text-base text-muted-foreground">
                     Gerencie programas de treino personalizados e acompanhe o progresso dos pacientes

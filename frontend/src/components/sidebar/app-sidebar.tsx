@@ -58,16 +58,16 @@ const data = {
             ],
         },
         {
-            title: 'Consulta',
-            url: '/app/consultas',
+            title: 'Consultar',
+            url: '/app/consultar',
             icon: UserRoundSearchIcon,
             items: [
-                { title: 'Terapeuta', url: '/app/consultas/terapeutas' },
-                { title: 'Paciente', url: '/app/consultas/pacientes' },
+                { title: 'Terapeuta', url: '/app/consultar/terapeutas' },
+                { title: 'Cliente', url: '/app/consultar/pacientes' },
             ],
         },
         {
-            title: 'Programas',
+            title: 'Programas/Objetivos',
             url: '/app/programas',
             icon: Activity,
             items: [

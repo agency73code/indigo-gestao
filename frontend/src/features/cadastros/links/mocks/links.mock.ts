@@ -349,6 +349,7 @@ export const mockLinks: PatientTherapistLink[] = [
     endDate: null,
     status: 'active',
     notes: 'Suporte em terapia ocupacional',
+    coTherapistActuation: 'Terapia Ocupacional',
     createdAt: '2024-02-01',
     updatedAt: '2024-02-01'
   },
@@ -397,6 +398,7 @@ export const mockLinks: PatientTherapistLink[] = [
     endDate: null,
     status: 'active',
     notes: 'Apoio no desenvolvimento social',
+    coTherapistActuation: 'Psicomotricidade',
     createdAt: '2024-03-15',
     updatedAt: '2024-03-15'
   },
