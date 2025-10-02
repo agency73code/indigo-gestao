@@ -12,9 +12,9 @@ const routeToTitleMap: Record<string, string> = {
     '/app/cadastro/terapeuta': 'Cadastro de Terapeuta',
     '/app/cadastro/cliente': 'Cadastro de Cliente',
     '/app/cadastro/paciente': 'Cadastro de Paciente',
-    '/app/consultas': 'Consultas',
-    '/app/consultas/terapeutas': 'Terapeutas',
-    '/app/consultas/pacientes': 'Pacientes',
+    '/app/consultar': 'Consultar',
+    '/app/consultar/terapeutas': 'Terapeutas',
+    '/app/consultar/pacientes': 'Pacientes',
     '/app/arquivos': 'Arquivos',
     '/app/configuracoes': 'Configurações',
     '/app/configuracoes/perfil': 'Perfil & Organização',
@@ -58,9 +58,9 @@ export function useBreadcrumb(): BreadcrumbItem[] {
                 ];
             }
 
-            if (pathname.includes('/consultas/')) {
+            if (pathname.includes('/consultar/')) {
                 return [
-                    { label: 'Consultas', href: '/app/consultas' },
+                    { label: 'Consultar', href: '/app/consultar' },
                     { label: exactTitle },
                 ];
             }

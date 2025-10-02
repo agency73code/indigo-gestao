@@ -28,7 +28,7 @@ export default function ConsultaHubPage() {
             title: 'Consultar Terapeutas',
             description: 'Visualize e gerencie os terapeutas cadastrados no sistema',
             icon: User,
-            href: '/app/consultas/terapeutas',
+            href: '/app/consultar/terapeutas',
             bgColor: 'bg-[var(--card-primary)]',
             textColor: 'text-white',
             ability: { action: 'manage', subject: 'all' },
@@ -37,7 +37,7 @@ export default function ConsultaHubPage() {
             title: 'Consultar Pacientes',
             description: 'Visualize e gerencie os pacientes cadastrados no sistema',
             icon: Users,
-            href: '/app/consultas/pacientes',
+            href: '/app/consultar/pacientes',
             bgColor: 'bg-blue-500',
             textColor: 'text-white',
             ability: { action: 'read', subject: 'all' },
@@ -64,7 +64,7 @@ export default function ConsultaHubPage() {
                     style={{ fontFamily: 'Sora, sans-serif' }}
                     className="text-2xl sm:text-2xl font-semibold text-primary"
                 >
-                    Consulta
+                    Consultar
                 </h1>
                 <p className="text-sm sm:text-base text-muted-foreground">
                     Visualize e gerencie os registros do sistema

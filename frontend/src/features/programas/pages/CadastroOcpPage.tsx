@@ -347,7 +347,7 @@ export default function CadastroOcpPage() {
                         style={{ fontFamily: 'Sora, sans-serif' }}
                         className="text-xl sm:text-2xl font-semibold text-primary leading-tight"
                     >
-                        Novo Programa OCP
+                        Novo Programa / Objetivos
                     </h1>
                     <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
                         Crie um programa de treino personalizado para o paciente
@@ -386,6 +386,11 @@ export default function CadastroOcpPage() {
                         errors={{ goalTitle: errors.goalTitle }}
                     />
 
+                    {/* Critérios de domínio */}
+                    <CriteriaSection
+                        criteria={formState.criteria}
+                        onCriteriaChange={handleCriteriaChange}
+                    />
                     {/* Lista de estímulos */}
                     <StimuliList
                         stimuli={formState.stimuli}
@@ -393,11 +398,6 @@ export default function CadastroOcpPage() {
                         errors={{ stimuli: errors.stimuli }}
                     />
 
-                    {/* Critérios de domínio */}
-                    <CriteriaSection
-                        criteria={formState.criteria}
-                        onCriteriaChange={handleCriteriaChange}
-                    />
 
                     {/* Observações gerais */}
                     <NotesSection notes={formState.notes} onNotesChange={handleNotesChange} />

@@ -112,7 +112,7 @@ export const router = createBrowserRouter([
                                 ),
                             },
                             {
-                                path: 'consultas',
+                                path: 'consultar',
                                 element: (
                                     <Suspense fallback={suspenseFallback}>
                                         <ConsultaHubPage />
@@ -120,7 +120,7 @@ export const router = createBrowserRouter([
                                 ),
                             },
                             {
-                                path: 'consultas/terapeutas',
+                                path: 'consultar/terapeutas',
                                 element: (
                                     <Suspense fallback={suspenseFallback}>
                                         <TerapeutasListPage />
@@ -128,7 +128,7 @@ export const router = createBrowserRouter([
                                 ),
                             },
                             {
-                                path: 'consultas/pacientes',
+                                path: 'consultar/pacientes',
                                 element: (
                                     <Suspense fallback={suspenseFallback}>
                                         <PacientesListPage />
