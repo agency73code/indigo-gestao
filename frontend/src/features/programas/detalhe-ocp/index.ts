@@ -1,6 +1,8 @@
-// Components exports
+﻿// Components exports
 export { default as HeaderProgram } from './components/HeaderProgram';
 export { default as GoalSection } from './components/GoalSection';
+export { default as CriteriaSection } from './components/CriteriaSection';
+export { default as NotesSection } from './components/NotesSection';
 export { default as StimuliSection } from './components/StimuliSection';
 export { default as SessionsList } from './components/SessionsList';
 export { default as LastSessionPreview } from './components/LastSessionPreview';

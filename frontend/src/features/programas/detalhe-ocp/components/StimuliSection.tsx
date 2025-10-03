@@ -1,4 +1,4 @@
-import { Zap } from 'lucide-react';
+﻿import { Zap } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import type { ProgramDetail } from '../types';
@@ -8,8 +8,24 @@ interface StimuliSectionProps {
 }
 
 export default function StimuliSection({ program }: StimuliSectionProps) {
-    const activeStimuli = program.stimuli.filter((stimulus) => stimulus.active);
-    const archivedStimuli = program.stimuli.filter((stimulus) => !stimulus.active);
+    const shortTermGoalDescription =
+        program.shortTermGoalDescription ?? program.goalDescription ?? null;
+
+    const applicationDescriptionRaw = program.stimuliApplicationDescription ?? null;
+    const fallbackStimulusDescription = program.stimuli.find((stimulus) =>
+        stimulus.description?.trim(),
+    );
+    const applicationDescription = applicationDescriptionRaw?.trim()?.length
+        ? applicationDescriptionRaw.trim()
+        : fallbackStimulusDescription?.description?.trim() ?? null;
+
+    const activeStimuli = [...program.stimuli]
+        .filter((stimulus) => stimulus.active)
+        .sort((a, b) => a.order - b.order);
+
+    const archivedStimuli = [...program.stimuli]
+        .filter((stimulus) => !stimulus.active)
+        .sort((a, b) => a.order - b.order);
 
     const getStimulusStatusBadge = (status: 'active' | 'archived') => {
         const baseClasses = 'px-2 py-1 text-xs font-medium rounded-full';
@@ -31,29 +47,25 @@ export default function StimuliSection({ program }: StimuliSectionProps) {
                     Objetivo a Curto Prazo
                 </CardTitle>
 
-                {/* Descrição detalhada do objetivo a curto prazo */}
-                {program.goalDescription && (
+                {shortTermGoalDescription && (
                     <div className="space-y-3 mt-4">
                         <Label className="text-sm font-medium">
                             Descrição detalhada do objetivo a curto prazo
                         </Label>
                         <div className="p-3 bg-muted rounded-md">
                             <p className="text-sm text-muted-foreground leading-relaxed">
-                                {program.goalDescription}
+                                {shortTermGoalDescription}
                             </p>
                         </div>
                     </div>
                 )}
 
-                {/* Descrição de Aplicação */}
-                {program.stimuliApplicationDescription && (
+                {applicationDescription && (
                     <div className="space-y-3 mt-4">
-                        <Label className="text-sm font-medium">
-                            Descrição da Aplicação
-                        </Label>
+                        <Label className="text-sm font-medium">Descrição da aplicação</Label>
                         <div className="p-3 bg-muted rounded-md">
                             <p className="text-sm text-muted-foreground leading-relaxed">
-                                {program.stimuliApplicationDescription}
+                                {applicationDescription}
                             </p>
                         </div>
                         <p className="text-xs text-muted-foreground">
@@ -65,51 +77,71 @@ export default function StimuliSection({ program }: StimuliSectionProps) {
 
             <CardContent className="pb-3 sm:pb-6">
                 <div className="space-y-4">
-                    {/* Estímulos ativos */}
                     {activeStimuli.length > 0 && (
                         <div className="space-y-3">
-                            {activeStimuli.map((stimulus, index) => (
-                                <div
-                                    key={stimulus.id}
-                                    className="flex items-center gap-3 p-3 border border-border rounded-md"
-                                >
-                                    <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 bg-primary text-primary-foreground rounded-full text-xs font-medium">
-                                        {index + 1}
-                                    </span>
-                                    <div className="flex-1">
-                                        <p className="text-sm font-medium">{stimulus.label}</p>
+                            {activeStimuli.map((stimulus) => {
+                                const stimulusDescription = stimulus.description?.trim();
+                                const shouldShowStimulusDescription =
+                                    stimulusDescription && stimulusDescription !== applicationDescription;
+
+                                return (
+                                    <div
+                                        key={stimulus.id}
+                                        className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3 p-3 border border-border rounded-md"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 bg-primary text-primary-foreground rounded-full text-xs font-medium">
+                                                {stimulus.order}
+                                            </span>
+                                            <div>
+                                                <p className="text-sm font-medium">{stimulus.label}</p>
+                                                {shouldShowStimulusDescription && (
+                                                    <p className="text-xs text-muted-foreground mt-1">
+                                                        {stimulusDescription}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="sm:ml-auto">{getStimulusStatusBadge('active')}</div>
                                     </div>
-                                    <div className="flex-shrink-0">
-                                        {getStimulusStatusBadge('active')}
-                                    </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     )}
 
-                    {/* Estímulos arquivados */}
                     {archivedStimuli.length > 0 && (
                         <div className="border-t pt-4">
                             <h4 className="text-sm font-medium text-muted-foreground mb-3">
                                 Estímulos arquivados
                             </h4>
                             <div className="space-y-3">
-                                {archivedStimuli.map((stimulus) => (
-                                    <div
-                                        key={stimulus.id}
-                                        className="flex items-center gap-3 p-3 border border-border rounded-md opacity-70"
-                                    >
-                                        <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 bg-muted text-muted-foreground rounded-full text-xs font-medium">
-                                            {stimulus.order}
-                                        </span>
-                                        <div className="flex-1">
-                                            <p className="text-sm font-medium">{stimulus.label}</p>
+                                {archivedStimuli.map((stimulus) => {
+                                    const stimulusDescription = stimulus.description?.trim();
+                                    const shouldShowStimulusDescription =
+                                        stimulusDescription && stimulusDescription !== applicationDescription;
+
+                                    return (
+                                        <div
+                                            key={stimulus.id}
+                                            className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3 p-3 border border-border rounded-md opacity-70"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <span className="flex-shrink-0 flex items-center justify-center w-6 h-6 bg-muted text-muted-foreground rounded-full text-xs font-medium">
+                                                    {stimulus.order}
+                                                </span>
+                                                <div>
+                                                    <p className="text-sm font-medium">{stimulus.label}</p>
+                                                    {shouldShowStimulusDescription && (
+                                                        <p className="text-xs text-muted-foreground mt-1">
+                                                            {stimulusDescription}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="sm:ml-auto">{getStimulusStatusBadge('archived')}</div>
                                         </div>
-                                        <div className="flex-shrink-0">
-                                            {getStimulusStatusBadge('archived')}
-                                        </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
                     )}
