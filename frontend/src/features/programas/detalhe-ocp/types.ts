@@ -13,6 +13,7 @@ export type ProgramDetail = {
     createdAt: string; // ISO
     goalTitle: string;
     goalDescription?: string | null;
+    stimuliApplicationDescription?: string | null;
     stimuli: { 
         id: string; 
         order: number; 

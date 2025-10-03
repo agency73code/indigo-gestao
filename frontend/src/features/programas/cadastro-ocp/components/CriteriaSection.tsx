@@ -10,13 +10,13 @@ interface CriteriaSectionProps {
 export default function CriteriaSection({ criteria, onCriteriaChange }: CriteriaSectionProps) {
     return (
         <Card padding="none"className="rounded-[5px] p-2 sm:p-4">
-            <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
+            <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-4 pt-3 sm:pt-6">
                 <CardTitle className="text-base flex items-center gap-2">
                     <CheckSquare className="h-4 w-4" />
                     Critérios de Domínio
                 </CardTitle>
             </CardHeader>
-            <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6 space-y-4">
+            <CardContent className="px-3 sm:px-4 pb-3 sm:pb-6 space-y-4">
                 <div className="space-y-2">
                     <Label htmlFor="criteria" className="text-sm font-medium">
                         Defina os critérios para considerar o programa dominado (opcional)

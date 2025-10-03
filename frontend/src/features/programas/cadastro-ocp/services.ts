@@ -102,6 +102,7 @@ export async function createProgram(payload: CreateProgramInput): Promise<{ id: 
                 name: payload.name,
                 goalTitle: payload.goalTitle,
                 goalDescription: payload.goalDescription,
+                stimuliApplicationDescription: payload.stimuliApplicationDescription,
                 criteria: payload.criteria,
                 notes: payload.notes,
                 stimuli: payload.stimuli,

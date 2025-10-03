@@ -13,6 +13,8 @@ export type ProgramListItem = {
     id: string;
     title?: string | null;
     objective?: string | null;
+    goalDescription?: string | null;
+    stimuliApplicationDescription?: string | null;
     status: ProgramStatus;
     lastSession?: string | null; // ISO
     patientId: string;

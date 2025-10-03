@@ -24,7 +24,7 @@ export default function GoalSection({
             <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                 <CardTitle className="text-base flex items-center gap-2">
                     <Target className="h-4 w-4" />
-                    Objetivo do Programa
+                    Objetivo do Programa / Objetivo
                 </CardTitle>
             </CardHeader>
             <CardContent className="pb-3 sm:pb-6 space-y-4">
@@ -47,10 +47,12 @@ export default function GoalSection({
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="goal-description">Descrição do objetivo (opcional)</Label>
+                    <Label htmlFor="goal-description">
+                        Descrição detalhada do objetivo de longo prazo
+                    </Label>
                     <textarea
                         id="goal-description"
-                        placeholder="Descreva o objetivo detalhadamente..."
+                        placeholder="Descreva mais detalhadamente o que se espera alcançar com este programa..."
                         value={goalDescription}
                         onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                             onGoalDescriptionChange(e.target.value)

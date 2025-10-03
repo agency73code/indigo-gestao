@@ -37,6 +37,7 @@ export default function CadastroOcpPage() {
         goalTitle: '',
         goalDescription: '',
         stimuli: [],
+        stimuliApplicationDescription: '',
         criteria: '',
         notes: '',
         createdAt: new Date().toISOString(),
@@ -104,7 +105,6 @@ export default function CadastroOcpPage() {
                     const initialStimulus: StimulusInput = {
                         id: `stimulus_${Date.now()}`,
                         label: '',
-                        description: '',
                         active: true,
                         order: 1,
                     };
@@ -124,7 +124,6 @@ export default function CadastroOcpPage() {
             const initialStimulus: StimulusInput = {
                 id: `stimulus_${Date.now()}`,
                 label: '',
-                description: '',
                 active: true,
                 order: 1,
             };
@@ -233,6 +232,10 @@ export default function CadastroOcpPage() {
         }
     };
 
+    const handleStimuliApplicationDescriptionChange = (description: string) => {
+        setFormState((prev) => ({ ...prev, stimuliApplicationDescription: description }));
+    };
+
     const handleCriteriaChange = (criteria: string) => {
         setFormState((prev) => ({ ...prev, criteria }));
     };
@@ -260,6 +263,8 @@ export default function CadastroOcpPage() {
                 goalTitle: formState.goalTitle.trim(),
                 goalDescription: formState.goalDescription.trim() || null,
                 stimuli: formState.stimuli.filter((s) => s.label.trim()), // Remove estímulos vazios
+                stimuliApplicationDescription:
+                    formState.stimuliApplicationDescription.trim() || null,
                 criteria: formState.criteria.trim() || null,
                 notes: formState.notes.trim() || null,
                 prazoInicio: formState.prazoInicio.trim() || undefined,
@@ -394,10 +399,13 @@ export default function CadastroOcpPage() {
                     {/* Lista de estímulos */}
                     <StimuliList
                         stimuli={formState.stimuli}
+                        stimuliApplicationDescription={formState.stimuliApplicationDescription}
+                        goalDescription={formState.goalDescription}
                         onChange={handleStimuliChange}
+                        onApplicationDescriptionChange={handleStimuliApplicationDescriptionChange}
+                        onGoalDescriptionChange={handleGoalDescriptionChange}
                         errors={{ stimuli: errors.stimuli }}
                     />
-
 
                     {/* Observações gerais */}
                     <NotesSection notes={formState.notes} onNotesChange={handleNotesChange} />

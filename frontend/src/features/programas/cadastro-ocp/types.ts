@@ -17,7 +17,6 @@ export type Therapist = {
 export type StimulusInput = { 
     id?: string; 
     label: string; 
-    description?: string; 
     active: boolean; 
     order: number;
 };
@@ -29,6 +28,7 @@ export type CreateProgramInput = {
     goalTitle: string;
     goalDescription?: string | null;
     stimuli: StimulusInput[]; // pelo menos 1, label não vazio
+    stimuliApplicationDescription?: string | null; // Descrição geral de aplicação dos estímulos
     criteria?: string | null;
     notes?: string | null;
     createdAt?: string; // preenchido no backend; aqui só exibição
@@ -53,6 +53,7 @@ export type FormState = {
     goalTitle: string;
     goalDescription: string;
     stimuli: StimulusInput[];
+    stimuliApplicationDescription: string;
     criteria: string;
     notes: string;
     createdAt: string;

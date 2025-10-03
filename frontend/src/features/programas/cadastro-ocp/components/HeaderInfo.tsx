@@ -363,7 +363,7 @@ export default function HeaderInfo({
                     <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                         <CardTitle className="text-base flex items-center gap-2">
                             <Calendar className="h-4 w-4" />
-                            Informações do Programa
+                            Informações do Programa / Objetivo
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="pb-3 sm:pb-6 space-y-4">

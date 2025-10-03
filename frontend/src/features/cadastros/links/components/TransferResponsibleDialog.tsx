@@ -245,7 +245,8 @@ export default function TransferResponsibleDialog({
                                 </p>
                             )}
                             <p className="text-xs text-muted-foreground">
-                                O terapeuta atual se tornará co-terapeuta com esta atuação específica.
+                                O terapeuta atual se tornará co-terapeuta com esta atuação
+                                específica.
                             </p>
                         </div>
 
@@ -289,6 +290,8 @@ export default function TransferResponsibleDialog({
                                             }
                                         }}
                                         locale={ptBR}
+                                        fromDate={new Date(link.startDate)}
+                                        toDate={new Date(new Date().getFullYear() + 10, 11, 31)}
                                         disabled={(date) => date < new Date(link.startDate)}
                                         initialFocus
                                     />
