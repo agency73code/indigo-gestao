@@ -262,7 +262,7 @@ function renderPatientCard(
     );
 }
 
-// Componente para chip do terapeuta (usado no card do paciente)
+// Componente para chip do terapeuta (usado no card do cliente)
 function TherapistChip({
     link,
     onEdit,
@@ -407,7 +407,7 @@ function renderTherapistCard(
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-48">
                                 <DropdownMenuItem onClick={() => onEdit(links[0])}>
-                                    Gerenciar pacientes
+                                    Gerenciar Clientes
                                 </DropdownMenuItem>
 
                                 {hasActiveLinks && (
@@ -440,7 +440,7 @@ function renderTherapistCard(
             <CardContent className="pt-0 flex-1 flex flex-col">
                 <div className="space-y-2 flex-1">
                     <h4 className="text-sm font-medium text-foreground">
-                        Pacientes ({activeLinks.length} ativos):
+                        Cliente(s) ({activeLinks.length} ativos):
                     </h4>
 
                     <div className="space-y-1">
@@ -457,7 +457,7 @@ function renderTherapistCard(
                             ))
                         ) : (
                             <p className="text-sm text-muted-foreground italic">
-                                Nenhum paciente ativo
+                                Nenhum cliente ativo
                             </p>
                         )}
                     </div>
@@ -495,8 +495,8 @@ function PatientChip({
         <div className="flex items-center justify-between p-2 bg-muted/30 rounded">
             <div className="flex items-center gap-2">
                 <span className="text-sm font-medium">
-                    {/* Aqui deveria buscar o nome do paciente pelo patientId */}
-                    Paciente {link.patientId}
+                    {/* Aqui deveria buscar o nome do cliente pelo patientId */}
+                    Cliente {link.patientId}
                 </span>
                 <Badge
                     variant={isResponsible ? 'default' : 'secondary'}

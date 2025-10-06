@@ -22,7 +22,7 @@ export default function HubFaturamentoPage() {
         },
         {
             title: 'Gestão (gerente)',
-            description: 'Listagem global com filtros por paciente e terapeuta',
+            description: 'Listagem global com filtros por cliente e terapeuta',
             icon: Table2,
             href: '/app/faturamento/gestao',
             bgColor: 'bg-purple-500',

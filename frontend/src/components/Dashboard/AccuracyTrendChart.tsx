@@ -30,7 +30,7 @@ const rangeLabels: Record<AccuracyRange, string> = {
 const viewLabels: Record<AccuracyView, string> = {
     general: 'Geral (média)',
     program: 'Por programa OCP',
-    patient: 'Por paciente',
+    patient: 'Por cliente',
 };
 
 interface AccuracyTrendChartProps {

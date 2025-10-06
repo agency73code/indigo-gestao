@@ -227,12 +227,12 @@ export default function VinculosPage() {
                                 </span>
                                 {/* Desktop: Título em uma linha */}
                                 <span className="hidden sm:flex items-center gap-2">
-                                    Vínculos Paciente <ArrowLeftRight className="h-5 w-5" />{' '}
+                                    Vínculos Cliente <ArrowLeftRight className="h-5 w-5" />{' '}
                                     Terapeuta
                                 </span>
                             </h1>
                             <p className="text-xs sm:text-sm text-gray-600 mt-0.5 sm:mt-1 leading-tight">
-                                Gerencie os vínculos entre pacientes e terapeutas
+                                Gerencie os vínculos entre clientes e terapeutas
                             </p>
                         </div>
                     </div>

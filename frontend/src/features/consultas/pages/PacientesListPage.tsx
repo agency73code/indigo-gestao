@@ -59,12 +59,12 @@ export default function PacientesListPage() {
                 const data = await listarClientes();
                 setPatients(data);
             } catch (error) {
-                console.error('Erro ao carregar pacientes:', error);
+                console.error('Erro ao carregar clientes:', error);
                 setPatients([]);
                 setError(
                     error instanceof Error
                     ? error.message
-                    : 'Erro ao carregar pacientes',
+                    : 'Erro ao carregar clientes',
                 );
             } finally {
                 setLoading(false);
@@ -160,10 +160,10 @@ export default function PacientesListPage() {
         <div className="flex flex-col top-0 left-0 w-full h-full sm:px-6 ">
             <CardHeader className="px-0">
                 <CardTitle className="text-2xl font-semibold text-primary">
-                    Consultar Pacientes
+                    Consultar Clientes
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">
-                    Visualize e gerencie os pacientes cadastrados no sistema.
+                    Visualize e gerencie os clientes cadastrados no sistema.
                 </p>
             </CardHeader>
             <CardContent className="space-y-1 px-0">
@@ -179,7 +179,7 @@ export default function PacientesListPage() {
                     <Link to="/app/cadastro/cliente">
                         <Button className="h-12 gap-2">
                             <Plus className="h-4 w-4" />
-                            Adicionar Paciente
+                            Adicionar Cliente
                         </Button>
                     </Link>
                 </div>

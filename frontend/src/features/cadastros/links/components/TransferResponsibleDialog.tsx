@@ -168,7 +168,7 @@ export default function TransferResponsibleDialog({
                         <DialogDescription className="text-xs sm:text-sm text-muted-foreground">
                             {patient && (
                                 <>
-                                    Transferir a responsabilidade do paciente{' '}
+                                    Transferir a responsabilidade do cliente{' '}
                                     <span className="font-medium">{patient.nome}</span> de{' '}
                                     <span className="font-medium">{therapist?.nome}</span> para
                                     outro terapeuta.

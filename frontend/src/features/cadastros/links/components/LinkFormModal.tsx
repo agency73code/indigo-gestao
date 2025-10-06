@@ -161,7 +161,7 @@ export default function LinkFormModal({
         const newErrors: Record<string, string> = {};
 
         if (!patientId) {
-            newErrors.patient = 'Selecione um paciente';
+            newErrors.patient = 'Selecione um cliente';
         }
 
         if (!therapistId) {
@@ -259,7 +259,7 @@ export default function LinkFormModal({
                 <div className="space-y-4 sm:space-y-6 py-2 sm:py-4">
                     {/* Seleção de Paciente */}
                     <div className="space-y-2">
-                        <Label className="text-sm font-medium">Paciente *</Label>
+                        <Label className="text-sm font-medium">Cliente *</Label>
                         <div className="relative">
                             <div
                                 className={cn(
@@ -289,7 +289,7 @@ export default function LinkFormModal({
                                             <User className="h-4 w-4 text-muted-foreground" />
                                         </div>
                                         <span className="text-sm text-muted-foreground">
-                                            Selecione um paciente
+                                            Selecione um cliente
                                         </span>
                                     </>
                                 )}
@@ -508,7 +508,7 @@ export default function LinkFormModal({
                     <DialogContent className="max-w-md w-[95vw] sm:w-full mx-auto rounded-[5px]">
                         <DialogHeader>
                             <DialogTitle className="text-base sm:text-lg">
-                                Selecionar Paciente
+                                Selecionar cliente
                             </DialogTitle>
                         </DialogHeader>
 
@@ -516,7 +516,7 @@ export default function LinkFormModal({
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input
-                                    placeholder="Buscar paciente..."
+                                    placeholder="Buscar cliente..."
                                     value={patientSearch}
                                     onChange={(e) => setPatientSearch(e.target.value)}
                                     className="pl-10"
@@ -548,7 +548,7 @@ export default function LinkFormModal({
                                     </div>
                                 ) : patientSearch.length >= 2 ? (
                                     <p className="text-sm text-muted-foreground text-center py-8">
-                                        Nenhum paciente encontrado
+                                        Nenhum cliente encontrado
                                     </p>
                                 ) : (
                                     <p className="text-sm text-muted-foreground text-center py-8">
