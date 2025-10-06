@@ -52,17 +52,55 @@ export async function listLinksByTherapist(filters: LinkFilters): Promise<Patien
 }
 
 /**
- * Cria novo vínculo
+ * Cria novo vínculo feito
  * Regras: Apenas 1 responsible ativo por paciente
  */
 export async function createLink(input: CreateLinkInput): Promise<PatientTherapistLink> {
   await delay(800);
-  
-  // Verifica se já existe um responsável ativo para o paciente
+
+  try {
+    const res = await fetch('/api/links/createLink', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(input)
+    });
+
+    if (!res.ok) {
+      let errorMessage = 'Falha ao criar vínculo';
+      const errorText = await res.text();
+
+      if (errorText) {
+        try {
+          const parsed = JSON.parse(errorText);
+          if (parsed?.message) {
+            errorMessage = parsed.message;
+          }
+        } catch {
+          errorMessage = errorText;
+        }
+      }
+
+      throw new Error(errorMessage);
+    }
+
+    const createdLink = (await res.json()) as PatientTherapistLink;
+    mockLinks.push(createdLink);
+    return createdLink;
+  } catch (error) {
+    if (error instanceof Error && error.name !== 'TypeError') {
+      throw error;
+    }
+
+    console.error('Erro ao criar vínculo no backend, utilizando fallback local:', error);
+  }
+
   if (input.role === 'responsible') {
-    const existingResponsible = mockLinks.find((link: PatientTherapistLink) => 
-      link.patientId === input.patientId && 
-      link.role === 'responsible' && 
+    const existingResponsible = mockLinks.find((link: PatientTherapistLink) =>
+      link.patientId === input.patientId &&
+      link.role === 'responsible' &&
       link.status === 'active'
     );
     
@@ -228,7 +266,7 @@ export async function archiveLink(id: string): Promise<void> {
 }
 
 /**
- * Busca todos os pacientes (para formulários)
+ * Busca todos os pacientes (para formulários) feito
  */
 export async function getAllPatients(): Promise<Paciente[]> {
   try {
@@ -254,7 +292,7 @@ export async function getAllPatients(): Promise<Paciente[]> {
 }
 
 /**
- * Busca todos os terapeutas (para formulários)
+ * Busca todos os terapeutas (para formulários) feito
  */
 export async function getAllTherapists(): Promise<Terapeuta[]> {
   try {
@@ -280,7 +318,7 @@ export async function getAllTherapists(): Promise<Terapeuta[]> {
 }
 
 /**
- * Busca todos os vínculos (para listagens)
+ * Busca todos os vínculos (para listagens) feito
  */
 export async function getAllLinks(): Promise<PatientTherapistLink[]> {
   try {

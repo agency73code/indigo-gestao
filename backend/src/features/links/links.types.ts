@@ -101,3 +101,13 @@ export interface DBLink {
     criado_em: Date;
     atualizado_em: Date;
 }
+
+export type CreateLink = {
+    patientId: string;
+    therapistId: string;
+    role: 'responsible' | 'co';
+    startDate: string;
+    endDate?: string | null | undefined;
+    notes?: string | null | undefined;
+    coTherapistActuation?: string | null | undefined;
+}

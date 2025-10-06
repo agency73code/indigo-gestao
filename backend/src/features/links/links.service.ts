@@ -1,4 +1,50 @@
-import { prisma } from '../../config/database.js'
+import { prisma } from '../../config/database.js';
+import { AppError } from '../../errors/AppError.js';
+import * as LinkTypes from './links.types.js';
+
+export async function createLink(payload: LinkTypes.CreateLink) {
+    if (payload.role === 'responsible') {
+        const existingResponsible = await prisma.terapeuta_cliente.findFirst({
+            where: {
+                cliente_id: payload.patientId,
+                papel: 'responsible',
+                status: 'active',
+            },
+        });
+
+        if (existingResponsible) {
+            throw new AppError('LINK_RESPONSIBLE_EXISTS', 'Já existe um responsável principal ativo para este paciente.', 409);
+        }
+    }
+
+    const created = await prisma.terapeuta_cliente.create({
+        data: {
+            cliente_id: payload.patientId,
+            terapeuta_id: payload.therapistId,
+            papel: payload.role,
+            status: 'active',
+            data_inicio: new Date(payload.startDate),
+            data_fim: payload.endDate ? new Date(payload.endDate) : null,
+            observacoes: payload.notes ?? null,
+            atuacao_coterapeuta: payload.coTherapistActuation ?? null,
+        },
+        select: {
+            id: true,
+            terapeuta_id: true,
+            cliente_id: true,
+            papel: true,
+            status: true,
+            data_inicio: true,
+            data_fim: true,
+            observacoes: true,
+            atuacao_coterapeuta: true,
+            criado_em: true,
+            atualizado_em: true,
+        },
+    });
+
+    return created;
+}
 
 export async function getAllClients() {
     return prisma.cliente.findMany({

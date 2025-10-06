@@ -27,7 +27,23 @@ function normalizeStatus(status: string | null | undefined): 'active' | 'ended' 
     return 'active';
 }
 
-export async function getAllClients(dto: LinkTypes.DBClient[]) {
+export function normalizeLink(link: LinkTypes.DBLink) {
+    return {
+        id: String(link.id),
+        patientId: link.cliente_id,
+        therapistId: link.terapeuta_id,
+        role: normalizeRole(link.papel),
+        startDate: link.data_inicio.toISOString(),
+        endDate: link.data_fim ? link.data_fim.toISOString() : null,
+        status: normalizeStatus(link.status),
+        notes: link.observacoes ?? null,
+        coTherapistActuation: link.atuacao_coterapeuta ?? null,
+        createdAt: link.criado_em.toISOString(),
+        updatedAt: link.atualizado_em.toISOString(),
+    }
+}
+
+export function getAllClients(dto: LinkTypes.DBClient[]) {
     return dto.map((client) => {
         const primaryCaregiver = client.cuidadores?.[0] ?? null;
         const primaryAddress = client.enderecos?.[0]?.endereco ?? null;
@@ -162,17 +178,5 @@ export function getAllTherapists(dto: LinkTypes.DBTherapist[]) {
 }
 
 export function getAllLinks(dto: LinkTypes.DBLink[]) {
-    return dto.map((link) => ({
-        id: String(link.id),
-        patientId: link.cliente_id,
-        therapistId: link.terapeuta_id,
-        role: normalizeRole(link.papel),
-        startDate: link.data_inicio.toISOString(),
-        endDate: link.data_fim ? link.data_fim.toISOString() : null,
-        status: normalizeStatus(link.status),
-        notes: link.observacoes ?? null,
-        coTherapistActuation: link.atuacao_coterapeuta ?? null,
-        createdAt: link.criado_em.toISOString(),
-        updatedAt: link.atualizado_em.toISOString(),
-    }))
+    return dto.map((link) => normalizeLink(link))
 }
