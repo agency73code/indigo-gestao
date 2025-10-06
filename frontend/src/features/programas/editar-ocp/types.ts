@@ -6,6 +6,7 @@ export type UpdateProgramInput = {
     name?: string | null;
     goalTitle?: string;
     goalDescription?: string | null;
+    stimuliApplicationDescription?: string | null;
     stimuli?: { 
         id?: string; 
         label: string; 
@@ -22,6 +23,8 @@ export type UpdateProgramInput = {
 
 export type ValidationErrors = {
     goalTitle?: string;
+    goalDescription?: string;
+    stimuliApplicationDescription?: string;
     stimuli?: { [index: number]: { label?: string; description?: string } };
     criteria?: string;
     notes?: string;

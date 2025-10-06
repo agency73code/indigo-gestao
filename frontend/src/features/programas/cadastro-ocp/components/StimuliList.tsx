@@ -1,26 +1,40 @@
 import { Plus, Zap } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import StimulusRow from './StimulusRow';
 import type { StimulusInput } from '../types';
 
 interface StimuliListProps {
     stimuli: StimulusInput[];
+    stimuliApplicationDescription?: string;
+    goalDescription?: string;
     onChange: (stimuli: StimulusInput[]) => void;
+    onApplicationDescriptionChange?: (description: string) => void;
+    onGoalDescriptionChange?: (description: string) => void;
     errors?: {
         stimuli?: string;
         stimulusErrors?: { [key: string]: { label?: string } };
+        stimuliApplicationDescription?: string;
+        goalDescription?: string;
     };
 }
 
-export default function StimuliList({ stimuli, onChange, errors }: StimuliListProps) {
+export default function StimuliList({
+    stimuli,
+    stimuliApplicationDescription = '',
+    goalDescription = '',
+    onChange,
+    onApplicationDescriptionChange,
+    onGoalDescriptionChange,
+    errors,
+}: StimuliListProps) {
     const generateId = () => `stimulus_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
     const handleAddStimulus = () => {
         const newStimulus: StimulusInput = {
             id: generateId(),
             label: '',
-            description: '',
             active: true,
             order: stimuli.length + 1,
         };
@@ -41,9 +55,7 @@ export default function StimuliList({ stimuli, onChange, errors }: StimuliListPr
     const handleRemoveStimulus = (id: string) => {
         if (stimuli.length === 1) {
             // Não permite remover o último estímulo, apenas limpa
-            const clearedStimulus = stimuli.map((s) =>
-                s.id === id ? { ...s, label: '', description: '' } : s,
-            );
+            const clearedStimulus = stimuli.map((s) => (s.id === id ? { ...s, label: '' } : s));
             onChange(clearedStimulus);
             return;
         }
@@ -91,22 +103,72 @@ export default function StimuliList({ stimuli, onChange, errors }: StimuliListPr
                 <div className="flex items-center justify-between">
                     <CardTitle className="text-base flex items-center gap-2">
                         <Zap className="h-4 w-4" />
-                        Estímulos do Programa
+                        Objetivo a Curto Prazo
                     </CardTitle>
                     <Button
                         type="button"
-                        variant="outline"
                         size="sm"
                         onClick={handleAddStimulus}
-                        className="h-8 px-2 gap-1 text-xs sm:text-sm"
+                        className="h-10 w-10 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground p-0"
+                        aria-label="Adicionar estímulo"
                     >
-                        <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
-                        
+                        <Plus className="h-4 w-4" />
                     </Button>
                 </div>
                 {errors?.stimuli && (
                     <p className="text-sm text-destructive mt-2">{errors.stimuli}</p>
                 )}
+
+                {/* Descrição detalhada do objetivo a curto prazo */}
+                <div className="space-y-3">
+                    <Label htmlFor="goal-description" className="text-sm font-medium">
+                        Descrição detalhada do objetivo a curto prazo 
+                    </Label>
+                    
+                    <textarea
+                        id="goal-description"
+                        placeholder="Descreva mais detalhadamente o que se espera alcançar com este objetivo..."
+                        value={goalDescription}
+                        onChange={(e) => onGoalDescriptionChange?.(e.target.value)}
+                        maxLength={1000}
+                        rows={3}
+                        className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+                    />
+                    {errors?.goalDescription && (
+                        <p className="text-sm text-destructive">{errors.goalDescription}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                        {goalDescription.length}/1000 caracteres
+                    </p>
+                </div>
+
+                {/* Descrição de Aplicação */}
+                <div className="space-y-3">
+                    <Label
+                        htmlFor="stimuli-application-description"
+                        className="text-sm font-medium"
+                    >
+                        Descrição da Aplicação
+                    </Label>
+                    <textarea
+                        id="stimuli-application-description"
+                        placeholder="Descreva detalhes gerais sobre como aplicar os estímulos deste programa..."
+                        value={stimuliApplicationDescription}
+                        onChange={(e) => onApplicationDescriptionChange?.(e.target.value)}
+                        maxLength={1000}
+                        rows={3}
+                        className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+                    />
+                    {errors?.stimuliApplicationDescription && (
+                        <p className="text-sm text-destructive">
+                            {errors.stimuliApplicationDescription}
+                        </p>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                        {stimuliApplicationDescription.length}/1000 caracteres
+                    </p>
+                    
+                </div>
             </CardHeader>
             <CardContent className="pb-3 sm:pb-6">
                 <div className="space-y-4">
@@ -116,13 +178,12 @@ export default function StimuliList({ stimuli, onChange, errors }: StimuliListPr
                             <p className="text-sm">Nenhum estímulo adicionado</p>
                             <Button
                                 type="button"
-                                variant="outline"
                                 size="sm"
                                 onClick={handleAddStimulus}
-                                className="mt-3"
+                                className="mt-3 h-10 w-10 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground p-0"
+                                aria-label="Adicionar primeiro estímulo"
                             >
-                                <Plus className="h-4 w-4 mr-2" />
-                                Adicionar primeiro estímulo
+                                <Plus className="h-4 w-4" />
                             </Button>
                         </div>
                     ) : (
@@ -139,6 +200,17 @@ export default function StimuliList({ stimuli, onChange, errors }: StimuliListPr
                                 errors={errors?.stimulusErrors?.[stimulus.id!]}
                             />
                         ))
+                    )}
+
+                    {stimuli.length > 0 && (
+                        <Button
+                            type="button"
+                            onClick={handleAddStimulus}
+                            className="w-full flex items-center gap-2 mt-4 h-12 rounded-[5px]"
+                        >
+                            <Plus className="w-4 h-4" />
+                            Adicionar outro Estímulo
+                        </Button>
                     )}
                 </div>
             </CardContent>

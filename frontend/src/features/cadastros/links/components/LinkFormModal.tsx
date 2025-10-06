@@ -250,7 +250,8 @@ export default function LinkFormModal({
                 <DialogHeader>
                     <DialogTitle
                         style={{ fontFamily: 'Sora, sans-serif' }}
-                        className="text-lg sm:text-xl font-semibold">
+                        className="text-lg sm:text-xl font-semibold"
+                    >
                         {title}
                     </DialogTitle>
                 </DialogHeader>
@@ -389,7 +390,9 @@ export default function LinkFormModal({
                         {/* Campo de Atuação do Co-terapeuta - aparece apenas quando Co-terapeuta está selecionado */}
                         {role === 'co' && (
                             <div className="space-y-2 pt-2 border-t border-border">
-                                <Label className="text-sm font-medium">Atuação do Co-terapeuta *</Label>
+                                <Label className="text-sm font-medium">
+                                    Atuação do Co-terapeuta *
+                                </Label>
                                 <Combobox
                                     options={AREAS_ATUACAO_OPTIONS}
                                     value={coTherapistActuation}
@@ -400,7 +403,9 @@ export default function LinkFormModal({
                                     error={!!errors.coTherapistActuation}
                                 />
                                 {errors.coTherapistActuation && (
-                                    <p className="text-sm text-destructive">{errors.coTherapistActuation}</p>
+                                    <p className="text-sm text-destructive">
+                                        {errors.coTherapistActuation}
+                                    </p>
                                 )}
                             </div>
                         )}
@@ -441,6 +446,7 @@ export default function LinkFormModal({
                                         }
                                     }}
                                     locale={ptBR}
+                                    toDate={new Date(new Date().getFullYear() + 10, 11, 31)}
                                     initialFocus
                                 />
                             </PopoverContent>

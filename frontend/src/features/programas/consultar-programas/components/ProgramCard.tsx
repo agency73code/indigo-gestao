@@ -55,6 +55,30 @@ export default function ProgramCard({ program, onOpen, onNewSession }: ProgramCa
                         </Button>
                     </div>
 
+                    {/* Descrição do objetivo a curto prazo */}
+                    {program.goalDescription && (
+                        <div className="space-y-1">
+                            <p className="text-xs font-medium text-muted-foreground">
+                                Descrição do objetivo:
+                            </p>
+                            <p className="text-xs text-muted-foreground line-clamp-2">
+                                {program.goalDescription}
+                            </p>
+                        </div>
+                    )}
+
+                    {/* Descrição da aplicação */}
+                    {program.stimuliApplicationDescription && (
+                        <div className="space-y-1">
+                            <p className="text-xs font-medium text-muted-foreground">
+                                Como aplicar:
+                            </p>
+                            <p className="text-xs text-muted-foreground line-clamp-2">
+                                {program.stimuliApplicationDescription}
+                            </p>
+                        </div>
+                    )}
+
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <div className="flex items-center gap-1">
                             <Calendar className="h-3 w-3" />

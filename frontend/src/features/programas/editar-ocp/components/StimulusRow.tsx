@@ -1,4 +1,4 @@
-import { ChevronUp, ChevronDown, ToggleLeft } from 'lucide-react';
+import { ChevronUp, ChevronDown, ToggleLeft, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,7 +17,6 @@ interface StimulusRowProps {
     canMoveUp: boolean;
     canMoveDown: boolean;
     onLabelChange: (index: number, label: string) => void;
-    onDescriptionChange: (index: number, description: string) => void;
     onActiveChange: (index: number, active: boolean) => void;
     onMoveUp: (index: number) => void;
     onMoveDown: (index: number) => void;
@@ -31,10 +30,10 @@ export default function StimulusRow({
     canMoveUp,
     canMoveDown,
     onLabelChange,
-    onDescriptionChange,
     onActiveChange,
     onMoveUp,
     onMoveDown,
+    onRemove,
     errors,
 }: StimulusRowProps) {
     const stimulusError = errors?.[index];
@@ -86,7 +85,15 @@ export default function StimulusRow({
                             <ChevronDown className="h-4 w-4" />
                         </Button>
 
-                        
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onRemove(index)}
+                            className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                            aria-label={`Remover estímulo ${index + 1}`}
+                        >
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
                     </div>
                 </div>
 
@@ -106,28 +113,6 @@ export default function StimulusRow({
                     )}
                     <p className="text-xs text-muted-foreground">
                         {stimulus.label.length}/60 caracteres
-                    </p>
-                </div>
-
-                {/* Campo da descrição */}
-                <div className="space-y-2">
-                    <Label htmlFor={`stimulus-description-${index}`}>Descrição (opcional)</Label>
-                    <textarea
-                        id={`stimulus-description-${index}`}
-                        placeholder="Descreva como trabalhar este estímulo..."
-                        value={stimulus.description || ''}
-                        onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                            onDescriptionChange(index, e.target.value)
-                        }
-                        maxLength={1000}
-                        className="w-full p-2 text-sm border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent resize-none"
-                        rows={3}
-                    />
-                    {stimulusError?.description && (
-                        <p className="text-sm text-red-600">{stimulusError.description}</p>
-                    )}
-                    <p className="text-xs text-muted-foreground">
-                        {(stimulus.description || '').length}/1000 caracteres
                     </p>
                 </div>
             </CardContent>

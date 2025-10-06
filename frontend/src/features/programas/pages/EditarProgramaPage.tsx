@@ -33,6 +33,7 @@ export default function EditarProgramaPage() {
     // Estados do formulário
     const [goalTitle, setGoalTitle] = useState('');
     const [goalDescription, setGoalDescription] = useState('');
+    const [stimuliApplicationDescription, setStimuliApplicationDescription] = useState('');
     const [stimuli, setStimuli] = useState<UpdateProgramInput['stimuli']>([]);
     const [criteria, setCriteria] = useState('');
     const [notes, setNotes] = useState('');
@@ -63,6 +64,7 @@ export default function EditarProgramaPage() {
             // Pré-preencher formulário
             setGoalTitle(programData.goalTitle);
             setGoalDescription(programData.goalDescription || '');
+            setStimuliApplicationDescription(programData.stimuliApplicationDescription || '');
             setStimuli(
                 programData.stimuli.map((s) => ({
                     id: s.id,
@@ -146,6 +148,7 @@ export default function EditarProgramaPage() {
                 name: program?.name,
                 goalTitle,
                 goalDescription: goalDescription || null,
+                stimuliApplicationDescription: stimuliApplicationDescription || null,
                 stimuli,
                 criteria: criteria || null,
                 notes: notes || null,
@@ -194,6 +197,7 @@ export default function EditarProgramaPage() {
                 name: program?.name,
                 goalTitle,
                 goalDescription: goalDescription || null,
+                stimuliApplicationDescription: stimuliApplicationDescription || null,
                 stimuli,
                 criteria: criteria || null,
                 notes: notes || null,
@@ -237,7 +241,9 @@ export default function EditarProgramaPage() {
         if (!program) return;
 
         const hasGoalChanges =
-            goalTitle !== program.goalTitle || goalDescription !== (program.goalDescription || '');
+            goalTitle !== program.goalTitle ||
+            goalDescription !== (program.goalDescription || '') ||
+            stimuliApplicationDescription !== (program.stimuliApplicationDescription || '');
 
         const hasStatusChanges = status !== program.status;
 
@@ -271,6 +277,7 @@ export default function EditarProgramaPage() {
         program,
         goalTitle,
         goalDescription,
+        stimuliApplicationDescription,
         stimuli,
         criteria,
         notes,
@@ -344,7 +351,11 @@ export default function EditarProgramaPage() {
                 {/* Editor de estímulos */}
                 <StimuliEditor
                     stimuli={stimuli || []}
+                    goalDescription={goalDescription}
+                    stimuliApplicationDescription={stimuliApplicationDescription}
                     onStimuliChange={setStimuli}
+                    onGoalDescriptionChange={setGoalDescription}
+                    onStimuliApplicationDescriptionChange={setStimuliApplicationDescription}
                     errors={validationErrors}
                 />
 

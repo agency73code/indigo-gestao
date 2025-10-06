@@ -1,4 +1,4 @@
-import type { ProgramDetail } from '../types';
+﻿import type { ProgramDetail } from '../types';
 
 export const mockProgramDetail: ProgramDetail = {
     id: 'prog-123',
@@ -13,37 +13,52 @@ export const mockProgramDetail: ProgramDetail = {
     createdAt: '2025-01-15T10:30:00.000Z',
     prazoInicio: '2025-01-15T10:30:00.000Z',
     prazoFim: '2025-04-15T10:30:00.000Z',
-    goalTitle: 'Desenvolvimento da comunicação verbal e não-verbal',
-    goalDescription: 'O objetivo principal é desenvolver as habilidades de comunicação da paciente, trabalhando expressão verbal, compreensão de comandos simples e uso de gestos funcionais para comunicação básica.',
+    goalTitle: 'Desenvolvimento da comunicação verbal e não verbal',
+    longTermGoalDescription:
+        'Promover avanços graduais na comunicação funcional da paciente, integrando recursos verbais e não verbais em interações sociais cotidianas.',
+    shortTermGoalDescription:
+        'Garantir que a paciente responda a comandos simples e utilize ao menos três formas de comunicação funcional (fala, gestos ou figuras) em contextos estruturados.',
+    goalDescription:
+        'Promover avanços graduais na comunicação funcional da paciente, integrando recursos verbais e não verbais em interações sociais cotidianas.',
+    stimuliApplicationDescription:
+        'Aplique os estímulos nas sessões diárias, utilizando reforçadores preferidos e alternando contextos (sala, pátio e refeitório) para favorecer a generalização.',
+    criteria:
+        '✓ 80% de acertos em três sessões consecutivas\n✓ Independência total em cinco apresentações\n✓ Manutenção por duas semanas sem treino',
+    notes:
+        'Paciente apresenta maior engajamento com recursos visuais. Priorizar sessões no período da manhã e envolver responsáveis na generalização dos estímulos.',
     stimuli: [
         {
             id: 'stim-1',
             order: 1,
             label: 'Identificação de objetos',
-            description: 'Apresentar objetos comuns do dia a dia e solicitar que a criança aponte ou nomeie o objeto apresentado. Utilizar brinquedos, utensílios domésticos e alimentos.',
-            active: true
+            description:
+                'Apresentar objetos do cotidiano e solicitar que a paciente aponte ou nomeie o item indicado.',
+            active: true,
         },
         {
             id: 'stim-2',
             order: 2,
             label: 'Imitação de gestos',
-            description: 'Trabalhar a imitação de gestos simples como acenar, bater palmas, apontar. Começar com gestos grossos e evoluir para gestos mais finos.',
-            active: true
+            description:
+                'Trabalhar imitação de gestos funcionais (acenar, bater palmas, apontar) iniciando com movimentos amplos.',
+            active: true,
         },
         {
             id: 'stim-3',
             order: 3,
             label: 'Seguir comandos simples',
-            description: 'Comandos de uma etapa como "pega a bola", "senta aqui", "vem cá". Evoluir gradualmente para comandos de duas etapas.',
-            active: true
+            description:
+                'Utilizar comandos de uma etapa e evoluir gradualmente para comandos com duas etapas em sequência.',
+            active: true,
         },
         {
             id: 'stim-4',
             order: 4,
             label: 'Expressão de necessidades',
-            description: 'Ensinar formas funcionais de expressar necessidades básicas como fome, sede, vontade de brincar, usando palavras, gestos ou símbolos.',
-            active: false
-        }
+            description:
+                'Ensinar formas objetivas de expressar necessidades básicas usando palavras, gestos ou figuras.',
+            active: false,
+        },
     ],
-    status: 'active'
+    status: 'active',
 };

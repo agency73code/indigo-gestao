@@ -118,7 +118,7 @@ function SelectorModal({
                                 <div className="space-y-2">
                                     {Array.from({ length: 3 }).map((_, i) => (
                                         <Card key={i} className="rounded-[5px]">
-                                            <CardContent className="p-2 sm:p-4">
+                                            <CardContent>
                                                 <div className="animate-pulse space-y-2">
                                                     <div className="h-4 bg-muted rounded w-3/4"></div>
                                                     <div className="h-3 bg-muted rounded w-1/2"></div>
@@ -130,11 +130,12 @@ function SelectorModal({
                             ) : (
                                 items.map((item) => (
                                     <Card
+                                        padding="medium"
                                         key={item.id}
                                         className="cursor-pointer hover:shadow-md transition-shadow rounded-[5px]"
                                         onClick={() => handleSelect(item)}
                                     >
-                                        <CardContent className="p-2 sm:p-4">
+                                        <CardContent className="p-0 sm:p-0">
                                             <div className="flex items-center gap-3">
                                                 <div className="flex-shrink-0">
                                                     {item.photoUrl ? (
@@ -363,7 +364,7 @@ export default function HeaderInfo({
                     <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                         <CardTitle className="text-base flex items-center gap-2">
                             <Calendar className="h-4 w-4" />
-                            Informações do Programa
+                            Informações do Programa / Objetivo
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="pb-3 sm:pb-6 space-y-4">

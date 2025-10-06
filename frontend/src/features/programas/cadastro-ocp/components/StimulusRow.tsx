@@ -31,7 +31,7 @@ export default function StimulusRow({
     const canMoveDown = index < totalItems - 1;
 
     return (
-        <div className="p-0 sm:p-4 space-y-3 bg-background">
+        <div className="p-0 sm:p-0 space-y-3 bg-background">
             {/* Header com número e ações */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -123,27 +123,6 @@ export default function StimulusRow({
                     )}
                     <p className="text-xs text-muted-foreground">
                         {stimulus.label.length}/60 caracteres
-                    </p>
-                </div>
-
-                <div className="space-y-2">
-                    <Label
-                        htmlFor={`stimulus-description-${stimulus.id}`}
-                        className="text-sm font-medium"
-                    >
-                        Descrição (opcional)
-                    </Label>
-                    <textarea
-                        id={`stimulus-description-${stimulus.id}`}
-                        placeholder="Descreva detalhes sobre como aplicar este estímulo..."
-                        value={stimulus.description || ''}
-                        onChange={(e) => onChange(stimulus.id!, 'description', e.target.value)}
-                        maxLength={1000}
-                        rows={2}
-                        className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                        {(stimulus.description || '').length}/1000 caracteres
                     </p>
                 </div>
             </div>

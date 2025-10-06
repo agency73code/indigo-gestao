@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
     HeaderProgram,
     GoalSection,
+    CriteriaSection,
     StimuliSection,
+    NotesSection,
     SessionsList,
     LastSessionPreview,
     SummaryCard,
@@ -35,7 +37,6 @@ export default function DetalheProgramaPage() {
             setLoading(true);
             setError(null);
 
-            // Carregar dados do programa e sessões em paralelo
             const [programData, sessionsData] = await Promise.all([
                 fetchProgramById(programaId),
                 fetchRecentSessions(programaId, 5),
@@ -43,7 +44,7 @@ export default function DetalheProgramaPage() {
 
             setProgram(programData);
             setSessions(sessionsData);
-            setRefreshKey(Date.now()); // Força re-renderização do header
+            setRefreshKey(Date.now());
         } catch (err) {
             console.error('Erro ao carregar dados do programa:', err);
             setError(err instanceof Error ? err.message : 'Erro desconhecido');
@@ -56,12 +57,10 @@ export default function DetalheProgramaPage() {
         loadData();
     }, [programaId]);
 
-    // Recarregar dados quando a rota muda (incluindo retorno da edição)
     useEffect(() => {
         loadData();
     }, [location.pathname, programaId]);
 
-    // Loading state
     if (loading) {
         return (
             <div className="min-h-screen bg-background pb-28">
@@ -76,7 +75,6 @@ export default function DetalheProgramaPage() {
         );
     }
 
-    // Error state
     if (error || !program) {
         return (
             <div className="min-h-screen bg-background">
@@ -98,8 +96,14 @@ export default function DetalheProgramaPage() {
                 {/* Objetivo do programa */}
                 <GoalSection program={program} />
 
-                {/* Estímulos em treino */}
+                {/* Critérios de domínio */}
+                <CriteriaSection program={program} />
+
+                {/* Objetivo a curto prazo e estímulos */}
                 <StimuliSection program={program} />
+
+                {/* Observações gerais */}
+                <NotesSection program={program} />
 
                 {/* Lista de sessões recentes */}
                 <SessionsList sessions={sessions} program={program} />
