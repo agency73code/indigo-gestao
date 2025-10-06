@@ -232,9 +232,23 @@ export async function archiveLink(id: string): Promise<void> {
  * Busca todos os pacientes (para formulários)
  */
 export async function getAllPatients(): Promise<Paciente[]> {
-  await delay(200);
-  console.log(mockPatients)
-  return [...mockPatients];
+  try {
+    const res = await fetch('/api/links/getAllClients', {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    const json = await res.json();
+    console.log(json);
+    return [...json];
+    throw new Error("Erro proposital para testar o catch");
+  } catch {
+    await delay(200);
+    console.log(mockPatients);
+    return [...mockPatients];
+  }
 }
 
 /**
