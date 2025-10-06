@@ -24,7 +24,6 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
  */
 export async function searchPatients(q: string): Promise<Paciente[]> {
   await delay(300);
-  console.log('teste')
   return searchPatientsByName(mockPatients, q);
 }
 
@@ -240,13 +239,16 @@ export async function getAllPatients(): Promise<Paciente[]> {
         'Content-Type': 'application/json',
       },
     });
+
+    if (!res.ok) {
+      throw new Error('Falha ao carregar clientes');
+    }
+
     const json = await res.json();
-    console.log(json);
-    return [...json];
-    throw new Error("Erro proposital para testar o catch");
-  } catch {
+    return json as Paciente[];
+  } catch (error) {
+    console.error('Erro ao buscar clientes, retornando mock:', error);
     await delay(200);
-    console.log(mockPatients);
     return [...mockPatients];
   }
 }
@@ -255,14 +257,50 @@ export async function getAllPatients(): Promise<Paciente[]> {
  * Busca todos os terapeutas (para formulários)
  */
 export async function getAllTherapists(): Promise<Terapeuta[]> {
-  await delay(200);
-  return [...mockTherapists];
+  try {
+    const res = await fetch('/api/links/getAllTherapists', {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error('Falha ao carregar terapeutas');
+    }
+    
+    const json = await res.json();
+    return json as Terapeuta[];
+  } catch (error) {
+    console.error('Erro ao buscar terapeutas, retornando mock:', error);
+    await delay(200);
+    return [...mockTherapists];
+  }
 }
 
 /**
  * Busca todos os vínculos (para listagens)
  */
 export async function getAllLinks(): Promise<PatientTherapistLink[]> {
-  await delay(300);
-  return [...mockLinks];
+  try {
+    const res = await fetch('/api/links/getAllLinks', {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error('Falha ao carregar vínculos');
+    }
+
+    const json = await res.json();
+    return json as PatientTherapistLink[];
+  } catch (error) {
+    console.error('Erro ao buscar vínculos, retornando mock:', error);
+    await delay(300);
+    return [...mockLinks];
+  }
 }
