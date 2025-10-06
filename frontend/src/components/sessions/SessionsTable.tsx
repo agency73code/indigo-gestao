@@ -564,9 +564,9 @@ export function SessionsTable({ rows }: SessionsTableProps) {
                         <Input
                             value={globalFilter ?? ''}
                             onChange={(event) => setGlobalFilter(event.target.value)}
-                            placeholder="Buscar por paciente, terapeuta ou tipo…"
+                            placeholder="Buscar por cliente, terapeuta ou tipo…"
                             className="pl-9"
-                            aria-label="Buscar por paciente, terapeuta ou tipo"
+                            aria-label="Buscar por cliente, terapeuta ou tipo"
                         />
                     </div>
                     <Separator orientation="vertical" className="hidden h-9 lg:block" />

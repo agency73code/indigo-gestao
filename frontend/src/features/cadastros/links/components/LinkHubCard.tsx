@@ -33,7 +33,7 @@ export default function LinkHubCard({}: {}) {
                         </div>
                         <div>
                             <CardTitle className="text-base font-sora">
-                                Vínculos Paciente ⇄ Terapeuta
+                                Vínculos Cliente ⇄ Terapeuta
                             </CardTitle>
                             <CardDescription className="text-xs">
                                 Gerencie relacionamentos terapêuticos

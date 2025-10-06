@@ -34,8 +34,8 @@ export default function ConsultaHubPage() {
             ability: { action: 'manage', subject: 'all' },
         },
         {
-            title: 'Consultar Pacientes',
-            description: 'Visualize e gerencie os pacientes cadastrados no sistema',
+            title: 'Consultar Clientes',
+            description: 'Visualize e gerencie os clientes cadastrados no sistema',
             icon: Users,
             href: '/app/consultar/pacientes',
             bgColor: 'bg-blue-500',
@@ -142,7 +142,7 @@ export default function ConsultaHubPage() {
 
                     <Card className="rounded-[5px]">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Total Pacientes</CardTitle>
+                            <CardTitle className="text-sm font-medium">Total Clientes</CardTitle>
                             <Users className="h-5 w-5 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>

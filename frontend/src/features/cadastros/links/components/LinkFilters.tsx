@@ -26,7 +26,7 @@ export default function LinkFilters({ filters, onFiltersChange }: LinkFiltersPro
             <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
-                    placeholder="Buscar por nome do paciente ou terapeuta"
+                    placeholder="Buscar por nome do cliente ou terapeuta"
                     value={filters.q || ''}
                     onChange={(e) => updateFilter('q', e.target.value)}
                     className="pl-10"
@@ -48,7 +48,7 @@ export default function LinkFilters({ filters, onFiltersChange }: LinkFiltersPro
                             className="h-8 text-xs sm:text-sm flex items-center gap-2"
                         >
                             <Users className="h-3 w-3" />
-                            Paciente
+                            Cliente
                         </Button>
                         <Button
                             variant={filters.viewBy === 'therapist' ? 'default' : 'outline'}

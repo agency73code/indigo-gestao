@@ -95,7 +95,7 @@ export default function LinkList({
     if (groupedData.length === 0) {
         const emptyMessage =
             filters.viewBy === 'patient'
-                ? 'Nenhum paciente encontrado com os filtros aplicados'
+                ? 'Nenhum cliente encontrado com os filtros aplicados'
                 : 'Nenhum terapeuta encontrado com os filtros aplicados';
 
         return (
