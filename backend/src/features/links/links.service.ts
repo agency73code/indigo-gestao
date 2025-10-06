@@ -2,6 +2,20 @@ import { prisma } from '../../config/database.js';
 import { AppError } from '../../errors/AppError.js';
 import * as LinkTypes from './links.types.js';
 
+const LINK_SELECT = {
+    id: true,
+    terapeuta_id: true,
+    cliente_id: true,
+    papel: true,
+    status: true,
+    data_inicio: true,
+    data_fim: true,
+    observacoes: true,
+    atuacao_coterapeuta: true,
+    criado_em: true,
+    atualizado_em: true,
+} as const;
+
 export async function createLink(payload: LinkTypes.CreateLink) {
     if (payload.role === 'responsible') {
         const existingResponsible = await prisma.terapeuta_cliente.findFirst({
@@ -28,19 +42,7 @@ export async function createLink(payload: LinkTypes.CreateLink) {
             observacoes: payload.notes ?? null,
             atuacao_coterapeuta: payload.coTherapistActuation ?? null,
         },
-        select: {
-            id: true,
-            terapeuta_id: true,
-            cliente_id: true,
-            papel: true,
-            status: true,
-            data_inicio: true,
-            data_fim: true,
-            observacoes: true,
-            atuacao_coterapeuta: true,
-            criado_em: true,
-            atualizado_em: true,
-        },
+        select: LINK_SELECT,
     });
 
     return created;
@@ -170,19 +172,38 @@ export async function getAllTherapists() {
 
 export async function getAllLinks() {
     return prisma.terapeuta_cliente.findMany({
-        select: {
-            id: true,
-            terapeuta_id: true,
-            cliente_id: true,
-            papel: true,
-            status: true,
-            data_inicio: true,
-            data_fim: true,
-            observacoes: true,
-            atuacao_coterapeuta: true,
-            criado_em: true,
-            atualizado_em: true,
-        },
+        select: LINK_SELECT,
         orderBy: { atualizado_em: 'desc' },
     });
+}
+
+export async function archiveLink(payload: LinkTypes.ArchiveLink) {
+    const linkId = Number(payload.id);
+
+    if (Number.isNaN(linkId)) {
+        throw new AppError('LINK_INVALID_ID', 'Identificador do vínculo inválido.', 400);
+    }
+
+    const existing = await prisma.terapeuta_cliente.findUnique({
+        where: { id: linkId },
+        select: LINK_SELECT,
+    });
+
+    if (!existing) {
+        throw new AppError('LINK_NOT_FOUND', 'Vínculo não encontrado.', 404);
+    }
+
+    if (existing.status === 'archived') {
+        return existing;
+    }
+
+    const updated = await prisma.terapeuta_cliente.update({
+        where: { id: linkId },
+        data: {
+            status: 'archived',
+        },
+        select: LINK_SELECT,
+    });
+
+    return updated;
 }

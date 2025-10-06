@@ -111,3 +111,7 @@ export type CreateLink = {
     notes?: string | null | undefined;
     coTherapistActuation?: string | null | undefined;
 }
+
+export type ArchiveLink = {
+    id: string;
+}

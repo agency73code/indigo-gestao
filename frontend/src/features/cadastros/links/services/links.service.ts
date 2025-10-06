@@ -52,7 +52,7 @@ export async function listLinksByTherapist(filters: LinkFilters): Promise<Patien
 }
 
 /**
- * Cria novo vínculo feito
+ * Cria novo vínculo [feito]
  * Regras: Apenas 1 responsible ativo por paciente
  */
 export async function createLink(input: CreateLinkInput): Promise<PatientTherapistLink> {
@@ -248,11 +248,57 @@ export async function endLink(id: string, endDate: string): Promise<void> {
 }
 
 /**
- * Arquiva vínculo (status='archived')
+ * Arquiva vínculo (status='archived') [feito]
  */
 export async function archiveLink(id: string): Promise<void> {
   await delay(400);
   
+  try {
+    const res = await fetch('/api/links/archiveLink', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ id })
+    });
+
+    if (!res.ok) {
+      let errorMessage = 'Falha ao arquivar vínculo';
+      const errorText = await res.text();
+
+      if (errorText) {
+        try {
+          const parsed = JSON.parse(errorText);
+          if (parsed?.message) {
+            errorMessage = parsed.message;
+          }
+        } catch {
+          errorMessage = errorText;
+        }
+      }
+
+      throw new Error(errorMessage);
+    }
+
+    const archiveLink = (await res.json()) as PatientTherapistLink;
+
+    const linkIndex = mockLinks.findIndex((link: PatientTherapistLink) => link.id === archiveLink.id);
+    if (linkIndex === -1) {
+      mockLinks.push(archiveLink);
+    } else {
+      mockLinks[linkIndex] = archiveLink;
+    }
+
+    return
+  } catch (error) {
+    if (error instanceof Error && error.name !== 'TypeError') {
+      throw error;
+    }
+
+    console.error('Erro ao arquivar vínculo no backend, utilizando fallback local:', error);
+  }
+
   const linkIndex = mockLinks.findIndex((link: PatientTherapistLink) => link.id === id);
   if (linkIndex === -1) {
     throw new Error('Vínculo não encontrado');
@@ -266,7 +312,7 @@ export async function archiveLink(id: string): Promise<void> {
 }
 
 /**
- * Busca todos os pacientes (para formulários) feito
+ * Busca todos os pacientes (para formulários) [feito]
  */
 export async function getAllPatients(): Promise<Paciente[]> {
   try {
@@ -292,7 +338,7 @@ export async function getAllPatients(): Promise<Paciente[]> {
 }
 
 /**
- * Busca todos os terapeutas (para formulários) feito
+ * Busca todos os terapeutas (para formulários) [feito]
  */
 export async function getAllTherapists(): Promise<Terapeuta[]> {
   try {
@@ -318,7 +364,7 @@ export async function getAllTherapists(): Promise<Terapeuta[]> {
 }
 
 /**
- * Busca todos os vínculos (para listagens) feito
+ * Busca todos os vínculos (para listagens) [feito]
  */
 export async function getAllLinks(): Promise<PatientTherapistLink[]> {
   try {

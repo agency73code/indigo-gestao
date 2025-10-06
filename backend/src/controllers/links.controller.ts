@@ -3,7 +3,7 @@ import * as LinkService from '../features/links/links.service.js';
 import * as LinkNormalizer from '../features/links/links.normalizer.js';
 import * as LinkTypes from '../features/links/links.types.js';
 
-export async function createLink(req: Request<unknown, unknown, LinkTypes.CreateLink> , res: Response, next: NextFunction) {
+export async function createLink(req: Request<unknown, unknown, LinkTypes.CreateLink>, res: Response, next: NextFunction) {
     try {
         const body = req.body;
         const created = await LinkService.createLink({
@@ -18,6 +18,17 @@ export async function createLink(req: Request<unknown, unknown, LinkTypes.Create
 
         const normalized = LinkNormalizer.normalizeLink(created);
         res.status(201).json(normalized);
+    } catch (err) {
+        next(err);
+    }
+}
+
+export async function archiveLink(req: Request<unknown, unknown, LinkTypes.ArchiveLink>, res: Response, next: NextFunction ) {
+    try {
+        const { id } = req.body;
+        const archived = await LinkService.archiveLink({ id });
+        const normalized = LinkNormalizer.normalizeLink(archived);
+        res.json(normalized);
     } catch (err) {
         next(err);
     }
