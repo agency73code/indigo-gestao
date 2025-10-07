@@ -130,10 +130,56 @@ export async function createLink(input: CreateLinkInput): Promise<PatientTherapi
 }
 
 /**
- * Atualiza vínculo existente
+ * Atualiza vínculo existente [feito]
  */
 export async function updateLink(input: UpdateLinkInput): Promise<PatientTherapistLink> {
   await delay(600);
+
+  try {
+    const res = await fetch('/api/links/updateLink', {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(input)
+    });
+
+    if (!res.ok) {
+      let errorMessage = 'Falha ao atualizar vínculo';
+      const errorText = await res.text();
+
+      if (errorText) {
+        try {
+          const parsed = JSON.parse(errorText);
+          if (parsed?.message) {
+            errorMessage = parsed.message;
+          }
+        } catch {
+          errorMessage = errorText;
+        }
+      }
+
+      throw new Error(errorMessage);
+    }
+
+    const updatedLink = (await res.json()) as PatientTherapistLink;
+    const backendLinkIndex = mockLinks.findIndex((link: PatientTherapistLink) => link.id === updatedLink.id);
+
+    if (backendLinkIndex === -1) {
+      mockLinks.push(updatedLink);
+    } else {
+      mockLinks[backendLinkIndex] = updatedLink;
+    }
+
+    return updatedLink;
+  } catch (error) {
+    if (error instanceof Error && error.name !== 'TypeError') {
+      throw error
+    }
+
+    console.error('Erro ao atualizar vínculo no backend, utilizando fallback local:', error);
+  }
   
   const linkIndex = mockLinks.findIndex((link: PatientTherapistLink) => link.id === input.id);
   if (linkIndex === -1) {
@@ -144,9 +190,9 @@ export async function updateLink(input: UpdateLinkInput): Promise<PatientTherapi
   
   // Se está mudando para responsável, verifica regra
   if (input.role === 'responsible' && existingLink.role !== 'responsible') {
-    const existingResponsible = mockLinks.find((link: PatientTherapistLink) => 
-      link.patientId === existingLink.patientId && 
-      link.role === 'responsible' && 
+    const existingResponsible = mockLinks.find((link: PatientTherapistLink) =>
+      link.patientId === existingLink.patientId &&
+      link.role === 'responsible' &&
       link.status === 'active' &&
       link.id !== input.id
     );
@@ -155,10 +201,63 @@ export async function updateLink(input: UpdateLinkInput): Promise<PatientTherapi
       throw new Error('Já existe um responsável principal ativo para este paciente.');
     }
   }
+
+  const normalizedStartDate = input.startDate ?? existingLink.startDate;
+  const parsedStartDate = new Date(normalizedStartDate);
+
+  if (Number.isNaN(parsedStartDate.getTime())) {
+    throw new Error('Data de início inválida.');
+  }
+
+  const hasEndDate = Object.prototype.hasOwnProperty.call(input, 'endDate');
+
+  let normalizedEndDate: string | null;
+  if (hasEndDate) {
+    if (input.endDate === null) {
+      normalizedEndDate = null;
+    } else if (typeof input.endDate === 'string' && input.endDate.trim() !== '') {
+      const parsedEndDate = new Date(input.endDate);
+
+      if (Number.isNaN(parsedEndDate.getTime())) {
+        throw new Error('Data de término inválida.');
+      }
+
+      if (parsedEndDate < parsedStartDate) {
+        throw new Error('A data de encerramento não pode ser anterior à data de início.');
+      }
+
+      normalizedEndDate = parsedEndDate.toISOString().split('T')[0];
+    } else if (typeof input.endDate === 'string') {
+      normalizedEndDate = null;
+    } else {
+      normalizedEndDate = existingLink.endDate ?? null;
+    }
+  } else {
+    normalizedEndDate = existingLink.endDate ?? null;
+    if (normalizedEndDate) {
+      const parsedEndDate = new Date(normalizedEndDate);
+      if (parsedEndDate < parsedStartDate) {
+        throw new Error('A data de encerramento não pode ser anterior à data de início.');
+      }
+    }
+  }
+
+  const normalizedStartDateString = parsedStartDate.toISOString().split('T')[0];
+
+  const roleChangedToResponsible = input.role === 'responsible' && existingLink.role !== 'responsible';
+  const hasCoTherapistActuation = Object.prototype.hasOwnProperty.call(input, 'coTherapistActuation');
+  const normalizedCoTherapistActuation = hasCoTherapistActuation
+    ? input.coTherapistActuation ?? null
+    : roleChangedToResponsible
+      ? null
+      : existingLink.coTherapistActuation ?? null;
   
   const updatedLink: PatientTherapistLink = {
     ...existingLink,
     ...input,
+    startDate: normalizedStartDateString,
+    endDate: normalizedEndDate,
+    coTherapistActuation: normalizedCoTherapistActuation,
     updatedAt: new Date().toISOString().split('T')[0]
   };
   

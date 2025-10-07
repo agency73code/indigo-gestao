@@ -121,6 +121,16 @@ export type EndLink = {
     endDate: string;
 }
 
+export type UpdateLink = {
+    id: string;
+    role?: 'responsible' | 'co' | undefined;
+    startDate?: string | undefined;
+    endDate?: string | null | undefined;
+    notes?: string | null | undefined;
+    status?: 'active' | 'ended' | 'archived' | undefined;
+    coTherapistActuation?: string | null | undefined;
+}
+
 export type TransferResponsible = {
     patientId: string;
     fromTherapistId: string;

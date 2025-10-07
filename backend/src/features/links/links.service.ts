@@ -1,3 +1,4 @@
+import type { Prisma } from '@prisma/client';
 import { prisma } from '../../config/database.js';
 import { AppError } from '../../errors/AppError.js';
 import * as LinkTypes from './links.types.js';
@@ -175,6 +176,122 @@ export async function getAllLinks() {
         select: LINK_SELECT,
         orderBy: { atualizado_em: 'desc' },
     });
+}
+
+export async function updateLink(payload: LinkTypes.UpdateLink) {
+    const linkId = Number(payload.id);
+
+    if (Number.isNaN(linkId)) {
+        throw new AppError('LINK_INVALID_ID', 'Identificador do vínculo inválido.', 400);
+    }
+
+    const existing = await prisma.terapeuta_cliente.findUnique({
+        where: { id: linkId },
+        select: LINK_SELECT,
+    });
+
+    if (!existing) {
+        throw new AppError('LINK_NOT_FOUND', 'Vínculo não encontrado.', 404)
+    }
+    
+    const nextRole = payload.role ?? existing.papel;
+    const nextStatus = payload.status ?? existing.status;
+    
+    if (nextRole === 'responsible' && nextStatus === 'active') {
+        const otherResponsible = await prisma.terapeuta_cliente.findFirst({
+            where: {
+                cliente_id: existing.cliente_id,
+                papel: 'responsible',
+                status: 'active',
+                NOT: { id: linkId },
+            },
+            select: { id: true },
+        });
+
+        if (otherResponsible) {
+            throw new AppError(
+                'LINK_RESPONSIBLE_EXISTS',
+                'Já existe um responsável principal ativo para este cliente.',
+                409,
+            );
+        }
+    }
+
+    const data: Prisma.terapeuta_clienteUpdateInput = {};
+
+    let startDate = existing.data_inicio;
+    if (payload.startDate) {
+        const parsedStart = new Date(payload.startDate);
+
+        if (Number.isNaN(parsedStart.getTime())) {
+            throw new AppError('LINK_INVALID_START_DATE', 'Data de início inválida.', 400);
+        }
+
+        data.data_inicio = parsedStart;
+        startDate = parsedStart;
+    }
+
+    let endDate = existing.data_fim;
+    const hasEndDate = Object.prototype.hasOwnProperty.call(payload, 'endDate');
+
+    if (hasEndDate) {
+        if (payload.endDate === null) {
+            data.data_fim = null;
+            endDate = null;
+        } else if (typeof payload.endDate === 'string' && payload.endDate.trim() !== '') {
+            const parsedEnd = new Date(payload.endDate);
+
+            if (Number.isNaN(parsedEnd.getTime())) {
+                throw new AppError('LINK_INVALID_END_DATE', 'Data de término inválida.', 400);
+            }
+
+            data.data_fim = parsedEnd;
+            endDate = parsedEnd;
+        } else if (typeof payload.endDate === 'string') {
+            data.data_fim = null;
+            endDate = null;
+        }
+    }
+
+    if (endDate && endDate < startDate) {
+        throw new AppError(
+            'LINK_INVALID_END_DATE',
+            'A data de encerramento não pode ser anterior à data de início do vínculo.',
+            400,
+        );
+    }
+
+    const roleChangedToResponsible = payload.role === 'responsible' && existing.papel !== 'responsible';
+
+    if (payload.role) {
+        data.papel = payload.role;
+    }
+
+    if (payload.status) {
+        data.status = payload.status;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(payload, 'notes')) {
+        data.observacoes = payload.notes ?? null;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(payload, 'coTherapistActuation')) {
+        data.atuacao_coterapeuta = payload.coTherapistActuation ?? null;
+    } else if (roleChangedToResponsible) {
+        data.atuacao_coterapeuta = null;
+    }
+
+    if (Object.keys(data).length === 0) {
+        return existing;
+    }
+
+    const updated = await prisma.terapeuta_cliente.update({
+        where: { id: linkId },
+        data,
+        select: LINK_SELECT,
+    });
+
+    return updated;
 }
 
 export async function archiveLink(payload: LinkTypes.ArchiveLink) {
