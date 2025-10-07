@@ -115,3 +115,8 @@ export type CreateLink = {
 export type ArchiveLink = {
     id: string;
 }
+
+export type EndLink = {
+    id: string;
+    endDate: string;
+}

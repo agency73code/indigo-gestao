@@ -229,21 +229,81 @@ export async function transferResponsible(input: TransferResponsibleInput): Prom
 }
 
 /**
- * Encerra vínculo (seta endDate e status='ended')
+ * Encerra vínculo (seta endDate e status='ended') [feito]
  */
 export async function endLink(id: string, endDate: string): Promise<void> {
   await delay(500);
+
+  try {
+    const res = await fetch('/api/links/endLink', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ id, endDate })
+    });
+
+    if (!res.ok) {
+      let errorMessage = 'Falha ao encerrar vínculo';
+      const errorText = await res.text();
+
+      if (errorText) {
+        try {
+          const parsed = JSON.parse(errorText);
+          if (parsed?.message) {
+            errorMessage = parsed.message;
+          }
+        } catch {
+          errorMessage = errorText;
+        }
+      }
+
+      throw new Error(errorMessage);
+    }
+
+    const endedLink = (await res.json()) as PatientTherapistLink;
+    const linkIndex = mockLinks.findIndex((link: PatientTherapistLink) => link.id === endedLink.id);
+
+    if (linkIndex === -1) {
+      mockLinks.push(endedLink);
+    } else {
+      mockLinks[linkIndex] = endedLink;
+    }
+
+    return;
+  } catch (error) {
+    if (error instanceof Error && error.name !== 'TypeError') {
+      throw error;
+    }
+
+    console.error('Erro ao encerrar vínculo no backend, utilizando fallback local:', error);
+  }
   
   const linkIndex = mockLinks.findIndex((link: PatientTherapistLink) => link.id === id);
   if (linkIndex === -1) {
     throw new Error('Vínculo não encontrado');
   }
+
+  const existingLink = mockLinks[linkIndex];
+  const parsedEndDate = new Date(endDate);
+
+  if (Number.isNaN(parsedEndDate.getTime())) {
+    throw new Error('Data de encerramento inválida.');
+  }
+
+  const parsedStartDate = new Date(existingLink.startDate);
+  if (!Number.isNaN(parsedStartDate.getTime()) && parsedEndDate < parsedStartDate) {
+    throw new Error('A data de encerramento não pode ser anterior à data de início.');
+  }
+
+  const normalizedEndDate = parsedEndDate.toISOString().split('T')[0];
   
   mockLinks[linkIndex] = {
-    ...mockLinks[linkIndex],
-    endDate,
+    ...existingLink,
+    endDate: normalizedEndDate,
     status: 'ended',
-    updatedAt: endDate
+    updatedAt: normalizedEndDate
   };
 }
 

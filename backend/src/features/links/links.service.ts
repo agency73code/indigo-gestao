@@ -207,3 +207,45 @@ export async function archiveLink(payload: LinkTypes.ArchiveLink) {
 
     return updated;
 }
+
+export async function endLink(payload: LinkTypes.EndLink) {
+    const linkId = Number(payload.id);
+
+    if (Number.isNaN(linkId)) {
+        throw new AppError('LINK_INVALID_ID', 'Identificador do vínculo inválido.', 400);
+    }
+
+    const endDate = new Date(payload.endDate);
+
+    if (Number.isNaN(endDate.getDate())) {
+        throw new AppError('LINK_INVALID_END_DATE', 'Data de encerramento inválida.', 400);
+    }
+
+    const existing = await prisma.terapeuta_cliente.findUnique({
+        where: { id: linkId },
+        select: LINK_SELECT,
+    });
+
+    if (!existing) {
+        throw new AppError('LINK_NOT_FOUND', 'Vínculo não encontrado.', 404);
+    }
+
+    if (endDate < existing.data_inicio) {
+        throw new AppError(
+            'LINK_INVALID_END_DATE',
+            'A data de encerramento não pode ser anterior à data de início do vínculo.',
+            400,
+        );
+    }
+
+    const updated = await prisma.terapeuta_cliente.update({
+        where: { id: linkId },
+        data: {
+            data_fim: endDate,
+            status: 'ended',
+        },
+        select: LINK_SELECT,
+    });
+
+    return updated;
+}

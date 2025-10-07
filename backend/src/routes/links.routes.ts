@@ -8,6 +8,7 @@ router.get('/getAllClients', LinkController.getAllClients);
 router.get('/getAllTherapists', LinkController.getAllTherapists);
 router.get('/getAllLinks', LinkController.getAllLinks);
 router.post('/createLink', LinkController.createLink);
+router.post('/endLink', LinkController.endLink);
 router.post('/archiveLink', LinkController.archiveLink);
 
 export default router;

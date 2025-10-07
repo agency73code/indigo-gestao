@@ -23,6 +23,17 @@ export async function createLink(req: Request<unknown, unknown, LinkTypes.Create
     }
 }
 
+export async function endLink(req: Request<unknown, unknown, LinkTypes.EndLink>, res: Response, next: NextFunction) {
+    try {
+        const { id, endDate } = req.body;
+        const ended = await LinkService.endLink({ id, endDate });
+        const normalized = LinkNormalizer.normalizeLink(ended);
+        res.json(normalized);
+    } catch (err) {
+        next(err);
+    }
+}
+
 export async function archiveLink(req: Request<unknown, unknown, LinkTypes.ArchiveLink>, res: Response, next: NextFunction ) {
     try {
         const { id } = req.body;
