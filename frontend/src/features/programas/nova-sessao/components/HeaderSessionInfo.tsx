@@ -55,7 +55,7 @@ export default function HeaderSessionInfo({ patient, program }: HeaderSessionInf
                     </Button>
                     <CardTitle className="text-base flex items-center gap-2">
                         <Brain className="h-4 w-4" />
-                        Nova Sessão
+                        Registrar nova Sessão
                     </CardTitle>
                 </div>
             </CardHeader>

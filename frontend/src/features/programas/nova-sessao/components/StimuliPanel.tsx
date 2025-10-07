@@ -1,68 +1,222 @@
-import { useState } from 'react';
-import { Brain, Play } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useMemo, useState } from 'react';
+import { Brain, ChevronDown, ChevronRight, Pause as PauseIcon, Play } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import AttemptPicker from './AttemptPicker';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import StimulusBlockPanel, {
+    type BlockCounts,
+    type ResultadoTentativa,
+    type StimulusSummary,
+} from './StimulusBlockPanel';
 import type { ProgramDetail, SessionAttempt, SessionAttemptType } from '../types';
+
+type BlockResumo = {
+    erro: number;
+    ajuda: number;
+    indep: number;
+    total: number;
+    ts: number;
+};
+
+const createEmptyCounts = (): BlockCounts => ({ erro: 0, ajuda: 0, indep: 0 });
 
 interface StimuliPanelProps {
     program: ProgramDetail;
     attempts: SessionAttempt[];
     onAddAttempt: (attempt: SessionAttempt) => void;
+    sessionId?: string;
 }
 
-export default function StimuliPanel({ program, attempts, onAddAttempt }: StimuliPanelProps) {
-    const [expanded, setExpanded] = useState<string | null>(null);
-    const [attemptPicker, setAttemptPicker] = useState<{
-        isOpen: boolean;
-        stimulusId: string;
-        stimulusLabel: string;
-    }>({ isOpen: false, stimulusId: '', stimulusLabel: '' });
+export default function StimuliPanel({
+    program,
+    attempts,
+    onAddAttempt,
+    sessionId,
+}: StimuliPanelProps) {
+    const [ativoId, setAtivoId] = useState<string | null>(null);
+    const [countsMap, setCountsMap] = useState<Record<string, BlockCounts>>({});
+    const [pausedMap, setPausedMap] = useState<Record<string, boolean>>({});
+    const [historico, setHistorico] = useState<Record<string, BlockResumo[]>>({});
 
-    // Filtrar apenas estímulos ativos
-    const activeStimuli = program.stimuli.filter((stimulus) => stimulus.active);
+    const activeStimuli = useMemo(
+        () => program.stimuli.filter((stimulus) => stimulus.active),
+        [program.stimuli],
+    );
 
-    const handleExpand = (stimulusId: string) => {
-        setExpanded(expanded === stimulusId ? null : stimulusId);
-    };
+    const activeStimulus = useMemo(
+        () => activeStimuli.find((stimulus) => stimulus.id === ativoId) ?? null,
+        [activeStimuli, ativoId],
+    );
 
-    const handleAddAttempt = (stimulusId: string, stimulusLabel: string) => {
-        setAttemptPicker({ isOpen: true, stimulusId, stimulusLabel });
-    };
+    const effectiveSessionId = sessionId ?? program.id ?? 'draft-session';
 
-    const handleAttemptTypeSelect = (type: SessionAttemptType) => {
-        const { stimulusId, stimulusLabel } = attemptPicker;
-        const stimulusAttempts = attempts.filter((attempt) => attempt.stimulusId === stimulusId);
+    const registrarTentativa = (resultado: ResultadoTentativa) => {
+        if (!ativoId || !activeStimulus) {
+            return;
+        }
+
+        setCountsMap((prev) => {
+            const atual = prev[ativoId] ?? createEmptyCounts();
+            const proximo: BlockCounts = {
+                ...atual,
+                [resultado]: atual[resultado] + 1,
+            } as BlockCounts;
+            return { ...prev, [ativoId]: proximo };
+        });
+
+        const stimulusAttempts = attempts.filter((attempt) => attempt.stimulusId === ativoId);
         const attemptNumber = stimulusAttempts.length + 1;
-        const newAttempt: SessionAttempt = {
+
+        const tipoSessao: SessionAttemptType =
+            resultado === 'erro' ? 'error' : resultado === 'ajuda' ? 'prompted' : 'independent';
+
+        const novoAttempto: SessionAttempt = {
             id: `attempt-${Date.now()}-${Math.random()}`,
             attemptNumber,
-            stimulusId,
-            stimulusLabel,
-            type,
+            stimulusId: ativoId,
+            stimulusLabel: activeStimulus.label,
+            type: tipoSessao,
             timestamp: new Date().toISOString(),
         };
-        onAddAttempt(newAttempt);
-        setAttemptPicker({ isOpen: false, stimulusId: '', stimulusLabel: '' });
+
+        onAddAttempt(novoAttempto);
     };
 
-    const handleCloseAttemptPicker = () => {
-        setAttemptPicker({ isOpen: false, stimulusId: '', stimulusLabel: '' });
+    const handleSelectStimulus = (stimulusId: string) => {
+        if (ativoId === stimulusId) {
+            setAtivoId(null);
+            return;
+        }
+
+        setAtivoId(stimulusId);
+        setPausedMap((prev) => ({ ...prev, [stimulusId]: false }));
+        setCountsMap((prev) => {
+            if (prev[stimulusId]) {
+                return prev;
+            }
+            return { ...prev, [stimulusId]: createEmptyCounts() };
+        });
+    };
+
+    const pausarBloco = () => {
+        if (!ativoId) {
+            return;
+        }
+
+        setPausedMap((prev) => ({ ...prev, [ativoId]: true }));
+        setAtivoId(null);
+    };
+
+    const finalizarBloco = () => {
+        if (!ativoId) {
+            return;
+        }
+
+        const counts = countsMap[ativoId] ?? createEmptyCounts();
+        const resumo: BlockResumo = {
+            ...counts,
+            total: counts.erro + counts.ajuda + counts.indep,
+            ts: Date.now(),
+        };
+
+        setHistorico((prev) => {
+            const atual = prev[ativoId] ? [...prev[ativoId]] : [];
+            atual.push(resumo);
+            return { ...prev, [ativoId]: atual };
+        });
+
+        setCountsMap((prev) => {
+            const copia = { ...prev };
+            delete copia[ativoId];
+            return copia;
+        });
+
+        setPausedMap((prev) => ({ ...prev, [ativoId]: false }));
+        setAtivoId(null);
+    };
+
+    const renderResumo = (stimulusId: string) => {
+        const resumoDoStimulo = historico[stimulusId];
+        if (!resumoDoStimulo || resumoDoStimulo.length === 0) {
+            return null;
+        }
+
+        return (
+            <div className="space-y-0">
+                {resumoDoStimulo.map((item, index) => (
+                    <div key={item.ts}>
+                        {index > 0 && <Separator />}
+                        <div className="px-4 py-3 text-xs">
+                            <div className="font-semibold text-sm mb-2 text-foreground">
+                                Tentativa {index + 1}
+                            </div>
+                            <div className="flex flex-wrap gap-3">
+                                <div className="flex items-center gap-1.5">
+                                    <span className="text-xs font-medium text-muted-foreground">
+                                        Erro:
+                                    </span>
+                                    <Badge
+                                        variant="outline"
+                                        className="bg-red-50 text-red-700 border-red-200"
+                                    >
+                                        {item.erro}
+                                    </Badge>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <span className="text-xs font-medium text-muted-foreground">
+                                        Ajuda:
+                                    </span>
+                                    <Badge
+                                        variant="outline"
+                                        className="bg-amber-50 text-amber-700 border-amber-200"
+                                    >
+                                        {item.ajuda}
+                                    </Badge>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <span className="text-xs font-medium text-muted-foreground">
+                                        Indep.:
+                                    </span>
+                                    <Badge
+                                        variant="outline"
+                                        className="bg-green-50 text-green-700 border-green-200"
+                                    >
+                                        {item.indep}
+                                    </Badge>
+                                </div>
+                                <div className="flex items-center gap-1.5 ml-auto">
+                                    <span className="text-xs font-medium text-muted-foreground">
+                                        Total:
+                                    </span>
+                                    <Badge
+                                        variant="outline"
+                                        className="bg-primary/10 text-primary border-primary/30 font-semibold"
+                                    >
+                                        {item.total}
+                                    </Badge>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        );
     };
 
     if (activeStimuli.length === 0) {
         return (
-            <Card className="rounded-[5px] Estímulos em treino">
+            <Card className="rounded-[5px]">
                 <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                     <CardTitle className="text-base flex items-center gap-2">
                         <Brain className="h-4 w-4" />
-                        Estímulos em treino
+                        Estimulos em treino
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="pb-3 sm:pb-6">
                     <div className="text-center py-8 text-muted-foreground">
                         <Brain className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                        <p>Nenhum estímulo ativo encontrado para este programa</p>
+                        <p>Nenhum estimulo ativo encontrado para este programa</p>
                     </div>
                 </CardContent>
             </Card>
@@ -70,87 +224,124 @@ export default function StimuliPanel({ program, attempts, onAddAttempt }: Stimul
     }
 
     return (
-        <>
-            <Card className="rounded-[5px] px-6 py-2 md:px-8 md:py-10 lg:px-8 lg:py-0">
-                <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
-                    <CardTitle className="text-base flex items-center gap-2">
-                        <Brain className="h-4 w-4" />
-                        Estímulos em treino
-                        <span className="text-sm font-normal text-muted-foreground">
-                            ({activeStimuli.length})
-                        </span>
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="pb-3 sm:pb-6">
-                    <div className="space-y-3">
-                        {activeStimuli.map((stimulus) => (
-                            <div key={stimulus.id}>
-                                <button
-                                    type="button"
-                                    className={`w-full text-left rounded-[8px] border bg-card hover:bg-muted/50 transition flex items-center px-4 py-3 gap-4 ${expanded === stimulus.id ? 'bg-muted/50' : ''}`}
-                                    onClick={() => handleExpand(stimulus.id)}
-                                >
-                                    <div className="flex-shrink-0 w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center font-semibold text-sm">
-                                        {stimulus.order}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="font-medium text-sm text-foreground mb-1">
+        <Card className="rounded-[5px] px-6 py-2 md:px-8 md:py-10 lg:px-8 lg:py-0">
+            <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
+                <CardTitle className="text-base flex items-center gap-2">
+                    <Brain className="h-4 w-4" />
+                    Estimulos em treino
+                    <Badge variant="secondary" className="ml-2">
+                        {activeStimuli.length}
+                    </Badge>
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="pb-3 sm:pb-6 space-y-4">
+                <div className="space-y-2">
+                    <div>
+                        <div className="text-xs font-medium text-muted-foreground mb-2">
+                            Objetivo a curto prazo
+                        </div>
+                        <div className="text-sm leading-relaxed bg-muted/50 border border-border rounded-[5px] p-3">
+                            {program.shortTermGoalDescription ?? 'Sem descrição informada.'}
+                        </div>
+                    </div>
+                    <div>
+                        <div className="text-xs font-medium text-muted-foreground mb-2">
+                            Descrição da aplicação
+                        </div>
+                        <div className="text-sm leading-relaxed bg-muted/50 border border-border rounded-[5px] p-3">
+                            {program.stimuliApplicationDescription ?? 'Sem descrição informada.'}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="space-y-3">
+                    {activeStimuli.map((stimulus) => {
+                        const isActive = ativoId === stimulus.id;
+                        const resumo = renderResumo(stimulus.id);
+                        const estaPausado = pausedMap[stimulus.id] ?? false;
+                        const counts = countsMap[stimulus.id] ?? createEmptyCounts();
+                        const stimulusSummary: StimulusSummary = {
+                            id: stimulus.id,
+                            nome: stimulus.label,
+                            indice: stimulus.order,
+                        };
+
+                        return (
+                            <div
+                                key={stimulus.id}
+                                className="rounded-[5px] border bg-card shadow-sm"
+                            >
+                                <div className="flex items-center justify-between px-4 py-3">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div className="h-8 w-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-xs font-semibold text-primary shrink-0">
+                                            {stimulus.order}
+                                        </div>
+                                        <div className="truncate font-medium text-sm text-foreground">
                                             {stimulus.label}
                                         </div>
-                                        <span className="inline-block px-2 py-0.5 rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 text-xs font-medium">
-                                            Ativo
-                                        </span>
                                     </div>
-                                    <div className="ml-auto">
-                                        <svg
-                                            width="20"
-                                            height="20"
-                                            fill="none"
-                                            viewBox="0 0 20 20"
-                                            className={`transition-transform stroke-foreground ${expanded === stimulus.id ? 'rotate-90' : ''}`}
+
+                                    <div className="flex items-center gap-2">
+                                        <Button
+                                            size="sm"
+                                            variant={isActive ? 'secondary' : 'outline'}
+                                            onClick={() => handleSelectStimulus(stimulus.id)}
                                         >
-                                            <path
-                                                d="M7 8l3 3 3-3"
-                                                strokeWidth="1.5"
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                            />
-                                        </svg>
+                                            <Play className="h-4 w-4 mr-2" /> Iniciar
+                                        </Button>
+                                        <button
+                                            onClick={() => handleSelectStimulus(stimulus.id)}
+                                            className="p-1 hover:bg-muted rounded transition-colors"
+                                            aria-label={isActive ? 'Fechar' : 'Abrir'}
+                                        >
+                                            {isActive ? (
+                                                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                            ) : (
+                                                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                                            )}
+                                        </button>
                                     </div>
-                                </button>
-                                {expanded === stimulus.id && (
-                                    <div className="px-4 pb-4 pt-2 bg-muted rounded-b-[8px]">
-                                        {stimulus.description && (
-                                            <div className="text-xs text-muted-foreground mb-2 leading-relaxed">
-                                                {stimulus.description}
-                                            </div>
-                                        )}
-                                        <div className="flex justify-end">
-                                            <Button
-                                                size="sm"
-                                                onClick={() =>
-                                                    handleAddAttempt(stimulus.id, stimulus.label)
+                                </div>
+
+                                <Separator />
+
+                                {isActive && (
+                                    <div className="px-4 pb-4">
+                                        <div className="pt-4">
+                                            <StimulusBlockPanel
+                                                sessionId={effectiveSessionId}
+                                                descricaoCurtoPrazo={
+                                                    program.shortTermGoalDescription ?? ''
                                                 }
-                                                className="h-8 px-3 text-xs"
-                                            >
-                                                <Play className="h-3 w-3 mr-1" />
-                                                Iniciar
-                                            </Button>
+                                                descricaoAplicacao={
+                                                    program.stimuliApplicationDescription ?? ''
+                                                }
+                                                stimulus={stimulusSummary}
+                                                paused={estaPausado}
+                                                counts={counts}
+                                                onCreateAttempt={registrarTentativa}
+                                                onPause={pausarBloco}
+                                                onFinalizarBloco={finalizarBloco}
+                                            />
                                         </div>
                                     </div>
                                 )}
-                            </div>
-                        ))}
-                    </div>
-                </CardContent>
-            </Card>
 
-            <AttemptPicker
-                isOpen={attemptPicker.isOpen}
-                stimulusLabel={attemptPicker.stimulusLabel}
-                onClose={handleCloseAttemptPicker}
-                onSelect={handleAttemptTypeSelect}
-            />
-        </>
+                                {!isActive && estaPausado && (
+                                    <div className="px-4 pb-3 pt-2">
+                                        <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                                            <PauseIcon className="h-3.5 w-3.5" />
+                                            <span>Bloco pausado</span>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {resumo}
+                            </div>
+                        );
+                    })}
+                </div>
+            </CardContent>
+        </Card>
     );
 }

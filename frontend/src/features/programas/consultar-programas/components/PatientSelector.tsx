@@ -44,7 +44,7 @@ export default function PatientSelector({
                 const results = await searchPatients(searchQuery);
                 setPatients(results);
             } catch (error) {
-                console.error('Erro ao buscar pacientes:', error);
+                console.error('Erro ao buscar cliente:', error);
             } finally {
                 setIsLoading(false);
             }

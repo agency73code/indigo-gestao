@@ -127,7 +127,7 @@ export default function StimuliEditor({
                 {/* Descrição detalhada do objetivo a curto prazo */}
                 <div className="space-y-3 mt-4">
                     <Label htmlFor="goal-description" className="text-sm font-medium">
-                        Descrição detalhada do objetivo a curto prazo
+                        Descrição detalhada do objetivo a curto prazo:
                     </Label>
                     <textarea
                         id="goal-description"

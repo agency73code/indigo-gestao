@@ -30,7 +30,7 @@ export default function CadastroHubPage() {
         },
         {
             title: 'Vínculos',
-            description: 'Gerencie vínculos entre pacientes e terapeutas no sistema',
+            description: 'Gerencie vínculos entre clientes e terapeutas no sistema',
             icon: Link2,
             href: '/app/cadastros/vinculos',
             bgColor: 'bg-green-500',

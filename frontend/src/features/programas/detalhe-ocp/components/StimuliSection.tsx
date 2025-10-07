@@ -49,8 +49,8 @@ export default function StimuliSection({ program }: StimuliSectionProps) {
 
                 {shortTermGoalDescription && (
                     <div className="space-y-3 mt-4">
-                        <Label className="text-sm font-medium">
-                            Descrição detalhada do objetivo a curto prazo
+                        <Label className="text-sm font-medium mb-1">
+                            Descrição detalhada do objetivo a curto prazo:
                         </Label>
                         <div className="p-3 bg-muted rounded-md">
                             <p className="text-sm text-muted-foreground leading-relaxed">
@@ -62,7 +62,7 @@ export default function StimuliSection({ program }: StimuliSectionProps) {
 
                 {applicationDescription && (
                     <div className="space-y-3 mt-4">
-                        <Label className="text-sm font-medium">Descrição da aplicação</Label>
+                        <Label className="text-sm font-medium mb-1">Descrição da aplicação:</Label>
                         <div className="p-3 bg-muted rounded-md">
                             <p className="text-sm text-muted-foreground leading-relaxed">
                                 {applicationDescription}

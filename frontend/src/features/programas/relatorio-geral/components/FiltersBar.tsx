@@ -112,7 +112,7 @@ export function FiltersBar({ value, onChange }: FiltersBarProps) {
 
                     {/* Programa */}
                     <div className="space-y-2">
-                        <Label htmlFor="programa">Programa (OCP)</Label>
+                        <Label htmlFor="programa">Programa / objetivo</Label>
                         <SearchableSelect
                             value={value.programaId || ''}
                             options={programas.map((p) => ({

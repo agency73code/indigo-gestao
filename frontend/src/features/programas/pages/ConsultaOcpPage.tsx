@@ -64,7 +64,7 @@ export default function ConsultaOcpPage() {
             <div className="py-4 lg:py-0">
                 <HeaderSection
                     title="Programas de Treino (OCP)"
-                    subtitle="Consultar e gerenciar programas terapêuticos dos pacientes"
+                    subtitle="Consultar e gerenciar programas terapêuticos dos clientes"
                 />
             </div>
 

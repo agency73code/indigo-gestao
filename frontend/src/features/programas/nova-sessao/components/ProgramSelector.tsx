@@ -87,7 +87,7 @@ export default function ProgramSelector({
                 <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                     <CardTitle className="text-base flex items-center gap-2">
                         <FolderOpen className="h-4 w-4" />
-                        Programa (OCP)
+                        Programa / Objetivo
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="pb-3 sm:pb-6">
@@ -156,7 +156,7 @@ export default function ProgramSelector({
                 >
                     <div className="bg-background w-full max-w-4xl h-[85vh] md:h-[70vh] rounded-t-lg md:rounded-lg shadow-lg animate-in slide-in-from-bottom md:fade-in duration-300 flex flex-col">
                         <div className="flex items-center justify-between p-4 sm:p-6 border-b">
-                            <h2 className="text-lg font-semibold">Selecionar Programa (OCP)</h2>
+                            <h2 className="text-lg font-semibold">Selecionar Programa / Objetivo</h2>
                             <Button
                                 variant="ghost"
                                 size="sm"

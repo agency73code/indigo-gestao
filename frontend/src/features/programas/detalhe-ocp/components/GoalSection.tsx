@@ -25,13 +25,15 @@ export default function GoalSection({ program }: GoalSectionProps) {
                 </div>
 
                 {longTermGoalDescription && (
-                    <div className="space-y-2">
-                        <p className="text-sm font-medium text-muted-foreground">
-                            Descrição detalhada do objetivo a longo prazo
+                    <div className="space-y-3 mt-4">
+                        <p className="text-sm font-medium text-primary mb-1">
+                            Descrição detalhada do objetivo a longo prazo:
                         </p>
-                        <p className="text-sm text-muted-foreground leading-relaxed break-words">
-                            {longTermGoalDescription}
-                        </p>
+                        <div className="p-3 bg-muted rounded-md">
+                            <p className="text-sm text-muted-foreground leading-relaxed">
+                                {longTermGoalDescription}
+                            </p>
+                        </div>
                     </div>
                 )}
             </CardContent>

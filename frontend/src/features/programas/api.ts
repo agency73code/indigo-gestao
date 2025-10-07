@@ -31,7 +31,7 @@ export async function fetchClients(q?: string): Promise<Patient[]> {
 
     if (!res.ok) {
         const text = await res.text();
-        throw new Error(`Erro ao buscar pacientes (${res.status}): ${text}`);
+        throw new Error(`Erro ao buscar cliente (${res.status}): ${text}`);
     }
 
     const json = await res.json();

@@ -150,7 +150,7 @@ export function OcpDeadlineCard({
         <Card className="w-full px-1 py-0 md:px-8 md:py-10 lg:px-2 lg:py-4">
             <CardHeader className="pb-2">
                 <CardTitle style={{ fontFamily: 'Sora, sans-serif' }} className='text-primary'>
-                    Prazo do Programa (OCP)
+                    Prazo do Programa / Objetivo
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">
                     Acompanhe o progresso temporal do programa atual

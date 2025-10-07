@@ -265,7 +265,7 @@ export default function CadastroSessaoPage() {
             return 'Selecione um paciente';
         }
         if (!selectedProgram) {
-            return 'Selecione um programa (OCP)';
+            return 'Selecione um programa / Objetivo';
         }
         if (sessionState.attempts.length === 0) {
             return 'Registre ao menos 1 tentativa';

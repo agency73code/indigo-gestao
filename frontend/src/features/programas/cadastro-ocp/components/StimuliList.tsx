@@ -122,7 +122,7 @@ export default function StimuliList({
                 {/* Descrição detalhada do objetivo a curto prazo */}
                 <div className="space-y-3">
                     <Label htmlFor="goal-description" className="text-sm font-medium">
-                        Descrição detalhada do objetivo a curto prazo 
+                        Descrição detalhada do objetivo a curto prazo:
                     </Label>
                     
                     <textarea

@@ -57,7 +57,7 @@ export default function HubPage() {
                     Programas / Objetivos
                 </h1>
                 <p className="text-sm sm:text-base text-muted-foreground">
-                    Gerencie programas de treino personalizados e acompanhe o progresso dos pacientes
+                    Gerencie programas de treino personalizados e acompanhe o progresso dos clientes
                 </p>
             </div>
 
