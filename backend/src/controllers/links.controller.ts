@@ -45,11 +45,24 @@ export async function archiveLink(req: Request<unknown, unknown, LinkTypes.Archi
     }
 }
 
+export async function transferResponsible(req: Request<unknown, unknown, LinkTypes.TransferResponsible>, res: Response, next: NextFunction) {
+    try {
+        const result = await LinkService.transferResponsible(req.body);
+        const normalized = {
+            newResponsible: LinkNormalizer.normalizeLink(result.newResponsible),
+            previousResponsible: LinkNormalizer.normalizeLink(result.previousResponsible),
+        };
+
+        res.json(normalized);
+    } catch (err) {
+        next(err);
+    }
+}
+
 export async function getAllClients(req: Request, res: Response, next: NextFunction) {
     try {
         const data = await LinkService.getAllClients();        
         const normalized = LinkNormalizer.getAllClients(data);
-        console.log(normalized)
         res.json(normalized);
     } catch (err) {
         next(err)

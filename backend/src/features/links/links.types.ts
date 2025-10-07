@@ -120,3 +120,16 @@ export type EndLink = {
     id: string;
     endDate: string;
 }
+
+export type TransferResponsible = {
+    patientId: string;
+    fromTherapistId: string;
+    toTherapistId: string;
+    effectiveDate: string;
+    oldResponsibleActuation: string;
+}
+
+export type TransferResponsibleResult = {
+    previousResponsible: DBLink;
+    newResponsible: DBLink;
+}

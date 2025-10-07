@@ -168,17 +168,73 @@ export async function updateLink(input: UpdateLinkInput): Promise<PatientTherapi
 }
 
 /**
- * Transfere responsabilidade
+ * Transfere responsabilidade [feito]
  * O antigo responsável vira co-terapeuta
  */
 export async function transferResponsible(input: TransferResponsibleInput): Promise<void> {
   await delay(800);
   
+  try {
+    const res = await fetch('/api/links/transferResponsible', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(input)
+    });
+
+    if (!res.ok) {
+      let errorMessage = 'Falha ao transferir responsabilidade';
+      const errorText = await res.text();
+
+      if (errorText) {
+        try {
+          const parsed = JSON.parse(errorText);
+          if (parsed?.message) {
+            errorMessage = parsed.message;
+          }
+        } catch {
+          errorMessage = errorText;
+        }
+      }
+
+      throw new Error(errorMessage);
+    }
+
+    const { newResponsible, previousResponsible } = (await res.json()) as {
+      newResponsible: PatientTherapistLink;
+      previousResponsible: PatientTherapistLink;
+    };
+
+    const previousIndex = mockLinks.findIndex((link: PatientTherapistLink) => link.id === previousResponsible.id);
+    if (previousIndex === -1) {
+      mockLinks.push(previousResponsible);
+    } else {
+      mockLinks[previousIndex] = previousResponsible;
+    }
+
+    const newIndex = mockLinks.findIndex((link: PatientTherapistLink) => link.id === newResponsible.id);
+    if (newIndex === -1) {
+      mockLinks.push(newResponsible);
+    } else {
+      mockLinks[newIndex] = newResponsible;
+    }
+
+    return;
+  } catch (error) {
+    if (error instanceof Error && error.name !== 'TypeError') {
+      throw error;
+    }
+
+    console.error('Erro ao transferir responsabilidade no backend, utilizando fallback local:', error);
+  }
+
   // Encontra o vínculo do responsável atual
-  const currentResponsibleIndex = mockLinks.findIndex((link: PatientTherapistLink) => 
-    link.patientId === input.patientId && 
+  const currentResponsibleIndex = mockLinks.findIndex((link: PatientTherapistLink) =>
+    link.patientId === input.patientId &&
     link.therapistId === input.fromTherapistId &&
-    link.role === 'responsible' && 
+    link.role === 'responsible' &&
     link.status === 'active'
   );
   
@@ -197,6 +253,8 @@ export async function transferResponsible(input: TransferResponsibleInput): Prom
     // Se já é co-terapeuta, atualiza para responsável
     if (existingNewTherapistLink.role === 'co') {
       existingNewTherapistLink.role = 'responsible';
+      existingNewTherapistLink.status = 'active';
+      existingNewTherapistLink.endDate = null;
       existingNewTherapistLink.updatedAt = input.effectiveDate;
     }
   } else {

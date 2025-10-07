@@ -27,7 +27,7 @@ export async function createLink(payload: LinkTypes.CreateLink) {
         });
 
         if (existingResponsible) {
-            throw new AppError('LINK_RESPONSIBLE_EXISTS', 'Já existe um responsável principal ativo para este paciente.', 409);
+            throw new AppError('LINK_RESPONSIBLE_EXISTS', 'Já existe um responsável principal ativo para este cliente.', 409);
         }
     }
 
@@ -248,4 +248,106 @@ export async function endLink(payload: LinkTypes.EndLink) {
     });
 
     return updated;
+}
+
+export async function transferResponsible(payload: LinkTypes.TransferResponsible): Promise<LinkTypes.TransferResponsibleResult> {
+    if (payload.fromTherapistId === payload.toTherapistId) {
+        throw new AppError(
+            'LINK_TRANSFER_SAME_THERAPIST',
+            'O novo responsável precisa ser diferente do responsável atual.',
+            400,
+        );
+    }
+
+    const effectiveDate = new Date(payload.effectiveDate);
+
+    if (Number.isNaN(effectiveDate.getTime())) {
+        throw new AppError(
+            'LINK_INVALID_EFFECTIVE_DATE',
+            'Data de efetivação da transferência inválida.',
+            400,
+        );
+    }
+
+    const currentResponsible = await prisma.terapeuta_cliente.findFirst({
+        where: {
+            cliente_id: payload.patientId,
+            terapeuta_id: payload.fromTherapistId,
+            papel: 'responsible',
+            status: 'active',
+        },
+        select: LINK_SELECT,
+    });
+
+    if (!currentResponsible) {
+        throw new AppError(
+            'LINK_RESPONSIBLE_NOT_FOUND',
+            'Responsável atual não encontrado para o cliente informado.',
+            404,
+        );
+    }
+
+    const transferResult = await prisma.$transaction(async (trx) => {
+        const existingNewTherapistLink = await trx.terapeuta_cliente.findFirst({
+            where: {
+                cliente_id: payload.patientId,
+                terapeuta_id: payload.toTherapistId,
+                status: 'active',
+            },
+            select: LINK_SELECT,
+            orderBy: { atualizado_em: 'desc' },
+        });
+
+        if (existingNewTherapistLink?.papel === 'responsible') {
+            throw new AppError(
+                'LINK_RESPONSIBLE_EXISTS',
+                'Já existe um responsável principal ativo para este cliente.',
+                409,
+            );
+        }
+
+        let newResponsible: LinkTypes.DBLink;
+
+        if (existingNewTherapistLink) {
+            newResponsible = await trx.terapeuta_cliente.update({
+                where: { id: existingNewTherapistLink.id },
+                data: {
+                    papel: 'responsible',
+                    status: 'active',
+                    data_fim: null,
+                    atuacao_coterapeuta: null,
+                    atualizado_em: effectiveDate,
+                },
+                select: LINK_SELECT,
+            });
+        } else {
+            newResponsible = await trx.terapeuta_cliente.create({
+                data: {
+                    cliente_id: payload.patientId,
+                    terapeuta_id: payload.toTherapistId,
+                    papel: 'responsible',
+                    status: 'active',
+                    data_inicio: effectiveDate,
+                    data_fim: null,
+                    observacoes: `Transferido de ${payload.fromTherapistId} em ${payload.effectiveDate}`,
+                    atuacao_coterapeuta: null,
+                },
+                select: LINK_SELECT,
+            });
+        }
+
+        const previousResponsible = await trx.terapeuta_cliente.update({
+            where: { id: currentResponsible.id },
+            data: {
+                papel: 'co',
+                atuacao_coterapeuta: payload.oldResponsibleActuation,
+                atualizado_em: effectiveDate,
+            },
+            select: LINK_SELECT,
+        });
+
+        return { previousResponsible, newResponsible } satisfies LinkTypes.TransferResponsibleResult;
+    });
+
+    return transferResult;
 }

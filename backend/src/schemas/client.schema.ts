@@ -5,7 +5,7 @@ import { cpf } from "cpf-cnpj-validator";
 const strip = (val: string) => val.replace(/[^\dA-Za-z]/g, "");
 
 export const ClientSchema = z.object({
-  nome: z.string().min(3, 'Nome é obrigatório'),
+  nome: z.string().min(1, 'Nome é obrigatório'),
   cpf: z.string().transform(strip).refine((val) => cpf.isValid(val), { message: 'CPF inválido' }),
   dataNascimento: z.coerce.date(),
   emailContato: z.email({ message: 'E-mail inválido' }),
@@ -16,7 +16,7 @@ export const ClientSchema = z.object({
     z.object({
       relacao: z.string().min(1, 'Relação é obrigatória'),
       descricaoRelacao: z.string().optional().nullable().default(null),
-      nome: z.string().min(3, 'Nome é obrigatório'),
+      nome: z.string().min(1, 'Nome é obrigatório'),
       cpf: z.string().transform(strip).refine((val) => cpf.isValid(val), { message: 'CPF inválido' }),
       profissao: z.string().optional().nullable().default(null),
       escolaridade: z.string().optional().nullable().default(null),
@@ -25,11 +25,11 @@ export const ClientSchema = z.object({
 
       endereco: z.object({
         cep: z.string().transform(strip),
-        logradouro: z.string().min(3, 'Rua é obrigatório'),
-        numero: z.string().min(3, 'Numero é obrigatório'),
-        bairro: z.string().min(3, 'Bairro é obrigatório'),
-        cidade: z.string().min(3, 'Cidade é obrigatório'),
-        uf: z.string().min(2, 'Estado é obrigatório'),
+        logradouro: z.string().min(1, 'Rua é obrigatório'),
+        numero: z.string().min(1, 'Numero é obrigatório'),
+        bairro: z.string().min(1, 'Bairro é obrigatório'),
+        cidade: z.string().min(1, 'Cidade é obrigatório'),
+        uf: z.string().min(1, 'Estado é obrigatório'),
         complemento: z.string().optional().nullable().default(null),
       }),
     }),
@@ -38,11 +38,11 @@ export const ClientSchema = z.object({
   enderecos: z.array(
     z.object({
       cep: z.string().transform(strip),
-      logradouro: z.string().min(3, 'Rua é obrigatório'),
-      numero: z.string().min(3, 'Numero é obrigatório'),
-      bairro: z.string().min(3, 'Bairro é obrigatório'),
-      cidade: z.string().min(3, 'Cidade é obrigatório'),
-      uf: z.string().min(2, 'Estado é obrigatório'),
+      logradouro: z.string().min(1, 'Rua é obrigatório'),
+      numero: z.string().min(1, 'Numero é obrigatório'),
+      bairro: z.string().min(1, 'Bairro é obrigatório'),
+      cidade: z.string().min(1, 'Cidade é obrigatório'),
+      uf: z.string().min(1, 'Estado é obrigatório'),
       complemento: z.string().optional().nullable().default(null),
       residenciaDe: z.string().optional().nullable().default(null),
       outroResidencia: z.string().optional().nullable().default(null),
@@ -50,7 +50,7 @@ export const ClientSchema = z.object({
   ).min(1, 'Deve haver pelo menos um endereço'),
 
   dadosPagamento: z.object({
-    nomeTitular: z.string().min(3, 'Nome do titular é obrigatório'),
+    nomeTitular: z.string().min(1, 'Nome do titular é obrigatório'),
     numeroCarteirinha: z.string().transform(strip).optional().nullable().default(null),
     telefone1: z.string().transform(strip),
     telefone2: z.string().transform(strip).optional().nullable().default(null),
@@ -78,20 +78,20 @@ export const ClientSchema = z.object({
     email: z.string().email({ message: 'E-mail da escola inválido' }).optional().nullable().default(null),
     endereco: z.object({
       cep: z.string().transform(strip),
-      logradouro: z.string().min(3, 'Rua é obrigatório'),
-      numero: z.string().min(3, 'Numero é obrigatório'),
-      bairro: z.string().min(3, 'Bairro é obrigatório'),
-      cidade: z.string().min(3, 'Cidade é obrigatório'),
-      uf: z.string().min(2, 'Estado é obrigatório'),
+      logradouro: z.string().min(1, 'Rua é obrigatório'),
+      numero: z.string().min(1, 'Numero é obrigatório'),
+      bairro: z.string().min(1, 'Bairro é obrigatório'),
+      cidade: z.string().min(1, 'Cidade é obrigatório'),
+      uf: z.string().min(1, 'Estado é obrigatório'),
       complemento: z.string().optional().nullable().default(null),
     }),
 
     contatos: z.array(
       z.object({
-        nome: z.string().min(3, 'Nome de contanto da escola é obrigatório'),
+        nome: z.string().min(1, 'Nome de contanto da escola é obrigatório'),
         telefone: z.string().transform(strip),
         email: z.string().email({ message: 'E-mail de contato da escola inválido' }).optional().nullable().default(null),
-        funcao: z.string().min(3, 'Funcao é obrigatória'),
+        funcao: z.string().min(1, 'Funcao é obrigatória'),
       })
     ),
   }),
