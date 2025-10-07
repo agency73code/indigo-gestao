@@ -350,9 +350,18 @@ model terapeuta_cliente {
   id                  Int                 @id @default(autoincrement())
   terapeuta_id        String
   cliente_id          String
+  papel               String              @default("responsible")
+  status              String              @default("active")
+  data_inicio         DateTime
+  data_fim            DateTime?
+  observacoes         String?             @db.Text
+  atuacao_coterapeuta String?
+  criado_em           DateTime            @default(now())
+  atualizado_em       DateTime            @updatedAt
 
   terapeuta           terapeuta           @relation(fields: [terapeuta_id], references: [id], onDelete: Cascade)
   cliente             cliente             @relation(fields: [cliente_id], references: [id], onDelete: Cascade)
 
-  @@unique([terapeuta_id, cliente_id])
+  @@index([terapeuta_id])
+  @@index([cliente_id])
 }

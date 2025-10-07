@@ -1,6 +1,8 @@
 import LinkCard from './LinkCard';
 import type { LinkListProps, PatientWithLinks, TherapistWithLinks } from '../types';
 
+type GroupedItem = PatientWithLinks | TherapistWithLinks;
+
 export default function LinkList({
     links,
     loading,
@@ -41,6 +43,8 @@ export default function LinkList({
         filters.viewBy === 'patient'
             ? groupLinksByPatient(filteredLinks)
             : groupLinksByTherapist(filteredLinks);
+
+    const sortedGroupedData = sortGroups(groupedData, filters.orderBy);
 
     function groupLinksByPatient(links: typeof filteredLinks) {
         const grouped = new Map<string, PatientWithLinks>();
@@ -92,7 +96,7 @@ export default function LinkList({
         );
     }
 
-    if (groupedData.length === 0) {
+    if (sortedGroupedData.length === 0) {
         const emptyMessage =
             filters.viewBy === 'patient'
                 ? 'Nenhum cliente encontrado com os filtros aplicados'
@@ -107,7 +111,7 @@ export default function LinkList({
 
     return (
         <div className="grid grid-cols-1 xl:grid-cols-1 gap-4">
-            {groupedData.map((item) => {
+            {sortedGroupedData.map((item) => {
                 const key = 'patient' in item ? item.patient.id : item.therapist.id;
                 const props =
                     filters.viewBy === 'patient'
@@ -129,4 +133,47 @@ export default function LinkList({
             })}
         </div>
     );
+
+    function sortGroups(
+        groups: GroupedItem[],
+        orderBy: LinkListProps['filters']['orderBy'],
+    ) {
+        const sorted = [...groups];
+
+        if (sorted.length <= 1) {
+            return sorted;
+        }
+
+        if (orderBy === 'alpha') {
+            return sorted.sort((a, b) =>
+                getGroupDisplayName(a).localeCompare(getGroupDisplayName(b), 'pt-BR', {
+                    sensitivity: 'base',
+                }),
+            );
+        }
+
+        return sorted.sort(
+            (a, b) => getMostRecentTimestamp(b) - getMostRecentTimestamp(a),
+        );
+    }
+
+    function getGroupDisplayName(item: GroupedItem) {
+        if ('patient' in item) {
+            return item.patient?.nome ?? '';
+        }
+
+        return item.therapist?.nome ?? '';
+    }
+
+    function getMostRecentTimestamp(item: GroupedItem) {
+        const timestamps = item.links
+            .map((link) => new Date(link.updatedAt || link.createdAt).getTime())
+            .filter((time) => !Number.isNaN(time));
+
+        if (timestamps.length === 0) {
+            return 0;
+        }
+
+        return Math.max(...timestamps);
+    }
 }

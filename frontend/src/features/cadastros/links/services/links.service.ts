@@ -24,7 +24,6 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
  */
 export async function searchPatients(q: string): Promise<Paciente[]> {
   await delay(300);
-  console.log('teste')
   return searchPatientsByName(mockPatients, q);
 }
 
@@ -53,17 +52,55 @@ export async function listLinksByTherapist(filters: LinkFilters): Promise<Patien
 }
 
 /**
- * Cria novo vínculo
+ * Cria novo vínculo [feito]
  * Regras: Apenas 1 responsible ativo por paciente
  */
 export async function createLink(input: CreateLinkInput): Promise<PatientTherapistLink> {
   await delay(800);
-  
-  // Verifica se já existe um responsável ativo para o paciente
+
+  try {
+    const res = await fetch('/api/links/createLink', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(input)
+    });
+
+    if (!res.ok) {
+      let errorMessage = 'Falha ao criar vínculo';
+      const errorText = await res.text();
+
+      if (errorText) {
+        try {
+          const parsed = JSON.parse(errorText);
+          if (parsed?.message) {
+            errorMessage = parsed.message;
+          }
+        } catch {
+          errorMessage = errorText;
+        }
+      }
+
+      throw new Error(errorMessage);
+    }
+
+    const createdLink = (await res.json()) as PatientTherapistLink;
+    mockLinks.push(createdLink);
+    return createdLink;
+  } catch (error) {
+    if (error instanceof Error && error.name !== 'TypeError') {
+      throw error;
+    }
+
+    console.error('Erro ao criar vínculo no backend, utilizando fallback local:', error);
+  }
+
   if (input.role === 'responsible') {
-    const existingResponsible = mockLinks.find((link: PatientTherapistLink) => 
-      link.patientId === input.patientId && 
-      link.role === 'responsible' && 
+    const existingResponsible = mockLinks.find((link: PatientTherapistLink) =>
+      link.patientId === input.patientId &&
+      link.role === 'responsible' &&
       link.status === 'active'
     );
     
@@ -211,11 +248,57 @@ export async function endLink(id: string, endDate: string): Promise<void> {
 }
 
 /**
- * Arquiva vínculo (status='archived')
+ * Arquiva vínculo (status='archived') [feito]
  */
 export async function archiveLink(id: string): Promise<void> {
   await delay(400);
   
+  try {
+    const res = await fetch('/api/links/archiveLink', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ id })
+    });
+
+    if (!res.ok) {
+      let errorMessage = 'Falha ao arquivar vínculo';
+      const errorText = await res.text();
+
+      if (errorText) {
+        try {
+          const parsed = JSON.parse(errorText);
+          if (parsed?.message) {
+            errorMessage = parsed.message;
+          }
+        } catch {
+          errorMessage = errorText;
+        }
+      }
+
+      throw new Error(errorMessage);
+    }
+
+    const archiveLink = (await res.json()) as PatientTherapistLink;
+
+    const linkIndex = mockLinks.findIndex((link: PatientTherapistLink) => link.id === archiveLink.id);
+    if (linkIndex === -1) {
+      mockLinks.push(archiveLink);
+    } else {
+      mockLinks[linkIndex] = archiveLink;
+    }
+
+    return
+  } catch (error) {
+    if (error instanceof Error && error.name !== 'TypeError') {
+      throw error;
+    }
+
+    console.error('Erro ao arquivar vínculo no backend, utilizando fallback local:', error);
+  }
+
   const linkIndex = mockLinks.findIndex((link: PatientTherapistLink) => link.id === id);
   if (linkIndex === -1) {
     throw new Error('Vínculo não encontrado');
@@ -229,7 +312,7 @@ export async function archiveLink(id: string): Promise<void> {
 }
 
 /**
- * Busca todos os pacientes (para formulários)
+ * Busca todos os pacientes (para formulários) [feito]
  */
 export async function getAllPatients(): Promise<Paciente[]> {
   try {
@@ -240,29 +323,68 @@ export async function getAllPatients(): Promise<Paciente[]> {
         'Content-Type': 'application/json',
       },
     });
+
+    if (!res.ok) {
+      throw new Error('Falha ao carregar clientes');
+    }
+
     const json = await res.json();
-    console.log(json);
-    return [...json];
-    throw new Error("Erro proposital para testar o catch");
-  } catch {
+    return json as Paciente[];
+  } catch (error) {
+    console.error('Erro ao buscar clientes, retornando mock:', error);
     await delay(200);
-    console.log(mockPatients);
     return [...mockPatients];
   }
 }
 
 /**
- * Busca todos os terapeutas (para formulários)
+ * Busca todos os terapeutas (para formulários) [feito]
  */
 export async function getAllTherapists(): Promise<Terapeuta[]> {
-  await delay(200);
-  return [...mockTherapists];
+  try {
+    const res = await fetch('/api/links/getAllTherapists', {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error('Falha ao carregar terapeutas');
+    }
+    
+    const json = await res.json();
+    return json as Terapeuta[];
+  } catch (error) {
+    console.error('Erro ao buscar terapeutas, retornando mock:', error);
+    await delay(200);
+    return [...mockTherapists];
+  }
 }
 
 /**
- * Busca todos os vínculos (para listagens)
+ * Busca todos os vínculos (para listagens) [feito]
  */
 export async function getAllLinks(): Promise<PatientTherapistLink[]> {
-  await delay(300);
-  return [...mockLinks];
+  try {
+    const res = await fetch('/api/links/getAllLinks', {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error('Falha ao carregar vínculos');
+    }
+
+    const json = await res.json();
+    return json as PatientTherapistLink[];
+  } catch (error) {
+    console.error('Erro ao buscar vínculos, retornando mock:', error);
+    await delay(300);
+    return [...mockLinks];
+  }
 }
