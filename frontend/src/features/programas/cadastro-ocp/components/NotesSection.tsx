@@ -23,7 +23,7 @@ export default function NotesSection({ notes, onNotesChange }: NotesSectionProps
                     </Label>
                     <textarea
                         id="notes"
-                        placeholder="Adicione observações importantes, histórico do paciente, estratégias específicas..."
+                        placeholder="Adicione observações importantes, histórico do cliente, estratégias específicas..."
                         value={notes}
                         onChange={(e) => onNotesChange(e.target.value)}
                         maxLength={1000}

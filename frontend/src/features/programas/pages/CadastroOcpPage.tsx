@@ -77,11 +77,11 @@ export default function CadastroOcpPage() {
                         const patient = await fetchPatientById(patientId);
                         setFormState((prev) => ({ ...prev, patient }));
                     } catch (error) {
-                        console.error('Erro ao carregar paciente:', error);
+                        console.error('Erro ao carregar cliente:', error);
                         // Se não encontrar, mas tiver nome, criar um objeto básico
                         if (patientName) {
                             toast.warning(
-                                'Paciente pré-selecionado não encontrado. Selecione novamente.',
+                                'Cliente pré-selecionado não encontrado. Selecione novamente.',
                             );
                         }
                     }
@@ -165,7 +165,7 @@ export default function CadastroOcpPage() {
         const errors: ValidationErrors = {};
 
         if (!formState.patient) {
-            errors.patientId = 'Selecione um paciente';
+            errors.patientId = 'Selecione um cliente';
         }
 
         if (!formState.therapist) {
@@ -355,7 +355,7 @@ export default function CadastroOcpPage() {
                         Novo Programa / Objetivos
                     </h1>
                     <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-                        Crie um programa de treino personalizado para o paciente
+                        Crie um programa / objetivo de treino personalizado para o cliente
                     </p>
                 </div>
             </div>

@@ -105,7 +105,7 @@ export async function createLink(input: CreateLinkInput): Promise<PatientTherapi
     );
     
     if (existingResponsible) {
-      throw new Error('Já existe um responsável principal ativo para este paciente.');
+      throw new Error('Já existe um responsável principal ativo para este cliente.');
     }
   }
   
@@ -198,7 +198,7 @@ export async function updateLink(input: UpdateLinkInput): Promise<PatientTherapi
     );
     
     if (existingResponsible) {
-      throw new Error('Já existe um responsável principal ativo para este paciente.');
+      throw new Error('Já existe um responsável principal ativo para este cliente.');
     }
   }
 

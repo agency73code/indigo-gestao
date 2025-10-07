@@ -21,9 +21,9 @@ export default function EmptyState({
                 <CardContent className="p-8 text-center space-y-4">
                     <User className="h-12 w-12 mx-auto text-muted-foreground" />
                     <div>
-                        <h3 className="font-medium text-lg">Selecione um paciente</h3>
+                        <h3 className="font-medium text-lg">Selecione um cliente</h3>
                         <p className="text-sm text-muted-foreground">
-                            Selecione um paciente para listar programas
+                            Selecione um cliente para listar programas
                         </p>
                     </div>
                 </CardContent>

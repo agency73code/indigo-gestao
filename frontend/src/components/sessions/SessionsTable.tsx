@@ -261,7 +261,7 @@ export function SessionsTable({ rows }: SessionsTableProps) {
                         className="-ml-2 gap-1"
                         onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
                     >
-                        Paciente
+                        Cliente
                         <ChevronDownIcon className="h-4 w-4" aria-hidden="true" />
                     </Button>
                 ),
@@ -280,13 +280,13 @@ export function SessionsTable({ rows }: SessionsTableProps) {
                                         <a
                                             href="#"
                                             className="font-medium text-foreground outline-none transition-colors hover:text-primary focus-visible:ring-2 focus-visible:ring-primary"
-                                            aria-label={`Abrir ficha do paciente ${name}`}
+                                            aria-label={`Abrir ficha do cliente ${name}`}
                                         >
                                             {name}
                                         </a>
                                     </TooltipTrigger>
                                     <TooltipContent className="text-xs">
-                                        Abrir ficha do paciente
+                                        Abrir ficha do cliente
                                     </TooltipContent>
                                 </Tooltip>
                             </TooltipProvider>
@@ -426,7 +426,7 @@ export function SessionsTable({ rows }: SessionsTableProps) {
                                 </span>
                             </TooltipTrigger>
                             <TooltipContent className="text-xs">
-                                Total de programas OCP em execução para este paciente
+                                Total de programas / objetivos em execução para este cliente
                             </TooltipContent>
                         </Tooltip>
                     </TooltipProvider>

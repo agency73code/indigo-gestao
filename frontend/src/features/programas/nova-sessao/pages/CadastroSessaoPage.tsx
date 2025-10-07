@@ -104,7 +104,7 @@ export default function CadastroSessaoPage() {
                 handlePatientSelect(patient);
             }
         } catch (err) {
-            console.error('Erro ao carregar paciente:', err);
+            console.error('Erro ao carregar cliente:', err);
         }
     };
 
@@ -222,7 +222,7 @@ export default function CadastroSessaoPage() {
             // Toast de confirmação com mensagem focada na experiência do usuário
             toast.success('Sessão registrada com sucesso! 🎉', {
                 description:
-                    'Os dados da sessão foram salvos e estão disponíveis no histórico do paciente.',
+                    'Os dados da sessão foram salvos e estão disponíveis no histórico do cliente.',
                 duration: 4000,
             });
 
@@ -263,7 +263,7 @@ export default function CadastroSessaoPage() {
 
     const getValidationMessage = () => {
         if (!selectedPatient) {
-            return 'Selecione um paciente';
+            return 'Selecione um cliente';
         }
         if (!selectedProgram) {
             return 'Selecione um programa / Objetivo';

@@ -22,7 +22,7 @@ export default function CadastroHubPage() {
         },
         {
             title: 'Cadastrar Cliente',
-            description: 'Crie o cadastro completo do paciente/cliente no sistema',
+            description: 'Crie o cadastro completo do cliente no sistema',
             icon: Users,
             href: '/app/cadastro/cliente',
             bgColor: 'bg-blue-500',

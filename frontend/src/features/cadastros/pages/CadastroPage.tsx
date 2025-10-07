@@ -37,7 +37,7 @@ export default function CadastroPage() {
                 <Link
                     to="/app/cadastro/cliente"
                     className="group block rounded-lg border bg-card p-6 hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                    aria-label="Cadastrar novo cliente/paciente no sistema"
+                    aria-label="Cadastrar novo cliente no sistema"
                 >
                     <div className="flex items-start gap-4">
                         <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors">
@@ -48,7 +48,7 @@ export default function CadastroPage() {
                                 Cadastrar Cliente
                             </h2>
                             <p className="text-sm text-muted-foreground mt-1">
-                                Crie o cadastro completo do paciente/cliente no sistema.
+                                Crie o cadastro completo do cliente no sistema.
                             </p>
                         </div>
                     </div>

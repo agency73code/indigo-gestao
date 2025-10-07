@@ -137,7 +137,7 @@ export const patientsMock: Patient[] = [
             cpf: '555.666.777-88',
             dataNascimento: '2008-02-14',
             genero: 'Masculino',
-            observacoes: 'Paciente com TDAH, em acompanhamento multidisciplinar'
+            observacoes: 'Cliente com TDAH, em acompanhamento multidisciplinar'
         },
         endereco: {
             cep: '06789-012',

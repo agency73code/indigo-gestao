@@ -82,15 +82,15 @@ export function FiltersBar({ value, onChange }: FiltersBarProps) {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {/* Paciente */}
                     <div className="space-y-2">
-                        <Label htmlFor="paciente">Paciente *</Label>
+                        <Label htmlFor="paciente">Cliente *</Label>
                         <SearchableSelect
                             value={value.pacienteId || ''}
                             options={pacientes.map((p) => ({
                                 id: p.id,
                                 nome: p.nome,
                             }))}
-                            placeholder="Selecione o paciente"
-                            emptyMessage="Nenhum paciente encontrado"
+                            placeholder="Selecione o cliente"
+                            emptyMessage="Nenhum cliente encontrado"
                             onSelect={(id) => updateFilter('pacienteId', id)}
                         />
                     </div>

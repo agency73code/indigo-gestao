@@ -58,7 +58,7 @@ export async function fetchPatientById(id: string): Promise<Patient> {
         });
 
         if (!res.ok) {
-            throw new Error(`Erro ao buscar paciente: ${res.statusText}`);
+            throw new Error(`Erro ao buscar cliente: ${res.statusText}`);
         }
 
         const json = await res.json();
@@ -68,7 +68,7 @@ export async function fetchPatientById(id: string): Promise<Patient> {
             await delay(300);
             const patient = MOCK_PATIENTS.find(p => p.id === id);
             if (!patient) {
-                throw new Error(`Paciente com ID ${id} não encontrado`);
+                throw new Error(`Cliente com ID ${id} não encontrado`);
             }
             return patient;
         }
@@ -163,7 +163,7 @@ export async function searchPatients(q?: string): Promise<Patient[]> {
             );
         }
         
-        throw new Error('Erro ao buscar pacientes');
+        throw new Error('Erro ao buscar cliente');
     }
 }
 

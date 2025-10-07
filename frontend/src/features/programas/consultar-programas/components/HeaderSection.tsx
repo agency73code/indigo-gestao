@@ -5,7 +5,7 @@ interface HeaderSectionProps {
 
 export default function HeaderSection({
     title = 'Consultar Programas (OCP)',
-    subtitle = 'Selecione um paciente para ver ou criar programas',
+    subtitle = 'Selecione um cliente para ver ou criar programas',
 }: HeaderSectionProps) {
     return (
         <div className="space-y-2 p-0">

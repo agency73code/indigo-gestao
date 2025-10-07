@@ -176,7 +176,7 @@ export default function DadosPessoaisStep({
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Relação com o paciente */}
                             <div className="space-y-2">
-                                <Label htmlFor={`relacao-${index}`}>Relação com o paciente *</Label>
+                                <Label htmlFor={`relacao-${index}`}>Relação com o cliente *</Label>
                                 <select
                                     id={`relacao-${index}`}
                                     value={cuidador.relacao || ''}

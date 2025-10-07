@@ -45,11 +45,11 @@ export default function ConsultaOcpPage() {
 
     const handleCreateProgram = () => {
         if (!selectedPatient) {
-            alert('Por favor, selecione um paciente antes de criar um programa.');
+            alert('Por favor, selecione um cliente antes de criar um programa.');
             return;
         }
 
-        // Navegar para página de criação passando o ID do paciente como query param
+        // Navegar para página de criação passando o ID do cliente como query param
         navigate(
             `/app/programas/novo?patientId=${selectedPatient.id}&patientName=${encodeURIComponent(selectedPatient.name)}`,
         );

@@ -81,7 +81,7 @@ export default function RelatorioMensalPage() {
                     Relatório Geral
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">
-                    Análise completa do desempenho e evolução do paciente
+                    Análise completa do desempenho e evolução do cliente
                 </p>
             </CardHeader>
 

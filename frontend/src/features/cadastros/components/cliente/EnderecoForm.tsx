@@ -84,7 +84,7 @@ export default function EnderecoForm({
                         }`}
                     >
                         <option value="">Selecione quem reside neste endereço</option>
-                        <option value="paciente">Paciente</option>
+                        <option value="paciente">Cliente</option>
                         <option value="mae">Mãe</option>
                         <option value="pai">Pai</option>
                         <option value="outro">Outro (especificar)</option>

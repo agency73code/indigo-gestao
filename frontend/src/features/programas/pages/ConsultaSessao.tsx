@@ -97,13 +97,13 @@ export default function ConsultaSessao() {
                 if (fetched) {
                     setPatient(fetched);
                 } else {
-                    setError('Paciente nao encontrado');
+                    setError('Cliente não encontrado');
                     setPatient(null);
                     setSessions([]);
                 }
             } catch {
                 if (!cancelled) {
-                    setError('Erro ao carregar paciente');
+                    setError('Erro ao carregar cliente');
                     setPatient(null);
                     setSessions([]);
                 }
@@ -305,7 +305,7 @@ export default function ConsultaSessao() {
             <div className="px-0 sm:px-4 py-4 sm:py-4">
                 <HeaderSection
                     title="Consultar Sessão"
-                    subtitle="Selecione um paciente para visualizar o historico e os resultados das sessoes."
+                    subtitle="Selecione um cliente para visualizar o historico e os resultados das sessoes."
                 />
             </div>
 
@@ -333,7 +333,7 @@ export default function ConsultaSessao() {
                     {!patient && !loading && (
                         <Card className="rounded-[5px]">
                             <CardContent className="p-6 text-sm text-muted-foreground">
-                                Selecione um paciente para ver as sessoes registradas.
+                                Selecione um cliente para ver as sessoes registradas.
                             </CardContent>
                         </Card>
                     )}

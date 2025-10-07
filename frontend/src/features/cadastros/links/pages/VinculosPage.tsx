@@ -222,7 +222,7 @@ export default function VinculosPage() {
                                     Vínculos
                                     <br />
                                     <span className="flex items-center gap-1">
-                                        Paciente <ArrowLeftRight className="h-4 w-4" /> Terapeuta
+                                        Cliente <ArrowLeftRight className="h-4 w-4" /> Terapeuta
                                     </span>
                                 </span>
                                 {/* Desktop: Título em uma linha */}

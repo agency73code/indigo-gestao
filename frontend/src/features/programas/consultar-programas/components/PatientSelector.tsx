@@ -76,13 +76,13 @@ export default function PatientSelector({
                 <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
                     <CardTitle className="text-base flex items-center gap-2">
                         <User className="h-4 w-4" />
-                        Paciente
+                        Cliente
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
                     {selected ? (
                         <div className="flex items-center gap-3 p-2 sm:p-3 bg-muted rounded-[5px]">
-                            {/* Avatar do paciente selecionado */}
+                            {/* Avatar do cliente selecionado */}
                             <div className="flex-shrink-0">
                                 {selected.photoUrl ? (
                                     <img
@@ -132,7 +132,7 @@ export default function PatientSelector({
                     ) : (
                         <Button className="w-full h-12" size="lg" onClick={() => setIsOpen(true)}>
                             <User className="h-4 w-4 mr-2" />
-                            Selecionar paciente
+                            Selecionar cliente
                         </Button>
                     )}
                 </CardContent>
@@ -150,7 +150,7 @@ export default function PatientSelector({
                 >
                     <div className="bg-background w-full max-w-4xl h-[85vh] md:h-[70vh] rounded-t-lg md:rounded-lg shadow-lg animate-in slide-in-from-bottom md:fade-in duration-300 flex flex-col">
                         <div className="flex items-center justify-between p-4 sm:p-6 border-b">
-                            <h2 className="text-lg font-semibold">Selecionar Paciente</h2>
+                            <h2 className="text-lg font-semibold">Selecionar Cliente</h2>
                             <Button
                                 variant="ghost"
                                 size="sm"

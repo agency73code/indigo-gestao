@@ -14,7 +14,7 @@ export default function CreateSessionFab({
 }: CreateSessionFabProps) {
     const ariaLabel = patientName
         ? `Adicionar sessão para ${patientName}`
-        : 'Selecionar paciente para adicionar sessão';
+        : 'Selecionar cliente para adicionar sessão';
 
     return (
         <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40">

@@ -14,7 +14,7 @@ export default function CreateProgramFab({
 }: CreateProgramFabProps) {
     const ariaLabel = patientName
         ? `Criar programa para ${patientName}`
-        : 'Selecionar paciente para criar programa';
+        : 'Selecionar cliente para criar programa';
 
     return (
         <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40">

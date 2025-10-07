@@ -418,7 +418,7 @@ export default function HeaderInfo({
                 isOpen={showPatientSelector}
                 onClose={() => setShowPatientSelector(false)}
                 onSelect={(item) => onPatientSelect(item as Patient)}
-                title="Selecionar Paciente"
+                title="Selecionar cliente"
                 searchPlaceholder="Buscar por nome ou responsável..."
                 type="patient"
             />
