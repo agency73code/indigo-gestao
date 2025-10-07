@@ -4,7 +4,7 @@ import { cpf, cnpj } from "cpf-cnpj-validator";
 const strip = (val: string) => val.replace(/[^\dA-Za-z]/g, "");
 
 export const therapistSchema = z.object({
-  nome: z.string().min(3),
+  nome: z.string().min(1, 'Nome é obrigatório'),
   email: z.string().email(),
   emailIndigo: z.string().email(),
   telefone: z.string().transform(strip).optional().nullable().default(null),
@@ -23,8 +23,8 @@ export const therapistSchema = z.object({
     .nullable()
     .optional()
     .default(null),
-  modeloVeiculo: z.string().min(2).nullable().optional().default(null),
-  banco: z.string().min(2),
+  modeloVeiculo: z.string().min(1).nullable().optional().default(null),
+  banco: z.string().min(1),
   agencia: z.string().transform(strip),
   conta: z.string().transform(strip),
   chavePix: z.string().transform(strip),

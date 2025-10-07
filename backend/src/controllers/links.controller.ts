@@ -23,6 +23,26 @@ export async function createLink(req: Request<unknown, unknown, LinkTypes.Create
     }
 }
 
+export async function updateLink(req: Request<unknown, unknown, LinkTypes.UpdateLink>, res: Response, next: NextFunction) {
+    try {
+        const body = req.body;
+        const updated = await LinkService.updateLink({
+            id: body.id,
+            role: body.role,
+            startDate: body.startDate,
+            endDate: body.endDate,
+            notes: body.notes,
+            status: body.status,
+            coTherapistActuation: body.coTherapistActuation,
+        });
+
+        const normalized = LinkNormalizer.normalizeLink(updated);
+        res.json(normalized);
+    } catch (err) {
+        next(err);
+    }
+}
+
 export async function endLink(req: Request<unknown, unknown, LinkTypes.EndLink>, res: Response, next: NextFunction) {
     try {
         const { id, endDate } = req.body;
@@ -45,11 +65,24 @@ export async function archiveLink(req: Request<unknown, unknown, LinkTypes.Archi
     }
 }
 
+export async function transferResponsible(req: Request<unknown, unknown, LinkTypes.TransferResponsible>, res: Response, next: NextFunction) {
+    try {
+        const result = await LinkService.transferResponsible(req.body);
+        const normalized = {
+            newResponsible: LinkNormalizer.normalizeLink(result.newResponsible),
+            previousResponsible: LinkNormalizer.normalizeLink(result.previousResponsible),
+        };
+
+        res.json(normalized);
+    } catch (err) {
+        next(err);
+    }
+}
+
 export async function getAllClients(req: Request, res: Response, next: NextFunction) {
     try {
         const data = await LinkService.getAllClients();        
         const normalized = LinkNormalizer.getAllClients(data);
-        console.log(normalized)
         res.json(normalized);
     } catch (err) {
         next(err)
