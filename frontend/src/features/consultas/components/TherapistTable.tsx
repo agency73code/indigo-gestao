@@ -193,7 +193,7 @@ export default function TherapistTable({
                                     {getSortIcon('status')}
                                 </div>
                             </th>
-                            <th className="text-right p-4 font-medium">Ações</th>
+                            <th className="text-center p-4 font-medium">Ações</th>
                         </tr>
                     </thead>
                     <tbody>

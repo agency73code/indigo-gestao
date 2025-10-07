@@ -6,6 +6,7 @@ import {
     ProgramSelector,
     HeaderSessionInfo,
     GoalPreview,
+    CriteriaSection,
     StimuliPanel,
     AttemptsRegister,
     SessionSummary,
@@ -113,7 +114,7 @@ export default function CadastroSessaoPage() {
             setLoadingProgram(true);
             const detail = await getProgramDetail(programId);
             setProgramDetail(detail);
-            
+
             // Criar um ProgramListItem mock para o seletor
             const programListItem: ProgramListItem = {
                 id: detail.id,
@@ -307,6 +308,9 @@ export default function CadastroSessaoPage() {
 
                             {/* Preview do objetivo */}
                             <GoalPreview program={programDetail} />
+
+                            {/* Critérios de domínio */}
+                            <CriteriaSection program={programDetail} />
 
                             {/* Painel de estímulos */}
                             <StimuliPanel

@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
-import { Brain, ChevronDown, ChevronRight, Pause as PauseIcon, Play } from 'lucide-react';
+import { Brain, Pause as PauseIcon, Play } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import StimulusBlockPanel, {
     type BlockCounts,
@@ -38,6 +39,17 @@ export default function StimuliPanel({
     const [countsMap, setCountsMap] = useState<Record<string, BlockCounts>>({});
     const [pausedMap, setPausedMap] = useState<Record<string, boolean>>({});
     const [historico, setHistorico] = useState<Record<string, BlockResumo[]>>({});
+
+    const shortTermGoalDescription =
+        program.shortTermGoalDescription ?? program.goalDescription ?? null;
+
+    const applicationDescriptionRaw = program.stimuliApplicationDescription ?? null;
+    const fallbackStimulusDescription = program.stimuli.find((stimulus) =>
+        stimulus.description?.trim(),
+    );
+    const applicationDescription = applicationDescriptionRaw?.trim()?.length
+        ? applicationDescriptionRaw.trim()
+        : (fallbackStimulusDescription?.description?.trim() ?? null);
 
     const activeStimuli = useMemo(
         () => program.stimuli.filter((stimulus) => stimulus.active),
@@ -152,50 +164,21 @@ export default function StimuliPanel({
                                 Tentativa {index + 1}
                             </div>
                             <div className="flex flex-wrap gap-3">
-                                <div className="flex items-center gap-1.5">
-                                    <span className="text-xs font-medium text-muted-foreground">
-                                        Erro:
-                                    </span>
-                                    <Badge
-                                        variant="outline"
-                                        className="bg-red-50 text-red-700 border-red-200"
-                                    >
-                                        {item.erro}
-                                    </Badge>
-                                </div>
-                                <div className="flex items-center gap-1.5">
-                                    <span className="text-xs font-medium text-muted-foreground">
-                                        Ajuda:
-                                    </span>
-                                    <Badge
-                                        variant="outline"
-                                        className="bg-amber-50 text-amber-700 border-amber-200"
-                                    >
-                                        {item.ajuda}
-                                    </Badge>
-                                </div>
-                                <div className="flex items-center gap-1.5">
-                                    <span className="text-xs font-medium text-muted-foreground">
-                                        Indep.:
-                                    </span>
-                                    <Badge
-                                        variant="outline"
-                                        className="bg-green-50 text-green-700 border-green-200"
-                                    >
-                                        {item.indep}
-                                    </Badge>
-                                </div>
-                                <div className="flex items-center gap-1.5 ml-auto">
-                                    <span className="text-xs font-medium text-muted-foreground">
-                                        Total:
-                                    </span>
-                                    <Badge
-                                        variant="outline"
-                                        className="bg-primary/10 text-primary border-primary/30 font-semibold"
-                                    >
-                                        {item.total}
-                                    </Badge>
-                                </div>
+                                <Badge variant="outline" className="p-2 rounded-[5px]">
+                                    Erro: {item.erro}
+                                </Badge>
+                                <Badge variant="outline" className="p-2 rounded-[5px]">
+                                    Ajuda: {item.ajuda}
+                                </Badge>
+                                <Badge variant="outline" className="p-2 rounded-[5px]">
+                                    Indep.: {item.indep}
+                                </Badge>
+                                <Badge
+                                    variant="outline"
+                                    className="font-semibold p-2 rounded-[5px] ml-auto"
+                                >
+                                    Total: {item.total}
+                                </Badge>
                             </div>
                         </div>
                     </div>
@@ -233,27 +216,35 @@ export default function StimuliPanel({
                         {activeStimuli.length}
                     </Badge>
                 </CardTitle>
+
+                {shortTermGoalDescription && (
+                    <div className="space-y-3 mt-4">
+                        <Label className="text-sm font-medium mb-1">
+                            Descrição detalhada do objetivo a curto prazo:
+                        </Label>
+                        <div className="p-3 bg-muted rounded-md">
+                            <p className="text-sm text-muted-foreground leading-relaxed">
+                                {shortTermGoalDescription}
+                            </p>
+                        </div>
+                    </div>
+                )}
+
+                {applicationDescription && (
+                    <div className="space-y-3 mt-4">
+                        <Label className="text-sm font-medium mb-1">Descrição da aplicação:</Label>
+                        <div className="p-3 bg-muted rounded-md">
+                            <p className="text-sm text-muted-foreground leading-relaxed">
+                                {applicationDescription}
+                            </p>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                            Esta descrição é aplicada a todos os estímulos do programa.
+                        </p>
+                    </div>
+                )}
             </CardHeader>
             <CardContent className="pb-3 sm:pb-6 space-y-4">
-                <div className="space-y-2">
-                    <div>
-                        <div className="text-xs font-medium text-muted-foreground mb-2">
-                            Objetivo a curto prazo
-                        </div>
-                        <div className="text-sm leading-relaxed bg-muted/50 border border-border rounded-[5px] p-3">
-                            {program.shortTermGoalDescription ?? 'Sem descrição informada.'}
-                        </div>
-                    </div>
-                    <div>
-                        <div className="text-xs font-medium text-muted-foreground mb-2">
-                            Descrição da aplicação
-                        </div>
-                        <div className="text-sm leading-relaxed bg-muted/50 border border-border rounded-[5px] p-3">
-                            {program.stimuliApplicationDescription ?? 'Sem descrição informada.'}
-                        </div>
-                    </div>
-                </div>
-
                 <div className="space-y-3">
                     {activeStimuli.map((stimulus) => {
                         const isActive = ativoId === stimulus.id;
@@ -273,7 +264,7 @@ export default function StimuliPanel({
                             >
                                 <div className="flex items-center justify-between px-4 py-3">
                                     <div className="flex items-center gap-3 min-w-0">
-                                        <div className="h-8 w-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-xs font-semibold text-primary shrink-0">
+                                        <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-xs font-semibold text-primary-foreground shrink-0">
                                             {stimulus.order}
                                         </div>
                                         <div className="truncate font-medium text-sm text-foreground">
@@ -284,22 +275,10 @@ export default function StimuliPanel({
                                     <div className="flex items-center gap-2">
                                         <Button
                                             size="sm"
-                                            variant={isActive ? 'secondary' : 'outline'}
                                             onClick={() => handleSelectStimulus(stimulus.id)}
                                         >
                                             <Play className="h-4 w-4 mr-2" /> Iniciar
                                         </Button>
-                                        <button
-                                            onClick={() => handleSelectStimulus(stimulus.id)}
-                                            className="p-1 hover:bg-muted rounded transition-colors"
-                                            aria-label={isActive ? 'Fechar' : 'Abrir'}
-                                        >
-                                            {isActive ? (
-                                                <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                                            ) : (
-                                                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                                            )}
-                                        </button>
                                     </div>
                                 </div>
 

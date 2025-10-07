@@ -1,5 +1,4 @@
 import { useEffect, type JSX } from 'react';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -140,16 +139,6 @@ export default function StimulusBlockPanel({
                     aria-label="Registrar tentativa"
                 >
                     {attemptOptions.map((option) => {
-                        const colorClasses = {
-                            erro: 'border-red-200 hover:bg-red-50 hover:border-red-300',
-                            ajuda: 'border-amber-200 hover:bg-amber-50 hover:border-amber-300',
-                            indep: 'border-green-200 hover:bg-green-50 hover:border-green-300',
-                        };
-                        const badgeClasses = {
-                            erro: 'bg-red-100 text-red-700 border-red-300',
-                            ajuda: 'bg-amber-100 text-amber-700 border-amber-300',
-                            indep: 'bg-green-100 text-green-700 border-green-300',
-                        };
                         const iconClasses = {
                             erro: 'text-red-600',
                             ajuda: 'text-amber-600',
@@ -160,7 +149,7 @@ export default function StimulusBlockPanel({
                             <Tooltip key={option.key}>
                                 <TooltipTrigger asChild>
                                     <Button
-                                        className={`h-20 rounded-[5px] justify-start px-4 transition-all ${colorClasses[option.key]}`}
+                                        className="h-20 rounded-[5px] justify-start px-4 bg-muted hover:bg-muted/70 border-border transition-all"
                                         variant="outline"
                                         disabled={paused}
                                         onClick={() => onCreateAttempt(option.key)}
@@ -170,12 +159,9 @@ export default function StimulusBlockPanel({
                                         <div className="text-left">
                                             <div className="font-semibold flex items-center gap-2">
                                                 {option.label}
-                                                <Badge
-                                                    variant="outline"
-                                                    className={`${badgeClasses[option.key]}`}
-                                                >
+                                                <div className="p-2 rounded-[5px]">
                                                     {counts[option.key]}
-                                                </Badge>
+                                                </div>
                                             </div>
                                             <div className="text-xs text-muted-foreground mt-0.5">
                                                 {option.tooltip}

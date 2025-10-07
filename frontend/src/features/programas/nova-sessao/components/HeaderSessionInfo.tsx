@@ -1,4 +1,4 @@
-import { ArrowLeft, Calendar, Brain } from 'lucide-react';
+import { ArrowLeft, Calendar, Brain, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -30,6 +30,19 @@ export default function HeaderSessionInfo({ patient, program }: HeaderSessionInf
         }
     };
 
+    const daysLeftInfo = () => {
+        if (!program.prazoInicio || !program.prazoFim) return null;
+
+        const now = new Date();
+        const end = new Date(program.prazoFim);
+        const start = new Date(program.prazoInicio);
+        const diff = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        if (isNaN(diff)) return null;
+        const status = now > end ? 'finalizado' : `restam ${diff} dias`;
+        const period = `${formatDate(start.toISOString())} — ${formatDate(end.toISOString())}`;
+        return { status, period };
+    };
+
     const handleGoBack = () => {
         // Se tem programa e paciente, volta para o detalhe do programa
         if (program.id && patient.id) {
@@ -39,6 +52,8 @@ export default function HeaderSessionInfo({ patient, program }: HeaderSessionInf
             navigate('/app/programas');
         }
     };
+
+    const prazo = daysLeftInfo();
 
     return (
         <Card className="rounded-[5px] px-6 py-2 md:px-8 md:py-10 lg:px-8 lg:py-0">
@@ -89,17 +104,15 @@ export default function HeaderSessionInfo({ patient, program }: HeaderSessionInf
                     </div>
                 </div>
 
-                {/* Informações do Terapeuta e Data */}
-                <div className="grid grid-cols-1 gap-3">
-                    <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Terapeuta:</span>
+                {/* Terapeuta e Data */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                    <div className="flex items-center">
+                        <span className="text-muted-foreground mr-2">Terapeuta:</span>
                         <span className="font-medium">{program.therapistName}</span>
                     </div>
-
-                    <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            Data da sessão:
+                    <div className="flex items-center justify sm:justify-end">
+                        <span className="text-muted-foreground flex items-center gap-1 mr-2">
+                            <Calendar className="h-3 w-3" /> Data da sessão:
                         </span>
                         <span className="font-medium">{formatDate(new Date().toISOString())}</span>
                     </div>
@@ -107,11 +120,35 @@ export default function HeaderSessionInfo({ patient, program }: HeaderSessionInf
 
                 {/* Nome do Programa */}
                 {program.name && (
-                    <div className="pt-2 border-t">
-                        <p className="text-sm text-muted-foreground mb-1">Nome do programa:</p>
+                    <div className="space-y-1">
+                        <p className="text-sm text-muted-foreground">Nome do programa:</p>
                         <p className="font-medium text-sm">{program.name}</p>
                     </div>
                 )}
+
+                {/* Prazo do Programa */}
+                <div className="pt-2 border-t flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground flex items-center gap-1">
+                        <Clock className="h-3 w-3" /> Prazo do programa
+                    </span>
+                    <span className="font-medium text-right">
+                        {program.prazoInicio && program.prazoFim && prazo ? (
+                            <>
+                                {prazo.period}
+                                <span className="block text-xs text-muted-foreground">
+                                    {prazo.status}
+                                </span>
+                            </>
+                        ) : (
+                            <>
+                                <span className="text-muted-foreground">Não definido</span>
+                                <span className="block text-xs text-muted-foreground">
+                                    Configure nas edições do programa
+                                </span>
+                            </>
+                        )}
+                    </span>
+                </div>
             </CardContent>
         </Card>
     );
