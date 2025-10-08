@@ -64,7 +64,7 @@ export default function SummaryCard({ sessions }: SummaryCardProps) {
                                 Acerto Geral
                             </span>
                         </div>
-                        <div className="text-xl font-bold text-primary">
+                        <div className="text-xl font-bold text-green-600">
                             {formatPercentage(overallAverage)}
                         </div>
                         <div className="text-xs text-muted-foreground">
@@ -80,7 +80,7 @@ export default function SummaryCard({ sessions }: SummaryCardProps) {
                                 Independência
                             </span>
                         </div>
-                        <div className="text-xl font-bold text-green-600">
+                        <div className="text-xl font-bold text-blue-600">
                             {formatPercentage(independenceAverage)}
                         </div>
                         <div className="text-xs text-muted-foreground">Taxa média</div>
@@ -94,7 +94,7 @@ export default function SummaryCard({ sessions }: SummaryCardProps) {
                                 Tentativas
                             </span>
                         </div>
-                        <div className="text-xl font-bold text-blue-600">{totalAttempts}</div>
+                        <div className="text-xl font-bold text-purple-600">{totalAttempts}</div>
                         <div className="text-xs text-muted-foreground">
                             Em {totalSessions} sessões
                         </div>
@@ -109,6 +109,7 @@ export default function SummaryCard({ sessions }: SummaryCardProps) {
                     </div>
                 )}
             </CardContent>
+            
         </Card>
     );
 }

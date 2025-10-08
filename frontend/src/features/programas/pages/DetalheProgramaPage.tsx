@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -28,7 +28,7 @@ export default function DetalheProgramaPage() {
 
     const loadData = async () => {
         if (!programaId) {
-            setError('ID do programa não encontrado.');
+            setError('ID do programa nao encontrado.');
             setLoading(false);
             return;
         }
@@ -79,7 +79,7 @@ export default function DetalheProgramaPage() {
         return (
             <div className="min-h-screen bg-background">
                 <div className="max-w-lg md:max-w-none mx-auto md:mx-4 lg:mx-8 p-4 pt-8">
-                    <ErrorBanner message={error || 'Programa não encontrado.'} onRetry={loadData} />
+                    <ErrorBanner message={error || 'Programa nao encontrado.'} onRetry={loadData} />
                 </div>
             </div>
         );
@@ -90,35 +90,36 @@ export default function DetalheProgramaPage() {
     return (
         <div className="min-h-screen bg-background pb-28 sm:p-0 my-4">
             <div className="max-w-lg md:max-w-none mx-auto md:mx-4 lg:mx-4 space-y-6">
-                {/* Header com informações do paciente e programa */}
+                {/* Header com informacoes do paciente e programa */}
                 <HeaderProgram key={refreshKey} program={program} />
 
                 {/* Objetivo do programa */}
                 <GoalSection program={program} />
 
-                {/* Critérios de domínio */}
+                {/* Criterios de dominio */}
                 <CriteriaSection program={program} />
 
-                {/* Objetivo a curto prazo e estímulos */}
+                {/* Objetivo a curto prazo e estimulos */}
                 <StimuliSection program={program} />
 
-                {/* Observações gerais */}
+                {/* Observacoes gerais */}
                 <NotesSection program={program} />
 
-                {/* Lista de sessões recentes */}
+                {/* Lista de sessoes recentes */}
                 <SessionsList sessions={sessions} program={program} />
 
-                {/* Preview da última sessão (se disponível) */}
-                {lastSession && <LastSessionPreview lastSession={lastSession} />}
+                {/* Preview da ultima sessao (se disponivel) */}
+                {lastSession && (<LastSessionPreview lastSession={lastSession} patientId={program.patientId} />)}
 
-                {/* Resumo com métricas gerais */}
+                {/* Resumo com metricas gerais */}
                 <SummaryCard sessions={sessions} />
             </div>
 
-            {/* Barra de ações fixa no rodapé */}
+            {/* Barra de acoes fixa no rodape */}
             <div className="mt-4">
                 <ActionBar program={program} />
             </div>
         </div>
     );
 }
+
