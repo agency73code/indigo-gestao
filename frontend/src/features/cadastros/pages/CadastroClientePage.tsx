@@ -133,6 +133,59 @@ export default function CadastroClientePage() {
 
             return { ...prev, [field]: value };
         });
+
+        // Validação em tempo real para limpar erros quando input é corrigido
+        const valueStr = String(value ?? '');
+
+        // Validação de CPF do cliente
+        if (field === 'cpf') {
+            const digits = onlyDigits(valueStr);
+            if (digits.length !== 11 || isValidCPF(valueStr)) {
+                setErrors((prev) => ({ ...prev, [field]: '' }));
+            }
+            return;
+        }
+
+        // Validação de CPF dos cuidadores
+        if (field.startsWith('cuidadores.') && field.endsWith('.cpf')) {
+            const digits = onlyDigits(valueStr);
+            if (digits.length !== 11 || isValidCPF(valueStr)) {
+                setErrors((prev) => ({ ...prev, [field]: '' }));
+            }
+            return;
+        }
+
+        // Validação de email dos cuidadores e cliente
+        if (
+            field === 'emailContato' ||
+            (field.startsWith('cuidadores.') && field.endsWith('.email'))
+        ) {
+            if (!valueStr.trim() || isValidEmail(valueStr)) {
+                setErrors((prev) => ({ ...prev, [field]: '' }));
+            }
+            return;
+        }
+
+        // Validação de telefone dos cuidadores
+        if (field.startsWith('cuidadores.') && field.endsWith('.telefone')) {
+            if (!valueStr.trim()) {
+                setErrors((prev) => ({ ...prev, [field]: '' }));
+                return;
+            }
+            const digits = onlyDigits(valueStr);
+            if (digits.length >= 10 && digits.length <= 11) {
+                setErrors((prev) => ({ ...prev, [field]: '' }));
+            }
+            return;
+        }
+
+        // Validação de CEP dos endereços
+        if (field.startsWith('enderecos.') && field.endsWith('.cep')) {
+            if (!valueStr.trim() || isValidCEP(valueStr)) {
+                setErrors((prev) => ({ ...prev, [field]: '' }));
+            }
+            return;
+        }
     };
 
     const handleBlurField = (field: string) => {
@@ -457,7 +510,7 @@ export default function CadastroClientePage() {
                             newErrors[`dadosEscola.contatos.${index}.funcao`] =
                                 'Função é obrigatória';
                         if (!contato.email?.trim())
-                            newErrors[`dadosEscola.contatos.${index}.email`] = 
+                            newErrors[`dadosEscola.contatos.${index}.email`] =
                                 'E-mail é obrigatório';
                         if (contato.email && !isValidEmail(contato.email))
                             newErrors[`dadosEscola.contatos.${index}.email`] = 'E-mail inválido';
@@ -499,18 +552,28 @@ export default function CadastroClientePage() {
 
         try {
             const payload = formData;
-            
+
             const formDataUpload = new FormData();
             formDataUpload.append('cpf', payload.cpf!);
             formDataUpload.append('tipo', 'clientes');
 
-            if (payload.arquivos?.fotoPerfil) formDataUpload.append("fotoPerfil", payload.arquivos.fotoPerfil);
-            if (payload.arquivos?.carterinhaPlano) formDataUpload.append("carterinhaPlano", payload.arquivos.carterinhaPlano);
-            if (payload.arquivos?.comprovanteCpf) formDataUpload.append("comprovanteCpf", payload.arquivos.comprovanteCpf);
-            if (payload.arquivos?.comprovanteResidencia) formDataUpload.append("comprovanteResidencia", payload.arquivos.comprovanteResidencia);
-            if (payload.arquivos?.documentoIdentidade) formDataUpload.append("documentoIdentidade", payload.arquivos.documentoIdentidade);
-            if (payload.arquivos?.prescricaoMedica) formDataUpload.append("prescricaoMedica", payload.arquivos.prescricaoMedica);
-            if (payload.arquivos?.relatoriosMedicos) formDataUpload.append("relatoriosMedicos", payload.arquivos.relatoriosMedicos);
+            if (payload.arquivos?.fotoPerfil)
+                formDataUpload.append('fotoPerfil', payload.arquivos.fotoPerfil);
+            if (payload.arquivos?.carterinhaPlano)
+                formDataUpload.append('carterinhaPlano', payload.arquivos.carterinhaPlano);
+            if (payload.arquivos?.comprovanteCpf)
+                formDataUpload.append('comprovanteCpf', payload.arquivos.comprovanteCpf);
+            if (payload.arquivos?.comprovanteResidencia)
+                formDataUpload.append(
+                    'comprovanteResidencia',
+                    payload.arquivos.comprovanteResidencia,
+                );
+            if (payload.arquivos?.documentoIdentidade)
+                formDataUpload.append('documentoIdentidade', payload.arquivos.documentoIdentidade);
+            if (payload.arquivos?.prescricaoMedica)
+                formDataUpload.append('prescricaoMedica', payload.arquivos.prescricaoMedica);
+            if (payload.arquivos?.relatoriosMedicos)
+                formDataUpload.append('relatoriosMedicos', payload.arquivos.relatoriosMedicos);
 
             const uploadResp = await fetch('/api/arquivos/upload', {
                 method: 'POST',

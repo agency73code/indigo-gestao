@@ -15,6 +15,7 @@ import {
     isValidCNPJ,
     toTitleCaseSimple,
     validatePixKey,
+    maskPixKey,
 } from '@/common/utils/mask';
 // Componentes dos steps
 import MultiStepProgress from '../components/MultiStepProgress';
@@ -118,9 +119,16 @@ export default function CadastroTerapeutaPage() {
             const masked = maskCPF(String(value ?? ''));
             setFormData((prev: any) => ({ ...prev, cpf: masked }));
 
-            // mostra erro quando tiver 11 dígitos (14 chars com máscara) e for inválido
-            const showError = masked.replace(/\D/g, '').length === 11 && !isValidCPF(masked);
-            setErrors((prev) => ({ ...prev, cpf: showError ? 'CPF inválido' : '' }));
+            // Limpa erro se CPF válido ou se ainda não tem 11 dígitos
+            const digits = masked.replace(/\D/g, '');
+            const hasFullLength = digits.length === 11;
+            const isValid = isValidCPF(masked);
+
+            if (!hasFullLength || isValid) {
+                setErrors((prev) => ({ ...prev, cpf: '' }));
+            } else if (hasFullLength && !isValid) {
+                setErrors((prev) => ({ ...prev, cpf: 'CPF inválido' }));
+            }
             return;
         }
 
@@ -131,9 +139,17 @@ export default function CadastroTerapeutaPage() {
                 ...prev,
                 cnpj: { ...(prev.cnpj || {}), numero: masked },
             }));
-            // mostra erro quando tiver 14 dígitos e for inválido
-            const showError = masked.replace(/\D/g, '').length === 14 && !isValidCNPJ(masked);
-            setErrors((prev) => ({ ...prev, ['cnpj.numero']: showError ? 'CNPJ inválido' : '' }));
+
+            // Limpa erro se CNPJ válido ou se ainda não tem 14 dígitos
+            const digits = masked.replace(/\D/g, '');
+            const hasFullLength = digits.length === 14;
+            const isValid = isValidCNPJ(masked);
+
+            if (!hasFullLength || isValid) {
+                setErrors((prev) => ({ ...prev, ['cnpj.numero']: '' }));
+            } else if (hasFullLength && !isValid) {
+                setErrors((prev) => ({ ...prev, ['cnpj.numero']: 'CNPJ inválido' }));
+            }
             return;
         }
 
@@ -146,16 +162,61 @@ export default function CadastroTerapeutaPage() {
             return;
         }
 
-        // [E-MAIL] normaliza em tempo real, mas NÃO valida aqui (valida no onBlur)
+        // [E-MAIL] normaliza em tempo real e valida para limpar erro quando válido
         if (field === 'email') {
             const norm = normalizeEmail(value);
             setFormData((prev: any) => ({ ...prev, email: norm }));
+
+            // Limpa erro se email válido ou vazio (validação obrigatória fica pro blur)
+            if (!norm.trim() || isValidEmail(norm)) {
+                setErrors((prev) => ({ ...prev, email: '' }));
+            }
             return;
         }
 
         if (field === 'emailIndigo') {
             const norm = normalizeEmail(value);
             setFormData((prev: any) => ({ ...prev, emailIndigo: norm }));
+
+            // Limpa erro se email válido ou vazio (validação obrigatória fica pro blur)
+            if (!norm.trim() || isValidEmail(norm)) {
+                setErrors((prev) => ({ ...prev, emailIndigo: '' }));
+            }
+            return;
+        }
+
+        // [PIX TIPO] - quando muda o tipo, limpa erro da chave e aplica máscara
+        if (field === 'pixTipo') {
+            setFormData((prev: any) => ({ ...prev, pixTipo: value, chavePix: '' }));
+            // Limpa erros relacionados ao Pix quando troca o tipo
+            setErrors((prev) => ({ ...prev, pixTipo: '', chavePix: '' }));
+            return;
+        }
+
+        // [CHAVE PIX] - aplica máscara e valida em tempo real
+        if (field === 'chavePix') {
+            const tipo = formData.pixTipo;
+            let maskedValue = value;
+
+            // Aplica máscara baseada no tipo selecionado
+            if (tipo) {
+                maskedValue = maskPixKey(tipo, String(value ?? ''));
+            }
+
+            setFormData((prev: any) => ({ ...prev, chavePix: maskedValue }));
+
+            // Validação em tempo real
+            if (!tipo) {
+                setErrors((prev) => ({ ...prev, chavePix: 'Selecione o tipo de chave primeiro' }));
+            } else if (!maskedValue?.trim()) {
+                setErrors((prev) => ({ ...prev, chavePix: '' })); // Limpa erro se campo vazio
+            } else {
+                const validation = validatePixKey(tipo, maskedValue);
+                setErrors((prev) => ({
+                    ...prev,
+                    chavePix: validation.valid ? '' : validation.message || 'Chave inválida',
+                }));
+            }
             return;
         }
 
