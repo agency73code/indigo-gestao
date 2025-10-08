@@ -38,7 +38,13 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import {
     Sheet,
@@ -120,15 +126,13 @@ function formatDateTime(value: string) {
         minute: '2-digit',
     });
     const normalize = (text: string) =>
-        text
-            .replace('.', '')
-            .replace(/\b(\w)/, (match) => match.toUpperCase());
+        text.replace('.', '').replace(/\b(\w)/, (match) => match.toUpperCase());
     return `${normalize(weekday)}, ${day} ${normalize(month)} • ${time}`;
 }
 
-function filterByPeriod(rows: SessionRow[], period: PeriodFilter, customRange: CustomRange) {
+function filterByPeriod(sessionRows: SessionRow[], period: PeriodFilter, customRange: CustomRange) {
     if (period === 'all') {
-        return rows;
+        return sessionRows;
     }
 
     const now = new Date();
@@ -137,11 +141,11 @@ function filterByPeriod(rows: SessionRow[], period: PeriodFilter, customRange: C
 
     if (period === 'custom') {
         if (!customRange.from && !customRange.to) {
-            return rows;
+            return sessionRows;
         }
         const from = customRange.from ? new Date(customRange.from) : null;
         const to = customRange.to ? new Date(customRange.to) : null;
-        return rows.filter((row) => {
+        return sessionRows.filter((row) => {
             const date = new Date(row.dateTime);
             if (Number.isNaN(date.getTime())) {
                 return false;
@@ -170,7 +174,7 @@ function filterByPeriod(rows: SessionRow[], period: PeriodFilter, customRange: C
         end.setDate(end.getDate() + 30);
     }
 
-    return rows.filter((row) => {
+    return sessionRows.filter((row) => {
         const date = new Date(row.dateTime);
         if (Number.isNaN(date.getTime())) {
             return false;
@@ -183,9 +187,7 @@ function filterByPeriod(rows: SessionRow[], period: PeriodFilter, customRange: C
 }
 
 export function SessionsTable({ rows }: SessionsTableProps) {
-    const [sorting, setSorting] = useState<SortingState>([
-        { id: 'dateTime', desc: false },
-    ]);
+    const [sorting, setSorting] = useState<SortingState>([{ id: 'dateTime', desc: false }]);
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
     const [globalFilter, setGlobalFilter] = useState('');
@@ -216,7 +218,10 @@ export function SessionsTable({ rows }: SessionsTableProps) {
         }
     }, [columnVisibility]);
 
-    const data = useMemo(() => filterByPeriod(rows, period, customRange), [rows, period, customRange]);
+    const data = useMemo(
+        () => filterByPeriod(rows, period, customRange),
+        [rows, period, customRange],
+    );
 
     const uniqueStatuses = useMemo(
         () => Array.from(new Set(rows.map((row) => row.status))),
@@ -240,7 +245,10 @@ export function SessionsTable({ rows }: SessionsTableProps) {
                 header: ({ table }) => (
                     <Checkbox
                         aria-label="Selecionar todas as sessões"
-                        checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && 'indeterminate')}
+                        checked={
+                            table.getIsAllPageRowsSelected() ||
+                            (table.getIsSomePageRowsSelected() && 'indeterminate')
+                        }
                         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
                     />
                 ),
@@ -295,7 +303,9 @@ export function SessionsTable({ rows }: SessionsTableProps) {
                 },
                 filterFn: (row, columnId, value) => {
                     if (!value) return true;
-                    return String(row.getValue(columnId)).toLowerCase().includes(String(value).toLowerCase());
+                    return String(row.getValue(columnId))
+                        .toLowerCase()
+                        .includes(String(value).toLowerCase());
                 },
             },
             {
@@ -324,7 +334,9 @@ export function SessionsTable({ rows }: SessionsTableProps) {
                             <div className="flex flex-col">
                                 <span className="font-medium text-foreground">{name}</span>
                                 {specialty && (
-                                    <span className="text-xs text-muted-foreground">{specialty}</span>
+                                    <span className="text-xs text-muted-foreground">
+                                        {specialty}
+                                    </span>
                                 )}
                             </div>
                         </div>
@@ -346,11 +358,16 @@ export function SessionsTable({ rows }: SessionsTableProps) {
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <Badge variant="outline" className="rounded-[999px] border-primary/50 text-primary">
+                                    <Badge
+                                        variant="outline"
+                                        className="rounded-[999px] border-primary/50 text-primary"
+                                    >
                                         {SESSION_TYPE_LABELS[type]}
                                     </Badge>
                                 </TooltipTrigger>
-                                <TooltipContent className="text-xs">Formato do atendimento</TooltipContent>
+                                <TooltipContent className="text-xs">
+                                    Formato do atendimento
+                                </TooltipContent>
                             </Tooltip>
                         </TooltipProvider>
                     );
@@ -369,11 +386,18 @@ export function SessionsTable({ rows }: SessionsTableProps) {
                         <TooltipProvider>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <span aria-label={`Status da sessão: ${getStatusLabel(status)}`}>
-                                        <StatusBadge status={status} className="uppercase tracking-tight" />
+                                    <span
+                                        aria-label={`Status da sessão: ${getStatusLabel(status)}`}
+                                    >
+                                        <StatusBadge
+                                            status={status}
+                                            className="uppercase tracking-tight"
+                                        />
                                     </span>
                                 </TooltipTrigger>
-                                <TooltipContent className="text-xs">Situação atual da sessão</TooltipContent>
+                                <TooltipContent className="text-xs">
+                                    Situação atual da sessão
+                                </TooltipContent>
                             </Tooltip>
                         </TooltipProvider>
                     );
@@ -403,7 +427,9 @@ export function SessionsTable({ rows }: SessionsTableProps) {
                         <div className="flex flex-col">
                             <span className="font-medium text-foreground">{formatted}</span>
                             {modality && (
-                                <span className="text-xs capitalize text-muted-foreground">{modality}</span>
+                                <span className="text-xs capitalize text-muted-foreground">
+                                    {modality}
+                                </span>
                             )}
                         </div>
                     );
@@ -421,7 +447,10 @@ export function SessionsTable({ rows }: SessionsTableProps) {
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <span className="font-medium" aria-label="Programas OCP ativos">
+                                <span
+                                    className="font-medium"
+                                    aria-label="Programas / objetivos ativos"
+                                >
                                     {row.getValue<number>('ocpActive')}
                                 </span>
                             </TooltipTrigger>
@@ -442,7 +471,10 @@ export function SessionsTable({ rows }: SessionsTableProps) {
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <span className="font-medium text-primary" aria-label="Acurácia de estímulos">
+                                <span
+                                    className="font-medium text-primary"
+                                    aria-label="Acurácia de estímulos"
+                                >
                                     {row.getValue<number>('stimuliAccuracy')}%
                                 </span>
                             </TooltipTrigger>
@@ -478,7 +510,7 @@ export function SessionsTable({ rows }: SessionsTableProps) {
                                 <DropdownMenuLabel>Ações rápidas</DropdownMenuLabel>
                                 <DropdownMenuItem>Ver ficha</DropdownMenuItem>
                                 <DropdownMenuItem>Registrar sessão</DropdownMenuItem>
-                                <DropdownMenuItem>Atualizar OCP</DropdownMenuItem>
+                                <DropdownMenuItem>Atualizar programa / objetivo</DropdownMenuItem>
                                 <DropdownMenuItem>Reagendar</DropdownMenuItem>
                                 <DropdownMenuItem>Cancelar</DropdownMenuItem>
                                 <DropdownMenuSeparator />
@@ -489,7 +521,11 @@ export function SessionsTable({ rows }: SessionsTableProps) {
                 },
             },
         ],
-        [rows],
+        // columns are static (only their renderers reference row data at render time)
+        // so we don't need to re-create the column definitions when `rows` changes.
+        // Keeping this array empty avoids an unnecessary lint warning from
+        // react-hooks/exhaustive-deps while ensuring stable column refs.
+        [],
     );
 
     const table = useReactTable({
@@ -522,7 +558,9 @@ export function SessionsTable({ rows }: SessionsTableProps) {
                 'status',
             ];
             return columnsToSearch.some((key) =>
-                String(row.getValue(key as string)).toLowerCase().includes(search),
+                String(row.getValue(key as string))
+                    .toLowerCase()
+                    .includes(search),
             );
         },
     });
@@ -588,7 +626,9 @@ export function SessionsTable({ rows }: SessionsTableProps) {
                                 {uniqueStatuses.map((status) => (
                                     <DropdownMenuItem
                                         key={status}
-                                        onClick={() => table.getColumn('status')?.setFilterValue(status)}
+                                        onClick={() =>
+                                            table.getColumn('status')?.setFilterValue(status)
+                                        }
                                     >
                                         {STATUS_LABELS[status]}
                                         {table.getColumn('status')?.getFilterValue() === status && (
@@ -610,7 +650,10 @@ export function SessionsTable({ rows }: SessionsTableProps) {
                                 <DropdownMenuLabel>Filtrar por tipo</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
                                 {uniqueTypes.map((type) => {
-                                    const filterValues = (table.getColumn('sessionType')?.getFilterValue() as string[]) ?? [];
+                                    const filterValues =
+                                        (table
+                                            .getColumn('sessionType')
+                                            ?.getFilterValue() as string[]) ?? [];
                                     const isChecked = filterValues.includes(type);
                                     return (
                                         <DropdownMenuCheckboxItem
@@ -620,7 +663,9 @@ export function SessionsTable({ rows }: SessionsTableProps) {
                                                 const next = value
                                                     ? [...filterValues, type]
                                                     : filterValues.filter((item) => item !== type);
-                                                table.getColumn('sessionType')?.setFilterValue(next);
+                                                table
+                                                    .getColumn('sessionType')
+                                                    ?.setFilterValue(next);
                                             }}
                                         >
                                             {type}
@@ -641,7 +686,10 @@ export function SessionsTable({ rows }: SessionsTableProps) {
                                 <DropdownMenuLabel>Filtrar por terapeuta</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
                                 {uniqueTherapists.map((therapist) => {
-                                    const filterValues = (table.getColumn('therapistName')?.getFilterValue() as string[]) ?? [];
+                                    const filterValues =
+                                        (table
+                                            .getColumn('therapistName')
+                                            ?.getFilterValue() as string[]) ?? [];
                                     const isChecked = filterValues.includes(therapist);
                                     return (
                                         <DropdownMenuCheckboxItem
@@ -650,8 +698,12 @@ export function SessionsTable({ rows }: SessionsTableProps) {
                                             onCheckedChange={(value) => {
                                                 const next = value
                                                     ? [...filterValues, therapist]
-                                                    : filterValues.filter((item) => item !== therapist);
-                                                table.getColumn('therapistName')?.setFilterValue(next);
+                                                    : filterValues.filter(
+                                                          (item) => item !== therapist,
+                                                      );
+                                                table
+                                                    .getColumn('therapistName')
+                                                    ?.setFilterValue(next);
                                             }}
                                         >
                                             {therapist}
@@ -665,7 +717,10 @@ export function SessionsTable({ rows }: SessionsTableProps) {
                             value={period}
                             onValueChange={(value) => handlePeriodChange(value as PeriodFilter)}
                         >
-                            <SelectTrigger className="w-[170px] justify-between gap-2" aria-label="Filtrar por período">
+                            <SelectTrigger
+                                className="w-[170px] justify-between gap-2"
+                                aria-label="Filtrar por período"
+                            >
                                 <CalendarIcon className="h-4 w-4" aria-hidden="true" />
                                 <SelectValue placeholder="Período" />
                             </SelectTrigger>
@@ -698,12 +753,17 @@ export function SessionsTable({ rows }: SessionsTableProps) {
                                     ocpActive: 'OCP Ativos',
                                     stimuliAccuracy: 'Acurácia (4 sem)',
                                 };
-                                const label = labelMap[columnId] ?? column.columnDef.header?.toString() ?? columnId;
+                                const label =
+                                    labelMap[columnId] ??
+                                    column.columnDef.header?.toString() ??
+                                    columnId;
                                 return (
                                     <DropdownMenuCheckboxItem
                                         key={column.id}
                                         checked={column.getIsVisible()}
-                                        onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                                        onCheckedChange={(value) =>
+                                            column.toggleVisibility(!!value)
+                                        }
                                     >
                                         {label}
                                     </DropdownMenuCheckboxItem>
@@ -746,12 +806,16 @@ export function SessionsTable({ rows }: SessionsTableProps) {
                                         key={header.id}
                                         className={cn(
                                             'align-middle',
-                                            CENTER_ALIGN_COLUMNS.has(header.column.id) && 'text-center',
+                                            CENTER_ALIGN_COLUMNS.has(header.column.id) &&
+                                                'text-center',
                                         )}
                                     >
                                         {header.isPlaceholder
                                             ? null
-                                            : flexRender(header.column.columnDef.header, header.getContext())}
+                                            : flexRender(
+                                                  header.column.columnDef.header,
+                                                  header.getContext(),
+                                              )}
                                     </TableHead>
                                 ))}
                             </TableRow>
@@ -761,15 +825,22 @@ export function SessionsTable({ rows }: SessionsTableProps) {
                         {table.getRowModel().rows.length ? (
                             <>
                                 {table.getRowModel().rows.map((row) => (
-                                    <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
+                                    <TableRow
+                                        key={row.id}
+                                        data-state={row.getIsSelected() && 'selected'}
+                                    >
                                         {row.getVisibleCells().map((cell) => (
                                             <TableCell
                                                 key={cell.id}
                                                 className={cn(
-                                                    CENTER_ALIGN_COLUMNS.has(cell.column.id) && 'text-center',
+                                                    CENTER_ALIGN_COLUMNS.has(cell.column.id) &&
+                                                        'text-center',
                                                 )}
                                             >
-                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                                {flexRender(
+                                                    cell.column.columnDef.cell,
+                                                    cell.getContext(),
+                                                )}
                                             </TableCell>
                                         ))}
                                     </TableRow>
@@ -777,7 +848,10 @@ export function SessionsTable({ rows }: SessionsTableProps) {
                             </>
                         ) : (
                             <TableRow>
-                                <TableCell colSpan={table.getVisibleLeafColumns().length} className="h-48 text-center">
+                                <TableCell
+                                    colSpan={table.getVisibleLeafColumns().length}
+                                    className="h-48 text-center"
+                                >
                                     <div className="flex h-full flex-col items-center justify-center gap-3">
                                         <h3 className="text-base font-semibold text-foreground">
                                             Sem sessões para os filtros atuais
@@ -785,7 +859,10 @@ export function SessionsTable({ rows }: SessionsTableProps) {
                                         <p className="text-sm text-muted-foreground">
                                             Ajuste os filtros ou crie uma nova sessão.
                                         </p>
-                                        <Button className="bg-primary text-primary-foreground" size="sm">
+                                        <Button
+                                            className="bg-primary text-primary-foreground"
+                                            size="sm"
+                                        >
                                             Nova sessão
                                         </Button>
                                     </div>
@@ -837,7 +914,12 @@ export function SessionsTable({ rows }: SessionsTableProps) {
                                 id="custom-from"
                                 type="date"
                                 value={customRange.from ?? ''}
-                                onChange={(event) => setCustomRange((prev) => ({ ...prev, from: event.target.value }))}
+                                onChange={(event) =>
+                                    setCustomRange((prev) => ({
+                                        ...prev,
+                                        from: event.target.value,
+                                    }))
+                                }
                             />
                         </div>
                         <div className="space-y-2">
@@ -848,7 +930,9 @@ export function SessionsTable({ rows }: SessionsTableProps) {
                                 id="custom-to"
                                 type="date"
                                 value={customRange.to ?? ''}
-                                onChange={(event) => setCustomRange((prev) => ({ ...prev, to: event.target.value }))}
+                                onChange={(event) =>
+                                    setCustomRange((prev) => ({ ...prev, to: event.target.value }))
+                                }
                             />
                         </div>
                     </div>
@@ -859,7 +943,10 @@ export function SessionsTable({ rows }: SessionsTableProps) {
                             </Button>
                         </SheetClose>
                         <SheetClose asChild>
-                            <Button onClick={applyCustomRange} className="bg-primary text-primary-foreground">
+                            <Button
+                                onClick={applyCustomRange}
+                                className="bg-primary text-primary-foreground"
+                            >
                                 Aplicar
                             </Button>
                         </SheetClose>

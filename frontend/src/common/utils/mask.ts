@@ -217,7 +217,7 @@ export function isValidCEP(value: string) {
 
 // --------- CURRENCY BRL ----------
 export function maskCurrencyBR(v: string | number) {
-  let value = String(v ?? "");
+  const value = String(v ?? "");
   
   // Remove tudo que não é dígito
   const digits = value.replace(/\D/g, "");
@@ -240,4 +240,120 @@ export function parseCurrencyBR(value: string): number {
   // Remove símbolos de moeda e converte para número
   const digits = String(value ?? "").replace(/[^\d,]/g, "").replace(",", ".");
   return parseFloat(digits) || 0;
+}
+
+// --------- PIX ----------
+
+/**
+ * Máscara para chave Pix tipo UUID/Aleatória
+ * Formato: 123e4567-e89b-12d3-a456-426614174000
+ */
+export function maskPixUUID(v: string) {
+  const clean = String(v ?? "").replace(/[^a-fA-F0-9-]/g, "").toLowerCase();
+  
+  // Remove hífens existentes e limita a 32 caracteres
+  const digits = clean.replace(/-/g, "").slice(0, 32);
+  
+  if (digits.length <= 8) return digits;
+  if (digits.length <= 12) return `${digits.slice(0, 8)}-${digits.slice(8)}`;
+  if (digits.length <= 16) return `${digits.slice(0, 8)}-${digits.slice(8, 12)}-${digits.slice(12)}`;
+  if (digits.length <= 20) return `${digits.slice(0, 8)}-${digits.slice(8, 12)}-${digits.slice(12, 16)}-${digits.slice(16)}`;
+  
+  return `${digits.slice(0, 8)}-${digits.slice(8, 12)}-${digits.slice(12, 16)}-${digits.slice(16, 20)}-${digits.slice(20)}`;
+}
+
+/**
+ * Valida chave Pix tipo UUID v4
+ */
+export function isValidPixUUID(v: string): boolean {
+  const uuid = String(v ?? "").toLowerCase().trim();
+  // UUID v4: 8-4-4-4-12 caracteres hexadecimais
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(uuid);
+}
+
+/**
+ * Valida telefone BR (10 ou 11 dígitos)
+ */
+export function isValidPhoneBR(v: string): boolean {
+  const digits = onlyDigits(v);
+  // 10 dígitos (fixo) ou 11 dígitos (celular)
+  if (digits.length !== 10 && digits.length !== 11) return false;
+  
+  // DDD válido (11-99)
+  const ddd = parseInt(digits.slice(0, 2), 10);
+  if (ddd < 11 || ddd > 99) return false;
+  
+  // Para celular (11 dígitos), o terceiro dígito deve ser 9
+  if (digits.length === 11 && digits[2] !== '9') return false;
+  
+  return true;
+}
+
+/**
+ * Valida chave Pix baseada no tipo
+ */
+export function validatePixKey(type: string, value: string): { valid: boolean; message?: string } {
+  const v = String(value ?? "").trim();
+  
+  if (!v) {
+    return { valid: false, message: "Campo obrigatório" };
+  }
+  
+  switch (type) {
+    case 'email':
+      return isValidEmail(v) 
+        ? { valid: true } 
+        : { valid: false, message: "E-mail inválido" };
+    
+    case 'telefone':
+      return isValidPhoneBR(v)
+        ? { valid: true }
+        : { valid: false, message: "Telefone inválido" };
+    
+    case 'cpf':
+      return isValidCPF(v)
+        ? { valid: true }
+        : { valid: false, message: "CPF inválido" };
+    
+    case 'cnpj':
+      return isValidCNPJ(v)
+        ? { valid: true }
+        : { valid: false, message: "CNPJ inválido" };
+    
+    case 'aleatoria':
+      return isValidPixUUID(v)
+        ? { valid: true }
+        : { valid: false, message: "Chave aleatória inválida" };
+    
+    default:
+      return { valid: false, message: "Tipo de chave inválido" };
+  }
+}
+
+/**
+ * Aplica máscara na chave Pix baseada no tipo
+ */
+export function maskPixKey(type: string, value: string): string {
+  const v = String(value ?? "");
+  
+  switch (type) {
+    case 'email':
+      return normalizeEmail(v);
+    
+    case 'telefone':
+      return maskBRPhone(v);
+    
+    case 'cpf':
+      return maskCPF(v);
+    
+    case 'cnpj':
+      return maskCNPJ(v);
+    
+    case 'aleatoria':
+      return maskPixUUID(v);
+    
+    default:
+      return v;
+  }
 }

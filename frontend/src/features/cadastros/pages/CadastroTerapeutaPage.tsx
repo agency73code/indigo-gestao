@@ -14,6 +14,7 @@ import {
     maskCNPJ,
     isValidCNPJ,
     toTitleCaseSimple,
+    validatePixKey,
 } from '@/common/utils/mask';
 // Componentes dos steps
 import MultiStepProgress from '../components/MultiStepProgress';
@@ -56,6 +57,7 @@ export default function CadastroTerapeutaPage() {
         banco: null,
         agencia: null,
         conta: null,
+        pixTipo: null,
         chavePix: null,
         valorHoraAcordado: null,
         professorUnindigo: 'nao' as 'sim' | 'nao',
@@ -185,7 +187,24 @@ export default function CadastroTerapeutaPage() {
                 }));
             }
         }
-        // (sem alteração nos demais campos)
+
+        // Validação da chave Pix no blur
+        if (field === 'chavePix') {
+            const tipo = formData.pixTipo;
+            const chave = formData.chavePix;
+
+            if (!tipo) {
+                setErrors((prev) => ({ ...prev, chavePix: 'Selecione o tipo de chave primeiro' }));
+            } else if (!chave?.trim()) {
+                setErrors((prev) => ({ ...prev, chavePix: 'Campo obrigatório' }));
+            } else {
+                const validation = validatePixKey(tipo, chave);
+                setErrors((prev) => ({
+                    ...prev,
+                    chavePix: validation.valid ? '' : validation.message || 'Chave inválida',
+                }));
+            }
+        }
     };
 
     const validateCurrentStep = () => {
@@ -229,7 +248,18 @@ export default function CadastroTerapeutaPage() {
                 if (!formData.banco?.trim()) newErrors.banco = 'Campo obrigatório';
                 if (!formData.agencia?.trim()) newErrors.agencia = 'Campo obrigatório';
                 if (!formData.conta?.trim()) newErrors.conta = 'Campo obrigatório';
-                if (!formData.chavePix?.trim()) newErrors.chavePix = 'Campo obrigatório';
+
+                // Validação Pix: tipo e chave
+                if (!formData.pixTipo?.trim()) {
+                    newErrors.pixTipo = 'Selecione o tipo de chave Pix';
+                } else if (!formData.chavePix?.trim()) {
+                    newErrors.chavePix = 'Campo obrigatório';
+                } else {
+                    const pixValidation = validatePixKey(formData.pixTipo, formData.chavePix);
+                    if (!pixValidation.valid) {
+                        newErrors.chavePix = pixValidation.message || 'Chave Pix inválida';
+                    }
+                }
                 break;
 
             case 2: // Endereço
@@ -318,18 +348,23 @@ export default function CadastroTerapeutaPage() {
                 payload.cnpj.razaoSocial = toTitleCaseSimple(payload.cnpj.razaoSocial);
 
             const formDataUpload = new FormData();
-            formDataUpload.append("cpf", payload.cpf);
-            formDataUpload.append("tipo", 'terapeutas');
-            if (payload.arquivos?.fotoPerfil) formDataUpload.append("fotoPerfil", payload.arquivos?.fotoPerfil);
-            if (payload.arquivos?.diplomaGraduacao) formDataUpload.append("diplomaGraduacao", payload.arquivos?.diplomaGraduacao);
-            if (payload.arquivos?.diplomaPosGraduacao) formDataUpload.append("diplomaPosGraduacao", payload.arquivos?.diplomaPosGraduacao);
-            if (payload.arquivos?.registroCRP) formDataUpload.append("registroCRP", payload.arquivos?.registroCRP);
-            if (payload.arquivos?.comprovanteEndereco) formDataUpload.append("comprovanteEndereco", payload.arquivos?.comprovanteEndereco);
+            formDataUpload.append('cpf', payload.cpf);
+            formDataUpload.append('tipo', 'terapeutas');
+            if (payload.arquivos?.fotoPerfil)
+                formDataUpload.append('fotoPerfil', payload.arquivos?.fotoPerfil);
+            if (payload.arquivos?.diplomaGraduacao)
+                formDataUpload.append('diplomaGraduacao', payload.arquivos?.diplomaGraduacao);
+            if (payload.arquivos?.diplomaPosGraduacao)
+                formDataUpload.append('diplomaPosGraduacao', payload.arquivos?.diplomaPosGraduacao);
+            if (payload.arquivos?.registroCRP)
+                formDataUpload.append('registroCRP', payload.arquivos?.registroCRP);
+            if (payload.arquivos?.comprovanteEndereco)
+                formDataUpload.append('comprovanteEndereco', payload.arquivos?.comprovanteEndereco);
 
-            const uploadResp = await fetch("/api/arquivos/upload", {
-                method: "POST",
+            const uploadResp = await fetch('/api/arquivos/upload', {
+                method: 'POST',
                 body: formDataUpload,
-            }).then(r => r.json());
+            }).then((r) => r.json());
 
             payload.arquivos = uploadResp.arquivos;
             console.log(payload);

@@ -1,7 +1,10 @@
 import { Input } from '@/ui/input';
 import { Label } from '@/ui/label';
+import { Combobox } from '@/ui/combobox';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Terapeuta } from '../../types/cadastros.types';
 import { DateField } from '@/common/components/layout/DateField';
+import { BRAZILIAN_BANKS, formatBankLabel } from '@/common/constants/banks';
 
 import {
     maskCPF,
@@ -10,10 +13,12 @@ import {
     maskPlate,
     maskPersonName,
     maskBRL,
+    maskPixKey,
+    validatePixKey,
 } from '@/common/utils/mask';
 
 interface DadosPessoaisStepProps {
-    data: Partial<Terapeuta>;
+    data: Partial<Terapeuta> & { pixTipo?: string };
     onUpdate: (field: string, value: any) => void;
     onBlurField?: (field: string) => void; // <- novo
     errors: Record<string, string>;
@@ -25,6 +30,30 @@ export default function DadosPessoaisStep({
     onBlurField,
     errors,
 }: DadosPessoaisStepProps) {
+    // Preparar opções do banco para o Combobox
+    const bankOptions = BRAZILIAN_BANKS.map((bank) => ({
+        value: bank.code,
+        label: formatBankLabel(bank),
+    }));
+
+    // Placeholders dinâmicos para Chave Pix
+    const getPixPlaceholder = (tipo: string | undefined): string => {
+        switch (tipo) {
+            case 'email':
+                return 'terapeuta@dominio.com';
+            case 'telefone':
+                return '(11) 98888-7777';
+            case 'cpf':
+                return '123.456.789-09';
+            case 'cnpj':
+                return '12.345.678/0001-95';
+            case 'aleatoria':
+                return '123e4567-e89b-12d3-a456-426614174000';
+            default:
+                return 'Selecione o tipo primeiro';
+        }
+    };
+
     return (
         <div className="space-y-4 md:space-y-6">
             <div>
@@ -211,12 +240,17 @@ export default function DadosPessoaisStep({
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 md:gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="banco">Banco *</Label>
-                    <Input
-                        id="banco"
+                    <Combobox
+                        options={bankOptions}
                         value={data.banco || ''}
-                        onChange={(e) => onUpdate('banco', e.target.value)}
-                        placeholder="Digite o nome do banco"
-                        className={errors.banco ? 'border-destructive' : ''}
+                        onValueChange={(value) => onUpdate('banco', value)}
+                        placeholder="Selecione um banco"
+                        searchPlaceholder="Buscar banco..."
+                        emptyMessage="Nenhum banco encontrado."
+                        error={!!errors.banco}
+                        aria-label="Banco"
+                        aria-required="true"
+                        data-testid="field-banco"
                     />
                     {errors.banco && <p className="text-sm text-destructive">{errors.banco}</p>}
                 </div>
@@ -245,16 +279,60 @@ export default function DadosPessoaisStep({
                     {errors.conta && <p className="text-sm text-destructive">{errors.conta}</p>}
                 </div>
 
+                <div className="space-y-2 md:col-span-3">
+                    <Label htmlFor="pixTipo">Tipo de Chave Pix *</Label>
+                    <Tabs
+                        value={data.pixTipo || ''}
+                        onValueChange={(value: string) => {
+                            onUpdate('pixTipo', value);
+                            // Limpa a chave ao trocar de tipo
+                            onUpdate('chavePix', '');
+                        }}
+                        className="w-full"
+                    >
+                        <TabsList
+                            className="grid w-full rounded-[5px] grid-cols-5"
+                            aria-label="Tipo de chave Pix"
+                            data-testid="pix-type"
+                        >
+                            <TabsTrigger value="email" className='rounded-[5px]'>E-mail</TabsTrigger>
+                            <TabsTrigger value="telefone" className='rounded-[5px]'>Telefone</TabsTrigger>
+                            <TabsTrigger value="cpf" className='rounded-[5px]'>CPF</TabsTrigger>
+                            <TabsTrigger value="aleatoria" className='rounded-[5px]'>Chave aleatória</TabsTrigger>
+                            <TabsTrigger value="cnpj" className='rounded-[5px]'>CNPJ</TabsTrigger>
+                        </TabsList>
+                    </Tabs>
+                    {errors.pixTipo && <p className="text-sm text-destructive">{errors.pixTipo}</p>}
+                </div>
+
                 <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="chavePix">Chave Pix *</Label>
                     <Input
                         id="chavePix"
                         type="text"
                         value={data.chavePix || ''}
-                        onChange={(e) => onUpdate('chavePix', e.target.value)}
-                        placeholder="Digite sua chave Pix"
+                        onChange={(e) => {
+                            const masked = maskPixKey(data.pixTipo || '', e.target.value);
+                            onUpdate('chavePix', masked);
+                        }}
+                        onBlur={() => {
+                            if (data.pixTipo && data.chavePix) {
+                                const validation = validatePixKey(data.pixTipo, data.chavePix);
+                                if (!validation.valid) {
+                                    // Atualiza erro via callback se disponível
+                                    onBlurField?.('chavePix');
+                                }
+                            }
+                        }}
+                        placeholder={getPixPlaceholder(data.pixTipo)}
+                        disabled={!data.pixTipo}
                         className={errors.chavePix ? 'border-destructive' : ''}
+                        aria-describedby="chavePix-help"
+                        data-testid="pix-key"
                     />
+                    <p id="chavePix-help" className="text-xs text-muted-foreground">
+                        Selecione o tipo e informe a chave no formato correspondente.
+                    </p>
                     {errors.chavePix && (
                         <p className="text-sm text-destructive">{errors.chavePix}</p>
                     )}

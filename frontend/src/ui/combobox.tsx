@@ -30,6 +30,9 @@ interface ComboboxProps {
     className?: string;
     disabled?: boolean;
     error?: boolean;
+    'aria-label'?: string;
+    'aria-required'?: string | boolean;
+    'data-testid'?: string;
 }
 
 export function Combobox({
@@ -42,6 +45,9 @@ export function Combobox({
     className,
     disabled = false,
     error = false,
+    'aria-label': ariaLabel,
+    'aria-required': ariaRequired,
+    'data-testid': dataTestId,
 }: ComboboxProps) {
     const [open, setOpen] = React.useState(false);
 
@@ -54,8 +60,14 @@ export function Combobox({
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
+                    aria-label={ariaLabel}
+                    aria-required={
+                        ariaRequired === 'true' || ariaRequired === true ? true : undefined
+                    }
+                    data-testid={dataTestId}
+                    style={{ fontFamily: 'inherit' }}
                     className={cn(
-                        'w-full justify-between h-9 rounded-[5px] border border-input bg-transparent px-4 py-5 text-base shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm',
+                        'w-full justify-between h-9 rounded-[5px] border border-input bg-transparent px-4 py-5 text-base shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm font-sans',
                         !selectedOption && 'text-muted-foreground',
                         error && 'border-destructive',
                         className,
