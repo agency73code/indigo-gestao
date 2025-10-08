@@ -1,6 +1,7 @@
 import type { User } from "@/features/auth/types/auth.types";
 import { authFetch } from "./http";
 import type { Terapeuta, Cliente } from "@/features/cadastros/types/cadastros.types";
+import type { Bank } from '@/common/constants/banks';
 import type { Therapist as TerapeutaConsulta, Patient } from '@/features/consultas/types/consultas.types'
 
 const AUTH_BYPASS =
@@ -29,6 +30,19 @@ export async function listarTerapeutas(): Promise<TerapeutaConsulta[]> {
   }
   
   return (data ?? []) as TerapeutaConsulta[];
+}
+
+export async function fetchBrazilianBanks(): Promise<Bank[]> {
+  const res = await authFetch('/api/terapeutas/bancos', { method: 'GET' });
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : null;
+
+  if (!res.ok) {
+    const msg = data?.message ?? data?.error ?? `Falha (${res.status})`;
+    throw new Error(msg);
+  }
+
+  return (data?.data ?? []) as Bank[];
 }
 
 export async function listarClientes(): Promise<Patient[]> {

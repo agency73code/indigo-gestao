@@ -28,6 +28,7 @@ async function main() {
         agencia: faker.finance.accountNumber(4),
         conta: faker.finance.accountNumber(6),
         chave_pix: faker.internet.email(),
+        pix_tipo: faker.helpers.arrayElement(['email', 'telefone', 'cpf', 'cnpj', 'aleatoria']),
         valor_hora: faker.finance.amount({ min: 200, max: 500, dec: 2 }),
         professor_uni: faker.datatype.boolean(),
         data_entrada: faker.date.past({ years: 5 }),

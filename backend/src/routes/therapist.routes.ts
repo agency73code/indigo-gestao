@@ -10,6 +10,7 @@ const router: ExpressRouter = Router();
 
 router.get('/', auth, TherapistController.list);
 router.get('/relatorio', auth, TherapistController.getTherapistReport);
+router.get('/bancos', auth, TherapistController.listBanks);
 router.get('/:therapistId', auth, TherapistController.getById);
 router.post('/cadastrar', auth, requireAbility('manage', 'Cadastro'), TherapistController.create);
 

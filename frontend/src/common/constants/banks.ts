@@ -6,9 +6,11 @@
 export interface Bank {
     code: string;
     name: string;
+    fullName?: string;
+    ispb?: string;
 }
 
-export const BRAZILIAN_BANKS: Bank[] = [
+export const FALLBACK_BRAZILIAN_BANKS: Bank[] = [
     { code: '001', name: 'Banco do Brasil' },
     { code: '033', name: 'Santander' },
     { code: '104', name: 'Caixa Econômica Federal' },
@@ -46,17 +48,11 @@ export const BRAZILIAN_BANKS: Bank[] = [
 ];
 
 /**
- * Retorna o nome do banco a partir do código
- */
-export function getBankNameByCode(code: string): string | null {
-    const bank = BRAZILIAN_BANKS.find(b => b.code === code);
-    return bank ? bank.name : null;
-}
-
-/**
  * Formata a exibição do banco para o Combobox
  * Exemplo: "Banco do Brasil (001)"
  */
 export function formatBankLabel(bank: Bank): string {
-    return `${bank.name} (${bank.code})`;
+    const displayName = bank.fullName ?? bank.name;
+    if (!bank.code) return displayName;
+    return `${displayName} (${bank.code})`;
 }

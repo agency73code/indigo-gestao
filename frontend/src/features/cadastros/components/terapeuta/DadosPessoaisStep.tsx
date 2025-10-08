@@ -1,10 +1,12 @@
+import { useEffect, useMemo, useState } from 'react';
 import { Input } from '@/ui/input';
 import { Label } from '@/ui/label';
 import { Combobox } from '@/ui/combobox';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Terapeuta } from '../../types/cadastros.types';
 import { DateField } from '@/common/components/layout/DateField';
-import { BRAZILIAN_BANKS, formatBankLabel } from '@/common/constants/banks';
+import { FALLBACK_BRAZILIAN_BANKS, formatBankLabel, type Bank } from '@/common/constants/banks';
+import { fetchBrazilianBanks } from '@/lib/api';
 
 import {
     maskCPF,
@@ -30,11 +32,71 @@ export default function DadosPessoaisStep({
     onBlurField,
     errors,
 }: DadosPessoaisStepProps) {
-    // Preparar opções do banco para o Combobox
-    const bankOptions = BRAZILIAN_BANKS.map((bank) => ({
-        value: bank.code,
-        label: formatBankLabel(bank),
-    }));
+    const [banks, setBanks] = useState<Bank[]>([]);
+    const [banksLoading, setBanksLoading] = useState(true);
+    const [banksMessage, setBanksMessage] = useState<string | null>(null);
+
+    useEffect(() => {
+        let isMounted = true;
+        setBanksLoading(true);
+
+        fetchBrazilianBanks()
+            .then((response) => {
+                if (!isMounted) return;
+                if (response.length === 0) {
+                    setBanks(FALLBACK_BRAZILIAN_BANKS);
+                    setBanksMessage('Lista atualizada indisponível. Exibindo opções padrão.');
+                } else {
+                    setBanks(response);
+                    setBanksMessage(null);
+                }
+            })
+            .catch((error) => {
+                console.error('Erro ao carregar bancos da Brasil API:', error);
+                if (!isMounted) return;
+                setBanks(FALLBACK_BRAZILIAN_BANKS);
+                setBanksMessage('Não foi possível atualizar a lista de bancos. Exibindo opções padrão.');
+            })
+            .finally(() => {
+                if (isMounted) {
+                    setBanksLoading(false);
+                }
+            });
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
+
+    const bankOptions = useMemo(() => {
+        const options = banks
+            .filter((bank) => Boolean(bank.code))
+            .map((bank) => ({
+                value: bank.code,
+                label: formatBankLabel(bank),
+            }));
+
+        if (data.banco && !options.some((option) => option.value === data.banco)) {
+            options.push({
+                value: data.banco,
+                label: data.banco,
+            });
+        }
+
+        return options.sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'));
+    }, [banks, data.banco]);
+
+    const bankPlaceholder = useMemo(() => {
+        if (banksLoading) return 'Carregando bancos...';
+        if (!bankOptions.length) return 'Nenhum banco disponível';
+        return 'Selecione um banco';
+    }, [banksLoading, bankOptions.length]);
+
+    const bankEmptyMessage = useMemo(() => {
+        if (banksLoading) return 'Carregando bancos...';
+        if (banksMessage) return banksMessage;
+        return 'Nenhum banco encontrado.';
+    }, [banksLoading, banksMessage]);
 
     // Placeholders dinâmicos para Chave Pix
     const getPixPlaceholder = (tipo: string | undefined): string => {
@@ -244,14 +306,18 @@ export default function DadosPessoaisStep({
                         options={bankOptions}
                         value={data.banco || ''}
                         onValueChange={(value) => onUpdate('banco', value)}
-                        placeholder="Selecione um banco"
+                        placeholder={bankPlaceholder}
                         searchPlaceholder="Buscar banco..."
-                        emptyMessage="Nenhum banco encontrado."
+                        emptyMessage={bankEmptyMessage}
                         error={!!errors.banco}
+                        disabled={banksLoading || bankOptions.length === 0}
                         aria-label="Banco"
                         aria-required="true"
                         data-testid="field-banco"
                     />
+                    {banksMessage && !errors.banco && (
+                        <p className="text-xs text-muted-foreground">{banksMessage}</p>
+                    )}
                     {errors.banco && <p className="text-sm text-destructive">{errors.banco}</p>}
                 </div>
 

@@ -16,6 +16,7 @@ export function normalizeTherapistForm(db: TherapistTypes.TherapistDB) {
         agencia: db.agencia ?? '',
         conta: db.conta ?? '',
         chavePix: db.chave_pix ?? '',
+        pixTipo: db.pix_tipo ?? '',
         valorHoraAcordado: db.valor_hora?.toString() ?? '',
         professorUnindigo: db.professor_uni ? 'Sim' : 'Não',
         disciplinaUniindigo: db.disciplina?.map((d) => d.nome).join(", ") ?? "",

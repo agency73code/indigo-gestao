@@ -27,6 +27,7 @@ export const therapistSchema = z.object({
   banco: z.string().min(1),
   agencia: z.string().transform(strip),
   conta: z.string().transform(strip),
+  pixTipo: z.enum(["email", "telefone", "cpf", "cnpj", "aleatoria"]),
   chavePix: z.string().transform(strip),
   valorHoraAcordado: z.string(),
   professorUnindigo: z.enum(["sim", "nao"]),

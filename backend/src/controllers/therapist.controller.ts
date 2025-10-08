@@ -3,6 +3,7 @@ import * as TherapistService from '../features/therapist/therapist.service.js';
 import * as TherapistNormalizer from '../features/therapist/therapist.normalizer.js'
 import { sendWelcomeEmail } from '../utils/mail.util.js';
 import { therapistSchema } from '../schemas/therapist.schema.js';
+import { fetchBrazilianBanks } from '../utils/brazilApi.util.js';
 
 export async function create(req: Request, res: Response, next: NextFunction) {
     try {
@@ -30,6 +31,15 @@ export async function getTherapistReport(req: Request, res: Response, next: Next
   } catch (err) {
     next(err);
   }
+}
+
+export async function listBanks(req: Request, res: Response, next: NextFunction) {
+    try {
+        const banks = await fetchBrazilianBanks();
+        res.json({ data: banks });
+    } catch (error) {
+        next(error);
+    }
 }
 
 export async function getById(req: Request, res: Response, next: NextFunction) {

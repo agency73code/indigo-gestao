@@ -190,6 +190,7 @@ model terapeuta {
   agencia                String?
   conta                  String?
   chave_pix              String?
+  pix_tipo               String?
   valor_hora             Decimal?                 @db.Decimal(10, 2)
   professor_uni          Boolean                  @default(false)
   endereco_id            Int?

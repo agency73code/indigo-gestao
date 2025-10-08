@@ -29,6 +29,7 @@ export async function create(dto: TherapistTypes.TherapistForm) {
       agencia: dto.agencia,
       conta: dto.conta,
       chave_pix: dto.chavePix,
+      pix_tipo: dto.pixTipo,
       valor_hora: brMoneyToNumber(dto.valorHoraAcordado),
       professor_uni: dto.professorUnindigo === 'sim',
       

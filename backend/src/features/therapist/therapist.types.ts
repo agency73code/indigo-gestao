@@ -15,6 +15,7 @@ export type TherapistForm = {
   agencia: string
   conta: string
   chavePix: string
+  pixTipo: 'email' | 'telefone' | 'cpf' | 'cnpj' | 'aleatoria'
   valorHoraAcordado: string
   professorUnindigo: string
   disciplinaUniindigo?: string | null | undefined
@@ -90,6 +91,7 @@ export interface TherapistDB {
     agencia?: string | null;
     conta?: string | null;
     chave_pix?: string | null;
+    pix_tipo?: string | null;
     valor_hora?: Decimal | null;
     professor_uni: boolean;
     endereco_id?: number | null;
