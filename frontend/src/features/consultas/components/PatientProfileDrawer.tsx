@@ -1,8 +1,9 @@
 import { X, User, MapPin, CreditCard, GraduationCap } from 'lucide-react';
-import { Button } from '@/ui/button';
+import { Button } from '@/components/ui/button';
 import ReadOnlyField from './ReadOnlyField';
 import type { Patient } from '../types/consultas.types';
 import { useCliente } from '../hooks/useCliente';
+import DocumentsTable from '../arquivos/components/DocumentsTable';
 
 interface PatientProfileDrawerProps {
     patient: Patient | null;
@@ -19,16 +20,16 @@ export default function PatientProfileDrawer({
         enderecos.map((item) => {
             const e = item.endereco;
             return {
-            ...e,
-            logradouro: e.rua ?? e.logradouro,
+                ...e,
+                logradouro: e.rua ?? e.logradouro,
             };
-    });
+        });
     const rawData = useCliente(patient?.id, open);
     const clienteData = rawData
         ? {
-            ...rawData,
-            enderecos: normalizarEnderecos(rawData.enderecos ?? []),
-        }
+              ...rawData,
+              enderecos: normalizarEnderecos(rawData.enderecos ?? []),
+          }
         : null;
 
     if (!patient || !open || !clienteData) return null;
@@ -58,7 +59,7 @@ export default function PatientProfileDrawer({
     };
 
     const arquivosMap = Array.isArray(clienteData.arquivos)
-        ? new Map(clienteData.arquivos.map(a => [a.tipo, a]))
+        ? new Map(clienteData.arquivos.map((a) => [a.tipo, a]))
         : new Map<string, any>();
 
     return (
@@ -68,9 +69,9 @@ export default function PatientProfileDrawer({
                 {/* Header - flex-shrink-0 mantém fixo */}
                 <div className="flex items-center gap-4 p-6 border-b bg-muted/30 flex-shrink-0">
                     <div className="h-16 w-16 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center text-lg font-medium text-purple-600 dark:text-purple-300">
-                        {arquivosMap.has("fotoPerfil") ? (
+                        {arquivosMap.has('fotoPerfil') ? (
                             <img
-                                src={`${import.meta.env.VITE_API_URL}/arquivos/view/${arquivosMap.get("fotoPerfil")?.arquivo_id}`}
+                                src={`${import.meta.env.VITE_API_URL}/arquivos/view/${arquivosMap.get('fotoPerfil')?.arquivo_id}`}
                                 alt={patient.nome}
                                 className="h-full w-full object-cover rounded-full"
                             />
@@ -104,23 +105,23 @@ export default function PatientProfileDrawer({
                                 Dados Pessoais
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <ReadOnlyField label="Nome *" value={clienteData.nome ?? ""} />
+                                <ReadOnlyField label="Nome *" value={clienteData.nome ?? ''} />
                                 <ReadOnlyField
                                     label="Data de nascimento *"
-                                    value={formatDate(clienteData.dataNascimento ?? "")}
+                                    value={formatDate(clienteData.dataNascimento ?? '')}
                                 />
-                                <ReadOnlyField label="CPF *" value={clienteData.cpf ?? ""} />
+                                <ReadOnlyField label="CPF *" value={clienteData.cpf ?? ''} />
                                 <ReadOnlyField
                                     label="E-mail de contato *"
-                                    value={clienteData.emailContato ?? ""}
+                                    value={clienteData.emailContato ?? ''}
                                 />
                                 <ReadOnlyField
                                     label="Data Entrada *"
-                                    value={formatDate(clienteData.dataEntrada ?? "")}
+                                    value={formatDate(clienteData.dataEntrada ?? '')}
                                 />
                                 <ReadOnlyField
                                     label="Data Saída"
-                                    value={formatDate(clienteData.dataSaida ?? "")}
+                                    value={formatDate(clienteData.dataSaida ?? '')}
                                 />
                             </div>
 
@@ -179,7 +180,9 @@ export default function PatientProfileDrawer({
                                                             />
                                                             <ReadOnlyField
                                                                 label="Logradouro"
-                                                                value={(cuidador.endereco as any).rua}
+                                                                value={
+                                                                    (cuidador.endereco as any).rua
+                                                                }
                                                             />
                                                             <ReadOnlyField
                                                                 label="Número"
@@ -210,32 +213,50 @@ export default function PatientProfileDrawer({
                             </h3>
 
                             {clienteData.enderecos?.length > 0 ? (
-                            clienteData.enderecos.map((endereco, index) => {
-                                return (
-                                <div key={index} className="mb-6">
-                                    {clienteData.enderecos!.length > 1 && (
-                                    <h4 className="text-md font-medium mb-4">
-                                        Endereço {index + 1}
-                                    </h4>
-                                    )}
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <ReadOnlyField label="CEP *" value={endereco.cep ?? ''} />
-                                    <ReadOnlyField label="UF *" value={endereco.uf ?? ''} />
-                                    <ReadOnlyField
-                                        label="Logradouro *"
-                                        value={endereco.logradouro ?? ''}
-                                        className="md:col-span-3"
-                                    />
-                                    <ReadOnlyField label="Número *" value={endereco.numero ?? ''} />
-                                    <ReadOnlyField label="Complemento" value={endereco.complemento ?? ''} />
-                                    <ReadOnlyField label="Bairro *" value={endereco.bairro ?? ''} />
-                                    <ReadOnlyField label="Cidade *" value={endereco.cidade ?? ''} />
-                                    </div>
-                                </div>
-                                );
-                            })
+                                clienteData.enderecos.map((endereco, index) => {
+                                    return (
+                                        <div key={index} className="mb-6">
+                                            {clienteData.enderecos!.length > 1 && (
+                                                <h4 className="text-md font-medium mb-4">
+                                                    Endereço {index + 1}
+                                                </h4>
+                                            )}
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                <ReadOnlyField
+                                                    label="CEP *"
+                                                    value={endereco.cep ?? ''}
+                                                />
+                                                <ReadOnlyField
+                                                    label="UF *"
+                                                    value={endereco.uf ?? ''}
+                                                />
+                                                <ReadOnlyField
+                                                    label="Logradouro *"
+                                                    value={endereco.logradouro ?? ''}
+                                                    className="md:col-span-3"
+                                                />
+                                                <ReadOnlyField
+                                                    label="Número *"
+                                                    value={endereco.numero ?? ''}
+                                                />
+                                                <ReadOnlyField
+                                                    label="Complemento"
+                                                    value={endereco.complemento ?? ''}
+                                                />
+                                                <ReadOnlyField
+                                                    label="Bairro *"
+                                                    value={endereco.bairro ?? ''}
+                                                />
+                                                <ReadOnlyField
+                                                    label="Cidade *"
+                                                    value={endereco.cidade ?? ''}
+                                                />
+                                            </div>
+                                        </div>
+                                    );
+                                })
                             ) : (
-                            <p className="text-muted-foreground">Nenhum endereço informado</p>
+                                <p className="text-muted-foreground">Nenhum endereço informado</p>
                             )}
                         </div>
 
@@ -253,11 +274,11 @@ export default function PatientProfileDrawer({
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                                 <ReadOnlyField
                                     label="Nome do titular *"
-                                    value={clienteData.dadosPagamento?.nomeTitular ?? ""}
+                                    value={clienteData.dadosPagamento?.nomeTitular ?? ''}
                                 />
                                 <ReadOnlyField
                                     label="Número da carteirinha"
-                                    value={clienteData.dadosPagamento?.numeroCarteirinha ?? ""}
+                                    value={clienteData.dadosPagamento?.numeroCarteirinha ?? ''}
                                 />
                             </div>
 
@@ -269,18 +290,18 @@ export default function PatientProfileDrawer({
                                     <div className="space-y-4">
                                         <ReadOnlyField
                                             label="Telefone *"
-                                            value={clienteData.dadosPagamento?.telefone1 ?? ""}
+                                            value={clienteData.dadosPagamento?.telefone1 ?? ''}
                                         />
                                         {clienteData.dadosPagamento?.mostrarTelefone2 && (
                                             <ReadOnlyField
                                                 label="Telefone 2"
-                                                value={clienteData.dadosPagamento?.telefone2 ?? ""}
+                                                value={clienteData.dadosPagamento?.telefone2 ?? ''}
                                             />
                                         )}
                                         {clienteData.dadosPagamento?.mostrarTelefone3 && (
                                             <ReadOnlyField
                                                 label="Telefone 3"
-                                                value={clienteData.dadosPagamento?.telefone3 ?? ""}
+                                                value={clienteData.dadosPagamento?.telefone3 ?? ''}
                                             />
                                         )}
                                     </div>
@@ -292,18 +313,18 @@ export default function PatientProfileDrawer({
                                     <div className="space-y-4">
                                         <ReadOnlyField
                                             label="E-mail *"
-                                            value={clienteData.dadosPagamento?.email1 ?? ""}
+                                            value={clienteData.dadosPagamento?.email1 ?? ''}
                                         />
                                         {clienteData.dadosPagamento?.mostrarEmail2 && (
                                             <ReadOnlyField
                                                 label="E-mail 2"
-                                                value={clienteData.dadosPagamento?.email2 ?? ""}
+                                                value={clienteData.dadosPagamento?.email2 ?? ''}
                                             />
                                         )}
                                         {clienteData.dadosPagamento?.mostrarEmail3 && (
                                             <ReadOnlyField
                                                 label="E-mail 3"
-                                                value={clienteData.dadosPagamento?.email3 ?? ""}
+                                                value={clienteData.dadosPagamento?.email3 ?? ''}
                                             />
                                         )}
                                     </div>
@@ -335,7 +356,7 @@ export default function PatientProfileDrawer({
                                         </h5>
                                         <ReadOnlyField
                                             label="Prazo reembolso (dias)"
-                                            value={clienteData.dadosPagamento?.prazoReembolso ?? ""}
+                                            value={clienteData.dadosPagamento?.prazoReembolso ?? ''}
                                         />
                                     </div>
                                 )}
@@ -351,12 +372,16 @@ export default function PatientProfileDrawer({
                                                 <ReadOnlyField
                                                     label="Número do processo"
                                                     value={
-                                                        clienteData.dadosPagamento?.numeroProcesso ?? ""
+                                                        clienteData.dadosPagamento
+                                                            ?.numeroProcesso ?? ''
                                                     }
                                                 />
                                                 <ReadOnlyField
                                                     label="Nome advogado"
-                                                    value={clienteData.dadosPagamento?.nomeAdvogado ?? ""}
+                                                    value={
+                                                        clienteData.dadosPagamento?.nomeAdvogado ??
+                                                        ''
+                                                    }
                                                 />
                                             </div>
 
@@ -370,7 +395,7 @@ export default function PatientProfileDrawer({
                                                         label="Telefone advogado *"
                                                         value={
                                                             clienteData.dadosPagamento
-                                                                ?.telefoneAdvogado1 ?? ""
+                                                                ?.telefoneAdvogado1 ?? ''
                                                         }
                                                     />
                                                     {clienteData.dadosPagamento
@@ -379,7 +404,7 @@ export default function PatientProfileDrawer({
                                                             label="Telefone advogado 2"
                                                             value={
                                                                 clienteData.dadosPagamento
-                                                                    ?.telefoneAdvogado2 ?? ""
+                                                                    ?.telefoneAdvogado2 ?? ''
                                                             }
                                                         />
                                                     )}
@@ -389,7 +414,7 @@ export default function PatientProfileDrawer({
                                                             label="Telefone advogado 3"
                                                             value={
                                                                 clienteData.dadosPagamento
-                                                                    ?.telefoneAdvogado3 ?? ""
+                                                                    ?.telefoneAdvogado3 ?? ''
                                                             }
                                                         />
                                                     )}
@@ -406,7 +431,7 @@ export default function PatientProfileDrawer({
                                                         label="E-mail advogado *"
                                                         value={
                                                             clienteData.dadosPagamento
-                                                                ?.emailAdvogado1 ?? ""
+                                                                ?.emailAdvogado1 ?? ''
                                                         }
                                                     />
                                                     {clienteData.dadosPagamento
@@ -415,7 +440,7 @@ export default function PatientProfileDrawer({
                                                             label="E-mail advogado 2"
                                                             value={
                                                                 clienteData.dadosPagamento
-                                                                    ?.emailAdvogado2 ?? ""
+                                                                    ?.emailAdvogado2 ?? ''
                                                             }
                                                         />
                                                     )}
@@ -425,7 +450,7 @@ export default function PatientProfileDrawer({
                                                             label="E-mail advogado 3"
                                                             value={
                                                                 clienteData.dadosPagamento
-                                                                    ?.emailAdvogado3 ?? ""
+                                                                    ?.emailAdvogado3 ?? ''
                                                             }
                                                         />
                                                     )}
@@ -459,7 +484,8 @@ export default function PatientProfileDrawer({
                                                 <ReadOnlyField
                                                     label="Valor da sessão *"
                                                     value={
-                                                        clienteData.dadosPagamento?.valorAcordado ?? ""
+                                                        clienteData.dadosPagamento?.valorAcordado ??
+                                                        ''
                                                     }
                                                 />
                                             )}
@@ -492,15 +518,15 @@ export default function PatientProfileDrawer({
                                 />
                                 <ReadOnlyField
                                     label="Nome *"
-                                    value={clienteData.dadosEscola?.nome ?? ""}
+                                    value={clienteData.dadosEscola?.nome ?? ''}
                                 />
                                 <ReadOnlyField
                                     label="Telefone *"
-                                    value={clienteData.dadosEscola?.telefone ?? ""}
+                                    value={clienteData.dadosEscola?.telefone ?? ''}
                                 />
                                 <ReadOnlyField
                                     label="E-mail"
-                                    value={clienteData.dadosEscola?.email ?? ""}
+                                    value={clienteData.dadosEscola?.email ?? ''}
                                 />
                             </div>
 
@@ -511,11 +537,11 @@ export default function PatientProfileDrawer({
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         <ReadOnlyField
                                             label="CEP"
-                                            value={clienteData.dadosEscola.endereco.cep ?? ""}
+                                            value={clienteData.dadosEscola.endereco.cep ?? ''}
                                         />
                                         <ReadOnlyField
                                             label="UF"
-                                            value={clienteData.dadosEscola.endereco.uf ?? ""}
+                                            value={clienteData.dadosEscola.endereco.uf ?? ''}
                                         />
                                         <ReadOnlyField
                                             label="Logradouro"
@@ -524,19 +550,21 @@ export default function PatientProfileDrawer({
                                         />
                                         <ReadOnlyField
                                             label="Número"
-                                            value={clienteData.dadosEscola.endereco.numero ?? ""}
+                                            value={clienteData.dadosEscola.endereco.numero ?? ''}
                                         />
                                         <ReadOnlyField
                                             label="Complemento"
-                                            value={clienteData.dadosEscola.endereco.complemento ?? ""}
+                                            value={
+                                                clienteData.dadosEscola.endereco.complemento ?? ''
+                                            }
                                         />
                                         <ReadOnlyField
                                             label="Bairro"
-                                            value={clienteData.dadosEscola.endereco.bairro ?? ""}
+                                            value={clienteData.dadosEscola.endereco.bairro ?? ''}
                                         />
                                         <ReadOnlyField
                                             label="Cidade"
-                                            value={clienteData.dadosEscola.endereco.cidade ?? ""}
+                                            value={clienteData.dadosEscola.endereco.cidade ?? ''}
                                         />
                                     </div>
                                 </div>
@@ -551,36 +579,7 @@ export default function PatientProfileDrawer({
                             <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
                                 📎 Arquivos
                             </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <ReadOnlyField
-                                label="Foto do perfil"
-                                value={arquivosMap.has("fotoPerfil") ? "Enviado" : "Não enviado"}
-                                />
-                                <ReadOnlyField
-                                label="Documento de identidade"
-                                value={arquivosMap.has("documentoIdentidade") ? "Enviado" : "Não enviado"}
-                                />
-                                <ReadOnlyField
-                                label="Comprovante de CPF"
-                                value={arquivosMap.has("comprovanteCpf") ? "Enviado" : "Não enviado"}
-                                />
-                                <ReadOnlyField
-                                label="Comprovante de residência"
-                                value={arquivosMap.has("comprovanteResidencia") ? "Enviado" : "Não enviado"}
-                                />
-                                <ReadOnlyField
-                                label="Carteirinha do plano"
-                                value={arquivosMap.has("carterinhaPlano") ? "Enviado" : "Não enviado"}
-                                />
-                                <ReadOnlyField
-                                label="Relatórios médicos"
-                                value={arquivosMap.has("relatoriosMedicos") ? "Enviado" : "Não enviado"}
-                                />
-                                <ReadOnlyField
-                                label="Prescrição médica"
-                                value={arquivosMap.has("prescricaoMedica") ? "Enviado" : "Não enviado"}
-                                />
-                            </div>
+                            <DocumentsTable ownerType="cliente" ownerId={patient.id} />
                         </div>
 
                         {/* Espaço extra para garantir scroll completo */}

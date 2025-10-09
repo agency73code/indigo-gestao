@@ -1,8 +1,9 @@
 import { X, User, MapPin, Briefcase, Building, GraduationCap, FileText, Car } from 'lucide-react';
-import { Button } from '@/ui/button';
+import { Button } from '@/components/ui/button';
 import ReadOnlyField from './ReadOnlyField';
 import type { Therapist } from '../types/consultas.types';
 import { useTerapeuta } from '../hooks/useTerapeuta';
+import DocumentsTable from '../arquivos/components/DocumentsTable';
 
 interface TherapistProfileDrawerProps {
     therapist: Therapist | null;
@@ -65,9 +66,9 @@ export default function TherapistProfileDrawer({
                     <div className="h-16 w-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-lg font-medium text-blue-600 dark:text-blue-300">
                         {displayAvatar ? (
                             <img
-                            src={displayAvatar}
-                            alt={therapist.nome}
-                            className="h-full w-full object-cover rounded-full"
+                                src={displayAvatar}
+                                alt={therapist.nome}
+                                className="h-full w-full object-cover rounded-full"
                             />
                         ) : (
                             getInitials(therapist.nome)
@@ -118,7 +119,11 @@ export default function TherapistProfileDrawer({
                             <div className="mt-6">
                                 <ReadOnlyField
                                     label="Possui Veículo? *"
-                                    value={terapeutaData.possuiVeiculo?.toLowerCase() === 'sim' ? 'Sim' : 'Não'}
+                                    value={
+                                        terapeutaData.possuiVeiculo?.toLowerCase() === 'sim'
+                                            ? 'Sim'
+                                            : 'Não'
+                                    }
                                 />
 
                                 {terapeutaData.possuiVeiculo?.toLowerCase() === 'sim' && (
@@ -260,7 +265,9 @@ export default function TherapistProfileDrawer({
                                 <ReadOnlyField
                                     label="Professor Uniindigo"
                                     value={
-                                        terapeutaData.professorUnindigo?.toLowerCase() === 'sim' ? 'Sim' : 'Não'
+                                        terapeutaData.professorUnindigo?.toLowerCase() === 'sim'
+                                            ? 'Sim'
+                                            : 'Não'
                                     }
                                 />
                                 {terapeutaData.disciplinaUniindigo && (
@@ -376,54 +383,7 @@ export default function TherapistProfileDrawer({
                                 <FileText className="w-5 h-5" />
                                 Arquivos
                             </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <ReadOnlyField
-                                    label="Foto de perfil"
-                                    value={
-                                        Array.isArray(terapeutaData.arquivos) &&
-                                        terapeutaData.arquivos.some((doc: any) => doc.nome === "fotoPerfil")
-                                            ? "Enviado"
-                                            : "Não enviado"
-                                    }
-                                    
-                                />
-                                <ReadOnlyField
-                                    label="Diploma graduação *"
-                                    value={
-                                        Array.isArray(terapeutaData.arquivos) &&
-                                        terapeutaData.arquivos.some((doc: any) => doc.nome === "diplomaGraduacao")
-                                            ? "Enviado"
-                                            : "Não enviado"
-                                    }
-                                />
-                                <ReadOnlyField
-                                    label="Diploma pós-graduação"
-                                    value={
-                                        Array.isArray(terapeutaData.arquivos) &&
-                                        terapeutaData.arquivos.some((doc: any) => doc.nome === "diplomaPosGraduacao")
-                                            ? "Enviado"
-                                            : "Não enviado"
-                                    }
-                                />
-                                <ReadOnlyField
-                                    label="Registro CRP *"
-                                    value={
-                                        Array.isArray(terapeutaData.arquivos) &&
-                                        terapeutaData.arquivos.some((doc: any) => doc.nome === "registroCRP")
-                                            ? "Enviado"
-                                            : "Não enviado"
-                                    }
-                                />
-                                <ReadOnlyField
-                                    label="Comprovante endereço *"
-                                    value={
-                                        Array.isArray(terapeutaData.arquivos) &&
-                                        terapeutaData.arquivos.some((doc: any) => doc.nome === "comprovanteEndereco")
-                                            ? "Enviado"
-                                            : "Não enviado"
-                                    }
-                                />
-                            </div>
+                            <DocumentsTable ownerType="terapeuta" ownerId={therapist.id} />
                         </div>
 
                         {/* Dados CNPJ - Seção Condicional */}

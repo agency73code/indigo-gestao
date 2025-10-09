@@ -20,6 +20,7 @@ import CadastroTerapeutaPage from '../../features/cadastros/pages/CadastroTerape
 import CadastroClientePage from '../../features/cadastros/pages/CadastroClientePage';
 import { VinculosPage } from '../../features/cadastros/links';
 import ConsultaHubPage from '../../features/consultas/pages/ConsultaHubPage';
+import TestDocumentsPage from '../../features/consultas/pages/TestDocumentsPage';
 import HubPage from '../../features/programas/pages/HubPage';
 import ConsultaOcpPage from '../../features/programas/pages/ConsultaOcpPage';
 import CadastroOcpPage from '../../features/programas/pages/CadastroOcpPage';
@@ -132,6 +133,14 @@ export const router = createBrowserRouter([
                                 element: (
                                     <Suspense fallback={suspenseFallback}>
                                         <PacientesListPage />
+                                    </Suspense>
+                                ),
+                            },
+                            {
+                                path: 'test-documents',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <TestDocumentsPage />
                                     </Suspense>
                                 ),
                             },
