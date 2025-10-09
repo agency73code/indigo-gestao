@@ -100,6 +100,9 @@ export interface LinkCardProps {
   therapistWithLinks?: TherapistWithLinks;
   // Modo de visualização
   viewBy: 'patient' | 'therapist';
+  // Listas para lookup de dados
+  patients: Paciente[];
+  therapists: Terapeuta[];
   // Ações
   onEdit: (link: PatientTherapistLink) => void;
   onAddTherapist: (patientId: string) => void;

@@ -21,7 +21,7 @@ import type { CreateLinkInput, UpdateLinkInput, LinkFormModalProps } from '../ty
 import type { Paciente, Terapeuta } from '../../types/cadastros.types';
 import { searchPatientsByName, searchTherapistsByName } from '../mocks/links.mock';
 
-// Opções de atuação para co-terapeuta
+// Opções de atuação para terapeutas (responsável e co-terapeuta)
 const AREAS_ATUACAO_OPTIONS = [
     { value: 'Fonoaudiologia', label: 'Fonoaudiologia' },
     { value: 'Psicomotricidade', label: 'Psicomotricidade' },
@@ -127,12 +127,29 @@ export default function LinkFormModal({
         }
     }, [open, initialData, isEdit, isNewTherapistCreation, patients, therapists]);
 
+    // Efeito para resetar busca de paciente quando modal abre
+    useEffect(() => {
+        if (showPatientSearch && !selectedPatient) {
+            setPatientSearch('');
+        }
+    }, [showPatientSearch, selectedPatient]);
+
+    // Efeito para resetar busca de terapeuta quando modal abre
+    useEffect(() => {
+        if (showTherapistSearch && !selectedTherapist) {
+            setTherapistSearch('');
+        }
+    }, [showTherapistSearch, selectedTherapist]);
+
     // Efeito para busca de pacientes
     useEffect(() => {
         const searchPatients = async () => {
             if (patientSearch.length >= 2) {
                 const results = searchPatientsByName(patients, patientSearch);
                 setPatientResults(results.slice(0, 10)); // Limitar a 10 resultados
+            } else if (patientSearch.length === 0) {
+                // Mostrar todos os pacientes quando não há busca
+                setPatientResults(patients.slice(0, 10));
             } else {
                 setPatientResults([]);
             }
@@ -148,6 +165,9 @@ export default function LinkFormModal({
             if (therapistSearch.length >= 2) {
                 const results = searchTherapistsByName(therapists, therapistSearch);
                 setTherapistResults(results.slice(0, 10)); // Limitar a 10 resultados
+            } else if (therapistSearch.length === 0) {
+                // Mostrar todos os terapeutas quando não há busca
+                setTherapistResults(therapists.slice(0, 10));
             } else {
                 setTherapistResults([]);
             }
@@ -168,8 +188,8 @@ export default function LinkFormModal({
             newErrors.therapist = 'Selecione um terapeuta';
         }
 
-        if (role === 'co' && !coTherapistActuation) {
-            newErrors.coTherapistActuation = 'Selecione a atuação do co-terapeuta';
+        if (!coTherapistActuation) {
+            newErrors.coTherapistActuation = 'Selecione a área de atuação do terapeuta';
         }
 
         if (!startDate) {
@@ -190,7 +210,7 @@ export default function LinkFormModal({
                 role,
                 startDate: startDate!.toISOString(),
                 notes: notes.trim() || undefined,
-                coTherapistActuation: role === 'co' ? coTherapistActuation : undefined,
+                coTherapistActuation: coTherapistActuation,
             };
             onSubmit(createData);
         } else {
@@ -199,7 +219,7 @@ export default function LinkFormModal({
                 role,
                 startDate: startDate!.toISOString(),
                 notes: notes.trim() || undefined,
-                coTherapistActuation: role === 'co' ? coTherapistActuation : undefined,
+                coTherapistActuation: coTherapistActuation,
             };
             onSubmit(updateData);
         }
@@ -387,28 +407,24 @@ export default function LinkFormModal({
                             </div>
                         </div>
 
-                        {/* Campo de Atuação do Co-terapeuta - aparece apenas quando Co-terapeuta está selecionado */}
-                        {role === 'co' && (
-                            <div className="space-y-2 pt-2 border-t border-border">
-                                <Label className="text-sm font-medium">
-                                    Atuação do Co-terapeuta *
-                                </Label>
-                                <Combobox
-                                    options={AREAS_ATUACAO_OPTIONS}
-                                    value={coTherapistActuation}
-                                    onValueChange={setCoTherapistActuation}
-                                    placeholder="Selecione a área de atuação"
-                                    searchPlaceholder="Buscar atuação..."
-                                    emptyMessage="Nenhuma atuação encontrada."
-                                    error={!!errors.coTherapistActuation}
-                                />
-                                {errors.coTherapistActuation && (
-                                    <p className="text-sm text-destructive">
-                                        {errors.coTherapistActuation}
-                                    </p>
-                                )}
-                            </div>
-                        )}
+                        {/* Campo de Atuação do Terapeuta - aparece sempre */}
+                        <div className="space-y-2 pt-2 border-t border-border">
+                            <Label className="text-sm font-medium">Área de Atuação *</Label>
+                            <Combobox
+                                options={AREAS_ATUACAO_OPTIONS}
+                                value={coTherapistActuation}
+                                onValueChange={setCoTherapistActuation}
+                                placeholder="Selecione a área de atuação"
+                                searchPlaceholder="Buscar atuação..."
+                                emptyMessage="Nenhuma atuação encontrada."
+                                error={!!errors.coTherapistActuation}
+                            />
+                            {errors.coTherapistActuation && (
+                                <p className="text-sm text-destructive">
+                                    {errors.coTherapistActuation}
+                                </p>
+                            )}
+                        </div>
                     </div>
 
                     {/* Data de Início */}
@@ -546,13 +562,13 @@ export default function LinkFormModal({
                                             </div>
                                         ))}
                                     </div>
-                                ) : patientSearch.length >= 2 ? (
+                                ) : patientSearch.length > 0 ? (
                                     <p className="text-sm text-muted-foreground text-center py-8">
                                         Nenhum cliente encontrado
                                     </p>
                                 ) : (
                                     <p className="text-sm text-muted-foreground text-center py-8">
-                                        Digite pelo menos 2 caracteres para buscar
+                                        Nenhum cliente disponível
                                     </p>
                                 )}
                             </div>
@@ -605,13 +621,13 @@ export default function LinkFormModal({
                                             </div>
                                         ))}
                                     </div>
-                                ) : therapistSearch.length >= 2 ? (
+                                ) : therapistSearch.length > 0 ? (
                                     <p className="text-sm text-muted-foreground text-center py-8">
                                         Nenhum terapeuta encontrado
                                     </p>
                                 ) : (
                                     <p className="text-sm text-muted-foreground text-center py-8">
-                                        Digite pelo menos 2 caracteres para buscar
+                                        Nenhum terapeuta disponível
                                     </p>
                                 )}
                             </div>

@@ -65,6 +65,8 @@ export default function LinkCard({
     patientWithLinks,
     therapistWithLinks,
     viewBy,
+    patients,
+    therapists,
     onEdit,
     onAddTherapist,
     onTransferResponsible,
@@ -74,6 +76,7 @@ export default function LinkCard({
     if (viewBy === 'patient' && patientWithLinks) {
         return renderPatientCard(
             patientWithLinks,
+            therapists,
             onEdit,
             onAddTherapist,
             onTransferResponsible,
@@ -85,6 +88,7 @@ export default function LinkCard({
     if (viewBy === 'therapist' && therapistWithLinks) {
         return renderTherapistCard(
             therapistWithLinks,
+            patients,
             onEdit,
             onTransferResponsible,
             onEndLink,
@@ -98,6 +102,7 @@ export default function LinkCard({
 // Renderiza card consolidado por paciente
 function renderPatientCard(
     { patient, links }: { patient: any; links: PatientTherapistLink[] },
+    therapists: any[],
     onEdit: (link: PatientTherapistLink) => void,
     onAddTherapist: (patientId: string) => void,
     onTransferResponsible: (link: PatientTherapistLink) => void,
@@ -214,12 +219,13 @@ function renderPatientCard(
             <CardContent className="pt-0 flex flex-col h-full">
                 {/* Lista de terapeutas vinculados */}
                 <div className="space-y-3 flex-1">
-                    <h4 className="text-sm font-medium text-foreground">Equipe de atendimento:</h4>
+                    <h4 className="text-sm font-medium text-foreground">Terapeutas vinculados:</h4>
 
-                    <div className="space-y-1">
+                    <div className="space-y-2">
                         {responsibleLink && (
                             <TherapistChip
                                 link={responsibleLink}
+                                therapists={therapists}
                                 onEdit={onEdit}
                                 onTransferResponsible={onTransferResponsible}
                                 onEndLink={onEndLink}
@@ -231,6 +237,7 @@ function renderPatientCard(
                             <TherapistChip
                                 key={link.id}
                                 link={link}
+                                therapists={therapists}
                                 onEdit={onEdit}
                                 onTransferResponsible={onTransferResponsible}
                                 onEndLink={onEndLink}
@@ -265,56 +272,57 @@ function renderPatientCard(
 // Componente para chip do terapeuta (usado no card do cliente)
 function TherapistChip({
     link,
+    therapists,
     onEdit,
     onTransferResponsible,
     onEndLink,
     onArchive,
 }: {
     link: PatientTherapistLink;
+    therapists: any[];
     onEdit: (link: PatientTherapistLink) => void;
     onTransferResponsible: (link: PatientTherapistLink) => void;
     onEndLink: (link: PatientTherapistLink) => void;
     onArchive: (link: PatientTherapistLink) => void;
 }) {
     const isResponsible = link.role === 'responsible';
-    const isCo = link.role === 'co';
+    const therapist = therapists.find((t) => t.id === link.therapistId);
+    const therapistName = therapist?.nome || `Terapeuta ${link.therapistId}`;
 
     return (
-        <div className="flex items-center justify-between p-2 bg-muted/30 rounded">
-            <div className="flex items-center gap-2">
-                <Badge
-                    variant={isResponsible ? 'default' : 'secondary'}
-                    className="text-xs px-2 py-0.5 flex items-center gap-1"
-                >
-                    {isResponsible ? (
-                        <UserCheck className="h-3 w-3" />
-                    ) : (
-                        <User className="h-3 w-3" />
-                    )}
-                    {getRoleLabel(link.role)}
-                </Badge>
+        <div className="grid grid-cols-[200px_1fr_auto] items-center gap-4 p-3 bg-muted/30 rounded-[5px]">
+            {/* Coluna 1: Badge de Atuação */}
+            <Badge
+                variant={isResponsible ? 'default' : 'secondary'}
+                className="text-xs py-0.5 flex items-center p-1 gap-1 w-fit"
+            >
+                {isResponsible ? <UserCheck className="h-3 w-3" /> : <User className="h-3 w-3" />}
+                {link.coTherapistActuation || 'Atuação não definida'}
+            </Badge>
+
+            {/* Coluna 2: Terapeuta (Avatar + Nome + Papel) */}
+            <div className="flex items-center gap-3">
+                <Avatar className="h-8 w-8">
+                    <AvatarFallback className="bg-muted text-muted-foreground text-xs">
+                        {getInitials(therapistName)}
+                    </AvatarFallback>
+                </Avatar>
                 <div className="flex flex-col">
-                    <span className="text-sm font-medium">
-                        {/* Aqui deveria buscar o nome do terapeuta pelo therapistId */}
-                        Terapeuta {link.therapistId}
-                    </span>
-                    {isCo && link.coTherapistActuation && (
-                        <span className="text-xs text-muted-foreground">
-                            Atuação: {link.coTherapistActuation}
-                        </span>
-                    )}
+                    <span className="text-sm font-medium">{therapistName}</span>
+                    <span className="text-xs text-muted-foreground">{getRoleLabel(link.role)}</span>
                 </div>
             </div>
 
+            {/* Coluna 3: Menu de Ações */}
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
                         aria-label="Ações"
                     >
-                        <MoreVertical className="h-3 w-3" />
+                        <MoreVertical className="h-4 w-4" />
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-40">
@@ -346,6 +354,7 @@ function TherapistChip({
 // Renderiza card consolidado por terapeuta
 function renderTherapistCard(
     { therapist, links }: { therapist: any; links: PatientTherapistLink[] },
+    patients: any[],
     onEdit: (link: PatientTherapistLink) => void,
     onTransferResponsible: (link: PatientTherapistLink) => void,
     onEndLink: (link: PatientTherapistLink) => void,
@@ -449,6 +458,7 @@ function renderTherapistCard(
                                 <PatientChip
                                     key={link.id}
                                     link={link}
+                                    patients={patients}
                                     onEdit={onEdit}
                                     onTransferResponsible={onTransferResponsible}
                                     onEndLink={onEndLink}
@@ -478,47 +488,76 @@ function renderTherapistCard(
 // Componente para chip do paciente (usado no card do terapeuta)
 function PatientChip({
     link,
+    patients,
     onEdit,
     onTransferResponsible,
     onEndLink,
     onArchive,
 }: {
     link: PatientTherapistLink;
+    patients: any[];
     onEdit: (link: PatientTherapistLink) => void;
     onTransferResponsible: (link: PatientTherapistLink) => void;
     onEndLink: (link: PatientTherapistLink) => void;
     onArchive: (link: PatientTherapistLink) => void;
 }) {
     const isResponsible = link.role === 'responsible';
+    const patient = patients.find((p) => p.id === link.patientId);
+    const patientName = patient?.nome || `Cliente ${link.patientId}`;
+
+    // Calcular idade do cliente
+    const calculateAge = (birthDate: string | Date | null | undefined) => {
+        if (!birthDate) return null;
+        const birth = new Date(birthDate);
+        const today = new Date();
+        let age = today.getFullYear() - birth.getFullYear();
+        const monthDiff = today.getMonth() - birth.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+            age--;
+        }
+        return age;
+    };
+
+    const age = calculateAge(patient?.dataNascimento);
+    const patientInitials = getInitials(patientName);
 
     return (
-        <div className="flex items-center justify-between p-2 bg-muted/30 rounded">
-            <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">
-                    {/* Aqui deveria buscar o nome do cliente pelo patientId */}
-                    Cliente {link.patientId}
-                </span>
-                <Badge
-                    variant={isResponsible ? 'default' : 'secondary'}
-                    className="text-xs px-2 py-0.5 flex items-center gap-1"
-                >
-                    {isResponsible ? (
-                        <UserCheck className="h-3 w-3" />
-                    ) : (
-                        <User className="h-3 w-3" />
-                    )}
-                    {getRoleLabel(link.role)}
-                </Badge>
+        <div className="grid grid-cols-[200px_1fr_auto] items-center gap-4 p-3 bg-muted/30 rounded-[5px]">
+            {/* Papel do Terapeuta (Responsável/Co-terapeuta) */}
+            <Badge
+                variant={isResponsible ? 'default' : 'secondary'}
+                className="text-xs py-0.5 flex items-center p-1 gap-1 w-fit"
+            >
+                {isResponsible ? <UserCheck className="h-3 w-3" /> : <User className="h-3 w-3" />}
+                {getRoleLabel(link.role)}
+            </Badge>
+
+            {/* Informações do Cliente */}
+            <div className="flex items-center gap-3">
+                <Avatar className="h-9 w-9">
+                    <AvatarImage src="" alt={patientName} />
+                    <AvatarFallback className="text-xs font-medium">
+                        {patientInitials}
+                    </AvatarFallback>
+                </Avatar>
+
+                <div className="flex flex-col min-w-0">
+                    <span className="text-sm font-medium truncate">{patientName}</span>
+                    <span className="text-xs text-muted-foreground">
+                        {age !== null ? `${age} anos` : 'Idade não informada'}
+                    </span>
+                </div>
             </div>
 
+            {/* Menu de Ações */}
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
                     >
-                        <MoreVertical className="h-3 w-3" />
+                        <MoreVertical className="h-4 w-4" />
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-40">

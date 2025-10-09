@@ -123,6 +123,8 @@ export default function LinkList({
                         key={key}
                         {...props}
                         viewBy={filters.viewBy || 'patient'}
+                        patients={patients}
+                        therapists={therapists}
                         onEdit={onEditLink}
                         onAddTherapist={onAddTherapist}
                         onEndLink={onEndLink}
@@ -134,10 +136,7 @@ export default function LinkList({
         </div>
     );
 
-    function sortGroups(
-        groups: GroupedItem[],
-        orderBy: LinkListProps['filters']['orderBy'],
-    ) {
+    function sortGroups(groups: GroupedItem[], orderBy: LinkListProps['filters']['orderBy']) {
         const sorted = [...groups];
 
         if (sorted.length <= 1) {
@@ -152,9 +151,7 @@ export default function LinkList({
             );
         }
 
-        return sorted.sort(
-            (a, b) => getMostRecentTimestamp(b) - getMostRecentTimestamp(a),
-        );
+        return sorted.sort((a, b) => getMostRecentTimestamp(b) - getMostRecentTimestamp(a));
     }
 
     function getGroupDisplayName(item: GroupedItem) {

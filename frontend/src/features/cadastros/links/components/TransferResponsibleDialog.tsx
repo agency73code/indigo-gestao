@@ -74,6 +74,13 @@ export default function TransferResponsibleDialog({
         }
     }, [open]);
 
+    // Efeito para resetar busca quando modal abre
+    useEffect(() => {
+        if (showTherapistSearch && !selectedTherapist) {
+            setTherapistSearch('');
+        }
+    }, [showTherapistSearch, selectedTherapist]);
+
     // Efeito para busca de terapeutas (excluir o terapeuta atual)
     useEffect(() => {
         const searchTherapists = async () => {
@@ -82,6 +89,10 @@ export default function TransferResponsibleDialog({
                 // Filtrar o terapeuta atual
                 const filteredResults = results.filter((t) => t.id !== link?.therapistId);
                 setTherapistResults(filteredResults.slice(0, 10));
+            } else if (therapistSearch.length === 0) {
+                // Mostrar todos os terapeutas (exceto o atual) quando não há busca
+                const filteredTherapists = therapists.filter((t) => t.id !== link?.therapistId);
+                setTherapistResults(filteredTherapists.slice(0, 10));
             } else {
                 setTherapistResults([]);
             }
@@ -388,13 +399,13 @@ export default function TransferResponsibleDialog({
                                             </div>
                                         ))}
                                     </div>
-                                ) : therapistSearch.length >= 2 ? (
+                                ) : therapistSearch.length > 0 ? (
                                     <p className="text-sm text-muted-foreground text-center py-8">
                                         Nenhum terapeuta encontrado
                                     </p>
                                 ) : (
                                     <p className="text-sm text-muted-foreground text-center py-8">
-                                        Digite pelo menos 2 caracteres para buscar
+                                        Nenhum terapeuta disponível
                                     </p>
                                 )}
                             </div>
