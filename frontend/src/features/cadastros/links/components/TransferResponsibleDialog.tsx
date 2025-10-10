@@ -22,20 +22,29 @@ import type { TransferResponsibleDialogProps, TransferResponsibleInput } from '.
 import type { Terapeuta } from '../../types/cadastros.types';
 import { searchTherapistsByName } from '../mocks/links.mock';
 
-// Opções de atuação para o antigo responsável que se tornará co-terapeuta
-const AREAS_ATUACAO_OPTIONS = [
-    { value: 'Fonoaudiologia', label: 'Fonoaudiologia' },
-    { value: 'Psicomotricidade', label: 'Psicomotricidade' },
-    { value: 'Fisioterapia', label: 'Fisioterapia' },
-    { value: 'Terapia Ocupacional', label: 'Terapia Ocupacional' },
-    { value: 'Psicopedagogia', label: 'Psicopedagogia' },
-    { value: 'Educador Físico', label: 'Educador Físico' },
-    { value: 'Terapia ABA', label: 'Terapia ABA' },
-    { value: 'Musicoterapia', label: 'Musicoterapia' },
-    { value: 'Pedagogia', label: 'Pedagogia' },
-    { value: 'Neuropsicologia', label: 'Neuropsicologia' },
-    { value: 'Nutrição', label: 'Nutrição' },
-];
+type ComboboxOption = { value: string; label: string };
+
+function buildActuationOptions(therapist: Terapeuta | null | undefined): ComboboxOption[] {
+    if (!therapist?.dadosProfissionais?.length) {
+        return [];
+    }
+
+    const uniqueAreas = new Map<string, string>();
+
+    therapist.dadosProfissionais.forEach((professionalData) => {
+        const area = professionalData.areaAtuacao?.trim();
+
+        if (!area) return;
+
+        const key = area.toLowerCase();
+
+        if (!uniqueAreas.has(key)) {
+            uniqueAreas.set(key, area);
+        }
+    });
+
+    return Array.from(uniqueAreas.values()).map((area) => ({ value: area, label: area }));
+}
 
 export default function TransferResponsibleDialog({
     open,
@@ -51,6 +60,7 @@ export default function TransferResponsibleDialog({
     const [toTherapistId, setToTherapistId] = useState<string>('');
     const [effectiveDate, setEffectiveDate] = useState<Date>(new Date());
     const [oldResponsibleActuation, setOldResponsibleActuation] = useState<string>('');
+    const [newResponsibleActuation, setNewResponsibleActuation] = useState<string>('');
 
     // Estados para busca de terapeutas
     const [therapistSearch, setTherapistSearch] = useState('');
@@ -58,6 +68,9 @@ export default function TransferResponsibleDialog({
     const [selectedTherapist, setSelectedTherapist] = useState<Terapeuta | null>(null);
     const [showTherapistSearch, setShowTherapistSearch] = useState(false);
     const [showCalendar, setShowCalendar] = useState(false);
+
+    const [oldActuationOptions, setOldActuationOptions] = useState<ComboboxOption[]>([]);
+    const [newActuationOptions, setNewActuationOptions] = useState<ComboboxOption[]>([]);
 
     // Estados de validação
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -68,8 +81,10 @@ export default function TransferResponsibleDialog({
             setToTherapistId('');
             setEffectiveDate(new Date());
             setOldResponsibleActuation('');
+            setNewResponsibleActuation('');
             setTherapistSearch('');
             setSelectedTherapist(null);
+            setNewActuationOptions([]);
             setErrors({});
         }
     }, [open]);
@@ -80,6 +95,92 @@ export default function TransferResponsibleDialog({
             setTherapistSearch('');
         }
     }, [showTherapistSearch, selectedTherapist]);
+
+    useEffect(() => {
+        const options = buildActuationOptions(therapist ?? null);
+        setOldActuationOptions(options);
+
+        setOldResponsibleActuation((current) => {
+            if (options.length === 0) {
+                return '';
+            }
+
+            if (current) {
+                const match = options.find(
+                    (option) => option.value.toLowerCase() === current.trim().toLowerCase(),
+                );
+
+                if (match) {
+                    return match.value;
+                }
+            }
+
+            if (options.length === 1) {
+                return options[0].value;
+            }
+
+            return '';
+        });
+    }, [therapist]);
+
+    useEffect(() => {
+        const options = buildActuationOptions(selectedTherapist);
+        setNewActuationOptions(options);
+
+        setNewResponsibleActuation((current) => {
+            if (options.length === 0) {
+                return ''
+            }
+
+            if (current) {
+                const match = options.find(
+                    (option) => option.value.toLowerCase() === current.trim().toLowerCase(),
+                );
+
+                if (match) {
+                    return match.value;
+                }
+            }
+
+            if (options.length === 1) {
+                return options[0].value;
+            }
+
+            return '';
+        });
+    }, [selectedTherapist]);
+
+    useEffect(() => {
+        if (!oldResponsibleActuation) {
+            return;
+        }
+
+        setErrors((prev) => {
+            if (!prev.oldResponsibleActuation) {
+                return prev;
+            }
+
+            const nextErrors = { ...prev };
+            delete nextErrors.oldResponsibleAction;
+            return nextErrors;
+        });
+    }, [oldResponsibleActuation]);
+
+    useEffect(() => {
+        if (!newResponsibleActuation) {
+            return;
+        }
+
+        setErrors((prev) => {
+            if (!prev.newResponsibleActuation) {
+                return prev;
+            }
+
+            const nextErrors = { ...prev };
+            delete nextErrors.newResponsibleActuation;
+            return nextErrors;
+        });
+    }, [newResponsibleActuation]);
 
     // Efeito para busca de terapeutas (excluir o terapeuta atual)
     useEffect(() => {
@@ -117,6 +218,10 @@ export default function TransferResponsibleDialog({
             newErrors.oldResponsibleActuation = 'Selecione a atuação para o antigo responsável';
         }
 
+        if (!newResponsibleActuation) {
+            newErrors.newResponsibleActuation = 'Selecione a atuação para o novo responsável';
+        }
+
         if (!effectiveDate) {
             newErrors.effectiveDate = 'Selecione a data de transferência';
         } else if (link?.startDate && effectiveDate < new Date(link.startDate)) {
@@ -136,6 +241,7 @@ export default function TransferResponsibleDialog({
             toTherapistId: toTherapistId,
             effectiveDate: effectiveDate.toISOString(),
             oldResponsibleActuation: oldResponsibleActuation,
+            newResponsibleActuation: newResponsibleActuation,
         };
 
         onConfirm(transferData);
@@ -236,18 +342,50 @@ export default function TransferResponsibleDialog({
                             </div>
                         </div>
 
+                        {/* Atuação do Novo Responsável */}
+                        <div className='space-y-2'>
+                            <Label className='text-sm font-medium'>
+                                Atuação do Novo Responsável *
+                            </Label>
+                            <Combobox
+                                options={newActuationOptions}
+                                value={newResponsibleActuation}
+                                onValueChange={setNewResponsibleActuation}
+                                placeholder={selectedTherapist
+                                    ? 'Selecione a área de atuação do novo responsável'
+                                    : 'Selecione um terapeuta para listar as áreas disponíveis'}
+                                searchPlaceholder='Buscar atuação...'
+                                emptyMessage={selectedTherapist
+                                    ? 'Nenhuma atuação encontrada.'
+                                    : 'Selecione um terapeuta para visualizar as áreas disponíveis.'}
+                                disabled={!selectedTherapist || newActuationOptions.length === 0}
+                                error={!!errors.newResponsibleActuation}
+                            />
+                            {errors.newResponsibleActuation && (
+                                <p className='text-xs text-muted-foreground'>
+                                    {errors.newResponsibleActuation}
+                                </p>
+                            )}
+                            <p className='text-xs text-muted-foreground'>
+                                As áreas exibidas são baseadas nos registros profissionais do terapeuta selecionado.
+                            </p>
+                        </div>
+
                         {/* Atuação do Antigo Responsável (agora Co-terapeuta) */}
                         <div className="space-y-2">
                             <Label className="text-sm font-medium">
                                 Atuação do Antigo Responsável (Co-terapeuta) *
                             </Label>
                             <Combobox
-                                options={AREAS_ATUACAO_OPTIONS}
+                                options={oldActuationOptions}
                                 value={oldResponsibleActuation}
                                 onValueChange={setOldResponsibleActuation}
                                 placeholder="Selecione a área de atuação"
                                 searchPlaceholder="Buscar atuação..."
-                                emptyMessage="Nenhuma atuação encontrada."
+                                emptyMessage={therapist
+                                    ? 'Nenhuma atuação encontrada.'
+                                    : 'Sem dados profissionais disponíveis.'}
+                                disabled={oldActuationOptions.length === 0}
                                 error={!!errors.oldResponsibleActuation}
                             />
                             {errors.oldResponsibleActuation && (
@@ -256,8 +394,7 @@ export default function TransferResponsibleDialog({
                                 </p>
                             )}
                             <p className="text-xs text-muted-foreground">
-                                O terapeuta atual se tornará co-terapeuta com esta atuação
-                                específica.
+                                O terapeuta atual se tornará co-terapeuta com esta atuação específica.
                             </p>
                         </div>
 

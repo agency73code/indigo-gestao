@@ -297,7 +297,7 @@ function TherapistChip({
                 className="text-xs py-0.5 flex items-center p-1 gap-1 w-fit"
             >
                 {isResponsible ? <UserCheck className="h-3 w-3" /> : <User className="h-3 w-3" />}
-                {link.coTherapistActuation || 'Atuação não definida'}
+                {link.actuationArea || 'Atuação não definida'}
             </Badge>
 
             {/* Coluna 2: Terapeuta (Avatar + Nome + Papel) */}

@@ -21,20 +21,29 @@ import type { CreateLinkInput, UpdateLinkInput, LinkFormModalProps } from '../ty
 import type { Paciente, Terapeuta } from '../../types/cadastros.types';
 import { searchPatientsByName, searchTherapistsByName } from '../mocks/links.mock';
 
-// Opções de atuação para terapeutas (responsável e co-terapeuta)
-const AREAS_ATUACAO_OPTIONS = [
-    { value: 'Fonoaudiologia', label: 'Fonoaudiologia' },
-    { value: 'Psicomotricidade', label: 'Psicomotricidade' },
-    { value: 'Fisioterapia', label: 'Fisioterapia' },
-    { value: 'Terapia Ocupacional', label: 'Terapia Ocupacional' },
-    { value: 'Psicopedagogia', label: 'Psicopedagogia' },
-    { value: 'Educador Físico', label: 'Educador Físico' },
-    { value: 'Terapia ABA', label: 'Terapia ABA' },
-    { value: 'Musicoterapia', label: 'Musicoterapia' },
-    { value: 'Pedagogia', label: 'Pedagogia' },
-    { value: 'Neuropsicologia', label: 'Neuropsicologia' },
-    { value: 'Nutrição', label: 'Nutrição' },
-];
+type ComboboxOption = { value: string; label: string };
+
+function buildActuationOptions(therapist: Terapeuta | null | undefined): ComboboxOption[] {
+    if (!therapist?.dadosProfissionais?.length) {
+        return [];
+    }
+
+    const uniqueAreas = new Map<string, string>();
+
+    therapist.dadosProfissionais.forEach((professionalData) => {
+        const area = professionalData.areaAtuacao?.trim();
+
+        if (!area) return;
+
+        const key = area.toLowerCase();
+
+        if (!uniqueAreas.has(key)) {
+            uniqueAreas.set(key, area);
+        }
+    });
+
+    return Array.from(uniqueAreas.values()).map((area) => ({ value: area, label: area }));
+}
 
 export default function LinkFormModal({
     open,
@@ -49,7 +58,8 @@ export default function LinkFormModal({
     const [patientId, setPatientId] = useState<string>('');
     const [therapistId, setTherapistId] = useState<string>('');
     const [role, setRole] = useState<'responsible' | 'co'>('responsible');
-    const [coTherapistActuation, setCoTherapistActuation] = useState<string>('');
+    const [actuationArea, setActuationArea] = useState<string>('');
+    const [actuationOptions, setActuationOptions] = useState<ComboboxOption[]>([]);
     const [startDate, setStartDate] = useState<Date>();
     const [notes, setNotes] = useState('');
 
@@ -77,7 +87,7 @@ export default function LinkFormModal({
             setPatientId(initialData.patientId);
             setTherapistId(initialData.therapistId);
             setRole(initialData.role);
-            setCoTherapistActuation(initialData.coTherapistActuation || '');
+            setActuationArea(initialData.actuationArea || '');
             setStartDate(new Date(initialData.startDate));
             setNotes(initialData.notes || '');
 
@@ -98,7 +108,7 @@ export default function LinkFormModal({
             setPatientId(initialData.patientId);
             setTherapistId('');
             setRole('co');
-            setCoTherapistActuation('');
+            setActuationArea('');
             setStartDate(undefined);
             setNotes('');
             setSelectedTherapist(null);
@@ -116,7 +126,7 @@ export default function LinkFormModal({
             setPatientId('');
             setTherapistId('');
             setRole('responsible');
-            setCoTherapistActuation('');
+            setActuationArea('');
             setStartDate(undefined);
             setNotes('');
             setSelectedPatient(null);
@@ -140,6 +150,49 @@ export default function LinkFormModal({
             setTherapistSearch('');
         }
     }, [showTherapistSearch, selectedTherapist]);
+
+    useEffect(() => {
+        const options = buildActuationOptions(selectedTherapist);
+        setActuationOptions(options);
+
+        setActuationArea((current) => {
+            if (options.length === 0) {
+                return '';
+            }
+
+            if (current) {
+                const match = options.find(
+                    (option) => option.value.toLowerCase() === current.trim().toLowerCase(),
+                );
+
+                if (match) {
+                    return match.value;
+                }
+            }
+
+            if (options.length === 1) {
+                return options[0].value;
+            }
+
+            return '';
+        });
+    }, [selectedTherapist]);
+
+    useEffect(() => {
+        if (!actuationArea) {
+            return;
+        }
+
+        setErrors((prev) => {
+            if (!prev.actuationArea) {
+                return prev;
+            }
+
+            const nextErrors = { ...prev };
+            delete nextErrors.actuationArea;
+            return nextErrors;
+        });
+    }, [actuationArea]);
 
     // Efeito para busca de pacientes
     useEffect(() => {
@@ -188,8 +241,8 @@ export default function LinkFormModal({
             newErrors.therapist = 'Selecione um terapeuta';
         }
 
-        if (!coTherapistActuation) {
-            newErrors.coTherapistActuation = 'Selecione a área de atuação do terapeuta';
+        if (!actuationArea) {
+            newErrors.actuationArea = 'Selecione a área de atuação do terapeuta';
         }
 
         if (!startDate) {
@@ -210,7 +263,7 @@ export default function LinkFormModal({
                 role,
                 startDate: startDate!.toISOString(),
                 notes: notes.trim() || undefined,
-                coTherapistActuation: coTherapistActuation,
+                actuationArea: actuationArea,
             };
             onSubmit(createData);
         } else {
@@ -219,7 +272,7 @@ export default function LinkFormModal({
                 role,
                 startDate: startDate!.toISOString(),
                 notes: notes.trim() || undefined,
-                coTherapistActuation: coTherapistActuation,
+                actuationArea: actuationArea,
             };
             onSubmit(updateData);
         }
@@ -376,13 +429,13 @@ export default function LinkFormModal({
                                     name="role"
                                     value="responsible"
                                     checked={role === 'responsible'}
-                                    onChange={(e) => {
-                                        setRole(e.target.value as 'responsible' | 'co');
-                                        // Limpar atuação quando muda para responsável
-                                        if (e.target.value === 'responsible') {
-                                            setCoTherapistActuation('');
-                                        }
-                                    }}
+                                        onChange={(e) => {
+                                            setRole(e.target.value as 'responsible' | 'co');
+                                            // Limpar atuação quando muda para responsável
+                                            if (e.target.value === 'responsible') {
+                                                setActuationArea('');
+                                            }
+                                        }}
                                     className="w-4 h-4 text-primary bg-gray-100 border-gray-300 focus:ring-primary/20"
                                 />
                                 <Label htmlFor="responsible" className="cursor-pointer">
@@ -411,17 +464,20 @@ export default function LinkFormModal({
                         <div className="space-y-2 pt-2 border-t border-border">
                             <Label className="text-sm font-medium">Área de Atuação *</Label>
                             <Combobox
-                                options={AREAS_ATUACAO_OPTIONS}
-                                value={coTherapistActuation}
-                                onValueChange={setCoTherapistActuation}
-                                placeholder="Selecione a área de atuação"
+                                options={actuationOptions}
+                                value={actuationArea}
+                                onValueChange={(value) => setActuationArea(value)}
+                                placeholder={selectedTherapist ? 'Selecione a área de atuação' : 'Selecione um terapeuta primeiro'}
                                 searchPlaceholder="Buscar atuação..."
-                                emptyMessage="Nenhuma atuação encontrada."
-                                error={!!errors.coTherapistActuation}
+                                emptyMessage={selectedTherapist
+                                    ? 'Nenhuma atuação encontrada.'
+                                    : 'Selecione um terapeuta para visualizar as áreas disponíveis.'}
+                                disabled={!selectedTherapist || actuationOptions.length === 0}
+                                error={!!errors.actuationArea}
                             />
-                            {errors.coTherapistActuation && (
+                            {errors.actuationArea && (
                                 <p className="text-sm text-destructive">
-                                    {errors.coTherapistActuation}
+                                    {errors.actuationArea}
                                 </p>
                             )}
                         </div>

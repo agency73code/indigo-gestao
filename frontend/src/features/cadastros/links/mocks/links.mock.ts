@@ -337,6 +337,7 @@ export const mockLinks: PatientTherapistLink[] = [
     endDate: null,
     status: 'active',
     notes: 'Primeira avaliação realizada em janeiro',
+    actuationArea: 'Fonoaudiologia',
     createdAt: '2024-01-15',
     updatedAt: '2024-01-15'
   },
@@ -349,7 +350,7 @@ export const mockLinks: PatientTherapistLink[] = [
     endDate: null,
     status: 'active',
     notes: 'Suporte em terapia ocupacional',
-    coTherapistActuation: 'Terapia Ocupacional',
+    actuationArea: 'Fonoaudiologia',
     createdAt: '2024-02-01',
     updatedAt: '2024-02-01'
   },
@@ -362,6 +363,7 @@ export const mockLinks: PatientTherapistLink[] = [
     endDate: null,
     status: 'active',
     notes: 'Foco em comportamentos adaptativos',
+    actuationArea: 'Fonoaudiologia',
     createdAt: '2024-01-20',
     updatedAt: '2024-01-20'
   },
@@ -374,6 +376,7 @@ export const mockLinks: PatientTherapistLink[] = [
     endDate: null,
     status: 'active',
     notes: 'Programa de comunicação alternativa',
+    actuationArea: 'Fonoaudiologia',
     createdAt: '2024-02-10',
     updatedAt: '2024-02-10'
   },
@@ -386,6 +389,7 @@ export const mockLinks: PatientTherapistLink[] = [
     endDate: null,
     status: 'active',
     notes: 'Intervenção comportamental',
+    actuationArea: 'Fonoaudiologia',
     createdAt: '2024-03-01',
     updatedAt: '2024-03-01'
   },
@@ -398,7 +402,7 @@ export const mockLinks: PatientTherapistLink[] = [
     endDate: null,
     status: 'active',
     notes: 'Apoio no desenvolvimento social',
-    coTherapistActuation: 'Psicomotricidade',
+    actuationArea: 'Fonoaudiologia',
     createdAt: '2024-03-15',
     updatedAt: '2024-03-15'
   },
@@ -411,6 +415,7 @@ export const mockLinks: PatientTherapistLink[] = [
     endDate: '2024-02-29',
     status: 'ended',
     notes: 'Programa concluído com sucesso',
+    actuationArea: 'Fonoaudiologia',
     createdAt: '2023-11-01',
     updatedAt: '2024-02-29'
   },
@@ -423,6 +428,7 @@ export const mockLinks: PatientTherapistLink[] = [
     endDate: null,
     status: 'active',
     notes: 'Continuidade do programa anterior',
+    actuationArea: 'Fonoaudiologia',
     createdAt: '2024-03-01',
     updatedAt: '2024-03-01'
   }

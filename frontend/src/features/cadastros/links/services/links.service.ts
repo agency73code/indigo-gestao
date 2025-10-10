@@ -109,6 +109,12 @@ export async function createLink(input: CreateLinkInput): Promise<PatientTherapi
     }
   }
   
+  const normalizedActuationArea = input.actuationArea?.trim();
+
+  if (!normalizedActuationArea) {
+    throw new Error('Selecione a área de atuação do terapeuta.');
+  }
+
   const newLink: PatientTherapistLink = {
     id: `link_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     patientId: input.patientId,
@@ -118,7 +124,7 @@ export async function createLink(input: CreateLinkInput): Promise<PatientTherapi
     endDate: input.endDate,
     status: 'active',
     notes: input.notes,
-    coTherapistActuation: input.coTherapistActuation,
+    actuationArea: normalizedActuationArea,
     createdAt: new Date().toISOString().split('T')[0],
     updatedAt: new Date().toISOString().split('T')[0]
   };
@@ -244,20 +250,21 @@ export async function updateLink(input: UpdateLinkInput): Promise<PatientTherapi
 
   const normalizedStartDateString = parsedStartDate.toISOString().split('T')[0];
 
-  const roleChangedToResponsible = input.role === 'responsible' && existingLink.role !== 'responsible';
-  const hasCoTherapistActuation = Object.prototype.hasOwnProperty.call(input, 'coTherapistActuation');
-  const normalizedCoTherapistActuation = hasCoTherapistActuation
-    ? input.coTherapistActuation ?? null
-    : roleChangedToResponsible
-      ? null
-      : existingLink.coTherapistActuation ?? null;
+  const normalizedActuationArea =
+    typeof input.actuationArea === 'string'
+      ? input.actuationArea.trim()
+      : (existingLink.actuationArea ?? '').trim();
+
+  if (!normalizedActuationArea) {
+    throw new Error('Selecione a área de atuação do terapeuta.');
+  }
   
   const updatedLink: PatientTherapistLink = {
     ...existingLink,
     ...input,
     startDate: normalizedStartDateString,
     endDate: normalizedEndDate,
-    coTherapistActuation: normalizedCoTherapistActuation,
+    actuationArea: normalizedActuationArea,
     updatedAt: new Date().toISOString().split('T')[0]
   };
   
@@ -336,11 +343,22 @@ export async function transferResponsible(input: TransferResponsibleInput): Prom
     link.role === 'responsible' &&
     link.status === 'active'
   );
-  
+
   if (currentResponsibleIndex === -1) {
     throw new Error('Responsável atual não encontrado');
   }
   
+  const normalizedOldActuation = input.oldResponsibleActuation.trim();
+  const normalizedNewActuation = input.newResponsibleActuation.trim();
+
+  if (!normalizedNewActuation) {
+    throw new Error('Selecione a atuação para o novo responsável.');
+  }
+
+  if (!normalizedOldActuation) {
+    throw new Error('Selecione a atuação para o antigo responsável.');
+  }
+
   // Verifica se o novo terapeuta já tem vínculo ativo com o paciente
   const existingNewTherapistLink = mockLinks.find((link: PatientTherapistLink) =>
     link.patientId === input.patientId &&
@@ -354,6 +372,7 @@ export async function transferResponsible(input: TransferResponsibleInput): Prom
       existingNewTherapistLink.role = 'responsible';
       existingNewTherapistLink.status = 'active';
       existingNewTherapistLink.endDate = null;
+      existingNewTherapistLink.actuationArea = normalizedNewActuation;
       existingNewTherapistLink.updatedAt = input.effectiveDate;
     }
   } else {
@@ -367,20 +386,20 @@ export async function transferResponsible(input: TransferResponsibleInput): Prom
       endDate: null,
       status: 'active',
       notes: `Transferido de ${input.fromTherapistId} em ${input.effectiveDate}`,
-      coTherapistActuation: null,
+      actuationArea: normalizedNewActuation,
       createdAt: input.effectiveDate,
       updatedAt: input.effectiveDate
     };
-    
+
     mockLinks.push(newResponsibleLink);
   }
-  
+
   // Transforma o antigo responsável em co-terapeuta
   const oldLink = mockLinks[currentResponsibleIndex];
   mockLinks[currentResponsibleIndex] = {
     ...oldLink,
     role: 'co',
-    coTherapistActuation: input.oldResponsibleActuation,
+    actuationArea: normalizedOldActuation,
     updatedAt: input.effectiveDate
   };
 }
