@@ -1,0 +1,205 @@
+import { authFetch } from '@/lib/http';
+import { MOCK_ENABLED, MOCK_DOCUMENTS } from '../arquivos/mocks/documents.mock';
+
+// Tipos para arquivos
+export type FileMeta = {
+  id: string;
+  tipo_documento: string;
+  nome: string;
+  tamanho: number;
+  tipo_conteudo: string;
+  data_envio: string;
+};
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+// Simulação de delay para mock (opcional)
+const mockDelay = (ms: number = 800) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Funções para listar arquivos
+export async function listFiles(params: { ownerType: "cliente" | "terapeuta"; ownerId: string }): Promise<FileMeta[]> {
+  // Se mock estiver habilitado, retorna dados mockados
+  if (MOCK_ENABLED) {
+    console.log('📁 [MOCK] Carregando documentos mockados para:', params);
+    await mockDelay(); // Simula delay da API
+    
+    const ownerData = MOCK_DOCUMENTS[params.ownerType];
+    let mockData = ownerData?.[params.ownerId] || [];
+    
+    // Se não encontrou dados para o ID específico, usa o 'default'
+    if (mockData.length === 0 && ownerData?.['default']) {
+      console.log('📁 [MOCK] ID específico não encontrado, usando dados default');
+      mockData = ownerData['default'];
+    }
+    
+    console.log('📁 [MOCK] Documentos encontrados:', mockData.length);
+    return mockData;
+  }
+
+  // Chamada real da API
+  const url = new URL('/api/files', API_BASE_URL);
+  url.searchParams.set('ownerType', params.ownerType);
+  url.searchParams.set('ownerId', params.ownerId);
+
+  const res = await authFetch(url.toString(), { method: 'GET' });
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : null;
+
+  if (!res.ok) {
+    const msg = data?.message ?? data?.error ?? `Falha ao carregar arquivos (${res.status})`;
+    throw new Error(msg);
+  }
+
+  return (data ?? []) as FileMeta[];
+}
+
+// Funções para construir URLs
+export function buildViewUrl(fileId: string): string {
+  if (MOCK_ENABLED) {
+    // Para mock, usar URLs de placeholder diretas
+    const mockUrls: Record<string, string> = {
+      // Cliente default
+      'doc-cliente-default-1': 'https://via.placeholder.com/400x300/4CAF50/white?text=Foto+Cliente',
+      'doc-cliente-default-2': 'https://via.placeholder.com/600x800/2196F3/white?text=Documento+ID',
+      
+      // Terapeuta default  
+      'doc-terapeuta-default-1': 'https://via.placeholder.com/400x300/FF9800/white?text=Foto+Terapeuta',
+      'doc-terapeuta-default-2': 'https://via.placeholder.com/600x800/9C27B0/white?text=Diploma',
+      'doc-terapeuta-default-3': 'https://via.placeholder.com/600x800/E91E63/white?text=CRP',
+      
+      // IDs específicos mockados
+      'doc-cliente-1': 'https://via.placeholder.com/400x300/4CAF50/white?text=Foto+João',
+      'doc-cliente-2': 'https://via.placeholder.com/600x800/2196F3/white?text=RG+João',
+      'doc-terapeuta-1': 'https://via.placeholder.com/400x300/FF5722/white?text=Foto+Ana',
+      'doc-terapeuta-2': 'https://via.placeholder.com/600x800/795548/white?text=Diploma+Ana',
+    };
+    
+    const mockUrl = mockUrls[fileId] || 'https://via.placeholder.com/600x400/607D8B/white?text=Documento+Mock';
+    console.log('🔍 [MOCK] URL de visualização gerada para:', fileId, '→', mockUrl);
+    return mockUrl;
+  }
+  
+  return `${API_BASE_URL}/api/files/${fileId}/view`;
+}
+
+export function buildDownloadUrl(fileId: string): string {
+  if (MOCK_ENABLED) {
+    console.log('⬇️ [MOCK] URL de download gerada para:', fileId);
+    // Para mock, usa a mesma URL de visualização como download
+    return buildViewUrl(fileId);
+  }
+  
+  return `${API_BASE_URL}/api/files/${fileId}/download`;
+}
+
+// ============================================
+// Funções de Edição (Cliente e Terapeuta)
+// ============================================
+
+// Atualizar dados do CLIENTE
+export async function updateCliente(ownerId: string, payload: any): Promise<void> {
+  if (MOCK_ENABLED) {
+    console.log('💾 [MOCK] Simulando atualização de cliente:', { ownerId, payload });
+    await mockDelay(1000);
+    console.log('✅ [MOCK] Cliente atualizado com sucesso');
+    return;
+  }
+
+  const res = await authFetch(`${API_BASE_URL}/api/clientes/${ownerId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : null;
+    const msg = data?.message ?? data?.error ?? `Falha ao atualizar cliente (${res.status})`;
+    throw new Error(msg);
+  }
+}
+
+// Atualizar dados do TERAPEUTA
+export async function updateTerapeuta(ownerId: string, payload: any): Promise<void> {
+  if (MOCK_ENABLED) {
+    console.log('💾 [MOCK] Simulando atualização de terapeuta:', { ownerId, payload });
+    await mockDelay(1000);
+    console.log('✅ [MOCK] Terapeuta atualizado com sucesso');
+    return;
+  }
+
+  const res = await authFetch(`${API_BASE_URL}/api/terapeutas/${ownerId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : null;
+    const msg = data?.message ?? data?.error ?? `Falha ao atualizar terapeuta (${res.status})`;
+    throw new Error(msg);
+  }
+}
+
+// Upload de arquivo (Consulta > Arquivos)
+export async function uploadFile(params: {
+  ownerType: "cliente" | "terapeuta";
+  ownerId: string;
+  tipo_documento: string;
+  file: File;
+}): Promise<void> {
+  if (MOCK_ENABLED) {
+    console.log('📤 [MOCK] Simulando upload de arquivo:', {
+      ownerType: params.ownerType,
+      ownerId: params.ownerId,
+      tipo_documento: params.tipo_documento,
+      fileName: params.file.name,
+      fileSize: params.file.size
+    });
+    await mockDelay(1500);
+    console.log('✅ [MOCK] Arquivo enviado com sucesso');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('file', params.file);
+  formData.append('tipo_documento', params.tipo_documento);
+
+  const url = new URL('/api/files', API_BASE_URL);
+  url.searchParams.set('ownerType', params.ownerType);
+  url.searchParams.set('ownerId', params.ownerId);
+
+  const res = await authFetch(url.toString(), {
+    method: 'POST',
+    body: formData
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : null;
+    const msg = data?.message ?? data?.error ?? `Falha ao fazer upload (${res.status})`;
+    throw new Error(msg);
+  }
+}
+
+// Delete de arquivo
+export async function deleteFile(fileId: string): Promise<void> {
+  if (MOCK_ENABLED) {
+    console.log('🗑️ [MOCK] Simulando exclusão de arquivo:', fileId);
+    await mockDelay(800);
+    console.log('✅ [MOCK] Arquivo excluído com sucesso');
+    return;
+  }
+
+  const res = await authFetch(`${API_BASE_URL}/api/files/${fileId}`, {
+    method: 'DELETE'
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : null;
+    const msg = data?.message ?? data?.error ?? `Falha ao excluir arquivo (${res.status})`;
+    throw new Error(msg);
+  }
+}
