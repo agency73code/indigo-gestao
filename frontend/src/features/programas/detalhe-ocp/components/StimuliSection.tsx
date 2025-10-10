@@ -11,13 +11,7 @@ export default function StimuliSection({ program }: StimuliSectionProps) {
     const shortTermGoalDescription =
         program.shortTermGoalDescription ?? program.goalDescription ?? null;
 
-    const applicationDescriptionRaw = program.stimuliApplicationDescription ?? null;
-    const fallbackStimulusDescription = program.stimuli.find((stimulus) =>
-        stimulus.description?.trim(),
-    );
-    const applicationDescription = applicationDescriptionRaw?.trim()?.length
-        ? applicationDescriptionRaw.trim()
-        : fallbackStimulusDescription?.description?.trim() ?? null;
+    const applicationDescription = program.stimuliApplicationDescription ?? null;
 
     const activeStimuli = [...program.stimuli]
         .filter((stimulus) => stimulus.active)
@@ -60,9 +54,9 @@ export default function StimuliSection({ program }: StimuliSectionProps) {
                     </div>
                 )}
 
-                {applicationDescription && (
+                {applicationDescription && applicationDescription.trim().length > 0 && (
                     <div className="space-y-3 mt-4">
-                        <Label className="text-sm font-medium mb-1">Descrição da aplicação:</Label>
+                        <Label className="text-sm font-medium mb-1">Descrição da Aplicação</Label>
                         <div className="p-3 bg-muted rounded-md">
                             <p className="text-sm text-muted-foreground leading-relaxed">
                                 {applicationDescription}
@@ -82,7 +76,8 @@ export default function StimuliSection({ program }: StimuliSectionProps) {
                             {activeStimuli.map((stimulus) => {
                                 const stimulusDescription = stimulus.description?.trim();
                                 const shouldShowStimulusDescription =
-                                    stimulusDescription && stimulusDescription !== applicationDescription;
+                                    stimulusDescription &&
+                                    stimulusDescription !== applicationDescription;
 
                                 return (
                                     <div
@@ -94,7 +89,9 @@ export default function StimuliSection({ program }: StimuliSectionProps) {
                                                 {stimulus.order}
                                             </span>
                                             <div>
-                                                <p className="text-sm font-medium">{stimulus.label}</p>
+                                                <p className="text-sm font-medium">
+                                                    {stimulus.label}
+                                                </p>
                                                 {shouldShowStimulusDescription && (
                                                     <p className="text-xs text-muted-foreground mt-1">
                                                         {stimulusDescription}
@@ -102,7 +99,9 @@ export default function StimuliSection({ program }: StimuliSectionProps) {
                                                 )}
                                             </div>
                                         </div>
-                                        <div className="sm:ml-auto">{getStimulusStatusBadge('active')}</div>
+                                        <div className="sm:ml-auto">
+                                            {getStimulusStatusBadge('active')}
+                                        </div>
                                     </div>
                                 );
                             })}
@@ -118,7 +117,8 @@ export default function StimuliSection({ program }: StimuliSectionProps) {
                                 {archivedStimuli.map((stimulus) => {
                                     const stimulusDescription = stimulus.description?.trim();
                                     const shouldShowStimulusDescription =
-                                        stimulusDescription && stimulusDescription !== applicationDescription;
+                                        stimulusDescription &&
+                                        stimulusDescription !== applicationDescription;
 
                                     return (
                                         <div
@@ -130,7 +130,9 @@ export default function StimuliSection({ program }: StimuliSectionProps) {
                                                     {stimulus.order}
                                                 </span>
                                                 <div>
-                                                    <p className="text-sm font-medium">{stimulus.label}</p>
+                                                    <p className="text-sm font-medium">
+                                                        {stimulus.label}
+                                                    </p>
                                                     {shouldShowStimulusDescription && (
                                                         <p className="text-xs text-muted-foreground mt-1">
                                                             {stimulusDescription}
@@ -138,7 +140,9 @@ export default function StimuliSection({ program }: StimuliSectionProps) {
                                                     )}
                                                 </div>
                                             </div>
-                                            <div className="sm:ml-auto">{getStimulusStatusBadge('archived')}</div>
+                                            <div className="sm:ml-auto">
+                                                {getStimulusStatusBadge('archived')}
+                                            </div>
                                         </div>
                                     );
                                 })}

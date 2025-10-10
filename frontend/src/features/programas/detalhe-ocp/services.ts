@@ -9,6 +9,14 @@ const USE_LOCAL_MOCKS = true;
 export async function fetchProgramById(programId: string): Promise<ProgramDetail> {
     try { 
         const program = await Api.fetchProgram(programId);
+        
+        // TODO: Remover este mock quando o backend adicionar o campo stimuliApplicationDescription
+        // Mock temporário para simular a descrição da aplicação
+        if (!program.stimuliApplicationDescription) {
+            program.stimuliApplicationDescription = 
+                'Aplique os estímulos nas sessões diárias, utilizando reforçadores preferidos e alternando contextos (sala, pátio e refeitório) para favorecer a generalização.';
+        }
+        
         return program;
     } catch {
         await new Promise(resolve => setTimeout(resolve, 500));

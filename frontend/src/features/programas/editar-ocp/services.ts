@@ -6,7 +6,16 @@ const USE_LOCAL_MOCKS = true;
 
 export async function fetchProgramById(programaId: string): Promise<ProgramDetail> {
     try {
-        return await Api.fetchProgram(programaId);
+        const program = await Api.fetchProgram(programaId);
+        
+        // TODO: Remover este mock quando o backend adicionar o campo stimuliApplicationDescription
+        // Mock temporário para simular a descrição da aplicação
+        if (!program.stimuliApplicationDescription) {
+            program.stimuliApplicationDescription = 
+                'Aplique os estímulos nas sessões diárias, utilizando reforçadores preferidos e alternando contextos (sala, pátio e refeitório) para favorecer a generalização.';
+        }
+        
+        return program;
     } catch (err) {
         if (USE_LOCAL_MOCKS) {
             const { mockProgramDetail } = await import('../detalhe-ocp/mocks/program.mock');

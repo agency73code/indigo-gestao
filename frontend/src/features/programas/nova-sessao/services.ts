@@ -13,6 +13,14 @@ export const listProgramsForSession = listPrograms;
 export async function getProgramDetail(programId: string): Promise<ProgramDetail> {
     try {
         const program = await Api.fetchProgram(programId);
+        
+        // TODO: Remover este mock quando o backend adicionar o campo stimuliApplicationDescription
+        // Mock temporário para simular a descrição da aplicação
+        if (!program.stimuliApplicationDescription) {
+            program.stimuliApplicationDescription = 
+                'Aplique os estímulos nas sessões diárias, utilizando reforçadores preferidos e alternando contextos (sala, pátio e refeitório) para favorecer a generalização.';
+        }
+        
         return program;
     } catch (error) {
         if (USE_LOCAL_MOCKS) {

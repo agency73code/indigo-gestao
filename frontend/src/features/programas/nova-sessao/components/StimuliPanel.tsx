@@ -39,17 +39,13 @@ export default function StimuliPanel({
     const [countsMap, setCountsMap] = useState<Record<string, BlockCounts>>({});
     const [pausedMap, setPausedMap] = useState<Record<string, boolean>>({});
     const [historico, setHistorico] = useState<Record<string, BlockResumo[]>>({});
+    // Armazena tentativas temporárias do bloco ativo (não enviadas ainda)
+    const [tempAttempts, setTempAttempts] = useState<Record<string, SessionAttempt[]>>({});
 
     const shortTermGoalDescription =
         program.shortTermGoalDescription ?? program.goalDescription ?? null;
 
-    const applicationDescriptionRaw = program.stimuliApplicationDescription ?? null;
-    const fallbackStimulusDescription = program.stimuli.find((stimulus) =>
-        stimulus.description?.trim(),
-    );
-    const applicationDescription = applicationDescriptionRaw?.trim()?.length
-        ? applicationDescriptionRaw.trim()
-        : (fallbackStimulusDescription?.description?.trim() ?? null);
+    const applicationDescription = program.stimuliApplicationDescription ?? null;
 
     const activeStimuli = useMemo(
         () => program.stimuli.filter((stimulus) => stimulus.active),
@@ -77,8 +73,10 @@ export default function StimuliPanel({
             return { ...prev, [ativoId]: proximo };
         });
 
+        // Calcula o número da tentativa baseado nas tentativas já salvas + temporárias
         const stimulusAttempts = attempts.filter((attempt) => attempt.stimulusId === ativoId);
-        const attemptNumber = stimulusAttempts.length + 1;
+        const tempStimulusAttempts = tempAttempts[ativoId] ?? [];
+        const attemptNumber = stimulusAttempts.length + tempStimulusAttempts.length + 1;
 
         const tipoSessao: SessionAttemptType =
             resultado === 'erro' ? 'error' : resultado === 'ajuda' ? 'prompted' : 'independent';
@@ -92,7 +90,11 @@ export default function StimuliPanel({
             timestamp: new Date().toISOString(),
         };
 
-        onAddAttempt(novoAttempto);
+        // Armazena temporariamente em vez de enviar imediatamente
+        setTempAttempts((prev) => {
+            const atual = prev[ativoId] ?? [];
+            return { ...prev, [ativoId]: [...atual, novoAttempto] };
+        });
     };
 
     const handleSelectStimulus = (stimulusId: string) => {
@@ -117,6 +119,21 @@ export default function StimuliPanel({
         }
 
         setPausedMap((prev) => ({ ...prev, [ativoId]: true }));
+
+        // Limpa as tentativas temporárias quando pausar (não finalizado)
+        setTempAttempts((prev) => {
+            const copia = { ...prev };
+            delete copia[ativoId];
+            return copia;
+        });
+
+        // Limpa os contadores também
+        setCountsMap((prev) => {
+            const copia = { ...prev };
+            delete copia[ativoId];
+            return copia;
+        });
+
         setAtivoId(null);
     };
 
@@ -136,6 +153,19 @@ export default function StimuliPanel({
             const atual = prev[ativoId] ? [...prev[ativoId]] : [];
             atual.push(resumo);
             return { ...prev, [ativoId]: atual };
+        });
+
+        // Envia todas as tentativas temporárias para o registro geral
+        const tempStimulusAttempts = tempAttempts[ativoId] ?? [];
+        tempStimulusAttempts.forEach((attempt) => {
+            onAddAttempt(attempt);
+        });
+
+        // Limpa as tentativas temporárias deste estímulo
+        setTempAttempts((prev) => {
+            const copia = { ...prev };
+            delete copia[ativoId];
+            return copia;
         });
 
         setCountsMap((prev) => {
@@ -230,9 +260,9 @@ export default function StimuliPanel({
                     </div>
                 )}
 
-                {applicationDescription && (
+                {applicationDescription && applicationDescription.trim().length > 0 && (
                     <div className="space-y-3 mt-4">
-                        <Label className="text-sm font-medium mb-1">Descrição da aplicação:</Label>
+                        <Label className="text-sm font-medium mb-1">Descrição da Aplicação</Label>
                         <div className="p-3 bg-muted rounded-md">
                             <p className="text-sm text-muted-foreground leading-relaxed">
                                 {applicationDescription}
