@@ -1,13 +1,145 @@
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
 import { useTerapeuta } from '../hooks/useTerapeuta';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/ui/label';
+import { FileText, Edit2, Save, X, Loader2 } from 'lucide-react';
 import ReadOnlyField from '../components/ReadOnlyField';
 import DocumentsTable from '../arquivos/components/DocumentsTable';
+import { DocumentsEditor } from '../arquivos/components/DocumentsEditor';
+import { updateTerapeuta } from '../service/consultas.service';
+import { listFiles, type FileMeta } from '../service/consultas.service';
 
 export default function ConsultaTerapeutaPage() {
     const { terapeutaId } = useParams<{ terapeutaId: string }>();
     const terapeutaData = useTerapeuta(terapeutaId, Boolean(terapeutaId));
+    
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [saveError, setSaveError] = useState<string | null>(null);
+    const [files, setFiles] = useState<FileMeta[]>([]);
+    const [filesLoading, setFilesLoading] = useState(true);
+
+    const { register, handleSubmit, reset, formState: { isDirty } } = useForm({
+        defaultValues: terapeutaData ? {
+            nome: terapeutaData.nome || '',
+            email: terapeutaData.email || '',
+            emailIndigo: terapeutaData.emailIndigo || '',
+            telefone: terapeutaData.telefone || '',
+            celular: terapeutaData.celular || '',
+            cpf: terapeutaData.cpf || '',
+            dataNascimento: terapeutaData.dataNascimento 
+                ? new Date(terapeutaData.dataNascimento).toISOString().split('T')[0] 
+                : '',
+            // Endereço
+            cep: terapeutaData.endereco?.cep || '',
+            rua: terapeutaData.endereco?.rua || '',
+            numero: terapeutaData.endereco?.numero || '',
+            complemento: terapeutaData.endereco?.complemento || '',
+            bairro: terapeutaData.endereco?.bairro || '',
+            cidade: terapeutaData.endereco?.cidade || '',
+            estado: terapeutaData.endereco?.estado || '',
+            // Veículo
+            possuiVeiculo: terapeutaData.possuiVeiculo || 'nao',
+            placaVeiculo: terapeutaData.placaVeiculo || '',
+            modeloVeiculo: terapeutaData.modeloVeiculo || '',
+        } : undefined
+    });
+
+    const loadFiles = async () => {
+        if (!terapeutaId) return;
+        setFilesLoading(true);
+        try {
+            const data = await listFiles({ ownerType: 'terapeuta', ownerId: terapeutaId });
+            setFiles(data);
+        } catch (err) {
+            console.error('Erro ao carregar arquivos:', err);
+        } finally {
+            setFilesLoading(false);
+        }
+    };
+
+    const handleEditClick = () => {
+        setIsEditMode(true);
+        setSaveError(null);
+        loadFiles();
+        
+        window.dispatchEvent(
+            new CustomEvent('consulta:edit:enter', {
+                detail: { ownerType: 'terapeuta', ownerId: terapeutaId }
+            })
+        );
+    };
+
+    const handleCancelClick = () => {
+        if (isDirty) {
+            const confirm = window.confirm('Você tem alterações não salvas. Deseja realmente cancelar?');
+            if (!confirm) return;
+        }
+
+        setIsEditMode(false);
+        setSaveError(null);
+        reset();
+
+        window.dispatchEvent(
+            new CustomEvent('consulta:edit:cancel', {
+                detail: { ownerType: 'terapeuta', ownerId: terapeutaId }
+            })
+        );
+    };
+
+    const onSubmit = async (data: any) => {
+        if (!terapeutaId) return;
+
+        setIsSaving(true);
+        setSaveError(null);
+
+        try {
+            await updateTerapeuta(terapeutaId, {
+                nome: data.nome,
+                email: data.email,
+                emailIndigo: data.emailIndigo,
+                telefone: data.telefone,
+                celular: data.celular,
+                cpf: data.cpf,
+                dataNascimento: data.dataNascimento,
+                possuiVeiculo: data.possuiVeiculo,
+                placaVeiculo: data.placaVeiculo,
+                modeloVeiculo: data.modeloVeiculo,
+                endereco: {
+                    cep: data.cep,
+                    rua: data.rua,
+                    numero: data.numero,
+                    complemento: data.complemento,
+                    bairro: data.bairro,
+                    cidade: data.cidade,
+                    estado: data.estado,
+                }
+            });
+
+            window.dispatchEvent(
+                new CustomEvent('consulta:edit:save:success', {
+                    detail: { ownerType: 'terapeuta', ownerId: terapeutaId }
+                })
+            );
+
+            setIsEditMode(false);
+        } catch (err: any) {
+            const msg = err.message ?? 'Erro ao salvar dados do terapeuta';
+            setSaveError(msg);
+
+            window.dispatchEvent(
+                new CustomEvent('consulta:edit:save:error', {
+                    detail: { ownerType: 'terapeuta', ownerId: terapeutaId, error: msg }
+                })
+            );
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     if (!terapeutaId) {
         return (
@@ -28,205 +160,175 @@ export default function ConsultaTerapeutaPage() {
     return (
         <div className="flex flex-col min-h-full w-full px-1 py-4 md:p-4 sm:p-4 lg:p-8 space-y-6">
             {/* Header */}
-            <div className="space-y-2">
-                <h1
-                    className="text-2xl font-semibold text-primary"
-                    style={{ fontFamily: 'Sora, sans-serif' }}
-                >
-                    Consulta do Terapeuta
-                </h1>
-                <p className="text-sm text-muted-foreground">
-                    Detalhes e documentos do terapeuta {terapeutaData.nome}
-                </p>
+            <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                    <h1
+                        className="text-2xl font-semibold text-primary"
+                        style={{ fontFamily: 'Sora, sans-serif' }}
+                    >
+                        Consulta do Terapeuta
+                    </h1>
+                    <p className="text-sm text-muted-foreground">
+                        Detalhes e documentos do terapeuta {terapeutaData.nome}
+                    </p>
+                </div>
+
+                {!isEditMode && (
+                    <Button onClick={handleEditClick} className="gap-2">
+                        <Edit2 className="h-4 w-4" />
+                        Editar
+                    </Button>
+                )}
             </div>
 
-            {/* Dados Pessoais */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Dados Pessoais</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <ReadOnlyField label="Nome" value={terapeutaData.nome || ''} />
-                        <ReadOnlyField label="Email" value={terapeutaData.email || ''} />
-                        <ReadOnlyField
-                            label="Email Indigo"
-                            value={terapeutaData.emailIndigo || ''}
-                        />
-                        <ReadOnlyField label="Telefone" value={terapeutaData.telefone || ''} />
-                        <ReadOnlyField label="Celular" value={terapeutaData.celular || ''} />
-                        <ReadOnlyField label="CPF" value={terapeutaData.cpf || ''} />
-                        <ReadOnlyField
-                            label="Data de Nascimento"
-                            value={
-                                terapeutaData.dataNascimento
-                                    ? new Date(terapeutaData.dataNascimento).toLocaleDateString(
-                                          'pt-BR',
-                                      )
-                                    : ''
-                            }
-                        />
-                        <ReadOnlyField
-                            label="Possui Veículo"
-                            value={terapeutaData.possuiVeiculo === 'sim' ? 'Sim' : 'Não'}
-                        />
-                        {terapeutaData.possuiVeiculo === 'sim' && (
-                            <>
-                                <ReadOnlyField
-                                    label="Placa do Veículo"
-                                    value={terapeutaData.placaVeiculo || ''}
-                                />
-                                <ReadOnlyField
-                                    label="Modelo do Veículo"
-                                    value={terapeutaData.modeloVeiculo || ''}
-                                />
-                            </>
-                        )}
-                    </div>
-                </CardContent>
-            </Card>
+            {saveError && (
+                <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded-lg text-sm">
+                    {saveError}
+                </div>
+            )}
 
-            {/* Endereço */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Endereço</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <ReadOnlyField label="CEP" value={terapeutaData.endereco?.cep || ''} />
-                        <ReadOnlyField label="Rua" value={terapeutaData.endereco?.rua || ''} />
-                        <ReadOnlyField
-                            label="Número"
-                            value={terapeutaData.endereco?.numero || ''}
-                        />
-                        <ReadOnlyField
-                            label="Complemento"
-                            value={terapeutaData.endereco?.complemento || ''}
-                        />
-                        <ReadOnlyField
-                            label="Bairro"
-                            value={terapeutaData.endereco?.bairro || ''}
-                        />
-                        <ReadOnlyField
-                            label="Cidade"
-                            value={terapeutaData.endereco?.cidade || ''}
-                        />
-                        <ReadOnlyField
-                            label="Estado"
-                            value={terapeutaData.endereco?.estado || ''}
-                        />
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* Dados Profissionais */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Dados Profissionais</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    {terapeutaData.dadosProfissionais &&
-                    terapeutaData.dadosProfissionais.length > 0 ? (
-                        <div className="space-y-6">
-                            {terapeutaData.dadosProfissionais.map((dados, index) => (
-                                <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {index > 0 && <div className="col-span-full border-t pt-4" />}
+            <form onSubmit={handleSubmit(onSubmit)}>
+                {/* Dados Pessoais */}
+                <Card className="mb-6">
+                    <CardHeader>
+                        <CardTitle>Dados Pessoais</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {isEditMode ? (
+                                <>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="nome">Nome</Label>
+                                        <Input id="nome" {...register('nome')} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="email">Email</Label>
+                                        <Input id="email" type="email" {...register('email')} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="emailIndigo">Email Indigo</Label>
+                                        <Input id="emailIndigo" type="email" {...register('emailIndigo')} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="telefone">Telefone</Label>
+                                        <Input id="telefone" {...register('telefone')} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="celular">Celular</Label>
+                                        <Input id="celular" {...register('celular')} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="cpf">CPF</Label>
+                                        <Input id="cpf" {...register('cpf')} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="dataNascimento">Data de Nascimento</Label>
+                                        <Input id="dataNascimento" type="date" {...register('dataNascimento')} />
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <ReadOnlyField label="Nome" value={terapeutaData.nome || ''} />
+                                    <ReadOnlyField label="Email" value={terapeutaData.email || ''} />
+                                    <ReadOnlyField label="Email Indigo" value={terapeutaData.emailIndigo || ''} />
+                                    <ReadOnlyField label="Telefone" value={terapeutaData.telefone || ''} />
+                                    <ReadOnlyField label="Celular" value={terapeutaData.celular || ''} />
+                                    <ReadOnlyField label="CPF" value={terapeutaData.cpf || ''} />
                                     <ReadOnlyField
-                                        label="Área de Atuação"
-                                        value={dados.areaAtuacao || ''}
+                                        label="Data de Nascimento"
+                                        value={
+                                            terapeutaData.dataNascimento
+                                                ? new Date(terapeutaData.dataNascimento).toLocaleDateString('pt-BR')
+                                                : ''
+                                        }
                                     />
-                                    <ReadOnlyField label="Cargo" value={dados.cargo || ''} />
-                                    <ReadOnlyField
-                                        label="Número do Conselho"
-                                        value={dados.numeroConselho || ''}
-                                    />
-                                </div>
-                            ))}
+                                </>
+                            )}
                         </div>
-                    ) : (
-                        <p className="text-muted-foreground">Nenhum dado profissional cadastrado</p>
-                    )}
-                </CardContent>
-            </Card>
+                    </CardContent>
+                </Card>
 
-            {/* Formação */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Formação</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <ReadOnlyField
-                            label="Graduação"
-                            value={terapeutaData.formacao?.graduacao || ''}
-                        />
-                        <ReadOnlyField
-                            label="Instituição de Graduação"
-                            value={terapeutaData.formacao?.instituicaoGraduacao || ''}
-                        />
-                        <ReadOnlyField
-                            label="Ano de Formatura"
-                            value={terapeutaData.formacao?.anoFormatura || ''}
-                        />
+                {/* Endereço */}
+                <Card className="mb-6">
+                    <CardHeader>
+                        <CardTitle>Endereço</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {isEditMode ? (
+                                <>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="cep">CEP</Label>
+                                        <Input id="cep" {...register('cep')} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="rua">Rua</Label>
+                                        <Input id="rua" {...register('rua')} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="numero">Número</Label>
+                                        <Input id="numero" {...register('numero')} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="complemento">Complemento</Label>
+                                        <Input id="complemento" {...register('complemento')} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="bairro">Bairro</Label>
+                                        <Input id="bairro" {...register('bairro')} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="cidade">Cidade</Label>
+                                        <Input id="cidade" {...register('cidade')} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="estado">Estado</Label>
+                                        <Input id="estado" maxLength={2} {...register('estado')} />
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <ReadOnlyField label="CEP" value={terapeutaData.endereco?.cep || ''} />
+                                    <ReadOnlyField label="Rua" value={terapeutaData.endereco?.rua || ''} />
+                                    <ReadOnlyField label="Número" value={terapeutaData.endereco?.numero || ''} />
+                                    <ReadOnlyField label="Complemento" value={terapeutaData.endereco?.complemento || ''} />
+                                    <ReadOnlyField label="Bairro" value={terapeutaData.endereco?.bairro || ''} />
+                                    <ReadOnlyField label="Cidade" value={terapeutaData.endereco?.cidade || ''} />
+                                    <ReadOnlyField label="Estado" value={terapeutaData.endereco?.estado || ''} />
+                                </>
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Action Buttons (Edit Mode) */}
+                {isEditMode && (
+                    <div className="flex justify-end gap-3 mb-6">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleCancelClick}
+                            disabled={isSaving}
+                        >
+                            <X className="h-4 w-4 mr-2" />
+                            Cancelar
+                        </Button>
+                        <Button type="submit" disabled={isSaving}>
+                            {isSaving ? (
+                                <>
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    Salvando...
+                                </>
+                            ) : (
+                                <>
+                                    <Save className="h-4 w-4 mr-2" />
+                                    Salvar
+                                </>
+                            )}
+                        </Button>
                     </div>
-
-                    {terapeutaData.formacao?.posGraduacoes &&
-                        terapeutaData.formacao.posGraduacoes.length > 0 && (
-                            <div className="mt-6">
-                                <h4 className="font-medium mb-4">Pós-graduações</h4>
-                                <div className="space-y-4">
-                                    {terapeutaData.formacao.posGraduacoes.map((pos, index) => (
-                                        <div
-                                            key={index}
-                                            className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-lg"
-                                        >
-                                            <ReadOnlyField
-                                                label="Tipo"
-                                                value={
-                                                    pos.tipo === 'lato'
-                                                        ? 'Lato Sensu'
-                                                        : 'Stricto Sensu'
-                                                }
-                                            />
-                                            <ReadOnlyField label="Curso" value={pos.curso || ''} />
-                                            <ReadOnlyField
-                                                label="Instituição"
-                                                value={pos.instituicao || ''}
-                                            />
-                                            <ReadOnlyField
-                                                label="Conclusão"
-                                                value={pos.conclusao || ''}
-                                            />
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                </CardContent>
-            </Card>
-
-            {/* Dados Bancários */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>Dados Bancários</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <ReadOnlyField label="Banco" value={terapeutaData.banco || ''} />
-                        <ReadOnlyField label="Agência" value={terapeutaData.agencia || ''} />
-                        <ReadOnlyField label="Conta" value={terapeutaData.conta || ''} />
-                        <ReadOnlyField label="Chave PIX" value={terapeutaData.chavePix || ''} />
-                        <ReadOnlyField
-                            label="Valor Hora Acordado"
-                            value={
-                                terapeutaData.valorHoraAcordado
-                                    ? `R$ ${terapeutaData.valorHoraAcordado.toFixed(2)}`
-                                    : ''
-                            }
-                        />
-                    </div>
-                </CardContent>
-            </Card>
+                )}
+            </form>
 
             {/* Arquivos */}
             <Card>
@@ -237,65 +339,25 @@ export default function ConsultaTerapeutaPage() {
                     </CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <DocumentsTable ownerType="terapeuta" ownerId={terapeutaId} />
+                    {isEditMode ? (
+                        filesLoading ? (
+                            <div className="flex items-center justify-center py-8">
+                                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                            </div>
+                        ) : (
+                            <DocumentsEditor
+                                files={files}
+                                ownerType="terapeuta"
+                                ownerId={terapeutaId}
+                                onUploadSuccess={loadFiles}
+                                onDeleteSuccess={loadFiles}
+                            />
+                        )
+                    ) : (
+                        <DocumentsTable ownerType="terapeuta" ownerId={terapeutaId} />
+                    )}
                 </CardContent>
             </Card>
-
-            {/* CNPJ (se houver) */}
-            {terapeutaData.cnpj && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Dados CNPJ</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <ReadOnlyField label="CNPJ" value={terapeutaData.cnpj.numero || ''} />
-                            <ReadOnlyField
-                                label="Razão Social"
-                                value={terapeutaData.cnpj.razaoSocial || ''}
-                            />
-                            <ReadOnlyField
-                                label="Nome Fantasia"
-                                value={terapeutaData.cnpj.nomeFantasia || ''}
-                            />
-                        </div>
-
-                        <div className="mt-6">
-                            <h4 className="font-medium mb-4">Endereço CNPJ</h4>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <ReadOnlyField
-                                    label="CEP"
-                                    value={terapeutaData.cnpj.endereco?.cep || ''}
-                                />
-                                <ReadOnlyField
-                                    label="Rua"
-                                    value={terapeutaData.cnpj.endereco?.rua || ''}
-                                />
-                                <ReadOnlyField
-                                    label="Número"
-                                    value={terapeutaData.cnpj.endereco?.numero || ''}
-                                />
-                                <ReadOnlyField
-                                    label="Complemento"
-                                    value={terapeutaData.cnpj.endereco?.complemento || ''}
-                                />
-                                <ReadOnlyField
-                                    label="Bairro"
-                                    value={terapeutaData.cnpj.endereco?.bairro || ''}
-                                />
-                                <ReadOnlyField
-                                    label="Cidade"
-                                    value={terapeutaData.cnpj.endereco?.cidade || ''}
-                                />
-                                <ReadOnlyField
-                                    label="Estado"
-                                    value={terapeutaData.cnpj.endereco?.estado || ''}
-                                />
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
         </div>
     );
 }

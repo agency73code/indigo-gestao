@@ -5,10 +5,10 @@ import { MOCK_ENABLED, MOCK_DOCUMENTS } from '../arquivos/mocks/documents.mock';
 export type FileMeta = {
   id: string;
   tipo_documento: string;
-  name: string;
-  size: number;
-  contentType: string;
-  uploadedAt: string;
+  nome: string;
+  tamanho: number;
+  tipo_conteudo: string;
+  data_envio: string;
 };
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
@@ -90,4 +90,116 @@ export function buildDownloadUrl(fileId: string): string {
   }
   
   return `${API_BASE_URL}/api/files/${fileId}/download`;
+}
+
+// ============================================
+// Funções de Edição (Cliente e Terapeuta)
+// ============================================
+
+// Atualizar dados do CLIENTE
+export async function updateCliente(ownerId: string, payload: any): Promise<void> {
+  if (MOCK_ENABLED) {
+    console.log('💾 [MOCK] Simulando atualização de cliente:', { ownerId, payload });
+    await mockDelay(1000);
+    console.log('✅ [MOCK] Cliente atualizado com sucesso');
+    return;
+  }
+
+  const res = await authFetch(`${API_BASE_URL}/api/clientes/${ownerId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : null;
+    const msg = data?.message ?? data?.error ?? `Falha ao atualizar cliente (${res.status})`;
+    throw new Error(msg);
+  }
+}
+
+// Atualizar dados do TERAPEUTA
+export async function updateTerapeuta(ownerId: string, payload: any): Promise<void> {
+  if (MOCK_ENABLED) {
+    console.log('💾 [MOCK] Simulando atualização de terapeuta:', { ownerId, payload });
+    await mockDelay(1000);
+    console.log('✅ [MOCK] Terapeuta atualizado com sucesso');
+    return;
+  }
+
+  const res = await authFetch(`${API_BASE_URL}/api/terapeutas/${ownerId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : null;
+    const msg = data?.message ?? data?.error ?? `Falha ao atualizar terapeuta (${res.status})`;
+    throw new Error(msg);
+  }
+}
+
+// Upload de arquivo (Consulta > Arquivos)
+export async function uploadFile(params: {
+  ownerType: "cliente" | "terapeuta";
+  ownerId: string;
+  tipo_documento: string;
+  file: File;
+}): Promise<void> {
+  if (MOCK_ENABLED) {
+    console.log('📤 [MOCK] Simulando upload de arquivo:', {
+      ownerType: params.ownerType,
+      ownerId: params.ownerId,
+      tipo_documento: params.tipo_documento,
+      fileName: params.file.name,
+      fileSize: params.file.size
+    });
+    await mockDelay(1500);
+    console.log('✅ [MOCK] Arquivo enviado com sucesso');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('file', params.file);
+  formData.append('tipo_documento', params.tipo_documento);
+
+  const url = new URL('/api/files', API_BASE_URL);
+  url.searchParams.set('ownerType', params.ownerType);
+  url.searchParams.set('ownerId', params.ownerId);
+
+  const res = await authFetch(url.toString(), {
+    method: 'POST',
+    body: formData
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : null;
+    const msg = data?.message ?? data?.error ?? `Falha ao fazer upload (${res.status})`;
+    throw new Error(msg);
+  }
+}
+
+// Delete de arquivo
+export async function deleteFile(fileId: string): Promise<void> {
+  if (MOCK_ENABLED) {
+    console.log('🗑️ [MOCK] Simulando exclusão de arquivo:', fileId);
+    await mockDelay(800);
+    console.log('✅ [MOCK] Arquivo excluído com sucesso');
+    return;
+  }
+
+  const res = await authFetch(`${API_BASE_URL}/api/files/${fileId}`, {
+    method: 'DELETE'
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : null;
+    const msg = data?.message ?? data?.error ?? `Falha ao excluir arquivo (${res.status})`;
+    throw new Error(msg);
+  }
 }

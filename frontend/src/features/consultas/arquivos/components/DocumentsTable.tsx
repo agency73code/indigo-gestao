@@ -45,7 +45,7 @@ export default function DocumentsTable({ ownerType, ownerId }: DocumentsTablePro
     };
 
     // Helper para obter extensão do contentType
-    const getFileExtension = (contentType: string): string => {
+    const getFileExtension = (tipo_conteudo: string): string => {
         const typeMap: Record<string, string> = {
             'application/pdf': 'PDF',
             'image/jpeg': 'JPG',
@@ -58,7 +58,7 @@ export default function DocumentsTable({ ownerType, ownerId }: DocumentsTablePro
             'application/zip': 'ZIP',
             'application/x-rar-compressed': 'RAR',
         };
-        return typeMap[contentType] || contentType.split('/').pop()?.toUpperCase() || 'ARQUIVO';
+        return typeMap[tipo_conteudo] || tipo_conteudo.split('/').pop()?.toUpperCase() || 'ARQUIVO';
     };
 
     // Mapear tipo_documento para labels amigáveis
@@ -178,12 +178,12 @@ export default function DocumentsTable({ ownerType, ownerId }: DocumentsTablePro
                     {data.map((file) => (
                         <TableRow key={file.id} data-testid={`doc-row-${file.id}`}>
                             <TableCell>{getDocumentTypeLabel(file.tipo_documento)}</TableCell>
-                            <TableCell className="max-w-48 truncate" title={file.name}>
-                                {file.name}
+                            <TableCell className="max-w-48 truncate" title={file.nome}>
+                                {file.nome}
                             </TableCell>
-                            <TableCell>{formatBytes(file.size)}</TableCell>
-                            <TableCell>{getFileExtension(file.contentType)}</TableCell>
-                            <TableCell>{formatDate(file.uploadedAt)}</TableCell>
+                            <TableCell>{formatBytes(file.tamanho)}</TableCell>
+                            <TableCell>{getFileExtension(file.tipo_conteudo)}</TableCell>
+                            <TableCell>{formatDate(file.data_envio)}</TableCell>
                             <TableCell>
                                 <div className="flex gap-2">
                                     <Button
@@ -192,7 +192,7 @@ export default function DocumentsTable({ ownerType, ownerId }: DocumentsTablePro
                                         onClick={() => onView(file)}
                                         disabled={pendingId === file.id}
                                         data-testid={`doc-view-${file.id}`}
-                                        aria-label={`Visualizar ${file.name}`}
+                                        aria-label={`Visualizar ${file.nome}`}
                                     >
                                         <Eye className="w-4 h-4" />
                                         Visualizar
@@ -202,7 +202,7 @@ export default function DocumentsTable({ ownerType, ownerId }: DocumentsTablePro
                                         onClick={() => onDownload(file)}
                                         disabled={pendingId === file.id}
                                         data-testid={`doc-dl-${file.id}`}
-                                        aria-label={`Baixar ${file.name}`}
+                                        aria-label={`Baixar ${file.nome}`}
                                     >
                                         <Download className="w-4 h-4" />
                                         Baixar
@@ -227,23 +227,23 @@ export default function DocumentsTable({ ownerType, ownerId }: DocumentsTablePro
                                 <h4 className="font-medium text-sm">
                                     {getDocumentTypeLabel(file.tipo_documento)}
                                 </h4>
-                                <p className="text-sm text-gray-600 truncate" title={file.name}>
-                                    {file.name}
+                                <p className="text-sm text-gray-600 truncate" title={file.nome}>
+                                    {file.nome}
                                 </p>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4 text-xs text-gray-500">
                                 <div>
                                     <span className="block font-medium">Tamanho:</span>
-                                    {formatBytes(file.size)}
+                                    {formatBytes(file.tamanho)}
                                 </div>
                                 <div>
                                     <span className="block font-medium">Formato:</span>
-                                    {getFileExtension(file.contentType)}
+                                    {getFileExtension(file.tipo_conteudo)}
                                 </div>
                                 <div className="col-span-2">
                                     <span className="block font-medium">Enviado em:</span>
-                                    {formatDate(file.uploadedAt)}
+                                    {formatDate(file.data_envio)}
                                 </div>
                             </div>
 
@@ -254,7 +254,7 @@ export default function DocumentsTable({ ownerType, ownerId }: DocumentsTablePro
                                     onClick={() => onView(file)}
                                     disabled={pendingId === file.id}
                                     data-testid={`doc-view-${file.id}`}
-                                    aria-label={`Visualizar ${file.name}`}
+                                    aria-label={`Visualizar ${file.nome}`}
                                     className="flex-1"
                                 >
                                     <Eye className="w-4 h-4 mr-1" />
@@ -265,7 +265,7 @@ export default function DocumentsTable({ ownerType, ownerId }: DocumentsTablePro
                                     onClick={() => onDownload(file)}
                                     disabled={pendingId === file.id}
                                     data-testid={`doc-dl-${file.id}`}
-                                    aria-label={`Baixar ${file.name}`}
+                                    aria-label={`Baixar ${file.nome}`}
                                     className="flex-1"
                                 >
                                     <Download className="w-4 h-4 mr-1" />

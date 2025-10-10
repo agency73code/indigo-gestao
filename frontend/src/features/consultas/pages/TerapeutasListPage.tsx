@@ -154,7 +154,7 @@ export default function TerapeutasListPage() {
 
     return (
         <div className="flex flex-col top-0 left-0 w-full h-full sm:p-6">
-            <CardHeader className="px-0">
+            <CardHeader className="p-0">
                 <CardTitle className="text-2xl font-semibold text-primary">
                     Consultar Terapeutas
                 </CardTitle>
@@ -172,12 +172,14 @@ export default function TerapeutasListPage() {
                             showFilters={false}
                         />
                     </div>
-                    <Link to="/app/cadastro/terapeuta">
-                        <Button className="h-12 gap-2">
-                            <Plus className="h-4 w-4" />
-                            Adicionar
-                        </Button>
-                    </Link>
+                    <div className="flex gap-2">
+                        <Link to="/app/cadastro/terapeuta">
+                            <Button className="h-12 gap-2">
+                                <Plus className="h-4 w-4" />
+                                Adicionar
+                            </Button>
+                        </Link>
+                    </div>
                 </div>
 
                 {error && (

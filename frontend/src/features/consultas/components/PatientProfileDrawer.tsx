@@ -1,9 +1,15 @@
-import { X, User, MapPin, CreditCard, GraduationCap } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { X, User, MapPin, CreditCard, GraduationCap, Save, Loader2, Edit2 } from 'lucide-react';
+import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/ui/label';
 import ReadOnlyField from './ReadOnlyField';
 import type { Patient } from '../types/consultas.types';
 import { useCliente } from '../hooks/useCliente';
 import DocumentsTable from '../arquivos/components/DocumentsTable';
+import { DocumentsEditor } from '../arquivos/components/DocumentsEditor';
+import { updateCliente, listFiles, type FileMeta } from '../service/consultas.service';
 
 interface PatientProfileDrawerProps {
     patient: Patient | null;
@@ -16,6 +22,12 @@ export default function PatientProfileDrawer({
     open,
     onClose,
 }: PatientProfileDrawerProps) {
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [saveError, setSaveError] = useState<string | null>(null);
+    const [files, setFiles] = useState<FileMeta[]>([]);
+    const [filesLoading, setFilesLoading] = useState(true);
+
     const normalizarEnderecos = (enderecos: any[]) =>
         enderecos.map((item) => {
             const e = item.endereco;
@@ -25,12 +37,155 @@ export default function PatientProfileDrawer({
             };
         });
     const rawData = useCliente(patient?.id, open);
-    const clienteData = rawData
+    const clienteData = useMemo(() => rawData
         ? {
               ...rawData,
               enderecos: normalizarEnderecos(rawData.enderecos ?? []),
           }
-        : null;
+        : null, [rawData]);
+
+    const { register, handleSubmit, reset, formState: { isDirty } } = useForm({
+        defaultValues: clienteData ? {
+            nome: clienteData.nome || '',
+            emailContato: clienteData.emailContato || '',
+            cpf: clienteData.cpf || '',
+            dataNascimento: clienteData.dataNascimento 
+                ? new Date(clienteData.dataNascimento).toISOString().split('T')[0] 
+                : '',
+            // Endereço (simplificado: apenas primeiro endereço)
+            cep: clienteData.enderecos?.[0]?.cep || '',
+            logradouro: clienteData.enderecos?.[0]?.logradouro || '',
+            numero: clienteData.enderecos?.[0]?.numero || '',
+            complemento: clienteData.enderecos?.[0]?.complemento || '',
+            bairro: clienteData.enderecos?.[0]?.bairro || '',
+            cidade: clienteData.enderecos?.[0]?.cidade || '',
+            uf: clienteData.enderecos?.[0]?.uf || '',
+        } : undefined
+    });
+
+    // Atualizar form quando clienteData chegar
+    useEffect(() => {
+        if (clienteData && open) {
+            reset({
+                nome: clienteData.nome || '',
+                emailContato: clienteData.emailContato || '',
+                cpf: clienteData.cpf || '',
+                dataNascimento: clienteData.dataNascimento 
+                    ? new Date(clienteData.dataNascimento).toISOString().split('T')[0] 
+                    : '',
+                cep: clienteData.enderecos?.[0]?.cep || '',
+                logradouro: clienteData.enderecos?.[0]?.logradouro || '',
+                numero: clienteData.enderecos?.[0]?.numero || '',
+                complemento: clienteData.enderecos?.[0]?.complemento || '',
+                bairro: clienteData.enderecos?.[0]?.bairro || '',
+                cidade: clienteData.enderecos?.[0]?.cidade || '',
+                uf: clienteData.enderecos?.[0]?.uf || '',
+            });
+        }
+    }, [clienteData, open, reset]);
+
+    // Resetar modo de edição quando o drawer fechar
+    useEffect(() => {
+        if (!open && isEditMode) {
+            setIsEditMode(false);
+            setSaveError(null);
+        }
+    }, [open, isEditMode]);
+
+    const handleEditClick = () => {
+        setIsEditMode(true);
+        setSaveError(null);
+        
+        if (patient?.id) {
+            setFilesLoading(true);
+            listFiles({ ownerType: 'cliente', ownerId: patient.id })
+                .then(setFiles)
+                .catch(console.error)
+                .finally(() => setFilesLoading(false));
+        }
+        
+        window.dispatchEvent(
+            new CustomEvent('consulta:edit:enter', {
+                detail: { ownerType: 'cliente', ownerId: patient?.id }
+            })
+        );
+    };
+
+    const loadFiles = async () => {
+        if (!patient?.id) return;
+        setFilesLoading(true);
+        try {
+            const data = await listFiles({ ownerType: 'cliente', ownerId: patient.id });
+            setFiles(data);
+        } catch (err) {
+            console.error('Erro ao carregar arquivos:', err);
+        } finally {
+            setFilesLoading(false);
+        }
+    };
+
+    const handleCancelClick = () => {
+        if (isDirty) {
+            const confirm = window.confirm('Você tem alterações não salvas. Deseja realmente cancelar?');
+            if (!confirm) return;
+        }
+
+        setIsEditMode(false);
+        setSaveError(null);
+        reset();
+
+        window.dispatchEvent(
+            new CustomEvent('consulta:edit:cancel', {
+                detail: { ownerType: 'cliente', ownerId: patient?.id }
+            })
+        );
+    };
+
+    const onSubmit = async (data: any) => {
+        if (!patient?.id) return;
+
+        setIsSaving(true);
+        setSaveError(null);
+
+        try {
+            await updateCliente(patient.id, {
+                nome: data.nome,
+                emailContato: data.emailContato,
+                cpf: data.cpf,
+                dataNascimento: data.dataNascimento,
+                enderecos: [{
+                    cep: data.cep,
+                    logradouro: data.logradouro,
+                    numero: data.numero,
+                    complemento: data.complemento,
+                    bairro: data.bairro,
+                    cidade: data.cidade,
+                    uf: data.uf,
+                }]
+            });
+
+            window.dispatchEvent(
+                new CustomEvent('consulta:edit:save:success', {
+                    detail: { ownerType: 'cliente', ownerId: patient.id }
+                })
+            );
+
+            setIsEditMode(false);
+            // Recarregar dados
+            window.location.reload();
+        } catch (err: any) {
+            const msg = err.message ?? 'Erro ao salvar dados do cliente';
+            setSaveError(msg);
+
+            window.dispatchEvent(
+                new CustomEvent('consulta:edit:save:error', {
+                    detail: { ownerType: 'cliente', ownerId: patient.id, error: msg }
+                })
+            );
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     if (!patient || !open || !clienteData) return null;
 
@@ -90,13 +245,33 @@ export default function PatientProfileDrawer({
                             )}
                         </div>
                     </div>
+                    
+                    {!isEditMode && (
+                        <Button 
+                            variant="secondary" 
+                            size="sm" 
+                            onClick={handleEditClick}
+                            className="h-8 gap-2"
+                        >
+                            <Edit2 className="h-4 w-4" />
+                            Editar
+                        </Button>
+                    )}
+                    
                     <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0">
                         <X className="h-4 w-4" />
                     </Button>
                 </div>
 
+                {/* Error Message */}
+                {saveError && (
+                    <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 text-sm flex-shrink-0">
+                        {saveError}
+                    </div>
+                )}
+
                 {/* Content - flex: 1 1 auto; min-height: 0; overflow-y: auto; para scroll */}
-                <div className="flex-1 min-h-0 overflow-y-auto">
+                <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 overflow-y-auto">
                     <div className="p-6 space-y-8">
                         {/* Dados Pessoais */}
                         <div>
@@ -105,24 +280,61 @@ export default function PatientProfileDrawer({
                                 Dados Pessoais
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <ReadOnlyField label="Nome *" value={clienteData.nome ?? ''} />
-                                <ReadOnlyField
-                                    label="Data de nascimento *"
-                                    value={formatDate(clienteData.dataNascimento ?? '')}
-                                />
-                                <ReadOnlyField label="CPF *" value={clienteData.cpf ?? ''} />
-                                <ReadOnlyField
-                                    label="E-mail de contato *"
-                                    value={clienteData.emailContato ?? ''}
-                                />
-                                <ReadOnlyField
-                                    label="Data Entrada *"
-                                    value={formatDate(clienteData.dataEntrada ?? '')}
-                                />
-                                <ReadOnlyField
-                                    label="Data Saída"
-                                    value={formatDate(clienteData.dataSaida ?? '')}
-                                />
+                                {isEditMode ? (
+                                    <>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="nome">Nome *</Label>
+                                            <Input id="nome" {...register('nome')} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="dataNascimento">Data de nascimento *</Label>
+                                            <Input id="dataNascimento" type="date" {...register('dataNascimento')} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="cpf">CPF *</Label>
+                                            <Input id="cpf" {...register('cpf')} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="emailContato">E-mail de contato *</Label>
+                                            <Input id="emailContato" type="email" {...register('emailContato')} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>Data Entrada *</Label>
+                                            <Input 
+                                                value={formatDate(clienteData.dataEntrada ?? '')} 
+                                                disabled 
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label>Data Saída</Label>
+                                            <Input 
+                                                value={formatDate(clienteData.dataSaida ?? '')} 
+                                                disabled 
+                                            />
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <ReadOnlyField label="Nome *" value={clienteData.nome ?? ''} />
+                                        <ReadOnlyField
+                                            label="Data de nascimento *"
+                                            value={formatDate(clienteData.dataNascimento ?? '')}
+                                        />
+                                        <ReadOnlyField label="CPF *" value={clienteData.cpf ?? ''} />
+                                        <ReadOnlyField
+                                            label="E-mail de contato *"
+                                            value={clienteData.emailContato ?? ''}
+                                        />
+                                        <ReadOnlyField
+                                            label="Data Entrada *"
+                                            value={formatDate(clienteData.dataEntrada ?? '')}
+                                        />
+                                        <ReadOnlyField
+                                            label="Data Saída"
+                                            value={formatDate(clienteData.dataSaida ?? '')}
+                                        />
+                                    </>
+                                )}
                             </div>
 
                             {/* Seção Cuidadores */}
@@ -212,51 +424,84 @@ export default function PatientProfileDrawer({
                                 Endereços
                             </h3>
 
-                            {clienteData.enderecos?.length > 0 ? (
-                                clienteData.enderecos.map((endereco, index) => {
-                                    return (
-                                        <div key={index} className="mb-6">
-                                            {clienteData.enderecos!.length > 1 && (
-                                                <h4 className="text-md font-medium mb-4">
-                                                    Endereço {index + 1}
-                                                </h4>
-                                            )}
-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                <ReadOnlyField
-                                                    label="CEP *"
-                                                    value={endereco.cep ?? ''}
-                                                />
-                                                <ReadOnlyField
-                                                    label="UF *"
-                                                    value={endereco.uf ?? ''}
-                                                />
-                                                <ReadOnlyField
-                                                    label="Logradouro *"
-                                                    value={endereco.logradouro ?? ''}
-                                                    className="md:col-span-3"
-                                                />
-                                                <ReadOnlyField
-                                                    label="Número *"
-                                                    value={endereco.numero ?? ''}
-                                                />
-                                                <ReadOnlyField
-                                                    label="Complemento"
-                                                    value={endereco.complemento ?? ''}
-                                                />
-                                                <ReadOnlyField
-                                                    label="Bairro *"
-                                                    value={endereco.bairro ?? ''}
-                                                />
-                                                <ReadOnlyField
-                                                    label="Cidade *"
-                                                    value={endereco.cidade ?? ''}
-                                                />
-                                            </div>
-                                        </div>
-                                    );
-                                })
+                            {isEditMode ? (
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="cep">CEP *</Label>
+                                        <Input id="cep" {...register('cep')} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="uf">UF *</Label>
+                                        <Input id="uf" maxLength={2} {...register('uf')} />
+                                    </div>
+                                    <div className="space-y-2 md:col-span-3">
+                                        <Label htmlFor="logradouro">Logradouro *</Label>
+                                        <Input id="logradouro" {...register('logradouro')} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="numero">Número *</Label>
+                                        <Input id="numero" {...register('numero')} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="complemento">Complemento</Label>
+                                        <Input id="complemento" {...register('complemento')} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="bairro">Bairro *</Label>
+                                        <Input id="bairro" {...register('bairro')} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="cidade">Cidade *</Label>
+                                        <Input id="cidade" {...register('cidade')} />
+                                    </div>
+                                </div>
                             ) : (
-                                <p className="text-muted-foreground">Nenhum endereço informado</p>
+                                clienteData.enderecos?.length > 0 ? (
+                                    clienteData.enderecos.map((endereco, index) => {
+                                        return (
+                                            <div key={index} className="mb-6">
+                                                {clienteData.enderecos!.length > 1 && (
+                                                    <h4 className="text-md font-medium mb-4">
+                                                        Endereço {index + 1}
+                                                    </h4>
+                                                )}
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                    <ReadOnlyField
+                                                        label="CEP *"
+                                                        value={endereco.cep ?? ''}
+                                                    />
+                                                    <ReadOnlyField
+                                                        label="UF *"
+                                                        value={endereco.uf ?? ''}
+                                                    />
+                                                    <ReadOnlyField
+                                                        label="Logradouro *"
+                                                        value={endereco.logradouro ?? ''}
+                                                        className="md:col-span-3"
+                                                    />
+                                                    <ReadOnlyField
+                                                        label="Número *"
+                                                        value={endereco.numero ?? ''}
+                                                    />
+                                                    <ReadOnlyField
+                                                        label="Complemento"
+                                                        value={endereco.complemento ?? ''}
+                                                    />
+                                                    <ReadOnlyField
+                                                        label="Bairro *"
+                                                        value={endereco.bairro ?? ''}
+                                                    />
+                                                    <ReadOnlyField
+                                                        label="Cidade *"
+                                                        value={endereco.cidade ?? ''}
+                                                    />
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                ) : (
+                                    <p className="text-muted-foreground">Nenhum endereço informado</p>
+                                )
                             )}
                         </div>
 
@@ -579,13 +824,57 @@ export default function PatientProfileDrawer({
                             <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
                                 📎 Arquivos
                             </h3>
-                            <DocumentsTable ownerType="cliente" ownerId={patient.id} />
+                            {isEditMode ? (
+                                filesLoading ? (
+                                    <div className="flex items-center justify-center py-8">
+                                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                                    </div>
+                                ) : (
+                                    <DocumentsEditor
+                                        files={files}
+                                        ownerType="cliente"
+                                        ownerId={patient.id}
+                                        onUploadSuccess={loadFiles}
+                                        onDeleteSuccess={loadFiles}
+                                    />
+                                )
+                            ) : (
+                                <DocumentsTable ownerType="cliente" ownerId={patient.id} />
+                            )}
                         </div>
 
                         {/* Espaço extra para garantir scroll completo */}
                         <div className="h-4"></div>
                     </div>
-                </div>
+
+                    {/* Action Buttons (Edit Mode) - Sticky Footer */}
+                    {isEditMode && (
+                        <div className="border-t p-4 bg-background flex justify-end gap-3 flex-shrink-0">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={handleCancelClick}
+                                disabled={isSaving}
+                            >
+                                <X className="h-4 w-4 mr-2" />
+                                Cancelar
+                            </Button>
+                            <Button type="submit" disabled={isSaving}>
+                                {isSaving ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                        Salvando...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Save className="h-4 w-4 mr-2" />
+                                        Salvar
+                                    </>
+                                )}
+                            </Button>
+                        </div>
+                    )}
+                </form>
             </div>
         </div>
     );

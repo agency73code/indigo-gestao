@@ -1,9 +1,15 @@
-import { X, User, MapPin, Briefcase, Building, GraduationCap, FileText, Car } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, User, MapPin, Briefcase, Building, GraduationCap, FileText, Car, Save, Loader2, Edit2 } from 'lucide-react';
+import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/ui/label';
 import ReadOnlyField from './ReadOnlyField';
 import type { Therapist } from '../types/consultas.types';
 import { useTerapeuta } from '../hooks/useTerapeuta';
 import DocumentsTable from '../arquivos/components/DocumentsTable';
+import { DocumentsEditor } from '../arquivos/components/DocumentsEditor';
+import { updateTerapeuta, listFiles, type FileMeta } from '../service/consultas.service';
 
 interface TherapistProfileDrawerProps {
     therapist: Therapist | null;
@@ -16,7 +22,184 @@ export default function TherapistProfileDrawer({
     open,
     onClose,
 }: TherapistProfileDrawerProps) {
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [saveError, setSaveError] = useState<string | null>(null);
+    const [files, setFiles] = useState<FileMeta[]>([]);
+    const [filesLoading, setFilesLoading] = useState(true);
+
     const terapeutaData = useTerapeuta(therapist?.id);
+
+    const { register, handleSubmit, reset, formState: { isDirty } } = useForm({
+        defaultValues: terapeutaData ? {
+            nome: terapeutaData.nome || '',
+            email: terapeutaData.email || '',
+            telefone: terapeutaData.telefone || '',
+            celular: terapeutaData.celular || '',
+            cpf: terapeutaData.cpf || '',
+            dataNascimento: terapeutaData.dataNascimento 
+                ? new Date(terapeutaData.dataNascimento).toISOString().split('T')[0] 
+                : '',
+            // Endereço
+            cep: terapeutaData.endereco?.cep || '',
+            rua: terapeutaData.endereco?.rua || '',
+            numero: terapeutaData.endereco?.numero || '',
+            complemento: terapeutaData.endereco?.complemento || '',
+            bairro: terapeutaData.endereco?.bairro || '',
+            cidade: terapeutaData.endereco?.cidade || '',
+            estado: terapeutaData.endereco?.estado || '',
+            // Veículo
+            possuiVeiculo: terapeutaData.possuiVeiculo || 'nao',
+            placaVeiculo: terapeutaData.placaVeiculo || '',
+            modeloVeiculo: terapeutaData.modeloVeiculo || '',
+            // Dados bancários
+            banco: terapeutaData.banco || '',
+            agencia: terapeutaData.agencia || '',
+            conta: terapeutaData.conta || '',
+            chavePix: terapeutaData.chavePix || '',
+        } : undefined
+    });
+
+    // Atualizar form quando terapeutaData chegar
+    useEffect(() => {
+        if (terapeutaData && open) {
+            reset({
+                nome: terapeutaData.nome || '',
+                email: terapeutaData.email || '',
+                telefone: terapeutaData.telefone || '',
+                celular: terapeutaData.celular || '',
+                cpf: terapeutaData.cpf || '',
+                dataNascimento: terapeutaData.dataNascimento 
+                    ? new Date(terapeutaData.dataNascimento).toISOString().split('T')[0] 
+                    : '',
+                cep: terapeutaData.endereco?.cep || '',
+                rua: terapeutaData.endereco?.rua || '',
+                numero: terapeutaData.endereco?.numero || '',
+                complemento: terapeutaData.endereco?.complemento || '',
+                bairro: terapeutaData.endereco?.bairro || '',
+                cidade: terapeutaData.endereco?.cidade || '',
+                estado: terapeutaData.endereco?.estado || '',
+                possuiVeiculo: terapeutaData.possuiVeiculo || 'nao',
+                placaVeiculo: terapeutaData.placaVeiculo || '',
+                modeloVeiculo: terapeutaData.modeloVeiculo || '',
+                banco: terapeutaData.banco || '',
+                agencia: terapeutaData.agencia || '',
+                conta: terapeutaData.conta || '',
+                chavePix: terapeutaData.chavePix || '',
+            });
+        }
+    }, [terapeutaData, open, reset]);
+
+    // Resetar modo de edição quando o drawer fechar
+    useEffect(() => {
+        if (!open && isEditMode) {
+            setIsEditMode(false);
+            setSaveError(null);
+        }
+    }, [open, isEditMode]);
+
+    const handleEditClick = () => {
+        setIsEditMode(true);
+        setSaveError(null);
+        
+        if (therapist?.id) {
+            setFilesLoading(true);
+            listFiles({ ownerType: 'terapeuta', ownerId: therapist.id })
+                .then(setFiles)
+                .catch(console.error)
+                .finally(() => setFilesLoading(false));
+        }
+        
+        window.dispatchEvent(
+            new CustomEvent('consulta:edit:enter', {
+                detail: { ownerType: 'terapeuta', ownerId: therapist?.id }
+            })
+        );
+    };
+
+    const loadFiles = async () => {
+        if (!therapist?.id) return;
+        setFilesLoading(true);
+        try {
+            const data = await listFiles({ ownerType: 'terapeuta', ownerId: therapist.id });
+            setFiles(data);
+        } catch (err) {
+            console.error('Erro ao carregar arquivos:', err);
+        } finally {
+            setFilesLoading(false);
+        }
+    };
+
+    const handleCancelClick = () => {
+        if (isDirty) {
+            const confirm = window.confirm('Você tem alterações não salvas. Deseja realmente cancelar?');
+            if (!confirm) return;
+        }
+
+        setIsEditMode(false);
+        setSaveError(null);
+        reset();
+
+        window.dispatchEvent(
+            new CustomEvent('consulta:edit:cancel', {
+                detail: { ownerType: 'terapeuta', ownerId: therapist?.id }
+            })
+        );
+    };
+
+    const onSubmit = async (data: any) => {
+        if (!therapist?.id) return;
+
+        setIsSaving(true);
+        setSaveError(null);
+
+        try {
+            await updateTerapeuta(therapist.id, {
+                nome: data.nome,
+                email: data.email,
+                telefone: data.telefone,
+                celular: data.celular,
+                cpf: data.cpf,
+                dataNascimento: data.dataNascimento,
+                possuiVeiculo: data.possuiVeiculo,
+                placaVeiculo: data.placaVeiculo,
+                modeloVeiculo: data.modeloVeiculo,
+                banco: data.banco,
+                agencia: data.agencia,
+                conta: data.conta,
+                chavePix: data.chavePix,
+                endereco: {
+                    cep: data.cep,
+                    rua: data.rua,
+                    numero: data.numero,
+                    complemento: data.complemento,
+                    bairro: data.bairro,
+                    cidade: data.cidade,
+                    estado: data.estado,
+                }
+            });
+
+            window.dispatchEvent(
+                new CustomEvent('consulta:edit:save:success', {
+                    detail: { ownerType: 'terapeuta', ownerId: therapist.id }
+                })
+            );
+
+            setIsEditMode(false);
+            window.location.reload();
+        } catch (err: any) {
+            const msg = err.message ?? 'Erro ao salvar dados do terapeuta';
+            setSaveError(msg);
+
+            window.dispatchEvent(
+                new CustomEvent('consulta:edit:save:error', {
+                    detail: { ownerType: 'terapeuta', ownerId: therapist.id, error: msg }
+                })
+            );
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     if (!therapist || !open || !terapeutaData) return null;
 
@@ -85,13 +268,33 @@ export default function TherapistProfileDrawer({
                             )}
                         </div>
                     </div>
+                    
+                    {!isEditMode && (
+                        <Button 
+                            variant="secondary" 
+                            size="sm" 
+                            onClick={handleEditClick}
+                            className="h-8 gap-2"
+                        >
+                            <Edit2 className="h-4 w-4" />
+                            Editar
+                        </Button>
+                    )}
+                    
                     <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0">
                         <X className="h-4 w-4" />
                     </Button>
                 </div>
 
+                {/* Error Message */}
+                {saveError && (
+                    <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 text-sm flex-shrink-0">
+                        {saveError}
+                    </div>
+                )}
+
                 {/* Content - rolável com todos os campos dos cadastros */}
-                <div className="flex-1 min-h-0 overflow-y-auto">
+                <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 overflow-y-auto">
                     <div className="space-y-8 pb-16 p-4">
                         {/* Seção 1: Dados Pessoais (DadosPessoaisStep) */}
                         <div>
@@ -100,49 +303,158 @@ export default function TherapistProfileDrawer({
                                 Dados Pessoais
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <ReadOnlyField label="Nome *" value={terapeutaData.nome} />
-                                <ReadOnlyField
-                                    label="Data de nascimento *"
-                                    value={formatDate(terapeutaData.dataNascimento)}
-                                />
-                                <ReadOnlyField label="E-mail *" value={terapeutaData.email} />
-                                <ReadOnlyField
-                                    label="E-mail Índigo *"
-                                    value={terapeutaData.emailIndigo}
-                                />
-                                <ReadOnlyField label="Telefone" value={terapeutaData.telefone} />
-                                <ReadOnlyField label="Celular *" value={terapeutaData.celular} />
-                                <ReadOnlyField label="CPF *" value={terapeutaData.cpf} />
+                                {isEditMode ? (
+                                    <>
+                                        <div>
+                                            <Label htmlFor="nome">Nome *</Label>
+                                            <Input
+                                                id="nome"
+                                                {...register('nome')}
+                                                placeholder="Nome completo"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label htmlFor="dataNascimento">
+                                                Data de nascimento *
+                                            </Label>
+                                            <Input
+                                                id="dataNascimento"
+                                                type="date"
+                                                {...register('dataNascimento')}
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label htmlFor="email">E-mail *</Label>
+                                            <Input
+                                                id="email"
+                                                type="email"
+                                                {...register('email')}
+                                                placeholder="email@exemplo.com"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label htmlFor="telefone">Telefone</Label>
+                                            <Input
+                                                id="telefone"
+                                                {...register('telefone')}
+                                                placeholder="(00) 0000-0000"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label htmlFor="celular">Celular *</Label>
+                                            <Input
+                                                id="celular"
+                                                {...register('celular')}
+                                                placeholder="(00) 00000-0000"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label htmlFor="cpf">CPF *</Label>
+                                            <Input
+                                                id="cpf"
+                                                {...register('cpf')}
+                                                placeholder="000.000.000-00"
+                                            />
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <ReadOnlyField label="Nome *" value={terapeutaData.nome} />
+                                        <ReadOnlyField
+                                            label="Data de nascimento *"
+                                            value={formatDate(terapeutaData.dataNascimento)}
+                                        />
+                                        <ReadOnlyField label="E-mail *" value={terapeutaData.email} />
+                                        <ReadOnlyField
+                                            label="E-mail Índigo *"
+                                            value={terapeutaData.emailIndigo}
+                                        />
+                                        <ReadOnlyField
+                                            label="Telefone"
+                                            value={terapeutaData.telefone}
+                                        />
+                                        <ReadOnlyField
+                                            label="Celular *"
+                                            value={terapeutaData.celular}
+                                        />
+                                        <ReadOnlyField label="CPF *" value={terapeutaData.cpf} />
+                                    </>
+                                )}
                             </div>
 
                             {/* Seção Veículo - Condicional */}
                             <div className="mt-6">
-                                <ReadOnlyField
-                                    label="Possui Veículo? *"
-                                    value={
-                                        terapeutaData.possuiVeiculo?.toLowerCase() === 'sim'
-                                            ? 'Sim'
-                                            : 'Não'
-                                    }
-                                />
-
-                                {terapeutaData.possuiVeiculo?.toLowerCase() === 'sim' && (
-                                    <div className="mt-4 p-4 border rounded-lg bg-muted/30">
-                                        <h4 className="font-medium mb-3 flex items-center gap-2">
-                                            <Car className="w-4 h-4" />
-                                            Dados do Veículo
-                                        </h4>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <ReadOnlyField
-                                                label="Placa do Veículo *"
-                                                value={terapeutaData.placaVeiculo}
-                                            />
-                                            <ReadOnlyField
-                                                label="Modelo do Veículo *"
-                                                value={terapeutaData.modeloVeiculo}
-                                            />
+                                {isEditMode ? (
+                                    <>
+                                        <div>
+                                            <Label htmlFor="possuiVeiculo">Possui Veículo? *</Label>
+                                            <select
+                                                id="possuiVeiculo"
+                                                {...register('possuiVeiculo')}
+                                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                            >
+                                                <option value="nao">Não</option>
+                                                <option value="sim">Sim</option>
+                                            </select>
                                         </div>
-                                    </div>
+
+                                        {terapeutaData.possuiVeiculo?.toLowerCase() === 'sim' && (
+                                            <div className="mt-4 p-4 border rounded-lg bg-muted/30">
+                                                <h4 className="font-medium mb-3 flex items-center gap-2">
+                                                    <Car className="w-4 h-4" />
+                                                    Dados do Veículo
+                                                </h4>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <div>
+                                                        <Label htmlFor="placaVeiculo">Placa do Veículo *</Label>
+                                                        <Input
+                                                            id="placaVeiculo"
+                                                            {...register('placaVeiculo')}
+                                                            placeholder="ABC-1234"
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <Label htmlFor="modeloVeiculo">Modelo do Veículo *</Label>
+                                                        <Input
+                                                            id="modeloVeiculo"
+                                                            {...register('modeloVeiculo')}
+                                                            placeholder="Ex: Honda Civic 2020"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </>
+                                ) : (
+                                    <>
+                                        <ReadOnlyField
+                                            label="Possui Veículo? *"
+                                            value={
+                                                terapeutaData.possuiVeiculo?.toLowerCase() === 'sim'
+                                                    ? 'Sim'
+                                                    : 'Não'
+                                            }
+                                        />
+
+                                        {terapeutaData.possuiVeiculo?.toLowerCase() === 'sim' && (
+                                            <div className="mt-4 p-4 border rounded-lg bg-muted/30">
+                                                <h4 className="font-medium mb-3 flex items-center gap-2">
+                                                    <Car className="w-4 h-4" />
+                                                    Dados do Veículo
+                                                </h4>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <ReadOnlyField
+                                                        label="Placa do Veículo *"
+                                                        value={terapeutaData.placaVeiculo}
+                                                    />
+                                                    <ReadOnlyField
+                                                        label="Modelo do Veículo *"
+                                                        value={terapeutaData.modeloVeiculo}
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </>
                                 )}
                             </div>
 
@@ -150,16 +462,55 @@ export default function TherapistProfileDrawer({
                             <div className="mt-6">
                                 <h4 className="text-md font-semibold mb-3">Dados para pagamento</h4>
                                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                    <ReadOnlyField label="Banco *" value={terapeutaData.banco} />
-                                    <ReadOnlyField
-                                        label="Agência *"
-                                        value={terapeutaData.agencia}
-                                    />
-                                    <ReadOnlyField label="Conta *" value={terapeutaData.conta} />
-                                    <ReadOnlyField
-                                        label="Chave PIX *"
-                                        value={terapeutaData.chavePix}
-                                    />
+                                    {isEditMode ? (
+                                        <>
+                                            <div>
+                                                <Label htmlFor="banco">Banco *</Label>
+                                                <Input
+                                                    id="banco"
+                                                    {...register('banco')}
+                                                    placeholder="Nome do banco"
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label htmlFor="agencia">Agência *</Label>
+                                                <Input
+                                                    id="agencia"
+                                                    {...register('agencia')}
+                                                    placeholder="0000"
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label htmlFor="conta">Conta *</Label>
+                                                <Input
+                                                    id="conta"
+                                                    {...register('conta')}
+                                                    placeholder="00000-0"
+                                                />
+                                            </div>
+                                            <div>
+                                                <Label htmlFor="chavePix">Chave PIX *</Label>
+                                                <Input
+                                                    id="chavePix"
+                                                    {...register('chavePix')}
+                                                    placeholder="CPF, e-mail, telefone ou chave aleatória"
+                                                />
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <ReadOnlyField label="Banco *" value={terapeutaData.banco} />
+                                            <ReadOnlyField
+                                                label="Agência *"
+                                                value={terapeutaData.agencia}
+                                            />
+                                            <ReadOnlyField label="Conta *" value={terapeutaData.conta} />
+                                            <ReadOnlyField
+                                                label="Chave PIX *"
+                                                value={terapeutaData.chavePix}
+                                            />
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -174,32 +525,95 @@ export default function TherapistProfileDrawer({
                                 Endereço
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <ReadOnlyField label="CEP *" value={terapeutaData.endereco?.cep} />
-                                <ReadOnlyField
-                                    label="Estado *"
-                                    value={terapeutaData.endereco?.estado}
-                                />
-                                <ReadOnlyField
-                                    label="Rua *"
-                                    value={terapeutaData.endereco?.rua}
-                                    className="md:col-span-2"
-                                />
-                                <ReadOnlyField
-                                    label="Número *"
-                                    value={terapeutaData.endereco?.numero}
-                                />
-                                <ReadOnlyField
-                                    label="Complemento"
-                                    value={terapeutaData.endereco?.complemento}
-                                />
-                                <ReadOnlyField
-                                    label="Bairro *"
-                                    value={terapeutaData.endereco?.bairro}
-                                />
-                                <ReadOnlyField
-                                    label="Cidade *"
-                                    value={terapeutaData.endereco?.cidade}
-                                />
+                                {isEditMode ? (
+                                    <>
+                                        <div>
+                                            <Label htmlFor="cep">CEP *</Label>
+                                            <Input
+                                                id="cep"
+                                                {...register('cep')}
+                                                placeholder="00000-000"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label htmlFor="estado">Estado *</Label>
+                                            <Input
+                                                id="estado"
+                                                {...register('estado')}
+                                                placeholder="SP"
+                                            />
+                                        </div>
+                                        <div className="md:col-span-2">
+                                            <Label htmlFor="rua">Rua *</Label>
+                                            <Input
+                                                id="rua"
+                                                {...register('rua')}
+                                                placeholder="Nome da rua"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label htmlFor="numero">Número *</Label>
+                                            <Input
+                                                id="numero"
+                                                {...register('numero')}
+                                                placeholder="123"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label htmlFor="complemento">Complemento</Label>
+                                            <Input
+                                                id="complemento"
+                                                {...register('complemento')}
+                                                placeholder="Apto, Bloco, etc."
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label htmlFor="bairro">Bairro *</Label>
+                                            <Input
+                                                id="bairro"
+                                                {...register('bairro')}
+                                                placeholder="Nome do bairro"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label htmlFor="cidade">Cidade *</Label>
+                                            <Input
+                                                id="cidade"
+                                                {...register('cidade')}
+                                                placeholder="Nome da cidade"
+                                            />
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <ReadOnlyField label="CEP *" value={terapeutaData.endereco?.cep} />
+                                        <ReadOnlyField
+                                            label="Estado *"
+                                            value={terapeutaData.endereco?.estado}
+                                        />
+                                        <ReadOnlyField
+                                            label="Rua *"
+                                            value={terapeutaData.endereco?.rua}
+                                            className="md:col-span-2"
+                                        />
+                                        <ReadOnlyField
+                                            label="Número *"
+                                            value={terapeutaData.endereco?.numero}
+                                        />
+                                        <ReadOnlyField
+                                            label="Complemento"
+                                            value={terapeutaData.endereco?.complemento}
+                                        />
+                                        <ReadOnlyField
+                                            label="Bairro *"
+                                            value={terapeutaData.endereco?.bairro}
+                                        />
+                                        <ReadOnlyField
+                                            label="Cidade *"
+                                            value={terapeutaData.endereco?.cidade}
+                                        />
+                                    </>
+                                )}
                             </div>
                         </div>
 
@@ -383,7 +797,23 @@ export default function TherapistProfileDrawer({
                                 <FileText className="w-5 h-5" />
                                 Arquivos
                             </h3>
-                            <DocumentsTable ownerType="terapeuta" ownerId={therapist.id} />
+                            {isEditMode ? (
+                                filesLoading ? (
+                                    <div className="flex items-center justify-center py-8">
+                                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                                    </div>
+                                ) : (
+                                    <DocumentsEditor
+                                        files={files}
+                                        ownerType="terapeuta"
+                                        ownerId={therapist.id}
+                                        onUploadSuccess={loadFiles}
+                                        onDeleteSuccess={loadFiles}
+                                    />
+                                )
+                            ) : (
+                                <DocumentsTable ownerType="terapeuta" ownerId={therapist.id} />
+                            )}
                         </div>
 
                         {/* Dados CNPJ - Seção Condicional */}
@@ -457,7 +887,35 @@ export default function TherapistProfileDrawer({
                         {/* Espaço extra para garantir scroll completo */}
                         <div className="h-4"></div>
                     </div>
-                </div>
+
+                    {/* Action Buttons (Edit Mode) - Sticky Footer */}
+                    {isEditMode && (
+                        <div className="border-t p-4 bg-background flex justify-end gap-3 flex-shrink-0">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={handleCancelClick}
+                                disabled={isSaving}
+                            >
+                                <X className="h-4 w-4 mr-2" />
+                                Cancelar
+                            </Button>
+                            <Button type="submit" disabled={isSaving}>
+                                {isSaving ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                        Salvando...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Save className="h-4 w-4 mr-2" />
+                                        Salvar
+                                    </>
+                                )}
+                            </Button>
+                        </div>
+                    )}
+                </form>
             </div>
         </div>
     );
