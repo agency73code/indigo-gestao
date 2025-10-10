@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { prisma } from '../../config/database.js';
 import { AppError } from '../../errors/AppError.js';
 import * as LinkTypes from './links.types.js';
@@ -12,10 +12,53 @@ const LINK_SELECT = {
     data_inicio: true,
     data_fim: true,
     observacoes: true,
-    atuacao_coterapeuta: true,
+    area_atuacao: true,
     criado_em: true,
     atualizado_em: true,
 } as const;
+
+async function resolveTherapistActuation(therapistId: string, actuation: string | null | undefined) {
+    const normalizedActuation = actuation?.trim();
+
+    if (!normalizedActuation) {
+        throw new AppError(
+            'LINK_ACTUATION_REQUIRED',
+            'A área de atuação é obrigatória para o terapeuta selecionado.',
+            400,
+        );
+    }
+
+    const registration = await prisma.registro_profissional.findFirst({
+        where: {
+            terapeuta_id: therapistId,
+            area_atuacao: {
+                equals: normalizedActuation,
+            },
+        },
+        select: {
+            area_atuacao: true,
+        },
+    });
+
+    if (!registration) {
+        const therapistExists = await prisma.terapeuta.findUnique({
+            where: { id: therapistId },
+            select: { id: true },
+        });
+
+        if (!therapistExists) {
+            throw new AppError('LINK_THERAPIST_NOT_FOUND', 'Terapeuta não encontrado.', 404);
+        }
+
+        throw new AppError(
+            'LINK_INVALID_ACTUATION',
+            'a área de atuação informada não está cadastrada para o terapeuta selecionado.',
+            400,
+        );
+    }
+
+    return registration.area_atuacao;
+}
 
 export async function createLink(payload: LinkTypes.CreateLink) {
     if (payload.role === 'responsible') {
@@ -32,6 +75,8 @@ export async function createLink(payload: LinkTypes.CreateLink) {
         }
     }
 
+    const actuationArea = await resolveTherapistActuation(payload.therapistId, payload.actuationArea);
+
     const created = await prisma.terapeuta_cliente.create({
         data: {
             cliente_id: payload.patientId,
@@ -41,7 +86,7 @@ export async function createLink(payload: LinkTypes.CreateLink) {
             data_inicio: new Date(payload.startDate),
             data_fim: payload.endDate ? new Date(payload.endDate) : null,
             observacoes: payload.notes ?? null,
-            atuacao_coterapeuta: payload.coTherapistActuation ?? null,
+            area_atuacao: actuationArea,
         },
         select: LINK_SELECT,
     });
@@ -261,8 +306,6 @@ export async function updateLink(payload: LinkTypes.UpdateLink) {
         );
     }
 
-    const roleChangedToResponsible = payload.role === 'responsible' && existing.papel !== 'responsible';
-
     if (payload.role) {
         data.papel = payload.role;
     }
@@ -275,10 +318,25 @@ export async function updateLink(payload: LinkTypes.UpdateLink) {
         data.observacoes = payload.notes ?? null;
     }
 
-    if (Object.prototype.hasOwnProperty.call(payload, 'coTherapistActuation')) {
-        data.atuacao_coterapeuta = payload.coTherapistActuation ?? null;
-    } else if (roleChangedToResponsible) {
-        data.atuacao_coterapeuta = null;
+    if (Object.prototype.hasOwnProperty.call(payload, 'actuationArea')) {
+        const requestedActuation = payload.actuationArea;
+
+        if (requestedActuation == null || requestedActuation.trim() === '') {
+            throw new AppError(
+                'LINK_ACTUATION_REQUIRED',
+                'A área de atuação é obrigatória para o terapeuta selecionado.',
+                400,
+            );
+        }
+
+        const resolvedActuation = await resolveTherapistActuation(existing.terapeuta_id, requestedActuation);
+        data.area_atuacao = resolvedActuation;
+    } else if (!existing.area_atuacao) {
+        throw new AppError(
+            'LINK_ACTUATION_REQUIRED',
+            'A área de atuação é obrigatória para o terapeuta selecionado.',
+            400,
+        );
     }
 
     if (Object.keys(data).length === 0) {
@@ -404,6 +462,11 @@ export async function transferResponsible(payload: LinkTypes.TransferResponsible
         );
     }
 
+    const [newResponsibleArea, previousResponsibleArea] = await Promise.all([
+        resolveTherapistActuation(payload.toTherapistId, payload.newResponsibleActuation),
+        resolveTherapistActuation(payload.fromTherapistId, payload.oldResponsibleActuation),
+    ])
+
     const transferResult = await prisma.$transaction(async (trx) => {
         const existingNewTherapistLink = await trx.terapeuta_cliente.findFirst({
             where: {
@@ -432,7 +495,7 @@ export async function transferResponsible(payload: LinkTypes.TransferResponsible
                     papel: 'responsible',
                     status: 'active',
                     data_fim: null,
-                    atuacao_coterapeuta: null,
+                    area_atuacao: newResponsibleArea,
                     atualizado_em: effectiveDate,
                 },
                 select: LINK_SELECT,
@@ -447,7 +510,7 @@ export async function transferResponsible(payload: LinkTypes.TransferResponsible
                     data_inicio: effectiveDate,
                     data_fim: null,
                     observacoes: `Transferido de ${payload.fromTherapistId} em ${payload.effectiveDate}`,
-                    atuacao_coterapeuta: null,
+                    area_atuacao: newResponsibleArea,
                 },
                 select: LINK_SELECT,
             });
@@ -457,7 +520,7 @@ export async function transferResponsible(payload: LinkTypes.TransferResponsible
             where: { id: currentResponsible.id },
             data: {
                 papel: 'co',
-                atuacao_coterapeuta: payload.oldResponsibleActuation,
+                area_atuacao: previousResponsibleArea,
                 atualizado_em: effectiveDate,
             },
             select: LINK_SELECT,

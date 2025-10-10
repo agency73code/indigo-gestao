@@ -356,7 +356,7 @@ model terapeuta_cliente {
   data_inicio         DateTime
   data_fim            DateTime?
   observacoes         String?             @db.Text
-  atuacao_coterapeuta String?
+  area_atuacao        String?
   criado_em           DateTime            @default(now())
   atualizado_em       DateTime            @updatedAt
 

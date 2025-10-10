@@ -37,7 +37,7 @@ export function normalizeLink(link: LinkTypes.DBLink) {
         endDate: link.data_fim ? link.data_fim.toISOString() : null,
         status: normalizeStatus(link.status),
         notes: link.observacoes ?? null,
-        coTherapistActuation: link.atuacao_coterapeuta ?? null,
+        actuationArea: link.area_atuacao ?? null,
         createdAt: link.criado_em.toISOString(),
         updatedAt: link.atualizado_em.toISOString(),
     }

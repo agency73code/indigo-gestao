@@ -20,7 +20,7 @@
     "packageManager": "pnpm@10.15.0",
     "dependencies": {
         "@casl/ability": "^6.7.3",
-        "@prisma/client": "^6.15.0",
+        "@prisma/client": "^6.17.1",
         "@types/bcrypt": "^6.0.0",
         "@types/nodemailer": "^7.0.1",
         "bcrypt": "^6.0.0",
@@ -37,7 +37,7 @@
         "multer": "^2.0.2",
         "mysql2": "^3.14.3",
         "nodemailer": "^7.0.5",
-        "prisma": "^6.15.0",
+        "prisma": "^6.17.1",
         "uuid": "^11.1.0"
     },
     "devDependencies": {

@@ -97,7 +97,7 @@ export interface DBLink {
     data_inicio: Date;
     data_fim: Date | null;
     observacoes: string | null;
-    atuacao_coterapeuta: string | null;
+    area_atuacao: string | null;
     criado_em: Date;
     atualizado_em: Date;
 }
@@ -109,7 +109,7 @@ export type CreateLink = {
     startDate: string;
     endDate?: string | null | undefined;
     notes?: string | null | undefined;
-    coTherapistActuation?: string | null | undefined;
+    actuationArea: string;
 }
 
 export type ArchiveLink = {
@@ -128,7 +128,7 @@ export type UpdateLink = {
     endDate?: string | null | undefined;
     notes?: string | null | undefined;
     status?: 'active' | 'ended' | 'archived' | undefined;
-    coTherapistActuation?: string | null | undefined;
+    actuationArea?: string | undefined;
 }
 
 export type TransferResponsible = {
@@ -137,6 +137,7 @@ export type TransferResponsible = {
     toTherapistId: string;
     effectiveDate: string;
     oldResponsibleActuation: string;
+    newResponsibleActuation: string;
 }
 
 export type TransferResponsibleResult = {
