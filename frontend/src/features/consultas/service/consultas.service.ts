@@ -105,8 +105,8 @@ export async function updateCliente(ownerId: string, payload: any): Promise<void
     return;
   }
 
-  const res = await authFetch(`${API_BASE_URL}/api/clientes/${ownerId}`, {
-    method: 'PUT',
+  const res = await authFetch(`${API_BASE_URL}/clientes/${ownerId}`, {
+    method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   });

@@ -153,3 +153,13 @@ export interface DBClientQueryPage {
         data_upload: Date | null;
     }[];
 }
+
+type DeepPartial<T> = {
+    [P in keyof T]?: T[P] extends Array<infer U>
+        ? Array<DeepPartial<U>> | undefined
+        : T[P] extends object | null
+            ? DeepPartial<NonNullable<T[P]>> | Extract<T[P], null> | undefined
+            : T[P] | undefined;
+};
+
+export type ClientUpdate = DeepPartial<Client>;
