@@ -79,7 +79,7 @@ export function useDocuments({ ownerType, ownerId, enabled = true }: UseDocument
     setPendingId(file.id);
     
     try {
-      const viewUrl = buildViewUrl(file.id);
+      const viewUrl = buildViewUrl(file.id, file.storageId);
       window.open(viewUrl, '_blank', 'noopener');
       
       // Dispatch evento de observabilidade
@@ -101,7 +101,7 @@ export function useDocuments({ ownerType, ownerId, enabled = true }: UseDocument
     setPendingId(file.id);
     
     try {
-      const downloadUrl = buildDownloadUrl(file.id);
+      const downloadUrl = buildDownloadUrl(file.id, file.storageId);
       const link = document.createElement('a');
       link.href = downloadUrl;
       link.download = file.nome;

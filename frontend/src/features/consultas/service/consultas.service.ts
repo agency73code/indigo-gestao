@@ -4,6 +4,7 @@ import { MOCK_ENABLED, MOCK_DOCUMENTS } from '../arquivos/mocks/documents.mock';
 // Tipos para arquivos
 export type FileMeta = {
   id: string;
+  storageId?: string;
   tipo_documento: string;
   nome: string;
   tamanho: number;
@@ -37,7 +38,7 @@ export async function listFiles(params: { ownerType: "cliente" | "terapeuta"; ow
   }
 
   // Chamada real da API
-  const url = new URL('/api/files', API_BASE_URL);
+  const url = new URL('/api/arquivos', API_BASE_URL);
   url.searchParams.set('ownerType', params.ownerType);
   url.searchParams.set('ownerId', params.ownerId);
 
@@ -50,11 +51,19 @@ export async function listFiles(params: { ownerType: "cliente" | "terapeuta"; ow
     throw new Error(msg);
   }
 
-  return (data ?? []) as FileMeta[];
+  if (Array.isArray(data)) {
+    return data.map(normalizeFileMeta);
+  }
+
+  if (Array.isArray(data?.arquivos)) {
+    return data.arquivos.map(normalizeFileMeta);
+  }
+
+  return [];
 }
 
 // Funções para construir URLs
-export function buildViewUrl(fileId: string): string {
+export function buildViewUrl(fileId: string, storageId?: string): string {
   if (MOCK_ENABLED) {
     // Para mock, usar URLs de placeholder diretas
     const mockUrls: Record<string, string> = {
@@ -79,17 +88,19 @@ export function buildViewUrl(fileId: string): string {
     return mockUrl;
   }
   
-  return `${API_BASE_URL}/api/files/${fileId}/view`;
+  const idToUse = storageId || fileId;
+  return `${API_BASE_URL}/arquivos/${idToUse}/view`;
 }
 
-export function buildDownloadUrl(fileId: string): string {
+export function buildDownloadUrl(fileId: string, storageId?: string): string {
   if (MOCK_ENABLED) {
     console.log('⬇️ [MOCK] URL de download gerada para:', fileId);
     // Para mock, usa a mesma URL de visualização como download
-    return buildViewUrl(fileId);
+    return buildViewUrl(fileId, storageId);
   }
   
-  return `${API_BASE_URL}/api/files/${fileId}/download`;
+  const idToUse = storageId || fileId;
+  return `${API_BASE_URL}/arquivos/${idToUse}/download`
 }
 
 // ============================================
@@ -166,7 +177,7 @@ export async function uploadFile(params: {
   formData.append('file', params.file);
   formData.append('tipo_documento', params.tipo_documento);
 
-  const url = new URL('/api/files', API_BASE_URL);
+  const url = new URL('/arquivos', API_BASE_URL);
   url.searchParams.set('ownerType', params.ownerType);
   url.searchParams.set('ownerId', params.ownerId);
 
@@ -192,7 +203,7 @@ export async function deleteFile(fileId: string): Promise<void> {
     return;
   }
 
-  const res = await authFetch(`${API_BASE_URL}/api/files/${fileId}`, {
+  const res = await authFetch(`${API_BASE_URL}/arquivos/${fileId}`, {
     method: 'DELETE'
   });
 
@@ -202,4 +213,43 @@ export async function deleteFile(fileId: string): Promise<void> {
     const msg = data?.message ?? data?.error ?? `Falha ao excluir arquivo (${res.status})`;
     throw new Error(msg);
   }
+}
+
+function normalizeFileMeta(raw: unknown): FileMeta {
+  const value = (raw ?? {}) as Record<string, unknown>;
+
+  const idCandidate = value['id'] ?? value['storageId'] ?? value['arquivo_id'] ?? '';
+  const id = typeof idCandidate === 'string' ? idCandidate : String(idCandidate || '');
+
+  const storageCandidate = value['storageId'] ?? value['arquivo_id'] ?? id;
+  const storageId = typeof storageCandidate === 'string' ? storageCandidate : String(storageCandidate || id);
+
+  const tipoCandidate = value['tipo_documento'] ?? value['tipo'] ?? 'documento';
+  const tipo_documento = typeof tipoCandidate === 'string' ? tipoCandidate : 'documento';
+
+  const nomeCandidate = value['nome'];
+  const nome = typeof nomeCandidate === 'string' && nomeCandidate.trim().length > 0 ? nomeCandidate : tipo_documento;
+
+  const tamanhoCandidate = value['tamanho'] ?? value['size'] ?? 0;
+  const tamanho = typeof tamanhoCandidate === 'number' ? tamanhoCandidate : Number.parseInt(String(tamanhoCandidate), 10) || 0;
+
+  const tipoConteudoCandidate = value['tipo_conteudo'] ?? value['mime_type'] ?? 'application/octet-stream';
+  const tipo_conteudo = typeof tipoConteudoCandidate === 'string' ? tipoConteudoCandidate : 'application/octet-stream';
+
+  const dataCandidate = value['data_envio'] ?? value['data_upload'];
+  const data_envio = typeof dataCandidate === 'string'
+    ? dataCandidate
+    : dataCandidate instanceof Date
+      ? dataCandidate.toISOString()
+      : new Date().toISOString();
+  
+  return {
+    id: id || storageId,
+    storageId,
+    tipo_documento,
+    nome,
+    tamanho,
+    tipo_conteudo,
+    data_envio,
+  };
 }
