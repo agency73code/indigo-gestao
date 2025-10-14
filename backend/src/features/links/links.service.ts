@@ -28,15 +28,31 @@ async function resolveTherapistActuation(therapistId: string, actuation: string 
         );
     }
 
+    const parsedId = Number(normalizedActuation);
+    const isNumericActuation = !Number.isNaN(parsedId) && `${parsedId}` === normalizedActuation;
+
     const registration = await prisma.registro_profissional.findFirst({
         where: {
             terapeuta_id: therapistId,
-            area_atuacao: {
-                equals: normalizedActuation,
-            },
+            ...(isNumericActuation
+                ? { area_atuacao_id: parsedId }
+                : {
+                    area_atuacao: {
+                        is: {
+                            nome: {
+                                equals: normalizedActuation,
+                            }
+                        }
+                    }
+                }
+            )
         },
         select: {
-            area_atuacao: true,
+            area_atuacao: {
+                select: {
+                    nome: true,
+                },
+            },
         },
     });
 
@@ -57,7 +73,7 @@ async function resolveTherapistActuation(therapistId: string, actuation: string 
         );
     }
 
-    return registration.area_atuacao;
+    return registration.area_atuacao.nome;
 }
 
 export async function createLink(payload: LinkTypes.CreateLink) {
@@ -172,8 +188,20 @@ export async function getAllTherapists() {
             },
             registro_profissional: {
                 select: {
-                    area_atuacao: true,
-                    cargo: true,
+                    area_atuacao_id: true,
+                    cargo_id: true,
+                    area_atuacao: {
+                        select: {
+                            id: true,
+                            nome: true,
+                        },
+                    },
+                    cargo: {
+                        select: {
+                            id: true,
+                            nome: true,
+                        },
+                    },
                     numero_conselho: true,
                 },
             },

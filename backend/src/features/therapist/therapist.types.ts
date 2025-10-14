@@ -1,5 +1,13 @@
 import type { Decimal } from "@prisma/client/runtime/library"
 
+export type TherapistProfessionalDataInput = {
+  areaAtuacao: string
+  areaAtuacaoId?: number | string | null | undefined
+  cargo: string
+  cargoId?: number | string | null | undefined
+  numeroConselho: string
+}
+
 export type TherapistForm = {
   nome: string
   email: string
@@ -59,11 +67,7 @@ export type TherapistForm = {
       estado?: string | null
     } | null
   } | null
-  dadosProfissionais: {
-    areaAtuacao: string
-    cargo: string
-    numeroConselho: string
-  }[],
+  dadosProfissionais: TherapistProfessionalDataInput[],
 
   // Arquivos
   arquivos?: Array<{
@@ -125,9 +129,17 @@ export interface TherapistDB {
     }[];
     registro_profissional?: {
         id: number;
-        area_atuacao: string;
-        cargo?: string | null;
+        area_atuacao_id: number;
+        cargo_id?: number | null;
         numero_conselho?: string | null;
+        area_atuacao: {
+          id: number;
+          nome: string;
+        };
+        cargo?: {
+          id: number;
+          nome: string;
+        } | null;
     }[];
     pessoa_juridica?: {
       id: number;

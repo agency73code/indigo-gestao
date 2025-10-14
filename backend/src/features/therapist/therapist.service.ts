@@ -4,6 +4,84 @@ import { brMoneyToNumber } from '../../utils/brMoney.js';
 import { generateResetToken } from "../../utils/resetToken.js";
 import { AppError } from "../../errors/AppError.js";
 
+async function resolveAreaAtuacaoId(
+  areaAtuacaoId: TherapistTypes.TherapistProfessionalDataInput['areaAtuacaoId'],
+  areaAtuacaoNome: string,
+) {
+  if (areaAtuacaoId != null && areaAtuacaoId !== '') {
+    const parsedId = Number(areaAtuacaoId);
+    if (!Number.isNaN(parsedId) && parsedId > 0) {
+      const exists = await prisma.area_atuacao.findUnique({ select: { id: true }, where: { id: parsedId } });
+      if (exists) {
+        return exists.id;
+      }
+    }
+  }
+
+  const normalizedName = areaAtuacaoNome?.trim();
+  if (!normalizedName) {
+    throw new AppError(
+      'INVALID_AREA_ACTIVITY',
+      'Área de atuação inválida. Selecione uma área de atuação cadastrada.',
+      400,
+    );
+  }
+
+  const area = await prisma.area_atuacao.findFirst({
+    where: {
+      nome: normalizedName
+    },
+    select: { id: true },
+  });
+
+  if (!area) {
+    throw new AppError(
+      'INVALID_AREA_ACTIVITY',
+      'Área de atuação inválida. Selecione uma área de atuação cadastrada.',
+      400,
+    );
+  }
+
+  return area.id;
+}
+
+async function resolveCargoId(
+  cargoId: TherapistTypes.TherapistProfessionalDataInput['cargoId'],
+  cargoNome: string,
+) {
+    if (cargoId != null && cargoId !== '') {
+      const parsedId = Number(cargoId);
+      if (!Number.isNaN(parsedId) && parsedId > 0) {
+        const exists = await prisma.cargo.findUnique({ select: { id: true }, where: { id: parsedId } });
+        if (exists) {
+          return exists.id;
+        }
+      }
+    }
+
+    const normalizedName = cargoNome?.trim();
+    if (!normalizedName) {
+      return null;
+    }
+
+    const cargo = await prisma.cargo.findFirst({
+      where: {
+        nome: normalizedName
+      },
+      select: { id: true },
+    });
+
+    if (!cargo) {
+      throw new AppError(
+        'INVALID_POSITION',
+        'Cargo inválido. Selecione um cargo cadastrado.',
+        400,
+      );
+    }
+
+    return cargo.id;
+}
+
 export async function create(dto: TherapistTypes.TherapistForm) {
   const existsCpf = await prisma.terapeuta.findUnique({ where: { cpf: dto.cpf } });
   if (existsCpf) throw new AppError('CPF_DUPLICADO', 'CPF já cadastrado!', 409);
@@ -12,6 +90,14 @@ export async function create(dto: TherapistTypes.TherapistForm) {
   if (existsEmail) throw new AppError('EMAIL_DUPLICADO', 'E-mail já cadastrado', 409);
 
   const { token, expiry } = generateResetToken();
+
+  const professionalRegistrations = await Promise.all(
+    (dto.dadosProfissionais ?? []).map(async (data) => ({
+      area_atuacao_id: await resolveAreaAtuacaoId(data.areaAtuacaoId, data.areaAtuacao),
+      cargo_id: await resolveCargoId(data.cargoId, data.cargo),
+      numero_conselho: data.numeroConselho || null,
+    })),
+  );
 
   const therapist = await prisma.terapeuta.create ({
     data: {
@@ -61,15 +147,15 @@ export async function create(dto: TherapistTypes.TherapistForm) {
         })) ?? [],
       },
 
-      registro_profissional: {
-        createMany: {
-          data: dto.dadosProfissionais.map((d) => ({
-            area_atuacao: d.areaAtuacao,
-            cargo: d.cargo,
-            numero_conselho: d.numeroConselho,
-          })),
-        },
-      },
+      ...(professionalRegistrations.length
+        ? {
+          registro_profissional: {
+            createMany: {
+              data: professionalRegistrations,
+            },
+          },
+        }
+        : {}),
 
       formacao: {
         create: {
@@ -131,7 +217,7 @@ export async function list():Promise<TherapistTypes.TherapistDB[]> {
     include: {
       endereco: true,
       formacao: { include: { pos_graduacao: true } },
-      registro_profissional: true,
+      registro_profissional: { include: { area_atuacao: true, cargo: true } },
       arquivos: true,
       pessoa_juridica: { include: { endereco: true } },
       disciplina: true,
@@ -145,7 +231,7 @@ export async function getById(therapistId: string) {
     include: {
       endereco: true,
       formacao: { include: { pos_graduacao: true } },
-      registro_profissional: true,
+      registro_profissional: { include: { area_atuacao: true, cargo: true } },
       arquivos: true,
       pessoa_juridica: { include: { endereco: true } },
       disciplina: true,

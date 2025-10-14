@@ -62,8 +62,10 @@ export function normalizeTherapistForm(db: TherapistTypes.TherapistDB) {
         },
 
         dadosProfissionais: db.registro_profissional?.map((r) => ({
-            areaAtuacao: r.area_atuacao ?? '',
-            cargo: r.cargo ?? '',
+            areaAtuacaoId: r.area_atuacao?.id ?? null,
+            areaAtuacao: r.area_atuacao?.nome ?? '',
+            cargoId: r.cargo?.id ?? null,
+            cargo: r.cargo?.nome ?? '',
             numeroConselho: r.numero_conselho ?? '',
         })) ?? [],
 
@@ -78,13 +80,17 @@ export function normalizeTherapistForm(db: TherapistTypes.TherapistDB) {
 }
 
 export function normalizeTherapistSession(db: TherapistTypes.TherapistDB) {
+    const specialties = (db.registro_profissional
+        ?.map((d) => d.area_atuacao?.nome?.trim())
+        .filter((value): value is string => Boolean(value && value.length > 0))
+    ) ?? [];
     return {
         id: db.id,
         nome: db.nome,
         email: db.email,
         telefone: db.telefone ?? db.celular,
         status: db.atividade ? 'ATIVO' : 'INATIVO',
-        especialidade: db.registro_profissional?.[0]?.area_atuacao ?? '',
+        especialidade: db.registro_profissional?.[0]?.area_atuacao?.nome ?? '',
         conselho: 'CRP',
         registroConselho: db.registro_profissional?.[0]?.numero_conselho ?? '',
         avatarUrl: '',
@@ -109,7 +115,7 @@ export function normalizeTherapistSession(db: TherapistTypes.TherapistDB) {
         profissional: {
             cargaHorariaSemanal: 0,
             atendeConvenio: false,
-            especialidades: db.registro_profissional?.map(d => d.area_atuacao) ?? ['Presencial'],
+            especialidades: specialties.length > 0 ? specialties : ['Presencial'],
             valorConsulta: Number(db.valor_hora),
             formasAtendimento: ['Presencial'],
         },

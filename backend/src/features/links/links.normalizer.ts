@@ -88,8 +88,10 @@ export function getAllTherapists(dto: LinkTypes.DBTherapist[]) {
         const address = therapist.endereco;
         const mainTraining = therapist.formacao?.[0] ?? null;
         const professionalData = therapist.registro_profissional?.map((register) => ({
-            areaAtuacao: register.area_atuacao,
-            cargo: register.cargo ?? '',
+            areaAtuacaoId: register.area_atuacao?.id ?? null,
+            areaAtuacao: register.area_atuacao?.nome ?? '',
+            cargoId: register.cargo?.id ?? null,
+            cargo: register.cargo?.nome ?? '',
             numeroConselho: register.numero_conselho ?? undefined,
         })) ?? [];
         const postgraduates = mainTraining?.pos_graduacao?.map((pg) => ({

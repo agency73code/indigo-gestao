@@ -1,12 +1,12 @@
 import type { Request, Response, NextFunction } from "express";
 import * as clientService from "../features/client/client.service.js";
-import * as clientNormalize from "../features/client/client.normalizer.js"
+import * as clientNormalize from "../features/client/client.normalizer.js";
 import { sendWelcomeEmail } from "../utils/mail.util.js";
-import { ClientSchema } from "../schemas/client.schema.js";
+import * as clientSchema from "../schemas/client.schema.js";
 
 export async function create(req: Request, res: Response, next: NextFunction) {
   try {
-    const parsed = ClientSchema.parse(req.body);
+    const parsed = clientSchema.ClientSchema.parse(req.body);
     const client = await clientService.create(parsed);
 
     if (!client) return res.status(500).json({ success: false, message: 'Erro ao cadastrar cliente' });

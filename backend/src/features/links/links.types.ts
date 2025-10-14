@@ -33,9 +33,19 @@ export interface DBClient {
     enderecos: DBClientAddress[];
 }
 
+export interface DBAreaAtuacao {
+    id: number;
+    nome: string;
+}
+
+export interface DBCargo {
+    id: number;
+    nome: string;
+}
+
 export interface DBProfessionalRegistration {
-    area_atuacao: string;
-    cargo: string | null;
+    area_atuacao: DBAreaAtuacao;
+    cargo: DBCargo | null;
     numero_conselho: string | null;
 }
 
