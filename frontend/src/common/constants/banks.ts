@@ -52,7 +52,7 @@ export const FALLBACK_BRAZILIAN_BANKS: Bank[] = [
  * Exemplo: "Banco do Brasil (001)"
  */
 export function formatBankLabel(bank: Bank): string {
-    const displayName = bank.fullName ?? bank.name;
+    const displayName = bank.name ?? bank.name;
     if (!bank.code) return displayName;
     return `${displayName} (${bank.code})`;
 }

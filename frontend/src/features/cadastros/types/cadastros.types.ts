@@ -36,7 +36,9 @@ export interface Terapeuta {
     // Dados profissionais
     dadosProfissionais: Array<{
         areaAtuacao: string;
+        areaAtuacaoId?: number | string | null;
         cargo: string;
+        cargoId?: number | string | null;
         numeroConselho?: string;
     }>;
 

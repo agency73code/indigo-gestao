@@ -13,7 +13,7 @@ export async function createLink(req: Request<unknown, unknown, LinkTypes.Create
             startDate: body.startDate,
             endDate: body.endDate,
             notes: body.notes,
-            coTherapistActuation: body.coTherapistActuation,
+            actuationArea: body.actuationArea,
         });
 
         const normalized = LinkNormalizer.normalizeLink(created);
@@ -33,7 +33,7 @@ export async function updateLink(req: Request<unknown, unknown, LinkTypes.Update
             endDate: body.endDate,
             notes: body.notes,
             status: body.status,
-            coTherapistActuation: body.coTherapistActuation,
+            actuationArea: body.actuationArea,
         });
 
         const normalized = LinkNormalizer.normalizeLink(updated);

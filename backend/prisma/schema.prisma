@@ -8,13 +8,17 @@ datasource db {
 }
 
 model area_atuacao {
-  id                     Int                      @id @default(autoincrement())
-  nome                   String                   @db.VarChar(100)
+  id                      Int                      @id @default(autoincrement())
+  nome                    String                   @db.VarChar(100)
+
+  registro_profissional   registro_profissional[]
 }
 
 model cargo {
-  id              Int               @id @default(autoincrement())
-  nome            String            @db.VarChar(100)
+  id                      Int               @id @default(autoincrement())
+  nome                    String            @db.VarChar(100)
+
+  registro_profissional   registro_profissional[]
 }
 
 model cliente {
@@ -243,13 +247,17 @@ model pos_graduacao {
 
 model registro_profissional {
   id                    Int                       @id @default(autoincrement())
-  area_atuacao          String
-  cargo                 String?
+  area_atuacao_id       Int
+  cargo_id              Int?
   numero_conselho       String?
   terapeuta_id          String
 
   terapeuta             terapeuta                 @relation(fields: [terapeuta_id], references: [id])
-  @@index([area_atuacao])
+  area_atuacao          area_atuacao              @relation(fields: [area_atuacao_id], references: [id])
+  cargo                 cargo?                    @relation(fields: [cargo_id], references: [id])
+
+  @@index([area_atuacao_id])
+  @@index([cargo_id])
 }
 
 model pessoa_juridica {
@@ -356,7 +364,7 @@ model terapeuta_cliente {
   data_inicio         DateTime
   data_fim            DateTime?
   observacoes         String?             @db.Text
-  atuacao_coterapeuta String?
+  area_atuacao        String?
   criado_em           DateTime            @default(now())
   atualizado_em       DateTime            @updatedAt
 

@@ -86,7 +86,11 @@ export const therapistSchema = z.object({
   dadosProfissionais: z.array(
     z.object({
       areaAtuacao: z.string(),
+      areaAtuacaoId: z.union([z.number().int().positive(), z.string().min(1)]),
       cargo: z.string(),
+      cargoId: z.union([z.number().int().positive(), z.string().min(1)])
+        .nullable()
+        .optional(),
       numeroConselho: z.string(),
     })
   ),

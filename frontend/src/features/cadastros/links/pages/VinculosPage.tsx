@@ -96,6 +96,7 @@ export default function VinculosPage() {
             startDate: new Date().toISOString(),
             status: 'active' as const,
             notes: '',
+            actuationArea: null,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
             _isNewTherapistCreation: true, // Flag especial para identificar criação
