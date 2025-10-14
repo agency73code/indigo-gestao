@@ -20,6 +20,7 @@ export type SessionState = {
     programId: string | null;
     attempts: SessionAttempt[];
     summary: SessionSummary;
+    notes?: string; // Observações da sessão
 };
 
 // Reutilizando tipos existentes

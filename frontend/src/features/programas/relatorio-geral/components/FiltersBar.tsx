@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/ui/card';
 import { Button } from '@/ui/button';
 import { Label } from '@/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import { DateField } from '@/common/components/layout/DateField';
 import { ChevronDown, ChevronUp, Filter } from 'lucide-react';
 import type { Filters } from '../types';
@@ -18,30 +17,24 @@ export function FiltersBar({ value, onChange }: FiltersBarProps) {
     const [isExpanded, setIsExpanded] = useState(false);
     const [terapeutas, setTerapeutas] = useState<{ id: string; nome: string }[]>([
         // mock inicial
-        { id: "ter-1", nome: "Dr. Ana Silva" },
-        { id: "ter-2", nome: "Dr. Carlos Mendes" },
-    ]);
-    const [pacientes, setPacientes] = useState<{ id: string; nome: string }[]>([
-        { id: "pac-1", nome: "João Silva" },
-        { id: "pac-2", nome: "Maria Santos" },
-        { id: "pac-3", nome: "Pedro Oliveira" },
+        { id: 'ter-1', nome: 'Dr. Ana Silva' },
+        { id: 'ter-2', nome: 'Dr. Carlos Mendes' },
     ]);
     const [programas, setProgramas] = useState<{ id: string; nome: string }[]>([
-        { id: "prog-1", nome: "Desenvolvimento Cognitivo" },
-        { id: "prog-2", nome: "Habilidades Sociais" },
-        { id: "prog-3", nome: "Comunicação" },
+        { id: 'prog-1', nome: 'Desenvolvimento Cognitivo' },
+        { id: 'prog-2', nome: 'Habilidades Sociais' },
+        { id: 'prog-3', nome: 'Comunicação' },
     ]);
     const [estimulos, setEstimulos] = useState<{ id: string; nome: string }[]>([
-        { id: "est-1", nome: "Contar até 10" },
-        { id: "est-2", nome: "Identificar cores" },
-        { id: "est-3", nome: "Formar palavras" },
+        { id: 'est-1', nome: 'Contar até 10' },
+        { id: 'est-2', nome: 'Identificar cores' },
+        { id: 'est-3', nome: 'Formar palavras' },
     ]);
 
     useEffect(() => {
-        fetchAndSet("/api/terapeutas/relatorio", setTerapeutas, "terapeutas");
-        fetchAndSet("/api/clientes/relatorios", setPacientes, "pacientes");
-        fetchAndSet("/api/ocp/reports/filters/programs", setProgramas, "programas");
-        fetchAndSet("/api/ocp/reports/filters/stimulus", setEstimulos, "estimulos");
+        fetchAndSet('/api/terapeutas/relatorio', setTerapeutas, 'terapeutas');
+        fetchAndSet('/api/ocp/reports/filters/programs', setProgramas, 'programas');
+        fetchAndSet('/api/ocp/reports/filters/stimulus', setEstimulos, 'estimulos');
     }, []);
 
     const updateFilter = (key: keyof Filters, newValue: any) => {
@@ -79,22 +72,7 @@ export function FiltersBar({ value, onChange }: FiltersBarProps) {
             </CardHeader>
 
             <CardContent className={`space-y-4 ${!isExpanded ? 'hidden md:block' : ''}`}>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {/* Paciente */}
-                    <div className="space-y-2">
-                        <Label htmlFor="paciente">Cliente *</Label>
-                        <SearchableSelect
-                            value={value.pacienteId || ''}
-                            options={pacientes.map((p) => ({
-                                id: p.id,
-                                nome: p.nome,
-                            }))}
-                            placeholder="Selecione o cliente"
-                            emptyMessage="Nenhum cliente encontrado"
-                            onSelect={(id) => updateFilter('pacienteId', id)}
-                        />
-                    </div>
-
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     {/* Período */}
                     <div className="space-y-2">
                         <Label htmlFor="periodo">Período</Label>
@@ -124,35 +102,7 @@ export function FiltersBar({ value, onChange }: FiltersBarProps) {
                             onSelect={(id) => updateFilter('programaId', id)}
                         />
                     </div>
-                </div>
 
-                {/* Período customizado */}
-                {value.periodo.mode === 'custom' && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t">
-                        <div className="space-y-2">
-                            <Label htmlFor="dataInicio">Data início</Label>
-                            <DateField
-                                value={value.periodo.start || ''}
-                                onChange={(iso) => updatePeriodo('start', iso)}
-                                placeholder="Selecione a data início"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="dataFim">Data fim</Label>
-                            <DateField
-                                value={value.periodo.end || ''}
-                                onChange={(iso) => updatePeriodo('end', iso)}
-                                placeholder="Selecione a data fim"
-                                minDate={
-                                    value.periodo.start ? new Date(value.periodo.start) : undefined
-                                }
-                            />
-                        </div>
-                    </div>
-                )}
-
-                {/* Filtros adicionais */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2 border-t">
                     {/* Estímulo */}
                     <div className="space-y-2">
                         <Label htmlFor="estimulo">Estímulo</Label>
@@ -182,22 +132,32 @@ export function FiltersBar({ value, onChange }: FiltersBarProps) {
                             onSelect={(id) => updateFilter('terapeutaId', id)}
                         />
                     </div>
+                </div>
 
-                    {/* Comparar */}
-                    <div className="space-y-2">
-                        <Label htmlFor="comparar">Comparar com período anterior</Label>
-                        <div className="flex items-center space-x-2">
-                            <Checkbox
-                                id="comparar"
-                                checked={value.comparar || false}
-                                onCheckedChange={(checked) => updateFilter('comparar', !!checked)}
+                {/* Período customizado */}
+                {value.periodo.mode === 'custom' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t">
+                        <div className="space-y-2">
+                            <Label htmlFor="dataInicio">Data início</Label>
+                            <DateField
+                                value={value.periodo.start || ''}
+                                onChange={(iso) => updatePeriodo('start', iso)}
+                                placeholder="Selecione a data início"
                             />
-                            <span className="text-sm text-muted-foreground">
-                                {value.comparar ? 'Ativado' : 'Desativado'}
-                            </span>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="dataFim">Data fim</Label>
+                            <DateField
+                                value={value.periodo.end || ''}
+                                onChange={(iso) => updatePeriodo('end', iso)}
+                                placeholder="Selecione a data fim"
+                                minDate={
+                                    value.periodo.start ? new Date(value.periodo.start) : undefined
+                                }
+                            />
                         </div>
                     </div>
-                </div>
+                )}
             </CardContent>
         </Card>
     );

@@ -10,6 +10,7 @@ import {
     StimuliPanel,
     AttemptsRegister,
     SessionSummary,
+    SessionObservations,
     SaveBar,
 } from '../components/index.ts';
 import {
@@ -70,6 +71,7 @@ export default function CadastroSessaoPage() {
             independenceRate: 0,
             totalAttempts: 0,
         },
+        notes: '',
     });
 
     // Estados de carregamento
@@ -93,6 +95,7 @@ export default function CadastroSessaoPage() {
             // Se programId estiver na URL, também carregar os detalhes do programa
             loadProgramData(programId);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchParams]);
 
     // Carregar dados do paciente
@@ -206,6 +209,13 @@ export default function CadastroSessaoPage() {
         });
     };
 
+    const handleNotesChange = (value: string) => {
+        setSessionState((prev) => ({
+            ...prev,
+            notes: value,
+        }));
+    };
+
     const handleSave = async () => {
         if (!canSave) return;
 
@@ -217,6 +227,7 @@ export default function CadastroSessaoPage() {
                 patientId: sessionState.patientId!,
                 programId: sessionState.programId!,
                 attempts: sessionState.attempts,
+                notes: sessionState.notes,
             });
 
             // Toast de confirmação com mensagem focada na experiência do usuário
@@ -317,6 +328,12 @@ export default function CadastroSessaoPage() {
                                 program={programDetail}
                                 attempts={sessionState.attempts}
                                 onAddAttempt={handleAddAttempt}
+                            />
+
+                            {/* Observações da sessão */}
+                            <SessionObservations
+                                notes={sessionState.notes || ''}
+                                onNotesChange={handleNotesChange}
                             />
 
                             {/* Registro de tentativas */}

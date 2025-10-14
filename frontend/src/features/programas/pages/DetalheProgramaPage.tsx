@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -13,8 +13,9 @@ import {
     ActionBar,
     ErrorBanner,
 } from '../detalhe-ocp/index';
-import { fetchProgramById, fetchRecentSessions } from '../detalhe-ocp/services';
+import { fetchProgramById, fetchRecentSessions, fetchProgramChart } from '../detalhe-ocp/services';
 import type { ProgramDetail, SessionListItem } from '../detalhe-ocp/types';
+import type { SerieLinha } from '../relatorio-geral/types';
 
 export default function DetalheProgramaPage() {
     const { programaId } = useParams<{ programaId: string }>();
@@ -22,11 +23,13 @@ export default function DetalheProgramaPage() {
 
     const [program, setProgram] = useState<ProgramDetail | null>(null);
     const [sessions, setSessions] = useState<SessionListItem[]>([]);
+    const [chartData, setChartData] = useState<SerieLinha[]>([]);
     const [loading, setLoading] = useState(true);
+    const [chartLoading, setChartLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [refreshKey, setRefreshKey] = useState<number>(Date.now());
 
-    const loadData = async () => {
+    const loadData = useCallback(async () => {
         if (!programaId) {
             setError('ID do programa nao encontrado.');
             setLoading(false);
@@ -45,21 +48,33 @@ export default function DetalheProgramaPage() {
             setProgram(programData);
             setSessions(sessionsData);
             setRefreshKey(Date.now());
+
+            // Carregar dados do gráfico em paralelo (não bloqueia a página)
+            setChartLoading(true);
+            fetchProgramChart(programaId)
+                .then((data) => {
+                    setChartData(data);
+                    setChartLoading(false);
+                })
+                .catch((err) => {
+                    console.error('Erro ao carregar gráfico:', err);
+                    setChartLoading(false);
+                });
         } catch (err) {
             console.error('Erro ao carregar dados do programa:', err);
             setError(err instanceof Error ? err.message : 'Erro desconhecido');
         } finally {
             setLoading(false);
         }
-    };
-
-    useEffect(() => {
-        loadData();
     }, [programaId]);
 
     useEffect(() => {
         loadData();
-    }, [location.pathname, programaId]);
+    }, [programaId, loadData]);
+
+    useEffect(() => {
+        loadData();
+    }, [location.pathname, programaId, loadData]);
 
     if (loading) {
         return (
@@ -109,10 +124,16 @@ export default function DetalheProgramaPage() {
                 <SessionsList sessions={sessions} program={program} />
 
                 {/* Preview da ultima sessao (se disponivel) */}
-                {lastSession && (<LastSessionPreview lastSession={lastSession} patientId={program.patientId} />)}
+                {lastSession && (
+                    <LastSessionPreview lastSession={lastSession} patientId={program.patientId} />
+                )}
 
                 {/* Resumo com metricas gerais */}
-                <SummaryCard sessions={sessions} />
+                <SummaryCard
+                    sessions={sessions}
+                    chartData={chartData}
+                    chartLoading={chartLoading}
+                />
             </div>
 
             {/* Barra de acoes fixa no rodape */}
@@ -122,4 +143,3 @@ export default function DetalheProgramaPage() {
         </div>
     );
 }
-

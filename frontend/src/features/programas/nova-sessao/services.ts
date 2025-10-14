@@ -34,13 +34,22 @@ export async function getProgramDetail(programId: string): Promise<ProgramDetail
     }
 }
 
-export async function saveSession(sessionData: { patientId: string; programId: string; attempts: SessionState['attempts'] }): Promise<{ id: string }> {
+export async function saveSession(sessionData: { 
+    patientId: string; 
+    programId: string; 
+    attempts: SessionState['attempts'];
+    notes?: string;
+}): Promise<{ id: string }> {
     try {
         const res = await fetch(`/api/ocp/programs/${sessionData.programId}/sessions`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
-            body: JSON.stringify({ patientId: sessionData.patientId, attempts: sessionData.attempts }),
+            body: JSON.stringify({ 
+                patientId: sessionData.patientId, 
+                attempts: sessionData.attempts,
+                notes: sessionData.notes,
+            }),
         });
         
         if (!res.ok) {

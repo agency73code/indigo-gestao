@@ -1,12 +1,21 @@
-import { BarChart3, TrendingUp, Hash } from 'lucide-react';
+import { BarChart3, CircleHelp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { SessionListItem } from '../types';
+import type { SerieLinha } from '../../relatorio-geral/types';
+import PerformanceChart from './PerformanceChart';
 
 interface SummaryCardProps {
     sessions: SessionListItem[];
+    chartData?: SerieLinha[];
+    chartLoading?: boolean;
 }
 
-export default function SummaryCard({ sessions }: SummaryCardProps) {
+export default function SummaryCard({
+    sessions,
+    chartData,
+    chartLoading = false,
+}: SummaryCardProps) {
     if (sessions.length === 0) {
         return null;
     }
@@ -47,69 +56,114 @@ export default function SummaryCard({ sessions }: SummaryCardProps) {
     };
 
     return (
-        <Card className="rounded-[5px] px-6 py-2 md:px-8 md:py-10 lg:px-8 lg:py-2">
-            <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
-                <CardTitle className="text-base flex items-center gap-2">
-                    <BarChart3 className="h-4 w-4" />
-                    Resumo Geral
-                </CardTitle>
-            </CardHeader>
-            <CardContent className="pb-3 sm:pb-6">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    {/* Acerto Geral */}
-                    <div className="text-center p-4 bg-muted/50 rounded-md">
-                        <div className="flex items-center justify-center gap-2 mb-2">
-                            <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                                Acerto Geral
-                            </span>
+        <div className="space-y-4">
+            {/* Grid de três cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Card 1: Acerto Geral */}
+                <Card className="rounded-[5px]">
+                    <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                            <CardTitle className="text-base font-semibold">Acerto geral</CardTitle>
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <CircleHelp className="h-4 w-4 text-muted-foreground cursor-help" />
+                                    </TooltipTrigger>
+                                    <TooltipContent className="max-w-[250px]">
+                                        <p className="text-xs">
+                                            Percentual médio de acertos nas últimas sessões deste
+                                            programa. Inclui respostas corretas e respostas com
+                                            ajuda.
+                                        </p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
                         </div>
-                        <div className="text-xl font-bold text-green-600">
+                        <p className="text-sm text-muted-foreground mt-1">
+                            Média das últimas {validSessions.length} sessões
+                        </p>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-4xl font-bold mb-2 text-green-600">
                             {formatPercentage(overallAverage)}
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                            Média das últimas {validSessions.length} sessões
-                        </div>
-                    </div>
+                    </CardContent>
+                </Card>
 
-                    {/* Taxa de Independência */}
-                    <div className="text-center p-4 bg-muted/50 rounded-md">
-                        <div className="flex items-center justify-center gap-2 mb-2">
-                            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                                Independência
-                            </span>
+                {/* Card 2: Independência */}
+                <Card className="rounded-[5px]">
+                    <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                            <CardTitle className="text-base font-semibold">Independência</CardTitle>
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <CircleHelp className="h-4 w-4 text-muted-foreground cursor-help" />
+                                    </TooltipTrigger>
+                                    <TooltipContent className="max-w-[250px]">
+                                        <p className="text-xs">
+                                            Taxa média de independência nas últimas sessões.
+                                            Representa o percentual de respostas corretas sem
+                                            qualquer ajuda do terapeuta.
+                                        </p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
                         </div>
-                        <div className="text-xl font-bold text-blue-600">
+                        <p className="text-sm text-muted-foreground mt-1">Taxa média</p>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-4xl font-bold mb-2 text-blue-600">
                             {formatPercentage(independenceAverage)}
                         </div>
-                        <div className="text-xs text-muted-foreground">Taxa média</div>
-                    </div>
+                    </CardContent>
+                </Card>
 
-                    {/* Total de Tentativas */}
-                    <div className="text-center p-4 bg-muted/50 rounded-md">
-                        <div className="flex items-center justify-center gap-2 mb-2">
-                            <Hash className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                                Tentativas
-                            </span>
+                {/* Card 3: Tentativas */}
+                <Card className="rounded-[5px]">
+                    <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                            <CardTitle className="text-base font-semibold">Tentativas</CardTitle>
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <CircleHelp className="h-4 w-4 text-muted-foreground cursor-help" />
+                                    </TooltipTrigger>
+                                    <TooltipContent className="max-w-[250px]">
+                                        <p className="text-xs">
+                                            Total acumulado de tentativas registradas em todas as
+                                            sessões deste programa. Quanto mais tentativas, mais
+                                            dados para análise do progresso.
+                                        </p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
                         </div>
-                        <div className="text-xl font-bold text-purple-600">{totalAttempts}</div>
-                        <div className="text-xs text-muted-foreground">
+                        <p className="text-sm text-muted-foreground mt-1">
                             Em {totalSessions} sessões
-                        </div>
-                    </div>
-                </div>
-
-                {validSessions.length === 0 && (
-                    <div className="text-center py-4">
-                        <p className="text-sm text-muted-foreground">
-                            Registre mais sessões para ver as estatísticas.
                         </p>
-                    </div>
-                )}
-            </CardContent>
-            
-        </Card>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-4xl font-bold mb-2">{totalAttempts}</div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {validSessions.length === 0 && (
+                <div className="text-center py-8 border-2 border-dashed rounded-[5px]">
+                    <BarChart3 className="h-8 w-8 mx-auto mb-2 opacity-30 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">
+                        Registre mais sessões para ver as estatísticas.
+                    </p>
+                </div>
+            )}
+
+            {/* Gráfico de Evolução do Desempenho */}
+            {chartData && chartData.length > 0 && (
+                <div className="mt-6">
+                    <PerformanceChart data={chartData} loading={chartLoading} />
+                </div>
+            )}
+        </div>
     );
 }

@@ -10,9 +10,10 @@ export { default as SummaryCard } from './components/SummaryCard';
 export { default as ActionBar } from './components/ActionBar';
 export { default as ErrorBanner } from './components/ErrorBanner';
 export { default as EmptyState } from './components/EmptyState';
+export { default as PerformanceChart } from './components/PerformanceChart';
 
 // Types exports
 export type { ProgramDetail, SessionListItem } from './types';
 
 // Services exports
-export { fetchProgramById, fetchRecentSessions } from './services';
+export { fetchProgramById, fetchRecentSessions, fetchProgramChart } from './services';

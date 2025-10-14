@@ -15,7 +15,7 @@ export default function GoalSection({ program }: GoalSectionProps) {
             <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                 <CardTitle className="text-base flex items-center gap-2">
                     <Target className="h-4 w-4" />
-                    Objetivo do Programa
+                    Objetivo do Programa a Longo Prazo
                 </CardTitle>
             </CardHeader>
             <CardContent className="pb-3 sm:pb-6 space-y-4">

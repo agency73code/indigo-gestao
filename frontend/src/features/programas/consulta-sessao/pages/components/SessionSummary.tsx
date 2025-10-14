@@ -1,42 +1,29 @@
-import { TrendingUp, CircleHelp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import type { SessionSummary } from '../types';
+import { TrendingUp, CircleHelp } from 'lucide-react';
+import type { Counts, StatusKind } from '../helpers';
+import { total, ti, getStatusConfig } from '../helpers';
 
 interface SessionSummaryProps {
-    summary: SessionSummary;
+    counts: Counts;
+    duration?: string | null;
+    planned?: number;
+    worked: number;
+    date: string;
+    status: StatusKind;
 }
 
-export default function SessionSummary({ summary }: SessionSummaryProps) {
-    const { overallAccuracy, independenceRate, totalAttempts } = summary;
-
-    if (totalAttempts === 0) {
-        return (
-            <div className="space-y-4 mb-24 sm:mb-0">
-                {/* Título da seção */}
-                <div className="flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5 text-muted-foreground" />
-                    <h2 className="text-lg font-semibold">Resumo da Sessão</h2>
-                </div>
-                <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-[5px]">
-                    <TrendingUp className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">Resumo será exibido após registrar tentativas</p>
-                </div>
-            </div>
-        );
-    }
+export default function SessionSummary({ counts, planned, worked, status }: SessionSummaryProps) {
+    const totalTentativas = total(counts);
+    const tiPercent = ti(counts);
+    const statusConfig = getStatusConfig(status);
 
     return (
-        <div className="space-y-4 mb-32 lg:mb-0">
-            {/* Título da seção */}
-            <div className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-muted-foreground" />
-                <h2 className="text-lg font-semibold">Resumo da Sessão</h2>
-            </div>
-
+        <div className="space-y-4">
             {/* Grid de três cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Card 1: Total de Tentativas */}
+                {/* Card 1: Tentativas */}
                 <Card className="rounded-[5px]">
                     <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
@@ -60,15 +47,19 @@ export default function SessionSummary({ summary }: SessionSummaryProps) {
                         </p>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-3xl font-bold">{totalAttempts}</div>
+                        <div className="text-4xl font-bold mb-3" data-testid="sess-tentativas">
+                            {totalTentativas}
+                        </div>
                     </CardContent>
                 </Card>
 
-                {/* Card 2: Acerto geral */}
+                {/* Card 2: Estímulos trabalhados */}
                 <Card className="rounded-[5px]">
                     <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
-                            <CardTitle className="text-base font-semibold">Acerto geral</CardTitle>
+                            <CardTitle className="text-base font-semibold">
+                                Estímulos trabalhados
+                            </CardTitle>
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
@@ -76,51 +67,73 @@ export default function SessionSummary({ summary }: SessionSummaryProps) {
                                     </TooltipTrigger>
                                     <TooltipContent className="max-w-[220px]">
                                         <p className="text-xs">
-                                            Percentual de tentativas independentes em relação ao
-                                            total. Quanto maior, melhor o desempenho geral do
-                                            cliente.
+                                            Quantidade de estímulos trabalhados em relação ao total
+                                            planejado para esta sessão do programa.
                                         </p>
                                     </TooltipContent>
                                 </Tooltip>
                             </TooltipProvider>
                         </div>
                         <p className="text-sm text-muted-foreground mt-1">
-                            Tentativas independentes
+                            {planned
+                                ? `De ${planned} estímulos planejados`
+                                : 'Estímulos desta sessão'}
                         </p>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-3xl font-bold text-green-600">
-                            {Math.round(overallAccuracy)}%
+                        <div className="text-4xl font-bold mb-3" data-testid="sess-estimulos">
+                            {planned ? `${worked}/${planned}` : worked}
                         </div>
                     </CardContent>
                 </Card>
 
-                {/* Card 3: Independência */}
+                {/* Card 3: Status geral */}
                 <Card className="rounded-[5px]">
                     <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
-                            <CardTitle className="text-base font-semibold">Independência</CardTitle>
+                            <CardTitle className="text-base font-semibold">Status geral</CardTitle>
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
                                         <CircleHelp className="h-4 w-4 text-muted-foreground cursor-help" />
                                     </TooltipTrigger>
                                     <TooltipContent className="max-w-[250px]">
+                                        <p className="text-xs font-medium mb-1">
+                                            Taxa de Independência (TI)
+                                        </p>
                                         <p className="text-xs">
-                                            Taxa de respostas corretas sem ajuda do terapeuta.
-                                            Indica o nível de autonomia do cliente nas tarefas
-                                            propostas.
+                                            Percentual de respostas independentes em relação ao
+                                            total. Quanto maior, melhor o desempenho do cliente.
+                                        </p>
+                                        <p className="text-xs mt-2 opacity-80">
+                                            Cálculo: INDEP ÷ (ERRO+AJUDA+INDEP)
                                         </p>
                                     </TooltipContent>
                                 </Tooltip>
                             </TooltipProvider>
                         </div>
-                        <p className="text-sm text-muted-foreground mt-1">Respostas sem ajuda</p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                            Taxa de independência da sessão
+                        </p>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-3xl font-bold text-blue-600">
-                            {Math.round(independenceRate)}%
-                        </div>
+                        <Badge
+                            variant="outline"
+                            className={`text-lg font-semibold px-3 py-2 gap-2 mb-2 ${statusConfig.cls}`}
+                            data-testid="sess-status"
+                        >
+                            <TrendingUp className="h-5 w-5" />
+                            <span className="whitespace-nowrap">
+                                {status === 'insuficiente'
+                                    ? statusConfig.label
+                                    : `${statusConfig.label} — ${tiPercent}%`}
+                            </span>
+                        </Badge>
+                        {status !== 'insuficiente' && (
+                            <p className="text-sm text-muted-foreground">
+                                {counts.indep} de {totalTentativas} independentes
+                            </p>
+                        )}
                     </CardContent>
                 </Card>
             </div>

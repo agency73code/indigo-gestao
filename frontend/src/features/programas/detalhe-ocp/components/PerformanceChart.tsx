@@ -1,5 +1,6 @@
-'use client';
+﻿'use client';
 
+import type { ReactNode } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     ChartContainer,
@@ -8,41 +9,51 @@ import {
     type ChartConfig,
 } from '@/components/ui/chart';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ReferenceLine, Legend } from 'recharts';
-import type { SerieLinha } from '../types';
+import type { SerieLinha } from '../../relatorio-geral/types';
 import { CardDescription } from '@/ui/card';
 
 const chartConfig = {
     acerto: {
-        label: '✅ Acerto Geral',
+        label: 'Pct. Acerto Geral',
         color: 'hsl(var(--chart-1))',
     },
     independencia: {
-        label: '🖐️ Independência',
+        label: 'Pct. Independência',
         color: 'hsl(var(--chart-2))',
     },
     erro: {
-        label: '❌ Erro',
+        label: 'Pct. Erro',
         color: '#ef4444',
     },
 } satisfies ChartConfig;
 
-interface DualLineProgressProps {
+interface PerformanceChartProps {
     data: SerieLinha[];
     loading?: boolean;
+    title?: string;
+    description?: ReactNode;
+    metaLabel?: string;
+    className?: string;
 }
 
-// Função para adicionar o cálculo de erro aos dados
 const addErrorData = (data: SerieLinha[]) => {
     return data.map((item) => ({
         ...item,
-        erro: 100 - item.acerto, // Erro = 100% - Acerto%
+        erro: 100 - item.acerto,
     }));
 };
 
-export function DualLineProgress({ data, loading = false }: DualLineProgressProps) {
+export default function PerformanceChart({
+    data,
+    loading = false,
+    title,
+    description,
+    metaLabel,
+    className,
+}: PerformanceChartProps) {
     if (loading) {
         return (
-            <Card>
+            <Card className="rounded-[5px]">
                 <CardHeader>
                     <CardTitle>Evolução do Desempenho</CardTitle>
                 </CardHeader>
@@ -53,24 +64,39 @@ export function DualLineProgress({ data, loading = false }: DualLineProgressProp
         );
     }
 
-    // Adicionar campo de erro calculado aos dados
+    if (!data || data.length === 0) {
+        return null;
+    }
+
     const dataWithError = addErrorData(data);
+    const chartTitle = title ?? 'Evolução de desempenho do programa';
+    const chartMetaLabel = metaLabel ?? 'Meta: Convergência';
+
+    let descriptionContent: ReactNode;
+    if (description === undefined) {
+        descriptionContent = (
+            <CardDescription>
+                <strong>Meta: convergência.</strong> Quando <em>Acerto</em> e <em>Independência</em>{' '}
+                se sobrepõem, <strong>100% dos acertos foram independentes</strong>. Acompanhe o{' '}
+                <em>gap de autonomia</em>: quanto menor, melhor.
+            </CardDescription>
+        );
+    } else if (typeof description === 'string') {
+        descriptionContent = <CardDescription>{description}</CardDescription>;
+    } else {
+        descriptionContent = description;
+    }
 
     return (
-        <Card className="px-1 py-0 md:px-8 md:py-10 lg:px-8 lg:py-8 mx-0">
+        <Card className={`px-1 py-0 md:px-8 md:py-10 lg:px-8 lg:py-8 mx-0 rounded-[5px] ${className ?? ''}`}>
             <CardHeader>
-                <div className="flex items-center gap-2 mb-2">
-                    <CardTitle>Evolução do desempenho</CardTitle>
+                <div className="mb-2 flex items-center gap-2">
+                    <CardTitle>{chartTitle}</CardTitle>
                     <span className="rounded-full border px-2 py-0.5 text-xs text-muted-foreground">
-                        Meta: Convergência
+                        {chartMetaLabel}
                     </span>
                 </div>
-                <CardDescription>
-                    <strong>Meta: convergência.</strong> Quando <em>Acerto</em> e{' '}
-                    <em>Independência</em> se sobrepõem,
-                    <strong> 100% dos acertos foram independentes</strong>. Acompanhe o{' '}
-                    <em>gap de autonomia</em>: quanto menor, melhor.
-                </CardDescription>
+                {descriptionContent}
             </CardHeader>
             <CardContent className="pt-6">
                 <ChartContainer config={chartConfig} className="aspect-[16/9] h-[300px] w-full">
@@ -107,7 +133,6 @@ export function DualLineProgress({ data, loading = false }: DualLineProgressProp
                             }
                         />
 
-                        {/* Linhas guia de porcentagem */}
                         <ReferenceLine
                             y={0}
                             stroke="var(--muted-foreground)"
@@ -140,11 +165,11 @@ export function DualLineProgress({ data, loading = false }: DualLineProgressProp
                         />
                         <Legend
                             content={({ payload }) => (
-                                <div className="flex justify-center gap-6 mt-4">
+                                <div className="mt-4 flex justify-center gap-6">
                                     {payload?.map((entry, index) => (
                                         <div key={index} className="flex items-center gap-2">
                                             <div
-                                                className="w-3 h-3 rounded-sm"
+                                                className="h-3 w-3 rounded-sm"
                                                 style={{ backgroundColor: entry.color }}
                                             />
                                             <span className="text-sm text-muted-foreground">
@@ -164,7 +189,6 @@ export function DualLineProgress({ data, loading = false }: DualLineProgressProp
                             dot={{ r: 3 }}
                             isAnimationActive
                         />
-
                         <Line
                             type="linear"
                             dataKey="independencia"
@@ -174,7 +198,6 @@ export function DualLineProgress({ data, loading = false }: DualLineProgressProp
                             dot={{ r: 3 }}
                             isAnimationActive
                         />
-
                         <Line
                             type="linear"
                             dataKey="erro"
