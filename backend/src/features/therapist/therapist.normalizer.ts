@@ -86,7 +86,7 @@ export function normalizeTherapistForm(db: TherapistTypes.TherapistDB) {
             cep: db.endereco?.cep ?? '',
             rua: db.endereco?.rua ?? '',
             numero: db.endereco?.numero ?? '',
-            complemento: db.endereco?.numero ?? '',
+            complemento: db.endereco?.complemento ?? '',
             bairro: db.endereco?.bairro ?? '',
             cidade: db.endereco?.cidade ?? '',
             estado: db.endereco?.uf ?? '',

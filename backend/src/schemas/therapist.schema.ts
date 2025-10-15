@@ -108,11 +108,17 @@ export const therapistSchema = z.object({
 });
 
 const possuiVeiculoSchema = z.preprocess((v) => {
-  if (v == null || v === '') return undefined;
-  if (typeof v === 'string') return v.trim().toLowerCase();
+  if (v == null) return undefined; // deixa o default atuar
   if (typeof v === 'boolean') return v ? 'sim' : 'nao';
+  if (typeof v === 'string') {
+    const s = v.trim().toLowerCase();
+    if (s === '') return undefined; // "" -> default('nao')
+    // remove acentos: "não" -> "nao"
+    const sAscii = s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return sAscii; // enum valida "sim" | "nao"
+  }
   return v;
-}, z.enum(['sim', 'nao']).default('nao'));
+}, z.enum(['sim', 'nao']).optional().default('nao'));
 
 export const updateTherapistSchema = z
   .object({
@@ -127,7 +133,7 @@ export const updateTherapistSchema = z
       .refine((val) => cpf.isValid(val), 'CPF inválido')
       .optional(),
     dataNascimento: z.coerce.date().optional(),
-    possuiVeiculo: possuiVeiculoSchema.optional(),
+    possuiVeiculo: possuiVeiculoSchema,
     placaVeiculo: z.preprocess((v) => {
       if (v === '' || v == null) return null;
       if (typeof v === 'string') return strip(v).toUpperCase();
