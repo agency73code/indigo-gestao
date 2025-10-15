@@ -77,13 +77,19 @@ export async function uploadFile(req: Request, res: Response) {
     const rootFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
     if (!rootFolderId) {
       return res.status(500).json({ error: 'Pasta raiz do Google Drive não configurada' });
-    } 
+    }
 
     const normalizedCpf = normalizeCpf(cpf);
     const uploads: NormalizedFileMeta[] = [];
 
     // Mantém em cache as pastas para evitar chamadas repetidas ao Drive durante um upload múltiplo.
-    const typeFolderCache = new Map<string, string>();
+    const ownerFolderName = ownerType ? ownerTypeToFolderName(ownerType) : normalizeOwnerFolderName(body.tipo);
+    if (!ownerFolderName) {
+      return res.status(400).json({ error: 'Tipo do proprietário inválido' });
+    }
+
+    const ownerFolderId = await getOrCreateOwnerTypeFolder(ownerFolderName, rootFolderId);
+    const cpfFolderId = await getOrCreateCpfFolder(normalizedCpf, ownerFolderId, rootFolderId);
 
     for (const { file, documentType } of availableFiles) {
       const tipoDocumento = documentType ?? body.tipo_documento ?? body.tipo;
@@ -91,9 +97,6 @@ export async function uploadFile(req: Request, res: Response) {
         return res.status(400).json({ error: 'Tipo de documento não informado' });
       }
 
-      const typeFolderId = typeFolderCache.get(tipoDocumento) ?? (await getOrCreateTypeFolder(tipoDocumento, rootFolderId));
-      typeFolderCache.set(tipoDocumento, typeFolderId);
-      const cpfFolderId = await getOrCreateCpfFolder(normalizedCpf, typeFolderId, rootFolderId);
       const storageMeta = await uploadOrUpdateFile(tipoDocumento, normalizedCpf, file, cpfFolderId, rootFolderId);
 
       let record = null;
@@ -123,6 +126,59 @@ export async function uploadFile(req: Request, res: Response) {
   } catch (error) {
     console.error('Erro upload:', error);
     return res.status(500).json({ error: 'Falha no upload' });
+  }
+}
+
+export async function create(req: Request, res: Response) {
+  try {
+    const body = req.body as { cpf?: string; tipo?: string; tipo_documento?: string };
+    const availableFiles = collectIncomingFiles(req, body.tipo_documento);
+
+    if (availableFiles.length === 0) {
+      return res.status(400).json({ error: 'Nenhum arquivo enviado' });
+    }
+
+    const ownerFolderName = normalizeOwnerFolderName(body.tipo);
+    if (!ownerFolderName) {
+      return res.status(400).json({ error: 'Tipo inválido. Use cliente(s) ou terapeuta(s)' });
+    }
+
+    const cpf = typeof body.cpf === 'string' ? body.cpf : undefined;
+    if (!cpf) {
+      return res.status(400).json({ error: 'CPF é obrigatório' });
+    }
+
+    const rootFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
+    if (!rootFolderId) {
+      return res.status(500).json({ error: 'Pasta raiz do Google Drive não configurada' });
+    }
+
+    const normalizedCpf = normalizeCpf(cpf);
+    const ownerFolderId = await getOrCreateOwnerTypeFolder(ownerFolderName, rootFolderId);
+    const cpfFolderId = await getOrCreateCpfFolder(normalizedCpf, ownerFolderId, rootFolderId);
+
+    const uploads: Array<{
+      tipo: string;
+      arquivo_id: string;
+      mime_type: string;
+      tamanho: number;
+      data_upload: string;
+    }> = [];
+
+    for (const { file, documentType } of availableFiles) {
+      const tipoDocumento = documentType ?? body.tipo_documento;
+      if (!tipoDocumento) {
+        return res.status(400).json({ error: 'Tipo de documento não informado' });
+      }
+
+      const storageMeta = await uploadOrUpdateFile(tipoDocumento, normalizedCpf, file, cpfFolderId, rootFolderId);
+      uploads.push(storageMeta);
+    }
+
+    return res.status(201).json({ arquivos: uploads });
+  } catch (error) {
+    console.error('Erro ao criar pasta e enviar arquivos:', error);
+    return res.status(500).json({ error: 'Falha ao processar arquivos' });
   }
 }
 
@@ -279,16 +335,25 @@ async function resolveCpf({
 function collectIncomingFiles(req: Request, defaultType?: string) {
   const collected: Array<{ file: Express.Multer.File; documentType: string | undefined }> = [];
 
-  if (req.file) {
-    collected.push({ file: req.file, documentType: defaultType });
+  const single = (req as Request & { file?: Express.Multer.File }).file;
+  if (single) {
+    collected.push({ file: single, documentType: defaultType });
     return collected;
   }
 
-  const files = req.file as Record<string, Express.Multer.File[] | undefined> | undefined;
-  if (!files) {
+  const filesEntry = (req as Request & { files?: unknown }).files;
+  if (!filesEntry) {
     return collected;
   }
 
+  if (Array.isArray(filesEntry)) {
+    for (const file of filesEntry) {
+      collected.push({ file, documentType: defaultType });
+    }
+    return collected;
+  }
+
+  const files = filesEntry as Record<string, Express.Multer.File[] | undefined>;
   for (const [fieldName, list] of Object.entries(files)) {
     for (const file of list ?? []) {
       collected.push({ file, documentType: fieldName || defaultType });
@@ -408,13 +473,13 @@ async function uploadOrUpdateFile(
   };
 }
 
-async function getOrCreateTypeFolder(tipo: string, parentFolderId: string) {
+async function getOrCreateOwnerTypeFolder(tipo: string, parentFolderId: string) {
   const existing = await drive.files.list({
     corpora: "drive",
     driveId: parentFolderId,
     includeItemsFromAllDrives: true,
     supportsAllDrives: true,
-    q: `name = '${tipo}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
+    q: `name = '${tipo}' and '${parentFolderId}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
     fields: "files(id, name)",
   });
 
@@ -441,7 +506,7 @@ async function getOrCreateCpfFolder(normalizedCpf: string, parentFolderId: strin
     driveId,
     includeItemsFromAllDrives: true,
     supportsAllDrives: true,
-    q: `name = '${normalizedCpf}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
+    q: `name = '${normalizedCpf}' and '${parentFolderId}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
     fields: "files(id, name, parents)",
   });
 
@@ -464,4 +529,26 @@ async function getOrCreateCpfFolder(normalizedCpf: string, parentFolderId: strin
 
 function normalizeCpf(cpf: string): string {
   return cpf.replace(/[^\d]/g, "");
+}
+
+function ownerTypeToFolderName(ownerType: OwnerType): 'clientes' | 'terapeutas' {
+  return ownerType === 'cliente' ? 'clientes' : 'terapeutas';
+}
+
+function normalizeOwnerFolderName(value:  unknown): 'clientes' | 'terapeutas' | null {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const normalized = value.trim().toLowerCase();
+
+  if (normalized === 'cliente' || normalized === 'clientes') {
+    return 'clientes';
+  }
+
+  if (normalized === 'terapeuta' || normalized === 'terapeutas') {
+    return 'terapeutas';
+  }
+
+  return null;
 }

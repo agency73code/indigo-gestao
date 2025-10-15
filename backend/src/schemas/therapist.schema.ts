@@ -1,6 +1,7 @@
 import z from "zod";
 import { cpf, cnpj } from "cpf-cnpj-validator";
 
+const placaRegex = /^([A-Z]{3}-\d{4}|[A-Z]{3}-?\d[A-Z]\d{2})$/;
 const strip = (val: string) => val.replace(/[^\dA-Za-z]/g, "");
 
 export const therapistSchema = z.object({
@@ -18,7 +19,7 @@ export const therapistSchema = z.object({
   placaVeiculo: z
     .string()
     .toUpperCase()
-    .regex(/^([A-Z]{3}-\d{4}|[A-Z]{3}-?\d[A-Z]\d{2})$/, 'Placa inválida. Use o formato ABC-1234 ou ABC-1D23.')
+    .regex(placaRegex, 'Placa inválida. Use o formato ABC-1234 ou ABC-1D23.')
     .transform(strip)
     .nullable()
     .optional()
@@ -106,6 +107,13 @@ export const therapistSchema = z.object({
   ).optional().default([]),
 });
 
+const possuiVeiculoSchema = z.preprocess((v) => {
+  if (v == null || v === '') return undefined;
+  if (typeof v === 'string') return v.trim().toLowerCase();
+  if (typeof v === 'boolean') return v ? 'sim' : 'nao';
+  return v;
+}, z.enum(['sim', 'nao']).default('nao'));
+
 export const updateTherapistSchema = z
   .object({
     nome: z.string().min(1, 'Nome é obrigatório').optional(),
@@ -119,14 +127,16 @@ export const updateTherapistSchema = z
       .refine((val) => cpf.isValid(val), 'CPF inválido')
       .optional(),
     dataNascimento: z.coerce.date().optional(),
-    possuiVeiculo: z.enum(["sim", "nao"]).optional(),
-    placaVeiculo: z
-      .string()
-      .toUpperCase()
-      .regex(/^([A-Z]{3}-\d{4}|[A-Z]{3}-?\d[A-Z]\d{2})$/, 'Placa inválida. Use o formato ABC-1234 ou ABC-1D23.')
-      .transform(strip)
-      .nullable()
-      .optional(),
+    possuiVeiculo: possuiVeiculoSchema.optional(),
+    placaVeiculo: z.preprocess((v) => {
+      if (v === '' || v == null) return null;
+      if (typeof v === 'string') return strip(v).toUpperCase();
+      return v;
+    },
+      z.string()
+        .regex(placaRegex, 'Placa inválida. Use o formato ABC-1234 ou ABC-1D23.')
+        .nullable()
+    ).optional(),
     modeloVeiculo: z.string().nullable().optional(),
     banco: z.string().optional(),
     agencia: z.string().transform(strip).optional(),

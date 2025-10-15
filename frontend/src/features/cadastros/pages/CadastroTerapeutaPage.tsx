@@ -427,7 +427,6 @@ export default function CadastroTerapeutaPage() {
             }).then((r) => r.json());
 
             payload.arquivos = uploadResp.arquivos;
-            console.log(payload);
             const result = await cadastrarTerapeuta(payload);
 
             if (!result.ok) {
