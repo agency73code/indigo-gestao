@@ -71,11 +71,11 @@ const data = {
             url: '/app/programas',
             icon: Activity,
             items: [
-                { title: 'Listar Programas', url: '/app/programas/lista' },
-                { title: 'Criar Programa', url: '/app/programas/novo' },
+                { title: 'Consultar Programas', url: '/app/programas/lista' },
+                { title: 'Novo Programa', url: '/app/programas/novo' },
                 { title: 'Consultar Sessão', url: '/app/programas/sessoes/consultar' },
-                { title: 'Registrar Sessão', url: '/app/programas/sessoes/nova' },
-                { title: 'Relatório Mensal', url: '/app/programas/relatorios/mensal' },
+                { title: 'Nova Sessão', url: '/app/programas/sessoes/nova' },
+                { title: 'Relatório', url: '/app/programas/relatorios/mensal' },
             ],
         },
         {
@@ -134,7 +134,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     });
 
     return (
-        <Sidebar variant="inset" {...props}>
+        <Sidebar variant="inset" {...props} className="no-print">
             <SidebarHeader className="pt-">
                 <SidebarMenu>
                     <SidebarMenuItem>

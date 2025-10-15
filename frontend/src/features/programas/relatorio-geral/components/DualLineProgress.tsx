@@ -57,7 +57,7 @@ export function DualLineProgress({ data, loading = false }: DualLineProgressProp
     const dataWithError = addErrorData(data);
 
     return (
-        <Card className="px-1 py-0 md:px-8 md:py-10 lg:px-8 lg:py-8 mx-0">
+        <Card className="px-6 py-6 md:px-8 md:py-10 lg:px-8 lg:py-8 mx-0">
             <CardHeader>
                 <div className="flex items-center gap-2 mb-2">
                     <CardTitle>Evolução do desempenho</CardTitle>

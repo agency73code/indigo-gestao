@@ -115,7 +115,7 @@ export default function PatientSelector({
                                     variant="outline"
                                     size="sm"
                                     onClick={() => setIsOpen(true)}
-                                    className="text-xs sm:text-sm"
+                                    className="text-xs sm:text-sm no-print"
                                 >
                                     Trocar
                                 </Button>
@@ -123,7 +123,7 @@ export default function PatientSelector({
                                     variant="outline"
                                     size="sm"
                                     onClick={handleClearPatient}
-                                    className="text-xs sm:text-sm"
+                                    className="text-xs sm:text-sm no-print"
                                 >
                                     Limpar
                                 </Button>
@@ -141,7 +141,7 @@ export default function PatientSelector({
             {/* Modal de Seleção de Paciente */}
             {isOpen && (
                 <div
-                    className="absolute inset-0 bg-black/50 z-30 flex items-end justify-center md:items-center"
+                    className="absolute inset-0 bg-black/50 z-30 flex items-end justify-center md:items-center no-print"
                     onClick={(e) => {
                         if (e.target === e.currentTarget) {
                             setIsOpen(false);
@@ -177,11 +177,15 @@ export default function PatientSelector({
                                     {isLoading ? (
                                         <div className="space-y-2">
                                             {Array.from({ length: 3 }).map((_, i) => (
-                                                <Card padding="none" key={i} className="rounded-[5px]">
+                                                <Card
+                                                    padding="none"
+                                                    key={i}
+                                                    className="rounded-[5px]"
+                                                >
                                                     <CardContent className="p-4">
                                                         <div className="animate-pulse space-y-2">
                                                             <div className="h-4 bg-muted rounded w-3/4"></div>
-                                                            <div className="h-3 bg-muted rounded w-1/2"></div> 
+                                                            <div className="h-3 bg-muted rounded w-1/2"></div>
                                                         </div>
                                                     </CardContent>
                                                 </Card>

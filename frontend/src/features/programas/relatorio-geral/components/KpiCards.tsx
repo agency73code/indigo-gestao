@@ -13,7 +13,7 @@ interface KpiCardProps {
 
 function KpiCard({ title, value, hint, icon, trend, trendValue }: KpiCardProps) {
     return (
-        <Card className='px-1 py-4 md:px-8 md:py-10 lg:px-0 lg:py-2'>
+        <Card className="px-1 py-4 md:px-8 md:py-10 lg:px-0 lg:py-2">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
                 <div className="h-4 w-4 text-muted-foreground">{icon}</div>
@@ -25,12 +25,7 @@ function KpiCard({ title, value, hint, icon, trend, trendValue }: KpiCardProps) 
                         : value}
                 </div>
                 {hint && <p className="text-xs text-muted-foreground mt-1">{hint}</p>}
-                {trend && trendValue && (
-                    <div className="flex items-center mt-2">
-                        
-                        
-                    </div>
-                )}
+                {trend && trendValue && <div className="flex items-center mt-2"></div>}
             </CardContent>
         </Card>
     );
@@ -44,7 +39,7 @@ interface KpiCardsProps {
 export function KpiCards({ data, loading = false }: KpiCardsProps) {
     if (loading) {
         return (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4" data-print-kpi-grid>
                 {Array.from({ length: 6 }, (_, i) => (
                     <Card key={i}>
                         <CardHeader className="space-y-0 pb-2">
@@ -61,7 +56,7 @@ export function KpiCards({ data, loading = false }: KpiCardsProps) {
     }
 
     return (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4" data-print-kpi-grid>
             <KpiCard
                 title="Acerto geral"
                 value={data.acerto + '%'}
@@ -93,8 +88,6 @@ export function KpiCards({ data, loading = false }: KpiCardsProps) {
                 hint="Sessões realizadas no período"
                 icon={<Calendar className="h-4 w-4" />}
             />
-
-           
         </div>
     );
 }
