@@ -41,6 +41,24 @@ export async function getById(req: Request, res: Response, next: NextFunction) {
   }
 }
 
+export async function update(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { id } = req.params;
+    if (!id) return res.status(400).json({ success: false, message: 'ID inválido' });
+
+    const parsed = clientSchema.UpdateClientSchema.parse(req.body);
+    if (Object.keys(parsed).length === 0) {
+      return res.status(400).json({ success: false, message: 'Nenhum dado fornecido para atualização' });
+    }
+
+    const updated = await clientService.update(id, parsed);
+
+    return res.json({ success: true, message: 'Cliente atualizado com sucesso!', data: updated });
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function getClientReport(req: Request, res: Response, next: NextFunction) {
   try {
     const data = await clientService.getClientReport();

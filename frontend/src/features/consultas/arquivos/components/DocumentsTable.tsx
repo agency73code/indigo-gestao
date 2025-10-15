@@ -189,6 +189,7 @@ export default function DocumentsTable({ ownerType, ownerId }: DocumentsTablePro
                                     <Button
                                         variant="outline"
                                         size="sm"
+                                        type='button'
                                         onClick={() => onView(file)}
                                         disabled={pendingId === file.id}
                                         data-testid={`doc-view-${file.id}`}
@@ -199,6 +200,7 @@ export default function DocumentsTable({ ownerType, ownerId }: DocumentsTablePro
                                     </Button>
                                     <Button
                                         size="sm"
+                                        type='button'
                                         onClick={() => onDownload(file)}
                                         disabled={pendingId === file.id}
                                         data-testid={`doc-dl-${file.id}`}
@@ -251,6 +253,7 @@ export default function DocumentsTable({ ownerType, ownerId }: DocumentsTablePro
                                 <Button
                                     variant="outline"
                                     size="sm"
+                                    type='button'
                                     onClick={() => onView(file)}
                                     disabled={pendingId === file.id}
                                     data-testid={`doc-view-${file.id}`}
@@ -262,6 +265,7 @@ export default function DocumentsTable({ ownerType, ownerId }: DocumentsTablePro
                                 </Button>
                                 <Button
                                     size="sm"
+                                    type='button'
                                     onClick={() => onDownload(file)}
                                     disabled={pendingId === file.id}
                                     data-testid={`doc-dl-${file.id}`}

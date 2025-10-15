@@ -1,5 +1,5 @@
 // Configuração do mock - altere para false quando quiser usar a API real
-export const MOCK_ENABLED = true;
+export const MOCK_ENABLED = false;
 
 // Tipos para mock
 export interface MockDocument {

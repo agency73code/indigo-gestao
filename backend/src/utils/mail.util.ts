@@ -42,8 +42,12 @@ export async function sendWelcomeEmail({
     try {
         console.log(`Enviando e-mail para ${to}`);
         return transporter.sendMail(mailOptions);
-    } catch (err: any) {
-        console.error('Erro ao enviar e-mail:', err.message);
+    } catch (err: unknown) {
+        if (err instanceof Error) {
+            console.error('Erro ao enviar e-mail:', err.message);
+        } else {
+            console.error('Erro desconhecido ao enviar e-mail:', err);
+        }
     }
 }
 
@@ -76,7 +80,11 @@ export async function sendPasswordResetEmail({ to, name, token, }: { to: string,
     try {
         console.log(`Enviando e-mail de reset para ${to}`);
         return transporter.sendMail(mailOptions);
-    } catch (err: any) {
-        console.error('erro ao enviar e-mail de reset:', err.message);
+    } catch (err: unknown) {
+        if (err instanceof Error) {
+            console.error('Erro ao enviar e-mail:', err.message);
+        } else {
+            console.error('Erro desconhecido ao enviar e-mail:', err);
+        }
     }
 }
