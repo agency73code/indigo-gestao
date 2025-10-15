@@ -8,6 +8,15 @@ export type TherapistProfessionalDataInput = {
   numeroConselho: string
 }
 
+export type EnderecoStringKeys =
+  | 'cep'
+  | 'rua'
+  | 'numero'
+  | 'complemento'
+  | 'bairro'
+  | 'cidade'
+  | 'uf';
+
 export type TherapistForm = {
   nome: string
   email: string

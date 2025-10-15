@@ -1,4 +1,66 @@
+import type { Prisma } from '@prisma/client';
+import { AppError } from '../../errors/AppError.js';
+import type { UpdateTherapistSchemaInput } from '../../schemas/therapist.schema.js';
 import * as TherapistTypes from "./therapist.types.js";
+
+export function normalizeTherapistNullableString(value: string | null | undefined) {
+    if (value === undefined) return undefined;
+    if (value === null) return null;
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : null;
+}
+
+export function normalizeTherapistDate(
+    value: Date | string | number | null | undefined,
+) {
+    if (value === undefined) return undefined;
+    if (value === null) return null;
+    if (value instanceof Date) return value;
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+        throw new AppError('INVALID_DATE', 'Formato de data inválido', 400);
+    }
+    return parsed;
+}
+
+export function normalizeTherapistEnderecoUpdate(
+    endereco: UpdateTherapistSchemaInput['endereco'],
+): {
+    hasChanges: boolean;
+    create: Prisma.enderecoCreateInput;
+    update: Prisma.enderecoUpdateInput;
+} {
+    const create: Prisma.enderecoCreateInput = {};
+    const update: Prisma.enderecoUpdateInput = {};
+    let hasChanges = false;
+
+    if (!endereco) {
+        return { hasChanges, create, update };
+    }
+
+    const assign = (key: TherapistTypes.EnderecoStringKeys, value: string | null | undefined) => {
+        if (value === undefined) return;
+        hasChanges = true;
+        const normalized = normalizeTherapistNullableString(value);
+
+        (update as Record<
+            TherapistTypes.EnderecoStringKeys,
+            string | Prisma.NullableStringFieldUpdateOperationsInput | null
+        >)[key] = normalized ?? null;
+
+        (create as Record<TherapistTypes.EnderecoStringKeys, string | null>)[key] = normalized ?? null;
+    };
+
+    assign('cep', endereco.cep);
+    assign('rua', endereco.rua);
+    assign('numero', endereco.numero);
+    assign('complemento', endereco.complemento);
+    assign('bairro', endereco.bairro);
+    assign('cidade', endereco.cidade);
+    assign('uf', endereco.estado);
+
+    return { hasChanges, create, update };
+}
 
 export function normalizeTherapistForm(db: TherapistTypes.TherapistDB) {
     return {

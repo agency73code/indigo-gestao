@@ -105,3 +105,52 @@ export const therapistSchema = z.object({
     })
   ).optional().default([]),
 });
+
+export const updateTherapistSchema = z
+  .object({
+    nome: z.string().min(1, 'Nome é obrigatório').optional(),
+    email: z.string().email().optional(),
+    emailIndigo: z.string().email().optional(),
+    telefone: z.string().transform(strip).optional(),
+    celular: z.string().transform(strip).optional(),
+    cpf: z
+      .string()
+      .transform(strip)
+      .refine((val) => cpf.isValid(val), 'CPF inválido')
+      .optional(),
+    dataNascimento: z.coerce.date().optional(),
+    possuiVeiculo: z.enum(["sim", "nao"]).optional(),
+    placaVeiculo: z
+      .string()
+      .toUpperCase()
+      .regex(/^([A-Z]{3}-\d{4}|[A-Z]{3}-?\d[A-Z]\d{2})$/, 'Placa inválida. Use o formato ABC-1234 ou ABC-1D23.')
+      .transform(strip)
+      .nullable()
+      .optional(),
+    modeloVeiculo: z.string().nullable().optional(),
+    banco: z.string().optional(),
+    agencia: z.string().transform(strip).optional(),
+    conta: z.string().transform(strip).optional(),
+    chavePix: z.string().transform(strip).optional(),
+    pixTipo: z.enum(["email", "telefone", "cpf", "cnpj", "aleatoria"]).optional(),
+    valorHoraAcordado: z.string().optional(),
+    professorUnindigo: z.enum(["sim", "nao"]).optional(),
+    disciplinaUniindigo: z.string().nullable().optional(),
+    endereco: z
+      .object({
+        cep: z.string().transform(strip).nullable().optional(),
+        rua: z.string().nullable().optional(),
+        numero: z.string().nullable().optional(),
+        complemento: z.string().nullable().optional(),
+        bairro: z.string().nullable().optional(),
+        cidade: z.string().nullable().optional(),
+        estado: z.string().length(2).toUpperCase().nullable().optional(),
+      })
+      .optional(),
+    dataInicio: z.coerce.date().optional(),
+    dataFim: z.coerce.date().nullable().optional(),
+  })
+  .strict();
+
+export type TherapistSchemaInput = z.infer<typeof therapistSchema>;
+export type UpdateTherapistSchemaInput = z.infer<typeof updateTherapistSchema>;
