@@ -351,7 +351,7 @@ export async function update(id: string, dto: UpdateClientSchemaInput) {
           endereco: {
             create: {
               cep: c.endereco.cep ?? null,
-              rua: (c.endereco as any).rua ?? c.endereco.logradouro ?? null,
+              rua: (c.endereco as ClientType.EnderecoInput).rua ?? c.endereco.logradouro ?? null,
               numero: c.endereco.numero ?? null,
               bairro: c.endereco.bairro ?? null,
               cidade: c.endereco.cidade ?? null,

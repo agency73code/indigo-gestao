@@ -154,6 +154,17 @@ export interface DBClientQueryPage {
     }[];
 }
 
+export type EnderecoInput = {
+  cep?: string | null;
+  rua?: string | null;
+  logradouro?: string | null;
+  numero?: string | null;
+  bairro?: string | null;
+  cidade?: string | null;
+  uf?: string | null;
+  complemento?: string | null;
+};
+
 type DeepPartial<T> = {
     [P in keyof T]?: T[P] extends Array<infer U>
         ? Array<DeepPartial<U>> | undefined
