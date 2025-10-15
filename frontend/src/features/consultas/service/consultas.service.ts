@@ -139,7 +139,7 @@ export async function updateTerapeuta(ownerId: string, payload: any): Promise<vo
     return;
   }
 
-  const res = await authFetch(`${API_BASE_URL}/api/terapeutas/${ownerId}`, {
+  const res = await authFetch(`${API_BASE_URL}/terapeutas/${ownerId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -177,7 +177,7 @@ export async function uploadFile(params: {
   formData.append('file', params.file);
   formData.append('tipo_documento', params.tipo_documento);
 
-  const url = new URL('/arquivos', API_BASE_URL);
+  const url = new URL('/api/arquivos', API_BASE_URL);
   url.searchParams.set('ownerType', params.ownerType);
   url.searchParams.set('ownerId', params.ownerId);
 
@@ -204,7 +204,7 @@ export async function deleteFile(fileId: string): Promise<void> {
   }
 
   const res = await authFetch(`${API_BASE_URL}/arquivos/${fileId}`, {
-    method: 'DELETE'
+    method: 'DELETE',
   });
 
   if (!res.ok) {

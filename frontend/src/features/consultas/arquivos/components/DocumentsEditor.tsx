@@ -213,6 +213,7 @@ export function DocumentsEditor({
               <Button
                 variant="ghost"
                 size="icon"
+                type="button"
                 className="text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0"
                 onClick={() => setDeleteTarget(file)}
               >

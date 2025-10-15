@@ -3,6 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { Readable } from "stream";
 import { drive } from "../config/googleDrive.js";
 import { prisma } from "../config/database.js";
+import { extension as mimeExt } from "mime-types";
 
 type OwnerType = "cliente" | "terapeuta";
 
@@ -131,7 +132,7 @@ export async function uploadFile(req: Request, res: Response) {
 export async function deleteFile(req: Request, res: Response) {
   const rawId = req.params.id;
   if (!rawId) return;
-
+  
   const id = Number.parseInt(rawId, 10);
 
   if (Number.isNaN(id)) {
@@ -195,9 +196,6 @@ export async function viewFile(req: Request, res: Response) {
 }
 
 export async function downloadFile(req: Request, res: Response) {
-  console.log('==============================================')
-  console.log('teste')
-  console.log('==============================================')
   const storageId = req.params.id ?? req.params.storageId;
 
   if (!storageId) {
@@ -211,8 +209,13 @@ export async function downloadFile(req: Request, res: Response) {
       supportsAllDrives: true,
     });
 
-    const fileName = metadata.data.name ?? `arquivo-${storageId}`;
+    const rawName  = metadata.data.name ?? `arquivo-${storageId}`;
     const mimeType = metadata.data.mimeType ?? "application/octet-stream";
+    
+    const hasExt = /\.[A-Za-z0-9]{1,10}$/.test(rawName);
+
+    const extFromMime = mimeExt(mimeType) || "bin";
+    const finalName = hasExt ? rawName : `${rawName}.${extFromMime}`;
 
     const file = await drive.files.get(
       { fileId: storageId, alt: "media", supportsAllDrives: true },
@@ -220,7 +223,12 @@ export async function downloadFile(req: Request, res: Response) {
     );
 
     res.setHeader("Content-Type", mimeType);
-    res.setHeader("Content-Disposition", `attachment; filename="${encodeURIComponent(fileName)}"`);
+    const asciiFallback = finalName.normalize('NFKD').replace(/[^\x20-\x7E]/g, '_').replace(/"/g, '\\"');
+    const encodedUtf8   = encodeURIComponent(finalName);
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${asciiFallback}"; filename*=UTF-8''${encodedUtf8}`
+    );
     file.data.on("error", (err) => {
       console.error("Erro ao streamar arquivo:", err);
       res.sendStatus(500);
@@ -290,7 +298,7 @@ function collectIncomingFiles(req: Request, defaultType?: string) {
   return collected;
 }
 
-async function  persistFileRecord({
+async function persistFileRecord({
   ownerType,
   ownerId,
   tipo,

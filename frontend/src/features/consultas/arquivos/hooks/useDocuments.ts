@@ -104,7 +104,6 @@ export function useDocuments({ ownerType, ownerId, enabled = true }: UseDocument
       const downloadUrl = buildDownloadUrl(file.id, file.storageId);
       const link = document.createElement('a');
       link.href = downloadUrl;
-      link.download = file.nome;
       link.style.display = 'none';
       document.body.appendChild(link);
       link.click();
