@@ -364,8 +364,7 @@ export default function CadastroTerapeutaPage() {
                     if (!pg?.curso?.trim())
                         newErrors[`formacao.posGraduacoes.${idx}.curso`] = 'Campo obrigatório';
                     if (!pg?.instituicao?.trim())
-                        newErrors[`formacao.posGraduacoes.${idx}.instituicao`] =
-                            'Campo obrigatório';
+                        newErrors[`formacao.posGraduacoes.${idx}.instituicao`] = 'Campo obrigatório';
                     if (!pg?.conclusao?.trim())
                         newErrors[`formacao.posGraduacoes.${idx}.conclusao`] = 'Campo obrigatório';
                 });
