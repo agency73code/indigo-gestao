@@ -67,7 +67,7 @@ export default function ActionBar({ program }: ActionBarProps) {
     return (
         <>
             {/* Variante Mobile - fixa no rodapé */}
-            <div className="md:hidden fixed bottom-0 left-0 w-full z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75 border-t border-border py-3">
+            <div className="md:hidden fixed bottom-0 left-0 w-full z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75 border-t border-border py-3 no-print">
                 <div className="max-w-lg mx-auto p-4 flex justify-center">
                     <ActionButtons
                         onRegisterSession={handleRegisterSession}
@@ -77,7 +77,7 @@ export default function ActionBar({ program }: ActionBarProps) {
             </div>
 
             {/* Variante Desktop/Tablet - sticky dentro do container */}
-            <div className="hidden md:block sticky bottom-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75 border-t border-border">
+            <div className="hidden md:block sticky bottom-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75 border-t border-border no-print">
                 <div className="max-w-screen-xl mx-auto px-6 py-3 flex items-center justify-center">
                     <ActionButtons
                         onRegisterSession={handleRegisterSession}

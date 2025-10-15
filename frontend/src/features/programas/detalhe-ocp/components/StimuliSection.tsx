@@ -23,7 +23,7 @@ export default function StimuliSection({ program }: StimuliSectionProps) {
         .sort((a, b) => a.order - b.order);
 
     return (
-        <Card className="rounded-[5px] px-6 py-8 md:px-8 md:py-10 lg:px-8 lg:py-0">
+        <Card className="rounded-[5px] px-6 py-0 md:px-8 md:py-10 lg:px-8 lg:py-0" data-print-block>
             <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                 <CardTitle className="text-base flex items-center gap-2">
                     <Zap className="h-4 w-4" />
@@ -33,7 +33,7 @@ export default function StimuliSection({ program }: StimuliSectionProps) {
                 {shortTermGoalDescription && (
                     <div className="space-y-3 mt-4">
                         <Label className="text-sm font-medium mb-1">
-                            Descri??o detalhada do objetivo a curto prazo:
+                            Descrição detalhada do objetivo a curto prazo:
                         </Label>
                         <div className="p-3 bg-muted rounded-md">
                             <p className="text-sm text-muted-foreground leading-relaxed">
@@ -45,14 +45,14 @@ export default function StimuliSection({ program }: StimuliSectionProps) {
 
                 {applicationDescription && applicationDescription.trim().length > 0 && (
                     <div className="space-y-3 mt-4">
-                        <Label className="text-sm font-medium mb-1">Descri??o da Aplica??o</Label>
+                        <Label className="text-sm font-medium mb-1">Descrição da Aplicação</Label>
                         <div className="p-3 bg-muted rounded-md">
                             <p className="text-sm text-muted-foreground leading-relaxed">
                                 {applicationDescription}
                             </p>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                            Esta descri??o ? aplicada a todos os est?mulos do programa.
+                            Esta descrição é aplicada a todos os estímulos do programa.
                         </p>
                     </div>
                 )}

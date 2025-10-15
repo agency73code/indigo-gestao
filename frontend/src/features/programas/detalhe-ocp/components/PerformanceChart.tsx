@@ -88,7 +88,9 @@ export default function PerformanceChart({
     }
 
     return (
-        <Card className={`px-1 py-0 md:px-8 md:py-10 lg:px-8 lg:py-8 mx-0 rounded-[5px] ${className ?? ''}`}>
+        <Card
+            className={`px-6 py-6 md:px-8 md:py-10 lg:px-8 lg:py-8 mx-0 rounded-[5px] ${className ?? ''}`}
+        >
             <CardHeader>
                 <div className="mb-2 flex items-center gap-2">
                     <CardTitle>{chartTitle}</CardTitle>
@@ -98,7 +100,7 @@ export default function PerformanceChart({
                 </div>
                 {descriptionContent}
             </CardHeader>
-            <CardContent className="pt-6">
+            <CardContent className="pt-6" data-print-chart>
                 <ChartContainer config={chartConfig} className="aspect-[16/9] h-[300px] w-full">
                     <LineChart
                         data={dataWithError}

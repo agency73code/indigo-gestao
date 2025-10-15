@@ -56,11 +56,11 @@ export default function SummaryCard({
     };
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-4 mx-0 px-0" data-print-block>
             {/* Grid de três cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4" data-print-kpi-grid>
                 {/* Card 1: Acerto Geral */}
-                <Card className="rounded-[5px]">
+                <Card className="rounded-[5px] py-6 m-0">
                     <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
                             <CardTitle className="text-base font-semibold">Acerto geral</CardTitle>
@@ -84,14 +84,14 @@ export default function SummaryCard({
                         </p>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-4xl font-bold mb-2 text-green-600">
+                        <div className="text-4xl font-bold text-green-600">
                             {formatPercentage(overallAverage)}
                         </div>
                     </CardContent>
                 </Card>
 
                 {/* Card 2: Independência */}
-                <Card className="rounded-[5px]">
+                <Card className="rounded-[5px] py-6 m-0">
                     <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
                             <CardTitle className="text-base font-semibold">Independência</CardTitle>
@@ -113,7 +113,7 @@ export default function SummaryCard({
                         <p className="text-sm text-muted-foreground mt-1">Taxa média</p>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-4xl font-bold mb-2 text-blue-600">
+                        <div className="text-4xl font-bold text-blue-600">
                             {formatPercentage(independenceAverage)}
                         </div>
                     </CardContent>
@@ -144,7 +144,7 @@ export default function SummaryCard({
                         </p>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-4xl font-bold mb-2">{totalAttempts}</div>
+                        <div className="text-4xl font-bold">{totalAttempts}</div>
                     </CardContent>
                 </Card>
             </div>

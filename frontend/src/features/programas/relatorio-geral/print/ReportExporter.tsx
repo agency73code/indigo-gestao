@@ -1,4 +1,4 @@
-﻿import { useCallback, useMemo, useRef } from 'react';
+﻿import { useCallback, useMemo, useRef, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { FileDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,8 @@ type ReportExporterProps = {
     reportTitle?: string;
     pageTitle?: string;
     pageSubtitle?: string;
+    hideButton?: boolean;
+    onPrintReady?: (printFn: () => void) => void;
 };
 
 type CanvasSnapshot = {
@@ -24,13 +26,25 @@ const DEFAULT_REPORT_TITLE = 'Relatório Geral — Programas & Objetivos';
 const DEFAULT_DOCUMENT_TITLE = 'relatorio_geral_programas_objetivos';
 
 const PRINT_PAGE_STYLE = `
-  @page { size: A4; margin: 8mm 6mm; }
+  @page { 
+    size: A4; 
+    margin: 8mm 6mm 12mm 6mm;
+    
+    @bottom-right {
+      content: "Página " counter(page) " de " counter(pages);
+      font-size: 12px;
+      color: hsl(var(--primary));
+      font-family: 'Sora', system-ui, -apple-system, sans-serif;
+      font-weight: 500;
+    }
+  }
+  
   @media print {
     html, body {
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
       overflow: visible !important;
-      font-size: 13px; /* ligeiro aumento pra ocupar melhor a página */
+      font-size: 22px; /* aumentado 38% para melhor legibilidade */
     }
 
     /* força largura de "desktop" dentro do A4 - mais largo para aproveitar o espaço */
@@ -39,6 +53,13 @@ const PRINT_PAGE_STYLE = `
       max-width: 100% !important;
       margin: 0 auto; 
       padding: 0 !important;
+      padding-top: 1rem !important;
+    }
+
+    /* Cabeçalho do PDF com padding superior */
+    [data-print-meta-header] {
+      padding-top: 0.5rem !important;
+      margin-bottom: 1rem !important;
     }
 
     /* mostrar/ocultar elementos específicos */
@@ -206,6 +227,8 @@ export function ReportExporter({
     reportTitle = DEFAULT_REPORT_TITLE,
     pageTitle = 'Painel de Progresso - Programas & Objetivos',
     pageSubtitle = 'Análise completa do desempenho e evolução do cliente',
+    hideButton = false,
+    onPrintReady,
 }: ReportExporterProps) {
     const printAreaRef = useRef<HTMLDivElement>(null);
     const canvasSnapshotsRef = useRef<CanvasSnapshot[]>([]);
@@ -285,23 +308,36 @@ export function ReportExporter({
         },
     });
 
+    // Expõe a função de print via callback quando disponível
+    useEffect(() => {
+        if (onPrintReady && handlePrint) {
+            onPrintReady(handlePrint);
+        }
+    }, [onPrintReady, handlePrint]);
+
     return (
         <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between px-6 pt-6 pb-2 no-print">
-                <div className="flex-1">
-                    <h1
-                        className="text-2xl font-semibold text-primary"
-                        style={{ fontFamily: 'Sora, sans-serif' }}
+            {!hideButton && (
+                <div className="flex items-center justify-between px-6 pt-6 pb-0 no-print">
+                    <div className="flex-1">
+                        <h1
+                            className="text-2xl font-semibold text-primary"
+                            style={{ fontFamily: 'Sora, sans-serif' }}
+                        >
+                            {pageTitle}
+                        </h1>
+                        <p className="text-sm text-muted-foreground mt-1">{pageSubtitle}</p>
+                    </div>
+                    <Button
+                        type="button"
+                        onClick={handlePrint}
+                        className="h-12 gap-2 rounded-[5px]"
                     >
-                        {pageTitle}
-                    </h1>
-                    <p className="text-sm text-muted-foreground mt-1">{pageSubtitle}</p>
+                        <FileDown className="h-4 w-4" aria-hidden />
+                        Exportar Relatório (PDF)
+                    </Button>
                 </div>
-                <Button type="button" onClick={handlePrint} className="h-12 gap-2 rounded-[5px]">
-                    <FileDown className="h-4 w-4" aria-hidden />
-                    Exportar Relatório (PDF)
-                </Button>
-            </div>
+            )}
 
             <div ref={printAreaRef} data-print-root className="flex flex-col">
                 <div data-print-meta-header data-print-only className="hidden">
