@@ -8,7 +8,7 @@ export default function HubFaturamentoPage() {
             title: 'Registrar Lançamento',
             description: 'Lançar horas e valores de um atendimento',
             icon: FilePlus,
-            href: '/app/faturamento/novo',
+            href: '/app/faturamento/registrar-lancamento',
             bgColor: 'bg-[var(--card-primary)]',
             textColor: 'text-white',
         },

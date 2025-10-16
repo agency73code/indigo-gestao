@@ -83,7 +83,7 @@ const data = {
             url: '/app/faturamento',
             icon: ReceiptText,
             items: [
-                { title: 'Registrar Lançamento', url: '/app/faturamento/novo' },
+                { title: 'Registrar Lançamento', url: '/app/faturamento/registrar-lancamento' },
                 { title: 'Minhas Horas', url: '/app/faturamento/minhas-horas' },
                 { title: 'Gestão (gerente)', url: '/app/faturamento/gestao' },
                 { title: 'Relatórios/Exportar', url: '/app/faturamento/relatorios' },

@@ -30,6 +30,7 @@ import { CadastroSessaoPage } from '../../features/programas/nova-sessao';
 import RelatorioMensalPage from '../../features/programas/pages/RelatorioMensalPage';
 import { HubFaturamentoPage } from '../../features/faturamento';
 import RegistrarLancamentoPage from '../../features/faturamento/registrar-lancamento/pages/RegistrarLancamentoPage';
+import MinhasHorasPage from '../../features/faturamento/minhas-horas/pages/MinhasHorasPage';
 import NotAccessPage from '@/features/shell/pages/NotAccessPage';
 import NotPermissionPage from '@/features/shell/pages/NotPermissionPage';
 import RequireAuth from '@/features/auth/components/RequireAuth';
@@ -244,7 +245,7 @@ export const router = createBrowserRouter([
                                 handle: { breadcrumb: 'Faturamento', title: 'Faturamento' },
                             },
                             {
-                                path: 'faturamento/novo',
+                                path: 'faturamento/registrar-lancamento',
                                 element: (
                                     <Suspense fallback={suspenseFallback}>
                                         <RegistrarLancamentoPage />
@@ -253,6 +254,18 @@ export const router = createBrowserRouter([
                                 handle: {
                                     breadcrumb: 'Registrar Lançamento',
                                     title: 'Registrar Lançamento',
+                                },
+                            },
+                            {
+                                path: 'faturamento/minhas-horas',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <MinhasHorasPage />
+                                    </Suspense>
+                                ),
+                                handle: {
+                                    breadcrumb: 'Minhas Horas',
+                                    title: 'Minhas Horas',
                                 },
                             },
                         ],
