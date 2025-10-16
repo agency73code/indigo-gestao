@@ -140,7 +140,7 @@ export async function updateTerapeuta(ownerId: string, payload: any): Promise<vo
   }
 
   const res = await authFetch(`${API_BASE_URL}/terapeutas/${ownerId}`, {
-    method: 'PUT',
+    method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   });

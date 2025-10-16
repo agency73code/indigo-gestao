@@ -45,6 +45,33 @@ export async function fetchBrazilianBanks(): Promise<Bank[]> {
   return (data?.data ?? []) as Bank[];
 }
 
+export interface ProfessionalMetadataItem {
+  id: number;
+  nome: string;
+}
+
+export interface ProfessionalMetadataResponse {
+  areasAtuacao: ProfessionalMetadataItem[];
+  cargos: ProfessionalMetadataItem[];
+}
+
+export async function fetchProfessionalMetadata(): Promise<ProfessionalMetadataResponse> {
+  const res = await authFetch('/api/metadata/profissional', { method: 'GET' });
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : null;
+
+  if (!res.ok) {
+    const msg = data?.message ?? data?.error ?? `Falha (${res.status})`;
+    throw new Error(msg);
+  }
+
+  const payload = data?.data ?? {};
+  return {
+    areasAtuacao: (payload.areaAtuacao ?? []) as ProfessionalMetadataItem[],
+    cargos: (payload.cargos ?? []) as ProfessionalMetadataItem[],
+  }
+}
+
 export async function listarClientes(): Promise<Patient[]> {
     const res = await authFetch('/api/clientes', { method: 'GET' });
     const text = await res.text();

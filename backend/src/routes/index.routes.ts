@@ -7,6 +7,7 @@ import filesRoutes from './files.routes.js';
 import cardsRoutes from './cards.routes.js';
 import ocpRoutes from './ocp.routes.js';
 import linksRoutes from './links.routes.js';
+import metadataRoutes from './metadata.routes.js';
 
 const router: ExpressRouter = Router();
 
@@ -17,5 +18,6 @@ router.use('/arquivos', filesRoutes);
 router.use('/cards', cardsRoutes);
 router.use('/ocp', ocpRoutes);
 router.use('/links', linksRoutes);
+router.use('/metadata', metadataRoutes);
 
 export default router;

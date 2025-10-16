@@ -1,9 +1,11 @@
+import { useEffect, useState } from 'react';
 import { Input } from '@/ui/input';
 import { Label } from '@/ui/label';
 import { DateField } from '@/common/components/layout/DateField';
 import { Button } from '@/ui/button';
 import { Combobox } from '@/ui/combobox';
 import { Plus, X } from 'lucide-react';
+import { fetchProfessionalMetadata } from '@/lib/api';
 import type { Terapeuta } from '../../types/cadastros.types';
 
 interface DadosProfissionaisStepProps {
@@ -12,51 +14,107 @@ interface DadosProfissionaisStepProps {
     errors: Record<string, string>;
 }
 
-const AREAS_ATUACAO_OPTIONS = [
-    { value: 'Fonoaudiologia', label: 'Fonoaudiologia' },
-    { value: 'Psicomotricidade', label: 'Psicomotricidade' },
-    { value: 'Fisioterapia', label: 'Fisioterapia' },
-    { value: 'Terapia Ocupacional', label: 'Terapia Ocupacional' },
-    { value: 'Psicopedagogia', label: 'Psicopedagogia' },
-    { value: 'Educador Físico', label: 'Educador Físico' },
-    { value: 'Terapia ABA', label: 'Terapia ABA' },
-    { value: 'Musicoterapia', label: 'Musicoterapia' },
-    { value: 'Pedagogia', label: 'Pedagogia' },
-    { value: 'Neuropsicologia', label: 'Neuropsicologia' },
-    { value: 'Nutrição', label: 'Nutrição' },
-];
+type ComboboxOption = {
+    value: string;
+    label: string;
+};
 
-const CARGOS_OPTIONS = [
-    { value: 'Acompanhante Terapeutico', label: 'Acompanhante Terapeutico' },
-    { value: 'Coordenador ABA', label: 'Coordenador ABA' },
-    { value: 'Supervisor ABA', label: 'Supervisor ABA' },
-    { value: 'Mediador de Conflitos', label: 'Mediador de Conflitos' },
-    { value: 'Coordenador Executivo', label: 'Coordenador Executivo' },
-    { value: 'Professor UniIndigo', label: 'Professor UniIndigo' },
-    { value: 'Terapeuta clinico', label: 'Terapeuta clinico' },
-    { value: 'Terapeuta Supervisor', label: 'Terapeuta Supervisor' },
-    { value: 'Gerente', label: 'Gerente' },
-];
+type DadoProfissional = NonNullable<Terapeuta['dadosProfissionais']>[number];
 
 export default function DadosProfissionaisStep({
     data,
     onUpdate,
     errors,
 }: DadosProfissionaisStepProps) {
-    const dadosProfissionais = data.dadosProfissionais || [
-        { areaAtuacao: '', cargo: '', numeroConselho: '' },
-    ];
+    const [areaOptions, setAreaOptions] = useState<ComboboxOption[]>([]);
+    const [cargoOptions, setCargoOptions] = useState<ComboboxOption[]>([]);
 
-    const handleDadoProfissionalChange = (index: number, field: string, value: string) => {
+    useEffect(() => {
+        let isMounted = true;
+
+        async function loadMetadata() {
+            try {
+                const metadata = await fetchProfessionalMetadata();
+                if (!isMounted) return;
+                
+                setAreaOptions(
+                    metadata.areasAtuacao.map((area) => ({
+                        value: String(area.id),
+                        label: area.nome,
+                    })),
+                );
+                setCargoOptions(
+                    metadata.cargos.map((cargo) => ({
+                        value: String(cargo.id),
+                        label: cargo.nome,
+                    })),
+                );
+            } catch (error) {
+                console.error('Falha ao carregar metadados profissionais:', error);
+            }
+        }
+
+        loadMetadata();
+        
+        return () => {
+            isMounted = false;
+        };
+    }, []);
+
+    const dadosProfissionais = (data.dadosProfissionais?.length
+        ? data.dadosProfissionais
+        : [
+            {
+                areaAtuacao: '',
+                areaAtuacaoId: null,
+                cargo: '',
+                cargoId: null,
+                numeroConselho: '',
+            },
+        ]) as DadoProfissional[];
+
+    const handleDadoProfissionalChange = <K extends keyof DadoProfissional>(
+        index: number,
+        field: K,
+        value: DadoProfissional[K],
+    ) => {
         const updatedDados = [...dadosProfissionais];
         updatedDados[index] = { ...updatedDados[index], [field]: value };
         onUpdate('dadosProfissionais', updatedDados);
     };
 
+    const handleAreaAtuacaoSelect = (index: number, value: string) => {
+        const option = areaOptions.find((item) => item.value === value);
+        const updated = [...dadosProfissionais];
+        updated[index] = {
+            ...updated[index],
+            areaAtuacaoId: value || null,
+            areaAtuacao: option?.label ?? '',
+        };
+        onUpdate('dadosProfissionais', updated);
+    };
+
+    const handleCargoSelect = (index: number, value: string) => {
+        const option = cargoOptions.find((item) => item.value === value);
+        const updated = [...dadosProfissionais];
+        updated[index] = {
+            ...updated[index],
+            cargoId: value || null,
+            cargo: option?.label ?? '',
+        };
+        onUpdate('dadosProfissionais', updated);
+    };
+
     const adicionarDadoProfissional = () => {
         const updatedDados = [
             ...dadosProfissionais,
-            { areaAtuacao: '', cargo: '', numeroConselho: '' },
+            {
+                areaAtuacao: '',
+                areaAtuacaoId: null,
+                cargo: '',
+                cargoId: null,
+                numeroConselho: '',
+            },
         ];
         onUpdate('dadosProfissionais', updatedDados);
     };
@@ -107,10 +165,15 @@ export default function DadosProfissionaisStep({
                                 Área de Atuação {index === 0 ? '*' : ''}
                             </Label>
                             <Combobox
-                                options={AREAS_ATUACAO_OPTIONS}
-                                value={dadoProfissional.areaAtuacao || ''}
+                                options={areaOptions}
+                                value={
+                                    dadoProfissional.areaAtuacaoId &&
+                                    dadoProfissional.areaAtuacaoId !== ''
+                                        ? String(dadoProfissional.areaAtuacaoId)
+                                        : ''
+                                }
                                 onValueChange={(value) =>
-                                    handleDadoProfissionalChange(index, 'areaAtuacao', value)
+                                    handleAreaAtuacaoSelect(index, value)
                                 }
                                 placeholder="Selecione a área de atuação"
                                 searchPlaceholder="Buscar área de atuação..."
@@ -128,10 +191,15 @@ export default function DadosProfissionaisStep({
                         <div className="space-y-2">
                             <Label htmlFor={`cargo-${index}`}>Cargo {index === 0 ? '*' : ''}</Label>
                             <Combobox
-                                options={CARGOS_OPTIONS}
-                                value={dadoProfissional.cargo || ''}
+                                options={cargoOptions}
+                                value={
+                                    dadoProfissional.cargoId &&
+                                    dadoProfissional.cargoId !== ''
+                                        ? String(dadoProfissional.cargoId)
+                                        : ''
+                                }
                                 onValueChange={(value) =>
-                                    handleDadoProfissionalChange(index, 'cargo', value)
+                                    handleCargoSelect(index, value)
                                 }
                                 placeholder="Selecione o cargo"
                                 searchPlaceholder="Buscar cargo..."

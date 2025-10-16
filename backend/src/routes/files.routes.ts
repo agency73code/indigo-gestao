@@ -28,7 +28,7 @@ router.post(
         { name: "prescricaoMedica", maxCount: 1 },
         { name: "relatoriosMedicos", maxCount: 1 },
     ]),
-    FileController.uploadFile,
+    FileController.create,
 );
 
 export default router;

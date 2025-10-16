@@ -84,7 +84,7 @@ export interface Client {
         mostrarEmailAdvogado3?: boolean;
         emailAdvogado3?: string | null;
         
-        // Campos especÃ­ficos para Particular
+        // Campos especificos para Particular
         houveNegociacao?: 'sim' | 'nao';
         valorAcordado?: string | null; // Renomeado de valorSessao para valorAcordado
         valorSessao?: string | null;
@@ -165,12 +165,89 @@ export type EnderecoInput = {
   complemento?: string | null;
 };
 
-type DeepPartial<T> = {
-    [P in keyof T]?: T[P] extends Array<infer U>
-        ? Array<DeepPartial<U>> | undefined
-        : T[P] extends object | null
-            ? DeepPartial<NonNullable<T[P]>> | Extract<T[P], null> | undefined
-            : T[P] | undefined;
-};
+// Tipos base
+export interface UpdateAddress {
+  id?: number;
+  cep: string;
+  logradouro: string;
+  numero: string;
+  complemento: string | null;
+  bairro: string;
+  cidade: string;
+  uf: string;
+}
 
-export type ClientUpdate = DeepPartial<Client>;
+export interface UpdateAddressClient extends UpdateAddress {
+  id?: number;
+  residenciaDe: string | null;
+  outroResidencia: string | null;
+}
+
+export interface UpdateCaregiver {
+  id?: number;
+  relacao: string;
+  descricaoRelacao: string | null;
+  nome: string;
+  cpf: string;
+  profissao: string;
+  escolaridade: string;
+  telefone: string;
+  email: string;
+  endereco: UpdateAddress;
+}
+
+export interface UpdateDataPayment {
+  nomeTitular: string;
+  numeroCarteirinha: string;
+  telefone1: string;
+  telefone2: string | null;
+  telefone3: string | null;
+  email1: string;
+  email2: string | null;
+  email3: string | null;
+  sistemaPagamento: string;
+  numeroProcesso: string | null;
+  nomeAdvogado: string | null;
+  telefoneAdvogado1: string | null;
+  telefoneAdvogado2: string | null;
+  telefoneAdvogado3: string | null;
+  emailAdvogado1: string | null;
+  emailAdvogado2: string | null;
+  emailAdvogado3: string | null;
+  houveNegociacao: string;
+  valorAcordado: string;
+}
+
+export interface UpdateSchoolContact {
+  id: number;
+  nome: string;
+  cargo: string;
+  telefone: string;
+  email: string;
+}
+
+export interface UpdateDataSchool {
+  tipoEscola: string;
+  nome: string;
+  telefone: string;
+  email: string;
+  endereco: UpdateAddress;
+  contatos: UpdateSchoolContact[];
+}
+
+export interface UpdateClient {
+  id: string;
+  nome: string;
+  cpf: string;
+  dataNascimento: Date;
+  emailContato: string;
+  dataEntrada: Date;
+  dataSaida: Date | null;
+  cuidadores: UpdateCaregiver[];
+  enderecos: UpdateAddress[];
+  dadosPagamento: UpdateDataPayment;
+  dadosEscola: UpdateDataSchool;
+}
+
+// Tipo para o update (todos os campos opcionais)
+export type ClientUpdate = Partial<UpdateClient>;
