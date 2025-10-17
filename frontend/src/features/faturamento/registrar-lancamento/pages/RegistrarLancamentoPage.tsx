@@ -15,7 +15,7 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { HourEntryForm } from '../components/HourEntryForm';
-import { hourEntryService } from '../../service/hourEntry.service';
+import { therapistService } from '../../services/faturamento.service';
 import type { CreateHourEntryInput } from '../../types/hourEntry.types';
 
 export default function RegistrarLancamentoPage() {
@@ -30,8 +30,8 @@ export default function RegistrarLancamentoPage() {
         setIsSubmitting(true);
         try {
             // Cria o lançamento e envia direto para aprovação
-            const created = await hourEntryService.create(data);
-            await hourEntryService.submit(created.id);
+            const created = await therapistService.create(data);
+            await therapistService.submit(created.id);
 
             toast.success('Lançamento enviado para aprovação.', {
                 description: 'O gestor será notificado.',

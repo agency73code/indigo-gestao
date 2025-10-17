@@ -40,7 +40,7 @@ const PRINT_PAGE_STYLE = `
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
       overflow: visible !important;
-      font-size: 24px;
+      font-size: 18px;
     }
 
     /* Força largura total no PDF */

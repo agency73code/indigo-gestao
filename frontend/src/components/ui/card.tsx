@@ -5,13 +5,13 @@ import { cva, type VariantProps } from "class-variance-authority";
 // Variantes de padding para o Card.
 // "md" replica exatamente os paddings do seu componente atual para não quebrar nada.
 const cardVariants = cva(
-  "rounded-[5px] border bg-card text-card-foreground shadow",
+  "rounded-[5px] mx-1 border bg-card text-card-foreground shadow",
   {
     variants: {
       padding: {
         none: "p-0", // Login compacto, páginas cheias etc.
         sm: "px-6 py-8 md:px-8 md:py-10 lg:px-12 lg:py-10",
-        md: "px-4 py-8 md:px-10 md:py-8 lg:px-4 lg:py-6", // default (compat)
+        md: "px-4 py-8 md:px-10 md:py-8 lg:px-10 lg:py-8", // default (compat)
         lg: "px-6 py-12 md:px-12 md:py-12 lg:px-16 lg:py-16",
         small: "px-6 py-2 md:px-8 md:py-10 lg:px-8 lg:py-0",
         medium: "px-4 py-4 md:px-4 md:py-4 lg:px-4 lg:py-4",
