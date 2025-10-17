@@ -54,7 +54,7 @@ model cuidador {
   relacao             String?
   descricaoRelacao    String?
   nome                String?
-  cpf                 String?               @db.Char(11)
+  cpf                 String                @db.Char(11) @unique
   profissao           String?
   escolaridade        String?
   telefone            String?
@@ -63,8 +63,10 @@ model cuidador {
   clienteId           String
   cliente             cliente               @relation(fields: [clienteId], references: [id])
 
-  enderecoId          Int
+  enderecoId          Int?
   endereco            endereco?             @relation(fields: [enderecoId], references: [id])
+
+  @@unique([clienteId, cpf], name: "unique_cuidador")
 }
 
 model cliente_endereco {

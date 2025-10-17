@@ -1,7 +1,6 @@
 import { prisma } from "../../config/database.js";
 import { AppError } from "../../errors/AppError.js";
 import * as ClientType from "./client.types.js";
-import type { UpdateClientSchemaInput } from "../../schemas/client.schema.js";
 import { v4 as uuidv4 } from "uuid";
 
 export async function create(dto: ClientType.Client) {
@@ -283,359 +282,296 @@ export async function getById(clientId: string) {
  });
 }
 
-export async function update(id: string, dto: UpdateClientSchemaInput) {
-  const existing = await prisma.cliente.findUnique({
-    where: { id },
-    include: {
-      dadosPagamento: { select: { id: true, sistemaPagamento: true } },
-      dadosEscola: { select: { id: true, tipoEscola: true } },
-    },
-  });
-
-  if (!existing) {
-    throw new AppError('CLIENTE_NAO_ENCONTRADO', 'Cliente não encontrado', 404);
+async function UpdateMainData(clientId: string, dadosPrincipais?: Partial<ClientType.UpdateClient>) {
+  if (dadosPrincipais) {
+    await prisma.cliente.update({
+      where: { id: clientId },
+      data: {
+        ...(dadosPrincipais.nome !== undefined && { nome: dadosPrincipais.nome }),
+        ...(dadosPrincipais.cpf !== undefined && { cpf: dadosPrincipais.cpf }),
+        ...(dadosPrincipais.dataNascimento !== undefined && { dataNascimento: dadosPrincipais.dataNascimento }),
+        ...(dadosPrincipais.emailContato !== undefined && { emailContato: dadosPrincipais.emailContato }),
+        ...(dadosPrincipais.dataEntrada !== undefined && { dataEntrada: dadosPrincipais.dataEntrada }),
+        ...(dadosPrincipais.dataSaida !== undefined && { dataSaida: dadosPrincipais.dataSaida }),
+      }
+    })
   }
+}
 
-  if (dto.cpf && dto.cpf !== existing.cpf) {
-    const existsCpf = await prisma.cliente.findFirst({ where: { cpf: dto.cpf, NOT: { id } } });
-    if (existsCpf) throw new AppError('CPF_DUPLICADO', 'CPF já cadastrado', 409);
-  }
-
-  if (dto.emailContato && dto.emailContato !== existing.emailContato) {
-    const existsEmail = await prisma.cliente.findFirst({ where: { emailContato: dto.emailContato, NOT: { id } } });
-    if (existsEmail) throw new AppError('EMAIL_DUPLICADO', 'E-mail já cadastrado', 409);
-  }
-
-  const data: Record<string, unknown> = {};
-
-  const toDate = (value: unknown) => {
-    if (value === null || value === undefined) return value as null | undefined;
-    if (value instanceof Date) return value;
-    const parsed = new Date(value as string | number);
-    if (Number.isNaN(parsed.getTime())) {
-      throw new AppError('DATA_INVALIDA', 'Formato de data inválido', 400);
-    }
-    return parsed;
-  };
-
-  if (dto.nome !== undefined) data.nome = dto.nome;
-  if (dto.cpf !== undefined) data.cpf = dto.cpf;
-  if (dto.dataNascimento !== undefined) data.dataNascimento = dto.dataNascimento === null ? null : toDate(dto.dataNascimento);
-  if (dto.emailContato !== undefined) data.emailContato = dto.emailContato;
-  if (dto.dataEntrada !== undefined) data.dataEntrada = dto.dataEntrada === null ? null : toDate(dto.dataEntrada);
-  if (dto.dataSaida !== undefined) {
-    const dataSaida = dto.dataSaida === null ? null : toDate(dto.dataSaida);
-    data.dataSaida = dataSaida;
-
-    const now = new Date();
-    data.status = !dataSaida || dataSaida > now ? 'ativo' : 'inativo';
-  }
-
-  if (dto.cuidadores !== undefined) {
-    data.cuidadores = {
-      deleteMany: { clienteId: id },
-      create: (dto.cuidadores ?? []).map((c) => {
-        if (!c?.endereco) {
-          throw new AppError('ENDERECO_CUIDADOR_OBRIGATORIO', 'Endereço do cuidador é obrigatório', 400);
+async function UpdateCaregiver(clientId: string, cuidadores?: Partial<ClientType.UpdateCaregiver[]>) {
+  if (Array.isArray(cuidadores)) {
+    const current = await prisma.cuidador.findMany({
+      where: { clienteId: clientId },
+      select: { cpf: true, enderecoId: true },
+    });
+  
+    const currentCpfs = new Set(current.map(c => c.cpf));
+    const incomingCpfs = new Set<string>(
+      (cuidadores ?? []).flatMap(c => (c?.cpf ? [c.cpf] : []))
+    );
+  
+    const toDelete = [...currentCpfs].filter(cpf => !incomingCpfs.has(cpf));
+    const toUpsert = cuidadores;
+  
+    await prisma.$transaction(async (tx) => {
+      for (const c of toUpsert) {
+        if (!c?.cpf) {
+          throw new AppError('CPF_MANDATORY', 'CPF do cuidador é obrigatório.', 422);
         }
-
-        return {
-          relacao: c.relacao ?? null,
-          descricaoRelacao: c.descricaoRelacao ?? null,
-          nome: c.nome ?? null,
-          cpf: c.cpf ?? null,
-          profissao: c.profissao ?? null,
-          escolaridade: c.escolaridade ?? null,
-          telefone: c.telefone ?? null,
-          email: c.email ?? null,
-          endereco: {
-            create: {
-              cep: c.endereco.cep ?? null,
-              rua: (c.endereco as ClientType.EnderecoInput).rua ?? c.endereco.logradouro ?? null,
-              numero: c.endereco.numero ?? null,
-              bairro: c.endereco.bairro ?? null,
-              cidade: c.endereco.cidade ?? null,
-              uf: c.endereco.uf ?? null,
-              complemento: c.endereco.complemento ?? null,
-            },
-          },
+  
+        const e: Partial<ClientType.UpdateAddress> = c.endereco ?? {}
+  
+        const enderecoUpdate = {
+        ...(e.cep !== undefined && { cep: e.cep }),
+        ...(e.logradouro !== undefined && { rua: e.logradouro }),
+        ...(e.numero !== undefined && { numero: e.numero }),
+        ...(e.complemento !== undefined && { complemento: e.complemento }),
+        ...(e.bairro !== undefined && { bairro: e.bairro }),
+        ...(e.cidade !== undefined && { cidade: e.cidade }),
+        ...(e.uf !== undefined && { uf: e.uf }),
         };
-      }),
-    };
-  }
-
-  if (dto.enderecos !== undefined) {
-    data.enderecos = {
-      deleteMany: { clienteId: id },
-      create: (dto.enderecos ?? []).map((e) => ({
-        residenciaDe: e?.residenciaDe ?? null,
-        outroResidencia: e?.outroResidencia ?? null,
-        endereco: {
-          connectOrCreate: {
-            where: {
-              unique_endereco: {
-                cep: e?.cep ?? '',
-                rua: e?.logradouro ?? '',
-                numero: e?.numero ?? '',
-                bairro: e?.bairro ?? '',
-                cidade: e?.cidade ?? '',
-                uf: e?.uf ?? '',
-                complemento: e?.complemento ?? '',
+  
+        const enderecoCreate = {
+          ...(e.cep !== undefined && { cep: e.cep }),
+          ...(e.logradouro !== undefined && { rua: e.logradouro }),
+          ...(e.numero !== undefined && { numero: e.numero }),
+          ...(e.complemento !== undefined && { complemento: e.complemento }),
+          ...(e.bairro !== undefined && { bairro: e.bairro }),
+          ...(e.cidade !== undefined && { cidade: e.cidade }),
+          ...(e.uf !== undefined && { uf: e.uf }),
+        };
+  
+        await tx.cuidador.upsert({
+          where: { cpf: c.cpf },
+          create: {
+            cliente: { connect: { id: clientId } },
+            relacao: c.relacao ?? null,
+            descricaoRelacao: c.descricaoRelacao ?? null,
+            nome: c.nome,
+            cpf: c.cpf,
+            profissao: c.profissao ?? null,
+            escolaridade: c.escolaridade ?? null,
+            telefone: c.telefone ?? null,
+            email: c.email ?? null,
+            endereco: { create: enderecoCreate },
+          },
+          update: {
+            cliente: { connect: { id: clientId } },
+            relacao: c.relacao ?? undefined,
+            descricaoRelacao: c.descricaoRelacao ?? null,
+            nome: c.nome ?? undefined,
+            profissao: c.profissao ?? undefined,
+            escolaridade: c.escolaridade ?? undefined,
+            telefone: c.telefone ?? undefined,
+            email: c.email ?? undefined,
+            endereco: {
+              upsert: {
+                create: enderecoCreate,
+                update: enderecoUpdate,
               },
             },
+          },
+        });
+      }
+  
+      if (toDelete.length > 0) {
+        const clientAddress = await tx.cliente_endereco.findFirst({
+          where: { clienteId: clientId },
+          select: { enderecoId: true },
+        });
+  
+        const addressesFromDeletes = await tx.cuidador.findMany({
+          where: { clienteId: clientId, cpf: { in: toDelete } },
+          select: { enderecoId: true },
+        });
+  
+        const fallbackCaregiver = await tx.cuidador.findFirst({
+          where: { clienteId: clientId, cpf: { notIn: toDelete } },
+          select: { enderecoId: true },
+        });
+  
+        const deletingIds = new Set(
+          addressesFromDeletes
+            .map(a => a.enderecoId)
+            .filter((id): id is number => id !== null)
+        );
+  
+        if (
+          clientAddress?.enderecoId !== undefined &&
+          deletingIds.has(clientAddress.enderecoId)
+        ) {
+          if (!fallbackCaregiver?.enderecoId) {
+            throw new AppError(
+              'CAREGIVER_ADDRESS_REQUIRED',
+              'Cliente deve ter ao menos 1 endereço de um cuidador responsável.',
+              400
+            );
+          }
+  
+          await tx.cliente_endereco.updateMany({
+            where: { clienteId: clientId, enderecoId: clientAddress.enderecoId },
+            data: { enderecoId: fallbackCaregiver.enderecoId },
+          });
+        }
+  
+        // apaga cuidadores
+        await tx.cuidador.deleteMany({
+          where: { clienteId: clientId, cpf: { in: toDelete } },
+        });
+  
+        // limpa endereços realmente órfãos (se seu schema permitir filtros relacionais, prefira)
+        const candidateIds = [...deletingIds];
+        if (candidateIds.length > 0) {
+          await tx.endereco.deleteMany({
+            where: { id: { in: candidateIds } },
+          });
+        }
+      }
+    });
+  }
+}
+
+async function UpdateAddress(clientId: string, enderecos?: Partial<ClientType.UpdateAddress[]>) {
+  const enderecoId = await prisma.cliente_endereco.findFirst({
+    where: { clienteId: clientId },
+    select: { enderecoId: true },
+  });
+
+  if (enderecoId) {
+    await prisma.endereco.update({
+      where: { id: enderecoId?.enderecoId },
+      data: {
+        ...(enderecos?.[0]?.cep !== undefined && { cep: enderecos?.[0]?.cep }),
+        ...(enderecos?.[0]?.logradouro !== undefined && { rua: enderecos?.[0]?.logradouro }),
+        ...(enderecos?.[0]?.numero !== undefined && { numero: enderecos?.[0]?.numero }),
+        ...(enderecos?.[0]?.complemento !== undefined && { complemento: enderecos?.[0]?.complemento }),
+        ...(enderecos?.[0]?.bairro !== undefined && { bairro: enderecos?.[0]?.bairro }),
+        ...(enderecos?.[0]?.cidade !== undefined && { cidade: enderecos?.[0]?.cidade }),
+        ...(enderecos?.[0]?.uf !== undefined && { uf: enderecos?.[0]?.uf }),
+      }
+    })
+  }
+}
+
+async function UpdateDataPayment(clientId: string, dadosPagamento?: Partial<ClientType.UpdateDataPayment>) {
+  await prisma.dados_pagamento.update({
+    where: { clienteId: clientId },
+    data: {
+      ...(dadosPagamento?.nomeTitular !== undefined && { nomeTitular: dadosPagamento.nomeTitular }),
+      ...(dadosPagamento?.numeroCarteirinha !== undefined && { numeroCarteirinha: dadosPagamento.numeroCarteirinha }),
+      ...(dadosPagamento?.telefone1 !== undefined && { telefone1: dadosPagamento.telefone1 }),
+      ...(dadosPagamento?.telefone2 !== undefined && { telefone2: dadosPagamento.telefone2 }),
+      ...(dadosPagamento?.telefone3 !== undefined && { telefone3: dadosPagamento.telefone3 }),
+      ...(dadosPagamento?.email1 !== undefined && { email1: dadosPagamento.email1 }),
+      ...(dadosPagamento?.email2 !== undefined && { email2: dadosPagamento.email2 }),
+      ...(dadosPagamento?.email3 !== undefined && { email3: dadosPagamento.email3 }),
+      ...(dadosPagamento?.sistemaPagamento !== undefined && { sistemaPagamento: dadosPagamento.sistemaPagamento }),
+      ...(dadosPagamento?.numeroProcesso !== undefined && { numeroProcesso: dadosPagamento.numeroProcesso }),
+      ...(dadosPagamento?.nomeAdvogado !== undefined && { nomeAdvogado: dadosPagamento.nomeAdvogado }),
+      ...(dadosPagamento?.telefoneAdvogado1 !== undefined && { telefoneAdvogado1: dadosPagamento.telefoneAdvogado1 }),
+      ...(dadosPagamento?.telefoneAdvogado2 !== undefined && { telefoneAdvogado2: dadosPagamento.telefoneAdvogado2 }),
+      ...(dadosPagamento?.telefoneAdvogado3 !== undefined && { telefoneAdvogado3: dadosPagamento.telefoneAdvogado3 }),
+      ...(dadosPagamento?.emailAdvogado1 !== undefined && { emailAdvogado1: dadosPagamento.emailAdvogado1 }),
+      ...(dadosPagamento?.emailAdvogado2 !== undefined && { emailAdvogado2: dadosPagamento.emailAdvogado2 }),
+      ...(dadosPagamento?.emailAdvogado3 !== undefined && { emailAdvogado3: dadosPagamento.emailAdvogado3 }),
+      ...(dadosPagamento?.houveNegociacao !== undefined && { houveNegociacao: dadosPagamento.houveNegociacao }),
+      ...(dadosPagamento?.valorAcordado !== undefined && { valorAcordado: dadosPagamento.valorAcordado }),
+    },
+  })
+}
+
+async function UpdateDataSchool(clientId: string, dadosEscola?: Partial<ClientType.UpdateDataSchool>) {
+  const escola = await prisma.dados_escola.update({
+    where: { clienteId: clientId },
+    data: {
+      ...(dadosEscola?.tipoEscola !== undefined && { tipoEscola: dadosEscola.tipoEscola }),
+      ...(dadosEscola?.nome !== undefined && { nome: dadosEscola.nome }),
+      ...(dadosEscola?.telefone !== undefined && { telefone: dadosEscola.telefone }),
+      ...(dadosEscola?.email !== undefined && { email: dadosEscola.email }),
+
+      ...(dadosEscola?.endereco !== undefined && {
+        endereco: {
+          upsert: {
+            update: {
+              ...(dadosEscola.endereco.cep !== undefined && { cep: dadosEscola.endereco.cep }),
+              ...(dadosEscola.endereco.logradouro !== undefined && { rua: dadosEscola.endereco.logradouro }),
+              ...(dadosEscola.endereco.numero !== undefined && { numero: dadosEscola.endereco.numero }),
+              ...(dadosEscola.endereco.complemento !== undefined && { complemento: dadosEscola.endereco.complemento }),
+              ...(dadosEscola.endereco.bairro !== undefined && { bairro: dadosEscola.endereco.bairro }),
+              ...(dadosEscola.endereco.cidade !== undefined && { cidade: dadosEscola.endereco.cidade }),
+              ...(dadosEscola.endereco.uf !== undefined && { uf: dadosEscola.endereco.uf }),
+            },
             create: {
-              cep: e?.cep ?? null,
-              rua: e?.logradouro ?? null,
-              numero: e?.numero ?? null,
-              bairro: e?.bairro ?? null,
-              cidade: e?.cidade ?? null,
-              uf: e?.uf ?? null,
-              complemento: e?.complemento ?? null,
+              ...(dadosEscola.endereco.cep !== undefined && { cep: dadosEscola.endereco.cep }),
+              ...(dadosEscola.endereco.logradouro !== undefined && { rua: dadosEscola.endereco.logradouro }),
+              ...(dadosEscola.endereco.numero !== undefined && { numero: dadosEscola.endereco.numero }),
+              ...(dadosEscola.endereco.complemento !== undefined && { complemento: dadosEscola.endereco.complemento }),
+              ...(dadosEscola.endereco.bairro !== undefined && { bairro: dadosEscola.endereco.bairro }),
+              ...(dadosEscola.endereco.cidade !== undefined && { cidade: dadosEscola.endereco.cidade }),
+              ...(dadosEscola.endereco.uf !== undefined && { uf: dadosEscola.endereco.uf }),
             },
           },
         },
-      })),
-    };
-  }
-
-  if (dto.dadosPagamento !== undefined) {
-    const pagamento = dto.dadosPagamento;
-    const updatePagamento: Record<string, unknown> = {};
-    const createPagamento: Record<string, unknown> = {
-      sistemaPagamento:
-        pagamento?.sistemaPagamento ?? existing.dadosPagamento?.sistemaPagamento ?? (() => {
-          throw new AppError('SISTEMA_PAGAMENTO_OBRIGATORIO', 'Sistema de pagamento é obrigatório', 400);
-        })(),
-    };
-
-    if (pagamento?.nomeTitular !== undefined) {
-      updatePagamento.nomeTitular = pagamento.nomeTitular;
-      createPagamento.nomeTitular = pagamento.nomeTitular ?? null;
-    }
-
-    if (pagamento?.numeroCarteirinha !== undefined) {
-      updatePagamento.numeroCarteirinha = pagamento.numeroCarteirinha;
-      createPagamento.numeroCarteirinha = pagamento.numeroCarteirinha ?? null;
-    }
-
-    if (pagamento?.telefone1 !== undefined) {
-      updatePagamento.telefone1 = pagamento.telefone1;
-      createPagamento.telefone1 = pagamento.telefone1 ?? null;
-    }
-
-    if (pagamento?.telefone2 !== undefined) {
-      updatePagamento.telefone2 = pagamento.telefone2;
-      createPagamento.telefone2 = pagamento.telefone2 ?? null;
-    }
-
-    if (pagamento?.telefone3 !== undefined) {
-      updatePagamento.telefone3 = pagamento.telefone3;
-      createPagamento.telefone3 = pagamento.telefone3 ?? null;
-    }
-
-    if (pagamento?.email1 !== undefined) {
-      updatePagamento.email1 = pagamento.email1;
-      createPagamento.email1 = pagamento.email1 ?? null;
-    }
-
-    if (pagamento?.email2 !== undefined) {
-      updatePagamento.email2 = pagamento.email2;
-      createPagamento.email2 = pagamento.email2 ?? null;
-    }
-
-    if (pagamento?.email3 !== undefined) {
-      updatePagamento.email3 = pagamento.email3;
-      createPagamento.email3 = pagamento.email3 ?? null;
-    }
-
-    if (pagamento?.sistemaPagamento !== undefined) {
-      updatePagamento.sistemaPagamento = pagamento.sistemaPagamento;
-    }
-
-    if (pagamento?.numeroProcesso !== undefined) {
-      updatePagamento.numeroProcesso = pagamento.numeroProcesso;
-      createPagamento.numeroProcesso = pagamento.numeroProcesso ?? null;
-    }
-
-    if (pagamento?.nomeAdvogado !== undefined) {
-      updatePagamento.nomeAdvogado = pagamento.nomeAdvogado;
-      createPagamento.nomeAdvogado = pagamento.nomeAdvogado ?? null;
-    }
-
-    if (pagamento?.telefoneAdvogado1 !== undefined) {
-      updatePagamento.telefoneAdvogado1 = pagamento.telefoneAdvogado1;
-      createPagamento.telefoneAdvogado1 = pagamento.telefoneAdvogado1 ?? null;
-    }
-
-    if (pagamento?.telefoneAdvogado2 !== undefined) {
-      updatePagamento.telefoneAdvogado2 = pagamento.telefoneAdvogado2;
-      createPagamento.telefoneAdvogado2 = pagamento.telefoneAdvogado2 ?? null;
-    }
-
-    if (pagamento?.telefoneAdvogado3 !== undefined) {
-      updatePagamento.telefoneAdvogado3 = pagamento.telefoneAdvogado3;
-      createPagamento.telefoneAdvogado3 = pagamento.telefoneAdvogado3 ?? null;
-    }
-
-    if (pagamento?.emailAdvogado1 !== undefined) {
-      updatePagamento.emailAdvogado1 = pagamento.emailAdvogado1;
-      createPagamento.emailAdvogado1 = pagamento.emailAdvogado1 ?? null;
-    }
-
-    if (pagamento?.emailAdvogado2 !== undefined) {
-      updatePagamento.emailAdvogado2 = pagamento.emailAdvogado2;
-      createPagamento.emailAdvogado2 = pagamento.emailAdvogado2 ?? null;
-    }
-
-    if (pagamento?.emailAdvogado3 !== undefined) {
-      updatePagamento.emailAdvogado3 = pagamento.emailAdvogado3;
-      createPagamento.emailAdvogado3 = pagamento.emailAdvogado3 ?? null;
-    }
-
-    if (pagamento?.houveNegociacao !== undefined) {
-      updatePagamento.houveNegociacao = pagamento.houveNegociacao;
-      createPagamento.houveNegociacao = pagamento.houveNegociacao ?? null;
-    }
-
-    if (pagamento?.valorAcordado !== undefined) {
-      updatePagamento.valorAcordado = pagamento.valorAcordado;
-      createPagamento.valorAcordado = pagamento.valorAcordado ?? null;
-    }
-
-    if (Object.keys(updatePagamento).length > 0 || existing.dadosPagamento) {
-      if (existing.dadosPagamento) {
-        if (Object.keys(updatePagamento).length > 0) {
-          data.dadosPagamento = { update: updatePagamento };
-        }
-      } else {
-        data.dadosPagamento = { create: createPagamento };
-      }
-    }
-  }
-
-  if (dto.dadosEscola !== undefined) {
-    const escola = dto.dadosEscola;
-    const updateEscola: Record<string, unknown> = {};
-    const createEscola: Record<string, unknown> = {
-      tipoEscola:
-        escola?.tipoEscola ?? existing.dadosEscola?.tipoEscola ?? (() => {
-          throw new AppError('TIPO_ESCOLA_OBRIGATORIO', 'Tipo de escola é obrigatório', 400);
-        })(),
-    };
-
-    if (escola?.nome !== undefined) {
-      updateEscola.nome = escola.nome;
-      createEscola.nome = escola.nome ?? null;
-    }
-
-    if (escola?.telefone !== undefined) {
-      updateEscola.telefone = escola.telefone;
-      createEscola.telefone = escola.telefone ?? null;
-    }
-
-    if (escola?.email !== undefined) {
-      updateEscola.email = escola.email;
-      createEscola.email = escola.email ?? null;
-    }
-
-    if (escola?.endereco !== undefined) {
-      if (escola.endereco) {
-        updateEscola.endereco = {
-          connectOrCreate: {
-            where: {
-              unique_endereco: {
-                cep: escola.endereco.cep ?? '',
-                rua: escola.endereco.logradouro ?? '',
-                numero: escola.endereco.numero ?? '',
-                bairro: escola.endereco.bairro ?? '',
-                cidade: escola.endereco.cidade ?? '',
-                uf: escola.endereco.uf ?? '',
-                complemento: escola.endereco.complemento ?? '',
-              },
-            },
-            create: {
-              cep: escola.endereco.cep ?? null,
-              rua: escola.endereco.logradouro ?? null,
-              numero: escola.endereco.numero ?? null,
-              bairro: escola.endereco.bairro ?? null,
-              cidade: escola.endereco.cidade ?? null,
-              uf: escola.endereco.uf ?? null,
-              complemento: escola.endereco.complemento ?? null,
-            },
-          },
-        };
-
-        createEscola.endereco = {
-          connectOrCreate: {
-            where: {
-              unique_endereco: {
-                cep: escola.endereco.cep ?? '',
-                rua: escola.endereco.logradouro ?? '',
-                numero: escola.endereco.numero ?? '',
-                bairro: escola.endereco.bairro ?? '',
-                cidade: escola.endereco.cidade ?? '',
-                uf: escola.endereco.uf ?? '',
-                complemento: escola.endereco.complemento ?? '',
-              },
-            },
-            create: {
-              cep: escola.endereco.cep ?? null,
-              rua: escola.endereco.logradouro ?? null,
-              numero: escola.endereco.numero ?? null,
-              bairro: escola.endereco.bairro ?? null,
-              cidade: escola.endereco.cidade ?? null,
-              uf: escola.endereco.uf ?? null,
-              complemento: escola.endereco.complemento ?? null,
-            },
-          },
-        };
-      } else {
-        updateEscola.endereco = { disconnect: true };
-      }
-    }
-
-    if (escola?.contatos !== undefined) {
-      updateEscola.contatos = {
-        deleteMany: {},
-        create: (escola.contatos ?? []).map((contato) => ({
-          nome: contato?.nome ?? null,
-          telefone: contato?.telefone ?? null,
-          email: contato?.email ?? null,
-          funcao: contato?.funcao ?? null,
-        })),
-      };
-
-      createEscola.contatos = {
-        create: (escola.contatos ?? []).map((contato) => ({
-          nome: contato?.nome ?? null,
-          telefone: contato?.telefone ?? null,
-          email: contato?.email ?? null,
-          funcao: contato?.funcao ?? null,
-        })),
-      };
-    }
-
-    if (Object.keys(updateEscola).length > 0 || existing.dadosEscola) {
-      if (existing.dadosEscola) {
-        if (Object.keys(updateEscola).length > 0) {
-          data.dadosEscola = { update: updateEscola };
-        }
-      } else {
-        data.dadosEscola = { create: createEscola };
-      }
-    }
-  }
-
-  if (Object.keys(data).length === 0) {
-    return getById(id);
-  }
-
-  await prisma.cliente.update({
-    where: { id },
-    data,
+      }),
+    },
+    select: { id: true },
   });
 
-  return getById(id);
+  const contato0 = dadosEscola?.contatos?.[0];
+
+  if (contato0) {
+    // pega o primeiro contato existente da escola
+    const contatoExistente = await prisma.escola_contato.findFirst({
+      where: { dadosEscolaId: escola.id },
+      orderBy: { id: 'asc' },
+      select: { id: true },
+    });
+
+    if (contatoExistente) {
+      // atualiza só o primeiro
+      await prisma.escola_contato.update({
+        where: { id: contatoExistente.id },
+        data: {
+          ...(contato0.nome !== undefined && { nome: contato0.nome }),
+          ...(contato0.telefone !== undefined && { telefone: contato0.telefone }),
+          ...(contato0.email !== undefined && { email: contato0.email }),
+        },
+      });
+    } else {
+      await prisma.escola_contato.create({
+        data: {
+          dadosEscolaId: escola.id,
+          nome: contato0.nome ?? null,
+          telefone: contato0.telefone ?? null,
+          email: contato0.email ?? null,
+        },
+      });
+    }
+  } 
+}
+
+export async function update(id: string, dto: Partial<ClientType.UpdateClient>) {
+  const {
+    cuidadores,
+    enderecos,
+    dadosPagamento,
+    dadosEscola,
+    ...dadosPrincipais
+  } = dto;
+
+  const clientId = id;
+
+  const existing = await prisma.cliente.findUnique({ where: { id: clientId } });
+  if (!existing) {
+    throw new AppError('CLIENT_NOT_FOUND', 'Cliente não encontrado.', 404);
+  }
+
+  await UpdateMainData(clientId, dadosPrincipais);
+  await UpdateCaregiver(clientId, cuidadores);
+  await UpdateAddress(clientId, enderecos);
+  await UpdateDataPayment(clientId, dadosPagamento);
+  await UpdateDataSchool(clientId, dadosEscola);
+
 }
 
 export async function list() {

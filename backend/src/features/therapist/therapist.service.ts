@@ -1,8 +1,11 @@
+import type { Prisma } from '@prisma/client';
 import { prisma } from "../../config/database.js";
 import * as TherapistTypes from './therapist.types.js';
+import * as TherapistNormalize from './therapist.normalizer.js';
 import { brMoneyToNumber } from '../../utils/brMoney.js';
 import { generateResetToken } from "../../utils/resetToken.js";
 import { AppError } from "../../errors/AppError.js";
+import type { UpdateTherapistSchemaInput } from '../../schemas/therapist.schema.js';
 
 async function resolveAreaAtuacaoId(
   areaAtuacaoId: TherapistTypes.TherapistProfessionalDataInput['areaAtuacaoId'],
@@ -246,4 +249,121 @@ export async function getTherapistReport() {
       nome: true,
     }
   });
+}
+
+export async function update(id: string, dto: UpdateTherapistSchemaInput) {
+  const existing = await prisma.terapeuta.findUnique({
+    where: { id },
+    include: { endereco: true },
+  });
+
+  if (!existing) {
+    throw new AppError('THERAPIST_NOT_FOUND', 'Terapeuta não encontrado', 404);
+  }
+
+  if (dto.cpf && dto.cpf !== existing.cpf) {
+    const existsCpf = await prisma.terapeuta.findUnique({ where: { cpf: dto.cpf } });
+    if (existsCpf) throw new AppError('CPF_DUPLICATED', 'CPF já cadastrado!', 409);
+  }
+
+  if (dto.email && dto.email !== existing.email) {
+    const existsEmail = await prisma.terapeuta.findUnique({ where: { email: dto.email } });
+    if (existsEmail) throw new AppError('EMAIL_DUPLICADO', 'E-mail já cadastrado', 409);
+  }
+
+  if (dto.emailIndigo && dto.emailIndigo !== existing.email_indigo) {
+    const existsEmailIndigo = await prisma.terapeuta.findUnique({ where: { email_indigo: dto.emailIndigo } });
+    if (existsEmailIndigo) throw new AppError('EMAIL_DUPLICADO', 'E-mail já cadastrado', 409);
+  }
+
+  const data: Prisma.terapeutaUpdateInput = {};
+
+  if (dto.nome !== undefined) data.nome = dto.nome.trim();
+  if (dto.email !== undefined) data.email = dto.email.trim();
+  if (dto.emailIndigo !== undefined) data.email_indigo = dto.emailIndigo.trim();
+  if (dto.telefone !== undefined) data.telefone = TherapistNormalize.normalizeTherapistNullableString(dto.telefone) ?? null;
+  if (dto.celular !== undefined) {
+    const celular = TherapistNormalize.normalizeTherapistNullableString(dto.celular);
+    if (!celular) {
+      throw new AppError('CELULAR_OBRIGATORIO', 'Celular é obrigatório', 400);
+    }
+    data.celular = celular;
+  }
+  if (dto.cpf !== undefined) data.cpf = dto.cpf;
+
+  if (dto.dataNascimento !== undefined) {
+    const parsed = TherapistNormalize.normalizeTherapistDate(dto.dataNascimento);
+    if (!parsed) {
+      throw new AppError('DATA_NASCIMENTO_OBRIGATORIA', 'Data de nascimento é obrigatória', 400);
+    }
+    data.data_nascimento = parsed;
+  }
+
+  if (dto.possuiVeiculo !== undefined) {
+    data.possui_veiculo = dto.possuiVeiculo === 'sim';
+  }
+
+  if (dto.placaVeiculo !== undefined) {
+    const placa = TherapistNormalize.normalizeTherapistNullableString(dto.placaVeiculo);
+    data.placa_veiculo = placa ? placa.toUpperCase() : null;
+  }
+
+  if (dto.modeloVeiculo !== undefined) {
+    data.modelo_veiculo = TherapistNormalize.normalizeTherapistNullableString(dto.modeloVeiculo) ?? null;
+  }
+
+  if (dto.banco !== undefined) data.banco = TherapistNormalize.normalizeTherapistNullableString(dto.banco) ?? null;
+  if (dto.agencia !== undefined) data.agencia = TherapistNormalize.normalizeTherapistNullableString(dto.agencia) ?? null;
+  if (dto.conta !== undefined) data.conta = TherapistNormalize.normalizeTherapistNullableString(dto.conta) ?? null;
+  if (dto.chavePix !== undefined) data.chave_pix = TherapistNormalize.normalizeTherapistNullableString(dto.chavePix) ?? null;
+  if (dto.pixTipo !== undefined) data.pix_tipo = dto.pixTipo;
+
+  if (dto.valorHoraAcordado !== undefined) {
+    const value = brMoneyToNumber(dto.valorHoraAcordado);
+    data.valor_hora = value;
+  }
+
+  if (dto.professorUnindigo !== undefined) {
+    data.professor_uni = dto.professorUnindigo === 'sim';
+  }
+
+  if (dto.dataInicio !== undefined) {
+    const parsed = TherapistNormalize.normalizeTherapistDate(dto.dataInicio);
+    if (!parsed) {
+      throw new AppError('DATA_INICIO_INVALIDA', 'Data de início inválida', 400);
+    }
+    data.data_entrada = parsed;
+  }
+
+  if (dto.dataFim !== undefined) {
+    if (dto.dataFim === null) {
+      data.data_saida = null;
+    } else {
+      const parsed = TherapistNormalize.normalizeTherapistDate(dto.dataFim);
+      if (parsed !== undefined) {
+        data.data_saida = parsed;
+      }
+    }
+  }
+
+  if (dto.endereco !== undefined) {
+    const normalizedEndereco = TherapistNormalize.normalizeTherapistEnderecoUpdate(dto.endereco);
+
+    if (normalizedEndereco.hasChanges) {
+      data.endereco = existing.endereco
+        ? { update: normalizedEndereco.update }
+        : { create: normalizedEndereco.create };
+    }
+  }
+
+  if (Object.keys(data).length === 0) {
+    return getById(id);
+  }
+
+  await prisma.terapeuta.update({
+    where: { id },
+    data,
+  });
+
+  return getById(id);
 }
