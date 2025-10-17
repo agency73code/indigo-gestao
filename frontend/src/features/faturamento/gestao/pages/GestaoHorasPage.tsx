@@ -241,7 +241,9 @@ export default function GestaoHorasPage() {
         <div className="flex flex-col gap-6 p-6">
             {/* Header */}
             <div>
-                <h1 className="text-2xl font-bold tracking-tight">Gestão de Horas</h1>
+                <h1 
+                style={{ color: 'var(--primary)', fontFamily: 'sora' }}
+                className="text-2xl font-bold tracking-tight">Gestão de Horas</h1>
                 <p className="text-sm text-muted-foreground">
                     Aprovação, pagamento e resumo por terapeuta.
                 </p>
