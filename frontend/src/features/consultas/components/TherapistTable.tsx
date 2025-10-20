@@ -90,9 +90,21 @@ export default function TherapistTable({
                     <div key={therapist.id} className="p-4 space-y-3">
                         <div className="flex items-start justify-between gap-3">
                             <div className="flex items-center gap-3">
-                                <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center text-sm font-semibold text-blue-600">
-                                    {getInitials(therapist.nome)}
-                                </div>
+                                {therapist.avatarUrl ? (
+                                    <img
+                                        src={therapist.avatarUrl.startsWith('/api')
+                                            ? `${import.meta.env.VITE_API_BASE ?? ''}${therapist.avatarUrl}`
+                                            : therapist.avatarUrl}
+                                        alt={therapist.nome}
+                                        className='h-10 w-10 md:h-8 md:w-8 rounded-full object-cover'
+                                        referrerPolicy='no-referrer'
+                                        loading='lazy'
+                                    />
+                                ) : (
+                                    <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center text-sm font-semibold text-blue-600">
+                                        {getInitials(therapist.nome)}
+                                    </div>
+                                )}
                                 <div>
                                     <p className="font-medium text-sm text-foreground">
                                         {therapist.nome}
@@ -204,9 +216,21 @@ export default function TherapistTable({
                             >
                                 <td className="p-4 align-top">
                                     <div className="flex items-center gap-3">
-                                        <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center text-xs font-medium text-blue-600">
-                                            {getInitials(therapist.nome)}
-                                        </div>
+                                        {therapist.avatarUrl ? (
+                                            <img
+                                                src={therapist.avatarUrl.startsWith('/api')
+                                                    ? `${import.meta.env.VITE_API_BASE ?? ''}${therapist.avatarUrl}`
+                                                    : therapist.avatarUrl}
+                                                alt={therapist.nome}
+                                                className='h-10 w-10 md:h-8 md:w-8 rounded-full object-cover'
+                                                referrerPolicy='no-referrer'
+                                                loading='lazy'
+                                            />
+                                        ) : (
+                                            <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center text-xs font-medium text-blue-600">
+                                                {getInitials(therapist.nome)}
+                                            </div>
+                                        )}
                                         <div>
                                             <div className="font-medium text-sm text-foreground break-words">
                                                 {therapist.nome}

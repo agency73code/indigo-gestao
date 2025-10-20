@@ -146,6 +146,9 @@ export function normalizeTherapistSession(db: TherapistTypes.TherapistDB) {
         ?.map((d) => d.area_atuacao?.nome?.trim())
         .filter((value): value is string => Boolean(value && value.length > 0))
     ) ?? [];
+
+    const fotoPerfil = (db.arquivos ?? []).find((a) => a.tipo === 'fotoPerfil');
+
     return {
         id: db.id,
         nome: db.nome,
@@ -155,7 +158,9 @@ export function normalizeTherapistSession(db: TherapistTypes.TherapistDB) {
         especialidade: db.registro_profissional?.[0]?.area_atuacao?.nome ?? '',
         conselho: 'CRP',
         registroConselho: db.registro_profissional?.[0]?.numero_conselho ?? '',
-        avatarUrl: '',
+        avatarUrl: fotoPerfil?.arquivo_id
+            ? `/api/arquivos/${fotoPerfil.arquivo_id}/view`
+            : '',
 
         pessoa: {
             cpf: db.cpf,
