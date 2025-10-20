@@ -89,9 +89,21 @@ export default function PatientTable({
                     <div key={patient.id} className="p-4 space-y-3">
                         <div className="flex items-start justify-between gap-3">
                             <div className="flex items-center gap-3">
-                                <div className="h-10 w-10 bg-purple-100 rounded-full flex items-center justify-center text-sm font-semibold text-purple-600">
-                                    {getInitials(patient.nome)}
-                                </div>
+                                {patient.avatarUrl ? (
+                                    <img
+                                        src={patient.avatarUrl.startsWith('/api') 
+                                            ? `${import.meta.env.VITE_API_BASE ?? ''}${patient.avatarUrl}`
+                                            : patient.avatarUrl}
+                                        alt={patient.nome}
+                                        className="h-10 w-10 md:h-8 md:w-8 rounded-full object-cover"
+                                        referrerPolicy="no-referrer"
+                                        loading="lazy"
+                                    />
+                                ) : (
+                                    <div className="h-10 w-10 bg-purple-100 rounded-full flex items-center justify-center text-sm font-semibold text-purple-600">
+                                        {getInitials(patient.nome)}
+                                    </div>
+                                )}
                                 <div>
                                     <p className="font-medium text-sm text-foreground">
                                         {patient.nome}
@@ -190,9 +202,21 @@ export default function PatientTable({
                             >
                                 <td className="p-4 align-top">
                                     <div className="flex items-center gap-3">
-                                        <div className="h-8 w-8 bg-purple-100 rounded-full flex items-center justify-center text-xs font-medium text-purple-600">
-                                            {getInitials(patient.nome)}
-                                        </div>
+                                        {patient.avatarUrl ? (
+                                            <img
+                                                src={patient.avatarUrl.startsWith('/api') 
+                                                    ? `${import.meta.env.VITE_API_BASE ?? ''}${patient.avatarUrl}`
+                                                    : patient.avatarUrl}
+                                                alt={patient.nome}
+                                                className="h-10 w-10 md:h-8 md:w-8 rounded-full object-cover"
+                                                referrerPolicy="no-referrer"
+                                                loading="lazy"
+                                            />
+                                        ) : (
+                                            <div className="h-8 w-8 bg-purple-100 rounded-full flex items-center justify-center text-xs font-medium text-purple-600">
+                                                {getInitials(patient.nome)}
+                                            </div>
+                                        )}
                                         <div>
                                             <div className="font-medium text-sm text-foreground break-words">
                                                 {patient.nome}

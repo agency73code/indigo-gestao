@@ -14,7 +14,7 @@ export async function normalizeList(db: ClientType.DBClientQueryPage[]) {
             responsavel: cuidador?.nome ?? '',
             status: c.status ?? '',
             avatarUrl: fotoPerfil?.arquivo_id 
-                ? `/api/arquivos/view/${fotoPerfil.arquivo_id}` 
+                ? `/api/arquivos/${fotoPerfil.arquivo_id}/view` 
                 : '',
             pessoa: {
                 cpf: cuidador?.cpf ?? '',
