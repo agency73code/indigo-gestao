@@ -289,10 +289,10 @@ async function UpdateMainData(clientId: string, dadosPrincipais?: Partial<Client
       data: {
         ...(dadosPrincipais.nome !== undefined && { nome: dadosPrincipais.nome }),
         ...(dadosPrincipais.cpf !== undefined && { cpf: dadosPrincipais.cpf }),
-        ...(dadosPrincipais.dataNascimento !== undefined && { dataNascimento: dadosPrincipais.dataNascimento }),
+        ...(dadosPrincipais.dataNascimento !== undefined && { dataNascimento: new Date(dadosPrincipais.dataNascimento) }),
         ...(dadosPrincipais.emailContato !== undefined && { emailContato: dadosPrincipais.emailContato }),
-        ...(dadosPrincipais.dataEntrada !== undefined && { dataEntrada: dadosPrincipais.dataEntrada }),
-        ...(dadosPrincipais.dataSaida !== undefined && { dataSaida: dadosPrincipais.dataSaida }),
+        ...(dadosPrincipais.dataEntrada !== undefined && { dataEntrada: new Date(dadosPrincipais.dataEntrada) }),
+        ...(dadosPrincipais.dataSaida !== undefined && { dataSaida: dadosPrincipais.dataSaida ? new Date(dadosPrincipais.dataSaida) : null }),
       }
     })
   }
