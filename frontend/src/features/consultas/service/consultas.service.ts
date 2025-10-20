@@ -1,5 +1,5 @@
 import { authFetch } from '@/lib/http';
-import { MOCK_ENABLED, MOCK_DOCUMENTS } from '../arquivos/mocks/documents.mock';
+import { MOCK_ENABLED } from '../arquivos/mocks/documents.mock';
 
 // Tipos para arquivos
 export type FileMeta = {
@@ -19,28 +19,8 @@ const mockDelay = (ms: number = 800) => new Promise(resolve => setTimeout(resolv
 
 // Funções para listar arquivos
 export async function listFiles(params: { ownerType: "cliente" | "terapeuta"; ownerId: string }): Promise<FileMeta[]> {
-  // Se mock estiver habilitado, retorna dados mockados
-  if (MOCK_ENABLED) {
-    console.log('📁 [MOCK] Carregando documentos mockados para:', params);
-    await mockDelay(); // Simula delay da API
-    
-    const ownerData = MOCK_DOCUMENTS[params.ownerType];
-    let mockData = ownerData?.[params.ownerId] || [];
-    
-    // Se não encontrou dados para o ID específico, usa o 'default'
-    if (mockData.length === 0 && ownerData?.['default']) {
-      console.log('📁 [MOCK] ID específico não encontrado, usando dados default');
-      mockData = ownerData['default'];
-    }
-    
-    console.log('📁 [MOCK] Documentos encontrados:', mockData.length);
-    return mockData;
-  }
-
-  // Chamada real da API
-  const url = new URL('/api/arquivos', API_BASE_URL);
-  url.searchParams.set('ownerType', params.ownerType);
-  url.searchParams.set('ownerId', params.ownerId);
+  const base = API_BASE_URL?.replace(/\/+$/, '') || '';
+  const url = `${base}/arquivos?ownerType=${params.ownerType}&ownerId=${params.ownerId}`;
 
   const res = await authFetch(url.toString(), { method: 'GET' });
   const text = await res.text();
