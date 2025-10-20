@@ -31,6 +31,7 @@ import RelatorioMensalPage from '../../features/programas/pages/RelatorioMensalP
 import { HubFaturamentoPage } from '../../features/faturamento';
 import RegistrarLancamentoPage from '../../features/faturamento/registrar-lancamento/pages/RegistrarLancamentoPage';
 import MinhasHorasPage from '../../features/faturamento/minhas-horas/pages/MinhasHorasPage';
+import GestaoHorasPage from '../../features/faturamento/gestao/pages/GestaoHorasPage';
 import NotAccessPage from '@/features/shell/pages/NotAccessPage';
 import NotPermissionPage from '@/features/shell/pages/NotPermissionPage';
 import RequireAuth from '@/features/auth/components/RequireAuth';
@@ -266,6 +267,18 @@ export const router = createBrowserRouter([
                                 handle: {
                                     breadcrumb: 'Minhas Horas',
                                     title: 'Minhas Horas',
+                                },
+                            },
+                            {
+                                path: 'faturamento/gestao',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <GestaoHorasPage />
+                                    </Suspense>
+                                ),
+                                handle: {
+                                    breadcrumb: 'Gestão de Horas',
+                                    title: 'Gestão de Horas',
                                 },
                             },
                         ],

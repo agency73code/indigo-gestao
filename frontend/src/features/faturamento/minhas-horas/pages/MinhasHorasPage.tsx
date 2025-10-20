@@ -2,14 +2,24 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { HourEntryFilters } from '../components/HourEntryFilters';
 import { HourEntryTable } from '../components/HourEntryTable';
-import { hourEntryService } from '../../service/hourEntry.service';
+import { therapistService } from '../../services/faturamento.service';
 import { fetchClients } from '../../api';
 import type { ListHourEntriesQuery, HourEntryDTO } from '../../types/hourEntry.types';
 import type { Patient } from '@/features/consultas/types/consultas.types';
+
+// Filtro inicial: mês atual
+const getInitialFilters = (): ListHourEntriesQuery => {
+    const today = new Date();
+    return {
+        from: format(startOfMonth(today), 'yyyy-MM-dd'),
+        to: format(endOfMonth(today), 'yyyy-MM-dd'),
+    };
+};
 
 export default function MinhasHorasPage() {
     const navigate = useNavigate();
@@ -19,8 +29,8 @@ export default function MinhasHorasPage() {
     const [patients, setPatients] = useState<Patient[]>([]);
     const [isLoading, setIsLoading] = useState(false);
 
-    // Estados de filtros e paginação
-    const [filters, setFilters] = useState<ListHourEntriesQuery>({});
+    // Estados de filtros e paginação (inicia com mês atual)
+    const [filters, setFilters] = useState<ListHourEntriesQuery>(getInitialFilters());
     const [page, setPage] = useState(1);
     const [pageSize] = useState(10);
     const [total, setTotal] = useState(0);
@@ -43,7 +53,7 @@ export default function MinhasHorasPage() {
     const loadEntries = async () => {
         setIsLoading(true);
         try {
-            const result = await hourEntryService.listMine({
+            const result = await therapistService.listMine({
                 ...filters,
                 page,
                 pageSize,
@@ -121,7 +131,7 @@ export default function MinhasHorasPage() {
             </div>
 
             {/* Filtros */}
-            <Card className="rounded-[5px]">
+            <Card className="rounded-[5px]" padding="medium">
                 <HourEntryFilters
                     onFilterChange={handleFilterChange}
                     patientOptions={patientOptions}

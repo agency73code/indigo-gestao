@@ -31,6 +31,7 @@ const routeToTitleMap: Record<string, string> = {
     '/app/faturamento': 'Faturamento',
     '/app/faturamento/registrar-lancamento': 'Registrar Lançamento',
     '/app/faturamento/minhas-horas': 'Minhas Horas',
+    '/app/faturamento/gestao': 'Gestão de Horas',
 };
 
 export function useBreadcrumb(): BreadcrumbItem[] {
