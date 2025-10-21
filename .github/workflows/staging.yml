@@ -1,8 +1,8 @@
-name: Deploy DEV
+name: Deploy STAGING
 
 on:
   push:
-    branches: [dev]
+    branches: [staging]
 
 jobs:
   deploy:
@@ -11,14 +11,14 @@ jobs:
       SSH_HOST: ${{ secrets.SSH_HOST }}
       SSH_USER: ${{ secrets.SSH_USER }}
       SSH_KEY:  ${{ secrets.SSH_KEY }}
-      DEV_PATH: ${{ secrets.DEV_PATH }}
-      PM2_APP:  ${{ secrets.PM2_APP_DEV }}
+      STAGING_PATH: ${{ secrets.STAGING_PATH }}
+      PM2_APP:  ${{ secrets.PM2_APP_STAGING }}
 
     steps:
       - name: Checkout (for metadata only)
         uses: actions/checkout@v4
 
-      - name: Deploy via SSH (DEV)
+      - name: Deploy via SSH (STAGING)
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ env.SSH_HOST }}
@@ -27,40 +27,32 @@ jobs:
           script: |
             set -euo pipefail
 
-            # 1) Clona se ainda não existir
-            if [ ! -d "$DEV_PATH/.git" ]; then
-              sudo mkdir -p "$DEV_PATH"
-              sudo chown -R "$USER:$USER" "$DEV_PATH"
-              git clone https://github.com/agency73code/indigo-gestao.git "$DEV_PATH"
+            if [ ! -d "$STAGING_PATH/.git" ]; then
+              sudo mkdir -p "$STAGING_PATH"
+              sudo chown -R "$USER:$USER" "$STAGING_PATH"
+              git clone https://github.com/agency73code/indigo-gestao.git "$STAGING_PATH"
             fi
 
-            # 2) Puxa código da branch dev
-            cd "$DEV_PATH"
+            cd "$STAGING_PATH"
             git fetch --all --prune
-            git checkout dev
-            git reset --hard origin/dev
+            git checkout staging
+            git reset --hard origin/staging
 
-            # 3) Backend: deps + migrações
             cd backend
             pnpm ci --omit=dev
             npx prisma migrate deploy
 
-            # 4) Frontend: build
             cd ../frontend
             pnpm ci
             pnpm run build
 
-            # 5) Reinicia PM2 (se não existir, sobe)
-            cd "$DEV_PATH"
+            cd "$STAGING_PATH"
             if pm2 describe "$PM2_APP" > /dev/null; then
               pm2 restart "$PM2_APP"
             else
-              # ajuste o comando de start conforme seu backend
-              # exemplo comum com ecosystem:
               if [ -f ecosystem.config.js ]; then
                 pm2 start ecosystem.config.js --only "$PM2_APP" || pm2 start ecosystem.config.js
               else
-                # fallback: inicia via node diretamente (ajuste o caminho do entrypoint!)
                 pm2 start backend/dist/server.js --name "$PM2_APP"
               fi
             fi
