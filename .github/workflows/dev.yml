@@ -24,6 +24,7 @@ jobs:
           host: ${{ env.SSH_HOST }}
           username: ${{ env.SSH_USER }}
           key: ${{ env.SSH_KEY }}
+          envs: DEV_PATH,PM2_APP
           script: |
             set -euo pipefail
 

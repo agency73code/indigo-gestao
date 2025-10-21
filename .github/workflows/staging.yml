@@ -26,6 +26,7 @@ jobs:
           username: ${{ env.SSH_USER }}
           key: ${{ env.SSH_KEY }}
           envs: STAGING_PATH,PM2_APP,CI
+
           script: |
             set -euo pipefail
             export CI=${CI:-true}   # força modo CI no remoto (evita o NO_TTY do pnpm)
