@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/shared/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
     Select,
@@ -11,11 +10,11 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { SectionHeader } from '@/components/configuracoes/SectionHeader';
 import { SettingsCard } from '@/components/configuracoes/SettingsCard';
 import { SwitchField } from '@/components/configuracoes/SwitchField';
-import { Settings, User, Bell, Shield, Zap, Building, X, Check } from 'lucide-react';
+import { PerfilSection } from '@/features/configuracoes/components/PerfilSection';
+import { Settings, User, Bell, Shield, Zap, X, Check } from 'lucide-react';
 
 export default function ConfiguracoesPage() {
     const location = useLocation();
@@ -119,79 +118,7 @@ export default function ConfiguracoesPage() {
                         description="Gerencie suas informações pessoais e da organização"
                     />
 
-                    <div className="grid gap-6 md:grid-cols-2">
-                        <SettingsCard
-                            title="Informações Pessoais"
-                            description="Seus dados básicos na plataforma"
-                        >
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-4">
-                                    <Avatar className="h-16 w-16">
-                                        <AvatarImage src="/placeholder-avatar.jpg" />
-                                        <AvatarFallback>
-                                            <User className="h-8 w-8" />
-                                        </AvatarFallback>
-                                    </Avatar>
-                                    <Button variant="outline" size="sm" className="rounded-[5px] p-4">
-                                        Alterar Avatar
-                                    </Button>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="nome">Nome Completo</Label>
-                                    <Input
-                                        id="nome"
-                                        placeholder="Seu nome completo"
-                                        defaultValue="João Silva"
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="email">E-mail</Label>
-                                    <Input
-                                        id="email"
-                                        type="email"
-                                        placeholder="seu@email.com"
-                                        defaultValue="joao@indigo.com"
-                                    />
-                                </div>
-                            </div>
-                        </SettingsCard>
-
-                        <SettingsCard
-                            title="Organização"
-                            description="Informações da sua organização"
-                        >
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-4">
-                                    <div className="h-16 w-16 bg-primary/10 rounded-[5px] flex items-center justify-center">
-                                        <Building className="h-8 w-8 text-primary" />
-                                    </div>
-                                    <Button variant="outline" size="sm" className="rounded-[5px] p-4">
-                                        Alterar Logo
-                                    </Button>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="organizacao">Nome da Organização</Label>
-                                    <Input
-                                        id="organizacao"
-                                        placeholder="Nome da sua organização"
-                                        defaultValue="Clínica Índigo"
-                                    />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="cnpj">CNPJ</Label>
-                                    <Input
-                                        id="cnpj"
-                                        placeholder="00.000.000/0000-00"
-                                        defaultValue="12.345.678/0001-90"
-                                    />
-                                </div>
-                            </div>
-                        </SettingsCard>
-                    </div>
+                    <PerfilSection />
                 </TabsContent>
 
                 {/* Preferências */}
