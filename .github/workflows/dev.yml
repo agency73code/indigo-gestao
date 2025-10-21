@@ -28,6 +28,11 @@ jobs:
           script: |
             set -euo pipefail
 
+            # garante pasta, dono e "safe.directory" para evitar o erro 128 do Git
+            sudo mkdir -p "$DEV_PATH"
+            sudo chown -R "$USER:$USER" "$DEV_PATH"
+            git config --global --add safe.directory "$DEV_PATH"
+
             # 1) Clona se ainda não existir
             if [ ! -d "$DEV_PATH/.git" ]; then
               sudo mkdir -p "$DEV_PATH"
@@ -41,14 +46,17 @@ jobs:
             git checkout dev
             git reset --hard origin/dev
 
+            command -v pnpm >/dev/null 2>&1 || (corepack enable && corepack prepare pnpm@latest --activate)
+
             # 3) Backend: deps + migrações
             cd backend
-            pnpm ci --omit=dev
-            npx prisma migrate deploy
+            pnpm install --frozen-lockfile --prod
+            pnpm dlx prisma migrate deploy
+            pnpm dlx prisma generate
 
             # 4) Frontend: build
             cd ../frontend
-            pnpm ci
+            pnpm install --frozen-lockfile
             pnpm run build
 
             # 5) Reinicia PM2 (se não existir, sobe)
