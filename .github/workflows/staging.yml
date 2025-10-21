@@ -13,6 +13,7 @@ jobs:
       SSH_KEY:  ${{ secrets.SSH_KEY }}
       STAGING_PATH: ${{ secrets.STAGING_PATH }}
       PM2_APP:  ${{ secrets.PM2_APP_STAGING }}
+      CI: true  # garante pnpm não-interativo
 
     steps:
       - name: Checkout (for metadata only)
@@ -24,29 +25,42 @@ jobs:
           host: ${{ env.SSH_HOST }}
           username: ${{ env.SSH_USER }}
           key: ${{ env.SSH_KEY }}
-          envs: DEV_PATH,PM2_APP
+          envs: STAGING_PATH,PM2_APP,CI
           script: |
             set -euo pipefail
+            export CI=${CI:-true}   # força modo CI no remoto (evita o NO_TTY do pnpm)
 
+            # Pasta, permissões e safe.directory (evita erro 128 do Git)
+            mkdir -p "$STAGING_PATH"
+            chown -R "$USER:$USER" "$STAGING_PATH" || true
+            git config --global --add safe.directory "$STAGING_PATH"
+
+            # Clone inicial se necessário
             if [ ! -d "$STAGING_PATH/.git" ]; then
-              sudo mkdir -p "$STAGING_PATH"
-              sudo chown -R "$USER:$USER" "$STAGING_PATH"
               git clone https://github.com/agency73code/indigo-gestao.git "$STAGING_PATH"
             fi
 
+            # Atualiza branch
             cd "$STAGING_PATH"
             git fetch --all --prune
             git checkout staging
             git reset --hard origin/staging
 
-            cd backend
-            pnpm ci --omit=dev
-            npx prisma migrate deploy
+            # pnpm via corepack (usa versão do projeto se houver packageManager)
+            command -v pnpm >/dev/null 2>&1 || (corepack enable && corepack prepare pnpm@latest --activate)
 
+            # Backend: deps (prod), migra e gera client via dlx (não precisa prisma como devDep local)
+            cd backend
+            pnpm install --frozen-lockfile --prod
+            pnpm dlx prisma migrate deploy
+            pnpm dlx prisma generate
+
+            # Frontend: deps (com dev) e build
             cd ../frontend
-            pnpm ci
+            pnpm install --frozen-lockfile
             pnpm run build
 
+            # PM2: restart ou start
             cd "$STAGING_PATH"
             if pm2 describe "$PM2_APP" > /dev/null; then
               pm2 restart "$PM2_APP"
