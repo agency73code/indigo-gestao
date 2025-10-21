@@ -15,9 +15,6 @@ jobs:
       PM2_APP:  ${{ secrets.PM2_APP_DEV }}
 
     steps:
-      - name: Checkout (for metadata only)
-        uses: actions/checkout@v4
-
       - name: Deploy via SSH (DEV)
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -27,6 +24,7 @@ jobs:
           envs: DEV_PATH,PM2_APP
           script: |
             set -euo pipefail
+            export CI=true   # <= 🔧 resolve o ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY
 
             # garante pasta, dono e "safe.directory" para evitar o erro 128 do Git
             mkdir -p "$DEV_PATH"
@@ -57,17 +55,14 @@ jobs:
             pnpm install --frozen-lockfile
             pnpm run build
 
-            # 5) Reinicia PM2 (se não existir, sobe)
+            # 5) PM2
             cd "$DEV_PATH"
             if pm2 describe "$PM2_APP" > /dev/null; then
               pm2 restart "$PM2_APP"
             else
-              # ajuste o comando de start conforme seu backend
-              # exemplo comum com ecosystem:
               if [ -f ecosystem.config.js ]; then
                 pm2 start ecosystem.config.js --only "$PM2_APP" || pm2 start ecosystem.config.js
               else
-                # fallback: inicia via node diretamente (ajuste o caminho do entrypoint!)
                 pm2 start backend/dist/server.js --name "$PM2_APP"
               fi
             fi
