@@ -48,13 +48,13 @@ jobs:
 
             # 3) Backend: deps + migrações
             cd backend
-            pnpm install --frozen-lockfile --prod --yes
+            pnpm install --frozen-lockfile --prod
             pnpm dlx prisma migrate deploy
             pnpm dlx prisma generate
 
             # 4) Frontend: build
             cd ../frontend
-            pnpm install --frozen-lockfile --yes
+            pnpm install --frozen-lockfile
             pnpm run build
 
             # 5) Reinicia PM2 (se não existir, sobe)
