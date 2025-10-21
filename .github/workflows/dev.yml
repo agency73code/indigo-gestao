@@ -29,8 +29,8 @@ jobs:
             set -euo pipefail
 
             # garante pasta, dono e "safe.directory" para evitar o erro 128 do Git
-            sudo mkdir -p "$DEV_PATH"
-            sudo chown -R "$USER:$USER" "$DEV_PATH"
+            mkdir -p "$DEV_PATH"
+            chown -R "$USER:$USER" "$DEV_PATH" || true
             git config --global --add safe.directory "$DEV_PATH"
 
             # 1) Clona se ainda não existir
