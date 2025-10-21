@@ -35,8 +35,6 @@ jobs:
 
             # 1) Clona se ainda não existir
             if [ ! -d "$DEV_PATH/.git" ]; then
-              sudo mkdir -p "$DEV_PATH"
-              sudo chown -R "$USER:$USER" "$DEV_PATH"
               git clone https://github.com/agency73code/indigo-gestao.git "$DEV_PATH"
             fi
 
@@ -50,13 +48,13 @@ jobs:
 
             # 3) Backend: deps + migrações
             cd backend
-            pnpm install --frozen-lockfile --prod
+            pnpm install --frozen-lockfile --prod --yes
             pnpm dlx prisma migrate deploy
             pnpm dlx prisma generate
 
             # 4) Frontend: build
             cd ../frontend
-            pnpm install --frozen-lockfile
+            pnpm install --frozen-lockfile --yes
             pnpm run build
 
             # 5) Reinicia PM2 (se não existir, sobe)
