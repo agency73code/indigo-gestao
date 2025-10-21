@@ -230,7 +230,7 @@ export default function ProfilePhotoFieldSimple({
             <Label>Foto de Perfil</Label>
 
             <div
-                className={`relative border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer ${
+                className={`relative border-2 border-dashed rounded-lg p-4 h-32 flex items-center justify-center text-center transition-colors cursor-pointer ${
                     error
                         ? 'border-destructive'
                         : 'border-muted-foreground/25 hover:border-muted-foreground/50'
@@ -240,21 +240,21 @@ export default function ProfilePhotoFieldSimple({
                 onClick={() => !disabled && fileInputRef.current?.click()}
             >
                 {previewUrl ? (
-                    <div className="flex flex-col items-center gap-3">
+                    <div className="flex items-center justify-center gap-4 w-full">
                         <div className="relative">
                             {hasImageError ? (
-                                <div className="w-24 h-24 rounded-full bg-muted border-2 border-muted flex items-center justify-center">
-                                    <X className="w-6 h-6 text-destructive" />
+                                <div className="w-20 h-20 rounded-full bg-muted border-2 border-muted flex items-center justify-center">
+                                    <X className="w-5 h-5 text-destructive" />
                                 </div>
                             ) : isImageLoading ? (
-                                <div className="w-24 h-24 rounded-full bg-muted animate-pulse border-2 border-muted flex items-center justify-center">
-                                    <Upload className="w-6 h-6 text-muted-foreground" />
+                                <div className="w-20 h-20 rounded-full bg-muted animate-pulse border-2 border-muted flex items-center justify-center">
+                                    <Upload className="w-5 h-5 text-muted-foreground" />
                                 </div>
                             ) : (
                                 <img
                                     src={previewUrl}
                                     alt="Preview da foto de perfil"
-                                    className="w-24 h-24 rounded-full object-cover border-2 border-muted"
+                                    className="w-20 h-20 rounded-full object-cover border-2 border-muted"
                                 />
                             )}
                             {!disabled && !isImageLoading && (
@@ -264,7 +264,7 @@ export default function ProfilePhotoFieldSimple({
                                         e.stopPropagation();
                                         handleRemove();
                                     }}
-                                    className="absolute -top-2 -right-2 p-1 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
+                                    className="absolute -top-1 -right-1 p-1 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
                                 >
                                     <X className="w-3 h-3" />
                                 </button>
@@ -286,13 +286,13 @@ export default function ProfilePhotoFieldSimple({
                         )}
                     </div>
                 ) : (
-                    <div>
-                        <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground mb-2">
-                            Clique para selecionar ou arraste uma foto aqui
+                    <div className="w-full">
+                        <Upload className="w-6 h-6 mx-auto mb-1 text-muted-foreground" />
+                        <p className="text-xs text-muted-foreground mb-1">
+                            Clique para selecionar uma foto
                         </p>
-                        <p className="text-xs text-muted-foreground">
-                            Formatos aceitos: JPG, PNG, WebP (máx. 5MB)
+                        <p className="text-xs text-muted-foreground opacity-70">
+                            JPG, PNG, WebP (máx. 5MB)
                         </p>
                     </div>
                 )}
