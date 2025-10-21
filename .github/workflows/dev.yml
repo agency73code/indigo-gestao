@@ -1,0 +1,27 @@
+name: Deploy DEV
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy to DEV via SSH
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd ${{ secrets.DEV_PATH }}
+            git pull origin dev
+            npm install --omit=dev
+            npx prisma migrate deploy
+            pm2 restart ${{ secrets.PM2_APP_DEV }}
