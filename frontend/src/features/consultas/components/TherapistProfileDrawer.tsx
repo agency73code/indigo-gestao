@@ -37,9 +37,7 @@ export default function TherapistProfileDrawer({
             telefone: terapeutaData.telefone || '',
             celular: terapeutaData.celular || '',
             cpf: terapeutaData.cpf || '',
-            dataNascimento: terapeutaData.dataNascimento 
-                ? new Date(terapeutaData.dataNascimento).toISOString().split('T')[0] 
-                : '',
+            dataNascimento: terapeutaData.dataNascimento,
             // Endereço
             cep: terapeutaData.endereco?.cep || '',
             rua: terapeutaData.endereco?.rua || '',
@@ -69,9 +67,7 @@ export default function TherapistProfileDrawer({
                 telefone: terapeutaData.telefone || '',
                 celular: terapeutaData.celular || '',
                 cpf: terapeutaData.cpf || '',
-                dataNascimento: terapeutaData.dataNascimento 
-                    ? new Date(terapeutaData.dataNascimento).toISOString().split('T')[0] 
-                    : '',
+                dataNascimento: terapeutaData.dataNascimento,
                 cep: terapeutaData.endereco?.cep || '',
                 rua: terapeutaData.endereco?.rua || '',
                 numero: terapeutaData.endereco?.numero || '',
@@ -222,7 +218,8 @@ export default function TherapistProfileDrawer({
 
     const formatDate = (dateString?: string) => {
         if (!dateString) return 'Não informado';
-        return new Date(dateString).toLocaleDateString('pt-BR');
+        const [year, month, day] = dateString.split('T')[0].split('-');
+        return `${day}/${month}/${year}`;
     };
 
     const maskCNPJ = (cnpj?: string) => {
