@@ -14,24 +14,19 @@ jobs:
       PM2_APP:  ${{ secrets.PM2_APP_PROD }}
 
     steps:
-      - name: Checkout (for metadata only)
-        uses: actions/checkout@v4
-
       - name: Deploy via SSH (PRODUÇÃO)
         uses: appleboy/ssh-action@v1.0.3
         env:
           PROD_PATH: ${{ vars.PROD_PATH }}
           PM2_APP: ${{ secrets.PM2_APP_PROD }}
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
+          host: ${{ env.SSH_HOST }}
+          username: ${{ env.SSH_USER }}
+          key: ${{ env.SSH_KEY }}
           envs: "PROD_PATH,PM2_APP"
           script: |
-            exec sudo -u deploy -H bash -c "$0" "$@"
-
             set -euo pipefail
-            echo "🚀 Deploy iniciado (PRODUÇÃO)"
+            echo "🚀 Deploy iniciado"
             echo "🔍 PROD_PATH='$PROD_PATH'"
             echo "🔍 PM2_APP='$PM2_APP'"
 
@@ -41,31 +36,34 @@ jobs:
             fi
 
             mkdir -p "$PROD_PATH"
-            chown -R "$USER:$USER" "$PROD_PATH" || true
+            chown -R deploy:deploy "$PROD_PATH" || true
             git config --global --add safe.directory "$PROD_PATH"
 
+            # 2) Puxa código da branch main
             cd "$PROD_PATH"
             git fetch --all --prune
             git checkout main
             git reset --hard origin/main
 
-            # pnpm via corepack
+            # 3) Configura pnpm
             command -v pnpm >/dev/null 2>&1 || (corepack enable && corepack prepare pnpm@latest --activate)
 
-            # === Backend ===
+            # 4) Backend: deps + migrações
             cd backend
-            pnpm install --frozen-lockfile --prod
-            pnpm dlx prisma migrate deploy
+            echo "📦 Instalando dependências backend..."
+            pnpm install --frozen-lockfile
+            pnpm dlx prisma migrate deploy || true
             pnpm dlx prisma generate
 
-            # === Frontend ===
+            # 5) Frontend: build
             cd ../frontend
+            echo "🧱 Buildando frontend..."
             pnpm install --frozen-lockfile
-            sudo -u deploy pnpm run build
+            pnpm run build
 
-            # === PM2 ===
+            # 6) PM2
             cd "$PROD_PATH"
-            echo "🚀 Reiniciando PM2 app: $PM2_APP"
+            echo "🔁 Reiniciando PM2..."
             if pm2 describe "$PM2_APP" > /dev/null; then
               pm2 restart "$PM2_APP"
             else
@@ -77,4 +75,7 @@ jobs:
             fi
 
             pm2 save
-            echo "::notice::✅ Deploy PRODUÇÃO concluído com sucesso em $(date)"
+            echo "📜 Commit implantado:"
+            git log -1 --pretty=format:"%h - %an, %ar : %s"
+            echo ""
+            echo "✅ Deploy PRODUÇÃO finalizado com sucesso!"
