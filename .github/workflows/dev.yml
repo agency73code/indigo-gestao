@@ -51,7 +51,7 @@ jobs:
 
             # 3) Backend: deps + migrações
             cd backend
-            pnpm install --frozen-lockfile --prod
+            pnpm install --frozen-lockfile --prod --filter ./backend
             pnpm dlx prisma migrate deploy
             pnpm dlx prisma generate
 
