@@ -26,7 +26,7 @@ jobs:
           key: ${{ env.SSH_KEY }}
           envs: "DEV_PATH,PM2_APP"
           script: |
-            whoami
+            exec sudo -u deploy -H bash -c "$0" "$@"
             set -euo pipefail
             echo "🚀 Deploy iniciado"
             echo "🔍 DEV_PATH='$DEV_PATH'"
