@@ -41,11 +41,6 @@ jobs:
             chown -R "$USER:$USER" "$DEV_PATH" || true
             git config --global --add safe.directory "$DEV_PATH"
 
-            cd "$DEV_PATH"
-            git fetch --all --prune
-            git checkout dev
-            git reset --hard origin/dev
-
             # 2) Puxa código da branch dev
             cd "$DEV_PATH"
             git fetch --all --prune
@@ -91,3 +86,4 @@ jobs:
             fi
 
             pm2 save
+            echo "✅ Deploy concluído com sucesso em $(date)"
