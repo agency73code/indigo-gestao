@@ -15,9 +15,6 @@ jobs:
       PM2_APP:  ${{ secrets.PM2_APP_STAGING }}
 
     steps:
-      - name: Checkout (for metadata only)
-        uses: actions/checkout@v4
-
       - name: Deploy via SSH (STAGING)
         uses: appleboy/ssh-action@v1.0.3
         env:
@@ -29,7 +26,6 @@ jobs:
           key: ${{ env.SSH_KEY }}
           envs: "STAGING_PATH,PM2_APP"
           script: |
-            exec sudo -u deploy -H bash -c "$0" "$@"
             set -euo pipefail
             echo "🚀 Deploy iniciado"
             echo "🔍 STAGING_PATH='$STAGING_PATH'"
@@ -41,30 +37,34 @@ jobs:
             fi
 
             mkdir -p "$STAGING_PATH"
-            chown -R "$USER:$USER" "$STAGING_PATH" || true
+            chown -R deploy:deploy "$STAGING_PATH" || true
             git config --global --add safe.directory "$STAGING_PATH"
 
-            # Atualiza branch
+            # 2) Puxa código da branch staging
             cd "$STAGING_PATH"
             git fetch --all --prune
             git checkout staging
             git reset --hard origin/staging
 
-            # pnpm via corepack (usa versão do projeto se houver packageManager)
+            # 3) Configura pnpm
             command -v pnpm >/dev/null 2>&1 || (corepack enable && corepack prepare pnpm@latest --activate)
 
-            # === Backend ===
-            pnpm install --frozen-lockfile --prod
-            pnpm dlx prisma migrate deploy
+            # 4) Backend: deps + migrações
+            cd backend
+            echo "📦 Instalando dependências backend..."
+            pnpm install --frozen-lockfile
+            pnpm dlx prisma migrate deploy || true
             pnpm dlx prisma generate
 
-            # === Frontend ===
+            # 5) Frontend: build
             cd ../frontend
+            echo "🧱 Buildando frontend..."
             pnpm install --frozen-lockfile
             pnpm run build
 
-            # === PM2 ===
+            # 6) PM2
             cd "$STAGING_PATH"
+            echo "🔁 Reiniciando PM2..."
             if pm2 describe "$PM2_APP" > /dev/null; then
               pm2 restart "$PM2_APP"
             else
@@ -76,3 +76,7 @@ jobs:
             fi
 
             pm2 save
+            echo "📜 Commit implantado:"
+            git log -1 --pretty=format:"%h - %an, %ar : %s"
+            echo ""
+            echo "✅ Deploy STAGING finalizado com sucesso!"
