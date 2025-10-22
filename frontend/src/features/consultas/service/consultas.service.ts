@@ -1,5 +1,5 @@
 import { authFetch } from '@/lib/http';
-import { MOCK_ENABLED } from '../arquivos/mocks/documents.mock';
+import { MOCK_ENABLED, MOCK_DOCUMENTS } from '../arquivos/mocks/documents.mock';
 
 // Tipos para arquivos
 export type FileMeta = {
@@ -19,6 +19,18 @@ const mockDelay = (ms: number = 800) => new Promise(resolve => setTimeout(resolv
 
 // Funções para listar arquivos
 export async function listFiles(params: { ownerType: "cliente" | "terapeuta"; ownerId: string }): Promise<FileMeta[]> {
+  if (MOCK_ENABLED) {
+    console.log('📋 [MOCK] Listando arquivos:', params);
+    await mockDelay(600);
+    
+    // Buscar documentos do mock
+    const ownerDocs = MOCK_DOCUMENTS[params.ownerType];
+    const docs = ownerDocs?.[params.ownerId] || ownerDocs?.['default'] || [];
+    
+    console.log('📋 [MOCK] Documentos encontrados:', docs.length);
+    return docs;
+  }
+  
   const base = API_BASE_URL?.replace(/\/+$/, '') || '';
   const url = `${base}/arquivos?ownerType=${params.ownerType}&ownerId=${params.ownerId}`;
 

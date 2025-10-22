@@ -1,115 +1,26 @@
 import { useEffect, useMemo, useState} from 'react';
-import { useForm } from 'react-hook-form';
-import { X, User, MapPin, CreditCard, GraduationCap, Save, Loader2, Edit2 } from 'lucide-react';
+import { useForm, useFieldArray } from 'react-hook-form';
+import { X, User, MapPin, CreditCard, GraduationCap, Save, Loader2, Edit2, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/ui/label';
 import ReadOnlyField from './ReadOnlyField';
-import type { Patient } from '../types/consultas.types';
+import { LoadingDots } from './LoadingDots';
+import type { Patient, ClientFormValues } from '../types/consultas.types';
 import { useCliente } from '../hooks/useCliente';
 import DocumentsTable from '../arquivos/components/DocumentsTable';
 import { DocumentsEditor } from '../arquivos/components/DocumentsEditor';
 import { updateCliente, listFiles, type FileMeta } from '../service/consultas.service';
-
-type CaregiverForm = {
-    relacao: string;
-    descricaoRelacao: string;
-    nome: string;
-    cpf: string;
-    profissao: string;
-    escolaridade: string;
-    telefone: string;
-    email: string;
-    endereco: {
-        cep: string;
-        logradouro: string;
-        numero: string;
-        complemento: string;
-        bairro: string;
-        cidade: string;
-        uf: string;
-    };
-};
-
-type AddressForm = {
-    cep: string;
-    logradouro: string;
-    numero: string;
-    complemento: string;
-    bairro: string;
-    cidade: string;
-    uf: string;
-    residenciaDe: string;
-    outroResidencia: string;
-};
-
-type PaymentForm = {
-    nomeTitular: string;
-    numeroCarteirinha: string;
-    telefone1: string;
-    mostrarTelefone2: boolean;
-    telefone2: string;
-    mostrarTelefone3: boolean;
-    telefone3: string;
-    email1: string;
-    mostrarEmail2: boolean;
-    email2: string;
-    mostrarEmail3: boolean;
-    email3: string;
-    sistemaPagamento: 'reembolso' | 'liminar' | 'particular';
-    prazoReembolso: string;
-    numeroProcesso: string;
-    nomeAdvogado: string;
-    telefoneAdvogado1: string;
-    mostrarTelefoneAdvogado2: boolean;
-    telefoneAdvogado2: string;
-    mostrarTelefoneAdvogado3: boolean;
-    telefoneAdvogado3: string;
-    emailAdvogado1: string;
-    mostrarEmailAdvogado2: boolean;
-    emailAdvogado2: string;
-    mostrarEmailAdvogado3: boolean;
-    emailAdvogado3: string;
-    houveNegociacao: 'sim' | 'nao' | '';
-    valorAcordado: string;
-};
-
-type SchoolContactForm = {
-    nome: string;
-    telefone: string;
-    email: string;
-    funcao: string;
-};
-
-type SchoolForm = {
-    tipoEscola: 'particular' | 'publica' | 'afastado' | 'clinica-escola';
-    nome: string;
-    telefone: string;
-    email: string;
-    endereco: {
-        cep: string;
-        logradouro: string;
-        numero: string;
-        complemento: string;
-        bairro: string;
-        cidade: string;
-        uf: string;
-    };
-    contatos: SchoolContactForm[];
-};
-
-type ClientFormValues = {
-    nome: string;
-    cpf: string;
-    emailContato: string;
-    dataNascimento: string;
-    dataEntrada: string;
-    dataSaida: string;
-    cuidadores: CaregiverForm[];
-    enderecos: AddressForm[];
-    dadosPagamento: PaymentForm;
-    dadosEscola: SchoolForm;
-};
+import ProfilePhotoFieldSimple from '@/components/profile/ProfilePhotoFieldSimple';
+import {
+    maskPersonName,
+    maskCPF,
+    isValidCPF,
+    maskBRPhone,
+    normalizeEmail,
+    isValidEmail,
+    maskCEP,
+} from '@/common/utils/mask';
 
 interface PatientProfileDrawerProps {
     patient: Patient | null;
@@ -220,6 +131,15 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
     const [saveError, setSaveError] = useState<string | null>(null);
     const [files, setFiles] = useState<FileMeta[]>([]);
     const [filesLoading, setFilesLoading] = useState(true);
+    const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
+    const [cpfError, setCpfError] = useState<string>('');
+    const [cuidadorCpfErrors, setCuidadorCpfErrors] = useState<Record<number, string>>({});
+    const [emailError, setEmailError] = useState<string>('');
+    const [cuidadorEmailErrors, setCuidadorEmailErrors] = useState<Record<number, string>>({});
+    const [pagamentoEmailErrors, setPagamentoEmailErrors] = useState<Record<string, string>>({});
+    const [advogadoEmailErrors, setAdvogadoEmailErrors] = useState<Record<string, string>>({});
+    const [escolaEmailError, setEscolaEmailError] = useState<string>('');
+    const [contatoEscolaEmailErrors, setContatoEscolaEmailErrors] = useState<Record<number, string>>({});
 
     const normalizarEnderecos = (enderecos: any[]) =>
         enderecos.map((item) => {
@@ -251,23 +171,23 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
         if (!clienteData) return null;
 
         return {
-            nome: clienteData.nome ?? '',
-            cpf: clienteData.cpf ?? '',
-            emailContato: clienteData.emailContato ?? '',
+            nome: maskPersonName(clienteData.nome ?? ''),
+            cpf: maskCPF(clienteData.cpf ?? ''),
+            emailContato: normalizeEmail(clienteData.emailContato ?? ''),
             dataNascimento: formatDateForInput(clienteData.dataNascimento ?? null),
             dataEntrada: formatDateForInput(clienteData.dataEntrada ?? null),
             dataSaida: formatDateForInput(clienteData.dataSaida ?? null),
             cuidadores: (clienteData.cuidadores ?? []).map((c) => ({
                 relacao: c.relacao ?? '',
                 descricaoRelacao: c.descricaoRelacao ?? '',
-                nome: c.nome ?? '',
-                cpf: c.cpf ?? '',
+                nome: maskPersonName(c.nome ?? ''),
+                cpf: maskCPF(c.cpf ?? ''),
                 profissao: c.profissao ?? '',
                 escolaridade: c.escolaridade ?? '',
-                telefone: c.telefone ?? '',
-                email: c.email ?? '',
+                telefone: maskBRPhone(c.telefone ?? ''),
+                email: normalizeEmail(c.email ?? ''),
                 endereco: {
-                    cep: c.endereco?.cep ?? '',
+                    cep: maskCEP(c.endereco?.cep ?? ''),
                     logradouro: (c.endereco as any)?.rua ?? c.endereco?.logradouro ?? '',
                     numero: c.endereco?.numero ?? '',
                     complemento: c.endereco?.complemento ?? '',
@@ -277,7 +197,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                 },
             })),
             enderecos: (clienteData.enderecos ?? []).map((e) => ({
-                cep: e.cep ?? '',
+                cep: maskCEP(e.cep ?? ''),
                 logradouro: e.logradouro ?? '',
                 numero: e.numero ?? '',
                 complemento: e.complemento ?? '',
@@ -288,42 +208,42 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                 outroResidencia: e.outroResidencia ?? '',
             })),
             dadosPagamento: {
-                nomeTitular: clienteData.dadosPagamento?.nomeTitular ?? '',
+                nomeTitular: maskPersonName(clienteData.dadosPagamento?.nomeTitular ?? ''),
                 numeroCarteirinha: clienteData.dadosPagamento?.numeroCarteirinha ?? '',
-                telefone1: clienteData.dadosPagamento?.telefone1 ?? '',
+                telefone1: maskBRPhone(clienteData.dadosPagamento?.telefone1 ?? ''),
                 mostrarTelefone2: Boolean(clienteData.dadosPagamento?.telefone2),
-                telefone2: clienteData.dadosPagamento?.telefone2 ?? '',
+                telefone2: maskBRPhone(clienteData.dadosPagamento?.telefone2 ?? ''),
                 mostrarTelefone3: Boolean(clienteData.dadosPagamento?.telefone3),
-                telefone3: clienteData.dadosPagamento?.telefone3 ?? '',
-                email1: clienteData.dadosPagamento?.email1 ?? '',
+                telefone3: maskBRPhone(clienteData.dadosPagamento?.telefone3 ?? ''),
+                email1: normalizeEmail(clienteData.dadosPagamento?.email1 ?? ''),
                 mostrarEmail2: Boolean(clienteData.dadosPagamento?.email2),
-                email2: clienteData.dadosPagamento?.email2 ?? '',
+                email2: normalizeEmail(clienteData.dadosPagamento?.email2 ?? ''),
                 mostrarEmail3: Boolean(clienteData.dadosPagamento?.email3),
-                email3: clienteData.dadosPagamento?.email3 ?? '',
+                email3: normalizeEmail(clienteData.dadosPagamento?.email3 ?? ''),
                 sistemaPagamento: clienteData.dadosPagamento?.sistemaPagamento ?? 'reembolso',
                 prazoReembolso: clienteData.dadosPagamento?.prazoReembolso ?? '',
                 numeroProcesso: clienteData.dadosPagamento?.numeroProcesso ?? '',
-                nomeAdvogado: clienteData.dadosPagamento?.nomeAdvogado ?? '',
-                telefoneAdvogado1: clienteData.dadosPagamento?.telefoneAdvogado1 ?? '',
+                nomeAdvogado: maskPersonName(clienteData.dadosPagamento?.nomeAdvogado ?? ''),
+                telefoneAdvogado1: maskBRPhone(clienteData.dadosPagamento?.telefoneAdvogado1 ?? ''),
                 mostrarTelefoneAdvogado2: Boolean(clienteData.dadosPagamento?.telefoneAdvogado2),
-                telefoneAdvogado2: clienteData.dadosPagamento?.telefoneAdvogado2 ?? '',
+                telefoneAdvogado2: maskBRPhone(clienteData.dadosPagamento?.telefoneAdvogado2 ?? ''),
                 mostrarTelefoneAdvogado3: Boolean(clienteData.dadosPagamento?.telefoneAdvogado3),
-                telefoneAdvogado3: clienteData.dadosPagamento?.telefoneAdvogado3 ?? '',
-                emailAdvogado1: clienteData.dadosPagamento?.emailAdvogado1 ?? '',
+                telefoneAdvogado3: maskBRPhone(clienteData.dadosPagamento?.telefoneAdvogado3 ?? ''),
+                emailAdvogado1: normalizeEmail(clienteData.dadosPagamento?.emailAdvogado1 ?? ''),
                 mostrarEmailAdvogado2: Boolean(clienteData.dadosPagamento?.emailAdvogado2),
-                emailAdvogado2: clienteData.dadosPagamento?.emailAdvogado2 ?? '',
+                emailAdvogado2: normalizeEmail(clienteData.dadosPagamento?.emailAdvogado2 ?? ''),
                 mostrarEmailAdvogado3: Boolean(clienteData.dadosPagamento?.emailAdvogado3),
-                emailAdvogado3: clienteData.dadosPagamento?.emailAdvogado3 ?? '',
+                emailAdvogado3: normalizeEmail(clienteData.dadosPagamento?.emailAdvogado3 ?? ''),
                 houveNegociacao: clienteData.dadosPagamento?.houveNegociacao ?? '',
                 valorAcordado: clienteData.dadosPagamento?.valorAcordado ?? '',
             },
             dadosEscola: {
                 tipoEscola: clienteData.dadosEscola?.tipoEscola ?? 'particular',
-                nome: clienteData.dadosEscola?.nome ?? '',
-                telefone: clienteData.dadosEscola?.telefone ?? '',
-                email: clienteData.dadosEscola?.email ?? '',
+                nome: maskPersonName(clienteData.dadosEscola?.nome ?? ''),
+                telefone: maskBRPhone(clienteData.dadosEscola?.telefone ?? ''),
+                email: normalizeEmail(clienteData.dadosEscola?.email ?? ''),
                 endereco: {
-                    cep: clienteData.dadosEscola?.endereco?.cep ?? '',
+                    cep: maskCEP(clienteData.dadosEscola?.endereco?.cep ?? ''),
                     logradouro: (clienteData.dadosEscola?.endereco as any)?.rua ?? clienteData.dadosEscola?.endereco?.logradouro ?? '',
                     numero: clienteData.dadosEscola?.endereco?.numero ?? '',
                     complemento: clienteData.dadosEscola?.endereco?.complemento ?? '',
@@ -332,9 +252,9 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                     uf: clienteData.dadosEscola?.endereco?.uf ?? '',
                 },
                 contatos: (clienteData.dadosEscola?.contatos ?? []).map((c) => ({
-                    nome: c.nome ?? '',
-                    telefone: c.telefone ?? '',
-                    email: c.email ?? '',
+                    nome: maskPersonName(c.nome ?? ''),
+                    telefone: maskBRPhone(c.telefone ?? ''),
+                    email: normalizeEmail(c.email ?? ''),
                     funcao: c.funcao ?? '',
                 })),
             },
@@ -346,9 +266,20 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
         handleSubmit,
         reset,
         watch,
+        control,
         formState: { isDirty },
     } = useForm<ClientFormValues>({
         defaultValues: clienteFormDefaults ?? defaultClientFormValues,
+    });
+
+    const { fields: cuidadoresFields, append: appendCuidador, remove: removeCuidador } = useFieldArray({
+        control,
+        name: 'cuidadores',
+    });
+
+    const { fields: contatosFields, append: appendContato, remove: removeContato } = useFieldArray({
+        control,
+        name: 'dadosEscola.contatos',
     });
 
     // Atualizar form quando clienteData chegar
@@ -365,6 +296,25 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
             setSaveError(null);
         }
     }, [open, isEditMode]);
+
+    // Carregar foto de perfil existente quando abrir o drawer
+    useEffect(() => {
+        if (open && patient?.id && files.length > 0) {
+            const fotoPerfil = files.find(f => f.tipo_documento === 'fotoPerfil');
+            if (fotoPerfil) {
+                // Construir URL da foto de perfil existente
+                const fotoUrl = `${import.meta.env.VITE_API_URL}/arquivos/${fotoPerfil.id}/view`;
+                setProfilePhoto(fotoUrl as any); // URL como string para preview
+            }
+        }
+    }, [open, patient?.id, files]);
+
+    // Carregar arquivos quando o drawer abrir
+    useEffect(() => {
+        if (open && patient?.id) {
+            loadFiles();
+        }
+    }, [open, patient?.id]);
 
     const watchCuidadores = watch('cuidadores');
     const watchEnderecos = watch('enderecos');
@@ -589,8 +539,8 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
             <div className="relative w-full max-w-4xl max-h-[90vh] bg-background border rounded-lg shadow-2xl flex flex-col">
-                {/* Header - flex-shrink-0 mantém fixo */}
-                <div className="flex items-center gap-4 p-6 border-b bg-muted/30 flex-shrink-0">
+                {/* Header - shrink-0 mantém fixo */}
+                <div className="flex items-center gap-4 p-6 border-b bg-muted/30 shrink-0">
                     <div className="h-16 w-16 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center text-lg font-medium text-purple-600 dark:text-purple-300">
                         {arquivosMap.has('fotoPerfil') ? (
                             <img
@@ -622,11 +572,16 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                         </div>
                     </div>
 
-                    {!isEditMode && (
+                    {!isEditMode ? (
                         <Button variant="secondary" size="sm" onClick={handleEditClick} className="h-8 gap-2">
                             <Edit2 className="h-4 w-4" />
                             Editar
                         </Button>
+                    ) : (
+                        <div className="flex items-center gap-2 px-3 py-1 bg-secondary rounded-md">
+                            <LoadingDots />
+                            <span className="text-sm font-medium">Editando</span>
+                        </div>
                     )}
 
                     <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0">
@@ -636,7 +591,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
 
                 {/* Error Message */}
                 {saveError && (
-                    <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 text-sm flex-shrink-0">
+                    <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 text-sm shrink-0">
                         {saveError}
                     </div>
                 )}
@@ -646,16 +601,48 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                     <div className="p-6 space-y-8">
                         {/* Dados Pessoais */}
                         <div>
-                            <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
+                            <h3 className="text-lg font-semibold mb-6 flex items-center gap-2" style={{ fontFamily: 'Sora, sans-serif' }}>
                                 <User className="w-5 h-5" />
                                 Dados Pessoais
                             </h3>
+
+                            {/* Foto de Perfil - aparece apenas em modo de edição */}
+                            {isEditMode && (
+                                <div className="mb-6">
+                                    <ProfilePhotoFieldSimple
+                                        userId={patient?.id || ''}
+                                        value={profilePhoto}
+                                        onChange={(file) => {
+                                            console.log('ProfilePhoto onChange:', file);
+                                            setProfilePhoto(file);
+                                        }}
+                                        onUploaded={(profileDto) => {
+                                            console.log('ProfilePhoto uploaded:', profileDto);
+                                            // Recarregar arquivos para atualizar a lista
+                                            if (patient?.id) {
+                                                listFiles({ ownerType: 'cliente', ownerId: patient.id })
+                                                    .then(setFiles)
+                                                    .catch(console.error);
+                                            }
+                                        }}
+                                    />
+                                </div>
+                            )}
+
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {isEditMode ? (
                                     <>
                                         <div className="space-y-2">
                                             <Label htmlFor="nome">Nome *</Label>
-                                            <Input id="nome" {...register('nome')} />
+                                            <Input 
+                                                id="nome" 
+                                                {...register('nome')}
+                                                onChange={(e) => {
+                                                    const masked = maskPersonName(e.target.value);
+                                                    e.target.value = masked;
+                                                    register('nome').onChange(e);
+                                                }}
+                                            />
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor="dataNascimento">Data de nascimento *</Label>
@@ -663,11 +650,57 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor="cpf">CPF *</Label>
-                                            <Input id="cpf" {...register('cpf')} />
+                                            <Input 
+                                                id="cpf" 
+                                                {...register('cpf')}
+                                                onChange={(e) => {
+                                                    const masked = maskCPF(e.target.value);
+                                                    e.target.value = masked;
+                                                    register('cpf').onChange(e);
+                                                    
+                                                    // Validar CPF
+                                                    if (masked.length === 14) {
+                                                        if (!isValidCPF(masked)) {
+                                                            setCpfError('CPF inválido');
+                                                        } else {
+                                                            setCpfError('');
+                                                        }
+                                                    } else if (masked.length === 0) {
+                                                        setCpfError('');
+                                                    } else {
+                                                        setCpfError('CPF incompleto');
+                                                    }
+                                                }}
+                                                maxLength={14}
+                                                className={cpfError ? 'border-red-500' : ''}
+                                            />
+                                            {cpfError && <p className="text-sm text-red-500">{cpfError}</p>}
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor="emailContato">E-mail de contato *</Label>
-                                            <Input id="emailContato" type="email" {...register('emailContato')} />
+                                            <Input 
+                                                id="emailContato" 
+                                                type="email" 
+                                                {...register('emailContato')}
+                                                onChange={(e) => {
+                                                    const normalized = normalizeEmail(e.target.value);
+                                                    e.target.value = normalized;
+                                                    register('emailContato').onChange(e);
+                                                    
+                                                    // Validar email
+                                                    if (normalized.length > 0) {
+                                                        if (!isValidEmail(normalized)) {
+                                                            setEmailError('E-mail inválido');
+                                                        } else {
+                                                            setEmailError('');
+                                                        }
+                                                    } else {
+                                                        setEmailError('');
+                                                    }
+                                                }}
+                                                className={emailError ? 'border-red-500' : ''}
+                                            />
+                                            {emailError && <p className="text-sm text-red-500">{emailError}</p>}
                                         </div>
                                         <div className="space-y-2">
                                             <Label htmlFor="dataEntrada">Data Entrada *</Label>
@@ -703,19 +736,33 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                                         <h5 className="font-medium text-sm">
                                                             Cuidador {index + 1}
                                                         </h5>
-                                                        {relation && caregiverRelationLabels[relation] && (
-                                                            <span className="text-xs text-muted-foreground">
-                                                                Relação: {caregiverRelationLabels[relation]}
-                                                            </span>
-                                                        )}
+                                                        <div className="flex items-center gap-2">
+                                                            {!isEditMode && relation && caregiverRelationLabels[relation] && (
+                                                                <span className="text-xs text-muted-foreground">
+                                                                    Relação: {caregiverRelationLabels[relation]}
+                                                                </span>
+                                                            )}
+                                                            {isEditMode && cuidadoresFields.length > 1 && (
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={() => removeCuidador(index)}
+                                                                    className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </Button>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                     {isEditMode ? (
                                                         <div className="space-y-4">
-                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                            {/* Linha 1: Relação (1/4) | CPF (1/4) | Nome (2/4) */}
+                                                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                                                 <div className="space-y-2">
                                                                     <Label>Relação *</Label>
                                                                     <select
-                                                                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                                                        className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
                                                                         {...register(`cuidadores.${index}.relacao` as const)}
                                                                     >
                                                                         <option value="">Selecione</option>
@@ -726,67 +773,190 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                                                         ))}
                                                                     </select>
                                                                 </div>
-                                                                {watchCuidadores?.[index]?.relacao === 'outro' && (
-                                                                    <div className="space-y-2">
-                                                                        <Label>Descrição da relação</Label>
-                                                                        <Input {...register(`cuidadores.${index}.descricaoRelacao` as const)} />
-                                                                    </div>
-                                                                )}
-                                                                <div className="space-y-2">
-                                                                    <Label>Nome *</Label>
-                                                                    <Input {...register(`cuidadores.${index}.nome` as const)} />
-                                                                </div>
                                                                 <div className="space-y-2">
                                                                     <Label>CPF *</Label>
-                                                                    <Input {...register(`cuidadores.${index}.cpf` as const)} />
+                                                                    <Input 
+                                                                        className={`h-10 ${cuidadorCpfErrors[index] ? 'border-red-500' : ''}`}
+                                                                        {...register(`cuidadores.${index}.cpf` as const)}
+                                                                        onChange={(e) => {
+                                                                            const masked = maskCPF(e.target.value);
+                                                                            e.target.value = masked;
+                                                                            register(`cuidadores.${index}.cpf` as const).onChange(e);
+                                                                            
+                                                                            // Validar CPF
+                                                                            if (masked.length === 14) {
+                                                                                if (!isValidCPF(masked)) {
+                                                                                    setCuidadorCpfErrors(prev => ({ ...prev, [index]: 'CPF inválido' }));
+                                                                                } else {
+                                                                                    setCuidadorCpfErrors(prev => {
+                                                                                        const newErrors = { ...prev };
+                                                                                        delete newErrors[index];
+                                                                                        return newErrors;
+                                                                                    });
+                                                                                }
+                                                                            } else if (masked.length === 0) {
+                                                                                setCuidadorCpfErrors(prev => {
+                                                                                    const newErrors = { ...prev };
+                                                                                    delete newErrors[index];
+                                                                                    return newErrors;
+                                                                                });
+                                                                            } else {
+                                                                                setCuidadorCpfErrors(prev => ({ ...prev, [index]: 'CPF incompleto' }));
+                                                                            }
+                                                                        }}
+                                                                        maxLength={14}
+                                                                    />
+                                                                    {cuidadorCpfErrors[index] && (
+                                                                        <p className="text-sm text-red-500">{cuidadorCpfErrors[index]}</p>
+                                                                    )}
+                                                                </div>
+                                                                <div className="space-y-2 md:col-span-2">
+                                                                    <Label>Nome *</Label>
+                                                                    <Input 
+                                                                        className="h-10" 
+                                                                        {...register(`cuidadores.${index}.nome` as const)}
+                                                                        onChange={(e) => {
+                                                                            const masked = maskPersonName(e.target.value);
+                                                                            e.target.value = masked;
+                                                                            register(`cuidadores.${index}.nome` as const).onChange(e);
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Descrição da relação (se "outro" for selecionado) */}
+                                                            {watchCuidadores?.[index]?.relacao === 'outro' && (
+                                                                <div className="space-y-2">
+                                                                    <Label>Descrição da relação</Label>
+                                                                    <Input className="h-10" {...register(`cuidadores.${index}.descricaoRelacao` as const)} />
+                                                                </div>
+                                                            )}
+
+                                                            {/* Linha 2: Telefone | E-mail */}
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                <div className="space-y-2">
+                                                                    <Label>Telefone *</Label>
+                                                                    <Input 
+                                                                        className="h-10" 
+                                                                        {...register(`cuidadores.${index}.telefone` as const)}
+                                                                        onChange={(e) => {
+                                                                            const masked = maskBRPhone(e.target.value);
+                                                                            e.target.value = masked;
+                                                                            register(`cuidadores.${index}.telefone` as const).onChange(e);
+                                                                        }}
+                                                                        maxLength={15}
+                                                                    />
+                                                                </div>
+                                                                <div className="space-y-2">
+                                                                    <Label>E-mail *</Label>
+                                                                    <Input 
+                                                                        className={`h-10 ${cuidadorEmailErrors[index] ? 'border-red-500' : ''}`}
+                                                                        type="email" 
+                                                                        {...register(`cuidadores.${index}.email` as const)}
+                                                                        onChange={(e) => {
+                                                                            const normalized = normalizeEmail(e.target.value);
+                                                                            e.target.value = normalized;
+                                                                            register(`cuidadores.${index}.email` as const).onChange(e);
+                                                                            
+                                                                            // Validar email
+                                                                            if (normalized.length > 0) {
+                                                                                if (!isValidEmail(normalized)) {
+                                                                                    setCuidadorEmailErrors(prev => ({ ...prev, [index]: 'E-mail inválido' }));
+                                                                                } else {
+                                                                                    setCuidadorEmailErrors(prev => {
+                                                                                        const newErrors = { ...prev };
+                                                                                        delete newErrors[index];
+                                                                                        return newErrors;
+                                                                                    });
+                                                                                }
+                                                                            } else {
+                                                                                setCuidadorEmailErrors(prev => {
+                                                                                    const newErrors = { ...prev };
+                                                                                    delete newErrors[index];
+                                                                                    return newErrors;
+                                                                                });
+                                                                            }
+                                                                        }}
+                                                                    />
+                                                                    {cuidadorEmailErrors[index] && (
+                                                                        <p className="text-sm text-red-500">{cuidadorEmailErrors[index]}</p>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Linha 3: Escolaridade | Profissão */}
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                <div className="space-y-2">
+                                                                    <Label>Escolaridade</Label>
+                                                                    <select
+                                                                        className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                                                        {...register(`cuidadores.${index}.escolaridade` as const)}
+                                                                    >
+                                                                        <option value="">Selecione a escolaridade</option>
+                                                                        <option value="fundamental-incompleto">Ensino Fundamental Incompleto</option>
+                                                                        <option value="fundamental-completo">Ensino Fundamental Completo</option>
+                                                                        <option value="medio-incompleto">Ensino Médio Incompleto</option>
+                                                                        <option value="medio-completo">Ensino Médio Completo</option>
+                                                                        <option value="superior-incompleto">Ensino Superior Incompleto</option>
+                                                                        <option value="superior-completo">Ensino Superior Completo</option>
+                                                                        <option value="pos-graduacao">Pós-graduação</option>
+                                                                    </select>
                                                                 </div>
                                                                 <div className="space-y-2">
                                                                     <Label>Profissão</Label>
-                                                                    <Input {...register(`cuidadores.${index}.profissao` as const)} />
-                                                                </div>
-                                                                <div className="space-y-2">
-                                                                    <Label>Escolaridade</Label>
-                                                                    <Input {...register(`cuidadores.${index}.escolaridade` as const)} />
-                                                                </div>
-                                                                <div className="space-y-2">
-                                                                    <Label>Telefone *</Label>
-                                                                    <Input {...register(`cuidadores.${index}.telefone` as const)} />
-                                                                </div>
-                                                                <div className="space-y-2">
-                                                                    <Label>Email *</Label>
-                                                                    <Input type="email" {...register(`cuidadores.${index}.email` as const)} />
+                                                                    <Input className="h-10" {...register(`cuidadores.${index}.profissao` as const)} />
                                                                 </div>
                                                             </div>
+
+                                                            {/* Endereço */}
                                                             <div className="space-y-2">
                                                                 <h6 className="text-xs font-medium text-muted-foreground">Endereço</h6>
-                                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                                    <div className="space-y-2">
-                                                                        <Label>CEP *</Label>
-                                                                        <Input {...register(`cuidadores.${index}.endereco.cep` as const)} />
+                                                                <div className="space-y-4">
+                                                                    {/* Linha 1: CEP | Cidade | UF */}
+                                                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                                        <div className="space-y-2">
+                                                                            <Label>CEP *</Label>
+                                                                            <Input 
+                                                                                className="h-10" 
+                                                                                {...register(`cuidadores.${index}.endereco.cep` as const)}
+                                                                                onChange={(e) => {
+                                                                                    const masked = maskCEP(e.target.value);
+                                                                                    e.target.value = masked;
+                                                                                    register(`cuidadores.${index}.endereco.cep` as const).onChange(e);
+                                                                                }}
+                                                                                maxLength={9}
+                                                                            />
+                                                                        </div>
+                                                                        <div className="space-y-2">
+                                                                            <Label>Cidade *</Label>
+                                                                            <Input className="h-10" {...register(`cuidadores.${index}.endereco.cidade` as const)} />
+                                                                        </div>
+                                                                        <div className="space-y-2">
+                                                                            <Label>UF *</Label>
+                                                                            <Input className="h-10" maxLength={2} {...register(`cuidadores.${index}.endereco.uf` as const)} />
+                                                                        </div>
                                                                     </div>
+
+                                                                    {/* Linha 2: Logradouro (full width) */}
                                                                     <div className="space-y-2">
-                                                                        <Label>UF *</Label>
-                                                                        <Input maxLength={2} {...register(`cuidadores.${index}.endereco.uf` as const)} />
-                                                                    </div>
-                                                                    <div className="space-y-2 md:col-span-3">
                                                                         <Label>Logradouro *</Label>
-                                                                        <Input {...register(`cuidadores.${index}.endereco.logradouro` as const)} />
+                                                                        <Input className="h-10" {...register(`cuidadores.${index}.endereco.logradouro` as const)} />
                                                                     </div>
-                                                                    <div className="space-y-2">
-                                                                        <Label>Número *</Label>
-                                                                        <Input {...register(`cuidadores.${index}.endereco.numero` as const)} />
-                                                                    </div>
-                                                                    <div className="space-y-2">
-                                                                        <Label>Complemento</Label>
-                                                                        <Input {...register(`cuidadores.${index}.endereco.complemento` as const)} />
-                                                                    </div>
-                                                                    <div className="space-y-2">
-                                                                        <Label>Bairro *</Label>
-                                                                        <Input {...register(`cuidadores.${index}.endereco.bairro` as const)} />
-                                                                    </div>
-                                                                    <div className="space-y-2">
-                                                                        <Label>Cidade *</Label>
-                                                                        <Input {...register(`cuidadores.${index}.endereco.cidade` as const)} />
+
+                                                                    {/* Linha 3: Número | Complemento | Bairro */}
+                                                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                                        <div className="space-y-2">
+                                                                            <Label>Número *</Label>
+                                                                            <Input className="h-10" {...register(`cuidadores.${index}.endereco.numero` as const)} />
+                                                                        </div>
+                                                                        <div className="space-y-2">
+                                                                            <Label>Complemento</Label>
+                                                                            <Input className="h-10" {...register(`cuidadores.${index}.endereco.complemento` as const)} />
+                                                                        </div>
+                                                                        <div className="space-y-2">
+                                                                            <Label>Bairro *</Label>
+                                                                            <Input className="h-10" {...register(`cuidadores.${index}.endereco.bairro` as const)} />
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -822,6 +992,37 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                             );
                                         })}
                                     </div>
+                                    
+                                    {/* Botão Adicionar Cuidador - só aparece em modo de edição */}
+                                    {isEditMode && (
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={() => appendCuidador({
+                                                relacao: '',
+                                                descricaoRelacao: '',
+                                                nome: '',
+                                                cpf: '',
+                                                profissao: '',
+                                                escolaridade: '',
+                                                telefone: '',
+                                                email: '',
+                                                endereco: {
+                                                    cep: '',
+                                                    logradouro: '',
+                                                    numero: '',
+                                                    complemento: '',
+                                                    bairro: '',
+                                                    cidade: '',
+                                                    uf: '',
+                                                },
+                                            })}
+                                            className="w-full mt-4 flex items-center justify-center gap-2"
+                                        >
+                                            <Plus className="h-4 w-4" />
+                                            Adicionar cuidador
+                                        </Button>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -831,7 +1032,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
 
                         {/* Endereços */}
                         <div>
-                            <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
+                            <h3 className="text-lg font-semibold mb-6 flex items-center gap-2" style={{ fontFamily: 'Sora, sans-serif' }}>
                                 <MapPin className="w-5 h-5" />
                                 Endereços
                             </h3>
@@ -845,34 +1046,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                                     <h4 className="text-sm font-medium">Endereço {index + 1}</h4>
                                                 )}
                                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                    <div className="space-y-2">
-                                                        <Label>CEP *</Label>
-                                                        <Input {...register(`enderecos.${index}.cep` as const)} />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <Label>UF *</Label>
-                                                        <Input maxLength={2} {...register(`enderecos.${index}.uf` as const)} />
-                                                    </div>
-                                                    <div className="space-y-2 md:col-span-3">
-                                                        <Label>Logradouro *</Label>
-                                                        <Input {...register(`enderecos.${index}.logradouro` as const)} />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <Label>Número *</Label>
-                                                        <Input {...register(`enderecos.${index}.numero` as const)} />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <Label>Complemento</Label>
-                                                        <Input {...register(`enderecos.${index}.complemento` as const)} />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <Label>Bairro *</Label>
-                                                        <Input {...register(`enderecos.${index}.bairro` as const)} />
-                                                    </div>
-                                                    <div className="space-y-2">
-                                                        <Label>Cidade *</Label>
-                                                        <Input {...register(`enderecos.${index}.cidade` as const)} />
-                                                    </div>
+                                                    {/* Linha 1: Residência de | CEP | UF */}
                                                     <div className="space-y-2">
                                                         <Label>Residência de</Label>
                                                         <select
@@ -886,12 +1060,54 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                                             ))}
                                                         </select>
                                                     </div>
+                                                    <div className="space-y-2">
+                                                        <Label>CEP *</Label>
+                                                        <Input 
+                                                            {...register(`enderecos.${index}.cep` as const)}
+                                                            onChange={(e) => {
+                                                                const masked = maskCEP(e.target.value);
+                                                                e.target.value = masked;
+                                                                register(`enderecos.${index}.cep` as const).onChange(e);
+                                                            }}
+                                                            maxLength={9}
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <Label>UF *</Label>
+                                                        <Input maxLength={2} {...register(`enderecos.${index}.uf` as const)} />
+                                                    </div>
+                                                    
+                                                    {/* Campo "Outro responsável" se "outro" for selecionado */}
                                                     {watchEnderecos?.[index]?.residenciaDe === 'outro' && (
-                                                        <div className="space-y-2">
+                                                        <div className="space-y-2 md:col-span-3">
                                                             <Label>Outro responsável</Label>
                                                             <Input {...register(`enderecos.${index}.outroResidencia` as const)} />
                                                         </div>
                                                     )}
+                                                    
+                                                    {/* Linha 2: Logradouro (2/3) | Número (1/3) */}
+                                                    <div className="space-y-2 md:col-span-2">
+                                                        <Label>Logradouro *</Label>
+                                                        <Input {...register(`enderecos.${index}.logradouro` as const)} />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <Label>Número *</Label>
+                                                        <Input {...register(`enderecos.${index}.numero` as const)} />
+                                                    </div>
+                                                    
+                                                    {/* Linha 3: Cidade | Complemento | Bairro */}
+                                                    <div className="space-y-2">
+                                                        <Label>Cidade *</Label>
+                                                        <Input {...register(`enderecos.${index}.cidade` as const)} />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <Label>Complemento</Label>
+                                                        <Input {...register(`enderecos.${index}.complemento` as const)} />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <Label>Bairro *</Label>
+                                                        <Input {...register(`enderecos.${index}.bairro` as const)} />
+                                                    </div>
                                                 </div>
                                             </div>
                                         ))}
@@ -900,34 +1116,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                     <div className="space-y-6">
                                         <div className="space-y-4">
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                <div className="space-y-2">
-                                                    <Label>CEP *</Label>
-                                                    <Input {...register(`enderecos.0.cep` as const)} />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <Label>UF *</Label>
-                                                    <Input maxLength={2} {...register(`enderecos.0.uf` as const)} />
-                                                </div>
-                                                <div className="space-y-2 md:col-span-3">
-                                                    <Label>Logradouro *</Label>
-                                                    <Input {...register(`enderecos.0.logradouro` as const)} />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <Label>Número *</Label>
-                                                    <Input {...register(`enderecos.0.numero` as const)} />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <Label>Complemento</Label>
-                                                    <Input {...register(`enderecos.0.complemento` as const)} />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <Label>Bairro *</Label>
-                                                    <Input {...register(`enderecos.0.bairro` as const)} />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <Label>Cidade *</Label>
-                                                    <Input {...register(`enderecos.0.cidade` as const)} />
-                                                </div>
+                                                {/* Linha 1: Residência de | CEP | UF */}
                                                 <div className="space-y-2">
                                                     <Label>Residência de</Label>
                                                     <select
@@ -941,12 +1130,46 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                                         ))}
                                                     </select>
                                                 </div>
+                                                <div className="space-y-2">
+                                                    <Label>CEP *</Label>
+                                                    <Input {...register(`enderecos.0.cep` as const)} />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>UF *</Label>
+                                                    <Input maxLength={2} {...register(`enderecos.0.uf` as const)} />
+                                                </div>
+                                                
+                                                {/* Campo "Outro responsável" se "outro" for selecionado */}
                                                 {watchEnderecos?.[0]?.residenciaDe === 'outro' && (
-                                                    <div className="space-y-2">
+                                                    <div className="space-y-2 md:col-span-3">
                                                         <Label>Outro responsável</Label>
                                                         <Input {...register(`enderecos.0.outroResidencia` as const)} />
                                                     </div>
                                                 )}
+                                                
+                                                {/* Linha 2: Logradouro (2/3) | Número (1/3) */}
+                                                <div className="space-y-2 md:col-span-2">
+                                                    <Label>Logradouro *</Label>
+                                                    <Input {...register(`enderecos.0.logradouro` as const)} />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Número *</Label>
+                                                    <Input {...register(`enderecos.0.numero` as const)} />
+                                                </div>
+                                                
+                                                {/* Linha 3: Cidade | Complemento | Bairro */}
+                                                <div className="space-y-2">
+                                                    <Label>Cidade *</Label>
+                                                    <Input {...register(`enderecos.0.cidade` as const)} />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Complemento</Label>
+                                                    <Input {...register(`enderecos.0.complemento` as const)} />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Bairro *</Label>
+                                                    <Input {...register(`enderecos.0.bairro` as const)} />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -958,17 +1181,27 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                             <h4 className="text-md font-medium">Endereço {index + 1}</h4>
                                         )}
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            {/* Linha 1: Residência de | CEP | UF */}
+                                            <ReadOnlyField 
+                                                label="Residência de" 
+                                                value={endereco.residenciaDe ? caregiverRelationLabels[endereco.residenciaDe] ?? endereco.residenciaDe : ''} 
+                                            />
                                             <ReadOnlyField label="CEP *" value={endereco.cep ?? ''} />
                                             <ReadOnlyField label="UF *" value={endereco.uf ?? ''} />
-                                            <ReadOnlyField label="Logradouro *" value={endereco.logradouro ?? ''} className="md:col-span-3" />
+                                            
+                                            {/* Campo "Outro responsável" se aplicável */}
+                                            {endereco.residenciaDe === 'outro' && endereco.outroResidencia && (
+                                                <ReadOnlyField label="Outro responsável" value={endereco.outroResidencia} className="md:col-span-3" />
+                                            )}
+                                            
+                                            {/* Linha 2: Logradouro (2/3) | Número (1/3) */}
+                                            <ReadOnlyField label="Logradouro *" value={endereco.logradouro ?? ''} className="md:col-span-2" />
                                             <ReadOnlyField label="Número *" value={endereco.numero ?? ''} />
+                                            
+                                            {/* Linha 3: Cidade | Complemento | Bairro */}
+                                            <ReadOnlyField label="Cidade *" value={endereco.cidade ?? ''} />
                                             <ReadOnlyField label="Complemento" value={endereco.complemento ?? ''} />
                                             <ReadOnlyField label="Bairro *" value={endereco.bairro ?? ''} />
-                                            <ReadOnlyField label="Cidade *" value={endereco.cidade ?? ''} />
-                                            <ReadOnlyField label="Residência de" value={endereco.residenciaDe ? caregiverRelationLabels[endereco.residenciaDe] ?? endereco.residenciaDe : ''} />
-                                            {endereco.residenciaDe === 'outro' && endereco.outroResidencia && (
-                                                <ReadOnlyField label="Outro responsável" value={endereco.outroResidencia} />
-                                            )}
                                         </div>
                                     </div>
                                 ))
@@ -982,7 +1215,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
 
                         {/* Dados Pagamento */}
                         <div>
-                            <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
+                            <h3 className="text-lg font-semibold mb-6 flex items-center gap-2" style={{ fontFamily: 'Sora, sans-serif' }}>
                                 <CreditCard className="w-5 h-5" />
                                 Dados Pagamento
                             </h3>
@@ -993,55 +1226,356 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div className="space-y-2">
                                             <Label>Nome do titular *</Label>
-                                            <Input {...register('dadosPagamento.nomeTitular')} />
+                                            <Input 
+                                                {...register('dadosPagamento.nomeTitular')}
+                                                onChange={(e) => {
+                                                    const masked = maskPersonName(e.target.value);
+                                                    e.target.value = masked;
+                                                    register('dadosPagamento.nomeTitular').onChange(e);
+                                                }}
+                                            />
                                         </div>
                                         <div className="space-y-2">
                                             <Label>Número carteirinha</Label>
                                             <Input {...register('dadosPagamento.numeroCarteirinha')} />
                                         </div>
-                                        <div className="space-y-2">
-                                            <Label>Telefone 1 *</Label>
-                                            <Input {...register('dadosPagamento.telefone1')} />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label className="flex items-center gap-2">
-                                                <input type="checkbox" {...register('dadosPagamento.mostrarTelefone2')} />
-                                                Telefone 2
-                                            </Label>
-                                            {watchDadosPagamento?.mostrarTelefone2 && (
-                                                <Input {...register('dadosPagamento.telefone2')} />
+                                    </div>
+                                    
+                                    {/* Telefones do titular - Grid de 3 colunas */}
+                                    <div>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                                            <div className="space-y-2">
+                                                <Label>Telefone 1 *</Label>
+                                                <Input 
+                                                    className="h-10" 
+                                                    placeholder="(11) 99999-9999"
+                                                    {...register('dadosPagamento.telefone1')}
+                                                    onChange={(e) => {
+                                                        const masked = maskBRPhone(e.target.value);
+                                                        e.target.value = masked;
+                                                        register('dadosPagamento.telefone1').onChange(e);
+                                                    }}
+                                                    maxLength={15}
+                                                />
+                                            </div>
+                                            {watchDadosPagamento?.mostrarTelefone2 ? (
+                                                <div className="space-y-2">
+                                                    <div className="flex items-center justify-between min-h-[20px]">
+                                                        <Label>Telefone 2</Label>
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => {
+                                                                const currentValues = watch('dadosPagamento');
+                                                                reset({
+                                                                    ...watch(),
+                                                                    dadosPagamento: {
+                                                                        ...currentValues,
+                                                                        mostrarTelefone2: false,
+                                                                        telefone2: '',
+                                                                        mostrarTelefone3: false,
+                                                                        telefone3: '',
+                                                                    },
+                                                                });
+                                                            }}
+                                                            className="text-destructive hover:text-destructive hover:bg-destructive/10 h-6 w-6 p-0"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </div>
+                                                    <Input 
+                                                        className="h-10" 
+                                                        placeholder="(11) 99999-9999"
+                                                        {...register('dadosPagamento.telefone2')}
+                                                        onChange={(e) => {
+                                                            const masked = maskBRPhone(e.target.value);
+                                                            e.target.value = masked;
+                                                            register('dadosPagamento.telefone2').onChange(e);
+                                                        }}
+                                                        maxLength={15}
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => {
+                                                        const currentValues = watch('dadosPagamento');
+                                                        reset({
+                                                            ...watch(),
+                                                            dadosPagamento: {
+                                                                ...currentValues,
+                                                                mostrarTelefone2: true,
+                                                            },
+                                                        });
+                                                    }}
+                                                    className="h-10 w-full"
+                                                >
+                                                    <Plus className="h-4 w-4 mr-2" />
+                                                    Adicionar telefone
+                                                </Button>
                                             )}
+                                            {watchDadosPagamento?.mostrarTelefone3 ? (
+                                                <div className="space-y-2">
+                                                    <div className="flex items-center justify-between min-h-[20px]">
+                                                        <Label>Telefone 3</Label>
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => {
+                                                                const currentValues = watch('dadosPagamento');
+                                                                reset({
+                                                                    ...watch(),
+                                                                    dadosPagamento: {
+                                                                        ...currentValues,
+                                                                        mostrarTelefone3: false,
+                                                                        telefone3: '',
+                                                                    },
+                                                                });
+                                                            }}
+                                                            className="text-destructive hover:text-destructive hover:bg-destructive/10 h-6 w-6 p-0"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </div>
+                                                    <Input 
+                                                        className="h-10" 
+                                                        placeholder="(11) 99999-9999"
+                                                        {...register('dadosPagamento.telefone3')}
+                                                        onChange={(e) => {
+                                                            const masked = maskBRPhone(e.target.value);
+                                                            e.target.value = masked;
+                                                            register('dadosPagamento.telefone3').onChange(e);
+                                                        }}
+                                                        maxLength={15}
+                                                    />
+                                                </div>
+                                            ) : watchDadosPagamento?.mostrarTelefone2 ? (
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => {
+                                                        const currentValues = watch('dadosPagamento');
+                                                        reset({
+                                                            ...watch(),
+                                                            dadosPagamento: {
+                                                                ...currentValues,
+                                                                mostrarTelefone3: true,
+                                                            },
+                                                        });
+                                                    }}
+                                                    className="h-10 w-full"
+                                                >
+                                                    <Plus className="h-4 w-4 mr-2" />
+                                                    Adicionar telefone
+                                                </Button>
+                                            ) : null}
                                         </div>
-                                        <div className="space-y-2">
-                                            <Label className="flex items-center gap-2">
-                                                <input type="checkbox" {...register('dadosPagamento.mostrarTelefone3')} />
-                                                Telefone 3
-                                            </Label>
-                                            {watchDadosPagamento?.mostrarTelefone3 && (
-                                                <Input {...register('dadosPagamento.telefone3')} />
+                                    </div>
+                                    
+                                    {/* E-mails do titular - Grid de 3 colunas */}
+                                    <div>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                                            <div className="space-y-2">
+                                                <Label>E-mail 1 *</Label>
+                                                <Input 
+                                                    className={`h-10 ${pagamentoEmailErrors['email1'] ? 'border-red-500' : ''}`}
+                                                    type="email" 
+                                                    placeholder="exemplo@email.com"
+                                                    {...register('dadosPagamento.email1')}
+                                                    onChange={(e) => {
+                                                        const normalized = normalizeEmail(e.target.value);
+                                                        e.target.value = normalized;
+                                                        register('dadosPagamento.email1').onChange(e);
+                                                        
+                                                        // Validar email
+                                                        if (normalized.length > 0) {
+                                                            if (!isValidEmail(normalized)) {
+                                                                setPagamentoEmailErrors(prev => ({ ...prev, email1: 'E-mail inválido' }));
+                                                            } else {
+                                                                setPagamentoEmailErrors(prev => {
+                                                                    const newErrors = { ...prev };
+                                                                    delete newErrors.email1;
+                                                                    return newErrors;
+                                                                });
+                                                            }
+                                                        } else {
+                                                            setPagamentoEmailErrors(prev => {
+                                                                const newErrors = { ...prev };
+                                                                delete newErrors.email1;
+                                                                return newErrors;
+                                                            });
+                                                        }
+                                                    }}
+                                                />
+                                                {pagamentoEmailErrors['email1'] && (
+                                                    <p className="text-sm text-red-500">{pagamentoEmailErrors['email1']}</p>
+                                                )}
+                                            </div>
+                                            {watchDadosPagamento?.mostrarEmail2 ? (
+                                                <div className="space-y-2">
+                                                    <div className="flex items-center justify-between min-h-[20px]">
+                                                        <Label>E-mail 2</Label>
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => {
+                                                                const currentValues = watch('dadosPagamento');
+                                                                reset({
+                                                                    ...watch(),
+                                                                    dadosPagamento: {
+                                                                        ...currentValues,
+                                                                        mostrarEmail2: false,
+                                                                        email2: '',
+                                                                        mostrarEmail3: false,
+                                                                        email3: '',
+                                                                    },
+                                                                });
+                                                            }}
+                                                            className="text-destructive hover:text-destructive hover:bg-destructive/10 h-6 w-6 p-0"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </div>
+                                                    <Input 
+                                                        className={`h-10 ${pagamentoEmailErrors['email2'] ? 'border-red-500' : ''}`}
+                                                        type="email" 
+                                                        placeholder="exemplo@email.com"
+                                                        {...register('dadosPagamento.email2')}
+                                                        onChange={(e) => {
+                                                            const normalized = normalizeEmail(e.target.value);
+                                                            e.target.value = normalized;
+                                                            register('dadosPagamento.email2').onChange(e);
+                                                            
+                                                            // Validar email
+                                                            if (normalized.length > 0) {
+                                                                if (!isValidEmail(normalized)) {
+                                                                    setPagamentoEmailErrors(prev => ({ ...prev, email2: 'E-mail inválido' }));
+                                                                } else {
+                                                                    setPagamentoEmailErrors(prev => {
+                                                                        const newErrors = { ...prev };
+                                                                        delete newErrors.email2;
+                                                                        return newErrors;
+                                                                    });
+                                                                }
+                                                            } else {
+                                                                setPagamentoEmailErrors(prev => {
+                                                                    const newErrors = { ...prev };
+                                                                    delete newErrors.email2;
+                                                                    return newErrors;
+                                                                });
+                                                            }
+                                                        }}
+                                                    />
+                                                    {pagamentoEmailErrors['email2'] && (
+                                                        <p className="text-sm text-red-500">{pagamentoEmailErrors['email2']}</p>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => {
+                                                        const currentValues = watch('dadosPagamento');
+                                                        reset({
+                                                            ...watch(),
+                                                            dadosPagamento: {
+                                                                ...currentValues,
+                                                                mostrarEmail2: true,
+                                                            },
+                                                        });
+                                                    }}
+                                                    className="h-10 w-full"
+                                                >
+                                                    <Plus className="h-4 w-4 mr-2" />
+                                                    Adicionar e-mail
+                                                </Button>
                                             )}
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label>E-mail 1 *</Label>
-                                            <Input type="email" {...register('dadosPagamento.email1')} />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label className="flex items-center gap-2">
-                                                <input type="checkbox" {...register('dadosPagamento.mostrarEmail2')} />
-                                                E-mail 2
-                                            </Label>
-                                            {watchDadosPagamento?.mostrarEmail2 && (
-                                                <Input type="email" {...register('dadosPagamento.email2')} />
-                                            )}
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label className="flex items-center gap-2">
-                                                <input type="checkbox" {...register('dadosPagamento.mostrarEmail3')} />
-                                                E-mail 3
-                                            </Label>
-                                            {watchDadosPagamento?.mostrarEmail3 && (
-                                                <Input type="email" {...register('dadosPagamento.email3')} />
-                                            )}
+                                            {watchDadosPagamento?.mostrarEmail3 ? (
+                                                <div className="space-y-2">
+                                                    <div className="flex items-center justify-between min-h-[20px]">
+                                                        <Label>E-mail 3</Label>
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => {
+                                                                const currentValues = watch('dadosPagamento');
+                                                                reset({
+                                                                    ...watch(),
+                                                                    dadosPagamento: {
+                                                                        ...currentValues,
+                                                                        mostrarEmail3: false,
+                                                                        email3: '',
+                                                                    },
+                                                                });
+                                                            }}
+                                                            className="text-destructive hover:text-destructive hover:bg-destructive/10 h-6 w-6 p-0"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </div>
+                                                    <Input 
+                                                        className={`h-10 ${pagamentoEmailErrors['email3'] ? 'border-red-500' : ''}`}
+                                                        type="email" 
+                                                        placeholder="exemplo@email.com"
+                                                        {...register('dadosPagamento.email3')}
+                                                        onChange={(e) => {
+                                                            const normalized = normalizeEmail(e.target.value);
+                                                            e.target.value = normalized;
+                                                            register('dadosPagamento.email3').onChange(e);
+                                                            
+                                                            // Validar email
+                                                            if (normalized.length > 0) {
+                                                                if (!isValidEmail(normalized)) {
+                                                                    setPagamentoEmailErrors(prev => ({ ...prev, email3: 'E-mail inválido' }));
+                                                                } else {
+                                                                    setPagamentoEmailErrors(prev => {
+                                                                        const newErrors = { ...prev };
+                                                                        delete newErrors.email3;
+                                                                        return newErrors;
+                                                                    });
+                                                                }
+                                                            } else {
+                                                                setPagamentoEmailErrors(prev => {
+                                                                    const newErrors = { ...prev };
+                                                                    delete newErrors.email3;
+                                                                    return newErrors;
+                                                                });
+                                                            }
+                                                        }}
+                                                    />
+                                                    {pagamentoEmailErrors['email3'] && (
+                                                        <p className="text-sm text-red-500">{pagamentoEmailErrors['email3']}</p>
+                                                    )}
+                                                </div>
+                                            ) : watchDadosPagamento?.mostrarEmail2 ? (
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => {
+                                                        const currentValues = watch('dadosPagamento');
+                                                        reset({
+                                                            ...watch(),
+                                                            dadosPagamento: {
+                                                                ...currentValues,
+                                                                mostrarEmail3: true,
+                                                            },
+                                                        });
+                                                    }}
+                                                    className="h-10 w-full"
+                                                >
+                                                    <Plus className="h-4 w-4 mr-2" />
+                                                    Adicionar e-mail
+                                                </Button>
+                                            ) : null}
                                         </div>
                                     </div>
 
@@ -1097,52 +1631,352 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                                 </div>
                                                 <div className="space-y-2">
                                                     <Label>Nome advogado</Label>
-                                                    <Input {...register('dadosPagamento.nomeAdvogado')} />
+                                                    <Input 
+                                                        {...register('dadosPagamento.nomeAdvogado')}
+                                                        onChange={(e) => {
+                                                            const masked = maskPersonName(e.target.value);
+                                                            e.target.value = masked;
+                                                            register('dadosPagamento.nomeAdvogado').onChange(e);
+                                                        }}
+                                                    />
                                                 </div>
-                                                <div className="space-y-2">
-                                                    <Label>Telefone advogado 1</Label>
-                                                    <Input {...register('dadosPagamento.telefoneAdvogado1')} />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <Label className="flex items-center gap-2">
-                                                        <input type="checkbox" {...register('dadosPagamento.mostrarTelefoneAdvogado2')} />
-                                                        Telefone advogado 2
-                                                    </Label>
-                                                    {watchDadosPagamento?.mostrarTelefoneAdvogado2 && (
-                                                        <Input {...register('dadosPagamento.telefoneAdvogado2')} />
-                                                    )}
+                                            </div>
+                                            
+                                            {/* Telefones do advogado - Grid de 3 colunas */}
+                                            <div>
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                                                    <div className="space-y-2">
+                                                        <Label>Telefone advogado 1</Label>
+                                                        <Input 
+                                                            className="h-10" 
+                                                            placeholder="(11) 99999-9999"
+                                                            {...register('dadosPagamento.telefoneAdvogado1')}
+                                                            onChange={(e) => {
+                                                                const masked = maskBRPhone(e.target.value);
+                                                                e.target.value = masked;
+                                                                register('dadosPagamento.telefoneAdvogado1').onChange(e);
+                                                            }}
+                                                            maxLength={15}
+                                                        />
                                                     </div>
-                                                <div className="space-y-2">
-                                                    <Label className="flex items-center gap-2">
-                                                        <input type="checkbox" {...register('dadosPagamento.mostrarTelefoneAdvogado3')} />
-                                                        Telefone advogado 3
-                                                    </Label>
-                                                    {watchDadosPagamento?.mostrarTelefoneAdvogado3 && (
-                                                        <Input {...register('dadosPagamento.telefoneAdvogado3')} />
+                                                    {watchDadosPagamento?.mostrarTelefoneAdvogado2 ? (
+                                                        <div className="space-y-2">
+                                                            <div className="flex items-center justify-between min-h-[20px]">
+                                                                <Label>Telefone advogado 2</Label>
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={() => {
+                                                                        const currentValues = watch('dadosPagamento');
+                                                                        reset({
+                                                                            ...watch(),
+                                                                            dadosPagamento: {
+                                                                                ...currentValues,
+                                                                                mostrarTelefoneAdvogado2: false,
+                                                                                telefoneAdvogado2: '',
+                                                                                mostrarTelefoneAdvogado3: false,
+                                                                                telefoneAdvogado3: '',
+                                                                            },
+                                                                        });
+                                                                    }}
+                                                                    className="text-destructive hover:text-destructive hover:bg-destructive/10 h-6 w-6 p-0"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </Button>
+                                                            </div>
+                                                            <Input 
+                                                                className="h-10" 
+                                                                placeholder="(11) 99999-9999"
+                                                                {...register('dadosPagamento.telefoneAdvogado2')}
+                                                                onChange={(e) => {
+                                                                    const masked = maskBRPhone(e.target.value);
+                                                                    e.target.value = masked;
+                                                                    register('dadosPagamento.telefoneAdvogado2').onChange(e);
+                                                                }}
+                                                                maxLength={15}
+                                                            />
+                                                        </div>
+                                                    ) : (
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => {
+                                                                const currentValues = watch('dadosPagamento');
+                                                                reset({
+                                                                    ...watch(),
+                                                                    dadosPagamento: {
+                                                                        ...currentValues,
+                                                                        mostrarTelefoneAdvogado2: true,
+                                                                    },
+                                                                });
+                                                            }}
+                                                            className="h-10 w-full"
+                                                        >
+                                                            <Plus className="h-4 w-4 mr-2" />
+                                                            Adicionar telefone
+                                                        </Button>
                                                     )}
+                                                    {watchDadosPagamento?.mostrarTelefoneAdvogado3 ? (
+                                                        <div className="space-y-2">
+                                                            <div className="flex items-center justify-between min-h-[20px]">
+                                                                <Label>Telefone advogado 3</Label>
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={() => {
+                                                                        const currentValues = watch('dadosPagamento');
+                                                                        reset({
+                                                                            ...watch(),
+                                                                            dadosPagamento: {
+                                                                                ...currentValues,
+                                                                                mostrarTelefoneAdvogado3: false,
+                                                                                telefoneAdvogado3: '',
+                                                                            },
+                                                                        });
+                                                                    }}
+                                                                    className="text-destructive hover:text-destructive hover:bg-destructive/10 h-6 w-6 p-0"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </Button>
+                                                            </div>
+                                                            <Input 
+                                                                className="h-10" 
+                                                                placeholder="(11) 99999-9999"
+                                                                {...register('dadosPagamento.telefoneAdvogado3')}
+                                                                onChange={(e) => {
+                                                                    const masked = maskBRPhone(e.target.value);
+                                                                    e.target.value = masked;
+                                                                    register('dadosPagamento.telefoneAdvogado3').onChange(e);
+                                                                }}
+                                                                maxLength={15}
+                                                            />
+                                                        </div>
+                                                    ) : watchDadosPagamento?.mostrarTelefoneAdvogado2 ? (
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => {
+                                                                const currentValues = watch('dadosPagamento');
+                                                                reset({
+                                                                    ...watch(),
+                                                                    dadosPagamento: {
+                                                                        ...currentValues,
+                                                                        mostrarTelefoneAdvogado3: true,
+                                                                    },
+                                                                });
+                                                            }}
+                                                            className="h-10 w-full"
+                                                        >
+                                                            <Plus className="h-4 w-4 mr-2" />
+                                                            Adicionar telefone
+                                                        </Button>
+                                                    ) : null}
                                                 </div>
-
-                                                <div className="space-y-2">
-                                                    <Label>Email advogado 1</Label>
-                                                    <Input type="email" {...register('dadosPagamento.emailAdvogado1')} />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <Label className="flex items-center gap-2">
-                                                        <input type="checkbox" {...register('dadosPagamento.mostrarEmailAdvogado2')} />
-                                                        Email advogado 2
-                                                    </Label>
-                                                    {watchDadosPagamento?.mostrarEmailAdvogado2 && (
-                                                        <Input type="email" {...register('dadosPagamento.emailAdvogado2')} />
+                                            </div>
+                                            
+                                            {/* E-mails do advogado - Grid de 3 colunas */}
+                                            <div>
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                                                    <div className="space-y-2">
+                                                        <Label>Email advogado 1</Label>
+                                                        <Input 
+                                                            className={`h-10 ${advogadoEmailErrors['emailAdvogado1'] ? 'border-red-500' : ''}`}
+                                                            type="email" 
+                                                            placeholder="exemplo@email.com"
+                                                            {...register('dadosPagamento.emailAdvogado1')}
+                                                            onChange={(e) => {
+                                                                const normalized = normalizeEmail(e.target.value);
+                                                                e.target.value = normalized;
+                                                                register('dadosPagamento.emailAdvogado1').onChange(e);
+                                                                
+                                                                // Validar email
+                                                                if (normalized.length > 0) {
+                                                                    if (!isValidEmail(normalized)) {
+                                                                        setAdvogadoEmailErrors(prev => ({ ...prev, emailAdvogado1: 'E-mail inválido' }));
+                                                                    } else {
+                                                                        setAdvogadoEmailErrors(prev => {
+                                                                            const newErrors = { ...prev };
+                                                                            delete newErrors.emailAdvogado1;
+                                                                            return newErrors;
+                                                                        });
+                                                                    }
+                                                                } else {
+                                                                    setAdvogadoEmailErrors(prev => {
+                                                                        const newErrors = { ...prev };
+                                                                        delete newErrors.emailAdvogado1;
+                                                                        return newErrors;
+                                                                    });
+                                                                }
+                                                            }}
+                                                        />
+                                                        {advogadoEmailErrors['emailAdvogado1'] && (
+                                                            <p className="text-sm text-red-500">{advogadoEmailErrors['emailAdvogado1']}</p>
+                                                        )}
+                                                    </div>
+                                                    {watchDadosPagamento?.mostrarEmailAdvogado2 ? (
+                                                        <div className="space-y-2">
+                                                            <div className="flex items-center justify-between min-h-[20px]">
+                                                                <Label>Email advogado 2</Label>
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={() => {
+                                                                        const currentValues = watch('dadosPagamento');
+                                                                        reset({
+                                                                            ...watch(),
+                                                                            dadosPagamento: {
+                                                                                ...currentValues,
+                                                                                mostrarEmailAdvogado2: false,
+                                                                                emailAdvogado2: '',
+                                                                                mostrarEmailAdvogado3: false,
+                                                                                emailAdvogado3: '',
+                                                                            },
+                                                                        });
+                                                                    }}
+                                                                    className="text-destructive hover:text-destructive hover:bg-destructive/10 h-6 w-6 p-0"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </Button>
+                                                            </div>
+                                                            <Input 
+                                                                className={`h-10 ${advogadoEmailErrors['emailAdvogado2'] ? 'border-red-500' : ''}`}
+                                                                type="email" 
+                                                                placeholder="exemplo@email.com"
+                                                                {...register('dadosPagamento.emailAdvogado2')}
+                                                                onChange={(e) => {
+                                                                    const normalized = normalizeEmail(e.target.value);
+                                                                    e.target.value = normalized;
+                                                                    register('dadosPagamento.emailAdvogado2').onChange(e);
+                                                                    
+                                                                    // Validar email
+                                                                    if (normalized.length > 0) {
+                                                                        if (!isValidEmail(normalized)) {
+                                                                            setAdvogadoEmailErrors(prev => ({ ...prev, emailAdvogado2: 'E-mail inválido' }));
+                                                                        } else {
+                                                                            setAdvogadoEmailErrors(prev => {
+                                                                                const newErrors = { ...prev };
+                                                                                delete newErrors.emailAdvogado2;
+                                                                                return newErrors;
+                                                                            });
+                                                                        }
+                                                                    } else {
+                                                                        setAdvogadoEmailErrors(prev => {
+                                                                            const newErrors = { ...prev };
+                                                                            delete newErrors.emailAdvogado2;
+                                                                            return newErrors;
+                                                                        });
+                                                                    }
+                                                                }}
+                                                            />
+                                                            {advogadoEmailErrors['emailAdvogado2'] && (
+                                                                <p className="text-sm text-red-500">{advogadoEmailErrors['emailAdvogado2']}</p>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => {
+                                                                const currentValues = watch('dadosPagamento');
+                                                                reset({
+                                                                    ...watch(),
+                                                                    dadosPagamento: {
+                                                                        ...currentValues,
+                                                                        mostrarEmailAdvogado2: true,
+                                                                    },
+                                                                });
+                                                            }}
+                                                            className="h-10 w-full"
+                                                        >
+                                                            <Plus className="h-4 w-4 mr-2" />
+                                                            Adicionar e-mail
+                                                        </Button>
                                                     )}
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <Label className="flex items-center gap-2">
-                                                        <input type="checkbox" {...register('dadosPagamento.mostrarEmailAdvogado3')} />
-                                                        Email advogado 3
-                                                    </Label>
-                                                    {watchDadosPagamento?.mostrarEmailAdvogado3 && (
-                                                        <Input type="email" {...register('dadosPagamento.emailAdvogado3')} />
-                                                    )}
+                                                    {watchDadosPagamento?.mostrarEmailAdvogado3 ? (
+                                                        <div className="space-y-2">
+                                                            <div className="flex items-center justify-between min-h-[20px]">
+                                                                <Label>Email advogado 3</Label>
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="ghost"
+                                                                    size="sm"
+                                                                    onClick={() => {
+                                                                        const currentValues = watch('dadosPagamento');
+                                                                        reset({
+                                                                            ...watch(),
+                                                                            dadosPagamento: {
+                                                                                ...currentValues,
+                                                                                mostrarEmailAdvogado3: false,
+                                                                                emailAdvogado3: '',
+                                                                            },
+                                                                        });
+                                                                    }}
+                                                                    className="text-destructive hover:text-destructive hover:bg-destructive/10 h-6 w-6 p-0"
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </Button>
+                                                            </div>
+                                                            <Input 
+                                                                className={`h-10 ${advogadoEmailErrors['emailAdvogado3'] ? 'border-red-500' : ''}`}
+                                                                type="email" 
+                                                                placeholder="exemplo@email.com"
+                                                                {...register('dadosPagamento.emailAdvogado3')}
+                                                                onChange={(e) => {
+                                                                    const normalized = normalizeEmail(e.target.value);
+                                                                    e.target.value = normalized;
+                                                                    register('dadosPagamento.emailAdvogado3').onChange(e);
+                                                                    
+                                                                    // Validar email
+                                                                    if (normalized.length > 0) {
+                                                                        if (!isValidEmail(normalized)) {
+                                                                            setAdvogadoEmailErrors(prev => ({ ...prev, emailAdvogado3: 'E-mail inválido' }));
+                                                                        } else {
+                                                                            setAdvogadoEmailErrors(prev => {
+                                                                                const newErrors = { ...prev };
+                                                                                delete newErrors.emailAdvogado3;
+                                                                                return newErrors;
+                                                                            });
+                                                                        }
+                                                                    } else {
+                                                                        setAdvogadoEmailErrors(prev => {
+                                                                            const newErrors = { ...prev };
+                                                                            delete newErrors.emailAdvogado3;
+                                                                            return newErrors;
+                                                                        });
+                                                                    }
+                                                                }}
+                                                            />
+                                                            {advogadoEmailErrors['emailAdvogado3'] && (
+                                                                <p className="text-sm text-red-500">{advogadoEmailErrors['emailAdvogado3']}</p>
+                                                            )}
+                                                        </div>
+                                                    ) : watchDadosPagamento?.mostrarEmailAdvogado2 ? (
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => {
+                                                                const currentValues = watch('dadosPagamento');
+                                                                reset({
+                                                                    ...watch(),
+                                                                    dadosPagamento: {
+                                                                        ...currentValues,
+                                                                        mostrarEmailAdvogado3: true,
+                                                                    },
+                                                                });
+                                                            }}
+                                                            className="h-10 w-full"
+                                                        >
+                                                            <Plus className="h-4 w-4 mr-2" />
+                                                            Adicionar e-mail
+                                                        </Button>
+                                                    ) : null}
                                                 </div>
                                             </div>
                                         </div>
@@ -1256,7 +2090,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
 
                         {/* Dados Escola */}
                         <div>
-                            <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
+                            <h3 className="text-lg font-semibold mb-6 flex items-center gap-2" style={{ fontFamily: 'Sora, sans-serif' }}>
                                 <GraduationCap className="w-5 h-5" />
                                 Dados Escola
                             </h3>
@@ -1278,75 +2112,204 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                         </div>
                                         <div className="space-y-2">
                                             <Label>Nome *</Label>
-                                            <Input {...register('dadosEscola.nome')} />
+                                            <Input 
+                                                {...register('dadosEscola.nome')}
+                                                onChange={(e) => {
+                                                    const masked = maskPersonName(e.target.value);
+                                                    e.target.value = masked;
+                                                    register('dadosEscola.nome').onChange(e);
+                                                }}
+                                            />
                                         </div>
                                         <div className="space-y-2">
                                             <Label>Telefone *</Label>
-                                            <Input {...register('dadosEscola.telefone')} />
+                                            <Input 
+                                                {...register('dadosEscola.telefone')}
+                                                onChange={(e) => {
+                                                    const masked = maskBRPhone(e.target.value);
+                                                    e.target.value = masked;
+                                                    register('dadosEscola.telefone').onChange(e);
+                                                }}
+                                                maxLength={15}
+                                            />
                                         </div>
                                         <div className="space-y-2">
                                             <Label>E-mail</Label>
-                                            <Input type="email" {...register('dadosEscola.email')} />
+                                            <Input 
+                                                type="email" 
+                                                className={escolaEmailError ? 'border-red-500' : ''}
+                                                {...register('dadosEscola.email')}
+                                                onChange={(e) => {
+                                                    const normalized = normalizeEmail(e.target.value);
+                                                    e.target.value = normalized;
+                                                    register('dadosEscola.email').onChange(e);
+                                                    
+                                                    // Validar email
+                                                    if (normalized.length > 0) {
+                                                        if (!isValidEmail(normalized)) {
+                                                            setEscolaEmailError('E-mail inválido');
+                                                        } else {
+                                                            setEscolaEmailError('');
+                                                        }
+                                                    } else {
+                                                        setEscolaEmailError('');
+                                                    }
+                                                }}
+                                            />
+                                            {escolaEmailError && (
+                                                <p className="text-sm text-red-500">{escolaEmailError}</p>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="space-y-2">
                                         <h4 className="text-sm font-medium">Endereço da Escola</h4>
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                            <div className="space-y-2">
-                                                <Label>CEP</Label>
-                                                <Input {...register('dadosEscola.endereco.cep')} />
+                                        <div className="space-y-4">
+                                            {/* Linha 1: CEP | Cidade | UF */}
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                <div className="space-y-2">
+                                                    <Label>CEP</Label>
+                                                    <Input 
+                                                        className="h-10" 
+                                                        {...register('dadosEscola.endereco.cep')}
+                                                        onChange={(e) => {
+                                                            const masked = maskCEP(e.target.value);
+                                                            e.target.value = masked;
+                                                            register('dadosEscola.endereco.cep').onChange(e);
+                                                        }}
+                                                        maxLength={9}
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Cidade</Label>
+                                                    <Input className="h-10" {...register('dadosEscola.endereco.cidade')} />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>UF</Label>
+                                                    <Input className="h-10" maxLength={2} {...register('dadosEscola.endereco.uf')} />
+                                                </div>
                                             </div>
+
+                                            {/* Linha 2: Logradouro (full width) */}
                                             <div className="space-y-2">
-                                                <Label>UF</Label>
-                                                <Input maxLength={2} {...register('dadosEscola.endereco.uf')} />
-                                            </div>
-                                            <div className="space-y-2 md:col-span-3">
                                                 <Label>Logradouro</Label>
-                                                <Input {...register('dadosEscola.endereco.logradouro')} />
+                                                <Input className="h-10" {...register('dadosEscola.endereco.logradouro')} />
                                             </div>
-                                            <div className="space-y-2">
-                                                <Label>Número</Label>
-                                                <Input {...register('dadosEscola.endereco.numero')} />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label>Complemento</Label>
-                                                <Input {...register('dadosEscola.endereco.complemento')} />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label>Bairro</Label>
-                                                <Input {...register('dadosEscola.endereco.bairro')} />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label>Cidade</Label>
-                                                <Input {...register('dadosEscola.endereco.cidade')} />
+
+                                            {/* Linha 3: Número | Complemento | Bairro */}
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                <div className="space-y-2">
+                                                    <Label>Número</Label>
+                                                    <Input className="h-10" {...register('dadosEscola.endereco.numero')} />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Complemento</Label>
+                                                    <Input className="h-10" {...register('dadosEscola.endereco.complemento')} />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Bairro</Label>
+                                                    <Input className="h-10" {...register('dadosEscola.endereco.bairro')} />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                    {watchDadosEscola?.contatos && watchDadosEscola.contatos.length > 0 && (
-                                        <div className="space-y-4">
-                                            <h4 className="text-sm font-medium">Contatos</h4>
-                                            {watchDadosEscola.contatos.map((_contato, index) => (
-                                                <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-lg">
+
+                                    {/* Contatos da Escola */}
+                                    <div className="space-y-4">
+                                        <h4 className="text-sm font-medium">Contatos</h4>
+                                        {contatosFields.map((field, index) => (
+                                            <div key={field.id} className="p-4 border rounded-lg bg-muted/30 space-y-4">
+                                                <div className="flex items-center justify-between">
+                                                    <h5 className="font-medium text-sm">Contato {index + 1}</h5>
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => removeContato(index)}
+                                                        className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                     <div className="space-y-2">
                                                         <Label>Nome</Label>
-                                                        <Input {...register(`dadosEscola.contatos.${index}.nome` as const)} />
+                                                        <Input 
+                                                            className="h-10" 
+                                                            {...register(`dadosEscola.contatos.${index}.nome` as const)}
+                                                            onChange={(e) => {
+                                                                const masked = maskPersonName(e.target.value);
+                                                                e.target.value = masked;
+                                                                register(`dadosEscola.contatos.${index}.nome` as const).onChange(e);
+                                                            }}
+                                                        />
                                                     </div>
                                                     <div className="space-y-2">
                                                         <Label>Telefone</Label>
-                                                        <Input {...register(`dadosEscola.contatos.${index}.telefone` as const)} />
+                                                        <Input 
+                                                            className="h-10" 
+                                                            {...register(`dadosEscola.contatos.${index}.telefone` as const)}
+                                                            onChange={(e) => {
+                                                                const masked = maskBRPhone(e.target.value);
+                                                                e.target.value = masked;
+                                                                register(`dadosEscola.contatos.${index}.telefone` as const).onChange(e);
+                                                            }}
+                                                            maxLength={15}
+                                                        />
                                                     </div>
                                                     <div className="space-y-2">
-                                                        <Label>Email</Label>
-                                                        <Input type="email" {...register(`dadosEscola.contatos.${index}.email` as const)} />
+                                                        <Label>E-mail</Label>
+                                                        <Input 
+                                                            className={`h-10 ${contatoEscolaEmailErrors[index] ? 'border-red-500' : ''}`}
+                                                            type="email" 
+                                                            {...register(`dadosEscola.contatos.${index}.email` as const)}
+                                                            onChange={(e) => {
+                                                                const normalized = normalizeEmail(e.target.value);
+                                                                e.target.value = normalized;
+                                                                register(`dadosEscola.contatos.${index}.email` as const).onChange(e);
+                                                                
+                                                                // Validar email
+                                                                if (normalized.length > 0) {
+                                                                    if (!isValidEmail(normalized)) {
+                                                                        setContatoEscolaEmailErrors(prev => ({ ...prev, [index]: 'E-mail inválido' }));
+                                                                    } else {
+                                                                        setContatoEscolaEmailErrors(prev => {
+                                                                            const newErrors = { ...prev };
+                                                                            delete newErrors[index];
+                                                                            return newErrors;
+                                                                        });
+                                                                    }
+                                                                } else {
+                                                                    setContatoEscolaEmailErrors(prev => {
+                                                                        const newErrors = { ...prev };
+                                                                        delete newErrors[index];
+                                                                        return newErrors;
+                                                                    });
+                                                                }
+                                                            }}
+                                                        />
+                                                        {contatoEscolaEmailErrors[index] && (
+                                                            <p className="text-sm text-red-500">{contatoEscolaEmailErrors[index]}</p>
+                                                        )}
                                                     </div>
                                                     <div className="space-y-2">
                                                         <Label>Função</Label>
-                                                        <Input {...register(`dadosEscola.contatos.${index}.funcao` as const)} />
+                                                        <Input className="h-10" {...register(`dadosEscola.contatos.${index}.funcao` as const)} />
                                                     </div>
                                                 </div>
-                                            ))}
-                                        </div>
-                                    )}
+                                            </div>
+                                        ))}
+                                        
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => appendContato({ nome: '', telefone: '', email: '', funcao: '' })}
+                                            className="w-full"
+                                        >
+                                            <Plus className="h-4 w-4 mr-2" />
+                                            Adicionar contato
+                                        </Button>
+                                    </div>
                                 </div>
                             ) : (
                                 <div className="space-y-6">
@@ -1405,7 +2368,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
 
                         {/* Arquivos */}
                         <div>
-                            <h3 className="text-lg font-semibold mb-6 flex items-center gap-2">
+                            <h3 className="text-lg font-semibold mb-6 flex items-center gap-2" style={{ fontFamily: 'Sora, sans-serif' }}>
                                 📎 Arquivos
                             </h3>
                             {isEditMode ? (
@@ -1433,7 +2396,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
 
                     {/* Action Buttons (Edit Mode) - Sticky Footer */}
                     {isEditMode && (
-                        <div className="border-t p-4 bg-background flex justify-end gap-3 flex-shrink-0">
+                        <div className="border-t p-4 bg-background flex justify-end gap-3 shr   ink-0">
                             <Button type="button" variant="outline" onClick={handleCancelClick} disabled={isSaving}>
                                 <X className="h-4 w-4 mr-2" />
                                 Cancelar

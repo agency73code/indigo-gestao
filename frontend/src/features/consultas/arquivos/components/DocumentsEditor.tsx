@@ -1,7 +1,9 @@
 import { useState, useRef } from "react";
-import { Trash2, Upload, Loader2 } from "lucide-react";
+import { Trash2, Upload, Loader2, FileUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/ui/label";
 import {
   Select,
   SelectContent,
@@ -49,10 +51,12 @@ export function DocumentsEditor({
   onDeleteSuccess,
 }: DocumentsEditorProps) {
   const [tipoDoc, setTipoDoc] = useState<string>("");
+  const [descricaoOutros, setDescricaoOutros] = useState("");
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<FileMeta | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,6 +65,11 @@ export function DocumentsEditor({
 
     if (!tipoDoc) {
       setUploadError("Selecione o tipo de documento antes de fazer upload");
+      return;
+    }
+
+    if (tipoDoc === "outros" && !descricaoOutros.trim()) {
+      setUploadError("Preencha a descrição do documento");
       return;
     }
 
@@ -85,6 +94,7 @@ export function DocumentsEditor({
 
       // Reset
       setTipoDoc("");
+      setDescricaoOutros("");
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -141,45 +151,162 @@ export function DocumentsEditor({
     }
   };
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+
+    if (!tipoDoc) {
+      setUploadError("Selecione o tipo de documento antes de fazer upload");
+      return;
+    }
+
+    if (tipoDoc === "outros" && !descricaoOutros.trim()) {
+      setUploadError("Preencha a descrição do documento");
+      return;
+    }
+
+    setUploading(true);
+    setUploadError(null);
+
+    window.dispatchEvent(
+      new CustomEvent("consulta:documents:upload:click", {
+        detail: { ownerType, ownerId, tipo_documento: tipoDoc, fileName: file.name },
+      })
+    );
+
+    try {
+      await uploadFile({ ownerType, ownerId, tipo_documento: tipoDoc, file });
+
+      window.dispatchEvent(
+        new CustomEvent("consulta:documents:upload:success", {
+          detail: { ownerType, ownerId, tipo_documento: tipoDoc, fileName: file.name },
+        })
+      );
+
+      setTipoDoc("");
+      setDescricaoOutros("");
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+
+      onUploadSuccess();
+    } catch (err: any) {
+      const msg = err.message ?? "Erro ao fazer upload do arquivo";
+      setUploadError(msg);
+
+      window.dispatchEvent(
+        new CustomEvent("consulta:documents:upload:error", {
+          detail: { ownerType, ownerId, tipo_documento: tipoDoc, fileName: file.name, error: msg },
+        })
+      );
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
       {/* Upload Section */}
       <div className="border rounded-lg p-4 bg-muted/20">
-        <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+        <h3 className="text-sm font-semibold mb-3 flex items-center gap-2" style={{ fontFamily: 'Sora, sans-serif' }}>
           <Upload className="h-4 w-4" />
           Adicionar Documento
         </h3>
 
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Select value={tipoDoc} onValueChange={setTipoDoc}>
-            <SelectTrigger className="w-full sm:w-[250px]">
-              <SelectValue placeholder="Tipo de documento" />
-            </SelectTrigger>
-            <SelectContent>
-              {TIPOS_DOCUMENTO.map((tipo) => (
-                <SelectItem key={tipo.value} value={tipo.value}>
-                  {tipo.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="space-y-3">
+          {/* Tipo de documento */}
+          <div>
+            <Label htmlFor="tipo-doc">Tipo de Documento</Label>
+            <Select value={tipoDoc} onValueChange={setTipoDoc}>
+              <SelectTrigger id="tipo-doc" className="h-10">
+                <SelectValue placeholder="Selecione o tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                {TIPOS_DOCUMENTO.map((tipo) => (
+                  <SelectItem key={tipo.value} value={tipo.value}>
+                    {tipo.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-          <input
-            ref={fileInputRef}
-            type="file"
-            onChange={handleFileSelect}
-            disabled={uploading || !tipoDoc}
-            className="flex-1"
-          />
+          {/* Campo de descrição (condicional para "outros") */}
+          {tipoDoc === "outros" && (
+            <div>
+              <Label htmlFor="descricao-outros">Descrição do Documento</Label>
+              <Input
+                id="descricao-outros"
+                type="text"
+                placeholder="Ex: Atestado médico, Declaração escolar..."
+                value={descricaoOutros}
+                onChange={(e) => setDescricaoOutros(e.target.value)}
+                className="h-10"
+              />
+            </div>
+          )}
 
-          {uploading && (
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          {/* Zona de drag & drop */}
+          <div
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onClick={() => fileInputRef.current?.click()}
+            className={`
+              border-2 border-dashed rounded-lg p-8 
+              text-center cursor-pointer transition-all
+              ${isDragOver ? 'border-primary bg-primary/5' : 'border-muted-foreground/25 hover:border-primary/50'}
+              ${!tipoDoc ? 'opacity-50 cursor-not-allowed' : ''}
+              ${uploading ? 'pointer-events-none opacity-60' : ''}
+            `}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              onChange={handleFileSelect}
+              disabled={uploading || !tipoDoc}
+              className="hidden"
+            />
+
+            <div className="flex flex-col items-center gap-2">
+              {uploading ? (
+                <>
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <p className="text-sm text-muted-foreground">Enviando arquivo...</p>
+                </>
+              ) : (
+                <>
+                  <FileUp className="h-8 w-8 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm font-medium">
+                      Clique ou arraste o arquivo aqui
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      PDF, imagens ou documentos
+                    </p>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {uploadError && (
+            <p className="text-sm text-destructive">{uploadError}</p>
           )}
         </div>
-
-        {uploadError && (
-          <p className="text-sm text-destructive mt-2">{uploadError}</p>
-        )}
       </div>
 
       {/* Files List */}
@@ -214,7 +341,7 @@ export function DocumentsEditor({
                 variant="ghost"
                 size="icon"
                 type="button"
-                className="text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0"
+                className="text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
                 onClick={() => setDeleteTarget(file)}
               >
                 <Trash2 className="h-4 w-4" />
