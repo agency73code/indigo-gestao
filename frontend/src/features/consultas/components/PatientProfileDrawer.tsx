@@ -202,11 +202,10 @@ function formatDateForInput(value?: string | Date | null) {
     return date.toISOString().split('T')[0];
 }
 
-function formatDate(value?: string | Date | null) {
+function formatDate(value?: string | null) {
     if (!value) return 'Não informado';
-    const date = value instanceof Date ? value : new Date(value);
-    if (Number.isNaN(date.getTime())) return 'Não informado';
-    return date.toLocaleDateString('pt-BR');
+    const [year, month, day] = value.split('T')[0].split('-');
+    return `${day}/${month}/${year}`;
 }
 
 function emptyToNull(value?: string | null) {

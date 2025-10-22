@@ -195,6 +195,8 @@ export async function getById(clientId: string) {
 
     enderecos: {
       select: {
+        residenciaDe: true,
+        outroResidencia: true,
         endereco: {
           select: {
             cep: true,
