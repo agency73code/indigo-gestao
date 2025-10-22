@@ -21,10 +21,13 @@ jobs:
           host: ${{ env.SSH_HOST }}
           username: ${{ env.SSH_USER }}
           key: ${{ env.SSH_KEY }}
-          envs: DEV_PATH,PM2_APP
+          envs: "DEV_PATH,PM2_APP"
           script: |
             set -euo pipefail
-            export CI=true   # <= 🔧 resolve o ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY
+            echo "🚀 Deploy iniciado"
+            echo "🔍 DEV_PATH='$DEV_PATH'"
+            echo "🔍 PM2_APP='$PM2_APP'"
+            export CI=true
 
             # garante pasta, dono e "safe.directory" para evitar o erro 128 do Git
             mkdir -p "$DEV_PATH"
