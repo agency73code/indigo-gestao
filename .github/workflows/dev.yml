@@ -17,6 +17,9 @@ jobs:
     steps:
       - name: Deploy via SSH (DEV)
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          DEV_PATH: ${{ secrets.DEV_PATH }}
+          PM@_APP: ${{ secrets.PM2_APP_DEV }}
         with:
           host: ${{ env.SSH_HOST }}
           username: ${{ env.SSH_USER }}
@@ -27,17 +30,21 @@ jobs:
             echo "🚀 Deploy iniciado"
             echo "🔍 DEV_PATH='$DEV_PATH'"
             echo "🔍 PM2_APP='$PM2_APP'"
-            export CI=true
+            
+            if [[ "$DEV_PATH" != *"/dev" ]]; then
+              echo "❌ Caminho inválido: $DEV_PATH"
+              exit 1
+            fi
 
             # garante pasta, dono e "safe.directory" para evitar o erro 128 do Git
             mkdir -p "$DEV_PATH"
             chown -R "$USER:$USER" "$DEV_PATH" || true
             git config --global --add safe.directory "$DEV_PATH"
 
-            # 1) Clona se ainda não existir
-            if [ ! -d "$DEV_PATH/.git" ]; then
-              git clone https://github.com/agency73code/indigo-gestao.git "$DEV_PATH"
-            fi
+            cd "$DEV_PATH"
+            git fetch --all --prune
+            git checkout dev
+            git reset --hard origin/dev
 
             # 2) Puxa código da branch dev
             cd "$DEV_PATH"
