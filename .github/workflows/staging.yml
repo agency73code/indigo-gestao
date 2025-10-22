@@ -11,9 +11,8 @@ jobs:
       SSH_HOST: ${{ secrets.SSH_HOST }}
       SSH_USER: ${{ secrets.SSH_USER }}
       SSH_KEY:  ${{ secrets.SSH_KEY }}
-      STAGING_PATH: ${{ secrets.STAGING_PATH }}
+      STAGING_PATH: ${{ vars.STAGING_PATH }}
       PM2_APP:  ${{ secrets.PM2_APP_STAGING }}
-      CI: true  # garante pnpm não-interativo
 
     steps:
       - name: Checkout (for metadata only)
@@ -21,16 +20,26 @@ jobs:
 
       - name: Deploy via SSH (STAGING)
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          STAGING_PATH: ${{ vars.STAGING_PATH }}
+          PM2_APP: ${{ secrets.PM2_APP_STAGING }}
         with:
           host: ${{ env.SSH_HOST }}
           username: ${{ env.SSH_USER }}
           key: ${{ env.SSH_KEY }}
           envs: STAGING_PATH,PM2_APP,CI
           script: |
+            exec sudo -u deploy -H bash -c "$0" "$@"
             set -euo pipefail
-            export CI=${CI:-true}   # força modo CI no remoto (evita o NO_TTY do pnpm)
+            echo "🚀 Deploy iniciado"
+            echo "🔍 STAGING_PATH='$STAGING_PATH'"
+            echo "🔍 PM2_APP='$PM2_APP'"
 
-            # Pasta, permissões e safe.directory (evita erro 128 do Git)
+            if [[ "$STAGING_PATH" != *"/staging" ]]; then
+              echo "❌ Caminho inválido: $STAGING_PATH"
+              exit 1
+            fi
+
             mkdir -p "$STAGING_PATH"
             chown -R "$USER:$USER" "$STAGING_PATH" || true
             git config --global --add safe.directory "$STAGING_PATH"
