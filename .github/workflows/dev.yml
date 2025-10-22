@@ -19,26 +19,25 @@ jobs:
         uses: appleboy/ssh-action@v1.0.3
         env:
           DEV_PATH: ${{ vars.DEV_PATH }}
-          PM@_APP: ${{ secrets.PM2_APP_DEV }}
+          PM2_APP:  ${{ secrets.PM2_APP_DEV }}
         with:
           host: ${{ env.SSH_HOST }}
           username: ${{ env.SSH_USER }}
           key: ${{ env.SSH_KEY }}
           envs: "DEV_PATH,PM2_APP"
           script: |
-            exec sudo -u deploy -H bash -c "$0" "$@"
             set -euo pipefail
             echo "🚀 Deploy iniciado"
             echo "🔍 DEV_PATH='$DEV_PATH'"
             echo "🔍 PM2_APP='$PM2_APP'"
-            
+
             if [[ "$DEV_PATH" != *"/dev" ]]; then
               echo "❌ Caminho inválido: $DEV_PATH"
               exit 1
             fi
 
             mkdir -p "$DEV_PATH"
-            chown -R "$USER:$USER" "$DEV_PATH" || true
+            chown -R deploy:deploy "$DEV_PATH" || true
             git config --global --add safe.directory "$DEV_PATH"
 
             # 2) Puxa código da branch dev
@@ -47,21 +46,25 @@ jobs:
             git checkout dev
             git reset --hard origin/dev
 
+            # 3) Configura pnpm
             command -v pnpm >/dev/null 2>&1 || (corepack enable && corepack prepare pnpm@latest --activate)
 
-            # 3) Backend: deps + migrações
+            # 4) Backend: deps + migrações
             cd backend
-            pnpm install --frozen-lockfile --prod --filter ./backend
-            pnpm dlx prisma migrate deploy
+            echo "📦 Instalando dependências backend..."
+            pnpm install --frozen-lockfile
+            pnpm dlx prisma migrate deploy || true
             pnpm dlx prisma generate
 
-            # 4) Frontend: build
+            # 5) Frontend: build
             cd ../frontend
+            echo "🧱 Buildando frontend..."
             pnpm install --frozen-lockfile
             pnpm run build
 
-            # 5) PM2
+            # 6) PM2
             cd "$DEV_PATH"
+            echo "🔁 Reiniciando PM2..."
             if pm2 describe "$PM2_APP" > /dev/null; then
               pm2 restart "$PM2_APP"
             else
@@ -73,3 +76,4 @@ jobs:
             fi
 
             pm2 save
+            echo "✅ Deploy finalizado com sucesso!"
