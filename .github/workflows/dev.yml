@@ -11,14 +11,14 @@ jobs:
       SSH_HOST: ${{ secrets.SSH_HOST }}
       SSH_USER: ${{ secrets.SSH_USER }}
       SSH_KEY:  ${{ secrets.SSH_KEY }}
-      DEV_PATH: ${{ secrets.DEV_PATH }}
+      DEV_PATH: ${{ vars.DEV_PATH }}
       PM2_APP:  ${{ secrets.PM2_APP_DEV }}
 
     steps:
       - name: Deploy via SSH (DEV)
         uses: appleboy/ssh-action@v1.0.3
         env:
-          DEV_PATH: ${{ secrets.DEV_PATH }}
+          DEV_PATH: ${{ vars.DEV_PATH }}
           PM@_APP: ${{ secrets.PM2_APP_DEV }}
         with:
           host: ${{ env.SSH_HOST }}
@@ -28,20 +28,14 @@ jobs:
           script: |
             set -euo pipefail
             echo "🚀 Deploy iniciado"
-            echo "🔍 DEV_PATH (sem máscara) real: $(printenv DEV_PATH)"
             echo "🔍 DEV_PATH='$DEV_PATH'"
             echo "🔍 PM2_APP='$PM2_APP'"
-
-            DEV_PATH_CLEAN="${DEV_PATH%\#safe}"
-            echo "🔍 DEV_PATH_CLEAN=$DEV_PATH_CLEAN"
-            cd "$DEV_PATH_CLEAN"
             
             if [[ "$DEV_PATH" != *"/dev" ]]; then
               echo "❌ Caminho inválido: $DEV_PATH"
               exit 1
             fi
 
-            # garante pasta, dono e "safe.directory" para evitar o erro 128 do Git
             mkdir -p "$DEV_PATH"
             chown -R "$USER:$USER" "$DEV_PATH" || true
             git config --global --add safe.directory "$DEV_PATH"
