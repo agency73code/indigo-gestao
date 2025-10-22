@@ -1,8 +1,7 @@
-name: Deploy STAGING
+name: Deploy MAIN (Produção)
 
 on:
-  push:
-    branches: [staging]
+  workflow_dispatch:        # 👈 só dispara manualmente (botão "Run workflow")
 
 jobs:
   deploy:
@@ -11,49 +10,50 @@ jobs:
       SSH_HOST: ${{ secrets.SSH_HOST }}
       SSH_USER: ${{ secrets.SSH_USER }}
       SSH_KEY:  ${{ secrets.SSH_KEY }}
-      STAGING_PATH: ${{ vars.STAGING_PATH }}
-      PM2_APP:  ${{ secrets.PM2_APP_STAGING }}
+      PROD_PATH: ${{ vars.PROD_PATH }}
+      PM2_APP:  ${{ secrets.PM2_APP_PROD }}
 
     steps:
       - name: Checkout (for metadata only)
         uses: actions/checkout@v4
 
-      - name: Deploy via SSH (STAGING)
+      - name: Deploy via SSH (PRODUÇÃO)
         uses: appleboy/ssh-action@v1.0.3
         env:
-          STAGING_PATH: ${{ vars.STAGING_PATH }}
-          PM2_APP: ${{ secrets.PM2_APP_STAGING }}
+          PROD_PATH: ${{ vars.PROD_PATH }}
+          PM2_APP: ${{ secrets.PM2_APP_PROD }}
         with:
-          host: ${{ env.SSH_HOST }}
-          username: ${{ env.SSH_USER }}
-          key: ${{ env.SSH_KEY }}
-          envs: "STAGING_PATH,PM2_APP"
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          envs: "PROD_PATH,PM2_APP"
           script: |
             exec sudo -u deploy -H bash -c "$0" "$@"
+
             set -euo pipefail
-            echo "🚀 Deploy iniciado"
-            echo "🔍 STAGING_PATH='$STAGING_PATH'"
+            echo "🚀 Deploy iniciado (PRODUÇÃO)"
+            echo "🔍 PROD_PATH='$PROD_PATH'"
             echo "🔍 PM2_APP='$PM2_APP'"
 
-            if [[ "$STAGING_PATH" != *"/staging" ]]; then
-              echo "❌ Caminho inválido: $STAGING_PATH"
+            if [[ "$PROD_PATH" != *"/html" ]]; then
+              echo "❌ Caminho inválido: $PROD_PATH"
               exit 1
             fi
 
-            mkdir -p "$STAGING_PATH"
-            chown -R "$USER:$USER" "$STAGING_PATH" || true
-            git config --global --add safe.directory "$STAGING_PATH"
+            mkdir -p "$PROD_PATH"
+            chown -R "$USER:$USER" "$PROD_PATH" || true
+            git config --global --add safe.directory "$PROD_PATH"
 
-            # Atualiza branch
-            cd "$STAGING_PATH"
+            cd "$PROD_PATH"
             git fetch --all --prune
-            git checkout staging
-            git reset --hard origin/staging
+            git checkout main
+            git reset --hard origin/main
 
-            # pnpm via corepack (usa versão do projeto se houver packageManager)
+            # pnpm via corepack
             command -v pnpm >/dev/null 2>&1 || (corepack enable && corepack prepare pnpm@latest --activate)
 
             # === Backend ===
+            cd backend
             pnpm install --frozen-lockfile --prod
             pnpm dlx prisma migrate deploy
             pnpm dlx prisma generate
@@ -61,10 +61,11 @@ jobs:
             # === Frontend ===
             cd ../frontend
             pnpm install --frozen-lockfile
-            pnpm run build
+            sudo -u deploy pnpm run build
 
             # === PM2 ===
-            cd "$STAGING_PATH"
+            cd "$PROD_PATH"
+            echo "🚀 Reiniciando PM2 app: $PM2_APP"
             if pm2 describe "$PM2_APP" > /dev/null; then
               pm2 restart "$PM2_APP"
             else
@@ -76,3 +77,4 @@ jobs:
             fi
 
             pm2 save
+            echo "::notice::✅ Deploy PRODUÇÃO concluído com sucesso em $(date)"
