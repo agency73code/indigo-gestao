@@ -218,24 +218,24 @@ export default function PatientTable({
                                             </div>
                                         )}
                                         <div>
-                                            <div className="font-medium text-sm text-foreground break-words">
+                                            <div className="font-medium text-sm text-foreground wrap-break-word">
                                                 {patient.nome}
                                             </div>
                                         </div>
                                     </div>
                                 </td>
                                 <td className="p-4 hidden md:table-cell align-top">
-                                    <span className="text-sm text-foreground break-words">
+                                    <span className="text-sm text-foreground wrap-break-word">
                                         {patient.email || 'Não informado'}
                                     </span>
                                 </td>
                                 <td className="p-4 hidden lg:table-cell align-top">
-                                    <span className="text-sm text-foreground break-words">
+                                    <span className="text-sm text-foreground wrap-break-word">
                                         {patient.telefone || 'Não informado'}
                                     </span>
                                 </td>
                                 <td className="p-4 align-top">
-                                    <span className="text-sm text-foreground break-words">
+                                    <span className="text-sm text-foreground wrap-break-word">
                                         {patient.responsavel || 'Não informado'}
                                     </span>
                                 </td>
