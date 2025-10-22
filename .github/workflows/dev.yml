@@ -58,7 +58,7 @@ jobs:
 
             # corrige dono e remove node_modules se estiver com permissões quebradas
             if [ -d node_modules ]; then
-              sudo chown -R "$USER:$USER" node_modules || true
+              chown -R "$USER:$USER" node_modules || true
               rm -rf node_modules/.bin || true
             fi
 
@@ -70,7 +70,7 @@ jobs:
             cd ../frontend
 
             if [ -d node_modules ]; then
-              sudo chown -R "$USER:$USER" node_modules || true
+              chown -R "$USER:$USER" node_modules || true
               rm -rf node_modules/.bin || true
             fi
 
