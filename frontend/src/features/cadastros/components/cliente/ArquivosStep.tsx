@@ -72,7 +72,7 @@ export default function ArquivosStep({ data, onUpdate, errors }: ArquivosStepPro
                     {hasFile ? (
                         <div className="flex items-center justify-between bg-muted rounded-md p-3">
                             <div className="flex items-center gap-2 min-w-0 flex-1">
-                                <FileText className="w-4 h-4 flex-shrink-0" />
+                                <FileText className="w-4 h-4 shrink-0" />
                                 <div className="min-w-0 flex-1">
                                     <span
                                         className="text-sm block truncate max-w-[200px]"
@@ -93,7 +93,7 @@ export default function ArquivosStep({ data, onUpdate, errors }: ArquivosStepPro
                                     e.stopPropagation();
                                     removeFile(field);
                                 }}
-                                className="text-destructive hover:text-destructive/80 flex-shrink-0 ml-2"
+                                className="text-destructive hover:text-destructive/80 shrink-0 ml-2"
                             >
                                 <X className="w-4 h-4" />
                             </button>

@@ -95,3 +95,107 @@ export interface SortState {
     field: string;
     direction: 'asc' | 'desc';
 }
+
+// ============================================
+// Form Types - PatientProfileDrawer
+// ============================================
+
+export type CaregiverForm = {
+    relacao: string;
+    descricaoRelacao: string;
+    nome: string;
+    cpf: string;
+    profissao: string;
+    escolaridade: string;
+    telefone: string;
+    email: string;
+    endereco: {
+        cep: string;
+        logradouro: string;
+        numero: string;
+        complemento: string;
+        bairro: string;
+        cidade: string;
+        uf: string;
+    };
+};
+
+export type AddressForm = {
+    cep: string;
+    logradouro: string;
+    numero: string;
+    complemento: string;
+    bairro: string;
+    cidade: string;
+    uf: string;
+    residenciaDe: string;
+    outroResidencia: string;
+};
+
+export type PaymentForm = {
+    nomeTitular: string;
+    numeroCarteirinha: string;
+    telefone1: string;
+    mostrarTelefone2: boolean;
+    telefone2: string;
+    mostrarTelefone3: boolean;
+    telefone3: string;
+    email1: string;
+    mostrarEmail2: boolean;
+    email2: string;
+    mostrarEmail3: boolean;
+    email3: string;
+    sistemaPagamento: 'reembolso' | 'liminar' | 'particular';
+    prazoReembolso: string;
+    numeroProcesso: string;
+    nomeAdvogado: string;
+    telefoneAdvogado1: string;
+    mostrarTelefoneAdvogado2: boolean;
+    telefoneAdvogado2: string;
+    mostrarTelefoneAdvogado3: boolean;
+    telefoneAdvogado3: string;
+    emailAdvogado1: string;
+    mostrarEmailAdvogado2: boolean;
+    emailAdvogado2: string;
+    mostrarEmailAdvogado3: boolean;
+    emailAdvogado3: string;
+    houveNegociacao: 'sim' | 'nao' | '';
+    valorAcordado: string;
+};
+
+export type SchoolContactForm = {
+    nome: string;
+    telefone: string;
+    email: string;
+    funcao: string;
+};
+
+export type SchoolForm = {
+    tipoEscola: 'particular' | 'publica' | 'afastado' | 'clinica-escola';
+    nome: string;
+    telefone: string;
+    email: string;
+    endereco: {
+        cep: string;
+        logradouro: string;
+        numero: string;
+        complemento: string;
+        bairro: string;
+        cidade: string;
+        uf: string;
+    };
+    contatos: SchoolContactForm[];
+};
+
+export type ClientFormValues = {
+    nome: string;
+    cpf: string;
+    emailContato: string;
+    dataNascimento: string;
+    dataEntrada: string;
+    dataSaida: string;
+    cuidadores: CaregiverForm[];
+    enderecos: AddressForm[];
+    dadosPagamento: PaymentForm;
+    dadosEscola: SchoolForm;
+};
