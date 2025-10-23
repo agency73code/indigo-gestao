@@ -145,7 +145,11 @@ function renderPatientCard(
                     <div className="flex items-center gap-3 flex-1">
                         {/* Avatar do paciente */}
                         <Avatar className="h-12 w-12">
-                            <AvatarImage src="" alt={patient.nome} />
+                            <AvatarImage 
+                                src={patient.avatarUrl || undefined } 
+                                alt={patient.nome}
+                                className='object-cover transition-opacity duration-300'
+                            />
                             <AvatarFallback className="text-sm font-medium">
                                 {patientInitials}
                             </AvatarFallback>
@@ -310,6 +314,11 @@ function TherapistChip({
             {/* Coluna 2: Terapeuta (Avatar + Nome + Cargo) */}
             <div className="flex items-center gap-3">
                 <Avatar className="h-8 w-8">
+                    <AvatarImage 
+                        src={therapist.avatarUrl || undefined } 
+                        alt={therapist.nome}
+                        className='object-cover transition-opacity duration-300'
+                    />
                     <AvatarFallback className="bg-muted text-muted-foreground text-xs">
                         {getInitials(therapistName)}
                     </AvatarFallback>
@@ -387,7 +396,11 @@ function renderTherapistCard(
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3 flex-1">
                         <Avatar className="h-12 w-12">
-                            <AvatarImage src="" alt={therapist.nome} />
+                            <AvatarImage 
+                                src={therapist.avatarUrl || undefined } 
+                                alt={therapist.nome}
+                                className='object-cover transition-opacity duration-300'
+                            />
                             <AvatarFallback className="text-sm font-medium">
                                 {therapistInitials}
                             </AvatarFallback>
@@ -540,7 +553,11 @@ function PatientChip({
             {/* Informações do Cliente */}
             <div className="flex items-center gap-3">
                 <Avatar className="h-9 w-9">
-                    <AvatarImage src="" alt={patientName} />
+                   <AvatarImage 
+                        src={patient.avatarUrl || undefined } 
+                        alt={patient.nome}
+                        className='object-cover transition-opacity duration-300'
+                    />
                     <AvatarFallback className="text-xs font-medium">
                         {patientInitials}
                     </AvatarFallback>

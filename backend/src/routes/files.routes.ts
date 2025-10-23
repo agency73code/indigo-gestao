@@ -8,6 +8,7 @@ const router: Router = Router();
 router.get("/", FileController.listFiles);
 router.get("/:storageId/view", FileController.viewFile);
 router.get("/:storageId/download", FileController.downloadFile);
+router.get('/getAvatar', FileController.getAvatar);
 router.post("/", upload.single("file"), FileController.uploadFile);
 router.delete("/:id", FileController.deleteFile);
 
