@@ -375,7 +375,6 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
 
         setIsSaving(true);
         setSaveError(null);
-
         try {
             await updateCliente(patient.id, {
                 nome: data.nome,
@@ -2420,3 +2419,5 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
         </div>
     );
 }
+
+// 🧩 WORKING HERE

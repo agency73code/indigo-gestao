@@ -46,11 +46,12 @@ export async function update(req: Request, res: Response, next: NextFunction) {
     const { id } = req.params;
     if (!id) return res.status(400).json({ success: false, message: 'ID inválido' });
 
-    // const parsed = clientSchema.UpdateClientSchema.parse(req.body);
-    // if (Object.keys(parsed).length === 0) {
-    //   return res.status(400).json({ success: false, message: 'Nenhum dado fornecido para atualização' });
-    // }
-    const updated = await clientService.update(id, req.body);
+    const parsed = clientSchema.UpdateClientSchema.parse(req.body);
+    if (Object.keys(parsed).length === 0) {
+      return res.status(400).json({ success: false, message: 'Nenhum dado fornecido para atualização' });
+    }
+
+    const updated = await clientService.update(id, parsed);
 
     return res.json({ success: true, message: 'Cliente atualizado com sucesso!', data: updated });
   } catch (err) {
@@ -88,3 +89,4 @@ export async function countActiveClients(req: Request, res: Response, next: Next
   }
 }
 
+// 🧩 WORKING HERE

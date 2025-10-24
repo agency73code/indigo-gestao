@@ -286,6 +286,18 @@ export async function getById(clientId: string) {
 
 async function UpdateMainData(clientId: string, dadosPrincipais?: Partial<ClientType.UpdateClient>) {
   if (dadosPrincipais) {
+    const dataSaida = dadosPrincipais.dataSaida;
+    const dataEntrada = dadosPrincipais.dataEntrada;
+    let status: string = 'ativo';
+
+    if (dataSaida && dataEntrada) {
+      if (dataSaida < dataEntrada) {
+        throw new AppError('INVALID_EXIT_DATE', 'Data de saida deve ser maior ou igual a data de entrada.', 422);
+      } else {
+        status = 'inativo';
+      }
+    }
+
     await prisma.cliente.update({
       where: { id: clientId },
       data: {
@@ -293,14 +305,16 @@ async function UpdateMainData(clientId: string, dadosPrincipais?: Partial<Client
         ...(dadosPrincipais.cpf !== undefined && { cpf: dadosPrincipais.cpf }),
         ...(dadosPrincipais.dataNascimento !== undefined && { dataNascimento: new Date(dadosPrincipais.dataNascimento) }),
         ...(dadosPrincipais.emailContato !== undefined && { emailContato: dadosPrincipais.emailContato }),
-        ...(dadosPrincipais.dataEntrada !== undefined && { dataEntrada: new Date(dadosPrincipais.dataEntrada) }),
-        ...(dadosPrincipais.dataSaida !== undefined && { dataSaida: dadosPrincipais.dataSaida ? new Date(dadosPrincipais.dataSaida) : null }),
+        ...(dataEntrada !== undefined && { dataEntrada: new Date(dataEntrada) }),
+        ...(dataSaida !== undefined && { dataSaida: dataSaida ? new Date(dataSaida) : null }),
+        status: status,
       }
     })
   }
 }
 
 async function UpdateCaregiver(clientId: string, cuidadores?: Partial<ClientType.UpdateCaregiver[]>) {
+  console.log(cuidadores);
   if (Array.isArray(cuidadores)) {
     const current = await prisma.cuidador.findMany({
       where: { clienteId: clientId },
@@ -314,6 +328,10 @@ async function UpdateCaregiver(clientId: string, cuidadores?: Partial<ClientType
   
     const toDelete = [...currentCpfs].filter(cpf => !incomingCpfs.has(cpf));
     const toUpsert = cuidadores;
+
+    console.log('atuais: ', current);
+    console.log('vieram do front: ', incomingCpfs);
+    console.log('removidos: ', toDelete);
   
     await prisma.$transaction(async (tx) => {
       for (const c of toUpsert) {
@@ -362,7 +380,7 @@ async function UpdateCaregiver(clientId: string, cuidadores?: Partial<ClientType
             relacao: c.relacao ?? undefined,
             descricaoRelacao: c.descricaoRelacao ?? null,
             nome: c.nome ?? undefined,
-            profissao: c.profissao ?? undefined,
+            profissao: c.profissao ?? null,
             escolaridade: c.escolaridade ?? undefined,
             telefone: c.telefone ?? undefined,
             email: c.email ?? undefined,
@@ -468,6 +486,7 @@ async function UpdateDataPayment(clientId: string, dadosPagamento?: Partial<Clie
       ...(dadosPagamento?.email2 !== undefined && { email2: dadosPagamento.email2 }),
       ...(dadosPagamento?.email3 !== undefined && { email3: dadosPagamento.email3 }),
       ...(dadosPagamento?.sistemaPagamento !== undefined && { sistemaPagamento: dadosPagamento.sistemaPagamento }),
+      ...(dadosPagamento?.prazoReembolso !== undefined && { prazoReembolso: dadosPagamento.prazoReembolso }),
       ...(dadosPagamento?.numeroProcesso !== undefined && { numeroProcesso: dadosPagamento.numeroProcesso }),
       ...(dadosPagamento?.nomeAdvogado !== undefined && { nomeAdvogado: dadosPagamento.nomeAdvogado }),
       ...(dadosPagamento?.telefoneAdvogado1 !== undefined && { telefoneAdvogado1: dadosPagamento.telefoneAdvogado1 }),
@@ -643,3 +662,5 @@ function generateResetToken() {
   expiry.setDate(expiry.getDate() + 1);
   return { token, expiry };
 }
+
+// 🧩 WORKING HERE

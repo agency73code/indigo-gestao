@@ -22,7 +22,7 @@ const caregiverSchema = z.object({
     .transform(strip)
     .refine((val) => cpf.isValid(val), { message: 'CPF inválido' }),
   profissao: z.string().optional().nullable().default(null),
-  escolaridade: z.string().optional().nullable().default(null),
+  escolaridade: z.string().min(1, 'Escolaridade é obrigatório'),
   telefone: z.string().transform(strip),
   email: z.email({ message: 'E-mail inválido' }),
   endereco: caregiverAddressSchema,
@@ -50,6 +50,7 @@ const paymentSchema = z.object({
   email2: z.email({ message: 'E-mail de pagamento 2 inválido' }).optional().nullable().default(null),
   email3: z.email({ message: 'E-mail de pagamento 3 inválido' }).optional().nullable().default(null),
   sistemaPagamento: z.enum(['reembolso', 'liminar', 'particular']),
+  prazoReembolso: z.string().optional().nullable().default(null),
   numeroProcesso: z.string().transform(strip).optional().nullable().default(null),
   nomeAdvogado: z.string().optional().nullable().default(null),
   telefoneAdvogado1: z.string().transform(strip).optional().nullable().default(null),
@@ -125,39 +126,28 @@ const nullableDate = z.preprocess((val) => {
   return val;
 }, z.date().nullable());
 
-const optionalCaregiverSchema = caregiverSchema.extend({
-  endereco: caregiverAddressSchema.partial().optional(),
-}).partial();
-
-const optionalClientAddressSchema = clientAddressSchema.partial();
-const optionalPaymentSchema = paymentSchema.partial();
-const optionalSchoolSchema = schoolSchema
-  .extend({
-    endereco: schoolAddressSchema.partial().optional(),
-    contatos: z.array(schoolContactSchema.partial()).optional(),
-  })
-  .partial();
 const optionalFileSchema = fileSchema.partial();
 
 export const UpdateClientSchema = z
   .object({
-    nome: z.string().min(1, 'Nome é obrigatório').optional(),
+    nome: z.string().min(1, 'Nome é obrigatório'),
     cpf: z
       .string()
       .transform(strip)
-      .refine((val) => cpf.isValid(val), { message: 'CPF inválido' })
-      .optional(),
-    dataNascimento: nullableDate.optional(),
-    emailContato: z.email({ message: 'E-mail inválido' }).optional(),
-    dataEntrada: nullableDate.optional(),
-    dataSaida: nullableDate.optional(),
-    cuidadores: z.array(optionalCaregiverSchema).optional(),
-    enderecos: z.array(optionalClientAddressSchema).optional(),
-    dadosPagamento: optionalPaymentSchema.optional(),
-    dadosEscola: optionalSchoolSchema.optional(),
+      .refine((val) => cpf.isValid(val), { message: 'CPF inválido' }),
+    dataNascimento: z.coerce.date(),
+    emailContato: z.email({ message: 'E-mail inválido' }),
+    dataEntrada: z.coerce.date(),
+    dataSaida: nullableDate.default(null),
+    cuidadores: z.array(caregiverSchema),
+    enderecos: z.array(clientAddressSchema),
+    dadosPagamento: paymentSchema,
+    dadosEscola: schoolSchema,
     arquivos: z.array(optionalFileSchema).optional(),
   })
   .strict();
 
 export type ClientSchemaInput = z.infer<typeof ClientSchema>;
 export type UpdateClientSchemaInput = z.infer<typeof UpdateClientSchema>;
+
+// 🧩 WORKING HERE
