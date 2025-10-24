@@ -22,6 +22,49 @@ import {
     maskCEP,
 } from '@/common/utils/mask';
 
+interface AvatarWithSkeletonProps {
+    src: string | null | undefined;
+    alt: string;
+    initials: string;
+    className?: string;
+}
+
+const AvatarWithSkeleton = ({ src, alt, initials, className = '' }: AvatarWithSkeletonProps) => {
+    const [imageLoaded, setImageLoaded] = useState(false);
+    const [imageError, setImageError] = useState(false);
+
+    // Se não tem src, mostrar iniciais diretamente
+    if (!src) {
+        return <>{initials}</>;
+    }
+
+    if (imageError) {
+        return <>{initials}</>;
+    }
+
+    return (
+        <>
+            {!imageLoaded && (
+                <div className="absolute inset-0 bg-muted rounded-full animate-pulse" />
+            )}
+            <img
+                src={src}
+                alt={alt}
+                className={`absolute inset-0 h-full w-full object-cover rounded-full transition-opacity duration-200 ${
+                    imageLoaded ? 'opacity-100' : 'opacity-0'
+                } ${className}`}
+                referrerPolicy="no-referrer"
+                loading="lazy"
+                onLoad={() => setImageLoaded(true)}
+                onError={() => {
+                    setImageError(true);
+                    setImageLoaded(false);
+                }}
+            />
+        </>
+    );
+};
+
 interface PatientProfileDrawerProps {
     patient: Patient | null;
     open: boolean;
@@ -540,16 +583,16 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
             <div className="relative w-full max-w-4xl max-h-[90vh] bg-background border rounded-lg shadow-2xl flex flex-col">
                 {/* Header - shrink-0 mantém fixo */}
                 <div className="flex items-center gap-4 p-6 border-b bg-muted/30 shrink-0">
-                    <div className="h-16 w-16 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center text-lg font-medium text-purple-600 dark:text-purple-300">
-                        {arquivosMap.has('fotoPerfil') ? (
-                            <img
-                                src={`${import.meta.env.VITE_API_URL}/arquivos/view/${arquivosMap.get('fotoPerfil')?.arquivo_id}`}
-                                alt={patient.nome}
-                                className="h-full w-full object-cover rounded-full"
-                            />
-                        ) : (
-                            getInitials(patient.nome)
-                        )}
+                    <div className="relative h-16 w-16 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center text-lg font-medium text-purple-600 dark:text-purple-300">
+                        <AvatarWithSkeleton
+                            src={
+                                arquivosMap.has('fotoPerfil')
+                                    ? `${import.meta.env.VITE_API_URL}/arquivos/view/${arquivosMap.get('fotoPerfil')?.arquivo_id}`
+                                    : undefined
+                            }
+                            alt={patient.nome}
+                            initials={getInitials(patient.nome)}
+                        />
                     </div>
                     <div className="flex-1">
                         <h2 className="text-xl font-semibold text-foreground">{patient.nome}</h2>

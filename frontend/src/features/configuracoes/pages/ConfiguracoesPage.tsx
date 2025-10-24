@@ -67,10 +67,10 @@ export default function ConfiguracoesPage() {
     };
 
     return (
-        <div className="flex flex-col top-0 left-0 w-full h-full px-6 py-6'">
+        <div className="flex flex-col top-0 left-0 w-full h-full px-4 py-4">
             {/* Header */}
-            <div className="my-8">
-                <div className="flex items-center gap-3 mb-2">
+            <div className="mb-4">
+                <div className="flex items-center gap-3">
                     <Settings className="w-6 h-6 text-primary" />
                     <h1
                         style={{ fontFamily: 'sora' }}
@@ -79,14 +79,12 @@ export default function ConfiguracoesPage() {
                         Configurações
                     </h1>
                 </div>
-                <p className="text-muted-foreground">
-                    Gerencie suas preferências, segurança e integrações da plataforma.
-                </p>
+                
             </div>
 
             {/* Tabs */}
             <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 mb-8">
+                <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 mb-4">
                     <TabsTrigger value="perfil" className="flex items-center gap-2">
                         <User className="w-4 h-4" />
                         <span className="hidden sm:inline">Perfil</span>

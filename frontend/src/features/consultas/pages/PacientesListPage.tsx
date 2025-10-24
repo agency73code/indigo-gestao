@@ -157,14 +157,12 @@ export default function PacientesListPage() {
     }
 
     return (
-        <div className="flex flex-col top-0 left-0 w-full h-full sm:px-6 ">
-            <CardHeader className="px-0">
+        <div className="flex flex-col top-0 left-0 w-full h-full sm:px-4 ">
+            <CardHeader className="p-0 py-4">
                 <CardTitle className="text-2xl font-semibold text-primary">
                     Consultar Clientes
                 </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                    Visualize e gerencie os clientes cadastrados no sistema.
-                </p>
+                
             </CardHeader>
             <CardContent className="space-y-1 px-0">
                 <div className="flex gap-4">
