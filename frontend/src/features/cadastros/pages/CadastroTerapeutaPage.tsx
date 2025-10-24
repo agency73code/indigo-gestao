@@ -58,7 +58,7 @@ export default function CadastroTerapeutaPage() {
         banco: null,
         agencia: null,
         conta: null,
-        pixTipo: 'email',
+        pixTipo: null,
         chavePix: null,
         valorHoraAcordado: null,
         professorUnindigo: 'nao' as 'sim' | 'nao',

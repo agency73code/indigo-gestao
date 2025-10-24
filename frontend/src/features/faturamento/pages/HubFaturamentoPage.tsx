@@ -39,7 +39,7 @@ export default function HubFaturamentoPage() {
     ];
 
     return (
-        <div className="flex flex-col min-h-full w-full p-1 md:p-4 lg:p-4 space-y-4">
+        <div className="flex flex-col min-h-full w-full p-1 md:p-4 lg:p-4 space-y-6">
             {/* Header Section */}
             <div className="space-y-2">
                 <h1
@@ -48,7 +48,9 @@ export default function HubFaturamentoPage() {
                 >
                     Faturamento
                 </h1>
-                
+                <p className="text-sm sm:text-base text-muted-foreground">
+                    Gerencie lançamentos de horas e valores dos atendimentos
+                </p>
             </div>
 
             {/* Main Action Cards */}

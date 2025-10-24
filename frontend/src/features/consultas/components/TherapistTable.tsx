@@ -1,64 +1,6 @@
-import { useState } from 'react';
 import { ChevronUp, ChevronDown, Eye, User } from 'lucide-react';
 import { Button } from '@/ui/button';
 import type { Therapist, SortState } from '../types/consultas.types';
-
-interface AvatarWithSkeletonProps {
-    src: string;
-    alt: string;
-    initials: string;
-    size?: 'sm' | 'md';
-}
-
-const AvatarWithSkeleton = ({ src, alt, initials, size = 'md' }: AvatarWithSkeletonProps) => {
-    const [imageLoaded, setImageLoaded] = useState(false);
-    const [imageError, setImageError] = useState(false);
-
-    const sizeClasses = size === 'sm' ? 'h-8 w-8 text-xs' : 'h-10 w-10 text-sm';
-
-    // Se não tem src, mostrar iniciais diretamente
-    if (!src) {
-        return (
-            <div className={`${sizeClasses} bg-blue-100 rounded-full flex items-center justify-center font-semibold text-blue-600`}>
-                {initials}
-            </div>
-        );
-    }
-
-    const fullSrc = src.startsWith('/api')
-        ? `${import.meta.env.VITE_API_BASE ?? ''}${src}`
-        : src;
-
-    if (imageError) {
-        return (
-            <div className={`${sizeClasses} bg-blue-100 rounded-full flex items-center justify-center font-semibold text-blue-600`}>
-                {initials}
-            </div>
-        );
-    }
-
-    return (
-        <div className={`relative ${sizeClasses}`}>
-            {!imageLoaded && (
-                <div className={`absolute inset-0 bg-muted rounded-full animate-pulse`} />
-            )}
-            <img
-                src={fullSrc}
-                alt={alt}
-                className={`${sizeClasses} rounded-full object-cover transition-opacity duration-200 ${
-                    imageLoaded ? 'opacity-100' : 'opacity-0'
-                }`}
-                referrerPolicy="no-referrer"
-                loading="lazy"
-                onLoad={() => setImageLoaded(true)}
-                onError={() => {
-                    setImageError(true);
-                    setImageLoaded(false);
-                }}
-            />
-        </div>
-    );
-};
 
 interface TherapistTableProps {
     therapists: Therapist[];
@@ -149,11 +91,14 @@ export default function TherapistTable({
                         <div className="flex items-start justify-between gap-3">
                             <div className="flex items-center gap-3">
                                 {therapist.avatarUrl ? (
-                                    <AvatarWithSkeleton
-                                        src={therapist.avatarUrl}
+                                    <img
+                                        src={therapist.avatarUrl.startsWith('/api')
+                                            ? `${import.meta.env.VITE_API_BASE ?? ''}${therapist.avatarUrl}`
+                                            : therapist.avatarUrl}
                                         alt={therapist.nome}
-                                        initials={getInitials(therapist.nome)}
-                                        size="md"
+                                        className='h-10 w-10 md:h-8 md:w-8 rounded-full object-cover'
+                                        referrerPolicy='no-referrer'
+                                        loading='lazy'
                                     />
                                 ) : (
                                     <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center text-sm font-semibold text-blue-600">
@@ -272,11 +217,14 @@ export default function TherapistTable({
                                 <td className="p-4 align-top">
                                     <div className="flex items-center gap-3">
                                         {therapist.avatarUrl ? (
-                                            <AvatarWithSkeleton
-                                                src={therapist.avatarUrl}
+                                            <img
+                                                src={therapist.avatarUrl.startsWith('/api')
+                                                    ? `${import.meta.env.VITE_API_BASE ?? ''}${therapist.avatarUrl}`
+                                                    : therapist.avatarUrl}
                                                 alt={therapist.nome}
-                                                initials={getInitials(therapist.nome)}
-                                                size="sm"
+                                                className='h-10 w-10 md:h-8 md:w-8 rounded-full object-cover'
+                                                referrerPolicy='no-referrer'
+                                                loading='lazy'
                                             />
                                         ) : (
                                             <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center text-xs font-medium text-blue-600">
@@ -284,19 +232,19 @@ export default function TherapistTable({
                                             </div>
                                         )}
                                         <div>
-                                            <div className="font-medium text-sm text-foreground wrap-break-word">
+                                            <div className="font-medium text-sm text-foreground break-words">
                                                 {therapist.nome}
                                             </div>
                                         </div>
                                     </div>
                                 </td>
                                 <td className="p-4 align-top">
-                                    <span className="text-sm text-foreground wrap-break-word">
+                                    <span className="text-sm text-foreground break-words">
                                         {therapist.especialidade || 'Não informado'}
                                     </span>
                                 </td>
                                 <td className="p-4 align-top">
-                                    <div className="text-sm text-foreground wrap-break-word">
+                                    <div className="text-sm text-foreground break-words">
                                         <div>{therapist.conselho || 'N/A'}</div>
                                         <div className="text-muted-foreground text-xs">
                                             {therapist.registroConselho || 'N/A'}
@@ -304,12 +252,12 @@ export default function TherapistTable({
                                     </div>
                                 </td>
                                 <td className="p-4 hidden lg:table-cell align-top">
-                                    <span className="text-sm text-foreground wrap-break-word">
+                                    <span className="text-sm text-foreground break-words">
                                         {therapist.email || 'Não informado'}
                                     </span>
                                 </td>
                                 <td className="p-4 hidden xl:table-cell align-top">
-                                    <span className="text-sm text-foreground wrap-break-word">
+                                    <span className="text-sm text-foreground break-words">
                                         {therapist.telefone || 'Não informado'}
                                     </span>
                                 </td>

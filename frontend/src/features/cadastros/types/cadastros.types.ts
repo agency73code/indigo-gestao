@@ -18,7 +18,6 @@ export interface Terapeuta {
     agencia: string;
     conta: string;
     chavePix: string;
-    pixTipo?: 'email' | 'telefone' | 'cpf' | 'cnpj' | 'aleatoria';
     valorHoraAcordado?: number | null;
     professorUnindigo?: 'sim' | 'nao';
     disciplinaUniindigo?: string | null;

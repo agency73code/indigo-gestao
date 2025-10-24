@@ -23,7 +23,6 @@ export function NavUser() {
         .map((n) => n[0]?.toUpperCase() ?? '')
         .slice(0, 2)
         .join('') : '?';
-    
     const displayAvatar = user?.avatar_url ? user?.avatar_url : initials;
     return (
         <SidebarMenu>
