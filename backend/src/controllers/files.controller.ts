@@ -1,10 +1,9 @@
-import type { Express, NextFunction, Request, Response } from "express";
+import type { Express, Request, Response } from "express";
 import type { Prisma } from "@prisma/client";
 import { Readable } from "stream";
 import { drive } from "../config/googleDrive.js";
 import { prisma } from "../config/database.js";
 import { extension as mimeExt } from "mime-types";
-import * as FileService from '../features/file/files.service.js';
 
 type OwnerType = "cliente" | "terapeuta";
 
@@ -16,17 +15,6 @@ interface NormalizedFileMeta {
   tamanho: number;
   tipo_conteudo: string;
   data_envio: string;
-}
-
-export async function getAvatar(req: Request, res: Response, next: NextFunction) {
-  try {
-    const { id, type } = req.query as { id: string, type: 'therapist' | 'client' };
-    const url = await FileService.getAvatar(id, type);
-    if (!url) return res.status(404).json({ message: "Avatar não encontrado" });
-    res.json({ avatarUrl: url });
-  } catch (error) {
-    next(error);
-  }
 }
 
 /**

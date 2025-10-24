@@ -18,7 +18,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 interface ComboboxOption {
     value: string;
     label: string;
-    searchValue?: string; // Campo customizado para busca
 }
 
 interface ComboboxProps {
@@ -68,16 +67,14 @@ export function Combobox({
                     data-testid={dataTestId}
                     style={{ fontFamily: 'inherit' }}
                     className={cn(
-                        'w-full justify-between h-9 rounded-[5px] border border-input bg-transparent px-3 py-2 text-base shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm font-sans',
+                        'w-full justify-between h-9 rounded-[5px] border border-input bg-transparent px-4 py-5 text-base shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm font-sans',
                         !selectedOption && 'text-muted-foreground',
                         error && 'border-destructive',
                         className,
                     )}
                     disabled={disabled}
                 >
-                    <span className="truncate flex-1 text-left">
-                        {selectedOption ? selectedOption.label : placeholder}
-                    </span>
+                    {selectedOption ? selectedOption.label : placeholder}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
             </PopoverTrigger>
@@ -90,10 +87,9 @@ export function Combobox({
                             {options.map((option) => (
                                 <CommandItem
                                     key={option.value}
-                                    value={option.searchValue || option.value}
-                                    keywords={[option.label, option.value]}
-                                    onSelect={() => {
-                                        const newValue = option.value === value ? '' : option.value;
+                                    value={option.value}
+                                    onSelect={(currentValue: string) => {
+                                        const newValue = currentValue === value ? '' : currentValue;
                                         onValueChange?.(newValue);
                                         setOpen(false);
                                     }}

@@ -7,20 +7,16 @@ const prisma = new PrismaClient();
 
 async function main() {
   const senhaHash = await bcrypt.hash('Senha123', 10);
-  const quantidade = 200000; // defina aqui quantos registros quer criar
+  const quantidade = 20000; // defina aqui quantos registros quer criar
 
   for (let i = 0; i < quantidade; i++) {
-    const nome = faker.person.fullName();
-    const base = nome.toLowerCase().replace(/\s+/g, '.').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    const email = `${base}.${String(i).padStart(5, '0')}@example.com`;
-    const email_indigo = `${base}.${String(i).padStart(5, '0')}@indigo.com`;
     const perfil_acesso = faker.helpers.arrayElement(['gerente', 'terapeuta']);
     
     await prisma.terapeuta.create({
       data: {
-        nome,
-        email,
-        email_indigo,
+        nome: faker.person.fullName(),
+        email: faker.internet.email(),
+        email_indigo: faker.internet.email({ provider: 'indigo.com' }),
         celular: faker.phone.number({ style: 'national' }),
         telefone: faker.phone.number({ style: 'national' }),
         cpf: cpf.generate(),

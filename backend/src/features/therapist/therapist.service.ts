@@ -6,7 +6,6 @@ import { brMoneyToNumber } from '../../utils/brMoney.js';
 import { generateResetToken } from "../../utils/resetToken.js";
 import { AppError } from "../../errors/AppError.js";
 import type { UpdateTherapistSchemaInput } from '../../schemas/therapist.schema.js';
-import { ACCESS_LEVELS } from '../../utils/accessLevels.js';
 
 async function resolveAreaAtuacaoId(
   areaAtuacaoId: TherapistTypes.TherapistProfessionalDataInput['areaAtuacaoId'],
@@ -137,7 +136,7 @@ export async function create(dto: TherapistTypes.TherapistForm) {
 
       data_entrada: new Date(dto.dataInicio),
       data_saida: dto.dataFim ? new Date(dto.dataFim) : null,
-      perfil_acesso: getHighestAccessRole(dto.dadosProfissionais),
+      perfil_acesso: 'gerente',
       token_redefinicao: token,
       validade_token: expiry,
 
@@ -367,26 +366,4 @@ export async function update(id: string, dto: UpdateTherapistSchemaInput) {
   });
 
   return getById(id);
-}
-
-function getHighestAccessRole(professionalData: TherapistTypes.TherapistForm['dadosProfissionais']): string {
-  if (!professionalData?.length) return 'Terapeuta Clínico';
-
-  let highest = { cargo: 'Terapeuta Clínico', level: 1 };
-
-  for (const { cargo } of professionalData) {
-    const normalized = normalizeCargo(cargo ?? '');
-    const level = ACCESS_LEVELS[normalized] ?? 0;
-    if (level >= highest.level) highest = { cargo: normalized, level };
-  }
-
-  return highest.cargo;
-}
-
-function normalizeCargo(cargo: string): string {
-  return cargo
-    .normalize('NFD') // separa acentos
-    .replace(/[\u0300-\u036f]/g, '') // remove acentos
-    .trim()
-    .toLowerCase();
 }

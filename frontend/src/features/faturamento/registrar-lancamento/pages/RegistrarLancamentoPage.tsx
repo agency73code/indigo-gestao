@@ -60,14 +60,16 @@ export default function RegistrarLancamentoPage() {
     return (
         <div className="flex flex-col min-h-full w-full p-1 md:p-4 lg:p-4 space-y-6">
             {/* Header */}
-            <div className="space-y-1 mb-4">
+            <div className="space-y-1 mb-2">
                 <h1
                     className="text-2xl font-semibold text-primary"
                     style={{ fontFamily: 'Sora, sans-serif' }}
                 >
                     Registrar Lançamento
                 </h1>
-                
+                <p className="text-sm text-muted-foreground">
+                    Informe os dados do atendimento. Valores não são exibidos neste módulo.
+                </p>
             </div>
 
             {/* Card do formulário */}
