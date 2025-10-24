@@ -153,14 +153,12 @@ export default function TerapeutasListPage() {
     }
 
     return (
-        <div className="flex flex-col top-0 left-0 w-full h-full sm:p-6">
-            <CardHeader className="p-0">
+        <div className="flex flex-col top-0 left-0 w-full h-full sm:p-4">
+            <CardHeader className="p-0 pb-4">
                 <CardTitle className="text-2xl font-semibold text-primary">
                     Consultar Terapeutas
                 </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                    Visualize e gerencie os terapeutas cadastrados no sistema.
-                </p>
+                
             </CardHeader>
             <CardContent className="space-y-1 px-0">
                 <div className="flex gap-4">

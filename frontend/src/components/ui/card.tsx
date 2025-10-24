@@ -5,7 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 // Variantes de padding para o Card.
 // "md" replica exatamente os paddings do seu componente atual para não quebrar nada.
 const cardVariants = cva(
-  "rounded-[5px] mx-1 border bg-card text-card-foreground shadow",
+  "rounded-[5px] border bg-card text-card-foreground shadow",
   {
     variants: {
       padding: {

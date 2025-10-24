@@ -74,12 +74,14 @@ export default function DadosPessoaisStep({
             .map((bank) => ({
                 value: bank.code,
                 label: formatBankLabel(bank),
+                searchValue: `${bank.name} ${bank.code}`.toLowerCase(), // Permite buscar por nome ou código
             }));
 
         if (data.banco && !options.some((option) => option.value === data.banco)) {
             options.push({
                 value: data.banco,
                 label: data.banco,
+                searchValue: data.banco.toLowerCase(),
             });
         }
 
@@ -125,8 +127,9 @@ export default function DadosPessoaisStep({
                 </p>
             </div>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 md:gap-4">
-                <div className="space-y-2">
+            {/* Primeira linha: Nome (2/4) | CPF (1/4) | Data de Nascimento (1/4) */}
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 md:gap-4">
+                <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="nome">Nome Completo *</Label>
                     <Input
                         id="nome"
@@ -147,7 +150,7 @@ export default function DadosPessoaisStep({
                         onChange={(e) => onUpdate('cpf', maskCPF(e.target.value))}
                         placeholder="000.000.000-00"
                         className={errors.cpf ? 'border-destructive' : ''}
-                        ria-invalid={!!errors.cpf}
+                        aria-invalid={!!errors.cpf}
                         aria-describedby={errors.cpf ? 'cpf-error' : undefined}
                     />
                     <p id="cpf-error" className="text-sm text-destructive">
@@ -155,7 +158,6 @@ export default function DadosPessoaisStep({
                     </p>
                 </div>
 
-                {/* Data de Nascimento */}
                 <div className="space-y-2">
                     <Label htmlFor="dataNascimento">Data de nascimento *</Label>
                     <DateField
@@ -169,9 +171,9 @@ export default function DadosPessoaisStep({
                 </div>
             </div>
 
-            {/* Primeira linha - Email e Email Índigo */}
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4">
-                <div className="space-y-2">
+            {/* Segunda linha: Email | Email Índigo | Celular | Telefone */}
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-6 md:gap-4">
+                <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="email">E-mail *</Label>
                     <Input
                         id="email"
@@ -187,14 +189,14 @@ export default function DadosPessoaisStep({
                     {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="emailIndigo">E-mail Índigo *</Label>
                     <Input
                         id="emailIndigo"
                         type="email"
                         value={data.emailIndigo || ''}
                         onChange={(e) => onUpdate('emailIndigo', e.target.value)}
-                        onBlur={() => onBlurField?.('email')}
+                        onBlur={() => onBlurField?.('emailIndigo')}
                         placeholder="email@indigo.com"
                         className={errors.emailIndigo ? 'border-destructive' : ''}
                         aria-invalid={!!errors.emailIndigo}
@@ -204,10 +206,7 @@ export default function DadosPessoaisStep({
                         <p className="text-sm text-destructive">{errors.emailIndigo}</p>
                     )}
                 </div>
-            </div>
 
-            {/* Segunda linha - Celular e CPF */}
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="celular">Celular *</Label>
                     <Input
