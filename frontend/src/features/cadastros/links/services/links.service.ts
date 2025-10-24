@@ -564,8 +564,22 @@ export async function getAllPatients(): Promise<Paciente[]> {
       throw new Error('Falha ao carregar clientes');
     }
 
-    const json = await res.json();
-    return json as Paciente[];
+    const clients = (await res.json()) as Paciente[];
+
+    const clientsWithAvatar = await Promise.all(
+      clients.map(async (p) => {
+        try {
+          const avatarRes = await fetch(`/api/arquivos/getAvatar?id=${p.id}&type=client`, {
+            credentials: 'include',
+          });
+          const data = await avatarRes.json();
+          return { ...p, avatarUrl: data.avatarUrl ?? '' };
+        } catch {
+          return { ...p,avatarUrl: '' };
+        }
+      })
+    );
+    return clientsWithAvatar;
   } catch (error) {
     console.error('Erro ao buscar clientes, retornando mock:', error);
     await delay(200);
@@ -590,8 +604,22 @@ export async function getAllTherapists(): Promise<Terapeuta[]> {
       throw new Error('Falha ao carregar terapeutas');
     }
     
-    const json = await res.json();
-    return json as Terapeuta[];
+    const therapists = (await res.json()) as Terapeuta[];
+
+    const therapistsWithAvatar = await Promise.all(
+      therapists.map(async (t) => {
+        try {
+          const avatarRes = await fetch(`/api/arquivos/getAvatar?id=${t.id}&type=therapist`, {
+            credentials: 'include',
+          });
+          const data = await avatarRes.json();
+          return { ...t, avatarUrl: data.avatarUrl ?? '' };
+        } catch {
+          return { ...t,avatarUrl: '' };
+        }
+      })
+    );
+    return therapistsWithAvatar;
   } catch (error) {
     console.error('Erro ao buscar terapeutas, retornando mock:', error);
     await delay(200);

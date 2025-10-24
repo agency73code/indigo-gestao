@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { LinkCardProps, PatientTherapistLink } from '../types';
+import { isSupervisorRole } from '../../constants/access-levels';
 
 // Helper para formatar datas
 function formatDate(dateString: string): string {
@@ -45,6 +46,11 @@ function getStatusBadge(status: string) {
 // Helper para traduzir papel
 function getRoleLabel(role: string) {
     return role === 'responsible' ? 'Responsável' : 'Co-terapeuta';
+}
+
+// Helper para pegar o cargo do terapeuta
+function getTherapistRole(therapist: any): string | null {
+    return therapist?.dadosProfissionais?.[0]?.cargo || null;
 }
 
 // Helper para calcular idade a partir da data de nascimento
@@ -139,7 +145,11 @@ function renderPatientCard(
                     <div className="flex items-center gap-3 flex-1">
                         {/* Avatar do paciente */}
                         <Avatar className="h-12 w-12">
-                            <AvatarImage src="" alt={patient.nome} />
+                            <AvatarImage 
+                                src={patient.avatarUrl || undefined } 
+                                alt={patient.nome}
+                                className='object-cover transition-opacity duration-300'
+                            />
                             <AvatarFallback className="text-sm font-medium">
                                 {patientInitials}
                             </AvatarFallback>
@@ -285,9 +295,10 @@ function TherapistChip({
     onEndLink: (link: PatientTherapistLink) => void;
     onArchive: (link: PatientTherapistLink) => void;
 }) {
-    const isResponsible = link.role === 'responsible';
     const therapist = therapists.find((t) => t.id === link.therapistId);
     const therapistName = therapist?.nome || `Terapeuta ${link.therapistId}`;
+    const therapistCargo = getTherapistRole(therapist);
+    const isResponsible = therapistCargo ? isSupervisorRole(therapistCargo) : link.role === 'responsible';
 
     return (
         <div className="grid grid-cols-[200px_1fr_auto] items-center gap-4 p-3 bg-muted/30 rounded-[5px]">
@@ -300,16 +311,23 @@ function TherapistChip({
                 {link.actuationArea || 'Atuação não definida'}
             </Badge>
 
-            {/* Coluna 2: Terapeuta (Avatar + Nome + Papel) */}
+            {/* Coluna 2: Terapeuta (Avatar + Nome + Cargo) */}
             <div className="flex items-center gap-3">
                 <Avatar className="h-8 w-8">
+                    <AvatarImage 
+                        src={therapist.avatarUrl || undefined } 
+                        alt={therapist.nome}
+                        className='object-cover transition-opacity duration-300'
+                    />
                     <AvatarFallback className="bg-muted text-muted-foreground text-xs">
                         {getInitials(therapistName)}
                     </AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col">
                     <span className="text-sm font-medium">{therapistName}</span>
-                    <span className="text-xs text-muted-foreground">{getRoleLabel(link.role)}</span>
+                    <span className="text-xs text-muted-foreground">
+                        {therapistCargo || getRoleLabel(link.role)}
+                    </span>
                 </div>
             </div>
 
@@ -361,8 +379,6 @@ function renderTherapistCard(
     onArchive: (link: PatientTherapistLink) => void,
 ) {
     const activeLinks = links.filter((link) => link.status === 'active');
-    const responsibleLinks = activeLinks.filter((link) => link.role === 'responsible');
-    const coTherapistLinks = activeLinks.filter((link) => link.role === 'co');
 
     const hasActiveLinks = activeLinks.length > 0;
     const overallStatus = hasActiveLinks
@@ -380,7 +396,11 @@ function renderTherapistCard(
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3 flex-1">
                         <Avatar className="h-12 w-12">
-                            <AvatarImage src="" alt={therapist.nome} />
+                            <AvatarImage 
+                                src={therapist.avatarUrl || undefined } 
+                                alt={therapist.nome}
+                                className='object-cover transition-opacity duration-300'
+                            />
                             <AvatarFallback className="text-sm font-medium">
                                 {therapistInitials}
                             </AvatarFallback>
@@ -449,7 +469,7 @@ function renderTherapistCard(
             <CardContent className="pt-0 flex-1 flex flex-col">
                 <div className="space-y-2 flex-1">
                     <h4 className="text-sm font-medium text-foreground">
-                        Cliente(s) ({activeLinks.length} ativos):
+                        Cliente(s):
                     </h4>
 
                     <div className="space-y-1">
@@ -474,9 +494,7 @@ function renderTherapistCard(
                 </div>
 
                 <div className="flex items-center gap-4 text-sm text-muted-foreground pt-2 border-t mt-4">
-                    <span>{responsibleLinks.length} responsável(is)</span>
-                    <span>•</span>
-                    <span>{coTherapistLinks.length} co-terapeuta(s)</span>
+                    <span>{activeLinks.length} cliente(s)</span>
                     <span>•</span>
                     <span className="capitalize">{statusBadge.label}</span>
                 </div>
@@ -535,7 +553,11 @@ function PatientChip({
             {/* Informações do Cliente */}
             <div className="flex items-center gap-3">
                 <Avatar className="h-9 w-9">
-                    <AvatarImage src="" alt={patientName} />
+                   <AvatarImage 
+                        src={patient.avatarUrl || undefined } 
+                        alt={patient.nome}
+                        className='object-cover transition-opacity duration-300'
+                    />
                     <AvatarFallback className="text-xs font-medium">
                         {patientInitials}
                     </AvatarFallback>
