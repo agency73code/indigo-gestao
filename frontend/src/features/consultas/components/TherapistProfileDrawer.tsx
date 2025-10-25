@@ -569,12 +569,15 @@ export default function TherapistProfileDrawer({
 
     const getStatusBadge = (status: string) => {
         const baseClasses = 'px-2 py-1 text-xs font-medium rounded-full';
-        const statusClasses =
-            status === 'ATIVO'
-                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
+        const normalizedStatus = status?.toUpperCase() || '';
+        const isActive = normalizedStatus === 'ATIVO';
+        const statusClasses = isActive
+            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+            : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
+        
+        const displayText = isActive ? 'Ativo' : 'Inativo';
 
-        return <span className={`${baseClasses} ${statusClasses}`}>{status}</span>;
+        return <span className={`${baseClasses} ${statusClasses}`}>{displayText}</span>;
     };
 
     const getPixPlaceholder = (tipo: string): string => {

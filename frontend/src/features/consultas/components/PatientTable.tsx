@@ -1,6 +1,64 @@
+import { useState } from 'react';
 import { ChevronUp, ChevronDown, Eye, Users } from 'lucide-react';
 import { Button } from '@/ui/button';
 import type { Patient, SortState } from '../types/consultas.types';
+
+interface AvatarWithSkeletonProps {
+    src?: string | null;
+    alt: string;
+    initials: string;
+    size?: 'sm' | 'md';
+}
+
+const AvatarWithSkeleton = ({ src, alt, initials, size = 'md' }: AvatarWithSkeletonProps) => {
+    const [imageLoaded, setImageLoaded] = useState(false);
+    const [imageError, setImageError] = useState(false);
+
+    const sizeClasses = size === 'sm' ? 'h-8 w-8 text-xs' : 'h-10 w-10 text-sm';
+
+    // Se não tem src, mostrar iniciais diretamente
+    if (!src) {
+        return (
+            <div className={`${sizeClasses} bg-purple-100 rounded-full flex items-center justify-center font-semibold text-purple-600`}>
+                {initials}
+            </div>
+        );
+    }
+
+    const fullSrc = src.startsWith('/api')
+        ? `${import.meta.env.VITE_API_BASE ?? ''}${src}`
+        : src;
+
+    if (imageError) {
+        return (
+            <div className={`${sizeClasses} bg-purple-100 rounded-full flex items-center justify-center font-semibold text-purple-600`}>
+                {initials}
+            </div>
+        );
+    }
+
+    return (
+        <div className={`relative ${sizeClasses}`}>
+            {!imageLoaded && (
+                <div className={`absolute inset-0 bg-muted rounded-full animate-pulse`} />
+            )}
+            <img
+                src={fullSrc}
+                alt={alt}
+                className={`${sizeClasses} rounded-full object-cover transition-opacity duration-200 ${
+                    imageLoaded ? 'opacity-100' : 'opacity-0'
+                }`}
+                referrerPolicy="no-referrer"
+                loading="lazy"
+                onLoad={() => setImageLoaded(true)}
+                onError={() => {
+                    setImageError(true);
+                    setImageLoaded(false);
+                }}
+            />
+        </div>
+    );
+};
 
 interface PatientTableProps {
     patients: Patient[];
@@ -57,12 +115,15 @@ export default function PatientTable({
 
     const getStatusBadge = (status: string) => {
         const baseClasses = 'px-2 py-1 text-xs font-medium rounded-full';
-        const statusClasses =
-            status === 'ATIVO'
-                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
+        const normalizedStatus = status?.toUpperCase() || '';
+        const isActive = normalizedStatus === 'ATIVO';
+        const statusClasses = isActive
+            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+            : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
+        
+        const displayText = isActive ? 'Ativo' : 'Inativo';
 
-        return <span className={`${baseClasses} ${statusClasses}`}>{status}</span>;
+        return <span className={`${baseClasses} ${statusClasses}`}>{displayText}</span>;
     };
 
     const getInitials = (name: string) => {
@@ -89,21 +150,12 @@ export default function PatientTable({
                     <div key={patient.id} className="p-4 space-y-3">
                         <div className="flex items-start justify-between gap-3">
                             <div className="flex items-center gap-3">
-                                {patient.avatarUrl ? (
-                                    <img
-                                        src={patient.avatarUrl.startsWith('/api') 
-                                            ? `${import.meta.env.VITE_API_BASE ?? ''}${patient.avatarUrl}`
-                                            : patient.avatarUrl}
-                                        alt={patient.nome}
-                                        className="h-10 w-10 md:h-8 md:w-8 rounded-full object-cover"
-                                        referrerPolicy="no-referrer"
-                                        loading="lazy"
-                                    />
-                                ) : (
-                                    <div className="h-10 w-10 bg-purple-100 rounded-full flex items-center justify-center text-sm font-semibold text-purple-600">
-                                        {getInitials(patient.nome)}
-                                    </div>
-                                )}
+                                <AvatarWithSkeleton
+                                    src={patient.avatarUrl}
+                                    alt={patient.nome}
+                                    initials={getInitials(patient.nome)}
+                                    size="md"
+                                />
                                 <div>
                                     <p className="font-medium text-sm text-foreground">
                                         {patient.nome}
@@ -202,21 +254,12 @@ export default function PatientTable({
                             >
                                 <td className="p-4 align-top">
                                     <div className="flex items-center gap-3">
-                                        {patient.avatarUrl ? (
-                                            <img
-                                                src={patient.avatarUrl.startsWith('/api') 
-                                                    ? `${import.meta.env.VITE_API_BASE ?? ''}${patient.avatarUrl}`
-                                                    : patient.avatarUrl}
-                                                alt={patient.nome}
-                                                className="h-10 w-10 md:h-8 md:w-8 rounded-full object-cover"
-                                                referrerPolicy="no-referrer"
-                                                loading="lazy"
-                                            />
-                                        ) : (
-                                            <div className="h-8 w-8 bg-purple-100 rounded-full flex items-center justify-center text-xs font-medium text-purple-600">
-                                                {getInitials(patient.nome)}
-                                            </div>
-                                        )}
+                                        <AvatarWithSkeleton
+                                            src={patient.avatarUrl}
+                                            alt={patient.nome}
+                                            initials={getInitials(patient.nome)}
+                                            size="sm"
+                                        />
                                         <div>
                                             <div className="font-medium text-sm text-foreground wrap-break-word">
                                                 {patient.nome}

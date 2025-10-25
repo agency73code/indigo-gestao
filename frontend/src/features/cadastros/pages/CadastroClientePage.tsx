@@ -692,7 +692,10 @@ export default function CadastroClientePage() {
                 ) : (
                     <Button onClick={handleSubmit} disabled={isLoading}>
                         {isLoading ? (
-                            'Cadastrando...'
+                            <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                                Cadastrando...
+                            </>
                         ) : (
                             <>
                                 <Check className="w-4 h-4 mr-2" />

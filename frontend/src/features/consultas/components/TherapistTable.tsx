@@ -4,7 +4,7 @@ import { Button } from '@/ui/button';
 import type { Therapist, SortState } from '../types/consultas.types';
 
 interface AvatarWithSkeletonProps {
-    src: string;
+    src?: string | null;
     alt: string;
     initials: string;
     size?: 'sm' | 'md';
@@ -116,12 +116,15 @@ export default function TherapistTable({
 
     const getStatusBadge = (status: string) => {
         const baseClasses = 'px-2 py-1 text-xs font-medium rounded-full';
-        const statusClasses =
-            status === 'ATIVO'
-                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
+        const normalizedStatus = status?.toUpperCase() || '';
+        const isActive = normalizedStatus === 'ATIVO';
+        const statusClasses = isActive
+            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+            : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
+        
+        const displayText = isActive ? 'Ativo' : 'Inativo';
 
-        return <span className={`${baseClasses} ${statusClasses}`}>{status}</span>;
+        return <span className={`${baseClasses} ${statusClasses}`}>{displayText}</span>;
     };
 
     const getInitials = (name: string) => {
@@ -148,18 +151,12 @@ export default function TherapistTable({
                     <div key={therapist.id} className="p-4 space-y-3">
                         <div className="flex items-start justify-between gap-3">
                             <div className="flex items-center gap-3">
-                                {therapist.avatarUrl ? (
-                                    <AvatarWithSkeleton
-                                        src={therapist.avatarUrl}
-                                        alt={therapist.nome}
-                                        initials={getInitials(therapist.nome)}
-                                        size="md"
-                                    />
-                                ) : (
-                                    <div className="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center text-sm font-semibold text-blue-600">
-                                        {getInitials(therapist.nome)}
-                                    </div>
-                                )}
+                                <AvatarWithSkeleton
+                                    src={therapist.avatarUrl}
+                                    alt={therapist.nome}
+                                    initials={getInitials(therapist.nome)}
+                                    size="md"
+                                />
                                 <div>
                                     <p className="font-medium text-sm text-foreground">
                                         {therapist.nome}
@@ -271,18 +268,12 @@ export default function TherapistTable({
                             >
                                 <td className="p-4 align-top">
                                     <div className="flex items-center gap-3">
-                                        {therapist.avatarUrl ? (
-                                            <AvatarWithSkeleton
-                                                src={therapist.avatarUrl}
-                                                alt={therapist.nome}
-                                                initials={getInitials(therapist.nome)}
-                                                size="sm"
-                                            />
-                                        ) : (
-                                            <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center text-xs font-medium text-blue-600">
-                                                {getInitials(therapist.nome)}
-                                            </div>
-                                        )}
+                                        <AvatarWithSkeleton
+                                            src={therapist.avatarUrl}
+                                            alt={therapist.nome}
+                                            initials={getInitials(therapist.nome)}
+                                            size="sm"
+                                        />
                                         <div>
                                             <div className="font-medium text-sm text-foreground wrap-break-word">
                                                 {therapist.nome}
