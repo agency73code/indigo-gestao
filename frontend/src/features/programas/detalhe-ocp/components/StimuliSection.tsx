@@ -27,7 +27,7 @@ export default function StimuliSection({ program }: StimuliSectionProps) {
             <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                 <CardTitle className="text-base flex items-center gap-2">
                     <Zap className="h-4 w-4" />
-                    Objetivo a Curto Prazo
+                    Objetivo do Programa a Curto Prazo
                 </CardTitle>
 
                 {shortTermGoalDescription && (

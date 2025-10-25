@@ -66,7 +66,7 @@ export default function HeaderProgram({ program }: HeaderProgramProps) {
                         <ArrowLeft className="h-4 w-4" />
                     </Button>
                     <CardTitle className="text-base flex items-center gap-2">
-                        Detalhe do Programa / Objetivo
+                        Detalhe do Programa / Objetivokdalkd
                     </CardTitle>
                 </div>
             </CardHeader>

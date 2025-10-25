@@ -599,12 +599,12 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                         <div className="flex items-center gap-2 mt-2">
                             <span
                                 className={`px-2 py-1 text-xs font-medium rounded-full ${
-                                    patient.status === 'ATIVO'
+                                    patient.status?.toUpperCase() === 'ATIVO'
                                         ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                                        : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300'
+                                        : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
                                 }`}
                             >
-                                {patient.status}
+                                {patient.status?.toUpperCase() === 'ATIVO' ? 'Ativo' : 'Inativo'}
                             </span>
                             {patient.responsavel && (
                                 <span className="text-sm text-muted-foreground">

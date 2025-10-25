@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { ChevronLeft, ArrowLeftRight, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import {
     LinkList,
     LinkFilters,
@@ -37,6 +38,7 @@ export default function VinculosPage() {
     const [therapists, setTherapists] = useState<Terapeuta[]>([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
+    const [modalLoading, setModalLoading] = useState(false);
     const [editingLink, setEditingLink] = useState<PatientTherapistLink | null>(null);
     const [showArchiveDialog, setShowArchiveDialog] = useState(false);
     const [archivingLink, setArchivingLink] = useState<PatientTherapistLink | null>(null);
@@ -108,15 +110,61 @@ export default function VinculosPage() {
 
     const handleSubmitLink = async (data: CreateLinkInput | UpdateLinkInput) => {
         try {
+            setModalLoading(true);
+            
             if ('id' in data) {
                 await updateLink(data as UpdateLinkInput);
+                toast.success('Vínculo atualizado com sucesso!', {
+                    description: 'As alterações foram salvas.',
+                    duration: 3000,
+                });
             } else {
                 await createLink(data as CreateLinkInput);
+                toast.success('Vínculo criado com sucesso! 🎉', {
+                    description: 'O vínculo entre cliente e terapeuta foi estabelecido.',
+                    duration: 4000,
+                });
             }
             await loadData(); // Recarregar dados
             setShowModal(false);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Erro ao salvar vínculo:', error);
+            
+            // Mensagens de erro específicas
+            const errorMessage = error?.message || error?.response?.data?.message;
+            
+            if (errorMessage?.toLowerCase().includes('já existe') || 
+                errorMessage?.toLowerCase().includes('duplicado') ||
+                errorMessage?.toLowerCase().includes('already exists')) {
+                toast.error('Vínculo já existe', {
+                    description: 'Este cliente já possui vínculo ativo com este terapeuta.',
+                    duration: 5000,
+                });
+            } else if (errorMessage?.toLowerCase().includes('responsável') ||
+                       errorMessage?.toLowerCase().includes('responsible')) {
+                toast.error('Responsável já existe', {
+                    description: 'Já existe um responsável principal ativo para este cliente.',
+                    duration: 5000,
+                });
+            } else if (errorMessage?.toLowerCase().includes('não encontrado') ||
+                       errorMessage?.toLowerCase().includes('not found')) {
+                toast.error('Dados não encontrados', {
+                    description: 'Cliente ou terapeuta não foi encontrado no sistema.',
+                    duration: 4000,
+                });
+            } else if (errorMessage) {
+                toast.error('Erro ao salvar vínculo', {
+                    description: errorMessage,
+                    duration: 5000,
+                });
+            } else {
+                toast.error('Erro ao salvar vínculo', {
+                    description: 'Ocorreu um erro inesperado. Tente novamente.',
+                    duration: 4000,
+                });
+            }
+        } finally {
+            setModalLoading(false);
         }
     };
 
@@ -277,6 +325,7 @@ export default function VinculosPage() {
                     initialData={editingLink}
                     patients={patients}
                     therapists={therapists}
+                    loading={modalLoading}
                 />
 
                 {/* Dialog de arquivamento */}
