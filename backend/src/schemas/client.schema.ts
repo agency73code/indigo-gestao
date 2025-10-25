@@ -59,7 +59,10 @@ const paymentSchema = z.object({
   emailAdvogado1: z.email({ message: 'E-mail do advogado inválido' }).optional().nullable().default(null),
   emailAdvogado2: z.email({ message: 'E-mail do advogado 2 inválido' }).optional().nullable().default(null),
   emailAdvogado3: z.email({ message: 'E-mail do advogado 3 inválido' }).optional().nullable().default(null),
-  houveNegociacao: z.enum(['sim', 'nao']),
+  houveNegociacao: z.preprocess(
+    (v) => v === null ? undefined : v,
+    z.enum(['sim', 'nao']).default('nao')
+  ),
   valorAcordado: z.string().optional().nullable().default(null),
 });
 
@@ -149,5 +152,3 @@ export const UpdateClientSchema = z
 
 export type ClientSchemaInput = z.infer<typeof ClientSchema>;
 export type UpdateClientSchemaInput = z.infer<typeof UpdateClientSchema>;
-
-// 🧩 WORKING HERE

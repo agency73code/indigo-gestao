@@ -245,5 +245,3 @@ function normalizeFileMeta(raw: unknown): FileMeta {
     data_envio,
   };
 }
-
-// 🧩 WORKING HERE

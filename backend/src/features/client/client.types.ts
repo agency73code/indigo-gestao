@@ -252,5 +252,3 @@ export interface UpdateClient {
 
 // Tipo para o update (todos os campos opcionais)
 export type ClientUpdate = Partial<UpdateClient>;
-
-// 🧩 WORKING HERE

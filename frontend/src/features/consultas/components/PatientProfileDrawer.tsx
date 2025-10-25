@@ -64,7 +64,7 @@ const defaultClientFormValues: ClientFormValues = {
         emailAdvogado2: '',
         mostrarEmailAdvogado3: false,
         emailAdvogado3: '',
-        houveNegociacao: '',
+        houveNegociacao: 'nao',
         valorAcordado: '',
     },
     dadosEscola: {
@@ -233,7 +233,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                 emailAdvogado2: normalizeEmail(clienteData.dadosPagamento?.emailAdvogado2 ?? ''),
                 mostrarEmailAdvogado3: Boolean(clienteData.dadosPagamento?.emailAdvogado3),
                 emailAdvogado3: normalizeEmail(clienteData.dadosPagamento?.emailAdvogado3 ?? ''),
-                houveNegociacao: clienteData.dadosPagamento?.houveNegociacao ?? '',
+                houveNegociacao: clienteData.dadosPagamento?.houveNegociacao ?? 'nao',
                 valorAcordado: clienteData.dadosPagamento?.valorAcordado ?? '',
             },
             dadosEscola: {
@@ -1062,7 +1062,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                                         <Label>CEP *</Label>
                                                         <Input 
                                                             {...register(`enderecos.${index}.cep` as const)}
-                                                            onChange={(e) => {
+                                                            onChange={async (e) => {
                                                                 const masked = maskCEP(e.target.value);
                                                                 e.target.value = masked;
                                                                 register(`enderecos.${index}.cep` as const).onChange(e);
@@ -2419,5 +2419,3 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
         </div>
     );
 }
-
-// 🧩 WORKING HERE

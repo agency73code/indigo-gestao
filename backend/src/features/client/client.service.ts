@@ -19,6 +19,49 @@ export async function create(dto: ClientType.Client) {
       ? 'ativo'
       : 'inativo';
 
+  const enderecoData = await Promise.all(
+    dto.enderecos.map(async (e) => {
+      const shouldConnect = !!e.residenciaDe;
+
+      if (shouldConnect) {
+        const existing = await prisma.endereco.findFirst({
+          where: {
+            cep: e.cep,
+            rua: e.logradouro,
+            numero: e.numero,
+            bairro: e.bairro,
+            cidade: e.cidade,
+            uf: e.uf,
+          },
+        });
+
+        if (existing) {
+          return {
+            residenciaDe: e.residenciaDe,
+            outroResidencia: e.outroResidencia ?? null,
+            endereco: { connect: { id: existing.id } },
+          };
+        }
+      }
+
+      return {
+        residenciaDe: e.residenciaDe ?? null,
+        outroResidencia: e.outroResidencia ?? null,
+        endereco: {
+          create: {
+            cep: e.cep,
+            rua: e.logradouro,
+            numero: e.numero,
+            bairro: e.bairro,
+            cidade: e.cidade,
+            uf: e.uf,
+            complemento: e.complemento ?? null
+          },
+        },
+      };
+    })
+  );
+
   return await prisma.cliente.create({
     data: {
       nome: dto.nome,
@@ -58,36 +101,7 @@ export async function create(dto: ClientType.Client) {
         })),
       },
 
-      enderecos: {
-        create: dto.enderecos.map((e) => ({
-          residenciaDe: e.residenciaDe ?? null,
-          outroResidencia: e.outroResidencia ?? null,
-          endereco: {
-            connectOrCreate: {
-              where: {
-                unique_endereco: {
-                  cep: e.cep ?? '',
-                  rua: e.logradouro ?? '',
-                  numero: e.numero ?? '',
-                  bairro: e.bairro ?? '',
-                  cidade: e.cidade ?? '',
-                  uf: e.uf ?? '',
-                  complemento: e.complemento ?? '',
-                },
-              },
-              create: {
-                cep: e.cep,
-                rua: e.logradouro,
-                numero: e.numero,
-                bairro: e.bairro,
-                cidade: e.cidade,
-                uf: e.uf,
-                complemento: e.complemento ?? null,
-              }
-            },
-          },
-        })),
-      },
+      enderecos: { enderecoData },
 
       dadosPagamento: {
         create: {
@@ -329,10 +343,6 @@ async function UpdateCaregiver(clientId: string, cuidadores?: Partial<ClientType
     const toDelete = [...currentCpfs].filter(cpf => !incomingCpfs.has(cpf));
     const toUpsert = cuidadores;
 
-    console.log('atuais: ', current);
-    console.log('vieram do front: ', incomingCpfs);
-    console.log('removidos: ', toDelete);
-  
     await prisma.$transaction(async (tx) => {
       for (const c of toUpsert) {
         if (!c?.cpf) {
@@ -405,16 +415,22 @@ async function UpdateCaregiver(clientId: string, cuidadores?: Partial<ClientType
           select: { enderecoId: true },
         });
   
+        console.log(addressesFromDeletes);
+        
         const fallbackCaregiver = await tx.cuidador.findFirst({
           where: { clienteId: clientId, cpf: { notIn: toDelete } },
           select: { enderecoId: true },
         });
+
+        console.log(fallbackCaregiver);
   
         const deletingIds = new Set(
           addressesFromDeletes
             .map(a => a.enderecoId)
             .filter((id): id is number => id !== null)
         );
+
+        console.log(deletingIds);
   
         if (
           clientAddress?.enderecoId !== undefined &&
@@ -662,5 +678,3 @@ function generateResetToken() {
   expiry.setDate(expiry.getDate() + 1);
   return { token, expiry };
 }
-
-// 🧩 WORKING HERE
