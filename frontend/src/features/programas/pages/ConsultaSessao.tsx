@@ -302,10 +302,10 @@ export default function ConsultaSessao() {
 
     return (
         <div className="flex flex-col min-h-full w-full">
-            <div className="px-0 sm:px-4 py-4 sm:py-4">
+            <div className="px-0 sm:px-4 pt-4 sm:pt-4">
                 <HeaderSection
                     title="Consultar Sessão"
-                    subtitle="Selecione um cliente para visualizar o historico e os resultados das sessoes."
+                    // subtitle="Selecione um cliente para visualizar o historico e os resultados das sessoes."
                 />
             </div>
 

@@ -344,9 +344,9 @@ export default function CadastroOcpPage() {
     }
 
     return (
-        <div className="flex flex-col min-h-full w-full p-0 sm:p-0 py-2 sm:py-4">
+        <div className="flex flex-col min-h-full w-full p-0 sm:p-0 pt-0 sm:py-4">
             {/* Header */}
-            <div className="py-2">
+            <div className="pb-4">
                 <div className="space-y-2 px-2 lg:px-4">
                     <h1
                         style={{ fontFamily: 'Sora, sans-serif' }}
@@ -354,15 +354,15 @@ export default function CadastroOcpPage() {
                     >
                         Novo Programa / Objetivos
                     </h1>
-                    <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+                    {/* <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
                         Crie um programa / objetivo de treino personalizado para o cliente
-                    </p>
+                    </p> */}
                 </div>
             </div>
 
             {/* Conteúdo principal */}
             <main className="flex-1 px-1 sm:px-3 pb-60 sm:pb-30 w-full">
-                <div className="space-y-6 md:max-w-none mx-auto">
+                <div className="space-y-6 md:max-w-none mx-auto">   
                     {/* Informações do cabeçalho */}
                     <HeaderInfo
                         patient={formState.patient}
