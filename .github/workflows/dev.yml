@@ -51,8 +51,9 @@ jobs:
 
             # 4) Backend: deps + migrações
             cd backend
-            echo "📦 Instalando dependências backend..."
+            echo "🧱 Buildando backend..."
             pnpm install --frozen-lockfile
+            pnpm run build
             pnpm dlx prisma migrate deploy || true
             pnpm dlx prisma generate
 

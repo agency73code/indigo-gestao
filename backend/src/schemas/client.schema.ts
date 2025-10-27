@@ -7,7 +7,7 @@ const caregiverAddressSchema = z.object({
   cep: z.string().transform(strip),
   logradouro: z.string().min(1, 'Rua é obrigatório'),
   numero: z.string().min(1, 'Numero é obrigatório'),
-  complemento: z.string().optional().nullable().default(null),
+  complemento: z.string().optional().nullable().default(''),
   bairro: z.string().min(1, 'Bairro é obrigatório'),
   cidade: z.string().min(1, 'Cidade é obrigatório'),
   uf: z.string().min(1, 'Estado é obrigatório'),
@@ -32,7 +32,7 @@ const clientAddressSchema = z.object({
   cep: z.string().transform(strip),
   logradouro: z.string().min(1, 'Rua é obrigatório'),
   numero: z.string().min(1, 'Numero é obrigatório'),
-  complemento: z.string().optional().nullable().default(null),
+  complemento: z.string().optional().nullable().default(''),
   bairro: z.string().min(1, 'Bairro é obrigatório'),
   cidade: z.string().min(1, 'Cidade é obrigatório'),
   uf: z.string().min(1, 'Estado é obrigatório'),
@@ -70,7 +70,7 @@ const schoolAddressSchema = z.object({
   cep: z.string().transform(strip),
   logradouro: z.string().min(1, 'Rua é obrigatório'),
   numero: z.string().min(1, 'Numero é obrigatório'),
-  complemento: z.string().optional().nullable().default(null),
+  complemento: z.string().optional().nullable().default(''),
   bairro: z.string().min(1, 'Bairro é obrigatório'),
   cidade: z.string().min(1, 'Cidade é obrigatório'),
   uf: z.string().min(1, 'Estado é obrigatório'),
@@ -85,7 +85,7 @@ const schoolContactSchema = z.object({
     .optional()
     .nullable()
     .default(null),
-  funcao: z.string().min(1, 'Funcao é obrigatória'),
+  funcao: z.string().nullable(),
 });
 
 const schoolSchema = z.object({

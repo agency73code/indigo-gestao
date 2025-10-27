@@ -1,7 +1,39 @@
 import { prisma } from "../../config/database.js";
+import { Prisma } from '@prisma/client'
 import { AppError } from "../../errors/AppError.js";
 import * as ClientType from "./client.types.js";
 import { v4 as uuidv4 } from "uuid";
+
+async function enderecoData(dto: ClientType.Client) {
+  return dto.enderecos.map((e) => ({
+    residenciaDe: e.residenciaDe ?? null,
+    outroResidencia: e.outroResidencia ?? null,
+    endereco: {
+      connectOrCreate: {
+        where: {
+          unique_endereco: {
+            cep: e.cep ?? null,
+            rua: e.logradouro ?? null,
+            numero: e.numero ?? null,
+            bairro: e.bairro ?? null,
+            cidade: e.cidade ?? null,
+            uf: e.uf ?? null,
+            complemento: e.complemento ?? '',
+          },
+        } as Prisma.enderecoWhereUniqueInput,
+        create: {
+          cep: e.cep ?? null,
+          rua: e.logradouro ?? null,
+          numero: e.numero ?? null,
+          bairro: e.bairro ?? null,
+          cidade: e.cidade ?? null,
+          uf: e.uf ?? null,
+          complemento: e.complemento ?? '',
+        },
+      },
+    },
+  }));
+}
 
 export async function create(dto: ClientType.Client) {
   const existsCpf = await prisma.cliente.findFirst({ where: { cpf: dto.cpf } });
@@ -18,49 +50,6 @@ export async function create(dto: ClientType.Client) {
     !dataSaida || dataSaida > now
       ? 'ativo'
       : 'inativo';
-
-  const enderecoData = await Promise.all(
-    dto.enderecos.map(async (e) => {
-      const shouldConnect = !!e.residenciaDe;
-
-      if (shouldConnect) {
-        const existing = await prisma.endereco.findFirst({
-          where: {
-            cep: e.cep,
-            rua: e.logradouro,
-            numero: e.numero,
-            bairro: e.bairro,
-            cidade: e.cidade,
-            uf: e.uf,
-          },
-        });
-
-        if (existing) {
-          return {
-            residenciaDe: e.residenciaDe,
-            outroResidencia: e.outroResidencia ?? null,
-            endereco: { connect: { id: existing.id } },
-          };
-        }
-      }
-
-      return {
-        residenciaDe: e.residenciaDe ?? null,
-        outroResidencia: e.outroResidencia ?? null,
-        endereco: {
-          create: {
-            cep: e.cep,
-            rua: e.logradouro,
-            numero: e.numero,
-            bairro: e.bairro,
-            cidade: e.cidade,
-            uf: e.uf,
-            complemento: e.complemento ?? null
-          },
-        },
-      };
-    })
-  );
 
   return await prisma.cliente.create({
     data: {
@@ -88,20 +77,33 @@ export async function create(dto: ClientType.Client) {
           email: c.email,
           
           endereco: {
-            create: {
-              cep: c.endereco?.cep,
-              rua: c.endereco?.logradouro,
-              numero: c.endereco?.numero,
-              bairro: c.endereco?.bairro,
-              cidade: c.endereco?.cidade,
-              uf: c.endereco?.uf,
-              complemento: c.endereco?.complemento ?? null,
+            connectOrCreate: {
+              where: {
+                unique_endereco: {
+                  cep: c.endereco.cep,
+                  rua: c.endereco.logradouro,
+                  numero: c.endereco.numero,
+                  bairro: c.endereco.bairro,
+                  cidade: c.endereco.cidade,
+                  uf: c.endereco.uf,
+                  complemento: c.endereco.complemento ?? '',
+                },
+              },
+              create: {
+                cep: c.endereco.cep,
+                rua: c.endereco.logradouro,
+                numero: c.endereco.numero,
+                bairro: c.endereco.bairro,
+                cidade: c.endereco.cidade,
+                uf: c.endereco.uf,
+                complemento: c.endereco.complemento ?? '',
+              },
             },
           },
         })),
       },
 
-      enderecos: { enderecoData },
+      enderecos: { create: await enderecoData(dto) },
 
       dadosPagamento: {
         create: {
@@ -141,7 +143,7 @@ export async function create(dto: ClientType.Client) {
               bairro: dto.dadosEscola.endereco.bairro ?? null,
               cidade: dto.dadosEscola.endereco.cidade ?? null,
               uf: dto.dadosEscola.endereco.uf ?? null,
-              complemento: dto.dadosEscola.endereco.complemento ?? null,
+              complemento: dto.dadosEscola.endereco.complemento ?? '',
             },
           },
 
@@ -328,7 +330,6 @@ async function UpdateMainData(clientId: string, dadosPrincipais?: Partial<Client
 }
 
 async function UpdateCaregiver(clientId: string, cuidadores?: Partial<ClientType.UpdateCaregiver[]>) {
-  console.log(cuidadores);
   if (Array.isArray(cuidadores)) {
     const current = await prisma.cuidador.findMany({
       where: { clienteId: clientId },
@@ -355,7 +356,7 @@ async function UpdateCaregiver(clientId: string, cuidadores?: Partial<ClientType
         ...(e.cep !== undefined && { cep: e.cep }),
         ...(e.logradouro !== undefined && { rua: e.logradouro }),
         ...(e.numero !== undefined && { numero: e.numero }),
-        ...(e.complemento !== undefined && { complemento: e.complemento }),
+        ...(e.complemento !== undefined && { complemento: e.complemento ?? '' }),
         ...(e.bairro !== undefined && { bairro: e.bairro }),
         ...(e.cidade !== undefined && { cidade: e.cidade }),
         ...(e.uf !== undefined && { uf: e.uf }),
@@ -365,7 +366,7 @@ async function UpdateCaregiver(clientId: string, cuidadores?: Partial<ClientType
           ...(e.cep !== undefined && { cep: e.cep }),
           ...(e.logradouro !== undefined && { rua: e.logradouro }),
           ...(e.numero !== undefined && { numero: e.numero }),
-          ...(e.complemento !== undefined && { complemento: e.complemento }),
+          ...(e.complemento !== undefined && { complemento: e.complemento ?? '' }),
           ...(e.bairro !== undefined && { bairro: e.bairro }),
           ...(e.cidade !== undefined && { cidade: e.cidade }),
           ...(e.uf !== undefined && { uf: e.uf }),
@@ -414,23 +415,20 @@ async function UpdateCaregiver(clientId: string, cuidadores?: Partial<ClientType
           where: { clienteId: clientId, cpf: { in: toDelete } },
           select: { enderecoId: true },
         });
-  
-        console.log(addressesFromDeletes);
         
         const fallbackCaregiver = await tx.cuidador.findFirst({
           where: { clienteId: clientId, cpf: { notIn: toDelete } },
-          select: { enderecoId: true },
+          select: { 
+            enderecoId: true, 
+            relacao: true, 
+          },
         });
-
-        console.log(fallbackCaregiver);
   
         const deletingIds = new Set(
           addressesFromDeletes
             .map(a => a.enderecoId)
             .filter((id): id is number => id !== null)
         );
-
-        console.log(deletingIds);
   
         if (
           clientAddress?.enderecoId !== undefined &&
@@ -446,7 +444,10 @@ async function UpdateCaregiver(clientId: string, cuidadores?: Partial<ClientType
   
           await tx.cliente_endereco.updateMany({
             where: { clienteId: clientId, enderecoId: clientAddress.enderecoId },
-            data: { enderecoId: fallbackCaregiver.enderecoId },
+            data: { 
+              enderecoId: fallbackCaregiver.enderecoId,
+              residenciaDe: fallbackCaregiver.relacao,
+            },
           });
         }
   
@@ -455,7 +456,7 @@ async function UpdateCaregiver(clientId: string, cuidadores?: Partial<ClientType
           where: { clienteId: clientId, cpf: { in: toDelete } },
         });
   
-        // limpa endereços realmente órfãos (se seu schema permitir filtros relacionais, prefira)
+        // limpa endereços realmente órfãos
         const candidateIds = [...deletingIds];
         if (candidateIds.length > 0) {
           await tx.endereco.deleteMany({
@@ -480,7 +481,7 @@ async function UpdateAddress(clientId: string, enderecos?: Partial<ClientType.Up
         ...(enderecos?.[0]?.cep !== undefined && { cep: enderecos?.[0]?.cep }),
         ...(enderecos?.[0]?.logradouro !== undefined && { rua: enderecos?.[0]?.logradouro }),
         ...(enderecos?.[0]?.numero !== undefined && { numero: enderecos?.[0]?.numero }),
-        ...(enderecos?.[0]?.complemento !== undefined && { complemento: enderecos?.[0]?.complemento }),
+        ...(enderecos?.[0]?.complemento !== undefined && { complemento: enderecos?.[0]?.complemento ?? ''}),
         ...(enderecos?.[0]?.bairro !== undefined && { bairro: enderecos?.[0]?.bairro }),
         ...(enderecos?.[0]?.cidade !== undefined && { cidade: enderecos?.[0]?.cidade }),
         ...(enderecos?.[0]?.uf !== undefined && { uf: enderecos?.[0]?.uf }),
@@ -528,24 +529,26 @@ async function UpdateDataSchool(clientId: string, dadosEscola?: Partial<ClientTy
 
       ...(dadosEscola?.endereco !== undefined && {
         endereco: {
-          upsert: {
-            update: {
-              ...(dadosEscola.endereco.cep !== undefined && { cep: dadosEscola.endereco.cep }),
-              ...(dadosEscola.endereco.logradouro !== undefined && { rua: dadosEscola.endereco.logradouro }),
-              ...(dadosEscola.endereco.numero !== undefined && { numero: dadosEscola.endereco.numero }),
-              ...(dadosEscola.endereco.complemento !== undefined && { complemento: dadosEscola.endereco.complemento }),
-              ...(dadosEscola.endereco.bairro !== undefined && { bairro: dadosEscola.endereco.bairro }),
-              ...(dadosEscola.endereco.cidade !== undefined && { cidade: dadosEscola.endereco.cidade }),
-              ...(dadosEscola.endereco.uf !== undefined && { uf: dadosEscola.endereco.uf }),
+          connectOrCreate: {
+            where: {
+              unique_endereco: {
+                cep: dadosEscola?.endereco.cep,
+                rua: dadosEscola?.endereco.logradouro,
+                numero: dadosEscola?.endereco.numero,
+                bairro: dadosEscola?.endereco.bairro,
+                cidade: dadosEscola?.endereco.cidade,
+                uf: dadosEscola?.endereco.uf,
+                complemento: dadosEscola?.endereco.complemento ?? '',
+              },
             },
             create: {
-              ...(dadosEscola.endereco.cep !== undefined && { cep: dadosEscola.endereco.cep }),
-              ...(dadosEscola.endereco.logradouro !== undefined && { rua: dadosEscola.endereco.logradouro }),
-              ...(dadosEscola.endereco.numero !== undefined && { numero: dadosEscola.endereco.numero }),
-              ...(dadosEscola.endereco.complemento !== undefined && { complemento: dadosEscola.endereco.complemento }),
-              ...(dadosEscola.endereco.bairro !== undefined && { bairro: dadosEscola.endereco.bairro }),
-              ...(dadosEscola.endereco.cidade !== undefined && { cidade: dadosEscola.endereco.cidade }),
-              ...(dadosEscola.endereco.uf !== undefined && { uf: dadosEscola.endereco.uf }),
+              cep: dadosEscola?.endereco.cep,
+              rua: dadosEscola?.endereco.logradouro,
+              numero: dadosEscola?.endereco.numero,
+              bairro: dadosEscola?.endereco.bairro,
+              cidade: dadosEscola?.endereco.cidade,
+              uf: dadosEscola?.endereco.uf,
+              complemento: dadosEscola?.endereco.complemento ?? '',
             },
           },
         },
@@ -554,37 +557,44 @@ async function UpdateDataSchool(clientId: string, dadosEscola?: Partial<ClientTy
     select: { id: true },
   });
 
-  const contato0 = dadosEscola?.contatos?.[0];
+  const contatos = dadosEscola?.contatos ?? [];
 
-  if (contato0) {
-    // pega o primeiro contato existente da escola
-    const contatoExistente = await prisma.escola_contato.findFirst({
-      where: { dadosEscolaId: escola.id },
-      orderBy: { id: 'asc' },
-      select: { id: true },
-    });
+  await prisma.$transaction(async (tx) => {
+    for (const contact of contatos) {
+      if (!contact) continue;
 
-    if (contatoExistente) {
-      // atualiza só o primeiro
-      await prisma.escola_contato.update({
-        where: { id: contatoExistente.id },
-        data: {
-          ...(contato0.nome !== undefined && { nome: contato0.nome }),
-          ...(contato0.telefone !== undefined && { telefone: contato0.telefone }),
-          ...(contato0.email !== undefined && { email: contato0.email }),
-        },
-      });
-    } else {
-      await prisma.escola_contato.create({
-        data: {
+      const exists = await tx.escola_contato.findFirst({
+        where: {
           dadosEscolaId: escola.id,
-          nome: contato0.nome ?? null,
-          telefone: contato0.telefone ?? null,
-          email: contato0.email ?? null,
+          ...(contact.email ? { email: contact.email } : { nome: contact.nome }),
         },
+        orderBy: { id: 'asc' },
+        select: { id: true },
       });
+
+      if (exists) {
+        await tx.escola_contato.update({
+          where: { id: exists.id },
+          data: {
+            nome: contact.nome,
+            telefone: contact.telefone,
+            email: contact.email,
+            funcao: contact.funcao,
+          },
+        });
+      } else {
+        await tx.escola_contato.create({
+          data: {
+            dadosEscolaId: escola.id,
+            nome: contact.nome,
+            telefone: contact.telefone,
+            email: contact.email,
+            funcao: contact.funcao,
+          },
+        });
+      }
     }
-  } 
+  });
 }
 
 export async function update(id: string, dto: Partial<ClientType.UpdateClient>) {
@@ -608,7 +618,6 @@ export async function update(id: string, dto: Partial<ClientType.UpdateClient>) 
   await UpdateAddress(clientId, enderecos);
   await UpdateDataPayment(clientId, dadosPagamento);
   await UpdateDataSchool(clientId, dadosEscola);
-
 }
 
 export async function list() {
