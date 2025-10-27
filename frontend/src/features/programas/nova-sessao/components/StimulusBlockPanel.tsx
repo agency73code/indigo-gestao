@@ -40,6 +40,7 @@ function useGestureHandler(
     const [isLongPressing, setIsLongPressing] = useState(false);
     const [showFloatingNumber, setShowFloatingNumber] = useState<'+1' | '-1' | null>(null);
     const longPressTimer = useRef<number | null>(null);
+
     const touchStartX = useRef<number>(0);
     const touchStartY = useRef<number>(0);
 
@@ -61,6 +62,7 @@ function useGestureHandler(
         touchStartY.current = e.clientY;
 
         longPressTimer.current = window.setTimeout(() => {
+
             setIsLongPressing(true);
             triggerHaptic();
         }, 500); // 500ms para long press
