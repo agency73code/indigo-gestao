@@ -221,7 +221,7 @@ export interface UpdateDataPayment {
 
 export interface UpdateSchoolContact {
   nome: string;
-  funcao: string;
+  funcao: string | null;
   telefone: string;
   email: string | null;
 }
