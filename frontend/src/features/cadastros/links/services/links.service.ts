@@ -569,7 +569,7 @@ export async function getAllPatients(): Promise<Paciente[]> {
     const clientsWithAvatar = await Promise.all(
       clients.map(async (p) => {
         try {
-          const avatarRes = await fetch(`/api/arquivos/getAvatar?id=${p.id}&type=client`, {
+          const avatarRes = await fetch(`${import.meta.env.VITE_API_URL}/arquivos/getAvatar?id=${p.id}&type=client`, {
             credentials: 'include',
           });
           const data = await avatarRes.json();
@@ -609,7 +609,7 @@ export async function getAllTherapists(): Promise<Terapeuta[]> {
     const therapistsWithAvatar = await Promise.all(
       therapists.map(async (t) => {
         try {
-          const avatarRes = await fetch(`/api/arquivos/getAvatar?id=${t.id}&type=therapist`, {
+          const avatarRes = await fetch(`${import.meta.env.VITE_API_URL}/arquivos/getAvatar?id=${t.id}&type=therapist`, {
             credentials: 'include',
           });
           const data = await avatarRes.json();
