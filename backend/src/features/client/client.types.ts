@@ -189,7 +189,7 @@ export interface UpdateCaregiver {
   descricaoRelacao: string | null;
   nome: string;
   cpf: string;
-  profissao: string;
+  profissao: string | null;
   escolaridade: string;
   telefone: string;
   email: string;
@@ -198,7 +198,7 @@ export interface UpdateCaregiver {
 
 export interface UpdateDataPayment {
   nomeTitular: string;
-  numeroCarteirinha: string;
+  numeroCarteirinha: string | null;
   telefone1: string;
   telefone2: string | null;
   telefone3: string | null;
@@ -206,6 +206,7 @@ export interface UpdateDataPayment {
   email2: string | null;
   email3: string | null;
   sistemaPagamento: string;
+  prazoReembolso: string | null;
   numeroProcesso: string | null;
   nomeAdvogado: string | null;
   telefoneAdvogado1: string | null;
@@ -215,22 +216,21 @@ export interface UpdateDataPayment {
   emailAdvogado2: string | null;
   emailAdvogado3: string | null;
   houveNegociacao: string;
-  valorAcordado: string;
+  valorAcordado: string | null;
 }
 
 export interface UpdateSchoolContact {
-  id: number;
   nome: string;
-  cargo: string;
+  funcao: string | null;
   telefone: string;
-  email: string;
+  email: string | null;
 }
 
 export interface UpdateDataSchool {
   tipoEscola: string;
-  nome: string;
-  telefone: string;
-  email: string;
+  nome: string | null;
+  telefone: string | null;
+  email: string | null;
   endereco: UpdateAddress;
   contatos: UpdateSchoolContact[];
 }
@@ -243,6 +243,7 @@ export interface UpdateClient {
   emailContato: string;
   dataEntrada: Date;
   dataSaida: Date | null;
+  status: string;
   cuidadores: UpdateCaregiver[];
   enderecos: UpdateAddress[];
   dadosPagamento: UpdateDataPayment;
