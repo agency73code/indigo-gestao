@@ -7,7 +7,7 @@ import { Label } from '@/ui/label';
 import { Combobox } from '@/ui/combobox';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ReadOnlyField from './ReadOnlyField';
-import { LoadingDots } from './LoadingDots';
+import { EditingBadge } from './EditingBadge';
 import ProfilePhotoFieldSimple from '@/components/profile/ProfilePhotoFieldSimple';
 import { DateField } from '@/common/components/layout/DateField';
 import type { Therapist } from '../types/consultas.types';
@@ -623,15 +623,17 @@ export default function TherapistProfileDrawer({
                     </div>
 
                     {!isEditMode ? (
-                        <Button variant="secondary" size="sm" onClick={handleEditClick} className="h-8 gap-2">
+                        <Button 
+                            variant="default" 
+                            size="sm" 
+                            onClick={handleEditClick} 
+                            className="h-8 gap-2"
+                        >
                             <Edit2 className="h-4 w-4" />
                             Editar
                         </Button>
                     ) : (
-                        <div className="flex items-center gap-2 px-3 py-1 bg-secondary rounded-md">
-                            <LoadingDots />
-                            <span className="text-sm font-medium">Editando</span>
-                        </div>
+                        <EditingBadge />
                     )}
 
                     <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0">

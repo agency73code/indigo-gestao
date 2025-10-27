@@ -60,9 +60,7 @@ export default function CadastroHubPage() {
                 >
                     Cadastro
                 </h1>
-                <p className="text-sm sm:text-base text-muted-foreground">
-                    Registre novos usuários e profissionais no sistema
-                </p>
+                
             </div>
 
             {/* Main Action Cards */}

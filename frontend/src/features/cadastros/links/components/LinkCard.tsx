@@ -1,7 +1,9 @@
 import { MoreVertical, Calendar, UserCheck, User, Plus } from 'lucide-react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -111,6 +113,7 @@ function renderPatientCard(
     onEndLink: (link: PatientTherapistLink) => void,
     onArchive: (link: PatientTherapistLink) => void,
 ) {
+    const [imageLoading, setImageLoading] = useState(true);
     const responsibleLink = links.find(
         (link) => link.role === 'responsible' && link.status === 'active',
     );
@@ -141,10 +144,14 @@ function renderPatientCard(
                     <div className="flex items-center gap-3 flex-1">
                         {/* Avatar do paciente */}
                         <Avatar className="h-12 w-12">
+                            {imageLoading && patient.avatarUrl && (
+                                <Skeleton className="h-12 w-12 rounded-full absolute inset-0" />
+                            )}
                             <AvatarImage 
                                 src={patient.avatarUrl || undefined } 
                                 alt={patient.nome}
-                                className='object-cover transition-opacity duration-300'
+                                className={imageLoading ? 'object-cover opacity-0' : 'object-cover opacity-100 transition-opacity duration-300'}
+                                onLoad={() => setImageLoading(false)}
                             />
                             <AvatarFallback className="text-sm font-medium">
                                 {patientInitials}
