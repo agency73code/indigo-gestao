@@ -38,7 +38,7 @@ export const therapistSchema = z.object({
     cep: z.string().transform(strip),
     rua: z.string(),
     numero: z.string(),
-    complemento: z.string().nullable().optional(),
+    complemento: z.string(),
     bairro: z.string(),
     cidade: z.string(),
     estado: z.string().length(2),
@@ -107,66 +107,4 @@ export const therapistSchema = z.object({
   ).optional().default([]),
 });
 
-const possuiVeiculoSchema = z.preprocess((v) => {
-  if (v == null) return undefined; // deixa o default atuar
-  if (typeof v === 'boolean') return v ? 'sim' : 'nao';
-  if (typeof v === 'string') {
-    const s = v.trim().toLowerCase();
-    if (s === '') return undefined; // "" -> default('nao')
-    // remove acentos: "não" -> "nao"
-    const sAscii = s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    return sAscii; // enum valida "sim" | "nao"
-  }
-  return v;
-}, z.enum(['sim', 'nao']).optional().default('nao'));
-
-export const updateTherapistSchema = z
-  .object({
-    nome: z.string().min(1, 'Nome é obrigatório').optional(),
-    email: z.string().email().optional(),
-    emailIndigo: z.string().email().optional(),
-    telefone: z.string().transform(strip).optional(),
-    celular: z.string().transform(strip).optional(),
-    cpf: z
-      .string()
-      .transform(strip)
-      .refine((val) => cpf.isValid(val), 'CPF inválido')
-      .optional(),
-    dataNascimento: z.coerce.date().optional(),
-    possuiVeiculo: possuiVeiculoSchema,
-    placaVeiculo: z.preprocess((v) => {
-      if (v === '' || v == null) return null;
-      if (typeof v === 'string') return strip(v).toUpperCase();
-      return v;
-    },
-      z.string()
-        .regex(placaRegex, 'Placa inválida. Use o formato ABC-1234 ou ABC-1D23.')
-        .nullable()
-    ).optional(),
-    modeloVeiculo: z.string().nullable().optional(),
-    banco: z.string().optional(),
-    agencia: z.string().transform(strip).optional(),
-    conta: z.string().transform(strip).optional(),
-    chavePix: z.string().transform(strip).optional(),
-    pixTipo: z.enum(["email", "telefone", "cpf", "cnpj", "aleatoria"]).optional(),
-    valorHoraAcordado: z.string().optional(),
-    professorUnindigo: z.enum(["sim", "nao"]).optional(),
-    disciplinaUniindigo: z.string().nullable().optional(),
-    endereco: z
-      .object({
-        cep: z.string().transform(strip).nullable().optional(),
-        rua: z.string().nullable().optional(),
-        numero: z.string().nullable().optional(),
-        complemento: z.string().nullable().optional(),
-        bairro: z.string().nullable().optional(),
-        cidade: z.string().nullable().optional(),
-        estado: z.string().length(2).toUpperCase().nullable().optional(),
-      })
-      .optional(),
-    dataInicio: z.coerce.date().optional(),
-    dataFim: z.coerce.date().nullable().optional(),
-  })
-  .strict();
-
 export type TherapistSchemaInput = z.infer<typeof therapistSchema>;
-export type UpdateTherapistSchemaInput = z.infer<typeof updateTherapistSchema>;
