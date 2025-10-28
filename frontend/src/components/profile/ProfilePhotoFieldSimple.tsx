@@ -178,7 +178,6 @@ export default function ProfilePhotoFieldSimple({
                 if (profileDto) {
                     onUploaded?.(profileDto);
                 }
-                toast.success('Foto de perfil atualizada com sucesso!');
             } catch (uploadError) {
                 console.error('Upload error:', uploadError);
                 toast.error('Erro no upload, mas foto foi processada localmente');

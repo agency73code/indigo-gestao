@@ -168,7 +168,13 @@ export async function create(dto: ClientType.Client) {
           data_upload: new Date(a.data_upload),
         })) ?? [],
       },
-    }
+    },
+    select: { 
+      id: true, 
+      emailContato: true,
+      nome: true,
+      token_redefinicao: true,
+    },
   });
 }
 
@@ -639,6 +645,11 @@ export async function list(therapistId: string) {
     const area = reg.area_atuacao.nome;
 
     if (!cargo || !area) continue;
+    // Gerente e Coordenador Executivo veem todos os clientes
+    if (cargo.includes('gerente') || cargo.includes('coordenador executivo')) {
+      whereClauses.push({ id: { not: '' } });
+      break;
+    }
 
     if (cargo.includes('supervisor')) {
       whereClauses.push({

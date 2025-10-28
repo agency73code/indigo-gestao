@@ -329,6 +329,7 @@ export async function update(id: string, dto: TherapistTypes.TherapistForm) {
       atividade,
       valor_hora: dto.valorHoraAcordado,
       professor_uni: dto.professorUnindigo === 'sim',
+      perfil_acesso: getHighestAccessRole(dto.dadosProfissionais),
 
       ...(dto.disciplinaUniindigo
       ? {
