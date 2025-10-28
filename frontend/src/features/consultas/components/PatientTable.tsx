@@ -14,12 +14,12 @@ const AvatarWithSkeleton = ({ src, alt, initials, size = 'md' }: AvatarWithSkele
     const [imageLoaded, setImageLoaded] = useState(false);
     const [imageError, setImageError] = useState(false);
 
-    const sizeClasses = size === 'sm' ? 'h-8 w-8 text-xs' : 'h-10 w-10 text-sm';
+    const sizeClasses = size === 'sm' ? 'h-8 w-8 min-w-[2rem] text-xs' : 'h-10 w-10 min-w-[2.5rem] text-sm';
 
     // Se não tem src, mostrar iniciais diretamente
     if (!src) {
         return (
-            <div className={`${sizeClasses} bg-purple-100 rounded-full flex items-center justify-center font-semibold text-purple-600`}>
+            <div className={`${sizeClasses} bg-purple-100 rounded-full flex items-center justify-center font-semibold text-purple-600 shrink-0`}>
                 {initials}
             </div>
         );
@@ -31,21 +31,21 @@ const AvatarWithSkeleton = ({ src, alt, initials, size = 'md' }: AvatarWithSkele
 
     if (imageError) {
         return (
-            <div className={`${sizeClasses} bg-purple-100 rounded-full flex items-center justify-center font-semibold text-purple-600`}>
+            <div className={`${sizeClasses} bg-purple-100 rounded-full flex items-center justify-center font-semibold text-purple-600 shrink-0`}>
                 {initials}
             </div>
         );
     }
 
     return (
-        <div className={`relative ${sizeClasses}`}>
+        <div className={`relative ${sizeClasses} shrink-0`}>
             {!imageLoaded && (
                 <div className={`absolute inset-0 bg-muted rounded-full animate-pulse`} />
             )}
             <img
                 src={fullSrc}
                 alt={alt}
-                className={`${sizeClasses} rounded-full object-cover transition-opacity duration-200 ${
+                className={`absolute inset-0 w-full h-full rounded-full object-cover transition-opacity duration-200 ${
                     imageLoaded ? 'opacity-100' : 'opacity-0'
                 }`}
                 referrerPolicy="no-referrer"
@@ -215,35 +215,43 @@ export default function PatientTable({
             </div>
 
             <div className="hidden md:block overflow-x-auto">
-                <table className="w-full">
+                <table className="w-full table-fixed">
+                    <colgroup>
+                        <col className="w-[26%]" />
+                        <col className="w-[20%] hidden md:table-column" />
+                        <col className="w-[14%] hidden lg:table-column" />
+                        <col className="w-[18%]" />
+                        <col className="w-[10%]" />
+                        <col className="w-[12%]" />
+                    </colgroup>
                     <thead className="bg-muted/50">
                         <tr>
                             <th
-                                className="text-left p-4 cursor-pointer hover:bg-muted/70 transition-colors"
+                                className="text-left p-3 cursor-pointer hover:bg-muted/70 transition-colors"
                                 onClick={() => onSort('nome')}
                             >
-                                <div className="flex items-center gap-2 font-medium">
+                                <div className="flex items-center gap-2 font-medium text-sm">
                                     Nome
                                     {getSortIcon('nome')}
                                 </div>
                             </th>
-                            <th className="text-left p-4 font-medium hidden md:table-cell">
+                            <th className="text-left p-3 font-medium text-sm hidden md:table-cell">
                                 E-mail
                             </th>
-                            <th className="text-left p-4 font-medium hidden lg:table-cell">
+                            <th className="text-left p-3 font-medium text-sm hidden lg:table-cell">
                                 Telefone
                             </th>
-                            <th className="text-left p-4 font-medium">Responsável</th>
+                            <th className="text-left p-3 font-medium text-sm">Responsável</th>
                             <th
-                                className="text-left p-4 cursor-pointer hover:bg-muted/70 transition-colors"
+                                className="text-left p-3 cursor-pointer hover:bg-muted/70 transition-colors"
                                 onClick={() => onSort('status')}
                             >
-                                <div className="flex items-center gap-2 font-medium">
+                                <div className="flex items-center gap-2 font-medium text-sm">
                                     Status
                                     {getSortIcon('status')}
                                 </div>
                             </th>
-                            <th className="text-center p-4 font-medium">Ações</th>
+                            <th className="text-center p-3 font-medium text-sm">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -252,43 +260,43 @@ export default function PatientTable({
                                 key={patient.id}
                                 className="border-t hover:bg-muted/50 transition-colors"
                             >
-                                <td className="p-4 align-top">
-                                    <div className="flex items-center gap-3">
+                                <td className="p-3">
+                                    <div className="flex items-center gap-2.5">
                                         <AvatarWithSkeleton
                                             src={patient.avatarUrl}
                                             alt={patient.nome}
                                             initials={getInitials(patient.nome)}
                                             size="sm"
                                         />
-                                        <div>
-                                            <div className="font-medium text-sm text-foreground wrap-break-word">
+                                        <div className="min-w-0 flex-1">
+                                            <div className="font-medium text-sm text-foreground break-words">
                                                 {patient.nome}
                                             </div>
                                         </div>
                                     </div>
                                 </td>
-                                <td className="p-4 hidden md:table-cell align-top">
-                                    <span className="text-sm text-foreground wrap-break-word">
+                                <td className="p-3 hidden md:table-cell">
+                                    <span className="text-sm text-foreground break-words">
                                         {patient.email || 'Não informado'}
                                     </span>
                                 </td>
-                                <td className="p-4 hidden lg:table-cell align-top">
-                                    <span className="text-sm text-foreground wrap-break-word">
+                                <td className="p-3 hidden lg:table-cell">
+                                    <span className="text-sm text-foreground whitespace-nowrap">
                                         {patient.telefone || 'Não informado'}
                                     </span>
                                 </td>
-                                <td className="p-4 align-top">
-                                    <span className="text-sm text-foreground wrap-break-word">
+                                <td className="p-3">
+                                    <span className="text-sm text-foreground break-words">
                                         {patient.responsavel || 'Não informado'}
                                     </span>
                                 </td>
-                                <td className="p-4 align-top">{getStatusBadge(patient.status)}</td>
-                                <td className="p-4 text-right align-top">
+                                <td className="p-3">{getStatusBadge(patient.status)}</td>
+                                <td className="p-3 text-center">
                                     <Button
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => onViewProfile(patient)}
-                                        className="flex items-center gap-2"
+                                        className="flex items-center gap-2 mx-auto"
                                     >
                                         <Eye className="w-4 h-4" />
                                         <span className="hidden sm:inline">Visualizar</span>
