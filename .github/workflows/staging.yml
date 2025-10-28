@@ -54,9 +54,9 @@ jobs:
             cd backend
             echo "🧱 Buildando backend..."
             pnpm install --frozen-lockfile
-            pnpm run build
-            pnpm dlx prisma migrate deploy || true
+            pnpm dlx prisma migrate deploy
             pnpm dlx prisma generate
+            pnpm run build
 
             # 5) Frontend: build
             cd ../frontend
