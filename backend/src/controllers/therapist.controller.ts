@@ -64,12 +64,15 @@ export async function update(req: Request, res: Response, next: NextFunction) {
     if (!therapistId) {
       return res.status(400).json({ success: false, message: 'ID do terapeuta é obrigatório!' });
     }
+
     const parsed = therapistSchema.parse(TherapistNormalizer.emptyStringsToNull(req.body));
     if (Object.keys(parsed).length === 0) {
       return res.status(400).json({ success: false, message: 'Nenhum dado fornecido para atualização' });
     }
 
-    console.log(JSON.stringify(parsed));
+    if (Array.isArray(parsed.formacao)) {
+      parsed.formacao = parsed.formacao[0];
+    }
 
     const updated = await TherapistService.update(therapistId, parsed);
     if (!updated) {
