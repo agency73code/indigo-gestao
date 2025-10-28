@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, User, X } from 'lucide-react';
+import { Search, User, X, Calendar } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,6 +35,26 @@ export default function PatientSelector({
             .join('')
             .toUpperCase()
             .slice(0, 2);
+    };
+
+    // Função para calcular idade a partir da data de nascimento
+    const calculateAge = (birthDate: string): number => {
+        const today = new Date();
+        const birth = new Date(birthDate);
+        let age = today.getFullYear() - birth.getFullYear();
+        const monthDiff = today.getMonth() - birth.getMonth();
+        
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+            age--;
+        }
+        
+        return age;
+    };
+
+    // Função para formatar data de nascimento
+    const formatBirthDate = (birthDate: string): string => {
+        const date = new Date(birthDate);
+        return date.toLocaleDateString('pt-BR');
     };
 
     // Buscar pacientes com debounce
@@ -113,6 +133,12 @@ export default function PatientSelector({
                                 {selected.guardianName && (
                                     <p className="text-sm text-muted-foreground">
                                         Responsável: {selected.guardianName}
+                                    </p>
+                                )}
+                                {selected.birthDate && (
+                                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                                        <Calendar className="h-3 w-3" />
+                                        {calculateAge(selected.birthDate)} anos ({formatBirthDate(selected.birthDate)})
                                     </p>
                                 )}
                             </div>
