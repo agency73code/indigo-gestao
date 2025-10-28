@@ -5,6 +5,7 @@ type Patient = {
     name: string;
     guardianName?: string;
     age?: number;
+    birthDate?: string | null;
     photoUrl?: string | null;
 };
 
@@ -77,6 +78,7 @@ export async function fetchClients(q?: string): Promise<Patient[]> {
                     name: p.name,
                     guardianName: p.guardianName,
                     age: ageCalc(p.birthDate),
+                    birthDate: p.birthDate,
                     photoUrl: avatarData.avatarUrl ?? null
                 };
             } catch {
@@ -85,6 +87,7 @@ export async function fetchClients(q?: string): Promise<Patient[]> {
                     name: p.name,
                     guardianName: p.guardianName,
                     age: ageCalc(p.birthDate),
+                    birthDate: p.birthDate,
                     photoUrl: null
                 };
             }

@@ -6,6 +6,9 @@ import { DualLineProgress } from '../relatorio-geral/components/DualLineProgress
 import { PatientSelector, type Patient } from '../consultar-programas/components';
 import { OcpDeadlineCard } from '../relatorio-geral/components/OcpDeadlineCard';
 import { AttentionStimuliBlock } from '../relatorio-geral/components/AttentionStimuliBlock';
+import { FileText } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { RichTextEditor } from '../../../components/ui/rich-text-editor';
 import {
     fetchKpis,
     fetchSerieLinha,
@@ -20,6 +23,7 @@ export default function RelatorioMensalPage() {
     const [searchParams] = useSearchParams();
 
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+    const [observacaoClinica, setObservacaoClinica] = useState<string>('');
 
     const [kpis, setKpis] = useState<KpisRelatorio | null>(null);
     const [serieLinha, setSerieLinha] = useState<SerieLinha[]>([]);
@@ -257,6 +261,22 @@ export default function RelatorioMensalPage() {
                                 onSelect={handlePatientSelect}
                                 onClear={handlePatientClear}
                             />
+                        </div>
+
+                        {/* Observação Clínica - aparece em tela e PDF */}
+                        <div data-print-block className="bg-muted/30 border border-border rounded-[5px] p-4 space-y-2">
+                            <Label className="flex items-center gap-2 text-sm font-semibold">
+                                <FileText className="w-4 h-4" />
+                                Observação Clínica (Relatório)
+                            </Label>
+                            <RichTextEditor
+                                placeholder="Adicione observações relevantes sobre o progresso do cliente, comportamentos observados durante as sessões, ou informações importantes para o relatório..."
+                                value={observacaoClinica}
+                                onChange={(html) => setObservacaoClinica(html)}
+                            />
+                            <p className="text-xs text-muted-foreground flex items-center gap-1 no-print">
+                                💡 Esta observação será incluída automaticamente no relatório PDF
+                            </p>
                         </div>
 
                         {/* Filtros interativos - só aparece na tela */}
