@@ -151,7 +151,7 @@ export default function TherapistProfileDrawer({
                 ? new Date(terapeutaData.dataFim).toISOString().split('T')[0] 
                 : '',
             valorHoraAcordado: terapeutaData.valorHoraAcordado 
-                ? Number(terapeutaData.valorHoraAcordado).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                ? terapeutaData.valorHoraAcordado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
                 : '',
             professorUnindigo: (terapeutaData.professorUnindigo?.toLowerCase() === 'sim' ? 'sim' : 'nao') as 'sim' | 'nao',
             disciplinaUniindigo: terapeutaData.disciplinaUniindigo || '',
@@ -262,7 +262,7 @@ export default function TherapistProfileDrawer({
                     ? new Date(terapeutaData.dataFim).toISOString().split('T')[0] 
                     : '',
                 valorHoraAcordado: terapeutaData.valorHoraAcordado 
-                    ? Number(terapeutaData.valorHoraAcordado).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                    ? terapeutaData.valorHoraAcordado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
                     : '',
                 professorUnindigo: (terapeutaData.professorUnindigo?.toLowerCase() === 'sim' ? 'sim' : 'nao') as 'sim' | 'nao',
                 disciplinaUniindigo: terapeutaData.disciplinaUniindigo || '',
@@ -480,13 +480,13 @@ export default function TherapistProfileDrawer({
                 dadosProfissionais: data.dadosProfissionais || [],
                 dataInicio: data.dataInicio,
                 dataFim: data.dataFim,
-                valorHoraAcordado: data.valorHoraAcordado ? mask.parseCurrencyBR(data.valorHoraAcordado) : null,
+                valorHoraAcordado: data.valorHoraAcordado ? mask.parseCurrencyBR(data.valorHoraAcordado).toString() : null,
                 professorUnindigo: data.professorUnindigo,
                 disciplinaUniindigo: data.disciplinaUniindigo,
                 formacao: {
                     graduacao: data.formacao?.graduacao || '',
                     instituicaoGraduacao: data.formacao?.instituicaoGraduacao || '',
-                    anoFormatura: data.formacao?.anoFormatura || '',
+                    anoFormatura: data.formacao?.anoFormatura.toString() || '',
                     posGraduacoes: data.formacao?.posGraduacoes || [],
                     participacaoCongressosDescricao: data.formacao?.participacaoCongressosDescricao || null,
                     publicacoesLivrosDescricao: data.formacao?.publicacoesLivrosDescricao || null,
