@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client'
 import { AppError } from "../../errors/AppError.js";
 import * as ClientType from "./client.types.js";
 import { v4 as uuidv4 } from "uuid";
+import { getTherapistData } from "../../cache/therapistCache.js";
 
 async function enderecoData(dto: ClientType.Client) {
   return dto.enderecos.map((e) => ({
@@ -620,8 +621,42 @@ export async function update(id: string, dto: Partial<ClientType.UpdateClient>) 
   await UpdateDataSchool(clientId, dadosEscola);
 }
 
-export async function list() {
+export async function list(therapistId: string) {
+  if (!therapistId) {
+    throw new AppError('REQUIRED_THERAPIST_ID', 'ID do terapeuta é obrigatório.', 400);
+  }
+
+  const registers = await getTherapistData(therapistId);
+
+  if (!registers.length) {
+    throw new AppError('REQUIRED_THERAPIST_REGISTER', 'Terapeuta sem registro profissional.', 400);
+  }
+
+  const whereClauses: ClientType.ClientVisibilityFilter[] = [];
+
+  for (const reg of registers) {
+    const cargo = reg.cargo?.nome?.toLowerCase();
+    const area = reg.area_atuacao.nome;
+
+    if (!cargo || !area) continue;
+
+    if (cargo.includes('supervisor')) {
+      whereClauses.push({
+        terapeuta: {
+          some: { area_atuacao: area }
+        },
+      });
+    } else if (cargo.includes('clínico')) {
+      whereClauses.push({
+        terapeuta: {
+          some: { terapeuta_id: therapistId }
+        },
+      });
+    }
+  }
+
  return prisma.cliente.findMany({
+  where: { OR: whereClauses },
   select: {
     id:true,
     nome: true,

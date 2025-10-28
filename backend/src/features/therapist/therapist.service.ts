@@ -4,6 +4,7 @@ import { brMoneyToNumber } from '../../utils/brMoney.js';
 import { generateResetToken } from "../../utils/resetToken.js";
 import { AppError } from "../../errors/AppError.js";
 import { ACCESS_LEVELS } from '../../utils/accessLevels.js';
+import { invalidateTherapistCache } from "../../cache/therapistCache.js";
 
 async function resolveAreaAtuacaoId(
   areaAtuacaoId: TherapistTypes.TherapistProfessionalDataInput['areaAtuacaoId'],
@@ -207,11 +208,14 @@ export async function create(dto: TherapistTypes.TherapistForm) {
         : {}),
     },
     select: {
+      id: true,
       email: true,
       nome: true,
       token_redefinicao: true,
     }
   });
+
+  invalidateTherapistCache(therapist.id);
   return therapist
 };
 
@@ -260,6 +264,8 @@ export async function update(id: string, dto: TherapistTypes.TherapistForm) {
       atividade = false;
     }
   }
+
+  invalidateTherapistCache(id);
 
   return prisma.terapeuta.update({
     where: { id },
@@ -428,7 +434,7 @@ export async function update(id: string, dto: TherapistTypes.TherapistForm) {
 function getHighestAccessRole(professionalData: TherapistTypes.TherapistForm['dadosProfissionais']): string {
   if (!professionalData?.length) return 'Terapeuta Clínico';
 
-  let highest = { cargo: 'Terapeuta Clínico', level: 1 };
+  let highest = { cargo: 'teste', level: 0 };
 
   for (const { cargo } of professionalData) {
     const normalized = normalizeCargo(cargo ?? '');

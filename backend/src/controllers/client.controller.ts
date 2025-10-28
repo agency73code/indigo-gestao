@@ -3,6 +3,7 @@ import * as clientService from "../features/client/client.service.js";
 import * as clientNormalize from "../features/client/client.normalizer.js";
 import { sendWelcomeEmail } from "../utils/mail.util.js";
 import * as clientSchema from "../schemas/client.schema.js";
+import { AppError } from "../errors/AppError.js";
 
 export async function create(req: Request, res: Response, next: NextFunction) {
   try {
@@ -70,7 +71,12 @@ export async function getClientReport(req: Request, res: Response, next: NextFun
 
 export async function list(req: Request, res: Response, next: NextFunction) {
   try {
-    const data = await clientService.list();
+    if (!req.user) {
+      throw new AppError('REQUIRED_THERAPIST_ID', 'ID do terapeuta é obrigatório.', 400);
+    } 
+    const therapistId = req.user.id;
+
+    const data = await clientService.list(therapistId as string);
     const normalized = await clientNormalize.normalizeList(data);
 
     res.json({ success: true, normalized });
