@@ -138,7 +138,7 @@ export const compressImage = async (
  */
 export const createFileFromBlob = (blob: Blob, fileName: string): File => {
   return new File([blob], fileName, {
-    type: blob.type,
+    type: blob.type || 'image/webp',
     lastModified: Date.now(),
   });
 };

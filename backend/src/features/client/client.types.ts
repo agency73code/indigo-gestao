@@ -1,3 +1,5 @@
+import type { Prisma } from '@prisma/client';
+
 export interface Caregiver {
     relacao: string;
     descricaoRelacao?: string | null;
@@ -252,3 +254,4 @@ export interface UpdateClient {
 
 // Tipo para o update (todos os campos opcionais)
 export type ClientUpdate = Partial<UpdateClient>;
+export type ClientVisibilityFilter = Prisma.clienteWhereInput;

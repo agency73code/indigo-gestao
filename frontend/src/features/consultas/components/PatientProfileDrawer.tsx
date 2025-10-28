@@ -668,7 +668,6 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                         userId={patient?.id || ''}
                                         value={profilePhoto}
                                         onChange={(file) => {
-                                            console.log('ProfilePhoto onChange:', file);
                                             setProfilePhoto(file);
                                         }}
                                         onUploaded={(profileDto) => {
