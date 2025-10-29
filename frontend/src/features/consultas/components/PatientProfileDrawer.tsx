@@ -776,10 +776,10 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                     </>
                                 ) : (
                                     <>
-                                        <ReadOnlyField label="Nome *" value={maskPersonName(clienteData.nome ?? '')} />
+                                        <ReadOnlyField label="Nome *" value={clienteData.nome ?? ''} />
                                         <ReadOnlyField label="Data de nascimento *" value={formatDate(clienteData.dataNascimento ?? '')} />
-                                        <ReadOnlyField label="CPF *" value={maskCPF(clienteData.cpf ?? '')} />
-                                        <ReadOnlyField label="E-mail de contato *" value={normalizeEmail(clienteData.emailContato ?? '')} />
+                                        <ReadOnlyField label="CPF *" value={clienteData.cpf ?? ''} />
+                                        <ReadOnlyField label="E-mail de contato *" value={clienteData.emailContato ?? ''} />
                                         <ReadOnlyField label="Data Entrada *" value={formatDate(clienteData.dataEntrada ?? '')} />
                                         <ReadOnlyField label="Data Saída" value={formatDate(clienteData.dataSaida ?? '')} />
                                     </>
@@ -789,14 +789,14 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                             {/* Seção Cuidadores */}
                             {caregiversToRender && caregiversToRender.length > 0 && (
                                 <div className="mt-6">
-                                    <h4 className="font-medium mb-4" style={{ fontFamily: 'Sora, sans-serif' }}>Cuidadores</h4>
+                                    <h4 className="font-medium mb-4">Cuidadores</h4>
                                     <div className="space-y-4">
                                         {caregiversToRender.map((cuidador, index) => {
                                             const relation = isEditMode ? cuidador.relacao : cuidador.relacao;
                                             return (
                                                 <div key={index} className="p-4 border rounded-lg bg-muted/30 space-y-4">
                                                     <div className="flex items-center justify-between flex-wrap gap-2">
-                                                        <h5 className="font-medium text-sm" style={{ fontFamily: 'Sora, sans-serif' }}>
+                                                        <h5 className="font-medium text-sm">
                                                             Cuidador {index + 1}
                                                         </h5>
                                                         <div className="flex items-center gap-2">
@@ -1026,12 +1026,12 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                                         </div>
                                                     ) : (
                                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                            <ReadOnlyField label="Nome" value={maskPersonName(cuidador.nome ?? '')} />
-                                                            <ReadOnlyField label="CPF" value={maskCPF(cuidador.cpf ?? '')} />
+                                                            <ReadOnlyField label="Nome" value={cuidador.nome} />
+                                                            <ReadOnlyField label="CPF" value={cuidador.cpf} />
                                                             <ReadOnlyField label="Profissão" value={cuidador.profissao} />
                                                             <ReadOnlyField label="Escolaridade" value={cuidador.escolaridade} />
-                                                            <ReadOnlyField label="Telefone" value={maskBRPhone(cuidador.telefone ?? '')} />
-                                                            <ReadOnlyField label="Email" value={normalizeEmail(cuidador.email ?? '')} />
+                                                            <ReadOnlyField label="Telefone" value={cuidador.telefone} />
+                                                            <ReadOnlyField label="Email" value={cuidador.email} />
                                                             {cuidador.descricaoRelacao && (
                                                                 <ReadOnlyField label="Descrição relação" value={cuidador.descricaoRelacao} />
                                                             )}
@@ -1039,18 +1039,13 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                                                 <div className="md:col-span-2 space-y-2">
                                                                     <h6 className="text-xs font-medium text-muted-foreground">Endereço</h6>
                                                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                                        {/* Linha 1: CEP | Cidade | UF */}
-                                                                        <ReadOnlyField label="CEP" value={maskCEP(cuidador.endereco.cep ?? '')} />
-                                                                        <ReadOnlyField label="Cidade" value={cuidador.endereco.cidade} />
+                                                                        <ReadOnlyField label="CEP" value={cuidador.endereco.cep} />
                                                                         <ReadOnlyField label="UF" value={(cuidador.endereco as any).uf ?? ''} />
-                                                                        
-                                                                        {/* Linha 2: Logradouro (coluna inteira) */}
                                                                         <ReadOnlyField label="Logradouro" value={(cuidador.endereco as any).rua ?? cuidador.endereco.logradouro ?? ''} className="md:col-span-3" />
-                                                                        
-                                                                        {/* Linha 3: Número | Complemento | Bairro */}
                                                                         <ReadOnlyField label="Número" value={cuidador.endereco.numero} />
                                                                         <ReadOnlyField label="Complemento" value={cuidador.endereco.complemento} />
                                                                         <ReadOnlyField label="Bairro" value={cuidador.endereco.bairro} />
+                                                                        <ReadOnlyField label="Cidade" value={cuidador.endereco.cidade} />
                                                                     </div>
                                                                 </div>
                                                             )}
@@ -1114,8 +1109,8 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                                     <h4 className="text-sm font-medium">Endereço {index + 1}</h4>
                                                 )}
                                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                    {/* Linha 1: Residência de (coluna inteira) */}
-                                                    <div className="space-y-2 md:col-span-3">
+                                                    {/* Linha 1: Residência de | CEP | UF */}
+                                                    <div className="space-y-2">
                                                         <Label>Residência de</Label>
                                                         <select
                                                             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -1128,16 +1123,6 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                                             ))}
                                                         </select>
                                                     </div>
-                                                    
-                                                    {/* Campo "Outro responsável" se "outro" for selecionado */}
-                                                    {watchEnderecos?.[index]?.residenciaDe === 'outro' && (
-                                                        <div className="space-y-2 md:col-span-3">
-                                                            <Label>Outro responsável</Label>
-                                                            <Input {...register(`enderecos.${index}.outroResidencia` as const)} />
-                                                        </div>
-                                                    )}
-                                                    
-                                                    {/* Linha 2: CEP | Cidade | UF */}
                                                     <div className="space-y-2">
                                                         <Label>CEP *</Label>
                                                         <Input 
@@ -1151,15 +1136,19 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                                         />
                                                     </div>
                                                     <div className="space-y-2">
-                                                        <Label>Cidade *</Label>
-                                                        <Input {...register(`enderecos.${index}.cidade` as const)} />
-                                                    </div>
-                                                    <div className="space-y-2">
                                                         <Label>UF *</Label>
                                                         <Input maxLength={2} {...register(`enderecos.${index}.uf` as const)} />
                                                     </div>
                                                     
-                                                    {/* Linha 3: Logradouro (2/3) | Número (1/3) */}
+                                                    {/* Campo "Outro responsável" se "outro" for selecionado */}
+                                                    {watchEnderecos?.[index]?.residenciaDe === 'outro' && (
+                                                        <div className="space-y-2 md:col-span-3">
+                                                            <Label>Outro responsável</Label>
+                                                            <Input {...register(`enderecos.${index}.outroResidencia` as const)} />
+                                                        </div>
+                                                    )}
+                                                    
+                                                    {/* Linha 2: Logradouro (2/3) | Número (1/3) */}
                                                     <div className="space-y-2 md:col-span-2">
                                                         <Label>Logradouro *</Label>
                                                         <Input {...register(`enderecos.${index}.logradouro` as const)} />
@@ -1169,14 +1158,18 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                                         <Input {...register(`enderecos.${index}.numero` as const)} />
                                                     </div>
                                                     
-                                                    {/* Linha 4: Bairro | Complemento */}
+                                                    {/* Linha 3: Cidade | Complemento | Bairro */}
+                                                    <div className="space-y-2">
+                                                        <Label>Cidade *</Label>
+                                                        <Input {...register(`enderecos.${index}.cidade` as const)} />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <Label>Complemento</Label>
+                                                        <Input {...register(`enderecos.${index}.complemento` as const)} />
+                                                    </div>
                                                     <div className="space-y-2">
                                                         <Label>Bairro *</Label>
                                                         <Input {...register(`enderecos.${index}.bairro` as const)} />
-                                                    </div>
-                                                    <div className="space-y-2 md:col-span-2">
-                                                        <Label>Complemento</Label>
-                                                        <Input {...register(`enderecos.${index}.complemento` as const)} />
                                                     </div>
                                                 </div>
                                             </div>
@@ -1186,8 +1179,8 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                     <div className="space-y-6">
                                         <div className="space-y-4">
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                {/* Linha 1: Residência de (coluna inteira) */}
-                                                <div className="space-y-2 md:col-span-3">
+                                                {/* Linha 1: Residência de | CEP | UF */}
+                                                <div className="space-y-2">
                                                     <Label>Residência de</Label>
                                                     <select
                                                         className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -1200,6 +1193,14 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                                         ))}
                                                     </select>
                                                 </div>
+                                                <div className="space-y-2">
+                                                    <Label>CEP *</Label>
+                                                    <Input {...register(`enderecos.0.cep` as const)} />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>UF *</Label>
+                                                    <Input maxLength={2} {...register(`enderecos.0.uf` as const)} />
+                                                </div>
                                                 
                                                 {/* Campo "Outro responsável" se "outro" for selecionado */}
                                                 {watchEnderecos?.[0]?.residenciaDe === 'outro' && (
@@ -1209,21 +1210,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                                     </div>
                                                 )}
                                                 
-                                                {/* Linha 2: CEP | Cidade | UF */}
-                                                <div className="space-y-2">
-                                                    <Label>CEP *</Label>
-                                                    <Input {...register(`enderecos.0.cep` as const)} />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <Label>Cidade *</Label>
-                                                    <Input {...register(`enderecos.0.cidade` as const)} />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <Label>UF *</Label>
-                                                    <Input maxLength={2} {...register(`enderecos.0.uf` as const)} />
-                                                </div>
-                                                
-                                                {/* Linha 3: Logradouro (2/3) | Número (1/3) */}
+                                                {/* Linha 2: Logradouro (2/3) | Número (1/3) */}
                                                 <div className="space-y-2 md:col-span-2">
                                                     <Label>Logradouro *</Label>
                                                     <Input {...register(`enderecos.0.logradouro` as const)} />
@@ -1233,14 +1220,18 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                                     <Input {...register(`enderecos.0.numero` as const)} />
                                                 </div>
                                                 
-                                                {/* Linha 4: Bairro | Complemento */}
+                                                {/* Linha 3: Cidade | Complemento | Bairro */}
+                                                <div className="space-y-2">
+                                                    <Label>Cidade *</Label>
+                                                    <Input {...register(`enderecos.0.cidade` as const)} />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Complemento</Label>
+                                                    <Input {...register(`enderecos.0.complemento` as const)} />
+                                                </div>
                                                 <div className="space-y-2">
                                                     <Label>Bairro *</Label>
                                                     <Input {...register(`enderecos.0.bairro` as const)} />
-                                                </div>
-                                                <div className="space-y-2 md:col-span-2">
-                                                    <Label>Complemento</Label>
-                                                    <Input {...register(`enderecos.0.complemento` as const)} />
                                                 </div>
                                             </div>
                                         </div>
@@ -1250,33 +1241,30 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                 addressesToRender.map((endereco, index) => (
                                     <div key={index} className="mb-6 space-y-4">
                                         {addressesToRender.length > 1 && (
-                                            <h4 className="text-md font-medium" style={{ fontFamily: 'Sora, sans-serif' }}>Endereço {index + 1}</h4>
+                                            <h4 className="text-md font-medium">Endereço {index + 1}</h4>
                                         )}
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                            {/* Linha 1: Residência de (coluna inteira) */}
+                                            {/* Linha 1: Residência de | CEP | UF */}
                                             <ReadOnlyField 
                                                 label="Residência de" 
                                                 value={endereco.residenciaDe ? caregiverRelationLabels[endereco.residenciaDe] ?? endereco.residenciaDe : ''} 
-                                                className="md:col-span-3"
                                             />
+                                            <ReadOnlyField label="CEP *" value={endereco.cep ?? ''} />
+                                            <ReadOnlyField label="UF *" value={endereco.uf ?? ''} />
                                             
                                             {/* Campo "Outro responsável" se aplicável */}
                                             {endereco.residenciaDe === 'outro' && endereco.outroResidencia && (
                                                 <ReadOnlyField label="Outro responsável" value={endereco.outroResidencia} className="md:col-span-3" />
                                             )}
                                             
-                                            {/* Linha 2: CEP | Cidade | UF */}
-                                            <ReadOnlyField label="CEP *" value={maskCEP(endereco.cep ?? '')} />
-                                            <ReadOnlyField label="Cidade *" value={endereco.cidade ?? ''} />
-                                            <ReadOnlyField label="UF *" value={endereco.uf ?? ''} />
-                                            
-                                            {/* Linha 3: Logradouro (2/3) | Número (1/3) */}
+                                            {/* Linha 2: Logradouro (2/3) | Número (1/3) */}
                                             <ReadOnlyField label="Logradouro *" value={endereco.logradouro ?? ''} className="md:col-span-2" />
                                             <ReadOnlyField label="Número *" value={endereco.numero ?? ''} />
                                             
-                                            {/* Linha 4: Bairro | Complemento */}
+                                            {/* Linha 3: Cidade | Complemento | Bairro */}
+                                            <ReadOnlyField label="Cidade *" value={endereco.cidade ?? ''} />
+                                            <ReadOnlyField label="Complemento" value={endereco.complemento ?? ''} />
                                             <ReadOnlyField label="Bairro *" value={endereco.bairro ?? ''} />
-                                            <ReadOnlyField label="Complemento" value={endereco.complemento ?? ''} className="md:col-span-2" />
                                         </div>
                                     </div>
                                 ))
@@ -2112,21 +2100,21 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                             ) : (
                                 <div className="space-y-6">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <ReadOnlyField label="Nome do titular *" value={maskPersonName(paymentData?.nomeTitular ?? '')} />
+                                        <ReadOnlyField label="Nome do titular *" value={paymentData?.nomeTitular ?? ''} />
                                         <ReadOnlyField label="Número carteirinha" value={paymentData?.numeroCarteirinha ?? ''} />
-                                        <ReadOnlyField label="Telefone 1 *" value={maskBRPhone(paymentData?.telefone1 ?? '')} />
+                                        <ReadOnlyField label="Telefone 1 *" value={paymentData?.telefone1 ?? ''} />
                                         {paymentData?.telefone2 && (
-                                            <ReadOnlyField label="Telefone 2" value={maskBRPhone(paymentData.telefone2)} />
+                                            <ReadOnlyField label="Telefone 2" value={paymentData.telefone2} />
                                         )}
                                         {paymentData?.telefone3 && (
-                                            <ReadOnlyField label="Telefone 3" value={maskBRPhone(paymentData.telefone3)} />
+                                            <ReadOnlyField label="Telefone 3" value={paymentData.telefone3} />
                                         )}
-                                        <ReadOnlyField label="E-mail 1 *" value={normalizeEmail(paymentData?.email1 ?? '')} />
+                                        <ReadOnlyField label="E-mail 1 *" value={paymentData?.email1 ?? ''} />
                                         {paymentData?.email2 && (
-                                            <ReadOnlyField label="E-mail 2" value={normalizeEmail(paymentData.email2)} />
+                                            <ReadOnlyField label="E-mail 2" value={paymentData.email2} />
                                         )}
                                         {paymentData?.email3 && (
-                                            <ReadOnlyField label="E-mail 3" value={normalizeEmail(paymentData.email3)} />
+                                            <ReadOnlyField label="E-mail 3" value={paymentData.email3} />
                                         )}
                                     </div>
                                     <ReadOnlyField label="Sistema de pagamento" value={
@@ -2149,20 +2137,20 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                     {paymentData?.sistemaPagamento === 'liminar' && (
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <ReadOnlyField label="Número processo" value={paymentData?.numeroProcesso ?? ''} />
-                                            <ReadOnlyField label="Nome advogado" value={maskPersonName(paymentData?.nomeAdvogado ?? '')} />
-                                            <ReadOnlyField label="Telefone advogado 1" value={maskBRPhone(paymentData?.telefoneAdvogado1 ?? '')} />
+                                            <ReadOnlyField label="Nome advogado" value={paymentData?.nomeAdvogado ?? ''} />
+                                            <ReadOnlyField label="Telefone advogado 1" value={paymentData?.telefoneAdvogado1 ?? ''} />
                                             {paymentData?.telefoneAdvogado2 && (
-                                                <ReadOnlyField label="Telefone advogado 2" value={maskBRPhone(paymentData.telefoneAdvogado2)} />
+                                                <ReadOnlyField label="Telefone advogado 2" value={paymentData.telefoneAdvogado2} />
                                             )}
                                             {paymentData?.telefoneAdvogado3 && (
-                                                <ReadOnlyField label="Telefone advogado 3" value={maskBRPhone(paymentData.telefoneAdvogado3)} />
+                                                <ReadOnlyField label="Telefone advogado 3" value={paymentData.telefoneAdvogado3} />
                                             )}
-                                            <ReadOnlyField label="Email advogado 1" value={normalizeEmail(paymentData?.emailAdvogado1 ?? '')} />
+                                            <ReadOnlyField label="Email advogado 1" value={paymentData?.emailAdvogado1 ?? ''} />
                                             {paymentData?.emailAdvogado2 && (
-                                                <ReadOnlyField label="Email advogado 2" value={normalizeEmail(paymentData.emailAdvogado2)} />
+                                                <ReadOnlyField label="Email advogado 2" value={paymentData.emailAdvogado2} />
                                             )}
                                             {paymentData?.emailAdvogado3 && (
-                                                <ReadOnlyField label="Email advogado 3" value={normalizeEmail(paymentData.emailAdvogado3)} />
+                                                <ReadOnlyField label="Email advogado 3" value={paymentData.emailAdvogado3} />
                                             )}
                                         </div>
                                     )}
@@ -2324,7 +2312,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                         {contatosFields.map((field, index) => (
                                             <div key={field.id} className="p-4 border rounded-lg bg-muted/30 space-y-4">
                                                 <div className="flex items-center justify-between">
-                                                    <h5 className="font-medium text-sm" style={{ fontFamily: 'Sora, sans-serif' }}>Contato {index + 1}</h5>
+                                                    <h5 className="font-medium text-sm">Contato {index + 1}</h5>
                                                     <Button
                                                         type="button"
                                                         variant="ghost"
@@ -2433,37 +2421,32 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                                           : 'Não informado'
                                             }
                                         />
-                                        <ReadOnlyField label="Nome *" value={maskPersonName(schoolData?.nome ?? '')} />
-                                        <ReadOnlyField label="Telefone *" value={maskBRPhone(schoolData?.telefone ?? '')} />
-                                        <ReadOnlyField label="E-mail" value={normalizeEmail(schoolData?.email ?? '')} />
+                                        <ReadOnlyField label="Nome *" value={schoolData?.nome ?? ''} />
+                                        <ReadOnlyField label="Telefone *" value={schoolData?.telefone ?? ''} />
+                                        <ReadOnlyField label="E-mail" value={schoolData?.email ?? ''} />
                                     </div>
                                     {schoolData?.endereco && (
                                         <div className="space-y-4">
-                                            <h4 className="text-md font-medium" style={{ fontFamily: 'Sora, sans-serif' }}>Endereço da Escola</h4>
+                                            <h4 className="text-md font-medium">Endereço da Escola</h4>
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                {/* Linha 1: CEP | Cidade | UF */}
-                                                <ReadOnlyField label="CEP" value={maskCEP(schoolData.endereco.cep ?? '')} />
-                                                <ReadOnlyField label="Cidade" value={schoolData.endereco.cidade ?? ''} />
+                                                <ReadOnlyField label="CEP" value={schoolData.endereco.cep ?? ''} />
                                                 <ReadOnlyField label="UF" value={schoolData.endereco.uf ?? ''} />
-                                                
-                                                {/* Linha 2: Logradouro (coluna inteira) */}
                                                 <ReadOnlyField label="Logradouro" value={(schoolData.endereco as any).rua ?? schoolData.endereco.logradouro ?? ''} className="md:col-span-3" />
-                                                
-                                                {/* Linha 3: Número | Complemento | Bairro */}
                                                 <ReadOnlyField label="Número" value={schoolData.endereco.numero ?? ''} />
                                                 <ReadOnlyField label="Complemento" value={schoolData.endereco.complemento ?? ''} />
                                                 <ReadOnlyField label="Bairro" value={schoolData.endereco.bairro ?? ''} />
+                                                <ReadOnlyField label="Cidade" value={schoolData.endereco.cidade ?? ''} />
                                             </div>
                                         </div>
                                     )}
                                     {schoolData?.contatos && schoolData.contatos.length > 0 && (
                                         <div className="space-y-4">
-                                            <h4 className="text-md font-medium" style={{ fontFamily: 'Sora, sans-serif' }}>Contatos</h4>
+                                            <h4 className="text-md font-medium">Contatos</h4>
                                             {schoolData.contatos.map((contato, index) => (
                                                 <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-lg">
-                                                    <ReadOnlyField label="Nome" value={maskPersonName(contato.nome ?? '')} />
-                                                    <ReadOnlyField label="Telefone" value={maskBRPhone(contato.telefone ?? '')} />
-                                                    <ReadOnlyField label="Email" value={normalizeEmail(contato.email ?? '')} />
+                                                    <ReadOnlyField label="Nome" value={contato.nome ?? ''} />
+                                                    <ReadOnlyField label="Telefone" value={contato.telefone ?? ''} />
+                                                    <ReadOnlyField label="Email" value={contato.email ?? ''} />
                                                     <ReadOnlyField label="Função" value={contato.funcao ?? ''} />
                                                 </div>
                                             ))}

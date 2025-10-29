@@ -135,7 +135,7 @@ export async function create(dto: TherapistTypes.TherapistForm) {
 
       data_entrada: new Date(dto.dataInicio),
       data_saida: dto.dataFim ? new Date(dto.dataFim) : null,
-      perfil_acesso: getHighestAccessRole(dto.dadosProfissionais),
+      perfil_acesso: 'gerente',
       token_redefinicao: token,
       validade_token: expiry,
 
