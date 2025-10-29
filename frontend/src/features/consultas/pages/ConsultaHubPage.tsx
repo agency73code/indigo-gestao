@@ -31,7 +31,7 @@ export default function ConsultaHubPage() {
             href: '/app/consultar/terapeutas',
             bgColor: 'bg-[var(--card-primary)]',
             textColor: 'text-white',
-            ability: { action: 'manage', subject: 'all' },
+            ability: { action: 'manage', subject: 'Consultar' },
         },
         {
             title: 'Consultar Clientes',
@@ -40,7 +40,7 @@ export default function ConsultaHubPage() {
             href: '/app/consultar/pacientes',
             bgColor: 'bg-blue-500',
             textColor: 'text-white',
-            ability: { action: 'read', subject: 'all' },
+            ability: { action: 'read', subject: 'Consultar' },
         },
     ];
 
