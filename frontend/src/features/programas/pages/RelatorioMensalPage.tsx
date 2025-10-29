@@ -22,6 +22,8 @@ import { ReportExporter } from '../relatorio-geral/print/ReportExporter';
 export default function RelatorioMensalPage() {
     const [searchParams] = useSearchParams();
 
+    console.log('[RelatorioMensalPage] Componente renderizou');
+
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
     const [observacaoClinica, setObservacaoClinica] = useState<string>('');
 
@@ -118,11 +120,13 @@ export default function RelatorioMensalPage() {
                 fetchPrazoPrograma(currentFilters),
             ]);
 
-            setSerieLinha(serieLinhaData);
+            setSerieLinha(Array.isArray(serieLinhaData) ? serieLinhaData : []);
             setPrazoPrograma(prazoProgramaData);
             setLoadingCharts(false);
         } catch (error) {
             console.error('Erro ao carregar dados do relatório:', error);
+            // Garantir que os estados sejam definidos mesmo em caso de erro
+            setSerieLinha([]);
             setLoadingKpis(false);
             setLoadingCharts(false);
         }
@@ -145,7 +149,8 @@ export default function RelatorioMensalPage() {
             try {
                 const data = await listSessionsByPatient(selectedPatient.id);
                 if (!isCancelled) {
-                    setSessions(data);
+                    // Garantir que sempre seja um array
+                    setSessions(Array.isArray(data) ? data : []);
                 }
             } catch (error) {
                 console.error('Erro ao carregar sessões do paciente:', error);

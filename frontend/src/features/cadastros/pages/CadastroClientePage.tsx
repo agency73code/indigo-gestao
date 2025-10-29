@@ -402,6 +402,9 @@ export default function CadastroClientePage() {
                         } else if (!isValidCPF(cuidador.cpf)) {
                             newErrors[`cuidadores.${index}.cpf`] = 'CPF inválido';
                         }
+                        if (!cuidador.escolaridade?.trim()) {
+                            newErrors[`cuidadores.${index}.escolaridade`] = 'Escolaridade é obrigatória';
+                        }
                     });
                 }
                 break;

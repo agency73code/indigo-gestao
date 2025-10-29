@@ -184,7 +184,7 @@ export function AttentionStimuliBlock({
         [lastSessions, filters],
     );
 
-    const hasSufficientAttempts = aggregation.all.some((item) => item.total >= 5);
+    const hasSufficientAttempts = aggregation?.all?.some((item) => item.total >= 5) ?? false;
 
     const handleWindowChange = (value: string) => {
         if (!value) return;
@@ -199,12 +199,12 @@ export function AttentionStimuliBlock({
         !error &&
         lastSessions.length > 0 &&
         hasSufficientAttempts &&
-        aggregation.filtered.length === 0;
+        (aggregation?.filtered?.length ?? 0) === 0;
 
     const showNoDataState =
         !loading &&
         !error &&
-        (lastSessions.length === 0 || aggregation.all.length === 0 || !hasSufficientAttempts);
+        (lastSessions.length === 0 || (aggregation?.all?.length ?? 0) === 0 || !hasSufficientAttempts);
 
     return (
         <Card className="rounded-[5px] px-6 py-6 md:px-8 lg:px-8">
@@ -283,7 +283,7 @@ export function AttentionStimuliBlock({
                     </div>
                 ) : (
                     <div role="list" aria-labelledby="attention-stimuli-title" className="space-y-3">
-                        {aggregation.filtered.map((item) => {
+                        {(aggregation?.filtered ?? []).map((item) => {
                             const statusConfig = getStatusConfig(item.status);
                             return (
                                 <div

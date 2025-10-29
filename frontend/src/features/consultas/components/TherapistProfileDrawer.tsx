@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { X, User, MapPin, Briefcase, Building, GraduationCap, FileText, Car, Save, Loader2, Edit2, Plus, Trash2 } from 'lucide-react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,7 @@ import { Combobox } from '@/ui/combobox';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ReadOnlyField from './ReadOnlyField';
 import { EditingBadge } from './EditingBadge';
-import ProfilePhotoFieldSimple from '@/components/profile/ProfilePhotoFieldSimple';
+import ProfilePhotoFieldSimple, { type ProfilePhotoFieldSimpleRef } from '@/components/profile/ProfilePhotoFieldSimple';
 import { DateField } from '@/common/components/layout/DateField';
 import type { Therapist } from '../types/consultas.types';
 import { useTerapeuta } from '../hooks/useTerapeuta';
@@ -51,7 +51,9 @@ const AvatarWithSkeleton = ({ src, alt, initials, className = '' }: AvatarWithSk
                     imageLoaded ? 'opacity-100' : 'opacity-0'
                 } ${className}`}
                 referrerPolicy="no-referrer"
-                loading="lazy"
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
                 onLoad={() => setImageLoaded(true)}
                 onError={() => {
                     setImageError(true);
@@ -79,6 +81,7 @@ export default function TherapistProfileDrawer({
     const [files, setFiles] = useState<FileMeta[]>([]);
     const [filesLoading, setFilesLoading] = useState(true);
     const [profilePhoto, setProfilePhoto] = useState<File | string | null>(null);
+    const profilePhotoRef = useRef<ProfilePhotoFieldSimpleRef>(null);
     const [areaOptions, setAreaOptions] = useState<{ value: string; label: string }[]>([]);
     const [cargoOptions, setCargoOptions] = useState<{ value: string; label: string }[]>([]);
     const [temCNPJ, setTemCNPJ] = useState(false);
@@ -239,7 +242,9 @@ export default function TherapistProfileDrawer({
                 agencia: terapeutaData.agencia || '',
                 conta: terapeutaData.conta || '',
                 pixTipo: terapeutaData.pixTipo || 'email',
-                chavePix: terapeutaData.chavePix || '',
+                chavePix: terapeutaData.chavePix 
+                    ? mask.maskPixKey(terapeutaData.pixTipo || 'email', terapeutaData.chavePix)
+                    : '',
                 dadosProfissionais: terapeutaData.dadosProfissionais && terapeutaData.dadosProfissionais.length > 0
                     ? terapeutaData.dadosProfissionais.map(dp => ({
                         areaAtuacao: dp.areaAtuacao || '',
@@ -262,7 +267,7 @@ export default function TherapistProfileDrawer({
                     ? new Date(terapeutaData.dataFim).toISOString().split('T')[0] 
                     : '',
                 valorHoraAcordado: terapeutaData.valorHoraAcordado 
-                    ? terapeutaData.valorHoraAcordado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                    ? mask.maskCurrencyBR(String(Math.round(terapeutaData.valorHoraAcordado * 100)))
                     : '',
                 professorUnindigo: (terapeutaData.professorUnindigo?.toLowerCase() === 'sim' ? 'sim' : 'nao') as 'sim' | 'nao',
                 disciplinaUniindigo: terapeutaData.disciplinaUniindigo || '',
@@ -452,6 +457,11 @@ export default function TherapistProfileDrawer({
         setSaveError(null);
 
         try {
+            // Fazer upload da foto primeiro, se houver uma nova
+            if (profilePhoto) {
+                await profilePhotoRef.current?.uploadPhoto();
+            }
+
             await updateTerapeuta(therapist.id, {
                 nome: data.nome,
                 email: data.email,
@@ -466,7 +476,8 @@ export default function TherapistProfileDrawer({
                 banco: data.banco,
                 agencia: data.agencia,
                 conta: data.conta,
-                chavePix: data.chavePix,
+                // Para email, enviar como está. Para outros tipos, remover formatação
+                chavePix: pixTipo === 'email' ? data.chavePix : data.chavePix?.replace(/\D/g, ''),
                 pixTipo: pixTipo,
                 endereco: {
                     cep: data.cep,
@@ -662,6 +673,7 @@ export default function TherapistProfileDrawer({
                             {isEditMode && (
                                 <div className="mb-6">
                                     <ProfilePhotoFieldSimple
+                                        ref={profilePhotoRef}
                                         userId={therapist?.id || ''}
                                         value={profilePhoto}
                                         onChange={(file) => {
@@ -1006,6 +1018,12 @@ export default function TherapistProfileDrawer({
                                                     {...register('agencia')}
                                                     placeholder="0000"
                                                     className="h-9 rounded-[5px]"
+                                                    onInput={(e: React.FormEvent<HTMLInputElement>) => {
+                                                        const input = e.currentTarget;
+                                                        const numbersOnly = input.value.replace(/\D/g, '');
+                                                        input.value = numbersOnly;
+                                                        setValue('agencia' as any, numbersOnly, { shouldDirty: true });
+                                                    }}
                                                 />
                                             </div>
                                             <div>
@@ -1015,6 +1033,12 @@ export default function TherapistProfileDrawer({
                                                     {...register('conta')}
                                                     placeholder="00000-0"
                                                     className="h-9 rounded-[5px]"
+                                                    onInput={(e: React.FormEvent<HTMLInputElement>) => {
+                                                        const input = e.currentTarget;
+                                                        const numbersOnly = input.value.replace(/\D/g, '');
+                                                        input.value = numbersOnly;
+                                                        setValue('conta' as any, numbersOnly, { shouldDirty: true });
+                                                    }}
                                                 />
                                             </div>
                                         </div>
@@ -1117,7 +1141,10 @@ export default function TherapistProfileDrawer({
                                             <div className="md:col-span-3">
                                                 <ReadOnlyField
                                                     label="Chave PIX *"
-                                                    value={terapeutaData.chavePix}
+                                                    value={terapeutaData.chavePix 
+                                                        ? mask.maskPixKey(terapeutaData.pixTipo || 'email', terapeutaData.chavePix)
+                                                        : 'N/A'
+                                                    }
                                                 />
                                             </div>
                                             <ReadOnlyField
@@ -1602,12 +1629,12 @@ export default function TherapistProfileDrawer({
                                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                                     <div className="space-y-2">
                                                         <Label htmlFor={`formacao.posGraduacoes.${index}.conclusao`}>Conclusão *</Label>
-                                                        <Input
-                                                            id={`formacao.posGraduacoes.${index}.conclusao`}
-                                                            type="month"
-                                                            {...register(`formacao.posGraduacoes.${index}.conclusao` as any)}
-                                                            placeholder="AAAA-MM"
-                                                            className="bg-white"
+                                                        <DateField
+                                                            value={watch(`formacao.posGraduacoes.${index}.conclusao` as any) || ''}
+                                                            onChange={(value) => {
+                                                                setValue(`formacao.posGraduacoes.${index}.conclusao` as any, value, { shouldDirty: true });
+                                                            }}
+                                                            placeholder="DD/MM/AAAA"
                                                         />
                                                     </div>
                                                 </div>
