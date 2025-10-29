@@ -1,7 +1,6 @@
 'use client';
 import * as React from 'react';
 import indigoLogo from '@/assets/logos/indigo.svg';
-import { useAbility } from '@/features/auth/abilities/useAbility';
 import {
     Frame,
     LayoutDashboard,
@@ -28,8 +27,30 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import type { Actions, Subjects } from '@/features/auth/abilities/ability';
+import type { LucideIcon } from 'lucide-react';
 
-const data = {
+interface SidebarSubItem {
+  title: string;
+  url: string;
+  ability?: { action: Actions; subject: Subjects };
+}
+
+interface SidebarItem {
+  title: string;
+  url: string;
+  icon: LucideIcon;
+  isActive?: boolean;
+  ability?: { action: Actions; subject: Subjects };
+  items?: SidebarSubItem[];
+}
+
+const data: {
+    user: { name: string; email: string; avatar: string };
+    navMain: SidebarItem[];
+    navSecondary: { title: string; url: string; icon: LucideIcon }[];
+    projects: { name: string; url: string; icon: LucideIcon; target?: string }[];
+} = {
     user: {
         name: 'shadcn',
         email: 'm@example.com',
@@ -51,8 +72,9 @@ const data = {
             title: 'Cadastro',
             url: '/app/cadastros',
             icon: UserPlus,
+            ability: { action: 'create', subject: 'Cadastro' },
             items: [
-                { title: 'Cadastrar Terapeuta', url: '/app/cadastro/terapeuta' },
+                { title: 'Cadastrar Terapeuta', url: '/app/cadastro/terapeuta', ability: { action: 'manage', subject: 'all' } },
                 { title: 'Cadastrar Cliente', url: '/app/cadastro/cliente' },
                 { title: 'Vínculos', url: '/app/cadastros/vinculos' },
             ],
@@ -62,7 +84,7 @@ const data = {
             url: '/app/consultar',
             icon: UserRoundSearchIcon,
             items: [
-                { title: 'Terapeuta', url: '/app/consultar/terapeutas' },
+                { title: 'Terapeuta', url: '/app/consultar/terapeutas', ability: { action: 'manage', subject: 'all' } },
                 { title: 'Cliente', url: '/app/consultar/pacientes' },
             ],
         },
@@ -75,8 +97,12 @@ const data = {
                 { title: 'Novo Programa', url: '/app/programas/novo' },
                 { title: 'Consultar Sessão', url: '/app/programas/sessoes/consultar' },
                 { title: 'Nova Sessão', url: '/app/programas/sessoes/nova' },
-                { title: 'Relatório', url: '/app/programas/relatorios/mensal' },
             ],
+        },
+        {
+            title: 'Relatório',
+            url: '/app/programas/relatorios/mensal',
+            icon: PieChart,
         },
         {
             title: 'Faturamento',
@@ -126,12 +152,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const { user } = useAuth();
     const displayAcesso = capitalize(user?.perfil_acesso ?? '-');
     const displayAvatar = indigoLogo;
-    const ability = useAbility();
-
-    const navMainFiltered = data.navMain.filter((item) => {
-        if (item.url === '/app/cadastros' && !ability.can('manage', 'Cadastro')) return false;
-        return true;
-    });
 
     return (
         <Sidebar variant="inset" {...props} className="no-print">
@@ -164,7 +184,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </SidebarMenu>
             </SidebarHeader>
             <SidebarContent className="pt-2">
-                <NavMain items={navMainFiltered} />
+                <NavMain items={data.navMain} />
                 <NavProjects projects={data.projects} />
                 <NavSecondary items={data.navSecondary} className="mt-auto" />
             </SidebarContent>

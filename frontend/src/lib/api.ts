@@ -73,16 +73,16 @@ export async function fetchProfessionalMetadata(): Promise<ProfessionalMetadataR
 }
 
 export async function listarClientes(): Promise<Patient[]> {
-    const res = await authFetch('/api/clientes', { method: 'GET' });
-    const text = await res.text();
-    const data = text ? JSON.parse(text) : null;
+  const res = await authFetch('/api/clientes', { method: 'GET' });
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : null;
 
-    if (!res.ok) {
-      const msg = data?.message ?? data?.error ?? `Falha (${res.status})`;
-      throw new Error(msg);
-    }
+  if (!res.ok) {
+    const msg = data?.message ?? data?.error ?? `Falha (${res.status})`;
+    throw new Error(msg);
+  }
 
-    return (data?.normalized ?? []) as Patient[];
+  return (data?.normalized ?? []) as Patient[];
 }
 
 export async function buscarClientePorId(id: string): Promise<Cliente> {

@@ -1,12 +1,10 @@
 import { useEffect, useMemo, useState, type ComponentType } from 'react';
 import {
     AlertCircle,
-    AlertTriangle,
     CheckCircle,
     Clock,
     Info,
     MinusCircle,
-    XCircle,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -27,7 +25,7 @@ type Counts = {
     indep: number;
 };
 
-type StatusKind = 'insuficiente' | 'positivo' | 'mediano' | 'atencao' | 'critico';
+type StatusKind = 'insuficiente' | 'positivo' | 'mediano' | 'atencao';
 
 type StatusResult = {
     kind: StatusKind;
@@ -59,16 +57,13 @@ function calcStatus(counts: Counts): StatusResult {
     if (total < 5) {
         return { kind: 'insuficiente', ti, total };
     }
-    if (ti >= 80) {
+    if (ti > 80) {
         return { kind: 'positivo', ti, total };
     }
-    if (ti >= 60) {
+    if (ti > 60) {
         return { kind: 'mediano', ti, total };
     }
-    if (ti >= 40) {
-        return { kind: 'atencao', ti, total };
-    }
-    return { kind: 'critico', ti, total };
+    return { kind: 'atencao', ti, total };
 }
 
 type StatusBadgeProps = {
@@ -100,14 +95,9 @@ const STATUS_CONFIG: Record<StatusKind, StatusBadgeConfig> = {
         cls: 'border-amber-500/40 text-amber-700 bg-amber-50',
     },
     atencao: {
-        icon: AlertTriangle,
+        icon: AlertCircle,
         label: 'Atencao',
         cls: 'border-orange-500/40 text-orange-700 bg-orange-50',
-    },
-    critico: {
-        icon: XCircle,
-        label: 'Critico',
-        cls: 'border-red-500/40 text-red-700 bg-red-50',
     },
 };
 
@@ -299,8 +289,8 @@ export default function LastSessionPreview({ lastSession, patientId }: LastSessi
                                     </button>
                                 </TooltipTrigger>
                                 <TooltipContent className="max-w-[260px] text-xs">
-                                    Status = INDEP / (Erro + Ajuda + INDEP). Positivo &gt;=80%,
-                                    Mediano 60-79%, Atencao 40-59%, Critico {'<'}40%. Se total {'<'}
+                                    Status = INDEP / (Erro + Ajuda + INDEP). Positivo &gt;80%,
+                                    Mediano &gt;60% e &lt;=80%, Atenção &lt;=60%. Se total {'<'}
                                     5, exibimos "Coleta insuficiente".
                                 </TooltipContent>
                             </Tooltip>

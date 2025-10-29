@@ -6,6 +6,9 @@ import { DualLineProgress } from '../relatorio-geral/components/DualLineProgress
 import { PatientSelector, type Patient } from '../consultar-programas/components';
 import { OcpDeadlineCard } from '../relatorio-geral/components/OcpDeadlineCard';
 import { AttentionStimuliBlock } from '../relatorio-geral/components/AttentionStimuliBlock';
+import { FileText } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { RichTextEditor } from '../../../components/ui/rich-text-editor';
 import {
     fetchKpis,
     fetchSerieLinha,
@@ -19,7 +22,10 @@ import { ReportExporter } from '../relatorio-geral/print/ReportExporter';
 export default function RelatorioMensalPage() {
     const [searchParams] = useSearchParams();
 
+    console.log('[RelatorioMensalPage] Componente renderizou');
+
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+    const [observacaoClinica, setObservacaoClinica] = useState<string>('');
 
     const [kpis, setKpis] = useState<KpisRelatorio | null>(null);
     const [serieLinha, setSerieLinha] = useState<SerieLinha[]>([]);
@@ -114,11 +120,13 @@ export default function RelatorioMensalPage() {
                 fetchPrazoPrograma(currentFilters),
             ]);
 
-            setSerieLinha(serieLinhaData);
+            setSerieLinha(Array.isArray(serieLinhaData) ? serieLinhaData : []);
             setPrazoPrograma(prazoProgramaData);
             setLoadingCharts(false);
         } catch (error) {
             console.error('Erro ao carregar dados do relatório:', error);
+            // Garantir que os estados sejam definidos mesmo em caso de erro
+            setSerieLinha([]);
             setLoadingKpis(false);
             setLoadingCharts(false);
         }
@@ -141,7 +149,8 @@ export default function RelatorioMensalPage() {
             try {
                 const data = await listSessionsByPatient(selectedPatient.id);
                 if (!isCancelled) {
-                    setSessions(data);
+                    // Garantir que sempre seja um array
+                    setSessions(Array.isArray(data) ? data : []);
                 }
             } catch (error) {
                 console.error('Erro ao carregar sessões do paciente:', error);
@@ -257,6 +266,22 @@ export default function RelatorioMensalPage() {
                                 onSelect={handlePatientSelect}
                                 onClear={handlePatientClear}
                             />
+                        </div>
+
+                        {/* Observação Clínica - aparece em tela e PDF */}
+                        <div data-print-block className="bg-muted/30 border border-border rounded-[5px] p-4 space-y-2">
+                            <Label className="flex items-center gap-2 text-sm font-semibold">
+                                <FileText className="w-4 h-4" />
+                                Observação Clínica (Relatório)
+                            </Label>
+                            <RichTextEditor
+                                placeholder="Adicione observações relevantes sobre o progresso do cliente, comportamentos observados durante as sessões, ou informações importantes para o relatório..."
+                                value={observacaoClinica}
+                                onChange={(html) => setObservacaoClinica(html)}
+                            />
+                            <p className="text-xs text-muted-foreground flex items-center gap-1 no-print">
+                                💡 Esta observação será incluída automaticamente no relatório PDF
+                            </p>
                         </div>
 
                         {/* Filtros interativos - só aparece na tela */}

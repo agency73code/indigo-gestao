@@ -4,6 +4,7 @@ export type Patient = {
     guardianName?: string | null;
     responsible?: string; // For mock compatibility
     age?: number;
+    birthDate?: string | null; // ISO date string (YYYY-MM-DD)
     photoUrl?: string | null;
 };
 

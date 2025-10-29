@@ -94,7 +94,7 @@ export interface DBTherapist {
     atividade: boolean;
     endereco: DBAddress | null;
     registro_profissional: DBProfessionalRegistration[];
-    formacao: DBFormation[];
+    formacao: DBFormation | null;
     pessoa_juridica: DBLegalPerson | null;
 }
 

@@ -371,10 +371,10 @@ export default function TransferResponsibleDialog({
                             </p>
                         </div>
 
-                        {/* Atuação do Antigo Responsável (agora Co-terapeuta) */}
+                        {/* Atuação do Antigo Responsável (após transferência) */}
                         <div className="space-y-2">
                             <Label className="text-sm font-medium">
-                                Atuação do Antigo Responsável (Co-terapeuta) *
+                                Atuação do Antigo Responsável *
                             </Label>
                             <Combobox
                                 options={oldActuationOptions}
@@ -394,7 +394,7 @@ export default function TransferResponsibleDialog({
                                 </p>
                             )}
                             <p className="text-xs text-muted-foreground">
-                                O terapeuta atual se tornará co-terapeuta com esta atuação específica.
+                                O terapeuta atual continuará vinculado com esta área de atuação específica.
                             </p>
                         </div>
 

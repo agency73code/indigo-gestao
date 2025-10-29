@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { CalendarIcon, User, Users, Search, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -20,6 +20,7 @@ import { Combobox } from '@/ui/combobox';
 import type { CreateLinkInput, UpdateLinkInput, LinkFormModalProps } from '../types';
 import type { Paciente, Terapeuta } from '../../types/cadastros.types';
 import { searchPatientsByName, searchTherapistsByName } from '../mocks/links.mock';
+import { isSupervisorRole } from '../../constants/access-levels';
 
 type ComboboxOption = { value: string; label: string };
 
@@ -45,6 +46,25 @@ function buildActuationOptions(therapist: Terapeuta | null | undefined): Combobo
     return Array.from(uniqueAreas.values()).map((area) => ({ value: area, label: area }));
 }
 
+/**
+ * Calcula o role baseado no cargo do terapeuta
+ */
+function calculateRoleFromTherapist(therapist: Terapeuta | null | undefined): 'responsible' | 'co' {
+    if (!therapist?.dadosProfissionais?.length) {
+        return 'co';
+    }
+
+    // Pega o primeiro cargo (principal) do terapeuta
+    const primaryCargo = therapist.dadosProfissionais[0]?.cargo;
+    
+    if (!primaryCargo) {
+        return 'co';
+    }
+
+    // Retorna 'responsible' se for supervisor (nível >= 3), senão 'co'
+    return isSupervisorRole(primaryCargo) ? 'responsible' : 'co';
+}
+
 export default function LinkFormModal({
     open,
     onClose,
@@ -57,7 +77,6 @@ export default function LinkFormModal({
     // Estados do formulário
     const [patientId, setPatientId] = useState<string>('');
     const [therapistId, setTherapistId] = useState<string>('');
-    const [role, setRole] = useState<'responsible' | 'co'>('responsible');
     const [actuationArea, setActuationArea] = useState<string>('');
     const [actuationOptions, setActuationOptions] = useState<ComboboxOption[]>([]);
     const [startDate, setStartDate] = useState<Date>();
@@ -86,7 +105,6 @@ export default function LinkFormModal({
         if (open && initialData && isEdit) {
             setPatientId(initialData.patientId);
             setTherapistId(initialData.therapistId);
-            setRole(initialData.role);
             setActuationArea(initialData.actuationArea || '');
             setStartDate(new Date(initialData.startDate));
             setNotes(initialData.notes || '');
@@ -107,9 +125,8 @@ export default function LinkFormModal({
             // Modo criação de novo terapeuta - pré-preencher paciente
             setPatientId(initialData.patientId);
             setTherapistId('');
-            setRole('co');
             setActuationArea('');
-            setStartDate(undefined);
+            setStartDate(new Date()); // Data atual como padrão
             setNotes('');
             setSelectedTherapist(null);
             setTherapistSearch('');
@@ -125,9 +142,8 @@ export default function LinkFormModal({
             // Limpar formulário para criação normal
             setPatientId('');
             setTherapistId('');
-            setRole('responsible');
             setActuationArea('');
-            setStartDate(undefined);
+            setStartDate(new Date()); // Data atual como padrão
             setNotes('');
             setSelectedPatient(null);
             setSelectedTherapist(null);
@@ -256,6 +272,9 @@ export default function LinkFormModal({
     const handleSubmit = () => {
         if (!validateForm()) return;
 
+        // Calcular role baseado no cargo do terapeuta selecionado
+        const role = calculateRoleFromTherapist(selectedTherapist);
+
         if (!isEdit) {
             const createData: CreateLinkInput = {
                 patientId: patientId,
@@ -346,6 +365,15 @@ export default function LinkFormModal({
                                 {selectedPatient ? (
                                     <>
                                         <Avatar className="h-8 w-8">
+                                            <AvatarImage 
+                                                src={(selectedPatient as any).avatarUrl 
+                                                    ? ((selectedPatient as any).avatarUrl.startsWith('/api')
+                                                        ? `${import.meta.env.VITE_API_BASE ?? ''}${(selectedPatient as any).avatarUrl}`
+                                                        : (selectedPatient as any).avatarUrl)
+                                                    : undefined
+                                                }
+                                                alt={selectedPatient.nome}
+                                            />
                                             <AvatarFallback className="text-xs">
                                                 {getInitials(selectedPatient.nome)}
                                             </AvatarFallback>
@@ -390,6 +418,15 @@ export default function LinkFormModal({
                                 {selectedTherapist ? (
                                     <>
                                         <Avatar className="h-8 w-8">
+                                            <AvatarImage 
+                                                src={(selectedTherapist as any).avatarUrl 
+                                                    ? ((selectedTherapist as any).avatarUrl.startsWith('/api')
+                                                        ? `${import.meta.env.VITE_API_BASE ?? ''}${(selectedTherapist as any).avatarUrl}`
+                                                        : (selectedTherapist as any).avatarUrl)
+                                                    : undefined
+                                                }
+                                                alt={selectedTherapist.nome}
+                                            />
                                             <AvatarFallback className="text-xs">
                                                 {getInitials(selectedTherapist.nome)}
                                             </AvatarFallback>
@@ -418,69 +455,48 @@ export default function LinkFormModal({
                         </div>
                     </div>
 
-                    {/* Tipo de Vínculo */}
-                    <div className="space-y-3">
-                        <Label className="text-sm font-medium">Tipo de Vínculo *</Label>
-                        <div className="space-y-3">
-                            <div className="flex items-center space-x-2">
-                                <input
-                                    type="radio"
-                                    id="responsible"
-                                    name="role"
-                                    value="responsible"
-                                    checked={role === 'responsible'}
-                                        onChange={(e) => {
-                                            setRole(e.target.value as 'responsible' | 'co');
-                                            // Limpar atuação quando muda para responsável
-                                            if (e.target.value === 'responsible') {
-                                                setActuationArea('');
-                                            }
-                                        }}
-                                    className="w-4 h-4 text-primary bg-gray-100 border-gray-300 focus:ring-primary/20"
-                                />
-                                <Label htmlFor="responsible" className="cursor-pointer">
-                                    Terapeuta Responsável
-                                </Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <input
-                                    type="radio"
-                                    id="co"
-                                    name="role"
-                                    value="co"
-                                    checked={role === 'co'}
-                                    onChange={(e) =>
-                                        setRole(e.target.value as 'responsible' | 'co')
-                                    }
-                                    className="w-4 h-4 text-primary bg-gray-100 border-gray-300 focus:ring-primary/20"
-                                />
-                                <Label htmlFor="co" className="cursor-pointer">
-                                    Co-terapeuta
-                                </Label>
+                    {/* Cargo do Terapeuta (read-only, calculado automaticamente) */}
+                    {selectedTherapist && selectedTherapist.dadosProfissionais?.[0]?.cargo && (
+                        <div className="space-y-2">
+                            <Label className="text-sm font-medium">Cargo</Label>
+                            <div className={cn(
+                                'flex items-center gap-2 p-3 border rounded-[5px]',
+                                isSupervisorRole(selectedTherapist.dadosProfissionais[0].cargo)
+                                    ? 'bg-primary/10 border-primary/20'
+                                    : 'bg-muted/30 border-input'
+                            )}>
+                                <span className="text-sm font-medium">
+                                    {selectedTherapist.dadosProfissionais[0].cargo}
+                                </span>
+                                <span className="text-xs text-muted-foreground ml-auto">
+                                    {isSupervisorRole(selectedTherapist.dadosProfissionais[0].cargo)
+                                        ? '• Supervisor'
+                                        : '• Terapeuta'}
+                                </span>
                             </div>
                         </div>
+                    )}
 
-                        {/* Campo de Atuação do Terapeuta - aparece sempre */}
-                        <div className="space-y-2 pt-2 border-t border-border">
-                            <Label className="text-sm font-medium">Área de Atuação *</Label>
-                            <Combobox
-                                options={actuationOptions}
-                                value={actuationArea}
-                                onValueChange={(value) => setActuationArea(value)}
-                                placeholder={selectedTherapist ? 'Selecione a área de atuação' : 'Selecione um terapeuta primeiro'}
-                                searchPlaceholder="Buscar atuação..."
-                                emptyMessage={selectedTherapist
-                                    ? 'Nenhuma atuação encontrada.'
-                                    : 'Selecione um terapeuta para visualizar as áreas disponíveis.'}
-                                disabled={!selectedTherapist || actuationOptions.length === 0}
-                                error={!!errors.actuationArea}
-                            />
-                            {errors.actuationArea && (
-                                <p className="text-sm text-destructive">
-                                    {errors.actuationArea}
-                                </p>
-                            )}
-                        </div>
+                    {/* Campo de Atuação do Terapeuta */}
+                    <div className="space-y-2">
+                        <Label className="text-sm font-medium">Área de Atuação *</Label>
+                        <Combobox
+                            options={actuationOptions}
+                            value={actuationArea}
+                            onValueChange={(value) => setActuationArea(value)}
+                            placeholder={selectedTherapist ? 'Selecione a área de atuação' : 'Selecione um terapeuta primeiro'}
+                            searchPlaceholder="Buscar atuação..."
+                            emptyMessage={selectedTherapist
+                                ? 'Nenhuma atuação encontrada.'
+                                : 'Selecione um terapeuta para visualizar as áreas disponíveis.'}
+                            disabled={!selectedTherapist || actuationOptions.length === 0}
+                            error={!!errors.actuationArea}
+                        />
+                        {errors.actuationArea && (
+                            <p className="text-sm text-destructive">
+                                {errors.actuationArea}
+                            </p>
+                        )}
                     </div>
 
                     {/* Data de Início */}
@@ -599,24 +615,37 @@ export default function LinkFormModal({
                             <div className="max-h-60 overflow-y-auto">
                                 {patientResults.length > 0 ? (
                                     <div className="space-y-2">
-                                        {patientResults.map((patient) => (
-                                            <div
-                                                key={patient.id}
-                                                className="flex items-center gap-3 p-3 hover:bg-muted/50 cursor-pointer rounded-[5px]"
-                                                onClick={() => handlePatientSelect(patient)}
-                                            >
-                                                <Avatar className="h-8 w-8">
-                                                    <AvatarFallback className="text-xs">
-                                                        {getInitials(patient.nome)}
-                                                    </AvatarFallback>
-                                                </Avatar>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-medium truncate">
-                                                        {patient.nome}
-                                                    </p>
+                                        {patientResults.map((patient) => {
+                                            const patientAny = patient as any;
+                                            const avatarUrl = patientAny.avatarUrl
+                                                ? (patientAny.avatarUrl.startsWith('/api')
+                                                    ? `${import.meta.env.VITE_API_BASE ?? ''}${patientAny.avatarUrl}`
+                                                    : patientAny.avatarUrl)
+                                                : undefined;
+                                            
+                                            return (
+                                                <div
+                                                    key={patient.id}
+                                                    className="flex items-center gap-3 p-3 hover:bg-muted/50 cursor-pointer rounded-[5px]"
+                                                    onClick={() => handlePatientSelect(patient)}
+                                                >
+                                                    <Avatar className="h-8 w-8">
+                                                        <AvatarImage 
+                                                            src={avatarUrl} 
+                                                            alt={patient.nome}
+                                                        />
+                                                        <AvatarFallback className="text-xs">
+                                                            {getInitials(patient.nome)}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-sm font-medium truncate">
+                                                            {patient.nome}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 ) : patientSearch.length > 0 ? (
                                     <p className="text-sm text-muted-foreground text-center py-8">
@@ -658,24 +687,37 @@ export default function LinkFormModal({
                             <div className="max-h-60 overflow-y-auto">
                                 {therapistResults.length > 0 ? (
                                     <div className="space-y-2">
-                                        {therapistResults.map((therapist) => (
-                                            <div
-                                                key={therapist.id}
-                                                className="flex items-center gap-3 p-3 hover:bg-muted/50 cursor-pointer rounded-[5px]"
-                                                onClick={() => handleTherapistSelect(therapist)}
-                                            >
-                                                <Avatar className="h-8 w-8">
-                                                    <AvatarFallback className="text-xs">
-                                                        {getInitials(therapist.nome)}
-                                                    </AvatarFallback>
-                                                </Avatar>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-medium truncate">
-                                                        {therapist.nome}
-                                                    </p>
+                                        {therapistResults.map((therapist) => {
+                                            const therapistAny = therapist as any;
+                                            const avatarUrl = therapistAny.avatarUrl
+                                                ? (therapistAny.avatarUrl.startsWith('/api')
+                                                    ? `${import.meta.env.VITE_API_BASE ?? ''}${therapistAny.avatarUrl}`
+                                                    : therapistAny.avatarUrl)
+                                                : undefined;
+                                            
+                                            return (
+                                                <div
+                                                    key={therapist.id}
+                                                    className="flex items-center gap-3 p-3 hover:bg-muted/50 cursor-pointer rounded-[5px]"
+                                                    onClick={() => handleTherapistSelect(therapist)}
+                                                >
+                                                    <Avatar className="h-8 w-8">
+                                                        <AvatarImage 
+                                                            src={avatarUrl} 
+                                                            alt={therapist.nome}
+                                                        />
+                                                        <AvatarFallback className="text-xs">
+                                                            {getInitials(therapist.nome)}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-sm font-medium truncate">
+                                                            {therapist.nome}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 ) : therapistSearch.length > 0 ? (
                                     <p className="text-sm text-muted-foreground text-center py-8">

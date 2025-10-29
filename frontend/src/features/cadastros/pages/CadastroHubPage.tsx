@@ -3,6 +3,8 @@ import { User, Users, UserPlus, Link2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEffect, useState } from 'react';
 import { getCardsOverview } from '@/lib/api';
+import { RequireAbility } from '@/features/auth/abilities/RequireAbility';
+import type { Actions, Subjects } from '@/features/auth/abilities/ability';
 
 export default function CadastroHubPage() {
     const [totalTerapeutas, setTotalTerapeutas] = useState(24);
@@ -19,6 +21,7 @@ export default function CadastroHubPage() {
             href: '/app/cadastro/terapeuta',
             bgColor: 'bg-[var(--card-primary)]',
             textColor: 'text-white',
+            ability: { action: 'manage', subject: 'all' },
         },
         {
             title: 'Cadastrar Cliente',
@@ -27,6 +30,7 @@ export default function CadastroHubPage() {
             href: '/app/cadastro/cliente',
             bgColor: 'bg-blue-500',
             textColor: 'text-white',
+            ability: { action: 'create', subject: 'Cadastro' },
         },
         {
             title: 'Vínculos',
@@ -35,6 +39,7 @@ export default function CadastroHubPage() {
             href: '/app/cadastros/vinculos',
             bgColor: 'bg-green-500',
             textColor: 'text-white',
+            ability: { action: 'create', subject: 'Cadastro' },
         },
     ];
 
@@ -60,41 +65,45 @@ export default function CadastroHubPage() {
                 >
                     Cadastro
                 </h1>
-                <p className="text-sm sm:text-base text-muted-foreground">
-                    Registre novos usuários e profissionais no sistema
-                </p>
+                
             </div>
 
             {/* Main Action Cards */}
             <div className="space-y-4 ">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 ">
                     {mainActions.map((action, index) => (
-                        <Card
-                            key={index}
-                            className={`overflow-hidden hover:shadow-md p-1 md:p-4 lg:p-8 transition-shadow rounded-[5px] ${action.bgColor} ${action.textColor}`}
+                        <RequireAbility
+                        key={index}
+                        action={(action.ability?.action ?? 'read') as Actions}
+                        subject={(action.ability?.subject ?? 'Dashboard') as Subjects}
                         >
-                            <Link
-                                to={action.href}
-                                className="block h-full"
-                                aria-label={`${action.title}: ${action.description}`}
+                            <Card
+                                key={index}
+                                className={`overflow-hidden hover:shadow-md p-1 md:p-4 lg:p-8 transition-shadow rounded-[5px] ${action.bgColor} ${action.textColor}`}
                             >
-                                <div className="p-4">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex-1 space-y-1">
-                                            <h3 className="font-medium text-base sm:text-lg">
-                                                {action.title}
-                                            </h3>
-                                            <p className="text-xs sm:text-sm opacity-90">
-                                                {action.description}
-                                            </p>
-                                        </div>
-                                        <div className="bg-white/20 rounded-full p-3 ml-3">
-                                            <action.icon className="h-6 w-6" />
+                                <Link
+                                    to={action.href}
+                                    className="block h-full"
+                                    aria-label={`${action.title}: ${action.description}`}
+                                >
+                                    <div className="p-4">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex-1 space-y-1">
+                                                <h3 className="font-medium text-base sm:text-lg">
+                                                    {action.title}
+                                                </h3>
+                                                <p className="text-xs sm:text-sm opacity-90">
+                                                    {action.description}
+                                                </p>
+                                            </div>
+                                            <div className="bg-white/20 rounded-full p-3 ml-3">
+                                                <action.icon className="h-6 w-6" />
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </Link>
-                        </Card>
+                                </Link>
+                            </Card>
+                        </RequireAbility>
                     ))}
                 </div>
             </div>

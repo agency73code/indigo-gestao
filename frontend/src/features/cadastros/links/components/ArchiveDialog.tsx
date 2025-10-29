@@ -61,9 +61,9 @@ export default function ArchiveDialog({
                                 </div>
                             )}
                             <div className="flex justify-between">
-                                <span>Tipo de vínculo:</span>
+                                <span>Área de atuação:</span>
                                 <span className="font-medium">
-                                    {link.role === 'responsible' ? 'Responsável' : 'Co-terapeuta'}
+                                    {link.actuationArea || 'Atuação não definida'}
                                 </span>
                             </div>
                             <div className="flex justify-between">
@@ -98,7 +98,7 @@ export default function ArchiveDialog({
                     {/* Aviso importante */}
                     <div className="bg-amber-50 border border-amber-200 rounded-md p-4">
                         <div className="flex">
-                            <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                            <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
                             <div className="ml-3">
                                 <h3 className="text-sm font-medium text-amber-800">
                                     O que acontece ao arquivar?

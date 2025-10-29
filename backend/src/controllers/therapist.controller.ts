@@ -2,7 +2,7 @@ import type { Request, Response, NextFunction } from 'express';
 import * as TherapistService from '../features/therapist/therapist.service.js';
 import * as TherapistNormalizer from '../features/therapist/therapist.normalizer.js'
 import { sendWelcomeEmail } from '../utils/mail.util.js';
-import { therapistSchema, updateTherapistSchema } from '../schemas/therapist.schema.js';
+import { therapistSchema } from '../schemas/therapist.schema.js';
 import { fetchBrazilianBanks } from '../utils/brazilApi.util.js';
 
 export async function create(req: Request, res: Response, next: NextFunction) {
@@ -65,9 +65,13 @@ export async function update(req: Request, res: Response, next: NextFunction) {
       return res.status(400).json({ success: false, message: 'ID do terapeuta é obrigatório!' });
     }
 
-    const parsed = updateTherapistSchema.parse(req.body);
+    const parsed = therapistSchema.parse(TherapistNormalizer.emptyStringsToNull(req.body));
     if (Object.keys(parsed).length === 0) {
       return res.status(400).json({ success: false, message: 'Nenhum dado fornecido para atualização' });
+    }
+
+    if (Array.isArray(parsed.formacao)) {
+      parsed.formacao = parsed.formacao[0];
     }
 
     const updated = await TherapistService.update(therapistId, parsed);
@@ -92,3 +96,4 @@ export async function list(req: Request, res: Response, next: NextFunction) {
         next(error);
     }
 }
+
