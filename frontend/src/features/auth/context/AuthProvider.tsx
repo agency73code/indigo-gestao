@@ -104,6 +104,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }, [navigate]);
 
+    const updateAvatar = useCallback((avatarUrl: string) => {
+        setAuthState((prev) => ({
+            ...prev,
+            user: prev.user ? { ...prev.user, avatar_url: avatarUrl } : null,
+        }));
+    }, []);
+
     const didHydrateRef = useRef(false);
     useEffect(() => {
         if (didHydrateRef.current) return;
@@ -118,6 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         forgotPassword,
         logout,
         hydrate,
+        updateAvatar,
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

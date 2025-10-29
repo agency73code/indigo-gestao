@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 
 async function main() {
   const senhaHash = await bcrypt.hash('Senha123', 10);
-  const quantidade = 200000; // defina aqui quantos registros quer criar
+  const quantidade = 10; // defina aqui quantos registros quer criar
 
   for (let i = 0; i < quantidade; i++) {
     const nome = faker.person.fullName();

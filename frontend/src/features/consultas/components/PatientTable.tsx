@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { ChevronUp, ChevronDown, Eye, Users } from 'lucide-react';
 import { Button } from '@/ui/button';
 import type { Patient, SortState } from '../types/consultas.types';
@@ -10,7 +10,7 @@ interface AvatarWithSkeletonProps {
     size?: 'sm' | 'md';
 }
 
-const AvatarWithSkeleton = ({ src, alt, initials, size = 'md' }: AvatarWithSkeletonProps) => {
+const AvatarWithSkeleton = memo(({ src, alt, initials, size = 'md' }: AvatarWithSkeletonProps) => {
     const [imageLoaded, setImageLoaded] = useState(false);
     const [imageError, setImageError] = useState(false);
 
@@ -58,7 +58,9 @@ const AvatarWithSkeleton = ({ src, alt, initials, size = 'md' }: AvatarWithSkele
             />
         </div>
     );
-};
+});
+
+AvatarWithSkeleton.displayName = 'AvatarWithSkeleton';
 
 interface PatientTableProps {
     patients: Patient[];
@@ -97,7 +99,7 @@ const LoadingSkeleton = () => (
     </div>
 );
 
-export default function PatientTable({
+const PatientTable = memo(function PatientTable({
     patients,
     loading = false,
     onViewProfile,
@@ -309,4 +311,6 @@ export default function PatientTable({
             </div>
         </div>
     );
-}
+});
+
+export default PatientTable;

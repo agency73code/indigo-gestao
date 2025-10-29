@@ -42,6 +42,8 @@ export function RichTextEditor({
         extensions: [
             StarterKit.configure({
                 heading: false,
+                // Desabilitar link do StarterKit para usar a configuração customizada
+                link: false,
             }),
             Heading.configure({
                 levels: [1, 2, 3],

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
 import Cropper from 'react-easy-crop';
 import {
     Dialog,
@@ -20,6 +20,10 @@ import {
 } from '@/utils/image';
 import { useProfilePhoto, type ProfilePhotoDTO } from '@/hooks/useProfilePhoto';
 
+export interface ProfilePhotoFieldSimpleRef {
+    uploadPhoto: () => Promise<ProfilePhotoDTO | null>;
+}
+
 interface ProfilePhotoFieldSimpleProps {
     userId: string;
     value?: File | string | null;
@@ -36,14 +40,17 @@ interface CropState {
     croppedAreaPixels: Area | null;
 }
 
-export default function ProfilePhotoFieldSimple({
-    userId,
-    value,
-    onChange,
-    onUploaded,
-    disabled = false,
-    error,
-}: ProfilePhotoFieldSimpleProps) {
+export default forwardRef<ProfilePhotoFieldSimpleRef, ProfilePhotoFieldSimpleProps>(function ProfilePhotoFieldSimple(
+    {
+        userId,
+        value,
+        onChange,
+        onUploaded,
+        disabled = false,
+        error,
+    },
+    ref
+) {
     // Estados do componente
     const [imageSrc, setImageSrc] = useState<string>('');
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -57,6 +64,27 @@ export default function ProfilePhotoFieldSimple({
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { uploadProfilePhoto, isUploading } = useProfilePhoto();
+
+    // Expõe função para fazer upload quando necessário
+    useImperativeHandle(ref, () => ({
+        uploadPhoto: async () => {
+            if (!value || typeof value === 'string') {
+                return null;
+            }
+
+            try {
+                const profileDto = await uploadProfilePhoto(value, userId);
+                if (profileDto) {
+                    onUploaded?.(profileDto);
+                }
+                return profileDto;
+            } catch (error) {
+                console.error('Upload error:', error);
+                toast.error('Erro ao fazer upload da foto');
+                return null;
+            }
+        },
+    }), [value, userId, uploadProfilePhoto, onUploaded]);
 
     // Preview da imagem atual
     const [previewUrl, setPreviewUrl] = useState<string>('');
@@ -169,19 +197,9 @@ export default function ProfilePhotoFieldSimple({
                 lastModified: Date.now(),
             });
 
-            // Chama onChange ANTES do upload para mostrar a preview imediatamente
+            // Apenas atualiza o estado local para preview
+            // O upload será feito quando o formulário pai for salvo
             onChange?.(croppedFile);
-
-            // Fazer upload em background
-            try {
-                const profileDto = await uploadProfilePhoto(croppedBlob, userId);
-                if (profileDto) {
-                    onUploaded?.(profileDto);
-                }
-            } catch (uploadError) {
-                console.error('Upload error:', uploadError);
-                toast.error('Erro no upload, mas foto foi processada localmente');
-            }
 
             setIsModalOpen(false);
             setImageSrc('');
@@ -193,10 +211,7 @@ export default function ProfilePhotoFieldSimple({
         imageSrc,
         cropState.croppedAreaPixels,
         orientation,
-        userId,
-        uploadProfilePhoto,
         onChange,
-        onUploaded,
     ]);
 
     const handleRemove = useCallback(() => {
@@ -387,4 +402,4 @@ export default function ProfilePhotoFieldSimple({
             </Dialog>
         </div>
     );
-}
+});
