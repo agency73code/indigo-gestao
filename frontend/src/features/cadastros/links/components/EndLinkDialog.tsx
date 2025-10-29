@@ -144,9 +144,9 @@ export default function EndLinkDialog({
                                 </span>
                             </div>
                             <div className="flex justify-between">
-                                <span>Tipo de vínculo:</span>
+                                <span>Área de atuação:</span>
                                 <span className="font-medium">
-                                    {link.role === 'responsible' ? 'Responsável' : 'Co-terapeuta'}
+                                    {link.actuationArea || 'Atuação não definida'}
                                 </span>
                             </div>
                             <div className="flex justify-between">

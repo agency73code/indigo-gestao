@@ -116,9 +116,9 @@ export default function MinhasHorasPage() {
                     >
                         Minhas Horas
                     </h1>
-                    <p className="text-sm text-muted-foreground">
+                    {/* <p className="text-sm text-muted-foreground">
                         Gerencie seus lançamentos de horas trabalhadas.
-                    </p>
+                    </p> */}
                 </div>
 
                 <Button

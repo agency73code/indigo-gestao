@@ -10,6 +10,7 @@
     prazoFim?: string; // ISO
     therapistId: string;
     therapistName: string;
+    therapistPhotoUrl?: string | null;
     createdAt: string; // ISO
     goalTitle: string;
     goalDescription?: string | null; // legado: descrição do objetivo (preferir campos específicos)

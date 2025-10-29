@@ -46,6 +46,7 @@ const applyOrientation = (
 
 /**
  * Create a cropped image from the original image
+ * Optimized for WebP with better compression
  */
 export const getCroppedImage = (
   imageSrc: string,
@@ -59,7 +60,10 @@ export const getCroppedImage = (
     
     image.onload = () => {
       const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext('2d', { 
+        alpha: false, // Melhor performance
+        willReadFrequently: false 
+      });
 
       if (!ctx) {
         reject(new Error('Failed to get canvas context'));
@@ -72,6 +76,10 @@ export const getCroppedImage = (
       // Apply orientation transformation
       ctx.save();
       applyOrientation(ctx, orientation, size, size);
+
+      // Usar imageSmoothingQuality para melhor qualidade
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
 
       // Draw the cropped area onto the canvas
       ctx.drawImage(
@@ -88,6 +96,7 @@ export const getCroppedImage = (
 
       ctx.restore();
 
+      // WebP com qualidade otimizada (85% é sweet spot)
       canvas.toBlob(
         (blob) => {
           if (blob) {
@@ -97,7 +106,7 @@ export const getCroppedImage = (
           }
         },
         'image/webp',
-        0.9
+        0.85 // Qualidade otimizada
       );
     };
 
@@ -138,7 +147,7 @@ export const compressImage = async (
  */
 export const createFileFromBlob = (blob: Blob, fileName: string): File => {
   return new File([blob], fileName, {
-    type: blob.type,
+    type: blob.type || 'image/webp',
     lastModified: Date.now(),
   });
 };

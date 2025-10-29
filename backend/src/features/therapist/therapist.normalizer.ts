@@ -1,6 +1,4 @@
-import type { Prisma } from '@prisma/client';
 import { AppError } from '../../errors/AppError.js';
-import type { UpdateTherapistSchemaInput } from '../../schemas/therapist.schema.js';
 import * as TherapistTypes from "./therapist.types.js";
 
 export function normalizeTherapistNullableString(value: string | null | undefined) {
@@ -21,45 +19,6 @@ export function normalizeTherapistDate(
         throw new AppError('INVALID_DATE', 'Formato de data inválido', 400);
     }
     return parsed;
-}
-
-export function normalizeTherapistEnderecoUpdate(
-    endereco: UpdateTherapistSchemaInput['endereco'],
-): {
-    hasChanges: boolean;
-    create: Prisma.enderecoCreateInput;
-    update: Prisma.enderecoUpdateInput;
-} {
-    const create: Prisma.enderecoCreateInput = {};
-    const update: Prisma.enderecoUpdateInput = {};
-    let hasChanges = false;
-
-    if (!endereco) {
-        return { hasChanges, create, update };
-    }
-
-    const assign = (key: TherapistTypes.EnderecoStringKeys, value: string | null | undefined) => {
-        if (value === undefined) return;
-        hasChanges = true;
-        const normalized = normalizeTherapistNullableString(value);
-
-        (update as Record<
-            TherapistTypes.EnderecoStringKeys,
-            string | Prisma.NullableStringFieldUpdateOperationsInput | null
-        >)[key] = normalized ?? null;
-
-        (create as Record<TherapistTypes.EnderecoStringKeys, string | null>)[key] = normalized ?? null;
-    };
-
-    assign('cep', endereco.cep);
-    assign('rua', endereco.rua);
-    assign('numero', endereco.numero);
-    assign('complemento', endereco.complemento);
-    assign('bairro', endereco.bairro);
-    assign('cidade', endereco.cidade);
-    assign('uf', endereco.estado);
-
-    return { hasChanges, create, update };
 }
 
 export function normalizeTherapistForm(db: TherapistTypes.TherapistDB) {
@@ -94,19 +53,28 @@ export function normalizeTherapistForm(db: TherapistTypes.TherapistDB) {
         
         dataInicio: db.data_entrada!,
         dataFim: db.data_saida ?? null,
-        formacao: {
-            graduacao: db.formacao?.[0]?.graduacao ?? '',
-            instituicaoGraduacao: db.formacao?.[0]?.instituicao_graduacao ?? '',
-            anoFormatura: db.formacao?.[0]?.ano_formatura ?? 0,
-            posGraduacoes: db.formacao?.[0]?.pos_graduacao?.map((p) => ({
-                tipo: p.tipo!,
-                curso: p.curso!,
-                instituicao: p.instituicao!,
-                conclusao: p.conclusao!,
-            })) ?? [],
-            participacaoCongressosDescricao: db.formacao?.[0]?.participacao_congressos ?? '',
-            publicacoesLivrosDescricao: db.formacao?.[0]?.publicacoes_descricao ?? '',
-        },
+        formacao: db.formacao
+            ? {
+                graduacao: db.formacao.graduacao ?? '',
+                instituicaoGraduacao: db.formacao.instituicao_graduacao ?? '',
+                anoFormatura: db.formacao.ano_formatura?.toString() ?? '',
+                posGraduacoes: db.formacao.pos_graduacao?.map((p) => ({
+                    tipo: p.tipo ?? '',
+                    curso: p.curso ?? '',
+                    instituicao: p.instituicao ?? '',
+                    conclusao: p.conclusao ?? '',
+                })) ?? [],
+                participacaoCongressosDescricao: db.formacao.participacao_congressos ?? '',
+                publicacoesLivrosDescricao: db.formacao.publicacoes_descricao ?? '',
+                }
+            : {
+                graduacao: '',
+                instituicaoGraduacao: '',
+                anoFormatura: '',
+                posGraduacoes: [],
+                participacaoCongressosDescricao: '',
+                publicacoesLivrosDescricao: '',
+                },
 
         cnpj: {
             numero: db.pessoa_juridica?.cnpj ?? '',
@@ -187,11 +155,11 @@ export function normalizeTherapistSession(db: TherapistTypes.TherapistDB) {
             formasAtendimento: ['Presencial'],
         },
 
-        formacao: db.formacao?.map(f => ({
-            curso: f.graduacao ?? '',
-            instituicao: f.instituicao_graduacao ?? '',
-            ano: f.ano_formatura ?? 2020,
-        })) ?? [],
+        formacao: {
+            curso: db.formacao?.graduacao,
+            instituicao: db.formacao?.instituicao_graduacao,
+            ano: db.formacao?.ano_formatura,
+        },
 
         arquivos: db.arquivos?.map((a) => ({
             nome: a.tipo,
@@ -201,4 +169,22 @@ export function normalizeTherapistSession(db: TherapistTypes.TherapistDB) {
         })),
         cnpj: db.pessoa_juridica?.cnpj ?? '',
     };
+}
+
+export function emptyStringsToNull<T>(value: T, parentKey?: string): T {
+  if (Array.isArray(value)) {
+    return value.map(v => emptyStringsToNull(v, parentKey)) as unknown as T;
+  }
+
+  if (value && typeof value === 'object') {
+    const entries = Object.entries(value as Record<string, unknown>)
+      .map(([k, v]) => [k, emptyStringsToNull(v, k)]);
+    return Object.fromEntries(entries) as unknown as T;
+  }
+
+  if (parentKey === 'complemento' && value === '') {
+    return '' as unknown as T;
+  }
+
+  return (value === '' ? null : value) as unknown as T;
 }

@@ -1,7 +1,9 @@
 import { ArrowLeft, Calendar, User, UserCheck } from 'lucide-react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
 import type { ProgramDetail } from '../types';
 
@@ -11,6 +13,8 @@ interface HeaderInfoProps {
 
 export default function HeaderInfo({ program }: HeaderInfoProps) {
     const navigate = useNavigate();
+    const [imageLoading, setImageLoading] = useState(true);
+    const [therapistImageLoading, setTherapistImageLoading] = useState(true);
 
     const getInitials = (name: string) => {
         return name
@@ -64,14 +68,21 @@ export default function HeaderInfo({ program }: HeaderInfoProps) {
                 <CardContent className="pb-3 sm:pb-6">
                     <div className="flex items-center gap-3 p-2 sm:p-3 bg-muted rounded-md">
                         <div className="flex-shrink-0">
-                            <Avatar className="w-12 h-12">
+                            <Avatar className="w-12 h-12 rounded-full">
+                                {imageLoading && program.patientPhotoUrl && (
+                                    <Skeleton className="h-12 w-12 rounded-full absolute inset-0" />
+                                )}
                                 {program.patientPhotoUrl ? (
                                     <AvatarImage
-                                        src={program.patientPhotoUrl}
+                                        src={program.patientPhotoUrl.startsWith('/api')
+                                            ? `${import.meta.env.VITE_API_BASE ?? ''}${program.patientPhotoUrl}`
+                                            : program.patientPhotoUrl}
                                         alt={`Foto de ${program.patientName}`}
+                                        className={imageLoading ? 'opacity-0' : 'opacity-100 transition-opacity'}
+                                        onLoad={() => setImageLoading(false)}
                                     />
                                 ) : null}
-                                <AvatarFallback className="bg-purple-100 text-purple-600">
+                                <AvatarFallback className="bg-purple-100 text-purple-600 rounded-full">
                                     {getInitials(program.patientName)}
                                 </AvatarFallback>
                             </Avatar>
@@ -104,6 +115,26 @@ export default function HeaderInfo({ program }: HeaderInfoProps) {
                 </CardHeader>
                 <CardContent className="pb-3 sm:pb-6">
                     <div className="flex items-center gap-3 p-2 sm:p-3 bg-muted rounded-md">
+                        <div className="flex-shrink-0">
+                            <Avatar className="w-12 h-12 rounded-full">
+                                {therapistImageLoading && program.therapistPhotoUrl && (
+                                    <Skeleton className="h-12 w-12 rounded-full absolute inset-0" />
+                                )}
+                                {program.therapistPhotoUrl ? (
+                                    <AvatarImage
+                                        src={program.therapistPhotoUrl.startsWith('/api')
+                                            ? `${import.meta.env.VITE_API_BASE ?? ''}${program.therapistPhotoUrl}`
+                                            : program.therapistPhotoUrl}
+                                        alt={`Foto de ${program.therapistName}`}
+                                        className={therapistImageLoading ? 'opacity-0' : 'opacity-100 transition-opacity'}
+                                        onLoad={() => setTherapistImageLoading(false)}
+                                    />
+                                ) : null}
+                                <AvatarFallback className="bg-blue-100 text-blue-600 rounded-full">
+                                    {getInitials(program.therapistName)}
+                                </AvatarFallback>
+                            </Avatar>
+                        </div>
                         <div className="flex-1 min-w-0">
                             <p className="font-medium">{program.therapistName}</p>
                         </div>

@@ -15,7 +15,8 @@ export async function listSessionsByPatient(patientId: string): Promise<Sessao[]
     
     const data = await res.json();
 
-    return data.data;
+    // Garantir que sempre retorna um array
+    return Array.isArray(data?.data) ? data.data : [];
   } catch (error) {
     if (USE_LOCAL_MOCKS) {
       const { mockRecentSessions } = await import(

@@ -6,6 +6,7 @@ export interface AuthContextValue extends AuthState {
     forgotPassword: (data: ForgotPasswordData) => Promise<void>;
     logout: () => Promise<void>;
     hydrate: () => Promise<void>;
+    updateAvatar: (avatarUrl: string) => void;
 }
 
 export const AuthContext = createContext<AuthContextValue | undefined>(undefined);

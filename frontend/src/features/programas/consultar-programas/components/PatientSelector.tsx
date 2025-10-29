@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Search, User, X } from 'lucide-react';
+import { Search, User, X, Calendar } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Skeleton } from '@/components/ui/skeleton';
 import { searchPatients } from '../services';
 import type { Patient } from '../types';
 
@@ -23,6 +25,7 @@ export default function PatientSelector({
     const [searchQuery, setSearchQuery] = useState('');
     const [patients, setPatients] = useState<Patient[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [imageLoading, setImageLoading] = useState<Record<string, boolean>>({});
 
     // Função para gerar iniciais do nome
     const getInitials = (name: string) => {
@@ -32,6 +35,26 @@ export default function PatientSelector({
             .join('')
             .toUpperCase()
             .slice(0, 2);
+    };
+
+    // Função para calcular idade a partir da data de nascimento
+    const calculateAge = (birthDate: string): number => {
+        const today = new Date();
+        const birth = new Date(birthDate);
+        let age = today.getFullYear() - birth.getFullYear();
+        const monthDiff = today.getMonth() - birth.getMonth();
+        
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+            age--;
+        }
+        
+        return age;
+    };
+
+    // Função para formatar data de nascimento
+    const formatBirthDate = (birthDate: string): string => {
+        const date = new Date(birthDate);
+        return date.toLocaleDateString('pt-BR');
     };
 
     // Buscar pacientes com debounce
@@ -83,21 +106,26 @@ export default function PatientSelector({
                     {selected ? (
                         <div className="flex items-center gap-3 p-2 sm:p-3 bg-muted rounded-[5px]">
                             {/* Avatar do cliente selecionado */}
-                            <div className="flex-shrink-0">
-                                {selected.photoUrl ? (
-                                    <img
-                                        src={selected.photoUrl}
-                                        alt={`Foto de ${selected.name}`}
-                                        className="w-12 h-12 rounded-full object-cover"
-                                        width={48}
-                                        height={48}
-                                    />
-                                ) : (
-                                    <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-sm font-medium text-purple-600">
-                                        {getInitials(selected.name)}
-                                    </div>
+                            <Avatar className="h-12 w-12 !rounded-full" style={{ borderRadius: '50%' }}>
+                                {imageLoading[`selected-${selected.id}`] !== false && selected.photoUrl && (
+                                    <Skeleton className="h-12 w-12 rounded-full absolute inset-0" />
                                 )}
-                            </div>
+                                <AvatarImage 
+                                    src={selected.photoUrl 
+                                        ? (selected.photoUrl.startsWith('/api')
+                                            ? `${import.meta.env.VITE_API_BASE ?? ''}${selected.photoUrl}`
+                                            : selected.photoUrl)
+                                        : undefined
+                                    } 
+                                    alt={selected.name} 
+                                    style={{ borderRadius: '50%' }}
+                                    onLoad={() => setImageLoading(prev => ({ ...prev, [`selected-${selected.id}`]: false }))}
+                                    className={imageLoading[`selected-${selected.id}`] !== false ? 'opacity-0' : 'opacity-100 transition-opacity'}
+                                />
+                                <AvatarFallback className="!rounded-full bg-purple-100 text-purple-600" style={{ borderRadius: '50%' }}>
+                                    {getInitials(selected.name)}
+                                </AvatarFallback>
+                            </Avatar>
 
                             {/* Informações do paciente */}
                             <div className="flex-1 min-w-0">
@@ -105,6 +133,12 @@ export default function PatientSelector({
                                 {selected.guardianName && (
                                     <p className="text-sm text-muted-foreground">
                                         Responsável: {selected.guardianName}
+                                    </p>
+                                )}
+                                {selected.birthDate && (
+                                    <p className="text-sm text-muted-foreground flex items-center gap-1">
+                                        <Calendar className="h-3 w-3" />
+                                        {calculateAge(selected.birthDate)} anos ({formatBirthDate(selected.birthDate)})
                                     </p>
                                 )}
                             </div>
@@ -202,21 +236,26 @@ export default function PatientSelector({
                                                 <CardContent className="p-4">
                                                     <div className="flex items-center gap-3">
                                                         {/* Avatar do paciente */}
-                                                        <div className="flex-shrink-0">
-                                                            {patient.photoUrl ? (
-                                                                <img
-                                                                    src={patient.photoUrl}
-                                                                    alt={`Foto de ${patient.name}`}
-                                                                    className="w-8 h-8 rounded-full object-cover"
-                                                                    width={32}
-                                                                    height={32}
-                                                                />
-                                                            ) : (
-                                                                <div className="h-8 w-8 bg-purple-100 rounded-full flex items-center justify-center text-xs font-medium text-purple-600">
-                                                                    {getInitials(patient.name)}
-                                                                </div>
+                                                        <Avatar className="h-8 w-8 !rounded-full" style={{ borderRadius: '50%' }}>
+                                                            {imageLoading[`patient-${patient.id}`] !== false && patient.photoUrl && (
+                                                                <Skeleton className="h-8 w-8 rounded-full absolute inset-0" />
                                                             )}
-                                                        </div>
+                                                            <AvatarImage 
+                                                                src={patient.photoUrl 
+                                                                    ? (patient.photoUrl.startsWith('/api')
+                                                                        ? `${import.meta.env.VITE_API_BASE ?? ''}${patient.photoUrl}`
+                                                                        : patient.photoUrl)
+                                                                    : undefined
+                                                                } 
+                                                                alt={patient.name} 
+                                                                style={{ borderRadius: '50%' }}
+                                                                onLoad={() => setImageLoading(prev => ({ ...prev, [`patient-${patient.id}`]: false }))}
+                                                                className={imageLoading[`patient-${patient.id}`] !== false ? 'opacity-0' : 'opacity-100 transition-opacity'}
+                                                            />
+                                                            <AvatarFallback className="!rounded-full bg-purple-100 text-purple-600 text-xs" style={{ borderRadius: '50%' }}>
+                                                                {getInitials(patient.name)}
+                                                            </AvatarFallback>
+                                                        </Avatar>
 
                                                         {/* Informações do paciente */}
                                                         <div className="flex-1 min-w-0">

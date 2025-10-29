@@ -1,7 +1,7 @@
 import type { RegistroTentativa } from '../types';
 
 export type Counts = { erro: number; ajuda: number; indep: number };
-export type StatusKind = 'insuficiente' | 'positivo' | 'mediano' | 'atencao' | 'critico';
+export type StatusKind = 'insuficiente' | 'positivo' | 'mediano' | 'atencao';
 
 export function sumCounts(a: Counts, b: Counts): Counts {
   return { 
@@ -24,10 +24,9 @@ export function toStatus(c: Counts): StatusKind {
   const t = total(c);
   if (t < 5) return 'insuficiente';
   const p = ti(c);
-  if (p >= 80) return 'positivo';
-  if (p >= 60) return 'mediano';
-  if (p >= 40) return 'atencao';
-  return 'critico';
+  if (p > 80) return 'positivo';
+  if (p > 60) return 'mediano';
+  return 'atencao';
 }
 
 export function aggregateByStimulus(registros: RegistroTentativa[]): Record<string, Counts> {
@@ -69,15 +68,11 @@ export function getStatusConfig(kind: StatusKind) {
       label: 'Atenção',
       cls: 'border-orange-500/40 text-orange-700 bg-orange-50',
     },
-    critico: {
-      label: 'Crítico',
-      cls: 'border-red-500/40 text-red-700 bg-red-50',
-    },
   };
   return configs[kind];
 }
 
 export function sortBySeverity(statusA: StatusKind, statusB: StatusKind): number {
-  const order: StatusKind[] = ['critico', 'atencao', 'mediano', 'positivo', 'insuficiente'];
+  const order: StatusKind[] = ['atencao', 'mediano', 'positivo', 'insuficiente'];
   return order.indexOf(statusA) - order.indexOf(statusB);
 }

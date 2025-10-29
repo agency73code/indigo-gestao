@@ -1,7 +1,9 @@
 import { MoreVertical, Calendar, UserCheck, User, Plus } from 'lucide-react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -41,10 +43,9 @@ function getStatusBadge(status: string) {
 
     return statusMap[status as keyof typeof statusMap] || statusMap.active;
 }
-
-// Helper para traduzir papel
-function getRoleLabel(role: string) {
-    return role === 'responsible' ? 'Responsável' : 'Co-terapeuta';
+// Helper para pegar o cargo do terapeuta
+function getTherapistRole(therapist: any): string | null {
+    return therapist?.dadosProfissionais?.[0]?.cargo || null;
 }
 
 // Helper para calcular idade a partir da data de nascimento
@@ -89,6 +90,7 @@ export default function LinkCard({
         return renderTherapistCard(
             therapistWithLinks,
             patients,
+            therapists,
             onEdit,
             onTransferResponsible,
             onEndLink,
@@ -109,6 +111,7 @@ function renderPatientCard(
     onEndLink: (link: PatientTherapistLink) => void,
     onArchive: (link: PatientTherapistLink) => void,
 ) {
+    const [imageLoading, setImageLoading] = useState(true);
     const responsibleLink = links.find(
         (link) => link.role === 'responsible' && link.status === 'active',
     );
@@ -139,7 +142,15 @@ function renderPatientCard(
                     <div className="flex items-center gap-3 flex-1">
                         {/* Avatar do paciente */}
                         <Avatar className="h-12 w-12">
-                            <AvatarImage src="" alt={patient.nome} />
+                            {imageLoading && patient.avatarUrl && (
+                                <Skeleton className="h-12 w-12 rounded-full absolute inset-0" />
+                            )}
+                            <AvatarImage 
+                                src={patient.avatarUrl || undefined } 
+                                alt={patient.nome}
+                                className={imageLoading ? 'object-cover opacity-0' : 'object-cover opacity-100 transition-opacity duration-300'}
+                                onLoad={() => setImageLoading(false)}
+                            />
                             <AvatarFallback className="text-sm font-medium">
                                 {patientInitials}
                             </AvatarFallback>
@@ -309,7 +320,9 @@ function TherapistChip({
                 </Avatar>
                 <div className="flex flex-col">
                     <span className="text-sm font-medium">{therapistName}</span>
-                    <span className="text-xs text-muted-foreground">{getRoleLabel(link.role)}</span>
+                    <span className="text-xs text-muted-foreground">
+                        {therapistCargo || 'Cargo não definido'}
+                    </span>
                 </div>
             </div>
 
@@ -355,6 +368,7 @@ function TherapistChip({
 function renderTherapistCard(
     { therapist, links }: { therapist: any; links: PatientTherapistLink[] },
     patients: any[],
+    therapists: any[],
     onEdit: (link: PatientTherapistLink) => void,
     onTransferResponsible: (link: PatientTherapistLink) => void,
     onEndLink: (link: PatientTherapistLink) => void,
@@ -459,6 +473,7 @@ function renderTherapistCard(
                                     key={link.id}
                                     link={link}
                                     patients={patients}
+                                    therapists={therapists}
                                     onEdit={onEdit}
                                     onTransferResponsible={onTransferResponsible}
                                     onEndLink={onEndLink}
@@ -489,6 +504,7 @@ function renderTherapistCard(
 function PatientChip({
     link,
     patients,
+    therapists,
     onEdit,
     onTransferResponsible,
     onEndLink,
@@ -496,14 +512,19 @@ function PatientChip({
 }: {
     link: PatientTherapistLink;
     patients: any[];
+    therapists: any[];
     onEdit: (link: PatientTherapistLink) => void;
     onTransferResponsible: (link: PatientTherapistLink) => void;
     onEndLink: (link: PatientTherapistLink) => void;
     onArchive: (link: PatientTherapistLink) => void;
 }) {
-    const isResponsible = link.role === 'responsible';
     const patient = patients.find((p) => p.id === link.patientId);
     const patientName = patient?.nome || `Cliente ${link.patientId}`;
+
+    // Obter terapeuta para verificar o cargo
+    const therapist = therapists.find((t) => t.id === link.therapistId);
+    const therapistCargo = getTherapistRole(therapist);
+    const isSupervisor = therapistCargo ? isSupervisorRole(therapistCargo) : false;
 
     // Calcular idade do cliente
     const calculateAge = (birthDate: string | Date | null | undefined) => {
@@ -523,13 +544,13 @@ function PatientChip({
 
     return (
         <div className="grid grid-cols-[200px_1fr_auto] items-center gap-4 p-3 bg-muted/30 rounded-[5px]">
-            {/* Papel do Terapeuta (Responsável/Co-terapeuta) */}
+            {/* Badge de Área de Atuação */}
             <Badge
-                variant={isResponsible ? 'default' : 'secondary'}
+                variant={isSupervisor ? 'default' : 'secondary'}
                 className="text-xs py-0.5 flex items-center p-1 gap-1 w-fit"
             >
-                {isResponsible ? <UserCheck className="h-3 w-3" /> : <User className="h-3 w-3" />}
-                {getRoleLabel(link.role)}
+                {isSupervisor ? <UserCheck className="h-3 w-3" /> : <User className="h-3 w-3" />}
+                {link.actuationArea || 'Atuação não definida'}
             </Badge>
 
             {/* Informações do Cliente */}
@@ -565,7 +586,7 @@ function PatientChip({
 
                     {link.status === 'active' && (
                         <>
-                            {isResponsible && (
+                            {link.role === 'responsible' && (
                                 <DropdownMenuItem onClick={() => onTransferResponsible(link)}>
                                     Transferir
                                 </DropdownMenuItem>

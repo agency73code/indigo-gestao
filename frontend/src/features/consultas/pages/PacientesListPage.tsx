@@ -1,13 +1,15 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
 import { CardContent, CardHeader, CardTitle } from '@/ui/card';
 import { Button } from '@/ui/button';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ToolbarConsulta from '../components/ToolbarConsulta';
 import PatientTable from '../components/PatientTable';
-import PatientProfileDrawer from '../components/PatientProfileDrawer';
 import { listarClientes } from '@/lib/api'
 import type { Patient, SortState, PaginationState } from '../types/consultas.types';
+
+// Lazy load do Drawer (só carrega quando necessário)
+const PatientProfileDrawer = lazy(() => import('../components/PatientProfileDrawer'));
 
 // Hook para debounce
 function useDebounce<T>(value: T, delay: number): T {
@@ -122,27 +124,27 @@ export default function PacientesListPage() {
         }));
     }, [filteredAndSortedPatients.length]);
 
-    // Handlers
-    const handleSort = (field: string) => {
+    // Handlers com useCallback para evitar re-renders desnecessários
+    const handleSort = useCallback((field: string) => {
         setSortState((prev) => ({
             field,
             direction: prev.field === field && prev.direction === 'asc' ? 'desc' : 'asc',
         }));
-    };
+    }, []);
 
-    const handlePageChange = (page: number) => {
+    const handlePageChange = useCallback((page: number) => {
         setPagination((prev) => ({ ...prev, page }));
-    };
+    }, []);
 
-    const handleViewProfile = (patient: Patient) => {
+    const handleViewProfile = useCallback((patient: Patient) => {
         setSelectedPatient(patient);
         setDrawerOpen(true);
-    };
+    }, []);
 
-    const handleCloseDrawer = () => {
+    const handleCloseDrawer = useCallback(() => {
         setDrawerOpen(false);
         setSelectedPatient(null);
-    };
+    }, []);
 
     // Calcular páginas para paginação
     const totalPages = Math.ceil(pagination.total / pagination.pageSize);
@@ -157,14 +159,12 @@ export default function PacientesListPage() {
     }
 
     return (
-        <div className="flex flex-col top-0 left-0 w-full h-full sm:px-6 ">
-            <CardHeader className="px-0">
+        <div className="flex flex-col top-0 left-0 w-full h-full sm:px-4 ">
+            <CardHeader className="p-0 py-4">
                 <CardTitle className="text-2xl font-semibold text-primary">
                     Consultar Clientes
                 </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                    Visualize e gerencie os clientes cadastrados no sistema.
-                </p>
+                
             </CardHeader>
             <CardContent className="space-y-1 px-0">
                 <div className="flex gap-4">
@@ -255,11 +255,16 @@ export default function PacientesListPage() {
                 )}
             </CardContent>
 
-            <PatientProfileDrawer
-                patient={selectedPatient}
-                open={drawerOpen}
-                onClose={handleCloseDrawer}
-            />
+            {/* Lazy load do Drawer com Suspense */}
+            {drawerOpen && (
+                <Suspense fallback={null}>
+                    <PatientProfileDrawer
+                        patient={selectedPatient}
+                        open={drawerOpen}
+                        onClose={handleCloseDrawer}
+                    />
+                </Suspense>
+            )}
         </div>
     );
 }

@@ -4,8 +4,7 @@
     Eye,
     CheckCircle,
     MinusCircle,
-    AlertTriangle,
-    XCircle,
+    AlertCircle,
     Info,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,22 +19,19 @@ interface ListaSessoesProps {
     onVerDetalhes: (sessaoId: string) => void;
 }
 
-type StatusKind = 'insuficiente' | 'positivo' | 'mediano' | 'atencao' | 'critico';
+type StatusKind = 'insuficiente' | 'positivo' | 'mediano' | 'atencao';
 
 function calcStatus(independencia: number, totalTentativas: number): StatusKind {
     if (totalTentativas < 5) {
         return 'insuficiente';
     }
-    if (independencia >= 80) {
+    if (independencia > 80) {
         return 'positivo';
     }
-    if (independencia >= 60) {
+    if (independencia > 60) {
         return 'mediano';
     }
-    if (independencia >= 40) {
-        return 'atencao';
-    }
-    return 'critico';
+    return 'atencao';
 }
 
 function getStatusConfig(kind: StatusKind) {
@@ -56,14 +52,9 @@ function getStatusConfig(kind: StatusKind) {
             cls: 'border-amber-500/40 text-amber-700 bg-amber-50',
         },
         atencao: {
-            icon: AlertTriangle,
+            icon: AlertCircle,
             label: 'Atenção',
             cls: 'border-orange-500/40 text-orange-700 bg-orange-50',
-        },
-        critico: {
-            icon: XCircle,
-            label: 'Crítico',
-            cls: 'border-red-500/40 text-red-700 bg-red-50',
         },
     };
     return configs[kind];

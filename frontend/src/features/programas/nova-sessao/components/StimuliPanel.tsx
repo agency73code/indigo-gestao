@@ -97,6 +97,54 @@ export default function StimuliPanel({
         });
     };
 
+    const removerTentativa = (resultado: ResultadoTentativa) => {
+        if (!ativoId || !activeStimulus) {
+            return;
+        }
+
+        const counts = countsMap[ativoId] ?? createEmptyCounts();
+        if (counts[resultado] <= 0) {
+            return; // Não pode remover se já está em 0
+        }
+
+        // Decrementa o contador
+        setCountsMap((prev) => {
+            const atual = prev[ativoId] ?? createEmptyCounts();
+            const proximo: BlockCounts = {
+                ...atual,
+                [resultado]: Math.max(0, atual[resultado] - 1),
+            } as BlockCounts;
+            return { ...prev, [ativoId]: proximo };
+        });
+
+        // Remove a última tentativa temporária deste tipo
+        setTempAttempts((prev) => {
+            const tempStimulusAttempts = prev[ativoId] ?? [];
+            
+            // Encontra o tipo correspondente
+            const tipoSessao: SessionAttemptType =
+                resultado === 'erro' ? 'error' : resultado === 'ajuda' ? 'prompted' : 'independent';
+            
+            // Filtra para encontrar a última tentativa deste tipo
+            const indiceUltimo = tempStimulusAttempts
+                .map((a, i) => ({ attempt: a, index: i }))
+                .filter((item) => item.attempt.type === tipoSessao)
+                .pop()?.index;
+
+            if (indiceUltimo === undefined) {
+                return prev;
+            }
+
+            // Remove a última tentativa deste tipo
+            const novasTemp = [
+                ...tempStimulusAttempts.slice(0, indiceUltimo),
+                ...tempStimulusAttempts.slice(indiceUltimo + 1),
+            ];
+
+            return { ...prev, [ativoId]: novasTemp };
+        });
+    };
+
     const handleSelectStimulus = (stimulusId: string) => {
         if (ativoId === stimulusId) {
             setAtivoId(null);
@@ -329,6 +377,7 @@ export default function StimuliPanel({
                                                 paused={estaPausado}
                                                 counts={counts}
                                                 onCreateAttempt={registrarTentativa}
+                                                onRemoveAttempt={removerTentativa}
                                                 onPause={pausarBloco}
                                                 onFinalizarBloco={finalizarBloco}
                                             />

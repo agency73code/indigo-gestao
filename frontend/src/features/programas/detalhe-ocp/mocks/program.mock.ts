@@ -1,15 +1,16 @@
 ﻿import type { ProgramDetail } from '../types';
 
 export const mockProgramDetail: ProgramDetail = {
-    id: 'prog-123',
-    name: 'Programa de Desenvolvimento da Linguagem',
-    patientId: 'pat-456',
-    patientName: 'Maria Silva Santos',
-    patientGuardian: 'Ana Silva Santos',
+    id: '1',
+    name: 'Programa de Habilidades Sociais',
+    patientId: '1',
+    patientName: 'João Silva',
+    patientGuardian: 'Maria Silva',
     patientAge: 8,
     patientPhotoUrl: null,
-    therapistId: 'ther-789',
+    therapistId: '1',
     therapistName: 'Dra. Juliana Oliveira',
+    therapistPhotoUrl: null,
     createdAt: '2025-01-15T10:30:00.000Z',
     prazoInicio: '2025-01-15T10:30:00.000Z',
     prazoFim: '2025-04-15T10:30:00.000Z',

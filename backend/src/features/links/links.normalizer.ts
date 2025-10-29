@@ -86,7 +86,9 @@ export function getAllClients(dto: LinkTypes.DBClient[]) {
 export function getAllTherapists(dto: LinkTypes.DBTherapist[]) {
     return dto.map((therapist) => {
         const address = therapist.endereco;
-        const mainTraining = therapist.formacao?.[0] ?? null;
+        const mainTraining = Array.isArray(therapist.formacao)
+            ? therapist.formacao[0] ?? null
+            : therapist.formacao ?? null;
         const professionalData = therapist.registro_profissional?.map((register) => ({
             areaAtuacaoId: register.area_atuacao?.id ?? null,
             areaAtuacao: register.area_atuacao?.nome ?? '',
@@ -94,7 +96,7 @@ export function getAllTherapists(dto: LinkTypes.DBTherapist[]) {
             cargo: register.cargo?.nome ?? '',
             numeroConselho: register.numero_conselho ?? undefined,
         })) ?? [];
-        const postgraduates = mainTraining?.pos_graduacao?.map((pg) => ({
+        const postgraduates = mainTraining?.pos_graduacao?.map((pg: LinkTypes.DBPostgraduate) => ({
             tipo: normalizePostgraduateType(pg.tipo),
             curso: pg.curso ?? '',
             instituicao: pg.instituicao ?? '',

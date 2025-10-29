@@ -1,7 +1,9 @@
 import { ArrowLeft, Calendar, Brain, Clock } from 'lucide-react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
 import type { Patient, ProgramDetail } from '../types';
 
@@ -12,6 +14,7 @@ interface HeaderSessionInfoProps {
 
 export default function HeaderSessionInfo({ patient, program }: HeaderSessionInfoProps) {
     const navigate = useNavigate();
+    const [imageLoading, setImageLoading] = useState(true);
 
     const getInitials = (name: string) => {
         return name
@@ -78,14 +81,21 @@ export default function HeaderSessionInfo({ patient, program }: HeaderSessionInf
                 {/* Informações do Paciente */}
                 <div className="flex items-center gap-3 p-3 bg-muted rounded-md">
                     <div className="flex-shrink-0">
-                        <Avatar className="w-12 h-12">
+                        <Avatar className="w-12 h-12 rounded-full">
+                            {imageLoading && patient.photoUrl && (
+                                <Skeleton className="h-12 w-12 rounded-full absolute inset-0" />
+                            )}
                             {patient.photoUrl ? (
                                 <AvatarImage
-                                    src={patient.photoUrl}
+                                    src={patient.photoUrl.startsWith('/api')
+                                        ? `${import.meta.env.VITE_API_BASE ?? ''}${patient.photoUrl}`
+                                        : patient.photoUrl}
                                     alt={`Foto de ${patient.name}`}
+                                    className={imageLoading ? 'opacity-0' : 'opacity-100 transition-opacity'}
+                                    onLoad={() => setImageLoading(false)}
                                 />
                             ) : null}
-                            <AvatarFallback className="bg-purple-100 text-purple-600">
+                            <AvatarFallback className="bg-purple-100 text-purple-600 rounded-full">
                                 {getInitials(patient.name)}
                             </AvatarFallback>
                         </Avatar>

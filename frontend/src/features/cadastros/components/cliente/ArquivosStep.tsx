@@ -3,7 +3,6 @@ import { Upload, FileText, X } from 'lucide-react';
 import { useRef } from 'react';
 import type { Cliente } from '../../types/cadastros.types';
 import ProfilePhotoFieldSimple from '@/components/profile/ProfilePhotoFieldSimple';
-import { useAuth } from '@/features/auth/hooks/useAuth';
 
 interface ArquivosStepProps {
     data: Partial<Cliente>;
@@ -12,8 +11,6 @@ interface ArquivosStepProps {
 }
 
 export default function ArquivosStep({ data, onUpdate, errors }: ArquivosStepProps) {
-    const { user } = useAuth();
-
     const fileInputRefs = {
         documentoIdentidade: useRef<HTMLInputElement>(null),
         comprovanteCpf: useRef<HTMLInputElement>(null),
@@ -130,10 +127,9 @@ export default function ArquivosStep({ data, onUpdate, errors }: ArquivosStepPro
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
                 <ProfilePhotoFieldSimple
-                    userId={user?.id || ''}
+                    userId={data?.id || ''}
                     value={data.arquivos?.fotoPerfil}
                     onChange={(file) => {
-                        console.log('ArquivosStep - onChange called with file:', file);
                         onUpdate('arquivos.fotoPerfil', file);
                     }}
                     error={errors['arquivos.fotoPerfil']}

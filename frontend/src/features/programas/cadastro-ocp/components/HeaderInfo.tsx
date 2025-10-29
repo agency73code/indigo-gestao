@@ -326,7 +326,7 @@ export default function HeaderInfo({
                                 </div>
 
                                 <div className="flex gap-2 flex-shrink-0 flex-col sm:flex-row">
-                                    <RequireAbility action="manage" subject="Terapeutas">
+                                    <RequireAbility action="manage" subject="all">
                                         <Button
                                             variant="outline"
                                             size="sm"

@@ -41,7 +41,7 @@ type AggregatedStimulus = {
     status: StatusKind;
 };
 
-const SEVERITY_WHITELIST: StatusKind[] = ['critico', 'atencao'];
+const SEVERITY_WHITELIST: StatusKind[] = ['atencao'];
 
 const WINDOW_OPTIONS: Array<{ label: string; value: WindowSize }> = [
     { label: 'Últimas 1', value: 1 },
@@ -50,9 +50,8 @@ const WINDOW_OPTIONS: Array<{ label: string; value: WindowSize }> = [
 ];
 
 function severityRank(kind: StatusKind) {
-    if (kind === 'critico') return 0;
-    if (kind === 'atencao') return 1;
-    return 2;
+    if (kind === 'atencao') return 0;
+    return 1;
 }
 
 function filterSessionsByFilters(sessions: Sessao[], filters: Filters): Sessao[] {
@@ -185,7 +184,7 @@ export function AttentionStimuliBlock({
         [lastSessions, filters],
     );
 
-    const hasSufficientAttempts = aggregation.all.some((item) => item.total >= 5);
+    const hasSufficientAttempts = aggregation?.all?.some((item) => item.total >= 5) ?? false;
 
     const handleWindowChange = (value: string) => {
         if (!value) return;
@@ -193,19 +192,19 @@ export function AttentionStimuliBlock({
         setWindowSize(parsed);
     };
 
-    const subtitle = `Baseado nas últimas ${windowSize} sessões. Mostra apenas Crítico e Atenção.`;
+    const subtitle = `Baseado nas últimas ${windowSize} sessões. Mostra apenas estímulos com status Atenção.`;
 
     const showEmptyState =
         !loading &&
         !error &&
         lastSessions.length > 0 &&
         hasSufficientAttempts &&
-        aggregation.filtered.length === 0;
+        (aggregation?.filtered?.length ?? 0) === 0;
 
     const showNoDataState =
         !loading &&
         !error &&
-        (lastSessions.length === 0 || aggregation.all.length === 0 || !hasSufficientAttempts);
+        (lastSessions.length === 0 || (aggregation?.all?.length ?? 0) === 0 || !hasSufficientAttempts);
 
     return (
         <Card className="rounded-[5px] px-6 py-6 md:px-8 lg:px-8">
@@ -229,8 +228,8 @@ export function AttentionStimuliBlock({
                                     </TooltipTrigger>
                                     <TooltipContent className="max-w-[260px] text-xs leading-relaxed">
                                         Status calculado pelo % de respostas independentes
-                                        (Indep./Total): Positivo &gt;= 80%, Mediano 60-79%, Atenção 40-59%,
-                                        Crítico &lt; 40%. Ordenamos por severidade e menor independência.
+                                        (Indep./Total): Positivo &gt; 80%, Mediano &gt;60% e &lt;=80%, Atenção &lt;=60%.
+                                        Ordenamos por severidade e menor independência.
                                     </TooltipContent>
                                 </Tooltip>
                             </TooltipProvider>
@@ -275,7 +274,7 @@ export function AttentionStimuliBlock({
                 ) : showEmptyState ? (
                     <div className="rounded-md border px-4 py-4 text-sm text-muted-foreground">
                         <p className="font-medium">
-                            Tudo certo por aqui! Nenhum estímulo Crítico ou de Atenção nas últimas{' '}
+                            Tudo certo por aqui! Nenhum estímulo com status Atenção nas últimas{' '}
                             {windowSize} sessões.
                         </p>
                         <p className="mt-1 text-xs text-muted-foreground/80">
@@ -284,7 +283,7 @@ export function AttentionStimuliBlock({
                     </div>
                 ) : (
                     <div role="list" aria-labelledby="attention-stimuli-title" className="space-y-3">
-                        {aggregation.filtered.map((item) => {
+                        {(aggregation?.filtered ?? []).map((item) => {
                             const statusConfig = getStatusConfig(item.status);
                             return (
                                 <div

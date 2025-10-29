@@ -1,13 +1,15 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
 import { CardContent, CardHeader, CardTitle } from '@/ui/card';
 import { Button } from '@/ui/button';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ToolbarConsulta from '../components/ToolbarConsulta';
 import TherapistTable from '../components/TherapistTable';
-import TherapistProfileDrawer from '../components/TherapistProfileDrawer';
 import type { Therapist, SortState, PaginationState } from '../types/consultas.types';
 import { listarTerapeutas } from '@/lib/api';
+
+// Lazy load do Drawer (só carrega quando necessário)
+const TherapistProfileDrawer = lazy(() => import('../components/TherapistProfileDrawer'));
 
 // Hook para debounce
 function useDebounce<T>(value: T, delay: number): T {
@@ -118,27 +120,27 @@ export default function TerapeutasListPage() {
         }));
     }, [filteredAndSortedTherapists.length]);
 
-    // Handlers
-    const handleSort = (field: string) => {
+    // Handlers com useCallback para evitar re-renders desnecessários
+    const handleSort = useCallback((field: string) => {
         setSortState((prev) => ({
             field,
             direction: prev.field === field && prev.direction === 'asc' ? 'desc' : 'asc',
         }));
-    };
+    }, []);
 
-    const handlePageChange = (page: number) => {
+    const handlePageChange = useCallback((page: number) => {
         setPagination((prev) => ({ ...prev, page }));
-    };
+    }, []);
 
-    const handleViewProfile = (therapist: Therapist) => {
+    const handleViewProfile = useCallback((therapist: Therapist) => {
         setSelectedTherapist(therapist);
         setDrawerOpen(true);
-    };
+    }, []);
 
-    const handleCloseDrawer = () => {
+    const handleCloseDrawer = useCallback(() => {
         setDrawerOpen(false);
         setSelectedTherapist(null);
-    };
+    }, []);
 
     // Calcular páginas para paginação
     const totalPages = Math.ceil(pagination.total / pagination.pageSize);
@@ -153,14 +155,12 @@ export default function TerapeutasListPage() {
     }
 
     return (
-        <div className="flex flex-col top-0 left-0 w-full h-full sm:p-6">
-            <CardHeader className="p-0">
+        <div className="flex flex-col top-0 left-0 w-full h-full sm:p-4">
+            <CardHeader className="p-0 pb-4">
                 <CardTitle className="text-2xl font-semibold text-primary">
                     Consultar Terapeutas
                 </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                    Visualize e gerencie os terapeutas cadastrados no sistema.
-                </p>
+                
             </CardHeader>
             <CardContent className="space-y-1 px-0">
                 <div className="flex gap-4">
@@ -251,11 +251,16 @@ export default function TerapeutasListPage() {
                 )}
             </CardContent>
 
-            <TherapistProfileDrawer
-                therapist={selectedTherapist}
-                open={drawerOpen}
-                onClose={handleCloseDrawer}
-            />
+            {/* Lazy load do Drawer com Suspense */}
+            {drawerOpen && (
+                <Suspense fallback={null}>
+                    <TherapistProfileDrawer
+                        therapist={selectedTherapist}
+                        open={drawerOpen}
+                        onClose={handleCloseDrawer}
+                    />
+                </Suspense>
+            )}
         </div>
     );
 }

@@ -14,6 +14,8 @@ import {
     SidebarMenuSubButton,
     SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
+import type { Actions, Subjects } from '@/features/auth/abilities/ability';
+import { RequireAbility } from '@/features/auth/abilities/RequireAbility';
 
 export function NavMain({
     items,
@@ -23,9 +25,11 @@ export function NavMain({
         url: string;
         icon: LucideIcon;
         isActive?: boolean;
+        ability?: { action: Actions; subject: Subjects };
         items?: {
             title: string;
             url: string;
+            ability?: { action: Actions; subject: Subjects };
         }[];
     }[];
 }) {
@@ -72,52 +76,64 @@ export function NavMain({
             </SidebarGroupLabel>
             <SidebarMenu>
                 {items.map((item) => (
-                    <Collapsible
+                    <RequireAbility
                         key={item.title}
-                        asChild
-                        open={openItems[item.title] || false}
-                        onOpenChange={() => toggleItem(item.title)}
+                        action={item.ability?.action ?? 'read'}
+                        subject={item.ability?.subject ?? 'Dashboard'}
                     >
-                        <SidebarMenuItem>
-                            <SidebarMenuButton asChild tooltip={item.title}>
-                                <Link to={item.url}>
-                                    <item.icon />
-                                    <span style={{ fontFamily: 'Sora, sans-serif' }}>
-                                        {item.title}
-                                    </span>
-                                </Link>
-                            </SidebarMenuButton>
-                            {item.items?.length ? (
-                                <>
-                                    <CollapsibleTrigger asChild>
-                                        <SidebarMenuAction className="data-[state=open]:rotate-90">
-                                            <ChevronRight />
-                                            <span className="sr-only">Toggle</span>
-                                        </SidebarMenuAction>
-                                    </CollapsibleTrigger>
-                                    <CollapsibleContent>
-                                        <SidebarMenuSub>
-                                            {item.items?.map((subItem) => (
-                                                <SidebarMenuSubItem key={subItem.title}>
-                                                    <SidebarMenuSubButton asChild>
-                                                        <Link to={subItem.url}>
-                                                            <span
-                                                                style={{
-                                                                    fontFamily: 'Sora, sans-serif',
-                                                                }}
-                                                            >
-                                                                {subItem.title}
-                                                            </span>
-                                                        </Link>
-                                                    </SidebarMenuSubButton>
-                                                </SidebarMenuSubItem>
-                                            ))}
-                                        </SidebarMenuSub>
-                                    </CollapsibleContent>
-                                </>
-                            ) : null}
-                        </SidebarMenuItem>
-                    </Collapsible>
+                        <Collapsible
+                            key={item.title}
+                            asChild
+                            open={openItems[item.title] || false}
+                            onOpenChange={() => toggleItem(item.title)}
+                        >
+                            <SidebarMenuItem>
+                                <SidebarMenuButton asChild tooltip={item.title}>
+                                    <Link to={item.url}>
+                                        <item.icon />
+                                        <span style={{ fontFamily: 'Sora, sans-serif' }}>
+                                            {item.title}
+                                        </span>
+                                    </Link>
+                                </SidebarMenuButton>
+                                {item.items?.length ? (
+                                    <>
+                                        <CollapsibleTrigger asChild>
+                                            <SidebarMenuAction className="data-[state=open]:rotate-90">
+                                                <ChevronRight />
+                                                <span className="sr-only">Toggle</span>
+                                            </SidebarMenuAction>
+                                        </CollapsibleTrigger>
+                                        <CollapsibleContent>
+                                            <SidebarMenuSub>
+                                                {item.items?.map((subItem) => (
+                                                    <RequireAbility
+                                                    key={subItem.title}
+                                                    action={subItem.ability?.action ?? 'read'}
+                                                    subject={subItem.ability?.subject ?? 'Dashboard'}
+                                                    >
+                                                        <SidebarMenuSubItem key={subItem.title}>
+                                                            <SidebarMenuSubButton asChild>
+                                                                <Link to={subItem.url}>
+                                                                    <span
+                                                                        style={{
+                                                                            fontFamily: 'Sora, sans-serif',
+                                                                        }}
+                                                                    >
+                                                                        {subItem.title}
+                                                                    </span>
+                                                                </Link>
+                                                            </SidebarMenuSubButton>
+                                                        </SidebarMenuSubItem>
+                                                    </RequireAbility>
+                                                ))}
+                                            </SidebarMenuSub>
+                                        </CollapsibleContent>
+                                    </>
+                                ) : null}
+                            </SidebarMenuItem>
+                        </Collapsible>
+                    </RequireAbility>
                 ))}
             </SidebarMenu>
         </SidebarGroup>

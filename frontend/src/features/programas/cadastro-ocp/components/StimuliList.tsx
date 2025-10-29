@@ -103,7 +103,7 @@ export default function StimuliList({
                 <div className="flex items-center justify-between">
                     <CardTitle className="text-base flex items-center gap-2">
                         <Zap className="h-4 w-4" />
-                        Objetivo a Curto Prazo
+                        Objetivo do Programa a Curto Prazo
                     </CardTitle>
                     <Button
                         type="button"

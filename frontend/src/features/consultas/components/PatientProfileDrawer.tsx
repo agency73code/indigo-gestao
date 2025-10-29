@@ -1,17 +1,17 @@
-import { useEffect, useMemo, useState} from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { X, User, MapPin, CreditCard, GraduationCap, Save, Loader2, Edit2, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/ui/label';
 import ReadOnlyField from './ReadOnlyField';
-import { LoadingDots } from './LoadingDots';
+import { EditingBadge } from './EditingBadge';
 import type { Patient, ClientFormValues } from '../types/consultas.types';
 import { useCliente } from '../hooks/useCliente';
 import DocumentsTable from '../arquivos/components/DocumentsTable';
 import { DocumentsEditor } from '../arquivos/components/DocumentsEditor';
 import { updateCliente, listFiles, type FileMeta } from '../service/consultas.service';
-import ProfilePhotoFieldSimple from '@/components/profile/ProfilePhotoFieldSimple';
+import ProfilePhotoFieldSimple, { type ProfilePhotoFieldSimpleRef } from '@/components/profile/ProfilePhotoFieldSimple';
 import {
     maskPersonName,
     maskCPF,
@@ -20,7 +20,53 @@ import {
     normalizeEmail,
     isValidEmail,
     maskCEP,
+    maskBRL,
 } from '@/common/utils/mask';
+
+interface AvatarWithSkeletonProps {
+    src: string | null | undefined;
+    alt: string;
+    initials: string;
+    className?: string;
+}
+
+const AvatarWithSkeleton = ({ src, alt, initials, className = '' }: AvatarWithSkeletonProps) => {
+    const [imageLoaded, setImageLoaded] = useState(false);
+    const [imageError, setImageError] = useState(false);
+
+    // Se não tem src, mostrar iniciais diretamente
+    if (!src) {
+        return <>{initials}</>;
+    }
+
+    if (imageError) {
+        return <>{initials}</>;
+    }
+
+    return (
+        <>
+            {!imageLoaded && (
+                <div className="absolute inset-0 bg-muted rounded-full animate-pulse" />
+            )}
+            <img
+                src={src}
+                alt={alt}
+                className={`absolute inset-0 h-full w-full object-cover rounded-full transition-opacity duration-200 ${
+                    imageLoaded ? 'opacity-100' : 'opacity-0'
+                } ${className}`}
+                referrerPolicy="no-referrer"
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
+                onLoad={() => setImageLoaded(true)}
+                onError={() => {
+                    setImageError(true);
+                    setImageLoaded(false);
+                }}
+            />
+        </>
+    );
+};
 
 interface PatientProfileDrawerProps {
     patient: Patient | null;
@@ -64,7 +110,7 @@ const defaultClientFormValues: ClientFormValues = {
         emailAdvogado2: '',
         mostrarEmailAdvogado3: false,
         emailAdvogado3: '',
-        houveNegociacao: '',
+        houveNegociacao: 'nao',
         valorAcordado: '',
     },
     dadosEscola: {
@@ -131,6 +177,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
     const [files, setFiles] = useState<FileMeta[]>([]);
     const [filesLoading, setFilesLoading] = useState(true);
     const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
+    const profilePhotoRef = useRef<ProfilePhotoFieldSimpleRef>(null);
     const [cpfError, setCpfError] = useState<string>('');
     const [cuidadorCpfErrors, setCuidadorCpfErrors] = useState<Record<number, string>>({});
     const [emailError, setEmailError] = useState<string>('');
@@ -233,7 +280,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                 emailAdvogado2: normalizeEmail(clienteData.dadosPagamento?.emailAdvogado2 ?? ''),
                 mostrarEmailAdvogado3: Boolean(clienteData.dadosPagamento?.emailAdvogado3),
                 emailAdvogado3: normalizeEmail(clienteData.dadosPagamento?.emailAdvogado3 ?? ''),
-                houveNegociacao: clienteData.dadosPagamento?.houveNegociacao ?? '',
+                houveNegociacao: clienteData.dadosPagamento?.houveNegociacao ?? 'nao',
                 valorAcordado: clienteData.dadosPagamento?.valorAcordado ?? '',
             },
             dadosEscola: {
@@ -266,6 +313,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
         reset,
         watch,
         control,
+        setValue,
         formState: { isDirty },
     } = useForm<ClientFormValues>({
         defaultValues: clienteFormDefaults ?? defaultClientFormValues,
@@ -300,6 +348,8 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
     useEffect(() => {
         if (open && patient?.id && files.length > 0) {
             const fotoPerfil = files.find(f => f.tipo_documento === 'fotoPerfil');
+
+         console.log(fotoPerfil)   
             if (fotoPerfil) {
                 // Construir URL da foto de perfil existente
                 const fotoUrl = `${import.meta.env.VITE_API_URL}/arquivos/${fotoPerfil.id}/view`;
@@ -319,6 +369,14 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
     const watchEnderecos = watch('enderecos');
     const watchDadosPagamento = watch('dadosPagamento');
     const watchDadosEscola = watch('dadosEscola');
+
+    // Formatar valor acordado quando carregar
+    useEffect(() => {
+        const currentValue = watchDadosPagamento?.valorAcordado;
+        if (currentValue && !currentValue.startsWith('R$')) {
+            setValue('dadosPagamento.valorAcordado', maskBRL(currentValue), { shouldDirty: false });
+        }
+    }, [watchDadosPagamento?.valorAcordado, setValue]);
 
     const handleEditClick = () => {
         setIsEditMode(true);
@@ -375,8 +433,12 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
 
         setIsSaving(true);
         setSaveError(null);
-
         try {
+            // Fazer upload da foto primeiro, se houver uma nova
+            if (profilePhoto) {
+                await profilePhotoRef.current?.uploadPhoto();
+            }
+
             await updateCliente(patient.id, {
                 nome: data.nome,
                 emailContato: data.emailContato,
@@ -540,28 +602,28 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
             <div className="relative w-full max-w-4xl max-h-[90vh] bg-background border rounded-lg shadow-2xl flex flex-col">
                 {/* Header - shrink-0 mantém fixo */}
                 <div className="flex items-center gap-4 p-6 border-b bg-muted/30 shrink-0">
-                    <div className="h-16 w-16 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center text-lg font-medium text-purple-600 dark:text-purple-300">
-                        {arquivosMap.has('fotoPerfil') ? (
-                            <img
-                                src={`${import.meta.env.VITE_API_URL}/arquivos/view/${arquivosMap.get('fotoPerfil')?.arquivo_id}`}
-                                alt={patient.nome}
-                                className="h-full w-full object-cover rounded-full"
-                            />
-                        ) : (
-                            getInitials(patient.nome)
-                        )}
+                    <div className="relative h-16 w-16 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center text-lg font-medium text-purple-600 dark:text-purple-300">
+                        <AvatarWithSkeleton
+                            src={
+                                arquivosMap.has('fotoPerfil')
+                                    ? `${import.meta.env.VITE_API_URL}/arquivos/view/${arquivosMap.get('fotoPerfil')?.arquivo_id}`
+                                    : undefined
+                            }
+                            alt={patient.nome}
+                            initials={getInitials(patient.nome)}
+                        />
                     </div>
                     <div className="flex-1">
                         <h2 className="text-xl font-semibold text-foreground">{patient.nome}</h2>
                         <div className="flex items-center gap-2 mt-2">
                             <span
                                 className={`px-2 py-1 text-xs font-medium rounded-full ${
-                                    patient.status === 'ATIVO'
+                                    patient.status?.toUpperCase() === 'ATIVO'
                                         ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                                        : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300'
+                                        : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
                                 }`}
                             >
-                                {patient.status}
+                                {patient.status?.toUpperCase() === 'ATIVO' ? 'Ativo' : 'Inativo'}
                             </span>
                             {patient.responsavel && (
                                 <span className="text-sm text-muted-foreground">
@@ -572,15 +634,17 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                     </div>
 
                     {!isEditMode ? (
-                        <Button variant="secondary" size="sm" onClick={handleEditClick} className="h-8 gap-2">
+                        <Button 
+                            variant="default" 
+                            size="sm" 
+                            onClick={handleEditClick} 
+                            className="h-8 gap-2"
+                        >
                             <Edit2 className="h-4 w-4" />
                             Editar
                         </Button>
                     ) : (
-                        <div className="flex items-center gap-2 px-3 py-1 bg-secondary rounded-md">
-                            <LoadingDots />
-                            <span className="text-sm font-medium">Editando</span>
-                        </div>
+                        <EditingBadge />
                     )}
 
                     <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0">
@@ -609,10 +673,10 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                             {isEditMode && (
                                 <div className="mb-6">
                                     <ProfilePhotoFieldSimple
+                                        ref={profilePhotoRef}
                                         userId={patient?.id || ''}
                                         value={profilePhoto}
                                         onChange={(file) => {
-                                            console.log('ProfilePhoto onChange:', file);
                                             setProfilePhoto(file);
                                         }}
                                         onUploaded={(profileDto) => {
@@ -1063,7 +1127,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                                         <Label>CEP *</Label>
                                                         <Input 
                                                             {...register(`enderecos.${index}.cep` as const)}
-                                                            onChange={(e) => {
+                                                            onChange={async (e) => {
                                                                 const masked = maskCEP(e.target.value);
                                                                 e.target.value = masked;
                                                                 register(`enderecos.${index}.cep` as const).onChange(e);
@@ -1616,7 +1680,21 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div className="space-y-2">
                                                 <Label>Prazo de reembolso</Label>
-                                                <Input {...register('dadosPagamento.prazoReembolso')} />
+                                                <Input 
+                                                    {...register('dadosPagamento.prazoReembolso')}
+                                                    type="number"
+                                                    min="1"
+                                                    placeholder="Ex: 30"
+                                                    onChange={(e) => {
+                                                        // Remove caracteres não numéricos
+                                                        const onlyNumbers = e.target.value.replace(/\D/g, '');
+                                                        e.target.value = onlyNumbers;
+                                                        setValue('dadosPagamento.prazoReembolso', onlyNumbers);
+                                                    }}
+                                                />
+                                                <p className="text-xs text-muted-foreground">
+                                                    Informe o prazo em dias para reembolso
+                                                </p>
                                             </div>
                                         </div>
                                     )}
@@ -2005,7 +2083,15 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                             {watchDadosPagamento?.houveNegociacao === 'sim' && (
                                                 <div className="space-y-2">
                                                     <Label>Valor acordado</Label>
-                                                    <Input {...register('dadosPagamento.valorAcordado')} />
+                                                    <Input 
+                                                        {...register('dadosPagamento.valorAcordado')}
+                                                        onChange={(e) => {
+                                                            const masked = maskBRL(e.target.value);
+                                                            e.target.value = masked;
+                                                            setValue('dadosPagamento.valorAcordado', masked);
+                                                        }}
+                                                        placeholder="R$ 0,00"
+                                                    />
                                                 </div>
                                             )}
                                         </div>
@@ -2041,7 +2127,12 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                                 : 'Não informado'
                                     } />
                                     {paymentData?.sistemaPagamento === 'reembolso' && (
-                                        <ReadOnlyField label="Prazo de reembolso" value={paymentData?.prazoReembolso ?? ''} />
+                                        <div className="space-y-2">
+                                            <ReadOnlyField label="Prazo de reembolso" value={paymentData?.prazoReembolso ?? ''} />
+                                            <p className="text-xs text-muted-foreground">
+                                                Prazo informado em dias
+                                            </p>
+                                        </div>
                                     )}
                                     {paymentData?.sistemaPagamento === 'liminar' && (
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -2076,7 +2167,10 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                                 }
                                             />
                                             {paymentData?.houveNegociacao === 'sim' && (
-                                                <ReadOnlyField label="Valor acordado" value={paymentData?.valorAcordado ?? ''} />
+                                                <ReadOnlyField 
+                                                    label="Valor acordado" 
+                                                    value={paymentData?.valorAcordado ? maskBRL(paymentData.valorAcordado) : 'Não informado'} 
+                                                />
                                             )}
                                         </div>
                                     )}

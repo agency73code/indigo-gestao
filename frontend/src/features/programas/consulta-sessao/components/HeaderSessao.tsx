@@ -1,7 +1,9 @@
 import { ArrowLeft, Calendar, Brain, Clock } from 'lucide-react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Skeleton } from '@/components/ui/skeleton';
 import type { Sessao } from '../types';
 import type { Patient, ProgramDetail } from '../types';
 
@@ -13,6 +15,7 @@ interface HeaderSessaoProps {
 }
 
 export default function HeaderSessao({ sessao, paciente, programa, onBack }: HeaderSessaoProps) {
+  const [imageLoading, setImageLoading] = useState(true);
   const getInitials = (name: string) =>
     name
       .split(' ')
@@ -61,9 +64,21 @@ export default function HeaderSessao({ sessao, paciente, programa, onBack }: Hea
         {/* Paciente */}
         <div className="flex items-center gap-3 p-3 bg-muted rounded-md">
           <div className="flex-shrink-0">
-            <Avatar className="w-12 h-12">
-              {paciente.photoUrl ? <AvatarImage src={paciente.photoUrl} alt={`Foto de ${paciente.name}`} /> : null}
-              <AvatarFallback className="bg-purple-100 text-purple-600">{getInitials(paciente.name)}</AvatarFallback>
+            <Avatar className="w-12 h-12 rounded-full">
+              {imageLoading && paciente.photoUrl && (
+                <Skeleton className="h-12 w-12 rounded-full absolute inset-0" />
+              )}
+              {paciente.photoUrl ? (
+                <AvatarImage 
+                  src={paciente.photoUrl.startsWith('/api')
+                    ? `${import.meta.env.VITE_API_BASE ?? ''}${paciente.photoUrl}`
+                    : paciente.photoUrl}
+                  alt={`Foto de ${paciente.name}`}
+                  className={imageLoading ? 'opacity-0' : 'opacity-100 transition-opacity'}
+                  onLoad={() => setImageLoading(false)}
+                />
+              ) : null}
+              <AvatarFallback className="bg-purple-100 text-purple-600 rounded-full">{getInitials(paciente.name)}</AvatarFallback>
             </Avatar>
           </div>
           <div className="flex-1 min-w-0">

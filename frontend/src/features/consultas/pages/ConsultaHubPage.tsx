@@ -31,7 +31,7 @@ export default function ConsultaHubPage() {
             href: '/app/consultar/terapeutas',
             bgColor: 'bg-[var(--card-primary)]',
             textColor: 'text-white',
-            ability: { action: 'manage', subject: 'all' },
+            ability: { action: 'manage', subject: 'Consultar' },
         },
         {
             title: 'Consultar Clientes',
@@ -40,7 +40,7 @@ export default function ConsultaHubPage() {
             href: '/app/consultar/pacientes',
             bgColor: 'bg-blue-500',
             textColor: 'text-white',
-            ability: { action: 'read', subject: 'all' },
+            ability: { action: 'read', subject: 'Consultar' },
         },
     ];
 
@@ -66,7 +66,7 @@ export default function ConsultaHubPage() {
     }, []);
 
     return (
-        <div className="flex flex-col min-h-full w-full px-1 py-4 md:p-4 sm:p-4 lg:p-4 space-y-6">
+        <div className="flex flex-col min-h-full w-full px-1 py-4 md:p-4 sm:p-4 lg:p-4 space-y-4">
             {/* Header Section */}
             <div className="space-y-2">
                 <h1
@@ -75,9 +75,9 @@ export default function ConsultaHubPage() {
                 >
                     Consultar
                 </h1>
-                <p className="text-sm sm:text-base text-muted-foreground">
+                {/* <p className="text-sm sm:text-base text-muted-foreground">
                     Visualize e gerencie os registros do sistema
-                </p>
+                </p> */}
             </div>
 
             {/* Main Action Cards */}

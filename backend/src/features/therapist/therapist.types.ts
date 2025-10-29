@@ -21,13 +21,13 @@ export type TherapistForm = {
   nome: string
   email: string
   emailIndigo: string
-  telefone?: string | null
+  telefone: string | null
   celular: string
   cpf: string
   dataNascimento: Date
   possuiVeiculo: string
-  placaVeiculo?: string | null
-  modeloVeiculo?: string | null
+  placaVeiculo: string | null
+  modeloVeiculo: string | null
   banco: string
   agencia: string
   conta: string
@@ -41,7 +41,7 @@ export type TherapistForm = {
     cep: string
     rua: string
     numero: string
-    complemento?: string | null | undefined
+    complemento: string
     bairro: string
     cidade: string
     estado: string
@@ -49,7 +49,7 @@ export type TherapistForm = {
 
   dataInicio: Date
   dataFim: Date | null | undefined
-  formacao: {
+  formacao?: {
     graduacao: string
     instituicaoGraduacao: string
     anoFormatura: string
@@ -61,7 +61,7 @@ export type TherapistForm = {
     }[]
     participacaoCongressosDescricao?: string | null
     publicacoesLivrosDescricao?: string | null
-  }
+  } | null
 
   cnpj?: {
     numero?: string | null
@@ -135,7 +135,7 @@ export interface TherapistDB {
             instituicao?: string | null
             conclusao?: string | null
         }[];
-    }[];
+    } | null;
     registro_profissional?: {
         id: number;
         area_atuacao_id: number;

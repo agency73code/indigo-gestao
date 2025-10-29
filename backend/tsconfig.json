@@ -41,5 +41,5 @@
         "moduleDetection": "force",
         "skipLibCheck": true
     },
-    "include" : ["src", "src/types"]
+    "include" : ["src", "src/types", "src/scripts"]
 }

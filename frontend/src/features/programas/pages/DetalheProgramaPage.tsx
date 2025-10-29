@@ -320,7 +320,7 @@ export default function DetalheProgramaPage() {
     return (
         <div className="flex flex-col gap-0">
             {/* Cabeçalho com título e botão de exportar (não imprime) */}
-            <div className="flex items-center justify-between px-6 pt-6 pb-0 no-print">
+            <div className="flex items-center justify-between px-6 pt-4 pb-0 no-print">
                 <div className="flex-1">
                     <h1
                         className="text-2xl font-semibold text-primary"
@@ -328,9 +328,9 @@ export default function DetalheProgramaPage() {
                     >
                         {program.name || 'Programa sem nome'}
                     </h1>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    {/* <p className="text-sm text-muted-foreground mt-1">
                         {program.patientName} • {program.goalTitle}
-                    </p>
+                    </p> */}
                 </div>
                 <Button type="button" onClick={handlePrint} className="h-12 gap-2 rounded-[5px]">
                     <FileDown className="h-4 w-4" aria-hidden />

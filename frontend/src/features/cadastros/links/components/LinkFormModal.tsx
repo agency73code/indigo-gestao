@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { CalendarIcon, User, Users, Search, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -109,7 +109,7 @@ export default function LinkFormModal({
             setTherapistId('');
             setRole('co');
             setActuationArea('');
-            setStartDate(undefined);
+            setStartDate(new Date()); // Data atual como padrão
             setNotes('');
             setSelectedTherapist(null);
             setTherapistSearch('');
@@ -127,7 +127,7 @@ export default function LinkFormModal({
             setTherapistId('');
             setRole('responsible');
             setActuationArea('');
-            setStartDate(undefined);
+            setStartDate(new Date()); // Data atual como padrão
             setNotes('');
             setSelectedPatient(null);
             setSelectedTherapist(null);
@@ -346,6 +346,15 @@ export default function LinkFormModal({
                                 {selectedPatient ? (
                                     <>
                                         <Avatar className="h-8 w-8">
+                                            <AvatarImage 
+                                                src={(selectedPatient as any).avatarUrl 
+                                                    ? ((selectedPatient as any).avatarUrl.startsWith('/api')
+                                                        ? `${import.meta.env.VITE_API_BASE ?? ''}${(selectedPatient as any).avatarUrl}`
+                                                        : (selectedPatient as any).avatarUrl)
+                                                    : undefined
+                                                }
+                                                alt={selectedPatient.nome}
+                                            />
                                             <AvatarFallback className="text-xs">
                                                 {getInitials(selectedPatient.nome)}
                                             </AvatarFallback>
@@ -390,6 +399,15 @@ export default function LinkFormModal({
                                 {selectedTherapist ? (
                                     <>
                                         <Avatar className="h-8 w-8">
+                                            <AvatarImage 
+                                                src={(selectedTherapist as any).avatarUrl 
+                                                    ? ((selectedTherapist as any).avatarUrl.startsWith('/api')
+                                                        ? `${import.meta.env.VITE_API_BASE ?? ''}${(selectedTherapist as any).avatarUrl}`
+                                                        : (selectedTherapist as any).avatarUrl)
+                                                    : undefined
+                                                }
+                                                alt={selectedTherapist.nome}
+                                            />
                                             <AvatarFallback className="text-xs">
                                                 {getInitials(selectedTherapist.nome)}
                                             </AvatarFallback>
@@ -599,24 +617,37 @@ export default function LinkFormModal({
                             <div className="max-h-60 overflow-y-auto">
                                 {patientResults.length > 0 ? (
                                     <div className="space-y-2">
-                                        {patientResults.map((patient) => (
-                                            <div
-                                                key={patient.id}
-                                                className="flex items-center gap-3 p-3 hover:bg-muted/50 cursor-pointer rounded-[5px]"
-                                                onClick={() => handlePatientSelect(patient)}
-                                            >
-                                                <Avatar className="h-8 w-8">
-                                                    <AvatarFallback className="text-xs">
-                                                        {getInitials(patient.nome)}
-                                                    </AvatarFallback>
-                                                </Avatar>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-medium truncate">
-                                                        {patient.nome}
-                                                    </p>
+                                        {patientResults.map((patient) => {
+                                            const patientAny = patient as any;
+                                            const avatarUrl = patientAny.avatarUrl
+                                                ? (patientAny.avatarUrl.startsWith('/api')
+                                                    ? `${import.meta.env.VITE_API_BASE ?? ''}${patientAny.avatarUrl}`
+                                                    : patientAny.avatarUrl)
+                                                : undefined;
+                                            
+                                            return (
+                                                <div
+                                                    key={patient.id}
+                                                    className="flex items-center gap-3 p-3 hover:bg-muted/50 cursor-pointer rounded-[5px]"
+                                                    onClick={() => handlePatientSelect(patient)}
+                                                >
+                                                    <Avatar className="h-8 w-8">
+                                                        <AvatarImage 
+                                                            src={avatarUrl} 
+                                                            alt={patient.nome}
+                                                        />
+                                                        <AvatarFallback className="text-xs">
+                                                            {getInitials(patient.nome)}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-sm font-medium truncate">
+                                                            {patient.nome}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 ) : patientSearch.length > 0 ? (
                                     <p className="text-sm text-muted-foreground text-center py-8">
@@ -658,24 +689,37 @@ export default function LinkFormModal({
                             <div className="max-h-60 overflow-y-auto">
                                 {therapistResults.length > 0 ? (
                                     <div className="space-y-2">
-                                        {therapistResults.map((therapist) => (
-                                            <div
-                                                key={therapist.id}
-                                                className="flex items-center gap-3 p-3 hover:bg-muted/50 cursor-pointer rounded-[5px]"
-                                                onClick={() => handleTherapistSelect(therapist)}
-                                            >
-                                                <Avatar className="h-8 w-8">
-                                                    <AvatarFallback className="text-xs">
-                                                        {getInitials(therapist.nome)}
-                                                    </AvatarFallback>
-                                                </Avatar>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-medium truncate">
-                                                        {therapist.nome}
-                                                    </p>
+                                        {therapistResults.map((therapist) => {
+                                            const therapistAny = therapist as any;
+                                            const avatarUrl = therapistAny.avatarUrl
+                                                ? (therapistAny.avatarUrl.startsWith('/api')
+                                                    ? `${import.meta.env.VITE_API_BASE ?? ''}${therapistAny.avatarUrl}`
+                                                    : therapistAny.avatarUrl)
+                                                : undefined;
+                                            
+                                            return (
+                                                <div
+                                                    key={therapist.id}
+                                                    className="flex items-center gap-3 p-3 hover:bg-muted/50 cursor-pointer rounded-[5px]"
+                                                    onClick={() => handleTherapistSelect(therapist)}
+                                                >
+                                                    <Avatar className="h-8 w-8">
+                                                        <AvatarImage 
+                                                            src={avatarUrl} 
+                                                            alt={therapist.nome}
+                                                        />
+                                                        <AvatarFallback className="text-xs">
+                                                            {getInitials(therapist.nome)}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-sm font-medium truncate">
+                                                            {therapist.nome}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 ) : therapistSearch.length > 0 ? (
                                     <p className="text-sm text-muted-foreground text-center py-8">

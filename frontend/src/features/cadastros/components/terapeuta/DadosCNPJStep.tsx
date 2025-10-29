@@ -52,8 +52,8 @@ export default function DadosCNPJStep({ data, onUpdate, errors }: DadosCNPJStepP
     }, [cepData]);
 
     return (
-        <div className="space-y-4 md:space-y-4 md:space-y-6">
-            <h3 className="text-base sm:text-base sm:text-lg font-semibold">Dados do CNPJ (Opcional)</h3>
+        <div className="space-y-4 md:space-y-6">
+            <h3 className="text-base sm:text-lg font-semibold">Dados do CNPJ (Opcional)</h3>
 
             <div className="bg-muted/50 p-4 rounded-lg">
                 <p className="text-sm text-muted-foreground mb-4">
@@ -87,7 +87,7 @@ export default function DadosCNPJStep({ data, onUpdate, errors }: DadosCNPJStepP
             </div>
 
             {temCNPJ && (
-                <div className="space-y-4 md:space-y-4 md:space-y-6">
+                <div className="space-y-4 md:space-y-6">
                     {/* Dados básicos do CNPJ */}
                     <div className="space-y-4">
                         <h4 className="text-md font-medium text-primary">Dados da Empresa</h4>

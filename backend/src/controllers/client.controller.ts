@@ -3,6 +3,7 @@ import * as clientService from "../features/client/client.service.js";
 import * as clientNormalize from "../features/client/client.normalizer.js";
 import { sendWelcomeEmail } from "../utils/mail.util.js";
 import * as clientSchema from "../schemas/client.schema.js";
+import { AppError } from "../errors/AppError.js";
 
 export async function create(req: Request, res: Response, next: NextFunction) {
   try {
@@ -45,12 +46,13 @@ export async function update(req: Request, res: Response, next: NextFunction) {
   try {
     const { id } = req.params;
     if (!id) return res.status(400).json({ success: false, message: 'ID inválido' });
+    console.log(req.body);
+    const parsed = clientSchema.UpdateClientSchema.parse(req.body);
+    if (Object.keys(parsed).length === 0) {
+      return res.status(400).json({ success: false, message: 'Nenhum dado fornecido para atualização' });
+    }
 
-    // const parsed = clientSchema.UpdateClientSchema.parse(req.body);
-    // if (Object.keys(parsed).length === 0) {
-    //   return res.status(400).json({ success: false, message: 'Nenhum dado fornecido para atualização' });
-    // }
-    const updated = await clientService.update(id, req.body);
+    const updated = await clientService.update(id, parsed);
 
     return res.json({ success: true, message: 'Cliente atualizado com sucesso!', data: updated });
   } catch (err) {
@@ -69,7 +71,12 @@ export async function getClientReport(req: Request, res: Response, next: NextFun
 
 export async function list(req: Request, res: Response, next: NextFunction) {
   try {
-    const data = await clientService.list();
+    if (!req.user) {
+      throw new AppError('REQUIRED_THERAPIST_ID', 'ID do terapeuta é obrigatório.', 400);
+    } 
+    const therapistId = req.user.id;
+
+    const data = await clientService.list(therapistId as string);
     const normalized = await clientNormalize.normalizeList(data);
 
     res.json({ success: true, normalized });
@@ -87,4 +94,3 @@ export async function countActiveClients(req: Request, res: Response, next: Next
     next(error);
   }
 }
-

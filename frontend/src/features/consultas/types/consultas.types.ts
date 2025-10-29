@@ -100,6 +100,31 @@ export interface SortState {
 // Form Types - PatientProfileDrawer
 // ============================================
 
+export type ProfessionalDataForm = {
+    areaAtuacao: string;
+    areaAtuacaoId?: number | string | null;
+    cargo: string;
+    cargoId?: number | string | null;
+    numeroConselho?: string;
+};
+
+export type PosGraduacaoForm = {
+    tipo: 'lato' | 'stricto';
+    curso: string;
+    instituicao: string;
+    conclusao: string;
+    comprovanteUrl?: string | null;
+};
+
+export type FormacaoForm = {
+    graduacao: string;
+    instituicaoGraduacao: string;
+    anoFormatura: string;
+    posGraduacoes?: PosGraduacaoForm[];
+    participacaoCongressosDescricao?: string | null;
+    publicacoesLivrosDescricao?: string | null;
+};
+
 export type CaregiverForm = {
     relacao: string;
     descricaoRelacao: string;
@@ -198,4 +223,51 @@ export type ClientFormValues = {
     enderecos: AddressForm[];
     dadosPagamento: PaymentForm;
     dadosEscola: SchoolForm;
+};
+
+export type CNPJForm = {
+    numero: string;
+    razaoSocial: string;
+    nomeFantasia: string;
+    endereco: {
+        cep: string;
+        rua: string;
+        numero: string;
+        complemento: string;
+        bairro: string;
+        cidade: string;
+        estado: string;
+    };
+};
+
+export type TherapistFormValues = {
+    nome: string;
+    email: string;
+    emailIndigo: string;
+    telefone: string;
+    celular: string;
+    cpf: string;
+    dataNascimento: string;
+    cep: string;
+    rua: string;
+    numero: string;
+    complemento: string;
+    bairro: string;
+    cidade: string;
+    estado: string;
+    possuiVeiculo: 'sim' | 'nao';
+    placaVeiculo: string;
+    modeloVeiculo: string;
+    banco: string;
+    agencia: string;
+    conta: string;
+    chavePix: string;
+    dadosProfissionais: ProfessionalDataForm[];
+    dataInicio: string;
+    dataFim: string;
+    valorHoraAcordado: string;
+    professorUnindigo: 'sim' | 'nao';
+    disciplinaUniindigo: string;
+    formacao: FormacaoForm;
+    cnpj: CNPJForm;
 };

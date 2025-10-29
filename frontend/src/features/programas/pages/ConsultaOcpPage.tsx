@@ -63,8 +63,7 @@ export default function ConsultaOcpPage() {
         <div className="flex flex-col min-h-full w-full p-1 sm:p-4">
             <div className="py-4 lg:py-0">
                 <HeaderSection
-                    title="Programas & Objetivos"
-                    subtitle="Consultar e gerenciar programas terapêuticos dos clientes"
+                    title="Consultar Programas & Objetivos"
                 />
             </div>
 
