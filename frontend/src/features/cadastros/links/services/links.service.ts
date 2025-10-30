@@ -725,7 +725,7 @@ export async function getAllSupervisionLinks(): Promise<TherapistSupervisionLink
     
     return supervisionLinks;
   } catch (error) {
-    console.log('⚠️ Backend não disponível, usando mock de vínculos de supervisão');
+    console.log('⚠️ Backend não disponível, usando mock de vínculos de supervisão:', error);
     // Retorna mock local quando backend não está disponível
     return [...mockSupervisionLinks];
   }
@@ -1078,7 +1078,7 @@ export async function canSuperviseTherapist(
     const result = await response.json();
     return result.canSupervise === true;
   } catch (error) {
-    console.warn('⚠️ Erro ao verificar permissão de supervisão');
+    console.warn('⚠️ Erro ao verificar permissão de supervisão:', error);
     return false;
   }
 }

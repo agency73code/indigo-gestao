@@ -12,9 +12,13 @@ export interface ProfilePhotoDTO {
 export interface UseProfilePhotoReturn {
   isUploading: boolean;
   uploadError: string | null;
-  uploadProfilePhoto: (croppedBlob: Blob, userId: string) => Promise<ProfilePhotoDTO | null>;
+  uploadProfilePhoto: (
+    croppedBlob: Blob,
+    userId: string,
+    fullName: string,
+    birthDate: string
+  ) => Promise<ProfilePhotoDTO | null>;
   clearError: () => void;
-  flushPendingPhoto: (newUserId: string) => Promise<void>;
 }
 
 /**
@@ -25,7 +29,6 @@ export const useProfilePhoto = (): UseProfilePhotoReturn => {
   const location = useLocation();
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [pendingPhoto, setPendingPhoto] = useState<Blob | null>(null);
 
   const clearError = useCallback(() => {
     setUploadError(null);
@@ -33,7 +36,9 @@ export const useProfilePhoto = (): UseProfilePhotoReturn => {
 
   const uploadProfilePhoto = useCallback(async (
     croppedBlob: Blob,
-    userId: string
+    userId: string,
+    fullName: string,
+    birthDate: string
   ): Promise<ProfilePhotoDTO | null> => {
 
     // Quando não existir userId(cadastro) só sai
@@ -46,16 +51,20 @@ export const useProfilePhoto = (): UseProfilePhotoReturn => {
 
     try {
       // Criar arquivo WebP com nome padronizado
-      const fileName = `avatar_${userId}.webp`;
+      const fileName = `profile-photo.webp`;
       const file = createFileFromBlob(croppedBlob, fileName);
-      // Criar FormData para enviar ao backend
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('tipo_documento', 'fotoPerfil');
       
       const isTerapeuta = location.pathname.includes('/app/consultar/terapeutas') || location.pathname.includes('/app/configuracoes');
       const ownerType = isTerapeuta ? 'terapeuta' : 'cliente';
       const url = `/api/arquivos?ownerType=${ownerType}&ownerId=${userId}`;
+
+      // Criar FormData para enviar ao backend
+      const formData = new FormData();
+      formData.append('fotoPerfil', file);
+      formData.append('ownerType', ownerType);
+      formData.append('ownerId', userId);
+      formData.append('fullName', fullName);
+      formData.append('birthDate', birthDate);
 
       // Fazer upload para o endpoint do backend
       const response = await fetch(url, {
@@ -110,18 +119,10 @@ export const useProfilePhoto = (): UseProfilePhotoReturn => {
     }
   }, []);
 
-  const flushPendingPhoto = useCallback(async (newUserId: string) => {
-    if (pendingPhoto) {
-      await uploadProfilePhoto(pendingPhoto, newUserId);
-      setPendingPhoto(null);
-    }
-  }, [pendingPhoto, uploadProfilePhoto]);
-
   return {
     isUploading,
     uploadError,
     uploadProfilePhoto,
     clearError,
-    flushPendingPhoto,
   };
 };

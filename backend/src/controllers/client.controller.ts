@@ -22,7 +22,7 @@ export async function create(req: Request, res: Response, next: NextFunction) {
         console.error('Erro ao enviar email de boas-vindas:', error);
     });
 
-    res.status(201).json({ success: true, message: 'Cliente cadastrado com sucesso!' });
+    res.status(201).json({ success: true, message: 'Cliente cadastrado com sucesso!', id: client.id });
   } catch (err) {
     next(err);
   }

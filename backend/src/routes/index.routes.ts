@@ -8,11 +8,13 @@ import cardsRoutes from './cards.routes.js';
 import ocpRoutes from './ocp.routes.js';
 import linksRoutes from './links.routes.js';
 import metadataRoutes from './metadata.routes.js';
+import genericsRoutes from './generics.routes.js';
 
 const router: ExpressRouter = Router();
 
 router.use('/terapeutas', therapistRoutes);
 router.use('/clientes', clientRoutes);
+router.use('/usuarios', genericsRoutes);
 router.use('/auth', authRoutes);
 router.use('/arquivos', filesRoutes);
 router.use('/cards', cardsRoutes);

@@ -78,7 +78,7 @@ export const router = createBrowserRouter([
                                 path: 'cadastros',
                                 element: (
                                     <Suspense fallback={suspenseFallback}>
-                                        <RequireAbility action="manage" subject="Cadastro">
+                                        <RequireAbility action="create" subject="Cadastro">
                                             <CadastroHubPage />
                                         </RequireAbility>
                                     </Suspense>
@@ -87,7 +87,7 @@ export const router = createBrowserRouter([
                             {
                                 path: 'cadastro/terapeuta',
                                 element: (
-                                    <RequireAbility action="manage" subject="Cadastro">
+                                    <RequireAbility action="manage" subject="all">
                                         <Suspense fallback={suspenseFallback}>
                                             <CadastroTerapeutaPage />
                                         </Suspense>
@@ -97,7 +97,7 @@ export const router = createBrowserRouter([
                             {
                                 path: 'cadastro/cliente',
                                 element: (
-                                    <RequireAbility action="manage" subject="Cadastro">
+                                    <RequireAbility action="create" subject="Cadastro">
                                         <Suspense fallback={suspenseFallback}>
                                             <CadastroClientePage />
                                         </Suspense>
@@ -107,7 +107,7 @@ export const router = createBrowserRouter([
                             {
                                 path: 'cadastros/vinculos',
                                 element: (
-                                    <RequireAbility action="manage" subject="Cadastro">
+                                    <RequireAbility action="create" subject="Cadastro">
                                         <Suspense fallback={suspenseFallback}>
                                             <VinculosPage />
                                         </Suspense>
