@@ -22,6 +22,8 @@ import { useProfilePhoto, type ProfilePhotoDTO } from '@/hooks/useProfilePhoto';
 
 interface ProfilePhotoFieldSimpleProps {
     userId: string;
+    fullName: string;
+    birthDate: string;
     value?: File | string | null;
     onChange?: (file: File | null) => void;
     onUploaded?: (profileDto: ProfilePhotoDTO) => void;
@@ -38,6 +40,8 @@ interface CropState {
 
 export default function ProfilePhotoFieldSimple({
     userId,
+    fullName,
+    birthDate,
     value,
     onChange,
     onUploaded,
@@ -174,7 +178,7 @@ export default function ProfilePhotoFieldSimple({
 
             // Fazer upload em background
             try {
-                const profileDto = await uploadProfilePhoto(croppedBlob, userId);
+                const profileDto = await uploadProfilePhoto(croppedBlob, userId, fullName, birthDate);
                 if (profileDto) {
                     onUploaded?.(profileDto);
                 }
@@ -194,6 +198,8 @@ export default function ProfilePhotoFieldSimple({
         cropState.croppedAreaPixels,
         orientation,
         userId,
+        fullName,
+        birthDate,
         uploadProfilePhoto,
         onChange,
         onUploaded,

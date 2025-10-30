@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,6 +13,30 @@ export function PerfilSection() {
     const { user } = useAuth();
     const [profilePhoto, setProfilePhoto] = useState<File | string | null>(user?.avatar_url || null);
     const [showPhotoEditor, setShowPhotoEditor] = useState(false);
+    const [userData, setUserData] = useState<{ nome: string; dataNascimento: string } | null>(null);
+
+    useEffect(() => {
+        if (!user?.id) return;
+
+        const url = `/api/usuarios/${user.id}`;
+
+        fetch(url, { credentials: 'include' })
+            .then((res) => {
+                if (!res.ok) {
+                    throw new Error(`Erro HTTP ${res.status}`);
+                }
+                return res.json();
+            })
+            .then((data) => {
+                setUserData({
+                    nome: data.nome,
+                    dataNascimento: data.dataNascimento,
+                });
+            })
+            .catch((err) =>
+                console.error('Erro ao carregar dados do usuário:', err)
+            );
+    }, [user]);
 
     const handlePhotoChange = useCallback((file: File | null) => {
         setProfilePhoto(file);
@@ -23,6 +47,7 @@ export function PerfilSection() {
         setProfilePhoto(dto.webViewLink || dto.thumbnailLink);
         setShowPhotoEditor(false);
     }, []);
+
     return (
         <div className="grid gap-6 md:grid-cols-2">
             <SettingsCard
@@ -31,10 +56,12 @@ export function PerfilSection() {
             >
                 <div className="space-y-4">
                     <div className="space-y-2">
-                        {showPhotoEditor ? (
+                        {showPhotoEditor && userData ? (
                             <div className="space-y-2">
                                 <ProfilePhotoFieldSimple
                                     userId={user?.id || ''}
+                                    fullName={userData.nome}
+                                    birthDate={userData.dataNascimento}
                                     value={profilePhoto}
                                     onChange={handlePhotoChange}
                                     onUploaded={handlePhotoUploaded}

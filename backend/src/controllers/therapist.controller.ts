@@ -18,7 +18,7 @@ export async function create(req: Request, res: Response, next: NextFunction) {
             console.error('Erro ao enviar email de boas-vindas:', error);
         });
 
-        res.status(201).json({ success: true, message: 'Terapeuta cadastrado com sucesso!' });  
+        res.status(201).json({ success: true, message: 'Terapeuta cadastrado com sucesso!', id: therapist.id });  
     } catch (error) {
         next(error);
     }

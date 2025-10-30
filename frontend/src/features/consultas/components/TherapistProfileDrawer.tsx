@@ -558,7 +558,7 @@ export default function TherapistProfileDrawer({
         : null;
 
     const displayAvatar = fotoPerfil
-        ? `${import.meta.env.VITE_API_URL}/arquivos/view/${fotoPerfil.arquivo_id}`
+        ? `${import.meta.env.VITE_API_URL}/arquivos/${fotoPerfil.arquivo_id}/view`
         : null;
 
     const formatDate = (dateString?: string) => {
@@ -663,6 +663,8 @@ export default function TherapistProfileDrawer({
                                 <div className="mb-6">
                                     <ProfilePhotoFieldSimple
                                         userId={therapist?.id || ''}
+                                        fullName={terapeutaData.nome}
+                                        birthDate={terapeutaData.dataNascimento}
                                         value={profilePhoto}
                                         onChange={(file) => {
                                             console.log('ProfilePhoto onChange:', file);

@@ -554,8 +554,6 @@ export default function CadastroClientePage() {
             const payload = formData;
 
             const formDataUpload = new FormData();
-            formDataUpload.append('cpf', payload.cpf!);
-            formDataUpload.append('tipo', 'clientes');
 
             if (payload.arquivos?.fotoPerfil)
                 formDataUpload.append('fotoPerfil', payload.arquivos.fotoPerfil);
@@ -564,10 +562,7 @@ export default function CadastroClientePage() {
             if (payload.arquivos?.comprovanteCpf)
                 formDataUpload.append('comprovanteCpf', payload.arquivos.comprovanteCpf);
             if (payload.arquivos?.comprovanteResidencia)
-                formDataUpload.append(
-                    'comprovanteResidencia',
-                    payload.arquivos.comprovanteResidencia,
-                );
+                formDataUpload.append('comprovanteResidencia', payload.arquivos.comprovanteResidencia);
             if (payload.arquivos?.documentoIdentidade)
                 formDataUpload.append('documentoIdentidade', payload.arquivos.documentoIdentidade);
             if (payload.arquivos?.prescricaoMedica)
@@ -575,12 +570,8 @@ export default function CadastroClientePage() {
             if (payload.arquivos?.relatoriosMedicos)
                 formDataUpload.append('relatoriosMedicos', payload.arquivos.relatoriosMedicos);
 
-            const uploadResp = await fetch('/api/arquivos/upload', {
-                method: 'POST',
-                body: formDataUpload,
-            }).then((r) => r.json());
+            delete payload.arquivos;
 
-            payload.arquivos = uploadResp.arquivos;
             const result = await cadastrarCliente(payload);
 
             if (!result.ok) {
@@ -595,6 +586,17 @@ export default function CadastroClientePage() {
                 }
                 return;
             }
+
+            formDataUpload.append('ownerType', 'cliente');
+            formDataUpload.append('ownerId', result.id);
+            formDataUpload.append('fullName', payload.nome!);
+            formDataUpload.append('birthDate', payload.dataNascimento!);
+            formDataUpload.append('cpf', payload.cpf!);
+
+            await fetch('/api/arquivos', {
+                method: 'POST',
+                body: formDataUpload,
+            }).then((r) => r.json());
 
             toast.success('Cliente cadastrado com sucesso!', {
                 description: 'O cadastro foi realizado e o cliente foi adicionado ao sistema.',
