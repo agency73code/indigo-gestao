@@ -33,6 +33,7 @@ interface DualLineProgressProps {
 
 // Função para adicionar o cálculo de erro aos dados
 const addErrorData = (data: SerieLinha[]) => {
+    if (!Array.isArray(data)) return [];
     return data.map((item) => ({
         ...item,
         erro: 100 - item.acerto, // Erro = 100% - Acerto%
@@ -54,7 +55,7 @@ export function DualLineProgress({ data, loading = false }: DualLineProgressProp
     }
 
     // Adicionar campo de erro calculado aos dados
-    const dataWithError = addErrorData(data);
+    const dataWithError = addErrorData(data || []);
 
     return (
         <Card className="px-6 py-6 md:px-8 md:py-10 lg:px-8 lg:py-8 mx-0">

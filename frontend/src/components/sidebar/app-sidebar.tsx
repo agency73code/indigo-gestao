@@ -97,8 +97,12 @@ const data: {
                 { title: 'Novo Programa', url: '/app/programas/novo' },
                 { title: 'Consultar Sessão', url: '/app/programas/sessoes/consultar' },
                 { title: 'Nova Sessão', url: '/app/programas/sessoes/nova' },
-                { title: 'Relatório', url: '/app/programas/relatorios/mensal' },
             ],
+        },
+        {
+            title: 'Relatório',
+            url: '/app/programas/relatorios/mensal',
+            icon: PieChart,
         },
         {
             title: 'Faturamento',

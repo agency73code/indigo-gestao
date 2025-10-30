@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState} from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { X, User, MapPin, CreditCard, GraduationCap, Save, Loader2, Edit2, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ import { useCliente } from '../hooks/useCliente';
 import DocumentsTable from '../arquivos/components/DocumentsTable';
 import { DocumentsEditor } from '../arquivos/components/DocumentsEditor';
 import { updateCliente, listFiles, type FileMeta } from '../service/consultas.service';
-import ProfilePhotoFieldSimple from '@/components/profile/ProfilePhotoFieldSimple';
+import ProfilePhotoFieldSimple, { type ProfilePhotoFieldSimpleRef } from '@/components/profile/ProfilePhotoFieldSimple';
 import {
     maskPersonName,
     maskCPF,
@@ -55,7 +55,9 @@ const AvatarWithSkeleton = ({ src, alt, initials, className = '' }: AvatarWithSk
                     imageLoaded ? 'opacity-100' : 'opacity-0'
                 } ${className}`}
                 referrerPolicy="no-referrer"
-                loading="lazy"
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
                 onLoad={() => setImageLoaded(true)}
                 onError={() => {
                     setImageError(true);
@@ -175,6 +177,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
     const [files, setFiles] = useState<FileMeta[]>([]);
     const [filesLoading, setFilesLoading] = useState(true);
     const [profilePhoto, setProfilePhoto] = useState<File | null>(null);
+    const profilePhotoRef = useRef<ProfilePhotoFieldSimpleRef>(null);
     const [cpfError, setCpfError] = useState<string>('');
     const [cuidadorCpfErrors, setCuidadorCpfErrors] = useState<Record<number, string>>({});
     const [emailError, setEmailError] = useState<string>('');
@@ -431,6 +434,11 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
         setIsSaving(true);
         setSaveError(null);
         try {
+            // Fazer upload da foto primeiro, se houver uma nova
+            if (profilePhoto) {
+                await profilePhotoRef.current?.uploadPhoto();
+            }
+
             await updateCliente(patient.id, {
                 nome: data.nome,
                 emailContato: data.emailContato,
@@ -665,6 +673,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                             {isEditMode && (
                                 <div className="mb-6">
                                     <ProfilePhotoFieldSimple
+                                        ref={profilePhotoRef}
                                         userId={patient?.id || ''}
                                         fullName={clienteData.nome!}
                                         birthDate={clienteData.dataNascimento!}

@@ -88,6 +88,20 @@ export const useProfilePhoto = (): UseProfilePhotoReturn => {
         }
       }
 
+      // O backend retorna { arquivos: [...] }
+      // Precisamos extrair o primeiro arquivo e formatar como ProfilePhotoDTO
+      if (responseData?.arquivos && responseData.arquivos.length > 0) {
+        const arquivo = responseData.arquivos[0];
+        const profileDto: ProfilePhotoDTO = {
+          fileId: arquivo.storageId || arquivo.id,
+          webViewLink: `/api/arquivos/${arquivo.storageId || arquivo.id}/view`,
+          thumbnailLink: `/api/arquivos/${arquivo.storageId || arquivo.id}/view`,
+        };
+        
+        toast.success('Foto atualizada com sucesso.');
+        return profileDto;
+      }
+
       toast.success('Foto atualizada com sucesso.');
       return responseData as ProfilePhotoDTO;
     } catch (error) {
