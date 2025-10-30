@@ -26,6 +26,8 @@ export interface ProfilePhotoFieldSimpleRef {
 
 interface ProfilePhotoFieldSimpleProps {
     userId: string;
+    fullName: string;
+    birthDate: string;
     value?: File | string | null;
     onChange?: (file: File | null) => void;
     onUploaded?: (profileDto: ProfilePhotoDTO) => void;
@@ -41,15 +43,17 @@ interface CropState {
 }
 
 export default forwardRef<ProfilePhotoFieldSimpleRef, ProfilePhotoFieldSimpleProps>(function ProfilePhotoFieldSimple(
-    {
-        userId,
-        value,
-        onChange,
-        onUploaded,
-        disabled = false,
-        error,
-    },
-    ref
+  {
+    userId,
+    fullName,   // veio da sua branch ✅
+    birthDate,  // veio da sua branch ✅
+    value,
+    onChange,
+    onUploaded,
+    disabled = false,
+    error,
+  },
+  ref
 ) {
     // Estados do componente
     const [imageSrc, setImageSrc] = useState<string>('');
@@ -73,7 +77,7 @@ export default forwardRef<ProfilePhotoFieldSimpleRef, ProfilePhotoFieldSimplePro
             }
 
             try {
-                const profileDto = await uploadProfilePhoto(value, userId);
+                const profileDto = await uploadProfilePhoto(value, userId, fullName, birthDate);
                 if (profileDto) {
                     onUploaded?.(profileDto);
                 }
@@ -84,7 +88,7 @@ export default forwardRef<ProfilePhotoFieldSimpleRef, ProfilePhotoFieldSimplePro
                 return null;
             }
         },
-    }), [value, userId, uploadProfilePhoto, onUploaded]);
+    }), [value, userId, birthDate, fullName, uploadProfilePhoto, onUploaded]);
 
     // Preview da imagem atual
     const [previewUrl, setPreviewUrl] = useState<string>('');
@@ -201,6 +205,24 @@ export default forwardRef<ProfilePhotoFieldSimpleRef, ProfilePhotoFieldSimplePro
             // O upload será feito quando o formulário pai for salvo
             onChange?.(croppedFile);
 
+            // Fazer upload em background (não bloqueia a UI)
+            void (async () => {
+            try {
+                const profileDto = await uploadProfilePhoto(
+                    croppedBlob,
+                    userId,
+                    fullName,
+                    birthDate
+                );
+                if (profileDto) {
+                    onUploaded?.(profileDto);
+                }
+            } catch (uploadError) {
+                console.error('Upload error:', uploadError);
+                toast.error('Erro no upload, mas foto foi processada localmente');
+            }
+            })();
+
             setIsModalOpen(false);
             setImageSrc('');
         } catch (error) {
@@ -211,7 +233,12 @@ export default forwardRef<ProfilePhotoFieldSimpleRef, ProfilePhotoFieldSimplePro
         imageSrc,
         cropState.croppedAreaPixels,
         orientation,
+        userId,
+        fullName,
+        birthDate,
+        uploadProfilePhoto,
         onChange,
+        onUploaded,
     ]);
 
     const handleRemove = useCallback(() => {

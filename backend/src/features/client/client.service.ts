@@ -674,12 +674,12 @@ export async function list(therapistId: string) {
                     },
                   },
                 },
-                { 
-                  terapeuta: { 
-                    registro_profissional: { 
-                      some: { 
+                {
+                  terapeuta: {
+                    registro_profissional: {
+                      some: {
                         area_atuacao: { nome: area },
-                        cargo: { 
+                        cargo: {
                           nome: { contains: 'acompanhante terapeutico' } 
                         },
                       },

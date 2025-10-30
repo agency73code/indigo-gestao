@@ -24,6 +24,8 @@ import { useProfilePhoto, type ProfilePhotoDTO } from '@/hooks/useProfilePhoto';
 
 interface ProfilePhotoFieldProps {
     userId: string;
+    fullName: string;
+    birthDate: string;
     control: Control<any>;
     name?: string;
     disabled?: boolean;
@@ -39,6 +41,8 @@ interface CropState {
 
 export default function ProfilePhotoField({
     userId,
+    fullName,
+    birthDate,
     control,
     name = 'profilePhoto',
     disabled = false,
@@ -157,7 +161,7 @@ export default function ProfilePhotoField({
             );
 
             // Fazer upload
-            const result = await uploadProfilePhoto(croppedBlob, userId);
+            const result = await uploadProfilePhoto(croppedBlob, userId, fullName, birthDate);
 
             if (result) {
                 // Atualizar campo do formulário
@@ -174,7 +178,7 @@ export default function ProfilePhotoField({
             console.error('Error cropping/uploading image:', error);
             toast.error('Erro ao processar imagem. Tente novamente.');
         }
-    }, [cropState, imageSrc, orientation, uploadProfilePhoto, userId, field, onUploaded]);
+    }, [cropState, imageSrc, orientation, uploadProfilePhoto, userId, fullName, birthDate, field, onUploaded]);
 
     // Handler para cancelar
     const handleCancel = () => {

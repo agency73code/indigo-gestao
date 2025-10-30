@@ -408,8 +408,7 @@ export default function CadastroTerapeutaPage() {
                 payload.cnpj.razaoSocial = toTitleCaseSimple(payload.cnpj.razaoSocial);
 
             const formDataUpload = new FormData();
-            formDataUpload.append('cpf', payload.cpf);
-            formDataUpload.append('tipo', 'terapeutas');
+
             if (payload.arquivos?.fotoPerfil)
                 formDataUpload.append('fotoPerfil', payload.arquivos?.fotoPerfil);
             if (payload.arquivos?.diplomaGraduacao)
@@ -421,12 +420,8 @@ export default function CadastroTerapeutaPage() {
             if (payload.arquivos?.comprovanteEndereco)
                 formDataUpload.append('comprovanteEndereco', payload.arquivos?.comprovanteEndereco);
 
-            const uploadResp = await fetch('/api/arquivos/upload', {
-                method: 'POST',
-                body: formDataUpload,
-            }).then((r) => r.json());
+            payload.arquivos = [];
 
-            payload.arquivos = uploadResp.arquivos;
             const result = await cadastrarTerapeuta(payload);
 
             if (!result.ok) {
@@ -441,6 +436,17 @@ export default function CadastroTerapeutaPage() {
                 }
                 return;
             }
+
+            formDataUpload.append('ownerType', 'terapeuta');
+            formDataUpload.append('ownerId', result.id);
+            formDataUpload.append('fullName', payload.nome);
+            formDataUpload.append('birthDate', payload.dataNascimento);
+            formDataUpload.append('cpf', payload.cpf);
+
+            await fetch('/api/arquivos', {
+                method: 'POST',
+                body: formDataUpload,
+            }).then((r) => r.json());
 
             toast.success('Terapeuta cadastrado com sucesso!', {
                 description: 'O cadastro foi realizado e o terapeuta foi adicionado ao sistema.',
