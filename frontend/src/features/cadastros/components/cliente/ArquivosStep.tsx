@@ -128,6 +128,8 @@ export default function ArquivosStep({ data, onUpdate, errors }: ArquivosStepPro
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
                 <ProfilePhotoFieldSimple
                     userId={data?.id || ''}
+                    fullName=""
+                    birthDate=""
                     value={data.arquivos?.fotoPerfil}
                     onChange={(file) => {
                         onUpdate('arquivos.fotoPerfil', file);
