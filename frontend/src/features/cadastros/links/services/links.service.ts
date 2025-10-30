@@ -5,16 +5,21 @@ import type {
   CreateLinkInput, 
   UpdateLinkInput,
   TransferResponsibleInput, 
-  LinkFilters
+  LinkFilters,
+  TherapistSupervisionLink,
+  CreateSupervisionLinkInput,
+  UpdateSupervisionLinkInput,
+  SupervisionHierarchy
 } from '../types';
 import { 
   mockPatients, 
   mockTherapists, 
   mockLinks,
+  mockSupervisionLinks,
   searchPatientsByName,
   searchTherapistsByName,
-  filterAndSortLinks 
-} from '../mocks/links.mock.js';
+  filterAndSortLinks
+} from '../mocks/links.mock';
 
 // Simula delay de rede
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -579,6 +584,14 @@ export async function getAllPatients(): Promise<Paciente[]> {
         }
       })
     );
+    
+    // Se retornou vazio, usar mocks
+    if (clientsWithAvatar.length === 0) {
+      console.log('⚠️ Backend retornou 0 clientes, usando mocks');
+      await delay(200);
+      return [...mockPatients];
+    }
+    
     return clientsWithAvatar;
   } catch (error) {
     console.error('Erro ao buscar clientes, retornando mock:', error);
@@ -619,6 +632,33 @@ export async function getAllTherapists(): Promise<Terapeuta[]> {
         }
       })
     );
+    
+    // Se retornou vazio, usar mocks
+    if (therapistsWithAvatar.length === 0) {
+      console.log('⚠️ Backend retornou 0 terapeutas, usando mocks');
+      await delay(200);
+      return [...mockTherapists];
+    }
+    
+    // SOLUÇÃO HÍBRIDA: Mesclar terapeutas do backend com mocks necessários para supervisão
+    // Pega os IDs únicos dos vínculos de supervisão mockados
+    const supervisionTherapistIds = new Set([
+      ...mockSupervisionLinks.map(l => l.supervisorId),
+      ...mockSupervisionLinks.map(l => l.supervisedTherapistId)
+    ]);
+    
+    // Encontra quais terapeutas de supervisão não existem no backend
+    const backendIds = new Set(therapistsWithAvatar.map(t => t.id).filter(Boolean));
+    const missingTherapists = mockTherapists.filter(t => 
+      t.id && supervisionTherapistIds.has(t.id) && !backendIds.has(t.id)
+    );
+    
+    // Se há terapeutas faltando necessários para supervisão, adiciona eles
+    if (missingTherapists.length > 0) {
+      console.log(`⚠️ Adicionando ${missingTherapists.length} terapeutas mockados necessários para supervisão`);
+      return [...therapistsWithAvatar, ...missingTherapists];
+    }
+    
     return therapistsWithAvatar;
   } catch (error) {
     console.error('Erro ao buscar terapeutas, retornando mock:', error);
@@ -650,5 +690,395 @@ export async function getAllLinks(): Promise<PatientTherapistLink[]> {
     console.error('Erro ao buscar vínculos, retornando mock:', error);
     await delay(300);
     return [...mockLinks];
+  }
+}
+
+// ==================== FUNÇÕES DE VÍNCULOS DE SUPERVISÃO ====================
+
+/**
+ * Busca todos os vínculos de supervisão
+ */
+export async function getAllSupervisionLinks(): Promise<TherapistSupervisionLink[]> {
+  await delay(300);
+  
+  try {
+    const res = await fetch('/api/links/getAllSupervisionLinks', {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error('Falha ao carregar vínculos de supervisão');
+    }
+
+    const json = await res.json();
+    const supervisionLinks = json as TherapistSupervisionLink[];
+    
+    // Se retornou vazio ou erro, usar mocks
+    if (!supervisionLinks || supervisionLinks.length === 0) {
+      console.log('⚠️ Backend retornou 0 vínculos de supervisão, usando mocks');
+      return [...mockSupervisionLinks];
+    }
+    
+    return supervisionLinks;
+  } catch (error) {
+    console.log('⚠️ Backend não disponível, usando mock de vínculos de supervisão');
+    // Retorna mock local quando backend não está disponível
+    return [...mockSupervisionLinks];
+  }
+}
+
+/**
+ * Cria novo vínculo de supervisão
+ */
+export async function createSupervisionLink(input: CreateSupervisionLinkInput): Promise<TherapistSupervisionLink> {
+  await delay(800);
+
+  // Validações frontend
+  if (input.supervisorId === input.supervisedTherapistId) {
+    throw new Error('Um terapeuta não pode supervisionar a si mesmo');
+  }
+
+  if (input.startDate && input.endDate && input.endDate < input.startDate) {
+    throw new Error('A data de término não pode ser anterior à data de início');
+  }
+
+  try {
+    const res = await fetch('/api/links/createSupervisionLink', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        ...input,
+        hierarchyLevel: input.hierarchyLevel || 1,
+        supervisionScope: input.supervisionScope || 'direct',
+      })
+    });
+
+    if (!res.ok) {
+      let errorMessage = 'Falha ao criar vínculo de supervisão';
+      const errorText = await res.text();
+
+      if (errorText) {
+        try {
+          const parsed = JSON.parse(errorText);
+          if (parsed?.message) {
+            errorMessage = parsed.message;
+          }
+        } catch {
+          errorMessage = errorText;
+        }
+      }
+
+      throw new Error(errorMessage);
+    }
+
+    const createdLink = (await res.json()) as TherapistSupervisionLink;
+    mockSupervisionLinks.push(createdLink);
+    return createdLink;
+  } catch (error) {
+    if (error instanceof Error && error.name !== 'TypeError') {
+      throw error;
+    }
+
+    // Fallback local para desenvolvimento
+    console.log('⚠️ Backend não disponível, criando vínculo de supervisão localmente');
+    
+    // Validações básicas
+    const existingLink = mockSupervisionLinks.find(link =>
+      link.supervisorId === input.supervisorId &&
+      link.supervisedTherapistId === input.supervisedTherapistId &&
+      link.status === 'active'
+    );
+    
+    if (existingLink) {
+      throw new Error('Já existe um vínculo ativo entre este supervisor e terapeuta.');
+    }
+    
+    const newLink: TherapistSupervisionLink = {
+      id: `sup_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      supervisorId: input.supervisorId,
+      supervisedTherapistId: input.supervisedTherapistId,
+      hierarchyLevel: input.hierarchyLevel || 1,
+      supervisionScope: input.supervisionScope || 'direct',
+      startDate: input.startDate,
+      endDate: input.endDate,
+      status: 'active',
+      notes: input.notes,
+      createdAt: new Date().toISOString().split('T')[0],
+      updatedAt: new Date().toISOString().split('T')[0]
+    };
+    
+    // Adiciona ao mock local
+    mockSupervisionLinks.push(newLink);
+    
+    return newLink;
+  }
+}
+
+/**
+ * Atualiza vínculo de supervisão existente
+ */
+export async function updateSupervisionLink(input: UpdateSupervisionLinkInput): Promise<TherapistSupervisionLink> {
+  await delay(600);
+
+  try {
+    const res = await fetch('/api/links/updateSupervisionLink', {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(input)
+    });
+
+    if (!res.ok) {
+      let errorMessage = 'Falha ao atualizar vínculo de supervisão';
+      const errorText = await res.text();
+
+      if (errorText) {
+        try {
+          const parsed = JSON.parse(errorText);
+          if (parsed?.message) {
+            errorMessage = parsed.message;
+          }
+        } catch {
+          errorMessage = errorText;
+        }
+      }
+
+      throw new Error(errorMessage);
+    }
+
+    const updatedLink = (await res.json()) as TherapistSupervisionLink;
+    
+    const linkIndex = mockSupervisionLinks.findIndex(link => link.id === updatedLink.id);
+    if (linkIndex !== -1) {
+      mockSupervisionLinks[linkIndex] = updatedLink;
+    }
+    
+    return updatedLink;
+  } catch (error) {
+    if (error instanceof Error && error.name !== 'TypeError') {
+      throw error
+    }
+
+    console.log('⚠️ Backend não disponível, atualizando vínculo de supervisão localmente');
+    
+    const linkIndex = mockSupervisionLinks.findIndex(link => link.id === input.id);
+    if (linkIndex === -1) {
+      throw new Error('Vínculo de supervisão não encontrado');
+    }
+    
+    const updatedLink: TherapistSupervisionLink = {
+      ...mockSupervisionLinks[linkIndex],
+      ...input,
+      updatedAt: new Date().toISOString().split('T')[0]
+    };
+    
+    mockSupervisionLinks[linkIndex] = updatedLink;
+    return updatedLink;
+  }
+}
+
+/**
+ * Encerra vínculo de supervisão (seta endDate e status='ended')
+ */
+export async function endSupervisionLink(id: string, endDate: string): Promise<void> {
+  await delay(500);
+
+  try {
+    const res = await fetch('/api/links/endSupervisionLink', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ id, endDate })
+    });
+
+    if (!res.ok) {
+      let errorMessage = 'Falha ao encerrar vínculo de supervisão';
+      const errorText = await res.text();
+
+      if (errorText) {
+        try {
+          const parsed = JSON.parse(errorText);
+          if (parsed?.message) {
+            errorMessage = parsed.message;
+          }
+        } catch {
+          errorMessage = errorText;
+        }
+      }
+
+      throw new Error(errorMessage);
+    }
+
+    const endedLink = (await res.json()) as TherapistSupervisionLink;
+    const linkIndex = mockSupervisionLinks.findIndex(link => link.id === endedLink.id);
+    if (linkIndex !== -1) {
+      mockSupervisionLinks[linkIndex] = endedLink;
+    }
+
+    return;
+  } catch (error) {
+    if (error instanceof Error && error.name !== 'TypeError') {
+      throw error;
+    }
+
+    console.log('⚠️ Backend não disponível, encerrando vínculo de supervisão localmente');
+    
+    const linkIndex = mockSupervisionLinks.findIndex(link => link.id === id);
+    if (linkIndex === -1) {
+      throw new Error('Vínculo de supervisão não encontrado');
+    }
+    
+    mockSupervisionLinks[linkIndex] = {
+      ...mockSupervisionLinks[linkIndex],
+      endDate,
+      status: 'ended',
+      updatedAt: endDate
+    };
+  }
+}
+
+/**
+ * Arquiva vínculo de supervisão (status='archived')
+ */
+export async function archiveSupervisionLink(id: string): Promise<void> {
+  await delay(400);
+  
+  try {
+    const res = await fetch('/api/links/archiveSupervisionLink', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ id })
+    });
+
+    if (!res.ok) {
+      let errorMessage = 'Falha ao arquivar vínculo de supervisão';
+      const errorText = await res.text();
+
+      if (errorText) {
+        try {
+          const parsed = JSON.parse(errorText);
+          if (parsed?.message) {
+            errorMessage = parsed.message;
+          }
+        } catch {
+          errorMessage = errorText;
+        }
+      }
+
+      throw new Error(errorMessage);
+    }
+
+    const archivedLink = (await res.json()) as TherapistSupervisionLink;
+    const linkIndex = mockSupervisionLinks.findIndex(link => link.id === archivedLink.id);
+    if (linkIndex !== -1) {
+      mockSupervisionLinks[linkIndex] = archivedLink;
+    }
+
+    return;
+  } catch (error) {
+    if (error instanceof Error && error.name !== 'TypeError') {
+      throw error;
+    }
+
+    console.log('⚠️ Backend não disponível, arquivando vínculo de supervisão localmente');
+    
+    const linkIndex = mockSupervisionLinks.findIndex(link => link.id === id);
+    if (linkIndex === -1) {
+      throw new Error('Vínculo de supervisão não encontrado');
+    }
+    
+    mockSupervisionLinks[linkIndex] = {
+      ...mockSupervisionLinks[linkIndex],
+      status: 'archived',
+      updatedAt: new Date().toISOString().split('T')[0]
+    };
+  }
+}
+
+/**
+ * Busca hierarquia completa de supervisão (incluindo subordinados indiretos)
+ */
+export async function getSupervisionHierarchy(
+  supervisorId: string
+): Promise<SupervisionHierarchy | null> {
+  try {
+    const response = await fetch(
+      `/api/links/getSupervisionHierarchy?supervisorId=${supervisorId}`,
+      {
+        method: 'GET',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Erro ao buscar hierarquia de supervisão');
+    }
+
+    return await response.json();
+  } catch (error) {
+    if (error instanceof TypeError) {
+      console.warn('⚠️ Backend não disponível, usando mock de hierarquia');
+      
+      // Mock: retornar hierarquia mockada
+      const allLinks = mockSupervisionLinks.filter(
+        link => link.supervisorId === supervisorId && link.status === 'active'
+      );
+      
+      const supervisor = mockTherapists.find(t => t.id === supervisorId);
+      if (!supervisor) return null;
+      
+      return {
+        supervisorId,
+        supervisor,
+        directSubordinates: allLinks.filter(l => (l.hierarchyLevel || 1) === 1),
+        indirectSubordinates: allLinks.filter(l => (l.hierarchyLevel || 1) > 1),
+        totalSubordinatesCount: allLinks.length,
+        maxHierarchyLevel: Math.max(...allLinks.map(l => l.hierarchyLevel || 1)),
+      };
+    }
+    throw error;
+  }
+}
+
+/**
+ * Verifica se um supervisor pode visualizar dados de um terapeuta
+ * (útil para controle de permissões no frontend)
+ */
+export async function canSuperviseTherapist(
+  supervisorId: string,
+  therapistId: string
+): Promise<boolean> {
+  try {
+    const response = await fetch(
+      `/api/links/canSupervise?supervisorId=${supervisorId}&therapistId=${therapistId}`,
+      {
+        method: 'GET',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+
+    if (!response.ok) return false;
+
+    const result = await response.json();
+    return result.canSupervise === true;
+  } catch (error) {
+    console.warn('⚠️ Erro ao verificar permissão de supervisão');
+    return false;
   }
 }

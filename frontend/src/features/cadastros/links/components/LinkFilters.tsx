@@ -1,6 +1,7 @@
-import { Search, User, Users, Filter, Badge } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import type { LinkFilters, LinkFiltersProps } from '../types';
 
 const STATUS_OPTIONS: Array<{ value: LinkFilters['status']; label: string }> = [
@@ -10,100 +11,84 @@ const STATUS_OPTIONS: Array<{ value: LinkFilters['status']; label: string }> = [
     { value: 'archived', label: 'Arquivados' },
 ];
 
-const ORDER_OPTIONS: Array<{ value: LinkFilters['orderBy']; label: string }> = [
-    { value: 'recent', label: 'Mais recente' },
-    { value: 'alpha', label: 'Alfabética' },
-];
-
 export default function LinkFilters({ filters, onFiltersChange }: LinkFiltersProps) {
     const updateFilter = <K extends keyof LinkFilters>(key: K, value: LinkFilters[K]) => {
         onFiltersChange({ ...filters, [key]: value });
     };
 
+    // Função para exibir o label customizado no Select
+    const getStatusLabel = () => {
+        const currentStatus = filters.status || 'all';
+        
+        // Se for "all" (Todos), mostra "Filtros"
+        if (currentStatus === 'all') {
+            return 'Filtros';
+        }
+        
+        // Caso contrário, mostra o label correspondente
+        const option = STATUS_OPTIONS.find(opt => opt.value === currentStatus);
+        return option?.label || 'Filtros';
+    };
+
     return (
-        <div className="space-y-4 sm:space-y-6">
-            {/* Busca */}
-            <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                    placeholder="Buscar por nome do cliente ou terapeuta"
-                    value={filters.q || ''}
-                    onChange={(e) => updateFilter('q', e.target.value)}
-                    className="pl-10"
-                />
-            </div>
-
-            {/* Tabs de visualização */}
-            <div className="space-y-3 sm:space-y-0 sm:flex sm:flex-wrap sm:gap-4">
-                <div className="flex items-center gap-2 flex-wrap">
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                        <Badge className="h-4 w-4" />
-                        <span className="text-sm font-medium">Visualizar por:</span>
-                    </div>
-                    <div className="flex gap-2 flex-wrap">
-                        <Button
-                            variant={filters.viewBy === 'patient' ? 'default' : 'outline'}
-                            size="sm"
-                            onClick={() => updateFilter('viewBy', 'patient')}
-                            className="h-8 text-xs sm:text-sm flex items-center gap-2"
-                        >
-                            <Users className="h-3 w-3" />
-                            Cliente
-                        </Button>
-                        <Button
-                            variant={filters.viewBy === 'therapist' ? 'default' : 'outline'}
-                            size="sm"
-                            onClick={() => updateFilter('viewBy', 'therapist')}
-                            className="h-8 text-xs sm:text-sm flex items-center gap-2"
-                        >
-                            <User className="h-3 w-3" />
-                            Terapeuta
-                        </Button>
-                    </div>
+        <div className="space-y-4">
+            {/* Linha com Busca à esquerda e Filtro de Status à direita */}
+            <div className="flex items-center gap-4">
+                {/* Busca - Esquerda */}
+                <div className="relative flex-1 max-w-md">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                    <Input
+                        placeholder="Buscar por nome, e-mail..."
+                        value={filters.q || ''}
+                        onChange={(e) => updateFilter('q', e.target.value)}
+                        className="pl-10 h-12 rounded-[5px]"
+                    />
                 </div>
 
-                {/* Status */}
-                <div className="flex items-center gap-2 flex-wrap">
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                        <Badge className="h-4 w-4" />
-                        <span className="text-sm font-medium">Status:</span>
-                    </div>
-                    <div className="flex gap-2 flex-wrap">
+                {/* Filtro de Status - Direita */}
+                <Select
+                    value={filters.status || 'all'}
+                    onValueChange={(value) => updateFilter('status', value as any)}
+                >
+                    <SelectTrigger
+                        className="w-[170px] !h-12 min-h-12 rounded-[5px]"
+                        aria-label="Filtrar por status"
+                    >
+                        <span className="text-sm">{getStatusLabel()}</span>
+                    </SelectTrigger>
+                    <SelectContent>
                         {STATUS_OPTIONS.map((option) => (
-                            <Button
-                                key={option.value}
-                                variant={filters.status === option.value ? 'default' : 'outline'}
-                                size="sm"
-                                onClick={() => updateFilter('status', option.value)}
-                                className="h-8 text-xs sm:text-sm"
-                            >
+                            <SelectItem key={option.value} value={option.value || 'all'}>
                                 {option.label}
-                            </Button>
+                            </SelectItem>
                         ))}
-                    </div>
-                </div>
-
-                {/* Ordenação */}
-                <div className="flex items-center gap-2 flex-wrap">
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                        <Filter className="h-4 w-4" />
-                        <span className="text-sm font-medium">Ordenar:</span>
-                    </div>
-                    <div className="flex gap-2 flex-wrap">
-                        {ORDER_OPTIONS.map((option) => (
-                            <Button
-                                key={option.value}
-                                variant={filters.orderBy === option.value ? 'default' : 'outline'}
-                                size="sm"
-                                onClick={() => updateFilter('orderBy', option.value)}
-                                className="h-8 text-xs sm:text-sm"
-                            >
-                                {option.label}
-                            </Button>
-                        ))}
-                    </div>
-                </div>
+                    </SelectContent>
+                </Select>
             </div>
+
+            {/* Tabs de visualização - Embaixo */}
+            <Tabs value={filters.viewBy} onValueChange={(value) => updateFilter('viewBy', value as any)}>
+                <TabsList className="grid w-full grid-cols-3 h-10 rounded-[5px] p-1">
+                    <TabsTrigger
+                        value="patient"
+                        className="rounded-[5px] data-[state=active]:rounded-[5px]"
+                    >
+                        Cliente
+                    </TabsTrigger>
+                    <TabsTrigger
+                        value="therapist"
+                        className="rounded-[5px] data-[state=active]:rounded-[5px]"
+                    >
+                        Terapeuta
+                    </TabsTrigger>
+                    <TabsTrigger
+                        value="supervision"
+                        className="rounded-[5px] data-[state=active]:rounded-[5px]"
+                    >
+                        Supervisão
+                    </TabsTrigger>
+                </TabsList>
+            </Tabs>
         </div>
     );
 }
