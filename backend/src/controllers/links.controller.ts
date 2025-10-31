@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
-import * as LinkService from '../features/links/links.service.js';
-import * as LinkNormalizer from '../features/links/links.normalizer.js';
-import * as LinkTypes from '../features/links/links.types.js';
+import * as LinkService from '../features/links/old/links.service.js';
+import * as LinkNormalizer from '../features/links/old/links.normalizer.js';
+import * as LinkTypes from '../features/links/old/links.types.js';
 
 export async function createLink(req: Request<unknown, unknown, LinkTypes.CreateLink>, res: Response, next: NextFunction) {
     try {

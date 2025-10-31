@@ -1,6 +1,6 @@
 import { Prisma } from '@prisma/client';
-import { prisma } from '../../config/database.js';
-import { AppError } from '../../errors/AppError.js';
+import { prisma } from '../../../config/database.js';
+import { AppError } from '../../../errors/AppError.js';
 import * as LinkTypes from './links.types.js';
 
 const LINK_SELECT = {

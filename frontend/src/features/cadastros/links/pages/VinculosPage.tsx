@@ -382,12 +382,18 @@ export default function VinculosPage() {
                 description: 'O vínculo foi arquivado com sucesso.',
                 duration: 3000,
             });
-        } catch (error) {
-            console.error('Erro ao arquivar vínculo de supervisão:', error);
-            toast.error('Erro ao arquivar vínculo', {
-                description: 'Ocorreu um erro ao arquivar o vínculo de supervisão.',
-                duration: 4000,
-            });
+        } catch (error: any) {
+            if (error?.message) {
+                toast.error('Erro ao arquivar vínculo', {
+                    description: error?.message,
+                    duration: 4000,
+                });
+            } else {
+                toast.error('Erro ao arquivar vínculo', {
+                    description: 'Ocorreu um erro ao arquivar o vínculo de supervisão.',
+                    duration: 4000,
+                });
+            }
         } finally {
             setArchiveSupervisionLoading(false);
         }

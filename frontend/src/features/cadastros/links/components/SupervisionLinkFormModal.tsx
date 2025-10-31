@@ -32,6 +32,11 @@ import type {
 } from '../types';
 import { searchTherapistsByName } from '../mocks/links.mock';
 
+function parseLocalDate(dateString: string) {
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
 // Helper para verificar se é cargo de supervisor
 const isSupervisorRole = (cargo: string): boolean => {
     const supervisorRoles = [
@@ -48,6 +53,8 @@ const isClinicalTherapistRole = (cargo: string): boolean => {
     const clinicalRoles = [
         'Terapeuta Clínico',
         'Acompanhante Terapeutico',
+        'Mediador de Conflitos',
+        'Professor Uniindigo'
     ];
     return clinicalRoles.some((role) => cargo.toLowerCase().includes(role.toLowerCase()));
 };
@@ -89,7 +96,7 @@ export default function SupervisionLinkFormModal({
         if (open && initialData && isEdit) {
             setSupervisorId(initialData.supervisorId);
             setSupervisedTherapistId(initialData.supervisedTherapistId);
-            setStartDate(new Date(initialData.startDate));
+            setStartDate(parseLocalDate(initialData.startDate));
             setNotes(initialData.notes || '');
             setSupervisionScope((initialData as any).supervisionScope || 'direct');
 

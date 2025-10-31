@@ -17,12 +17,11 @@ import { isSupervisorRole } from '../../constants/access-levels';
 
 // Helper para formatar datas
 function formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-    });
+    // Parse manualmente yyyy-mm-dd sem deslocamento de timezone
+    const [year, month, day] = dateString.split('-').map(Number);
+    return `${day.toString().padStart(2, '0')}/${month
+        .toString()
+        .padStart(2, '0')}/${year}`;
 }
 
 // Helper para obter iniciais do nome

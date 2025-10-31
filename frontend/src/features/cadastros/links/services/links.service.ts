@@ -696,317 +696,185 @@ export async function getAllLinks(): Promise<PatientTherapistLink[]> {
 // ==================== FUNÇÕES DE VÍNCULOS DE SUPERVISÃO ====================
 
 /**
- * Busca todos os vínculos de supervisão
+ * Busca todos os vínculos de supervisão [feito]
  */
 export async function getAllSupervisionLinks(): Promise<TherapistSupervisionLink[]> {
   await delay(300);
   
-  try {
-    const res = await fetch('/api/links/getAllSupervisionLinks', {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-    });
+  const res = await fetch('/api/links/getAllSupervisionLinks', {
+    method: 'GET',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+  });
 
-    if (!res.ok) {
-      throw new Error('Falha ao carregar vínculos de supervisão');
-    }
-
-    const json = await res.json();
-    const supervisionLinks = json as TherapistSupervisionLink[];
-    
-    // Se retornou vazio ou erro, usar mocks
-    if (!supervisionLinks || supervisionLinks.length === 0) {
-      console.log('⚠️ Backend retornou 0 vínculos de supervisão, usando mocks');
-      return [...mockSupervisionLinks];
-    }
-    
-    return supervisionLinks;
-  } catch (error) {
-    console.log('⚠️ Backend não disponível, usando mock de vínculos de supervisão:', error);
-    // Retorna mock local quando backend não está disponível
-    return [...mockSupervisionLinks];
+  if (!res.ok) {
+    throw new Error('Falha ao carregar vínculos de supervisão');
   }
+
+  const json = await res.json();
+
+  // Tipagem explícita e retorno direto
+  return json as TherapistSupervisionLink[];
 }
 
 /**
- * Cria novo vínculo de supervisão
+ * Cria novo vínculo de supervisão [feito]
  */
 export async function createSupervisionLink(input: CreateSupervisionLinkInput): Promise<TherapistSupervisionLink> {
   await delay(800);
 
-  // Validações frontend
+  // Validações básicas (front)
   if (input.supervisorId === input.supervisedTherapistId) {
-    throw new Error('Um terapeuta não pode supervisionar a si mesmo');
+    throw new Error('Um terapeuta não pode supervisionar a si mesmo.');
   }
 
   if (input.startDate && input.endDate && input.endDate < input.startDate) {
-    throw new Error('A data de término não pode ser anterior à data de início');
+    throw new Error('A data de término não pode ser anterior à data de início.');
   }
 
-  try {
-    const res = await fetch('/api/links/createSupervisionLink', {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        ...input,
-        hierarchyLevel: input.hierarchyLevel || 1,
-        supervisionScope: input.supervisionScope || 'direct',
-      })
-    });
-
-    if (!res.ok) {
-      let errorMessage = 'Falha ao criar vínculo de supervisão';
-      const errorText = await res.text();
-
-      if (errorText) {
-        try {
-          const parsed = JSON.parse(errorText);
-          if (parsed?.message) {
-            errorMessage = parsed.message;
-          }
-        } catch {
-          errorMessage = errorText;
-        }
-      }
-
-      throw new Error(errorMessage);
-    }
-
-    const createdLink = (await res.json()) as TherapistSupervisionLink;
-    mockSupervisionLinks.push(createdLink);
-    return createdLink;
-  } catch (error) {
-    if (error instanceof Error && error.name !== 'TypeError') {
-      throw error;
-    }
-
-    // Fallback local para desenvolvimento
-    console.log('⚠️ Backend não disponível, criando vínculo de supervisão localmente');
-    
-    // Validações básicas
-    const existingLink = mockSupervisionLinks.find(link =>
-      link.supervisorId === input.supervisorId &&
-      link.supervisedTherapistId === input.supervisedTherapistId &&
-      link.status === 'active'
-    );
-    
-    if (existingLink) {
-      throw new Error('Já existe um vínculo ativo entre este supervisor e terapeuta.');
-    }
-    
-    const newLink: TherapistSupervisionLink = {
-      id: `sup_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      supervisorId: input.supervisorId,
-      supervisedTherapistId: input.supervisedTherapistId,
+  const res = await fetch('/api/links/createSupervisionLink', {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      ...input,
       hierarchyLevel: input.hierarchyLevel || 1,
       supervisionScope: input.supervisionScope || 'direct',
-      startDate: input.startDate,
-      endDate: input.endDate,
-      status: 'active',
-      notes: input.notes,
-      createdAt: new Date().toISOString().split('T')[0],
-      updatedAt: new Date().toISOString().split('T')[0]
-    };
-    
-    // Adiciona ao mock local
-    mockSupervisionLinks.push(newLink);
-    
-    return newLink;
+    })
+  });
+
+  if (!res.ok) {
+    let errorMessage = 'Falha ao criar vínculo de supervisão.';
+    const errorText = await res.text();
+
+    if (errorText) {
+      try {
+        const parsed = JSON.parse(errorText);
+        if (parsed?.message) {
+          errorMessage = parsed.message;
+        }
+      } catch {
+        errorMessage = errorText;
+      }
+    }
+
+    throw new Error(errorMessage);
   }
+
+  return (await res.json()) as TherapistSupervisionLink;
 }
 
 /**
- * Atualiza vínculo de supervisão existente
+ * Atualiza vínculo de supervisão existente [feito]
  */
 export async function updateSupervisionLink(input: UpdateSupervisionLinkInput): Promise<TherapistSupervisionLink> {
   await delay(600);
 
-  try {
-    const res = await fetch('/api/links/updateSupervisionLink', {
-      method: 'PATCH',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(input)
-    });
+  const res = await fetch('/api/links/updateSupervisionLink', {
+    method: 'PATCH',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(input)
+  });
 
-    if (!res.ok) {
-      let errorMessage = 'Falha ao atualizar vínculo de supervisão';
-      const errorText = await res.text();
+  if (!res.ok) {
+    let errorMessage = 'Falha ao atualizar vínculo de supervisão';
+    const errorText = await res.text();
 
-      if (errorText) {
-        try {
-          const parsed = JSON.parse(errorText);
-          if (parsed?.message) {
-            errorMessage = parsed.message;
-          }
-        } catch {
-          errorMessage = errorText;
+    if (errorText) {
+      try {
+        const parsed = JSON.parse(errorText);
+        if (parsed?.message) {
+          errorMessage = parsed.message;
         }
+      } catch {
+        errorMessage = errorText;
       }
-
-      throw new Error(errorMessage);
     }
 
-    const updatedLink = (await res.json()) as TherapistSupervisionLink;
-    
-    const linkIndex = mockSupervisionLinks.findIndex(link => link.id === updatedLink.id);
-    if (linkIndex !== -1) {
-      mockSupervisionLinks[linkIndex] = updatedLink;
-    }
-    
-    return updatedLink;
-  } catch (error) {
-    if (error instanceof Error && error.name !== 'TypeError') {
-      throw error
-    }
-
-    console.log('⚠️ Backend não disponível, atualizando vínculo de supervisão localmente');
-    
-    const linkIndex = mockSupervisionLinks.findIndex(link => link.id === input.id);
-    if (linkIndex === -1) {
-      throw new Error('Vínculo de supervisão não encontrado');
-    }
-    
-    const updatedLink: TherapistSupervisionLink = {
-      ...mockSupervisionLinks[linkIndex],
-      ...input,
-      updatedAt: new Date().toISOString().split('T')[0]
-    };
-    
-    mockSupervisionLinks[linkIndex] = updatedLink;
-    return updatedLink;
+    throw new Error(errorMessage);
   }
+
+  const updatedLink = (await res.json()) as TherapistSupervisionLink;
+  return updatedLink;
 }
 
 /**
- * Encerra vínculo de supervisão (seta endDate e status='ended')
+ * Encerra vínculo de supervisão (seta endDate e status='ended') [feito]
  */
 export async function endSupervisionLink(id: string, endDate: string): Promise<void> {
   await delay(500);
+  
+  const res = await fetch('/api/links/endSupervisionLink', {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ id, endDate })
+  });
 
-  try {
-    const res = await fetch('/api/links/endSupervisionLink', {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ id, endDate })
-    });
+  if (!res.ok) {
+    let errorMessage = 'Falha ao encerrar vínculo de supervisão';
+    const errorText = await res.text();
 
-    if (!res.ok) {
-      let errorMessage = 'Falha ao encerrar vínculo de supervisão';
-      const errorText = await res.text();
-
-      if (errorText) {
-        try {
-          const parsed = JSON.parse(errorText);
-          if (parsed?.message) {
-            errorMessage = parsed.message;
-          }
-        } catch {
-          errorMessage = errorText;
+    if (errorText) {
+      try {
+        const parsed = JSON.parse(errorText);
+        if (parsed?.message) {
+          errorMessage = parsed.message;
         }
+      } catch {
+        errorMessage = errorText;
       }
-
-      throw new Error(errorMessage);
     }
 
-    const endedLink = (await res.json()) as TherapistSupervisionLink;
-    const linkIndex = mockSupervisionLinks.findIndex(link => link.id === endedLink.id);
-    if (linkIndex !== -1) {
-      mockSupervisionLinks[linkIndex] = endedLink;
-    }
-
-    return;
-  } catch (error) {
-    if (error instanceof Error && error.name !== 'TypeError') {
-      throw error;
-    }
-
-    console.log('⚠️ Backend não disponível, encerrando vínculo de supervisão localmente');
-    
-    const linkIndex = mockSupervisionLinks.findIndex(link => link.id === id);
-    if (linkIndex === -1) {
-      throw new Error('Vínculo de supervisão não encontrado');
-    }
-    
-    mockSupervisionLinks[linkIndex] = {
-      ...mockSupervisionLinks[linkIndex],
-      endDate,
-      status: 'ended',
-      updatedAt: endDate
-    };
+    throw new Error(errorMessage);
   }
+
+  await res.json();
 }
 
 /**
- * Arquiva vínculo de supervisão (status='archived')
+ * Arquiva vínculo de supervisão (status='archived') [feito]
  */
 export async function archiveSupervisionLink(id: string): Promise<void> {
   await delay(400);
   
-  try {
-    const res = await fetch('/api/links/archiveSupervisionLink', {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ id })
-    });
+  const res = await fetch('/api/links/archiveSupervisionLink', {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ id })
+  });
 
-    if (!res.ok) {
-      let errorMessage = 'Falha ao arquivar vínculo de supervisão';
-      const errorText = await res.text();
+  if (!res.ok) {
+    let errorMessage = 'Falha ao arquivar vínculo de supervisão';
+    const errorText = await res.text();
 
-      if (errorText) {
-        try {
-          const parsed = JSON.parse(errorText);
-          if (parsed?.message) {
-            errorMessage = parsed.message;
-          }
-        } catch {
-          errorMessage = errorText;
+    if (errorText) {
+      try {
+        const parsed = JSON.parse(errorText);
+        if (parsed?.message) {
+          errorMessage = parsed.message;
         }
+      } catch {
+        errorMessage = errorText;
       }
-
-      throw new Error(errorMessage);
     }
 
-    const archivedLink = (await res.json()) as TherapistSupervisionLink;
-    const linkIndex = mockSupervisionLinks.findIndex(link => link.id === archivedLink.id);
-    if (linkIndex !== -1) {
-      mockSupervisionLinks[linkIndex] = archivedLink;
-    }
-
-    return;
-  } catch (error) {
-    if (error instanceof Error && error.name !== 'TypeError') {
-      throw error;
-    }
-
-    console.log('⚠️ Backend não disponível, arquivando vínculo de supervisão localmente');
-    
-    const linkIndex = mockSupervisionLinks.findIndex(link => link.id === id);
-    if (linkIndex === -1) {
-      throw new Error('Vínculo de supervisão não encontrado');
-    }
-    
-    mockSupervisionLinks[linkIndex] = {
-      ...mockSupervisionLinks[linkIndex],
-      status: 'archived',
-      updatedAt: new Date().toISOString().split('T')[0]
-    };
+    throw new Error(errorMessage);
   }
+
+  await res.json();
 }
 
 /**

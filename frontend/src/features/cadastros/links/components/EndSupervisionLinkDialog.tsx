@@ -79,9 +79,7 @@ export default function EndSupervisionLinkDialog({
                                 <p className="text-sm text-muted-foreground">
                                     Data de início:{' '}
                                     <span className="font-medium text-foreground">
-                                        {format(new Date(link.startDate), "dd 'de' MMMM 'de' yyyy", {
-                                            locale: ptBR,
-                                        })}
+                                        {link.startDate.split('-').reverse().join('/')}
                                     </span>
                                 </p>
                             </div>
