@@ -16,13 +16,18 @@ import type { LinkCardProps, PatientTherapistLink } from '../types';
 import { isSupervisorRole } from '../../constants/access-levels';
 
 // Helper para formatar datas
-function formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-    });
+function formatDate(dateString?: string | null): string {
+    if (!dateString) return 'Data não informada';
+
+    // tenta converter diretamente para Date
+    const parsed = new Date(dateString);
+    if (isNaN(parsed.getTime())) return 'Data inválida';
+
+    const day = String(parsed.getDate()).padStart(2, '0');
+    const month = String(parsed.getMonth() + 1).padStart(2, '0');
+    const year = parsed.getFullYear();
+
+    return `${day}/${month}/${year}`;
 }
 
 // Helper para obter iniciais do nome
@@ -67,6 +72,7 @@ function calculateAge(birthDate: string): number {
 export default function LinkCard({
     patientWithLinks,
     therapistWithLinks,
+    supervisorWithLinks,
     viewBy,
     patients,
     therapists,
@@ -75,6 +81,9 @@ export default function LinkCard({
     onTransferResponsible,
     onEndLink,
     onArchive,
+    onEditSupervision,
+    onEndSupervision,
+    onArchiveSupervision,
 }: LinkCardProps) {
     if (viewBy === 'patient' && patientWithLinks) {
         return renderPatientCard(
@@ -97,6 +106,16 @@ export default function LinkCard({
             onTransferResponsible,
             onEndLink,
             onArchive,
+        );
+    }
+
+    if (viewBy === 'supervision' && supervisorWithLinks) {
+        return renderSupervisionCard(
+            supervisorWithLinks,
+            therapists,
+            onEditSupervision,
+            onEndSupervision,
+            onArchiveSupervision,
         );
     }
 
@@ -607,6 +626,316 @@ function PatientChip({
                             <DropdownMenuSeparator />
 
                             <DropdownMenuItem onClick={() => onEndLink(link)}>
+                                Encerrar
+                            </DropdownMenuItem>
+                        </>
+                    )}
+
+                    <DropdownMenuItem onClick={() => onArchive(link)}>Arquivar</DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+        </div>
+    );
+}
+
+// Renderiza card consolidado de supervisão
+function renderSupervisionCard(
+    { supervisor, links }: { supervisor: any; links: any[] },
+    therapists: any[],
+    onEdit: (link: any) => void,
+    onEnd: (link: any) => void,
+    onArchive: (link: any) => void,
+) {
+    const supervisorInitials = getInitials(supervisor.nome);
+    const activeLinks = links.filter((link) => link.status === 'active');
+    const hasActiveLinks = activeLinks.length > 0;
+
+    // Separar vínculos diretos e indiretos baseado no hierarchyLevel
+    const directLinks = activeLinks.filter((link) => !link.hierarchyLevel || link.hierarchyLevel === 1);
+    const indirectLinks = activeLinks.filter((link) => link.hierarchyLevel && link.hierarchyLevel > 1);
+
+    // Status geral do supervisor
+    const overallStatus = hasActiveLinks
+        ? 'active'
+        : links.some((link) => link.status === 'ended')
+          ? 'ended'
+          : 'archived';
+    const statusBadge = getStatusBadge(overallStatus);
+
+    const supervisorRole = getTherapistRole(supervisor);
+    const avatarUrl = (supervisor as any).avatarUrl
+        ? ((supervisor as any).avatarUrl.startsWith('/api')
+            ? `${import.meta.env.VITE_API_BASE ?? ''}${(supervisor as any).avatarUrl}`
+            : (supervisor as any).avatarUrl)
+        : undefined;
+
+    // Data de início do vínculo mais antigo
+    const startDate = links.length > 0
+        ? links.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())[0]?.startDate
+        : null;
+
+    return (
+        <Card className="rounded-[5px] hover:shadow-md transition-shadow h-full flex flex-col">
+            <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3 flex-1">
+                        {/* Avatar do supervisor */}
+                        <Avatar className="h-12 w-12">
+                            <AvatarImage
+                                src={avatarUrl}
+                                alt={supervisor.nome}
+                                className='object-cover transition-opacity duration-300'
+                            />
+                            <AvatarFallback className="text-sm font-medium">
+                                {supervisorInitials}
+                            </AvatarFallback>
+                        </Avatar>
+
+                        <div className="flex-1 min-w-0">
+                            {/* Nome do supervisor */}
+                            <h3
+                                className="font-medium text-base text-foreground truncate"
+                                style={{ fontFamily: 'Sora, sans-serif' }}
+                            >
+                                {supervisor.nome}
+                            </h3>
+                            <p className="text-sm text-muted-foreground">
+                                {supervisorRole || 'Supervisor'}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Status geral e menu */}
+                    <div className="flex items-center gap-2">
+                        <Badge variant={statusBadge.variant} className="text-xs">
+                            {statusBadge.label}
+                        </Badge>
+
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                    aria-label="Mais ações"
+                                >
+                                    <MoreVertical className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                                <DropdownMenuItem onClick={() => onEdit(links[0])}>
+                                    Gerenciar Terapeutas
+                                </DropdownMenuItem>
+
+                                {hasActiveLinks && (
+                                    <>
+                                        <DropdownMenuSeparator />
+
+                                        <DropdownMenuItem
+                                            onClick={() =>
+                                                activeLinks.forEach((link) => onEnd(link))
+                                            }
+                                        >
+                                            Encerrar todos os vínculos
+                                        </DropdownMenuItem>
+
+                                        <DropdownMenuItem
+                                            onClick={() =>
+                                                activeLinks.forEach((link) => onArchive(link))
+                                            }
+                                        >
+                                            Arquivar todos
+                                        </DropdownMenuItem>
+                                    </>
+                                )}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                </div>
+            </CardHeader>
+
+            <CardContent className="pt-0 flex flex-col h-full">
+                {/* Lista de terapeutas supervisionados */}
+                <div className="space-y-3 flex-1">
+                    {/* Supervisionados Diretos */}
+                    {directLinks.length > 0 && (
+                        <div className="space-y-2">
+                            <h4 className="text-sm font-medium text-foreground">
+                                Supervisão Direta ({directLinks.length}):
+                            </h4>
+                            {directLinks.map((link) => (
+                                <SupervisedTherapistChip
+                                    key={link.id}
+                                    link={link}
+                                    therapists={therapists}
+                                    onEdit={onEdit}
+                                    onEnd={onEnd}
+                                    onArchive={onArchive}
+                                />
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Supervisionados Indiretos */}
+                    {indirectLinks.length > 0 && (
+                        <div className="space-y-2">
+                            <h4 className="text-sm font-medium text-foreground">
+                                Supervisão Indireta ({indirectLinks.length}):
+                            </h4>
+                            {indirectLinks.map((link) => (
+                                <SupervisedTherapistChip
+                                    key={link.id}
+                                    link={link}
+                                    therapists={therapists}
+                                    onEdit={onEdit}
+                                    onEnd={onEnd}
+                                    onArchive={onArchive}
+                                />
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Nenhum terapeuta ativo */}
+                    {activeLinks.length === 0 && (
+                        <p className="text-sm text-muted-foreground italic">
+                            Nenhum terapeuta supervisionado ativo
+                        </p>
+                    )}
+                </div>
+
+                {/* Metadados - Fixo na parte inferior */}
+                {startDate && (
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground pt-4 mt-4 border-t">
+                        <div className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            <span>Desde {formatDate(startDate)}</span>
+                        </div>
+                        <span>•</span>
+                        <span>
+                            {activeLinks.length} {activeLinks.length === 1 ? 'terapeuta' : 'terapeutas'}
+                            {indirectLinks.length > 0 && ` (${directLinks.length} direto${directLinks.length !== 1 ? 's' : ''}, ${indirectLinks.length} indireto${indirectLinks.length !== 1 ? 's' : ''})`}
+                        </span>
+                        <span>•</span>
+                        <span className="capitalize">{statusBadge.label}</span>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+    );
+}
+
+// Componente para chip do terapeuta supervisionado (seguindo padrão de TherapistChip)
+function SupervisedTherapistChip({
+    link,
+    therapists,
+    onEdit,
+    onEnd,
+    onArchive,
+}: {
+    link: any;
+    therapists: any[];
+    onEdit: (link: any) => void;
+    onEnd: (link: any) => void;
+    onArchive: (link: any) => void;
+}) {
+    const therapist = therapists.find((t) => t.id === link.supervisedTherapistId);
+
+    if (!therapist) {
+        return null;
+    }
+
+    const therapistInitials = getInitials(therapist.nome);
+    const therapistRole = getTherapistRole(therapist);
+    const therapistAvatarUrl = (therapist as any).avatarUrl
+        ? ((therapist as any).avatarUrl.startsWith('/api')
+            ? `${import.meta.env.VITE_API_BASE ?? ''}${(therapist as any).avatarUrl}`
+            : (therapist as any).avatarUrl)
+        : undefined;
+
+    // Determinar área de atuação
+    const actuationArea = link.actuationArea || therapist.dadosProfissionais?.[0]?.areaAtuacao || 'Supervisão';
+    
+    // Determinar escopo de supervisão
+    const supervisionScope = link.supervisionScope || 'direct';
+    const scopeLabels = {
+        direct: 'Direta',
+        team: 'Equipe',
+    };
+    const scopeLabel = scopeLabels[supervisionScope as keyof typeof scopeLabels] || 'Direta';
+    
+    // Nível hierárquico
+    const hierarchyLevel = link.hierarchyLevel || 1;
+    const isIndirect = hierarchyLevel > 1;
+
+    return (
+        <div className="grid grid-cols-[200px_1fr_auto] items-center gap-4 p-3 bg-muted/30 rounded-[5px]">
+            {/* Coluna 1: Badges de Atuação e Escopo */}
+            <div className="flex flex-wrap gap-1">
+                <Badge
+                    variant="secondary"
+                    className="text-xs py-0.5 flex items-center p-1 gap-1 w-fit"
+                >
+                    <User className="h-3 w-3" />
+                    {actuationArea}
+                </Badge>
+                {isIndirect && (
+                    <Badge
+                        variant="outline"
+                        className="text-xs py-0.5 flex items-center p-1 gap-1 w-fit"
+                    >
+                        Nível {hierarchyLevel}
+                    </Badge>
+                )}
+                {supervisionScope !== 'direct' && (
+                    <Badge
+                        variant="default"
+                        className="text-xs py-0.5 flex items-center p-1 gap-1 w-fit"
+                    >
+                        {scopeLabel}
+                    </Badge>
+                )}
+            </div>
+
+            {/* Coluna 2: Terapeuta (Avatar + Nome + Cargo) */}
+            <div className="flex items-center gap-3">
+                <Avatar className="h-8 w-8">
+                    <AvatarImage
+                        src={therapistAvatarUrl}
+                        alt={therapist.nome}
+                        className='object-cover transition-opacity duration-300'
+                    />
+                    <AvatarFallback className="bg-muted text-muted-foreground text-xs">
+                        {therapistInitials}
+                    </AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col">
+                    <span className="text-sm font-medium">{therapist.nome}</span>
+                    <span className="text-xs text-muted-foreground">
+                        {therapistRole || 'Cargo não definido'}
+                    </span>
+                </div>
+            </div>
+
+            {/* Coluna 3: Menu de Ações */}
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                        aria-label="Ações"
+                    >
+                        <MoreVertical className="h-4 w-4" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-40">
+                    <DropdownMenuItem onClick={() => onEdit(link)}>Editar</DropdownMenuItem>
+
+                    {link.status === 'active' && (
+                        <>
+                            <DropdownMenuSeparator />
+
+                            <DropdownMenuItem onClick={() => onEnd(link)}>
                                 Encerrar
                             </DropdownMenuItem>
                         </>

@@ -16,6 +16,7 @@ const envSchema = z.object({
     PORT: z.coerce.number().default(3000),
     DATABASE_URL: z.string().min(1),
     JWT_SECRET: z.string().min(1, 'JWT_SECRET é obrigatório'),
+    API_URL: z.string(),
     FRONTEND_URL: z.string().url('FRONTEND_URL precisa ser uma URL válida'),
     SMTP_HOST: z.string().min(1),
     SMTP_PORT: z.coerce.number().min(1),

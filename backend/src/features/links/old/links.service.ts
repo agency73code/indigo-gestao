@@ -1,6 +1,6 @@
 import { Prisma } from '@prisma/client';
-import { prisma } from '../../config/database.js';
-import { AppError } from '../../errors/AppError.js';
+import { prisma } from '../../../config/database.js';
+import { AppError } from '../../../errors/AppError.js';
 import * as LinkTypes from './links.types.js';
 
 const LINK_SELECT = {
@@ -76,21 +76,13 @@ async function resolveTherapistActuation(therapistId: string, actuation: string 
     return registration.area_atuacao.nome;
 }
 
+/**
+ * Service responsável por criar um novo vínculo entre cliente e terapeuta.
+ * Resolve a área de atuação conforme o terapeuta informado e persiste o vínculo no banco.
+ * Em caso de sucesso, retorna o vínculo recém-criado com os campos definidos em LINK_SELECT.
+ * Não realiza normalização — responsabilidade da camada Controller.
+ */
 export async function createLink(payload: LinkTypes.CreateLink) {
-    if (payload.role === 'responsible') {
-        const existingResponsible = await prisma.terapeuta_cliente.findFirst({
-            where: {
-                cliente_id: payload.patientId,
-                papel: 'responsible',
-                status: 'active',
-            },
-        });
-
-        if (existingResponsible) {
-            throw new AppError('LINK_RESPONSIBLE_EXISTS', 'Já existe um responsável principal ativo para este cliente.', 409);
-        }
-    }
-
     const actuationArea = await resolveTherapistActuation(payload.therapistId, payload.actuationArea);
 
     const created = await prisma.terapeuta_cliente.create({
@@ -110,8 +102,16 @@ export async function createLink(payload: LinkTypes.CreateLink) {
     return created;
 }
 
-export async function getAllClients() {
+export async function getAllClients(search?: string) {
+    const where: Prisma.clienteWhereInput = {};
+
+    // Filtro de nome (busca por texto)
+    if (search && search.trim() !== '') {
+        where.nome = { contains: search.trim().toLowerCase() }
+    }
+
     return prisma.cliente.findMany({
+        where,
         select: {
             id: true,
             nome: true,
@@ -148,12 +148,32 @@ export async function getAllClients() {
                 orderBy: { id: 'asc' },
             },
         },
+        take: 5,
         orderBy: { nome: 'asc' },
     });
 }
 
-export async function getAllTherapists() {
-    return prisma.terapeuta.findMany({
+export async function getAllTherapists(search?: string, role?: string) {
+    const where: Prisma.terapeutaWhereInput = {};
+
+    // Filtro de nome (busca por texto)
+    if (search && search.trim() !== '') {
+        where.nome = { contains: search.trim().toLowerCase() }
+    }
+
+    if (role && role !== 'all') {
+        const cargoNames = role === 'supervisor' ? LinkTypes.SUPERVISOR_ROLES : LinkTypes.CLINICAL_ROLES;
+        where.registro_profissional = {
+            some: {
+                cargo: {
+                    nome: { in: cargoNames },
+                },
+            },
+        };
+    }
+
+    const therapists = await prisma.terapeuta.findMany({
+        where,
         select: {
             id: true,
             nome: true,
@@ -240,15 +260,99 @@ export async function getAllTherapists() {
                 },
             },
         },
+        take: 5,
         orderBy: { nome: 'asc' },
     });
+
+    return therapists;
 }
 
-export async function getAllLinks() {
-    return prisma.terapeuta_cliente.findMany({
-        select: LINK_SELECT,
-        orderBy: { atualizado_em: 'desc' },
+/**
+ * Service responsável por buscar todos os vínculos entre clientes e terapeutas.
+ * Retorna até 5 registros mais recentes, ordenados pela data de atualização decrescente.
+ * Não aplica normalização — responsabilidade da camada Controller.
+ */
+export async function getAllLinks(filters?: LinkTypes.LinkFilters) {
+    const where = buildWhere(filters);
+    const orderBy = buildOrderBy(filters);
+
+    const links = await prisma.terapeuta_cliente.findMany({
+        where,
+        take: 5,
+        orderBy,
+        include: {
+            terapeuta: {
+                include: {
+                    registro_profissional: {
+                        include: { area_atuacao: true },
+                    },
+                },
+            },
+            cliente: {
+                include: {
+                    cuidadores: true,
+                },
+            },
+        },
     });
+
+    return links;
+}
+
+/**
+ * Monta dinamicamente o objeto "where" com base nos filtros recebidos.
+ */
+function buildWhere(filters?: LinkTypes.LinkFilters) {
+    if (!filters) return {};
+
+    const { status, q } = filters;
+
+    const where: Record<string, unknown> = {};
+
+    // Filtro de status
+    if (status && status !== 'all') {
+        where.status = status;
+    }
+
+    // Filtro de busca textual
+    if (q && q.trim() !== '') {
+        where.OR = [
+            // Terapeuta
+            { terapeuta: { nome: { contains: q } } },
+            { terapeuta: { email: { contains: q } } },
+            { terapeuta: { email_indigo: { contains: q } } },
+            { terapeuta: { cpf: { contains: q } } },
+            {
+                terapeuta: {
+                    registro_profissional: {
+                        some: {
+                            area_atuacao: { nome: { contains: q } },
+                        },
+                    },
+                },
+            },
+
+            // Cliente
+            { cliente: { nome: { contains: q } } },
+            { cliente: { emailContato: { contains: q } } },
+            { cliente: { cpf: { contains: q } } },
+
+            // Cuidador do cliente
+            { cliente: { cuidadores: { some: { nome: { contains: q } } } } },
+            { cliente: { cuidadores: { some: { email: { contains: q } } } } },
+            { cliente: { cuidadores: { some: { cpf: { contains: q } } } } },
+        ];
+    }
+
+    return where;
+}
+
+/**
+ * Define a ordenação conforme o filtro `orderBy` recebido.
+ */
+function buildOrderBy(filters?: LinkTypes.LinkFilters) {
+    const recent = filters?.orderBy === 'recent';
+    return { atualizado_em: recent ? 'desc' : 'asc' } as const;
 }
 
 export async function updateLink(payload: LinkTypes.UpdateLink) {
@@ -266,33 +370,9 @@ export async function updateLink(payload: LinkTypes.UpdateLink) {
     if (!existing) {
         throw new AppError('LINK_NOT_FOUND', 'Vínculo não encontrado.', 404)
     }
-    
-    const nextRole = payload.role ?? existing.papel;
-    const nextStatus = payload.status ?? existing.status;
-    
-    if (nextRole === 'responsible' && nextStatus === 'active') {
-        const otherResponsible = await prisma.terapeuta_cliente.findFirst({
-            where: {
-                cliente_id: existing.cliente_id,
-                papel: 'responsible',
-                status: 'active',
-                NOT: { id: linkId },
-            },
-            select: { id: true },
-        });
-
-        if (otherResponsible) {
-            throw new AppError(
-                'LINK_RESPONSIBLE_EXISTS',
-                'Já existe um responsável principal ativo para este cliente.',
-                409,
-            );
-        }
-    }
 
     const data: Prisma.terapeuta_clienteUpdateInput = {};
 
-    let startDate = existing.data_inicio;
     if (payload.startDate) {
         const parsedStart = new Date(payload.startDate);
 
@@ -301,45 +381,6 @@ export async function updateLink(payload: LinkTypes.UpdateLink) {
         }
 
         data.data_inicio = parsedStart;
-        startDate = parsedStart;
-    }
-
-    let endDate = existing.data_fim;
-    const hasEndDate = Object.prototype.hasOwnProperty.call(payload, 'endDate');
-
-    if (hasEndDate) {
-        if (payload.endDate === null) {
-            data.data_fim = null;
-            endDate = null;
-        } else if (typeof payload.endDate === 'string' && payload.endDate.trim() !== '') {
-            const parsedEnd = new Date(payload.endDate);
-
-            if (Number.isNaN(parsedEnd.getTime())) {
-                throw new AppError('LINK_INVALID_END_DATE', 'Data de término inválida.', 400);
-            }
-
-            data.data_fim = parsedEnd;
-            endDate = parsedEnd;
-        } else if (typeof payload.endDate === 'string') {
-            data.data_fim = null;
-            endDate = null;
-        }
-    }
-
-    if (endDate && endDate < startDate) {
-        throw new AppError(
-            'LINK_INVALID_END_DATE',
-            'A data de encerramento não pode ser anterior à data de início do vínculo.',
-            400,
-        );
-    }
-
-    if (payload.role) {
-        data.papel = payload.role;
-    }
-
-    if (payload.status) {
-        data.status = payload.status;
     }
 
     if (Object.prototype.hasOwnProperty.call(payload, 'notes')) {
@@ -347,29 +388,17 @@ export async function updateLink(payload: LinkTypes.UpdateLink) {
     }
 
     if (Object.prototype.hasOwnProperty.call(payload, 'actuationArea')) {
-        const requestedActuation = payload.actuationArea;
-
-        if (requestedActuation == null || requestedActuation.trim() === '') {
-            throw new AppError(
-                'LINK_ACTUATION_REQUIRED',
-                'A área de atuação é obrigatória para o terapeuta selecionado.',
-                400,
-            );
+        const requested = payload.actuationArea;
+        if (!requested?.trim()) {
+            throw new AppError('LINK_ACTUATION_REQUIRED', 'A área de atuação é obrigatória.', 400);
         }
 
-        const resolvedActuation = await resolveTherapistActuation(existing.terapeuta_id, requestedActuation);
-        data.area_atuacao = resolvedActuation;
+        data.area_atuacao = await resolveTherapistActuation(existing.terapeuta_id, requested);
     } else if (!existing.area_atuacao) {
-        throw new AppError(
-            'LINK_ACTUATION_REQUIRED',
-            'A área de atuação é obrigatória para o terapeuta selecionado.',
-            400,
-        );
+        throw new AppError('LINK_ACTUATION_REQUIRED', 'A área de atuação é obrigatória.', 400);
     }
 
-    if (Object.keys(data).length === 0) {
-        return existing;
-    }
+    if (Object.keys(data).length === 0) return existing;
 
     const updated = await prisma.terapeuta_cliente.update({
         where: { id: linkId },
@@ -377,9 +406,54 @@ export async function updateLink(payload: LinkTypes.UpdateLink) {
         select: LINK_SELECT,
     });
 
+    reopenLink(linkId);
+
     return updated;
 }
 
+/**
+ * Service responsável por reabrir um vínculo encerrado entre cliente e terapeuta.
+ * Apenas vínculos com status='ended' podem ser reativados.
+ * Ao reabrir, o status é alterado para 'active' e a data de término (data_fim) é limpa.
+ * Em caso de erro (vínculo inexistente ou status inválido), lança um AppError apropriado.
+ */
+export async function reopenLink(id: number) {
+  const linkId = id;
+
+  const existing = await prisma.terapeuta_cliente.findUnique({
+    where: { id: linkId },
+    select: LINK_SELECT,
+  });
+
+  if (!existing) {
+    throw new AppError('LINK_NOT_FOUND', 'Vínculo não encontrado.', 404);
+  }
+
+  if (existing.status !== 'ended') {
+    throw new AppError(
+      'LINK_NOT_ENDED',
+      'Apenas vínculos encerrados podem ser reabertos.',
+      400
+    );
+  }
+
+  const updated = await prisma.terapeuta_cliente.update({
+    where: { id: linkId },
+    data: {
+      status: 'active',
+      data_fim: null,
+    },
+    select: LINK_SELECT,
+  });
+
+  return updated;
+}
+
+/**
+ * Service responsável por arquivar um vínculo entre cliente e terapeuta.
+ * Apenas vínculos com status='ended' podem ser arquivados.
+ * Em caso de violação, lança um AppError com código e mensagem adequados.
+ */
 export async function archiveLink(payload: LinkTypes.ArchiveLink) {
     const linkId = Number(payload.id);
 
@@ -392,12 +466,18 @@ export async function archiveLink(payload: LinkTypes.ArchiveLink) {
         select: LINK_SELECT,
     });
 
+    
     if (!existing) {
         throw new AppError('LINK_NOT_FOUND', 'Vínculo não encontrado.', 404);
     }
-
-    if (existing.status === 'archived') {
-        return existing;
+    
+    // Verificação de estado: só permite arquivar se o vínculo estiver encerrado
+    if (existing.status !== 'ended') {
+        throw new AppError(
+            'LINK_NOT_ENDED',
+            'Apenas vínculos encerrados podem ser arquivados.',
+            400
+        );
     }
 
     const updated = await prisma.terapeuta_cliente.update({

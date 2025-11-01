@@ -1,4 +1,21 @@
 import { useState, useEffect } from 'react';
+import { searchTherapists } from '../services/links.service';
+import { Search, User, Users, Calendar as CalendarIcon, Loader2 } from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import {
     Dialog,
     DialogContent,
@@ -6,249 +23,130 @@ import {
     DialogTitle,
     DialogFooter,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { CalendarIcon, User, Users, Search, Loader2 } from 'lucide-react';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { cn } from '@/lib/utils';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { Combobox } from '@/ui/combobox';
-import type { CreateLinkInput, UpdateLinkInput, LinkFormModalProps } from '../types';
-import type { Paciente, Terapeuta } from '../../types/cadastros.types';
-import { isSupervisorRole } from '../../constants/access-levels';
-import { searchPatients, searchTherapists } from '../services/links.service';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import type {
+    SupervisionLinkFormModalProps,
+    Terapeuta,
+    CreateSupervisionLinkInput,
+    UpdateSupervisionLinkInput,
+    TerapeutaAvatar,
+} from '../types';
 
-type ComboboxOption = { value: string; label: string };
-
-function buildActuationOptions(therapist: Terapeuta | null | undefined): ComboboxOption[] {
-    if (!therapist?.dadosProfissionais?.length) {
-        return [];
-    }
-
-    const uniqueAreas = new Map<string, string>();
-
-    therapist.dadosProfissionais.forEach((professionalData) => {
-        const area = professionalData.areaAtuacao?.trim();
-
-        if (!area) return;
-
-        const key = area.toLowerCase();
-
-        if (!uniqueAreas.has(key)) {
-            uniqueAreas.set(key, area);
-        }
-    });
-
-    return Array.from(uniqueAreas.values()).map((area) => ({ value: area, label: area }));
+function parseLocalDate(dateString: string) {
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day);
 }
 
-/**
- * Calcula o role baseado no cargo do terapeuta
- */
-function calculateRoleFromTherapist(therapist: Terapeuta | null | undefined): 'responsible' | 'co' {
-    if (!therapist?.dadosProfissionais?.length) {
-        return 'co';
-    }
-
-    // Pega o primeiro cargo (principal) do terapeuta
-    const primaryCargo = therapist.dadosProfissionais[0]?.cargo;
-    
-    if (!primaryCargo) {
-        return 'co';
-    }
-
-    // Retorna 'responsible' se for supervisor (nível >= 3), senão 'co'
-    return isSupervisorRole(primaryCargo) ? 'responsible' : 'co';
-}
-
-export default function LinkFormModal({
+export default function SupervisionLinkFormModal({
     open,
     onClose,
     onSubmit,
     initialData = null,
-    patients,
     therapists,
     loading = false,
-}: LinkFormModalProps) {
+}: SupervisionLinkFormModalProps) {
     // Estados do formulário
-    const [patientId, setPatientId] = useState<string>('');
-    const [therapistId, setTherapistId] = useState<string>('');
-    const [actuationArea, setActuationArea] = useState<string>('');
-    const [actuationOptions, setActuationOptions] = useState<ComboboxOption[]>([]);
+    const [supervisorId, setSupervisorId] = useState<string>('');
+    const [supervisedTherapistId, setSupervisedTherapistId] = useState<string>('');
     const [startDate, setStartDate] = useState<Date>();
     const [notes, setNotes] = useState('');
+    const [supervisionScope, setSupervisionScope] = useState<'direct' | 'team'>('direct');
 
-    // Estados para busca de pacientes/terapeutas
-    const [patientSearch, setPatientSearch] = useState('');
+    // Estados para busca de terapeutas
+    const [supervisorSearch, setSupervisorSearch] = useState('');
     const [therapistSearch, setTherapistSearch] = useState('');
-    const [patientResults, setPatientResults] = useState<Paciente[]>([]);
-    const [therapistResults, setTherapistResults] = useState<Terapeuta[]>([]);
-    const [selectedPatient, setSelectedPatient] = useState<Paciente | null>(null);
-    const [selectedTherapist, setSelectedTherapist] = useState<Terapeuta | null>(null);
-    const [showPatientSearch, setShowPatientSearch] = useState(false);
+    const [selectedSupervisor, setSelectedSupervisor] = useState<TerapeutaAvatar | null>(null);
+    const [selectedTherapist, setSelectedTherapist] = useState<TerapeutaAvatar | null>(null);
+    const [showSupervisorSearch, setShowSupervisorSearch] = useState(false);
     const [showTherapistSearch, setShowTherapistSearch] = useState(false);
     const [showCalendar, setShowCalendar] = useState(false);
+    const [supervisorResults, setSupervisorResults] = useState<Terapeuta[]>([]);
+    const [therapistResults, setTherapistResults] = useState<Terapeuta[]>([]);
 
     // Estados de validação
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-    // Determinar se é edição ou criação de novo terapeuta
+    // Determinar se é edição
     const isEdit = !!initialData && !!(initialData as any)?.id;
-    const isNewTherapistCreation = !!initialData && !!(initialData as any)?._isNewTherapistCreation;
 
     // Efeito para carregar dados iniciais no modo edição
     useEffect(() => {
         if (open && initialData && isEdit) {
-            setPatientId(initialData.patientId);
-            setTherapistId(initialData.therapistId);
-            setActuationArea(initialData.actuationArea || '');
-            setStartDate(new Date(initialData.startDate));
+            setSupervisorId(initialData.supervisorId);
+            setSupervisedTherapistId(initialData.supervisedTherapistId);
+            setStartDate(parseLocalDate(initialData.startDate));
             setNotes(initialData.notes || '');
+            setSupervisionScope((initialData as any).supervisionScope || 'direct');
 
-            // Buscar dados completos do paciente e terapeuta
-            const patient = patients.find((p) => p.id === initialData.patientId);
-            const therapist = therapists.find((t) => t.id === initialData.therapistId);
+            // Buscar dados completos do supervisor e terapeuta
+            const supervisor = therapists.find((t) => t.id === initialData.supervisorId);
+            const therapist = therapists.find((t) => t.id === initialData.supervisedTherapistId);
 
-            if (patient) {
-                setSelectedPatient(patient);
-                setPatientSearch(patient.nome);
+            if (supervisor) {
+                setSelectedSupervisor(supervisor);
+                setSupervisorSearch(supervisor.nome);
             }
             if (therapist) {
                 setSelectedTherapist(therapist);
                 setTherapistSearch(therapist.nome);
             }
-        } else if (open && initialData && isNewTherapistCreation) {
-            // Modo criação de novo terapeuta - pré-preencher paciente
-            setPatientId(initialData.patientId);
-            setTherapistId('');
-            setActuationArea('');
-            setStartDate(new Date()); // Data atual como padrão
+        } else if (open && !isEdit) {
+            // Modo criação - resetar campos
+            setSupervisorId('');
+            setSupervisedTherapistId('');
+            setStartDate(new Date());
             setNotes('');
+            setSupervisionScope('direct');
+            setSelectedSupervisor(null);
             setSelectedTherapist(null);
-            setTherapistSearch('');
-            setErrors({});
-
-            // Buscar e pré-preencher dados do paciente
-            const patient = patients.find((p) => p.id === initialData.patientId);
-            if (patient) {
-                setSelectedPatient(patient);
-                setPatientSearch(patient.nome);
-            }
-        } else if (open && (!initialData || (!isEdit && !isNewTherapistCreation))) {
-            // Limpar formulário para criação normal
-            setPatientId('');
-            setTherapistId('');
-            setActuationArea('');
-            setStartDate(new Date()); // Data atual como padrão
-            setNotes('');
-            setSelectedPatient(null);
-            setSelectedTherapist(null);
-            setPatientSearch('');
+            setSupervisorSearch('');
             setTherapistSearch('');
             setErrors({});
         }
-    }, [open, initialData, isEdit, isNewTherapistCreation, patients, therapists]);
+    }, [open, initialData, isEdit, therapists]);
 
-    // Efeito para resetar busca de paciente quando modal abre
+    // Efeito de busca de supervisor
     useEffect(() => {
-        if (showPatientSearch && !selectedPatient) {
-            setPatientSearch('');
-        }
-    }, [showPatientSearch, selectedPatient]);
-
-    // Efeito para resetar busca de terapeuta quando modal abre
-    useEffect(() => {
-        if (showTherapistSearch && !selectedTherapist) {
-            setTherapistSearch('');
-        }
-    }, [showTherapistSearch, selectedTherapist]);
-
-    useEffect(() => {
-        const options = buildActuationOptions(selectedTherapist);
-        setActuationOptions(options);
-
-        setActuationArea((current) => {
-            if (options.length === 0) {
-                return '';
+        const timeout = setTimeout(async () => {
+            if (showSupervisorSearch) {
+                const results = await searchTherapists('supervisor', supervisorSearch);
+                setSupervisorResults(results);
             }
+        }, 400); // 400ms de debounce
 
-            if (current) {
-                const match = options.find(
-                    (option) => option.value.toLowerCase() === current.trim().toLowerCase(),
-                );
+        return () => clearTimeout(timeout);
+    }, [supervisorSearch, showSupervisorSearch]);
 
-                if (match) {
-                    return match.value;
-                }
-            }
-
-            if (options.length === 1) {
-                return options[0].value;
-            }
-
-            return '';
-        });
-    }, [selectedTherapist]);
-
-    useEffect(() => {
-        if (!actuationArea) {
-            return;
-        }
-
-        setErrors((prev) => {
-            if (!prev.actuationArea) {
-                return prev;
-            }
-
-            const nextErrors = { ...prev };
-            delete nextErrors.actuationArea;
-            return nextErrors;
-        });
-    }, [actuationArea]);
-
+    // Efeito de busca de terapeuta
     useEffect(() => {
         const timeout = setTimeout(async () => {
             if (showTherapistSearch) {
-                const results = await searchTherapists('all', therapistSearch);
+                const results = await searchTherapists('clinico', therapistSearch);
                 setTherapistResults(results);
-            } 
+            }
         }, 400);
 
         return () => clearTimeout(timeout);
     }, [therapistSearch, showTherapistSearch]);
 
-    useEffect(() => {
-        const timeout = setTimeout(async () => {
-            if (showPatientSearch) {
-                const results = await searchPatients(patientSearch);
-                setPatientResults(results);
-            } 
-        }, 400);
-
-        return () => clearTimeout(timeout);
-    }, [patientSearch, showPatientSearch]);
-
     const validateForm = () => {
         const newErrors: Record<string, string> = {};
 
-        if (!patientId) {
-            newErrors.patient = 'Selecione um cliente';
+        if (!supervisorId) {
+            newErrors.supervisor = 'Selecione um supervisor';
         }
 
-        if (!therapistId) {
+        if (!supervisedTherapistId) {
             newErrors.therapist = 'Selecione um terapeuta';
         }
 
-        if (!actuationArea) {
-            newErrors.actuationArea = 'Selecione a área de atuação do terapeuta';
+        if (supervisorId === supervisedTherapistId) {
+            newErrors.therapist = 'O supervisor e o terapeuta não podem ser a mesma pessoa';
         }
 
         if (!startDate) {
-            newErrors.startDate = 'Selecione a data de início';
+            newErrors.startDate = 'Selecione uma data de início';
         }
 
         setErrors(newErrors);
@@ -256,48 +154,49 @@ export default function LinkFormModal({
     };
 
     const handleSubmit = () => {
-        if (!validateForm()) return;
+        if (!validateForm()) {
+            return;
+        }
 
-        // Calcular role baseado no cargo do terapeuta selecionado
-        const role = calculateRoleFromTherapist(selectedTherapist);
+        const formattedStartDate = startDate
+            ? format(startDate, 'yyyy-MM-dd')
+            : new Date().toISOString().split('T')[0];
 
-        if (!isEdit) {
-            const createData: CreateLinkInput = {
-                patientId: patientId,
-                therapistId: therapistId,
-                role,
-                startDate: startDate!.toISOString(),
-                notes: notes.trim() || undefined,
-                actuationArea: actuationArea,
-            };
-            onSubmit(createData);
-        } else {
-            const updateData: UpdateLinkInput = {
-                id: initialData!.id,
-                role,
-                startDate: startDate!.toISOString(),
-                notes: notes.trim() || undefined,
-                actuationArea: actuationArea,
+        if (isEdit && initialData?.id) {
+            const updateData: UpdateSupervisionLinkInput = {
+                id: initialData.id,
+                startDate: formattedStartDate,
+                notes: notes.trim() || null,
+                supervisionScope,
             };
             onSubmit(updateData);
+        } else {
+            const createData: CreateSupervisionLinkInput = {
+                supervisorId,
+                supervisedTherapistId,
+                startDate: formattedStartDate,
+                notes: notes.trim() || null,
+                supervisionScope,
+            };
+            onSubmit(createData);
         }
     };
 
-    const handlePatientSelect = (patient: Paciente) => {
-        setSelectedPatient(patient);
-        setPatientId(patient.id || '');
-        setPatientSearch(patient.nome);
-        setShowPatientSearch(false);
+    const handleSupervisorSelect = (supervisor: Terapeuta) => {
+        setSelectedSupervisor(supervisor);
+        setSupervisorId(supervisor.id || '');
+        setSupervisorSearch(supervisor.nome);
+        setShowSupervisorSearch(false);
 
         // Limpar erro se existir
-        if (errors.patient) {
-            setErrors((prev) => ({ ...prev, patient: '' }));
+        if (errors.supervisor) {
+            setErrors((prev) => ({ ...prev, supervisor: '' }));
         }
     };
 
     const handleTherapistSelect = (therapist: Terapeuta) => {
         setSelectedTherapist(therapist);
-        setTherapistId(therapist.id || '');
+        setSupervisedTherapistId(therapist.id || '');
         setTherapistSearch(therapist.nome);
         setShowTherapistSearch(false);
 
@@ -316,11 +215,7 @@ export default function LinkFormModal({
             .toUpperCase();
     };
 
-    const title = isEdit
-        ? 'Editar Vínculo'
-        : isNewTherapistCreation
-          ? 'Adicionar Terapeuta'
-          : 'Novo Vínculo';
+    const title = isEdit ? 'Editar Vínculo de Supervisão' : 'Novo Vínculo de Supervisão';
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
@@ -335,57 +230,62 @@ export default function LinkFormModal({
                 </DialogHeader>
 
                 <div className="space-y-4 sm:space-y-6 py-2 sm:py-4">
-                    {/* Seleção de Paciente */}
+                    {/* Seleção de Supervisor */}
                     <div className="space-y-2">
-                        <Label className="text-sm font-medium">Cliente *</Label>
+                        <Label className="text-sm font-medium">Supervisor *</Label>
                         <div className="relative">
                             <div
                                 className={cn(
                                     'flex items-center gap-3 p-3 border rounded-[5px] cursor-pointer',
                                     'hover:bg-muted/50 transition-colors',
-                                    errors.patient ? 'border-destructive' : 'border-input',
+                                    errors.supervisor ? 'border-destructive' : 'border-input',
                                     isEdit && 'opacity-60 cursor-not-allowed',
                                 )}
-                                onClick={() => !isEdit && setShowPatientSearch(true)}
+                                onClick={() => !isEdit && setShowSupervisorSearch(true)}
                             >
-                                {selectedPatient ? (
+                                {selectedSupervisor ? (
                                     <>
                                         <Avatar className="h-8 w-8">
                                             <AvatarImage 
-                                                src={(selectedPatient as any).avatarUrl || undefined}
-                                                alt={selectedPatient.nome}
+                                                src={selectedSupervisor.avatarUrl || undefined}
+                                                alt={selectedSupervisor.nome}
                                             />
                                             <AvatarFallback className="text-xs">
-                                                {getInitials(selectedPatient.nome)}
+                                                {getInitials(selectedSupervisor.nome)}
                                             </AvatarFallback>
                                         </Avatar>
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-medium truncate">
-                                                {selectedPatient.nome}
+                                                {selectedSupervisor.nome}
                                             </p>
+                                            {selectedSupervisor.dadosProfissionais?.[0]?.cargo && (
+                                                <p className="text-xs text-muted-foreground truncate">
+                                                    {selectedSupervisor.dadosProfissionais[0].cargo}
+                                                </p>
+                                            )}
                                         </div>
                                     </>
                                 ) : (
                                     <>
                                         <div className="h-8 w-8 bg-muted rounded-full flex items-center justify-center">
-                                            <User className="h-4 w-4 text-muted-foreground" />
+                                            <Users className="h-4 w-4 text-muted-foreground" />
                                         </div>
                                         <span className="text-sm text-muted-foreground">
-                                            Selecione um cliente
+                                            Selecione um supervisor
                                         </span>
                                     </>
                                 )}
                                 {!isEdit && <Search className="h-4 w-4 text-muted-foreground" />}
                             </div>
-                            {errors.patient && (
-                                <p className="text-sm text-destructive mt-1">{errors.patient}</p>
+                            {errors.supervisor && (
+                                <p className="text-sm text-destructive mt-1">{errors.supervisor}</p>
                             )}
                         </div>
                     </div>
 
-                    {/* Seleção de Terapeuta */}
+                    {/* Seleção de Terapeuta Clínico */}
                     <div className="space-y-2">
-                        <Label className="text-sm font-medium">Terapeuta *</Label>
+                        <Label className="text-sm font-medium">Terapeuta Clínico *</Label>
                         <div className="relative">
                             <div
                                 className={cn(
@@ -400,7 +300,7 @@ export default function LinkFormModal({
                                     <>
                                         <Avatar className="h-8 w-8">
                                             <AvatarImage 
-                                                src={(selectedTherapist as any).avatarUrl || undefined}
+                                                src={selectedTherapist.avatarUrl || undefined}
                                                 alt={selectedTherapist.nome}
                                             />
                                             <AvatarFallback className="text-xs">
@@ -411,12 +311,17 @@ export default function LinkFormModal({
                                             <p className="text-sm font-medium truncate">
                                                 {selectedTherapist.nome}
                                             </p>
+                                            {selectedTherapist.dadosProfissionais?.[0]?.cargo && (
+                                                <p className="text-xs text-muted-foreground truncate">
+                                                    {selectedTherapist.dadosProfissionais[0].cargo}
+                                                </p>
+                                            )}
                                         </div>
                                     </>
                                 ) : (
                                     <>
                                         <div className="h-8 w-8 bg-muted rounded-full flex items-center justify-center">
-                                            <Users className="h-4 w-4 text-muted-foreground" />
+                                            <User className="h-4 w-4 text-muted-foreground" />
                                         </div>
                                         <span className="text-sm text-muted-foreground">
                                             Selecione um terapeuta
@@ -431,50 +336,6 @@ export default function LinkFormModal({
                         </div>
                     </div>
 
-                    {/* Cargo do Terapeuta (read-only, calculado automaticamente) */}
-                    {selectedTherapist && selectedTherapist.dadosProfissionais?.[0]?.cargo && (
-                        <div className="space-y-2">
-                            <Label className="text-sm font-medium">Cargo</Label>
-                            <div className={cn(
-                                'flex items-center gap-2 p-3 border rounded-[5px]',
-                                isSupervisorRole(selectedTherapist.dadosProfissionais[0].cargo)
-                                    ? 'bg-primary/10 border-primary/20'
-                                    : 'bg-muted/30 border-input'
-                            )}>
-                                <span className="text-sm font-medium">
-                                    {selectedTherapist.dadosProfissionais[0].cargo}
-                                </span>
-                                <span className="text-xs text-muted-foreground ml-auto">
-                                    {isSupervisorRole(selectedTherapist.dadosProfissionais[0].cargo)
-                                        ? '• Supervisor'
-                                        : '• Terapeuta'}
-                                </span>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Campo de Atuação do Terapeuta */}
-                    <div className="space-y-2">
-                        <Label className="text-sm font-medium">Área de Atuação *</Label>
-                        <Combobox
-                            options={actuationOptions}
-                            value={actuationArea}
-                            onValueChange={(value) => setActuationArea(value)}
-                            placeholder={selectedTherapist ? 'Selecione a área de atuação' : 'Selecione um terapeuta primeiro'}
-                            searchPlaceholder="Buscar atuação..."
-                            emptyMessage={selectedTherapist
-                                ? 'Nenhuma atuação encontrada.'
-                                : 'Selecione um terapeuta para visualizar as áreas disponíveis.'}
-                            disabled={!selectedTherapist || actuationOptions.length === 0}
-                            error={!!errors.actuationArea}
-                        />
-                        {errors.actuationArea && (
-                            <p className="text-sm text-destructive">
-                                {errors.actuationArea}
-                            </p>
-                        )}
-                    </div>
-
                     {/* Data de Início */}
                     <div className="space-y-2">
                         <Label className="text-sm font-medium">Data de Início *</Label>
@@ -485,32 +346,29 @@ export default function LinkFormModal({
                                     className={cn(
                                         'w-full justify-start text-left font-normal',
                                         !startDate && 'text-muted-foreground',
-                                        errors.startDate && 'border-destructive',
+                                        errors.startDate && 'border-destructive'
                                     )}
                                 >
                                     <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {startDate
-                                        ? format(startDate, "dd 'de' MMMM 'de' yyyy", {
-                                              locale: ptBR,
-                                          })
-                                        : 'Selecione uma data'}
+                                    {startDate ? (
+                                        format(startDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+                                    ) : (
+                                        <span>Selecione a data</span>
+                                    )}
                                 </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="p-0" align="start">
+                            <PopoverContent className="w-auto p-0" align="start">
                                 <Calendar
                                     mode="single"
                                     selected={startDate}
                                     onSelect={(date) => {
                                         setStartDate(date);
                                         setShowCalendar(false);
-
-                                        // Limpar erro se existir
                                         if (errors.startDate) {
                                             setErrors((prev) => ({ ...prev, startDate: '' }));
                                         }
                                     }}
                                     locale={ptBR}
-                                    toDate={new Date(new Date().getFullYear() + 10, 11, 31)}
                                     initialFocus
                                 />
                             </PopoverContent>
@@ -520,59 +378,82 @@ export default function LinkFormModal({
                         )}
                     </div>
 
+                    {/* Escopo de Supervisão */}
+                    <div className="space-y-2">
+                        <Label className="text-sm font-medium">Escopo de Supervisão</Label>
+                        <Select value={supervisionScope} onValueChange={(value: 'direct' | 'team') => setSupervisionScope(value)}>
+                            <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Selecione o escopo" />
+                            </SelectTrigger>
+                            <SelectContent className="w-[400px]">
+                                <SelectItem value="direct" className="flex-col items-start h-auto py-3">
+                                    <span className="font-medium text-sm">Direta</span>
+                                    <span className="text-xs text-muted-foreground mt-1 block">
+                                        Supervisão apenas do terapeuta vinculado
+                                    </span>
+                                </SelectItem>
+                                <SelectItem value="team" className="flex-col items-start h-auto py-3">
+                                    <span className="font-medium text-sm">Equipe</span>
+                                    <span className="text-xs text-muted-foreground mt-1 block">
+                                        Supervisão do terapeuta e sua equipe
+                                    </span>
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                            {supervisionScope === 'direct' && 'O supervisor terá acesso apenas aos dados do terapeuta supervisionado.'}
+                            {supervisionScope === 'team' && 'O supervisor terá acesso aos dados do terapeuta e de todos os subordinados dele.'}
+                        </p>
+                    </div>
+
                     {/* Observações */}
                     <div className="space-y-2">
                         <Label className="text-sm font-medium">Observações</Label>
-                        <textarea
-                            className="w-full p-3 border border-input rounded-[5px] resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
-                            placeholder="Observações sobre o vínculo (opcional)"
-                            rows={3}
+                        <Textarea
+                            placeholder="Observações sobre o vínculo de supervisão (opcional)"
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}
+                            className="min-h-[100px] resize-none"
                             maxLength={500}
                         />
-                        <p className="text-xs text-muted-foreground text-right">
+                        <div className="text-xs text-muted-foreground text-right">
                             {notes.length}/500
-                        </p>
+                        </div>
                     </div>
                 </div>
 
-                <DialogFooter className="gap-2 sm:gap-3 flex-col sm:flex-row">
+                <DialogFooter className="gap-2 sm:gap-0">
                     <Button
                         variant="outline"
                         onClick={onClose}
                         disabled={loading}
-                        className="w-full sm:w-auto order-2 sm:order-1"
+                        className="flex-1 sm:flex-none"
                     >
                         Cancelar
                     </Button>
                     <Button
                         onClick={handleSubmit}
                         disabled={loading}
-                        className="w-full sm:w-auto gap-2 order-1 sm:order-2"
+                        className="flex-1 sm:flex-none gap-2"
                     >
                         {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                         <span className="sm:hidden">
-                            {isEdit ? 'Salvar' : isNewTherapistCreation ? 'Adicionar' : 'Criar'}
+                            {isEdit ? 'Salvar' : 'Criar'}
                         </span>
                         <span className="hidden sm:inline">
-                            {isEdit
-                                ? 'Salvar Alterações'
-                                : isNewTherapistCreation
-                                  ? 'Adicionar Terapeuta'
-                                  : 'Criar Vínculo'}
+                            {isEdit ? 'Salvar Alterações' : 'Criar Vínculo'}
                         </span>
                     </Button>
                 </DialogFooter>
             </DialogContent>
 
-            {/* Modal de busca de pacientes */}
-            {showPatientSearch && (
-                <Dialog open={showPatientSearch} onOpenChange={setShowPatientSearch}>
+            {/* Modal de busca de supervisores */}
+            {showSupervisorSearch && (
+                <Dialog open={showSupervisorSearch} onOpenChange={setShowSupervisorSearch}>
                     <DialogContent className="max-w-md w-[95vw] sm:w-full mx-auto rounded-[5px]">
                         <DialogHeader>
                             <DialogTitle className="text-base sm:text-lg">
-                                Selecionar cliente
+                                Selecionar supervisor
                             </DialogTitle>
                         </DialogHeader>
 
@@ -580,56 +461,55 @@ export default function LinkFormModal({
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input
-                                    placeholder="Buscar cliente..."
-                                    value={patientSearch}
-                                    onChange={(e) => setPatientSearch(e.target.value)}
+                                    placeholder="Buscar supervisor..."
+                                    value={supervisorSearch}
+                                    onChange={(e) => setSupervisorSearch(e.target.value)}
                                     className="pl-10"
                                     autoFocus
                                 />
                             </div>
 
                             <div className="max-h-60 overflow-y-auto">
-                                {patientResults.length > 0 ? (
+                                {supervisorResults.length > 0 ? (
                                     <div className="space-y-2">
-                                        {patientResults.map((patient) => {
-                                            const patientAny = patient as any;
-                                            const avatarUrl = patientAny.avatarUrl
-                                                ? (patientAny.avatarUrl.startsWith('/api')
-                                                    ? `${import.meta.env.VITE_API_BASE ?? ''}${patientAny.avatarUrl}`
-                                                    : patientAny.avatarUrl)
-                                                : undefined;
-                                            
+                                        {supervisorResults.map((supervisor) => {
+                                            const supervisorAny = supervisor as any;
                                             return (
                                                 <div
-                                                    key={patient.id}
+                                                    key={supervisor.id}
                                                     className="flex items-center gap-3 p-3 hover:bg-muted/50 cursor-pointer rounded-[5px]"
-                                                    onClick={() => handlePatientSelect(patient)}
+                                                    onClick={() => handleSupervisorSelect(supervisor)}
                                                 >
                                                     <Avatar className="h-8 w-8">
                                                         <AvatarImage 
-                                                            src={avatarUrl} 
-                                                            alt={patient.nome}
+                                                            src={supervisorAny.avatarUrl}
+                                                            alt={supervisor.nome}
                                                         />
                                                         <AvatarFallback className="text-xs">
-                                                            {getInitials(patient.nome)}
+                                                            {getInitials(supervisor.nome)}
                                                         </AvatarFallback>
                                                     </Avatar>
                                                     <div className="flex-1 min-w-0">
                                                         <p className="text-sm font-medium truncate">
-                                                            {patient.nome}
+                                                            {supervisor.nome}
                                                         </p>
+                                                        {supervisor.dadosProfissionais?.[0]?.cargo && (
+                                                            <p className="text-xs text-muted-foreground truncate">
+                                                                {supervisor.dadosProfissionais[0].cargo}
+                                                            </p>
+                                                        )}
                                                     </div>
                                                 </div>
                                             );
                                         })}
                                     </div>
-                                ) : patientSearch.length > 0 ? (
+                                ) : supervisorSearch.length > 0 ? (
                                     <p className="text-sm text-muted-foreground text-center py-8">
-                                        Nenhum cliente encontrado
+                                        Nenhum supervisor encontrado
                                     </p>
                                 ) : (
                                     <p className="text-sm text-muted-foreground text-center py-8">
-                                        Nenhum cliente disponível
+                                        Nenhum supervisor disponível
                                     </p>
                                 )}
                             </div>
@@ -638,13 +518,13 @@ export default function LinkFormModal({
                 </Dialog>
             )}
 
-            {/* Modal de busca de terapeutas */}
+            {/* Modal de busca de terapeutas clínicos */}
             {showTherapistSearch && (
                 <Dialog open={showTherapistSearch} onOpenChange={setShowTherapistSearch}>
                     <DialogContent className="max-w-md w-[95vw] sm:w-full mx-auto rounded-[5px]">
                         <DialogHeader>
                             <DialogTitle className="text-base sm:text-lg">
-                                Selecionar Terapeuta
+                                Selecionar terapeuta clínico
                             </DialogTitle>
                         </DialogHeader>
 
@@ -665,12 +545,6 @@ export default function LinkFormModal({
                                     <div className="space-y-2">
                                         {therapistResults.map((therapist) => {
                                             const therapistAny = therapist as any;
-                                            const avatarUrl = therapistAny.avatarUrl
-                                                ? (therapistAny.avatarUrl.startsWith('/api')
-                                                    ? `${import.meta.env.VITE_API_BASE ?? ''}${therapistAny.avatarUrl}`
-                                                    : therapistAny.avatarUrl)
-                                                : undefined;
-                                            
                                             return (
                                                 <div
                                                     key={therapist.id}
@@ -679,7 +553,7 @@ export default function LinkFormModal({
                                                 >
                                                     <Avatar className="h-8 w-8">
                                                         <AvatarImage 
-                                                            src={avatarUrl} 
+                                                            src={therapistAny.avatarUrl} 
                                                             alt={therapist.nome}
                                                         />
                                                         <AvatarFallback className="text-xs">
@@ -690,6 +564,11 @@ export default function LinkFormModal({
                                                         <p className="text-sm font-medium truncate">
                                                             {therapist.nome}
                                                         </p>
+                                                        {therapist.dadosProfissionais?.[0]?.cargo && (
+                                                            <p className="text-xs text-muted-foreground truncate">
+                                                                {therapist.dadosProfissionais[0].cargo}
+                                                            </p>
+                                                        )}
                                                     </div>
                                                 </div>
                                             );

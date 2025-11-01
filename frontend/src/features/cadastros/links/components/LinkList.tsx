@@ -1,10 +1,18 @@
 import LinkCard from './LinkCard';
-import type { LinkListProps, PatientWithLinks, TherapistWithLinks } from '../types';
+import type {
+  LinkListProps,
+  PatientWithLinks,
+  TherapistWithLinks,
+  SupervisorWithLinks,
+  PatientTherapistLink,
+  TherapistSupervisionLink,
+} from '../types';
 
-type GroupedItem = PatientWithLinks | TherapistWithLinks;
+type GroupedItem = PatientWithLinks | TherapistWithLinks | SupervisorWithLinks;
 
 export default function LinkList({
     links,
+    supervisionLinks,
     loading,
     patients,
     therapists,
@@ -14,39 +22,25 @@ export default function LinkList({
     onEndLink,
     onArchiveLink,
     onTransferResponsible,
+    onEditSupervisionLink,
+    onEndSupervisionLink,
+    onArchiveSupervisionLink,
 }: LinkListProps) {
     // Helper functions to find patient/therapist by ID
     const findPatient = (id: string) => patients.find((p) => p.id === id);
     const findTherapist = (id: string) => therapists.find((t) => t.id === id);
 
-    // Filter links based on active filters
-    const filteredLinks = links.filter((link) => {
-        if (filters.status && filters.status !== 'all' && link.status !== filters.status) {
-            return false;
-        }
-        if (filters.q) {
-            const patient = findPatient(link.patientId);
-            const therapist = findTherapist(link.therapistId);
-            const searchTerm = filters.q.toLowerCase();
-            const patientName = patient?.nome?.toLowerCase() || '';
-            const therapistName = therapist?.nome?.toLowerCase() || '';
-
-            if (!patientName.includes(searchTerm) && !therapistName.includes(searchTerm)) {
-                return false;
-            }
-        }
-        return true;
-    });
-
     // Group links by patient or therapist based on viewBy
     const groupedData =
         filters.viewBy === 'patient'
-            ? groupLinksByPatient(filteredLinks)
-            : groupLinksByTherapist(filteredLinks);
+            ? groupLinksByPatient(links)
+            : filters.viewBy === 'therapist'
+            ? groupLinksByTherapist(links)
+            : groupLinksBySupervisor(supervisionLinks);
 
     const sortedGroupedData = sortGroups(groupedData, filters.orderBy);
 
-    function groupLinksByPatient(links: typeof filteredLinks) {
+    function groupLinksByPatient(links: PatientTherapistLink[]) {
         const grouped = new Map<string, PatientWithLinks>();
 
         links.forEach((link) => {
@@ -66,7 +60,7 @@ export default function LinkList({
         return Array.from(grouped.values());
     }
 
-    function groupLinksByTherapist(links: typeof filteredLinks) {
+    function groupLinksByTherapist(links: PatientTherapistLink[]) {
         const grouped = new Map<string, TherapistWithLinks>();
 
         links.forEach((link) => {
@@ -86,6 +80,27 @@ export default function LinkList({
         return Array.from(grouped.values());
     }
 
+    function groupLinksBySupervisor(links: TherapistSupervisionLink[]) {
+        const grouped = new Map<string, SupervisorWithLinks>();
+
+        links.forEach((link) => {
+            const supervisor = findTherapist(link.supervisorId);
+            
+            if (!supervisor || !supervisor.id) return;
+
+            if (!grouped.has(supervisor.id)) {
+                grouped.set(supervisor.id, {
+                    supervisor,
+                    links: [],
+                });
+            }
+
+            grouped.get(supervisor.id)!.links.push(link);
+        });
+
+        return Array.from(grouped.values());
+    }
+
     if (loading) {
         return (
             <div className="space-y-4">
@@ -100,7 +115,9 @@ export default function LinkList({
         const emptyMessage =
             filters.viewBy === 'patient'
                 ? 'Nenhum cliente encontrado com os filtros aplicados'
-                : 'Nenhum terapeuta encontrado com os filtros aplicados';
+                : filters.viewBy === 'therapist'
+                ? 'Nenhum terapeuta encontrado com os filtros aplicados'
+                : 'Nenhum supervisor encontrado com os filtros aplicados';
 
         return (
             <div className="text-center py-8 text-gray-500">
@@ -112,11 +129,18 @@ export default function LinkList({
     return (
         <div className="grid grid-cols-1 xl:grid-cols-1 gap-4">
             {sortedGroupedData.map((item) => {
-                const key = 'patient' in item ? item.patient.id : item.therapist.id;
+                const key = 'patient' in item 
+                    ? item.patient.id 
+                    : 'therapist' in item 
+                    ? item.therapist.id 
+                    : item.supervisor.id;
+                    
                 const props =
                     filters.viewBy === 'patient'
                         ? { patientWithLinks: item as PatientWithLinks }
-                        : { therapistWithLinks: item as TherapistWithLinks };
+                        : filters.viewBy === 'therapist'
+                        ? { therapistWithLinks: item as TherapistWithLinks }
+                        : { supervisorWithLinks: item as SupervisorWithLinks };
 
                 return (
                     <LinkCard
@@ -130,6 +154,9 @@ export default function LinkList({
                         onEndLink={onEndLink}
                         onArchive={onArchiveLink}
                         onTransferResponsible={onTransferResponsible}
+                        onEditSupervision={onEditSupervisionLink}
+                        onEndSupervision={onEndSupervisionLink}
+                        onArchiveSupervision={onArchiveSupervisionLink}
                     />
                 );
             })}
@@ -159,7 +186,11 @@ export default function LinkList({
             return item.patient?.nome ?? '';
         }
 
-        return item.therapist?.nome ?? '';
+        if ('therapist' in item) {
+            return item.therapist?.nome ?? '';
+        }
+
+        return item.supervisor?.nome ?? '';
     }
 
     function getMostRecentTimestamp(item: GroupedItem) {
