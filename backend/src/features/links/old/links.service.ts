@@ -76,6 +76,12 @@ async function resolveTherapistActuation(therapistId: string, actuation: string 
     return registration.area_atuacao.nome;
 }
 
+/**
+ * Service responsável por criar um novo vínculo entre cliente e terapeuta.
+ * Resolve a área de atuação conforme o terapeuta informado e persiste o vínculo no banco.
+ * Em caso de sucesso, retorna o vínculo recém-criado com os campos definidos em LINK_SELECT.
+ * Não realiza normalização — responsabilidade da camada Controller.
+ */
 export async function createLink(payload: LinkTypes.CreateLink) {
     const actuationArea = await resolveTherapistActuation(payload.therapistId, payload.actuationArea);
 
@@ -261,12 +267,92 @@ export async function getAllTherapists(search?: string, role?: string) {
     return therapists;
 }
 
-export async function getAllLinks() {
-    return prisma.terapeuta_cliente.findMany({
-        select: LINK_SELECT,
+/**
+ * Service responsável por buscar todos os vínculos entre clientes e terapeutas.
+ * Retorna até 5 registros mais recentes, ordenados pela data de atualização decrescente.
+ * Não aplica normalização — responsabilidade da camada Controller.
+ */
+export async function getAllLinks(filters?: LinkTypes.LinkFilters) {
+    const where = buildWhere(filters);
+    const orderBy = buildOrderBy(filters);
+
+    const links = await prisma.terapeuta_cliente.findMany({
+        where,
         take: 5,
-        orderBy: { atualizado_em: 'desc' },
+        orderBy,
+        include: {
+            terapeuta: {
+                include: {
+                    registro_profissional: {
+                        include: { area_atuacao: true },
+                    },
+                },
+            },
+            cliente: {
+                include: {
+                    cuidadores: true,
+                },
+            },
+        },
     });
+
+    return links;
+}
+
+/**
+ * Monta dinamicamente o objeto "where" com base nos filtros recebidos.
+ */
+function buildWhere(filters?: LinkTypes.LinkFilters) {
+    if (!filters) return {};
+
+    const { status, q } = filters;
+
+    const where: Record<string, unknown> = {};
+
+    // Filtro de status
+    if (status && status !== 'all') {
+        where.status = status;
+    }
+
+    // Filtro de busca textual
+    if (q && q.trim() !== '') {
+        where.OR = [
+            // Terapeuta
+            { terapeuta: { nome: { contains: q } } },
+            { terapeuta: { email: { contains: q } } },
+            { terapeuta: { email_indigo: { contains: q } } },
+            { terapeuta: { cpf: { contains: q } } },
+            {
+                terapeuta: {
+                    registro_profissional: {
+                        some: {
+                            area_atuacao: { nome: { contains: q } },
+                        },
+                    },
+                },
+            },
+
+            // Cliente
+            { cliente: { nome: { contains: q } } },
+            { cliente: { emailContato: { contains: q } } },
+            { cliente: { cpf: { contains: q } } },
+
+            // Cuidador do cliente
+            { cliente: { cuidadores: { some: { nome: { contains: q } } } } },
+            { cliente: { cuidadores: { some: { email: { contains: q } } } } },
+            { cliente: { cuidadores: { some: { cpf: { contains: q } } } } },
+        ];
+    }
+
+    return where;
+}
+
+/**
+ * Define a ordenação conforme o filtro `orderBy` recebido.
+ */
+function buildOrderBy(filters?: LinkTypes.LinkFilters) {
+    const recent = filters?.orderBy === 'recent';
+    return { atualizado_em: recent ? 'desc' : 'asc' } as const;
 }
 
 export async function updateLink(payload: LinkTypes.UpdateLink) {
@@ -320,9 +406,54 @@ export async function updateLink(payload: LinkTypes.UpdateLink) {
         select: LINK_SELECT,
     });
 
+    reopenLink(linkId);
+
     return updated;
 }
 
+/**
+ * Service responsável por reabrir um vínculo encerrado entre cliente e terapeuta.
+ * Apenas vínculos com status='ended' podem ser reativados.
+ * Ao reabrir, o status é alterado para 'active' e a data de término (data_fim) é limpa.
+ * Em caso de erro (vínculo inexistente ou status inválido), lança um AppError apropriado.
+ */
+export async function reopenLink(id: number) {
+  const linkId = id;
+
+  const existing = await prisma.terapeuta_cliente.findUnique({
+    where: { id: linkId },
+    select: LINK_SELECT,
+  });
+
+  if (!existing) {
+    throw new AppError('LINK_NOT_FOUND', 'Vínculo não encontrado.', 404);
+  }
+
+  if (existing.status !== 'ended') {
+    throw new AppError(
+      'LINK_NOT_ENDED',
+      'Apenas vínculos encerrados podem ser reabertos.',
+      400
+    );
+  }
+
+  const updated = await prisma.terapeuta_cliente.update({
+    where: { id: linkId },
+    data: {
+      status: 'active',
+      data_fim: null,
+    },
+    select: LINK_SELECT,
+  });
+
+  return updated;
+}
+
+/**
+ * Service responsável por arquivar um vínculo entre cliente e terapeuta.
+ * Apenas vínculos com status='ended' podem ser arquivados.
+ * Em caso de violação, lança um AppError com código e mensagem adequados.
+ */
 export async function archiveLink(payload: LinkTypes.ArchiveLink) {
     const linkId = Number(payload.id);
 
@@ -335,12 +466,18 @@ export async function archiveLink(payload: LinkTypes.ArchiveLink) {
         select: LINK_SELECT,
     });
 
+    
     if (!existing) {
         throw new AppError('LINK_NOT_FOUND', 'Vínculo não encontrado.', 404);
     }
-
-    if (existing.status === 'archived') {
-        return existing;
+    
+    // Verificação de estado: só permite arquivar se o vínculo estiver encerrado
+    if (existing.status !== 'ended') {
+        throw new AppError(
+            'LINK_NOT_ENDED',
+            'Apenas vínculos encerrados podem ser arquivados.',
+            400
+        );
     }
 
     const updated = await prisma.terapeuta_cliente.update({

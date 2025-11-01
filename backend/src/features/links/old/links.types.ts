@@ -169,3 +169,10 @@ export const CLINICAL_ROLES = [
   'Mediador de Conflitos',
   'Professor UniIndigo',
 ];
+
+export type LinkFilters = {
+  viewBy?: 'patient' | 'therapist' | 'supervision';
+  status?: 'all' | 'active' | 'ended' | 'archived';
+  orderBy?: 'recent' | 'oldest';
+  q?: string;
+};

@@ -106,14 +106,19 @@ export async function getAllTherapists(req: Request, res: Response, next: NextFu
     }
 }
 
+/**
+ * Controller responsável por listar todos os vínculos entre clientes e terapeutas,
+ * aplicando filtros opcionais recebidos via query string (ex: status, terapeuta, paciente, etc).
+ * Em caso de sucesso, retorna a lista de vínculos já normalizados.
+ * Em caso de erro, propaga um AppError adequado para tratamento pelo middleware global.
+ */
 export async function getAllLinks(req: Request, res: Response, next: NextFunction) {
     try {
-        const data = await LinkService.getAllLinks();
+        const filters = { ...req.query };
+        const data = await LinkService.getAllLinks(filters);
         const normalized = LinkNormalizer.getAllLinks(data);
         res.json(normalized);
     } catch (err) {
         next(err);
     }
 }
-
-// ajuste build redeploy

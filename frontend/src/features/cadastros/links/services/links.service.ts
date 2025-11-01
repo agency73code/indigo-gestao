@@ -284,21 +284,17 @@ export async function archiveLink(id: string): Promise<void> {
     });
 
     if (!res.ok) {
-      let errorMessage = 'Falha ao arquivar vínculo';
-      const errorText = await res.text();
+      let error: { code?: string, message?: string } = {};
 
-      if (errorText) {
-        try {
-          const parsed = JSON.parse(errorText);
-          if (parsed?.message) {
-            errorMessage = parsed.message;
-          }
-        } catch {
-          errorMessage = errorText;
-        }
+      try {
+        error = await res.json(); // tenta ler o JSON que o AppError enviou
+      } catch {
+        // fallback se o corpo não for JSON
+        const text = await res.text();
+        error.message = text || 'Erro desconhecido ao arquivar vínculo.';
       }
 
-      throw new Error(errorMessage);
+      throw new Error(error.message || 'Falha ao arquivar vínculo.');
     }
 
     await res.json();
@@ -393,22 +389,24 @@ export async function getAllTherapists(): Promise<Terapeuta[]> {
  * Busca todos os vínculos (para listagens)
  */
 export async function getAllLinks(filters?: LinkFilters): Promise<PatientTherapistLink[]> {
-  await delay(300);
-  console.log(filters);
-  const res = await fetch('/api/links/getAllLinks', {
+  if (!filters || filters.viewBy === 'supervision') return [];
+
+  // Monta query string a partir do objeto de filtros
+  const query = filters
+   ? '?' + new URLSearchParams(filters as Record<string, string>).toString()
+   : '';
+
+  const res = await fetch(`/api/links/getAllLinks${query}`, {
     method: 'GET',
     credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json'
-    },
   });
 
   if (!res.ok) {
     throw new Error('Falha ao carregar vínculos');
   }
-
   
   const json = await res.json();
+  console.log(json)
   return json as PatientTherapistLink[];
 }
 

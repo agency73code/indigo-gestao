@@ -159,7 +159,7 @@ export default function VinculosPage() {
                     duration: 4000,
                 });
             }
-            await loadData(); // Recarregar dados
+            await loadData(filters); // Recarregar dados
             setShowModal(false);
         } catch (error: any) {
             console.error('Erro ao salvar vínculo:', error);
@@ -217,7 +217,7 @@ export default function VinculosPage() {
             await endLink(endingLink.id, endDate);
 
             // Recarregar dados para refletir a mudança
-            await loadData();
+            await loadData(filters);
 
             // Fechar diálogo
             setShowEndDialog(false);
@@ -244,13 +244,20 @@ export default function VinculosPage() {
             await archiveLink(archivingLink.id);
 
             // Recarregar dados para refletir a mudança
-            await loadData();
+            await loadData(filters);
 
             // Fechar diálogo
             setShowArchiveDialog(false);
             setArchivingLink(null);
-        } catch (error) {
-            console.error('Erro ao arquivar vínculo:', error);
+            toast.success('Vínculo arquivado com sucesso', {
+                description: 'O vínculo foi movido para o status "Arquivado".',
+                duration: 3000,
+            });
+        } catch (error: any) {
+            toast.error('Erro ao arquivar vínculo', {
+                description: error.message || 'Ocorreu um erro inesperado.',
+                duration: 3000,
+            });
         } finally {
             setArchiveLoading(false);
         }
@@ -268,7 +275,7 @@ export default function VinculosPage() {
             await transferResponsible(data);
 
             // Recarregar dados para refletir a mudança
-            await loadData();
+            await loadData(filters);
 
             // Fechar diálogo
             setShowTransferDialog(false);
