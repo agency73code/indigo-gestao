@@ -522,7 +522,7 @@ export default function CadastroTerapeutaPage() {
     return (
         <div className="container mx-auto px-1 sm:px-6 md:px-6 py-6 md:py-8">
             <CardHeader className="p-0">
-                <CardTitle className="text-xl sm:text-2xl mb-6 md:mb-8 text-primary">
+                <CardTitle className="text-xl sm:text-2xl mb-6 md:mb-8 text-primary font-medium">
                     Cadastro de Terapeuta
                 </CardTitle>
                 <MultiStepProgress

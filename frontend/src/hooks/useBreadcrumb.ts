@@ -28,6 +28,9 @@ const routeToTitleMap: Record<string, string> = {
     '/app/programas/sessoes/nova': 'Registrar Sessão',
     '/app/programas/sessoes/consultar': 'Consultar Sessão',
     '/app/programas/relatorios/mensal': 'Relatório Geral',
+    '/app/relatorios': 'Relatórios',
+    '/app/relatorios/lista': 'Relatórios Salvos',
+    '/app/relatorios/novo': 'Gerar Relatório',
     '/app/faturamento': 'Faturamento',
     '/app/faturamento/registrar-lancamento': 'Registrar Lançamento',
     '/app/faturamento/minhas-horas': 'Minhas Horas',
@@ -88,6 +91,13 @@ export function useBreadcrumb(): BreadcrumbItem[] {
                 ];
             }
 
+            if (pathname.includes('/relatorios/')) {
+                return [
+                    { label: 'Relatórios', href: '/app/relatorios' },
+                    { label: exactTitle },
+                ];
+            }
+
             return [{ label: exactTitle }];
         }
 
@@ -140,6 +150,18 @@ export function useBreadcrumb(): BreadcrumbItem[] {
                     { label: 'Programas', href: preservePacienteId('/app/programas') },
                     { label: 'Consultar Sessão', href: preservePacienteId('/app/programas/sessoes/consultar') },
                     { label: sessionLabel },
+                ];
+            }
+        }
+
+        if (pathname.startsWith('/app/relatorios/') && pathname !== '/app/relatorios/novo') {
+            const segments = pathname.split('/');
+            const reportId = segments[3];
+
+            if (reportId && reportId !== 'novo') {
+                return [
+                    { label: 'Relatórios', href: '/app/relatorios' },
+                    { label: 'Visualizar Relatório' },
                 ];
             }
         }

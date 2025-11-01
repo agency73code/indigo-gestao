@@ -163,7 +163,7 @@ export default function ConsultaTerapeutaPage() {
             <div className="flex items-center justify-between">
                 <div className="space-y-2">
                     <h1
-                        className="text-2xl font-semibold text-primary"
+                        className="text-2xl font-medium text-primary"
                         style={{ fontFamily: 'Sora, sans-serif' }}
                     >
                         Consulta do Terapeuta

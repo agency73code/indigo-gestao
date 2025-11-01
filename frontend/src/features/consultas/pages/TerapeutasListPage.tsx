@@ -1,64 +1,67 @@
-import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { CardContent, CardHeader, CardTitle } from '@/ui/card';
 import { Button } from '@/ui/button';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import ToolbarConsulta from '../components/ToolbarConsulta';
 import TherapistTable from '../components/TherapistTable';
 import type { Therapist, SortState, PaginationState } from '../types/consultas.types';
-import { listarTerapeutas } from '@/lib/api';
+import { listTherapists } from '../services/therapist.service';
 
 // Lazy load do Drawer (só carrega quando necessário)
 const TherapistProfileDrawer = lazy(() => import('../components/TherapistProfileDrawer'));
 
-// Hook para debounce
-function useDebounce<T>(value: T, delay: number): T {
-    const [debouncedValue, setDebouncedValue] = useState<T>(value);
-
-    useEffect(() => {
-        const handler = setTimeout(() => {
-            setDebouncedValue(value);
-        }, delay);
-
-        return () => {
-            clearTimeout(handler);
-        };
-    }, [value, delay]);
-
-    return debouncedValue;
-}
-
 export default function TerapeutasListPage() {
+    // ✅ NOVO: URL como source of truth para filtros
+    const [searchParams, setSearchParams] = useSearchParams();
+    
+    // Estados para dados
     const [therapists, setTherapists] = useState<Therapist[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [searchTerm, setSearchTerm] = useState('');
     const [selectedTherapist, setSelectedTherapist] = useState<Therapist | null>(null);
     const [drawerOpen, setDrawerOpen] = useState(false);
 
-    // Estados para ordenação e paginação
-    const [sortState, setSortState] = useState<SortState>({
-        field: 'nome',
-        direction: 'asc',
-    });
-
+    // ✅ NOVO: Estados para paginação (vem do backend agora)
     const [pagination, setPagination] = useState<PaginationState>({
         page: 1,
         pageSize: 10,
         total: 0,
     });
 
-    // Debounce para busca
-    const debouncedSearchTerm = useDebounce(searchTerm, 300);
+    // ✅ NOVO: Ler filtros da URL
+    const searchTerm = searchParams.get('q') || '';
+    const currentPage = Number(searchParams.get('page')) || 1;
+    const sortParam = searchParams.get('sort') || 'nome_asc';
+    
+    // Parsear sort (formato: "campo_direção")
+    const [sortField, sortDirection] = sortParam.split('_') as [string, 'asc' | 'desc'];
+    const sortState: SortState = {
+        field: sortField,
+        direction: sortDirection,
+    };
 
-    // Carregar dados
+    // ✅ NOVO: Carregar dados quando URL mudar
     useEffect(() => {
         const loadTherapists = async () => {
             setLoading(true);
             setError(null);
             try {
-                const therapistList = await listarTerapeutas();
-                setTherapists(therapistList);
+                // Chamar API com filtros da URL
+                const response = await listTherapists({
+                    q: searchTerm || undefined,
+                    page: currentPage,
+                    pageSize: pagination.pageSize,
+                    sort: sortParam,
+                });
+
+                // Atualizar estado com dados do backend
+                setTherapists(response.items);
+                setPagination({
+                    page: response.page,
+                    pageSize: response.pageSize,
+                    total: response.total,
+                });
             } catch (error) {
                 console.error('Erro ao carregar terapeutas:', error);
                 setError(error instanceof Error ? error.message : 'Erro ao carregar terapeutas');
@@ -69,68 +72,46 @@ export default function TerapeutasListPage() {
         };
 
         loadTherapists();
-    }, []);
+    }, [searchParams]); // ✅ Reage a mudanças na URL
 
-    // Filtrar e ordenar dados
-    const filteredAndSortedTherapists = useMemo(() => {
-        let filtered = therapists;
-
-        // Aplicar filtro de busca
-        if (debouncedSearchTerm) {
-            const search = debouncedSearchTerm.toLowerCase();
-            filtered = therapists.filter(
-                (therapist) =>
-                    therapist.nome.toLowerCase().includes(search) ||
-                    therapist.email?.toLowerCase().includes(search) ||
-                    therapist.telefone?.includes(search) ||
-                    therapist.registroConselho?.toLowerCase().includes(search) ||
-                    therapist.especialidade?.toLowerCase().includes(search),
-            );
+    // ✅ NOVO: Atualizar URL quando buscar
+    const handleSearchChange = useCallback((value: string) => {
+        const newParams = new URLSearchParams(searchParams);
+        
+        if (value) {
+            newParams.set('q', value);
+        } else {
+            newParams.delete('q');
         }
+        
+        // Reset para página 1 ao buscar
+        newParams.set('page', '1');
+        
+        setSearchParams(newParams);
+    }, [searchParams, setSearchParams]);
 
-        // Aplicar ordenação
-        filtered.sort((a, b) => {
-            const aValue = a[sortState.field as keyof Therapist] as string;
-            const bValue = b[sortState.field as keyof Therapist] as string;
-
-            if (!aValue && !bValue) return 0;
-            if (!aValue) return 1;
-            if (!bValue) return -1;
-
-            const comparison = aValue.localeCompare(bValue, 'pt-BR');
-            return sortState.direction === 'asc' ? comparison : -comparison;
-        });
-
-        return filtered;
-    }, [therapists, debouncedSearchTerm, sortState]);
-
-    // Aplicar paginação
-    const paginatedTherapists = useMemo(() => {
-        const startIndex = (pagination.page - 1) * pagination.pageSize;
-        const endIndex = startIndex + pagination.pageSize;
-        return filteredAndSortedTherapists.slice(startIndex, endIndex);
-    }, [filteredAndSortedTherapists, pagination.page, pagination.pageSize]);
-
-    // Atualizar total quando os dados filtrados mudarem
-    useEffect(() => {
-        setPagination((prev) => ({
-            ...prev,
-            total: filteredAndSortedTherapists.length,
-            page: 1, // Reset para primeira página quando filtrar
-        }));
-    }, [filteredAndSortedTherapists.length]);
-
-    // Handlers com useCallback para evitar re-renders desnecessários
+    // ✅ NOVO: Atualizar URL quando ordenar
     const handleSort = useCallback((field: string) => {
-        setSortState((prev) => ({
-            field,
-            direction: prev.field === field && prev.direction === 'asc' ? 'desc' : 'asc',
-        }));
-    }, []);
+        const newParams = new URLSearchParams(searchParams);
+        
+        // Toggle direção se for o mesmo campo
+        const newDirection = 
+            sortState.field === field && sortState.direction === 'asc' 
+                ? 'desc' 
+                : 'asc';
+        
+        newParams.set('sort', `${field}_${newDirection}`);
+        newParams.set('page', '1'); // Reset para página 1
+        
+        setSearchParams(newParams);
+    }, [searchParams, setSearchParams, sortState]);
 
+    // ✅ NOVO: Atualizar URL quando mudar página
     const handlePageChange = useCallback((page: number) => {
-        setPagination((prev) => ({ ...prev, page }));
-    }, []);
+        const newParams = new URLSearchParams(searchParams);
+        newParams.set('page', page.toString());
+        setSearchParams(newParams);
+    }, [searchParams, setSearchParams]);
 
     const handleViewProfile = useCallback((therapist: Therapist) => {
         setSelectedTherapist(therapist);
@@ -149,7 +130,7 @@ export default function TerapeutasListPage() {
 
     let visiblePages = pages;
     if (totalPages > maxVisiblePages) {
-        const start = Math.max(1, pagination.page - Math.floor(maxVisiblePages / 2));
+        const start = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
         const end = Math.min(totalPages, start + maxVisiblePages - 1);
         visiblePages = pages.slice(start - 1, end);
     }
@@ -157,7 +138,7 @@ export default function TerapeutasListPage() {
     return (
         <div className="flex flex-col top-0 left-0 w-full h-full sm:p-4">
             <CardHeader className="p-0 pb-4">
-                <CardTitle className="text-2xl font-semibold text-primary">
+                <CardTitle className="text-2xl font-medium text-primary">
                     Consultar Terapeutas
                 </CardTitle>
                 
@@ -167,7 +148,7 @@ export default function TerapeutasListPage() {
                     <div className="flex-1">
                         <ToolbarConsulta
                             searchValue={searchTerm}
-                            onSearchChange={setSearchTerm}
+                            onSearchChange={handleSearchChange}
                             placeholder="Buscar por nome, e-mail..."
                             showFilters={false}
                         />
@@ -187,18 +168,18 @@ export default function TerapeutasListPage() {
                 )}
 
                 <TherapistTable
-                    therapists={paginatedTherapists}
+                    therapists={therapists}
                     loading={loading}
                     onViewProfile={handleViewProfile}
                     sortState={sortState}
                     onSort={handleSort}
                 />
 
-                {!loading && filteredAndSortedTherapists.length > 0 && (
+                {!loading && pagination.total > 0 && (
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                         <div className="text-sm text-muted-foreground sm:text-left text-center">
-                            Mostrando {(pagination.page - 1) * pagination.pageSize + 1} a{' '}
-                            {Math.min(pagination.page * pagination.pageSize, pagination.total)} de{' '}
+                            Mostrando {(currentPage - 1) * pagination.pageSize + 1} a{' '}
+                            {Math.min(currentPage * pagination.pageSize, pagination.total)} de{' '}
                             {pagination.total} resultados
                         </div>
 
@@ -208,9 +189,9 @@ export default function TerapeutasListPage() {
                                     variant="outline"
                                     size="sm"
                                     onClick={() =>
-                                        handlePageChange(Math.max(1, pagination.page - 1))
+                                        handlePageChange(Math.max(1, currentPage - 1))
                                     }
-                                    disabled={pagination.page === 1}
+                                    disabled={currentPage === 1}
                                     className="sm:flex items-center gap-2"
                                 >
                                     <ChevronLeft className="w-4 h-4" />
@@ -222,11 +203,11 @@ export default function TerapeutasListPage() {
                                         <Button
                                             key={page}
                                             variant={
-                                                page === pagination.page ? 'default' : 'outline'
+                                                page === currentPage ? 'default' : 'outline'
                                             }
                                             size="sm"
                                             onClick={() => handlePageChange(page)}
-                                            className="min-w-[40px]"
+                                            className="min-w-10"
                                         >
                                             {page}
                                         </Button>
@@ -237,9 +218,9 @@ export default function TerapeutasListPage() {
                                     variant="outline"
                                     size="sm"
                                     onClick={() =>
-                                        handlePageChange(Math.min(totalPages, pagination.page + 1))
+                                        handlePageChange(Math.min(totalPages, currentPage + 1))
                                     }
-                                    disabled={pagination.page === totalPages}
+                                    disabled={currentPage === totalPages}
                                     className="sm:flex items-center gap-2"
                                 >
                                     <ChevronRight className="w-4 h-4" />

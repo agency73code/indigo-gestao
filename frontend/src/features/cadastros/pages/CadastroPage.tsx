@@ -19,7 +19,7 @@ export default function CadastroPage() {
                     aria-label="Cadastrar novo terapeuta no sistema"
                 >
                     <div className="flex items-start gap-4">
-                        <div className="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                        <div className="shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
                             <User className="w-5 h-5 text-blue-600" />
                         </div>
                         <div>
@@ -40,7 +40,7 @@ export default function CadastroPage() {
                     aria-label="Cadastrar novo cliente no sistema"
                 >
                     <div className="flex items-start gap-4">
-                        <div className="flex-shrink-0 w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors">
+                        <div className="shrink-0 w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors">
                             <Users className="w-5 h-5 text-green-600" />
                         </div>
                         <div>

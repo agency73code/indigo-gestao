@@ -71,7 +71,7 @@ export default function HeaderSessionInfo({ patient, program }: HeaderSessionInf
                     >
                         <ArrowLeft className="h-4 w-4" />
                     </Button>
-                    <CardTitle className="text-base flex items-center gap-2">
+                    <CardTitle className="text-1xl font-medium flex items-center gap-2">
                         <Brain className="h-4 w-4" />
                         Registrar nova Sessão
                     </CardTitle>
@@ -80,7 +80,7 @@ export default function HeaderSessionInfo({ patient, program }: HeaderSessionInf
             <CardContent className="pb-3 sm:pb-6 space-y-4">
                 {/* Informações do Paciente */}
                 <div className="flex items-center gap-3 p-3 bg-muted rounded-md">
-                    <div className="flex-shrink-0">
+                    <div className="shrink-0">
                         <Avatar className="w-12 h-12 rounded-full">
                             {imageLoading && patient.photoUrl && (
                                 <Skeleton className="h-12 w-12 rounded-full absolute inset-0" />

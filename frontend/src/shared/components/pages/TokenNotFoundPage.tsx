@@ -19,7 +19,7 @@ const TokenNotFoundPage: React.FC = () => {
                         {/* Título */}
                         <div className="space-y-2">
                             <h3
-                                className="text-2xl font-semibold text-primary"
+                                className="text-2xl font-medium text-primary"
                                 style={{ fontFamily: 'Sora, sans-serif' }}
                             >
                                 Token não encontrado

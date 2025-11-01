@@ -62,7 +62,7 @@ export default function RegistrarLancamentoPage() {
             {/* Header */}
             <div className="space-y-1 mb-4">
                 <h1
-                    className="text-2xl font-semibold text-primary"
+                    className="text-2xl font-medium text-primary"
                     style={{ fontFamily: 'Sora, sans-serif' }}
                 >
                     Registrar Lançamento

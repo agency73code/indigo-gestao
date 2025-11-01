@@ -357,7 +357,7 @@ export default function RelatorioMensalPage() {
                 <div className="flex flex-col w-full h-full">
                     <div className="px-6 pt-6 pb-2">
                         <h1
-                            className="text-2xl font-semibold text-primary"
+                            className="text-2xl font-medium text-primary"
                             style={{ fontFamily: 'Sora, sans-serif' }}
                         >
                             Painel de Progresso - Programas & Objetivos

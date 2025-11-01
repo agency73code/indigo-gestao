@@ -323,7 +323,7 @@ export default function DetalheProgramaPage() {
             <div className="flex items-center justify-between px-6 pt-4 pb-0 no-print">
                 <div className="flex-1">
                     <h1
-                        className="text-2xl font-semibold text-primary"
+                        className="text-2xl font-medium text-primary"
                         style={{ fontFamily: 'Sora, sans-serif' }}
                     >
                         {program.name || 'Programa sem nome'}

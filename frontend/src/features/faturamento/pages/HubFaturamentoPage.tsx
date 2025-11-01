@@ -44,7 +44,7 @@ export default function HubFaturamentoPage() {
             <div className="space-y-2">
                 <h1
                     style={{ fontFamily: 'Sora, sans-serif' }}
-                    className="text-2xl sm:text-2xl font-semibold text-primary"
+                    className="text-2xl sm:text-2xl font-medium text-primary"
                 >
                     Faturamento
                 </h1>

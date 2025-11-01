@@ -56,7 +56,7 @@ export default function CadastroHubPage() {
             <div className="space-y-0 p">
                 <h1
                     style={{ fontFamily: 'Sora, sans-serif' }}
-                    className="text-2xl sm:text-2xl font-semibold text-primary"
+                    className="text-2xl sm:text-2xl font-medium text-primary"
                 >
                     Cadastro
                 </h1>

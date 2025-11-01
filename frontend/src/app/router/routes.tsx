@@ -22,12 +22,12 @@ import { VinculosPage } from '../../features/cadastros/links';
 import ConsultaHubPage from '../../features/consultas/pages/ConsultaHubPage';
 import TestDocumentsPage from '../../features/consultas/pages/TestDocumentsPage';
 import HubPage from '../../features/programas/pages/HubPage';
+import { RelatoriosHubPage, RelatoriosPage, GerarRelatorioPage, VisualizarRelatorioPage } from '../../features/relatorios';
 import ConsultaOcpPage from '../../features/programas/pages/ConsultaOcpPage';
 import CadastroOcpPage from '../../features/programas/pages/CadastroOcpPage';
 import DetalheProgramaPage from '../../features/programas/pages/DetalheProgramaPage';
 import EditarProgramaPage from '../../features/programas/pages/EditarProgramaPage';
 import { CadastroSessaoPage } from '../../features/programas/nova-sessao';
-import RelatorioMensalPage from '../../features/programas/pages/RelatorioMensalPage';
 import { HubFaturamentoPage } from '../../features/faturamento';
 import RegistrarLancamentoPage from '../../features/faturamento/registrar-lancamento/pages/RegistrarLancamentoPage';
 import MinhasHorasPage from '../../features/faturamento/minhas-horas/pages/MinhasHorasPage';
@@ -220,12 +220,40 @@ export const router = createBrowserRouter([
                                 handle: { breadcrumb: 'Consultar Sessão' },
                             },
                             {
-                                path: 'programas/relatorios/mensal',
+                                path: 'relatorios',
                                 element: (
                                     <Suspense fallback={suspenseFallback}>
-                                        <RelatorioMensalPage />
+                                        <RelatoriosHubPage />
                                     </Suspense>
                                 ),
+                                handle: { breadcrumb: 'Relatórios', title: 'Relatórios' },
+                            },
+                            {
+                                path: 'relatorios/lista',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <RelatoriosPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Relatórios Salvos', title: 'Relatórios Salvos' },
+                            },
+                            {
+                                path: 'relatorios/novo',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <GerarRelatorioPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Gerar Relatório', title: 'Gerar Relatório' },
+                            },
+                            {
+                                path: 'relatorios/:id',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <VisualizarRelatorioPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Visualizar Relatório', title: 'Visualizar Relatório' },
                             },
                             {
                                 path: 'programas/sessoes/:sessaoId',

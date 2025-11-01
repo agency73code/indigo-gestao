@@ -350,7 +350,7 @@ export default function CadastroOcpPage() {
                 <div className="space-y-2 px-2 lg:px-4">
                     <h1
                         style={{ fontFamily: 'Sora, sans-serif' }}
-                        className="text-xl sm:text-2xl font-semibold text-primary leading-tight"
+                        className="text-xl sm:text-2xl font-medium text-primary leading-tight"
                     >
                         Novo Programa / Objetivos
                     </h1>

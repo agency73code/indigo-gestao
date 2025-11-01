@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Plus, Search, FileText, BarChart3, Eye } from 'lucide-react';
+import { Plus, Search, FileText, Eye, BarChart3 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function HubPage() {
@@ -36,14 +36,6 @@ export default function HubPage() {
             bgColor: 'bg-green-500',
             textColor: 'text-white',
         },
-        {
-            title: 'Relatório Mensal',
-            description: 'Visualizar relatórios e estatísticas',
-            icon: BarChart3,
-            href: '/app/programas/relatorios/mensal',
-            bgColor: 'bg-purple-500',
-            textColor: 'text-white',
-        },
     ];
 
     return (
@@ -52,7 +44,7 @@ export default function HubPage() {
             <div className="space-y-2">
                 <h1
                     style={{ fontFamily: 'Sora, sans-serif' }}
-                    className="text-2xl sm:text-2xl font-semibold text-primary"
+                    className="text-2xl sm:text-2xl font-medium text-primary"
                 >
                     Programas / Objetivos
                 </h1>

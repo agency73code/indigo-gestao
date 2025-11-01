@@ -665,7 +665,7 @@ export default function CadastroClientePage() {
         <div className="container mx-auto p-6">
             {/* Header */}
             <CardHeader className="p-0">
-                <CardTitle className="text-2xl mb-8 text-primary">Cadastro de Cliente</CardTitle>
+                <CardTitle className="text-2xl mb-8 text-primary font-medium">Cadastro de Cliente</CardTitle>
                 <MultiStepProgress
                     currentStep={currentStep}
                     totalSteps={STEPS.length}

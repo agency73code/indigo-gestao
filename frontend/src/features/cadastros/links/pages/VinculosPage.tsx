@@ -401,8 +401,8 @@ export default function VinculosPage() {
                     <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                         <Button
                             variant="ghost"
-                            size="sm"
-                            className="p-1.5 sm:p-2 flex-shrink-0"
+                            size="icon"
+                            className="p-1.5 sm:p-2 shrink-0"
                             onClick={() => navigate(-1)}
                         >
                             <ChevronLeft className="h-4 w-4" />
@@ -410,7 +410,7 @@ export default function VinculosPage() {
                         <div className="min-w-0 flex-1">
                             <h1
                                 style={{ fontFamily: 'Sora, sans-serif' }}
-                                className="text-lg sm:text-2xl font-semibold text-primary leading-tight"
+                                className="text-lg sm:text-2xl font-medium text-primary leading-tight"
                             >
                                 {/* Mobile: Título em duas linhas */}
                                 <span className="sm:hidden">
@@ -452,7 +452,7 @@ export default function VinculosPage() {
                         onValueChange={(value) => setFilters({ ...filters, status: value as any })}
                     >
                         <SelectTrigger
-                            className="w-[170px] !h-12 min-h-12 rounded-[5px]"
+                            className="w-[170px] h-12! min-h-12 rounded-[5px]"
                             aria-label="Filtrar por status"
                         >
                             <span className="text-sm">
@@ -473,7 +473,7 @@ export default function VinculosPage() {
                     <div className="flex gap-2 ml-auto">
                         <Button
                             onClick={handleCreateLink}
-                            className="h-12 rounded-[5px] flex-shrink-0 px-4"
+                            className="h-12 rounded-[5px] shrink-0 px-4"
                             variant="default"
                         >
                             <Plus className="h-4 w-4 mr-2" />
@@ -481,7 +481,7 @@ export default function VinculosPage() {
                         </Button>
                         <Button
                             onClick={handleCreateSupervisionLink}
-                            className="h-12 rounded-[5px] flex-shrink-0 px-4"
+                            className="h-12 rounded-[5px] shrink-0 px-4"
                             variant="outline"
                         >
                             <Users className="h-4 w-4 mr-2" />

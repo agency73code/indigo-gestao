@@ -13,6 +13,7 @@ import {
     UserRoundSearchIcon,
     Activity,
     ReceiptText,
+    FileText,
 } from 'lucide-react';
 import { NavMain } from '@/components/sidebar/nav-main';
 import { NavProjects } from '@/components/sidebar/nav-projects';
@@ -78,9 +79,13 @@ const data = {
             ],
         },
         {
-            title: 'Relatório',
-            url: '/app/programas/relatorios/mensal',
-            icon: PieChart,
+            title: 'Relatórios',
+            url: '/app/relatorios',
+            icon: FileText,
+            items: [
+                { title: 'Relatórios Salvos', url: '/app/relatorios/lista' },
+                { title: 'Gerar Relatório', url: '/app/relatorios/novo' },
+            ],
         },
         {
             title: 'Faturamento',

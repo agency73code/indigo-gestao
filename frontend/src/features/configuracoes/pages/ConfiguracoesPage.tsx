@@ -74,7 +74,7 @@ export default function ConfiguracoesPage() {
                     <Settings className="w-6 h-6 text-primary" />
                     <h1
                         style={{ fontFamily: 'sora' }}
-                        className="text-2xl font-semibold text-primary"
+                        className="text-2xl font-medium text-primary"
                     >
                         Configurações
                     </h1>

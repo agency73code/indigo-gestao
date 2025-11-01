@@ -243,7 +243,7 @@ export default function GestaoHorasPage() {
             <div>
                 <h1 
                 style={{ color: 'var(--primary)', fontFamily: 'sora' }}
-                className="text-2xl font-bold tracking-tight">Gestão de Horas</h1>
+                className="text-2xl font-medium tracking-tight">Gestão de Horas</h1>
                 <p className="text-sm text-muted-foreground">
                     Aprovação, pagamento e resumo por terapeuta.
                 </p>

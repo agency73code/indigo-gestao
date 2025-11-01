@@ -11,7 +11,7 @@ export default function HeaderSection({
         <div className="space-y-2 p-0 pb-2">
             <h1
                 style={{ fontFamily: 'Sora, sans-serif' }}
-                className="text-xl sm:text-2xl font-semibold text-primary leading-tight"
+                className="text-xl sm:text-2xl font-medium text-primary leading-tight"
             >
                 {title}
             </h1>

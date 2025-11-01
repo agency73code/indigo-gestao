@@ -9,8 +9,6 @@ import * as services from '../consulta-sessao/services';
 import { getPatientById } from '../consultar-programas/services';
 import type { Sessao, SessaoFiltersState } from '../consulta-sessao/types';
 
-const DAY_IN_MS = 1000 * 60 * 60 * 24;
-
 const DEFAULT_FILTERS: SessaoFiltersState = {
     q: '',
     dateRange: 'all',
@@ -19,11 +17,6 @@ const DEFAULT_FILTERS: SessaoFiltersState = {
     sort: 'date-desc',
 };
 
-function getSessionTime(sessao: Sessao): number {
-    const timestamp = new Date(sessao.data).getTime();
-    return Number.isNaN(timestamp) ? 0 : timestamp;
-}
-
 export default function ConsultaSessao() {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
@@ -31,6 +24,8 @@ export default function ConsultaSessao() {
     const [filters, setFilters] = useState<SessaoFiltersState>(DEFAULT_FILTERS);
     const [patient, setPatient] = useState<Patient | null>(null);
     const [sessions, setSessions] = useState<Sessao[]>([]);
+    const [total, setTotal] = useState(0); // TODO: Usar quando adicionar componente de paginação
+    void total; // Silencia warning - será usado na paginação
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isUpdatingUrl, setIsUpdatingUrl] = useState(false);
@@ -127,6 +122,7 @@ export default function ConsultaSessao() {
         const loadSessions = async () => {
             if (!patient) {
                 setSessions([]);
+                setTotal(0);
                 setLoading(false);
                 return;
             }
@@ -135,9 +131,19 @@ export default function ConsultaSessao() {
             setError(null);
 
             try {
-                const items = await services.listSessionsByPatient(patient.id);
+                // 🔄 Passa filtros da URL para o service
+                const response = await services.listSessionsByPatient(patient.id, {
+                    q: filters.q,
+                    dateRange: filters.dateRange,
+                    programId: filters.program === 'all' ? undefined : filters.program,
+                    therapistId: filters.therapist === 'all' ? undefined : filters.therapist,
+                    sort: filters.sort,
+                    page: 1, // TODO: pegar da URL quando adicionar paginação
+                    pageSize: 10,
+                });
                 if (!cancelled) {
-                    setSessions(items);
+                    setSessions(response.items);
+                    setTotal(response.total);
                 }
             } catch {
                 if (!cancelled) {
@@ -155,7 +161,7 @@ export default function ConsultaSessao() {
         return () => {
             cancelled = true;
         };
-    }, [patient]);
+    }, [patient, filters]);
 
     const programOptions = useMemo(() => {
         if (!patient) return [] as string[];
@@ -218,70 +224,8 @@ export default function ConsultaSessao() {
         [applyFilters],
     );
 
-    const filteredSessions = useMemo(() => {
-        if (!patient) return [] as Sessao[];
-
-        const now = Date.now();
-        const currentYear = new Date(now).getFullYear();
-
-        const matchesDateRange = (sessao: Sessao) => {
-            if (filters.dateRange === 'all') return true;
-            const sessionTime = getSessionTime(sessao);
-            if (!sessionTime) return false;
-            const diff = now - sessionTime;
-            switch (filters.dateRange) {
-                case 'last7':
-                    return diff <= 7 * DAY_IN_MS;
-                case 'last30':
-                    return diff <= 30 * DAY_IN_MS;
-                case 'year':
-                    return new Date(sessionTime).getFullYear() === currentYear;
-                default:
-                    return true;
-            }
-        };
-
-        const matchesProgram = (sessao: Sessao) =>
-            filters.program === 'all' || sessao.programa === filters.program;
-
-        const matchesTherapist = (sessao: Sessao) =>
-            filters.therapist === 'all' || sessao.terapeutaNome === filters.therapist;
-
-        const matchesQuery = (sessao: Sessao) => {
-            if (!filters.q) return true;
-            const query = filters.q.toLowerCase();
-            return (
-                sessao.programa.toLowerCase().includes(query) ||
-                sessao.objetivo.toLowerCase().includes(query) ||
-                (sessao.terapeutaNome ?? '').toLowerCase().includes(query)
-            );
-        };
-
-        const filtered = sessions.filter(
-            (sessao) =>
-                matchesDateRange(sessao) &&
-                matchesProgram(sessao) &&
-                matchesTherapist(sessao) &&
-                matchesQuery(sessao),
-        );
-
-        const getAccuracy = (sessao: Sessao) => services.resumirSessao(sessao).acerto;
-
-        return filtered.sort((a, b) => {
-            switch (filters.sort) {
-                case 'date-asc':
-                    return getSessionTime(a) - getSessionTime(b);
-                case 'date-desc':
-                    return getSessionTime(b) - getSessionTime(a);
-                case 'accuracy-asc':
-                    return getAccuracy(a) - getAccuracy(b);
-                case 'accuracy-desc':
-                    return getAccuracy(b) - getAccuracy(a);
-                default:
-                    return 0;
-            }
-        });
-    }, [patient, sessions, filters]);
+    // ⚠️ FILTROS REMOVIDOS - Agora feito pelo service com adapter
+    // A filtragem/ordenação/paginação é feita no backend (futuro) ou localmente pelo adapter
 
     const handleViewDetails = (sessionId: string) => {
         if (!patient) return;
@@ -354,7 +298,7 @@ export default function ConsultaSessao() {
 
                     {patient && !loading && !error && (
                         <ListaSessoes
-                            sessoes={filteredSessions}
+                            sessoes={sessions}
                             onVerDetalhes={handleViewDetails}
                         />
                     )}

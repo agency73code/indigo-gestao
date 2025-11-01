@@ -1,0 +1,606 @@
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import html2pdf from 'html2pdf.js';
+import { toast } from 'sonner';
+import { FiltersBar } from '../gerar-relatorio/components/FiltersBar';
+import { KpiCards } from '../gerar-relatorio/components/KpiCards';
+import { DualLineProgress } from '../gerar-relatorio/components/DualLineProgress';
+import { PatientSelector, type Patient } from '../../programas/consultar-programas/components';
+import { OcpDeadlineCard } from '../gerar-relatorio/components/OcpDeadlineCard';
+import { AttentionStimuliBlock } from '../gerar-relatorio/components/AttentionStimuliBlock';
+import { SaveReportDialog } from '../components';
+import { FileText } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { RichTextEditor } from '../../../components/ui/rich-text-editor';
+import {
+    fetchKpis,
+    fetchSerieLinha,
+    fetchPrazoPrograma,
+} from '../gerar-relatorio/services/relatorio.service';
+import { listSessionsByPatient } from '../../programas/consulta-sessao/services';
+import type { Sessao as SessionDetail } from '../../programas/consulta-sessao/types';
+import type { Filters, KpisRelatorio, SerieLinha, PrazoPrograma } from '../gerar-relatorio/types';
+import type { SavedReport } from '../types';
+import { ReportExporter } from '../gerar-relatorio/print/ReportExporter';
+
+export function GerarRelatorioPage() {
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    console.log('[RelatorioMensalPage] Componente renderizou');
+
+    const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+    const [observacaoClinica, setObservacaoClinica] = useState<string>('');
+    const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+
+    const [kpis, setKpis] = useState<KpisRelatorio | null>(null);
+    const [serieLinha, setSerieLinha] = useState<SerieLinha[]>([]);
+    const [prazoPrograma, setPrazoPrograma] = useState<PrazoPrograma | null>(null);
+    const [sessions, setSessions] = useState<SessionDetail[]>([]);
+
+    const [loadingKpis, setLoadingKpis] = useState(true);
+    const [loadingCharts, setLoadingCharts] = useState(true);
+    const [loadingSessions, setLoadingSessions] = useState(false);
+    const [sessionsError, setSessionsError] = useState<string | null>(null);
+
+    // Estados para os filtros (programas, estímulos, terapeutas)
+    const [programas, setProgramas] = useState<{ id: string; nome: string }[]>([]);
+    const [estimulos, setEstimulos] = useState<{ id: string; nome: string }[]>([]);
+    const [terapeutas, setTerapeutas] = useState<{ id: string; nome: string }[]>([]);
+
+    // 🔄 Lê filtros da URL
+    const [filters, setFilters] = useState<Filters>(() => {
+        const periodo = searchParams.get('periodo') || '30d';
+        const periodoStart = searchParams.get('periodoStart');
+        const periodoEnd = searchParams.get('periodoEnd');
+        
+        return {
+            pacienteId: searchParams.get('pacienteId') || undefined,
+            periodo: periodo === 'custom' && periodoStart && periodoEnd
+                ? { mode: 'custom', start: periodoStart, end: periodoEnd }
+                : { mode: periodo as '30d' | '90d' },
+            programaId: searchParams.get('programaId') || undefined,
+            estimuloId: searchParams.get('estimuloId') || undefined,
+            terapeutaId: searchParams.get('terapeutaId') || undefined,
+            comparar: searchParams.get('comparar') === 'true',
+        };
+    });
+
+    // 🔄 Sincroniza filtros com URL
+    const syncFiltersToUrl = useCallback((newFilters: Filters) => {
+        const params = new URLSearchParams();
+        
+        if (newFilters.pacienteId) params.set('pacienteId', newFilters.pacienteId);
+        if (newFilters.programaId) params.set('programaId', newFilters.programaId);
+        if (newFilters.estimuloId) params.set('estimuloId', newFilters.estimuloId);
+        if (newFilters.terapeutaId) params.set('terapeutaId', newFilters.terapeutaId);
+        if (newFilters.comparar) params.set('comparar', 'true');
+        
+        // Período
+        if (newFilters.periodo.mode === 'custom') {
+            params.set('periodo', 'custom');
+            if (newFilters.periodo.start) params.set('periodoStart', newFilters.periodo.start);
+            if (newFilters.periodo.end) params.set('periodoEnd', newFilters.periodo.end);
+        } else {
+            params.set('periodo', newFilters.periodo.mode);
+        }
+        
+        setSearchParams(params);
+    }, [setSearchParams]);
+
+    // 🔄 Atualiza filtros quando URL mudar (botão voltar, por exemplo)
+    useEffect(() => {
+        const periodo = searchParams.get('periodo') || '30d';
+        const periodoStart = searchParams.get('periodoStart');
+        const periodoEnd = searchParams.get('periodoEnd');
+        
+        setFilters({
+            pacienteId: searchParams.get('pacienteId') || undefined,
+            periodo: periodo === 'custom' && periodoStart && periodoEnd
+                ? { mode: 'custom', start: periodoStart, end: periodoEnd }
+                : { mode: periodo as '30d' | '90d' },
+            programaId: searchParams.get('programaId') || undefined,
+            estimuloId: searchParams.get('estimuloId') || undefined,
+            terapeutaId: searchParams.get('terapeutaId') || undefined,
+            comparar: searchParams.get('comparar') === 'true',
+        });
+    }, [searchParams]);
+
+    // Buscar opções de filtros (programas, estímulos, terapeutas)
+    useEffect(() => {
+        const fetchFilterOptions = async () => {
+            try {
+                const [programasRes, estimulosRes, terapeutasRes] = await Promise.all([
+                    fetch('/api/ocp/reports/filters/programs', { credentials: 'include' }),
+                    fetch('/api/ocp/reports/filters/stimulus', { credentials: 'include' }),
+                    fetch('/api/terapeutas/relatorio', { credentials: 'include' }),
+                ]);
+
+                const programasData = await programasRes.json();
+                const estimulosData = await estimulosRes.json();
+                const terapeutasData = await terapeutasRes.json();
+
+                // Garantir que sempre sejam arrays - seguindo padrão da API
+                const programasArray = Array.isArray(programasData?.data)
+                    ? programasData.data
+                    : Array.isArray(programasData?.programas)
+                      ? programasData.programas
+                      : Array.isArray(programasData)
+                        ? programasData
+                        : [];
+
+                const estimulosArray = Array.isArray(estimulosData?.data)
+                    ? estimulosData.data
+                    : Array.isArray(estimulosData?.estimulos)
+                      ? estimulosData.estimulos
+                      : Array.isArray(estimulosData)
+                        ? estimulosData
+                        : [];
+
+                const terapeutasArray = Array.isArray(terapeutasData?.data)
+                    ? terapeutasData.data
+                    : Array.isArray(terapeutasData?.terapeutas)
+                      ? terapeutasData.terapeutas
+                      : Array.isArray(terapeutasData)
+                        ? terapeutasData
+                        : [];
+
+                console.log('Terapeutas carregados:', terapeutasArray); // Debug
+
+                setProgramas(programasArray);
+                setEstimulos(estimulosArray);
+                setTerapeutas(terapeutasArray);
+            } catch (error) {
+                console.error('Erro ao carregar opções de filtros:', error);
+                // Em caso de erro, definir arrays vazios
+                setProgramas([]);
+                setEstimulos([]);
+                setTerapeutas([]);
+            }
+        };
+
+        fetchFilterOptions();
+    }, []);
+
+    const loadData = useCallback(async (currentFilters: Filters) => {
+        try {
+            setLoadingKpis(true);
+            const kpisData = await fetchKpis(currentFilters);
+            setKpis(kpisData);
+            setLoadingKpis(false);
+
+            setLoadingCharts(true);
+            const [serieLinhaData, prazoProgramaData] = await Promise.all([
+                fetchSerieLinha(currentFilters),
+                fetchPrazoPrograma(currentFilters),
+            ]);
+
+            setSerieLinha(Array.isArray(serieLinhaData) ? serieLinhaData : []);
+            setPrazoPrograma(prazoProgramaData);
+            setLoadingCharts(false);
+        } catch (error) {
+            console.error('Erro ao carregar dados do relatório:', error);
+            // Garantir que os estados sejam definidos mesmo em caso de erro
+            setSerieLinha([]);
+            setLoadingKpis(false);
+            setLoadingCharts(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!selectedPatient) {
+            setSessions([]);
+            setSessionsError(null);
+            setLoadingSessions(false);
+            return;
+        }
+
+        let isCancelled = false;
+
+        const loadSessions = async () => {
+            setLoadingSessions(true);
+            setSessionsError(null);
+
+            try {
+                const response = await listSessionsByPatient(selectedPatient.id);
+                if (!isCancelled) {
+                    // 🔄 Extrai items da resposta paginada
+                    setSessions(response.items || []);
+                }
+            } catch (error) {
+                console.error('Erro ao carregar sessões do paciente:', error);
+                if (!isCancelled) {
+                    setSessions([]);
+                    setSessionsError('Não foi possível carregar as sessões do paciente.');
+                }
+            } finally {
+                if (!isCancelled) {
+                    setLoadingSessions(false);
+                }
+            }
+        };
+
+        loadSessions();
+
+        return () => {
+            isCancelled = true;
+        };
+    }, [selectedPatient]);
+
+    useEffect(() => {
+        if (selectedPatient) {
+            loadData(filters);
+        }
+    }, [filters, selectedPatient, loadData]);
+
+    const sanitizeForFileName = (value: string) =>
+        value
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-zA-Z0-9]+/g, '_')
+            .replace(/^_+|_+$/g, '')
+            .toLowerCase();
+
+    const documentTitle = useMemo(() => {
+        if (!selectedPatient) {
+            return undefined;
+        }
+
+        const patientSlug = sanitizeForFileName(selectedPatient.name || 'cliente');
+        return `relatorio_${patientSlug}`;
+    }, [selectedPatient]);
+
+    const handlePatientSelect = (patient: Patient) => {
+        setSelectedPatient(patient);
+        const newFilters = {
+            ...filters,
+            pacienteId: patient.id,
+        };
+        setFilters(newFilters);
+        syncFiltersToUrl(newFilters);
+    };
+
+    const handlePatientClear = () => {
+        setSelectedPatient(null);
+        const newFilters = {
+            ...filters,
+            pacienteId: undefined,
+        };
+        setFilters(newFilters);
+        syncFiltersToUrl(newFilters);
+    };
+
+    const handleFiltersChange = (newFilters: Filters) => {
+        setFilters(newFilters);
+        syncFiltersToUrl(newFilters);
+    };
+
+    // Handler para salvar o relatório (COM GERAÇÃO DE PDF)
+    const handleSaveReport = async (title: string): Promise<SavedReport> => {
+        if (!selectedPatient) {
+            throw new Error('Nenhum paciente selecionado');
+        }
+
+        // PASSO 1: Gerar PDF da tela atual
+        toast.info('Gerando PDF do relatório...', { duration: 2000 });
+        
+        const reportElement = document.querySelector('[data-report-exporter]') as HTMLElement;
+        if (!reportElement) {
+            throw new Error('Conteúdo do relatório não encontrado');
+        }
+
+        // Configurações do PDF
+        const pdfFileName = `relatorio_${sanitizeForFileName(selectedPatient.name)}_${new Date().toISOString().split('T')[0]}.pdf`;
+        
+        const opt = {
+            margin: 10,
+            filename: pdfFileName,
+            image: { type: 'jpeg' as const, quality: 0.98 },
+            html2canvas: { 
+                scale: 2, 
+                useCORS: true,
+                logging: false,
+                letterRendering: true
+            },
+            jsPDF: { 
+                unit: 'mm', 
+                format: 'a4', 
+                orientation: 'portrait' as const
+            }
+        };
+
+        let pdfBlob: Blob;
+        try {
+            pdfBlob = await html2pdf()
+                .set(opt)
+                .from(reportElement)
+                .output('blob');
+        } catch (error) {
+            console.error('Erro ao gerar PDF:', error);
+            throw new Error('Erro ao gerar PDF do relatório');
+        }
+
+        // PASSO 2: Determinar o período com base nos filtros
+        let periodStart: string;
+        let periodEnd: string = new Date().toISOString().split('T')[0]; // ISO Date (YYYY-MM-DD)
+
+        if (filters.periodo.mode === 'custom' && filters.periodo.start && filters.periodo.end) {
+            periodStart = filters.periodo.start;
+            periodEnd = filters.periodo.end;
+        } else if (filters.periodo.mode === '90d') {
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - 90);
+            periodStart = startDate.toISOString().split('T')[0];
+        } else {
+            // Default: 30 dias
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - 30);
+            periodStart = startDate.toISOString().split('T')[0];
+        }
+
+        // PASSO 3: Construir FormData com PDF + dados do relatório
+        toast.info('Salvando relatório...', { duration: 2000 });
+
+        const formData = new FormData();
+        formData.append('pdf', pdfBlob, pdfFileName);
+        formData.append('title', title);
+        formData.append('type', 'mensal');
+        formData.append('patientId', selectedPatient.id);
+        formData.append('therapistId', ''); // TODO: pegar do contexto de autenticação
+        formData.append('periodStart', periodStart);
+        formData.append('periodEnd', periodEnd);
+        formData.append('clinicalObservations', observacaoClinica);
+        formData.append('status', 'final');
+
+        // Adicionar dados estruturados (filtros e dados gerados)
+        const periodo: import('../types').ReportPeriod = {
+            mode: filters.periodo.mode,
+            start: periodStart,
+            end: periodEnd,
+        };
+
+        const structuredData = {
+            filters: {
+                pacienteId: selectedPatient.id,
+                periodo,
+                programaId: filters.programaId,
+                estimuloId: filters.estimuloId,
+                terapeutaId: filters.terapeutaId,
+                comparar: filters.comparar,
+            },
+            generatedData: {
+                kpis: kpis ? {
+                    acerto: kpis.acerto || 0,
+                    independencia: kpis.independencia || 0,
+                    tentativas: kpis.tentativas || 0,
+                    sessoes: kpis.sessoes || 0,
+                    assiduidade: kpis.assiduidade,
+                    gapIndependencia: kpis.gapIndependencia,
+                } : {
+                    acerto: 0,
+                    independencia: 0,
+                    tentativas: 0,
+                    sessoes: 0,
+                },
+                graphic: serieLinha.map(item => ({
+                    x: item.x || '',
+                    acerto: item.acerto || 0,
+                    independencia: item.independencia || 0,
+                })),
+                programDeadline: prazoPrograma ? {
+                    percent: prazoPrograma.percent || 0,
+                    label: prazoPrograma.label || '',
+                    inicio: prazoPrograma.inicio,
+                    fim: prazoPrograma.fim,
+                } : undefined,
+            },
+        };
+
+        formData.append('data', JSON.stringify(structuredData));
+
+        // PASSO 4: Enviar para o backend
+        try {
+            const response = await fetch(`${import.meta.env.VITE_API_BASE || ''}/api/relatorios`, {
+                method: 'POST',
+                body: formData,
+                credentials: 'include',
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || 'Erro ao salvar relatório');
+            }
+
+            const savedReport: SavedReport = await response.json();
+            
+            toast.success('Relatório salvo com sucesso!');
+            
+            return savedReport;
+        } catch (error) {
+            console.error('Erro ao salvar relatório:', error);
+            toast.error(error instanceof Error ? error.message : 'Erro ao salvar relatório');
+            throw error;
+        }
+    };
+
+    // Labels para o resumo de filtros no PDF
+    const getPeriodoLabel = () => {
+        if (filters.periodo.mode === '30d') return 'Últimos 30 dias';
+        if (filters.periodo.mode === '90d') return 'Últimos 90 dias';
+        if (filters.periodo.mode === 'custom' && filters.periodo.start && filters.periodo.end) {
+            const start = new Date(filters.periodo.start).toLocaleDateString('pt-BR');
+            const end = new Date(filters.periodo.end).toLocaleDateString('pt-BR');
+            return `${start} até ${end}`;
+        }
+        return 'Período não especificado';
+    };
+
+    const getProgramaLabel = () => {
+        if (!filters.programaId) return 'Todos os programas';
+        if (!Array.isArray(programas)) return 'Todos os programas';
+        const programa = programas.find((p) => p.id === filters.programaId);
+        return programa?.nome || filters.programaId;
+    };
+
+    const getEstimuloLabel = () => {
+        if (!filters.estimuloId) return 'Todos os estímulos';
+        if (!Array.isArray(estimulos)) return 'Todos os estímulos';
+        const estimulo = estimulos.find((e) => e.id === filters.estimuloId);
+        return estimulo?.nome || filters.estimuloId;
+    };
+
+    const getTerapeutaLabel = () => {
+        if (!filters.terapeutaId) return 'Todos os terapeutas';
+        if (!Array.isArray(terapeutas)) {
+            console.warn('Terapeutas não é um array:', terapeutas);
+            return 'Todos os terapeutas';
+        }
+        console.log('Buscando terapeuta com ID:', filters.terapeutaId);
+        console.log('Lista de terapeutas disponível:', terapeutas);
+        const terapeuta = terapeutas.find((t) => t.id === filters.terapeutaId);
+        console.log('Terapeuta encontrado:', terapeuta);
+        return terapeuta?.nome || filters.terapeutaId;
+    };
+
+    return (
+        <div className="flex flex-col w-full h-full">
+            {selectedPatient ? (
+                <>
+                    <ReportExporter 
+                        documentTitle={documentTitle}
+                        onSave={() => setSaveDialogOpen(true)}
+                    >
+                        <div className="space-y-4 md:space-y-6 px-6 pb-6">
+                        {/* Bloco de Cliente - aparece em tela e PDF */}
+                        <div data-print-program-header>
+                            <PatientSelector
+                                selected={selectedPatient}
+                                onSelect={handlePatientSelect}
+                                onClear={handlePatientClear}
+                            />
+                        </div>
+
+                        {/* Observação Clínica - aparece em tela e PDF */}
+                        <div data-print-block className="bg-muted/30 border border-border rounded-[5px] p-4 space-y-2">
+                            <Label className="flex items-center gap-2 text-sm font-semibold">
+                                <FileText className="w-4 h-4" />
+                                Observação Clínica (Relatório)
+                            </Label>
+                            <RichTextEditor
+                                placeholder="Adicione observações relevantes sobre o progresso do cliente, comportamentos observados durante as sessões, ou informações importantes para o relatório..."
+                                value={observacaoClinica}
+                                onChange={(html) => setObservacaoClinica(html)}
+                            />
+                            <p className="text-xs text-muted-foreground flex items-center gap-1 no-print">
+                                💡 Esta observação será incluída automaticamente no relatório PDF
+                            </p>
+                        </div>
+
+                        {/* Filtros interativos - só aparece na tela */}
+                        <div className="no-print">
+                            <FiltersBar value={filters} onChange={handleFiltersChange} />
+                        </div>
+
+                        {/* Resumo de filtros - só aparece no PDF */}
+                        <div
+                            data-print-only
+                            data-print-filters-summary
+                            data-print-block
+                            className="hidden"
+                        >
+                            <div className="space-y-2">
+                                <h3 className="text-sm font-semibold text-primary mb-2">
+                                    Filtros Aplicados
+                                </h3>
+                                <div className="flex flex-wrap gap-2">
+                                    <span className="chip">
+                                        <strong>Período:</strong> {getPeriodoLabel()}
+                                    </span>
+                                    <span className="chip">
+                                        <strong>Programa:</strong> {getProgramaLabel()}
+                                    </span>
+                                    <span className="chip">
+                                        <strong>Estímulo:</strong> {getEstimuloLabel()}
+                                    </span>
+                                    <span className="chip">
+                                        <strong>Terapeuta:</strong> {getTerapeutaLabel()}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* KPIs */}
+                        {kpis && (
+                            <section data-print-block>
+                                <KpiCards data={kpis} loading={loadingKpis} />
+                            </section>
+                        )}
+
+                        {/* Gráfico de Evolução */}
+                        <section data-print-block data-print-wide>
+                            <div data-print-chart>
+                                <DualLineProgress data={serieLinha} loading={loadingCharts} />
+                            </div>
+                        </section>
+
+                        {/* Estímulos que precisam de atenção */}
+                        <section data-print-block data-print-wide>
+                            <AttentionStimuliBlock
+                                sessions={sessions}
+                                filters={filters}
+                                loading={loadingSessions}
+                                error={sessionsError}
+                            />
+                        </section>
+
+                        {/* Prazo do Programa */}
+                        <section data-print-block data-print-wide>
+                            <OcpDeadlineCard
+                                inicio={prazoPrograma?.inicio}
+                                fim={prazoPrograma?.fim}
+                                percent={prazoPrograma?.percent}
+                                label={prazoPrograma?.label}
+                                loading={loadingCharts}
+                            />
+                        </section>
+                    </div>
+                </ReportExporter>
+
+                {/* Dialog de Salvamento */}
+                <SaveReportDialog
+                    open={saveDialogOpen}
+                    onOpenChange={setSaveDialogOpen}
+                    onSave={handleSaveReport}
+                    defaultTitle={`Relatório ${selectedPatient.name} - ${new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}`}
+                />
+                </>
+            ) : (
+                <div className="flex flex-col w-full h-full">
+                    <div className="px-6 pt-6 pb-2">
+                        <h1
+                            className="text-2xl font-medium text-primary"
+                            style={{ fontFamily: 'Sora, sans-serif' }}
+                        >
+                            Painel de Progresso - Programas & Objetivos
+                        </h1>
+                        <p className="text-sm text-muted-foreground mt-1">
+                            Análise completa do desempenho e evolução do cliente
+                        </p>
+                    </div>
+                    <div className="space-y-4 md:space-y-6 px-6 pb-6">
+                        <PatientSelector
+                            selected={selectedPatient}
+                            onSelect={handlePatientSelect}
+                            onClear={handlePatientClear}
+                        />
+
+                        <div className="text-center py-12 border-2 border-dashed rounded-lg">
+                            <p className="text-muted-foreground">
+                                Selecione um cliente para visualizar o relatório
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}

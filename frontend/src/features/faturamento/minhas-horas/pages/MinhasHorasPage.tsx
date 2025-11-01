@@ -111,7 +111,7 @@ export default function MinhasHorasPage() {
             <div className="flex items-start justify-between mb-2">
                 <div className="space-y-1">
                     <h1
-                        className="text-2xl font-semibold text-primary"
+                        className="text-2xl font-medium text-primary"
                         style={{ fontFamily: 'Sora, sans-serif' }}
                     >
                         Minhas Horas
@@ -171,7 +171,7 @@ export default function MinhasHorasPage() {
                                             variant={pageNum === page ? 'default' : 'outline'}
                                             size="sm"
                                             onClick={() => handlePageChange(pageNum)}
-                                            className="min-w-[40px]"
+                                            className="min-w-10"
                                         >
                                             {pageNum}
                                         </Button>
