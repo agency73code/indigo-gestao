@@ -271,9 +271,7 @@ export async function getAllLinks() {
 
 export async function updateLink(payload: LinkTypes.UpdateLink) {
     const linkId = Number(payload.id);
-    console.log('============================================')
-    console.log(payload)
-    console.log('============================================')
+
     if (Number.isNaN(linkId)) {
         throw new AppError('LINK_INVALID_ID', 'Identificador do vínculo inválido.', 400);
     }
@@ -289,7 +287,6 @@ export async function updateLink(payload: LinkTypes.UpdateLink) {
 
     const data: Prisma.terapeuta_clienteUpdateInput = {};
 
-    let startDate = existing.data_inicio;
     if (payload.startDate) {
         const parsedStart = new Date(payload.startDate);
 
@@ -298,45 +295,6 @@ export async function updateLink(payload: LinkTypes.UpdateLink) {
         }
 
         data.data_inicio = parsedStart;
-        startDate = parsedStart;
-    }
-
-    let endDate = existing.data_fim;
-    const hasEndDate = Object.prototype.hasOwnProperty.call(payload, 'endDate');
-
-    if (hasEndDate) {
-        if (payload.endDate === null) {
-            data.data_fim = null;
-            endDate = null;
-        } else if (typeof payload.endDate === 'string' && payload.endDate.trim() !== '') {
-            const parsedEnd = new Date(payload.endDate);
-
-            if (Number.isNaN(parsedEnd.getTime())) {
-                throw new AppError('LINK_INVALID_END_DATE', 'Data de término inválida.', 400);
-            }
-
-            data.data_fim = parsedEnd;
-            endDate = parsedEnd;
-        } else if (typeof payload.endDate === 'string') {
-            data.data_fim = null;
-            endDate = null;
-        }
-    }
-
-    if (endDate && endDate < startDate) {
-        throw new AppError(
-            'LINK_INVALID_END_DATE',
-            'A data de encerramento não pode ser anterior à data de início do vínculo.',
-            400,
-        );
-    }
-
-    if (payload.role) {
-        data.papel = payload.role;
-    }
-
-    if (payload.status) {
-        data.status = payload.status;
     }
 
     if (Object.prototype.hasOwnProperty.call(payload, 'notes')) {
@@ -344,29 +302,17 @@ export async function updateLink(payload: LinkTypes.UpdateLink) {
     }
 
     if (Object.prototype.hasOwnProperty.call(payload, 'actuationArea')) {
-        const requestedActuation = payload.actuationArea;
-
-        if (requestedActuation == null || requestedActuation.trim() === '') {
-            throw new AppError(
-                'LINK_ACTUATION_REQUIRED',
-                'A área de atuação é obrigatória para o terapeuta selecionado.',
-                400,
-            );
+        const requested = payload.actuationArea;
+        if (!requested?.trim()) {
+            throw new AppError('LINK_ACTUATION_REQUIRED', 'A área de atuação é obrigatória.', 400);
         }
 
-        const resolvedActuation = await resolveTherapistActuation(existing.terapeuta_id, requestedActuation);
-        data.area_atuacao = resolvedActuation;
+        data.area_atuacao = await resolveTherapistActuation(existing.terapeuta_id, requested);
     } else if (!existing.area_atuacao) {
-        throw new AppError(
-            'LINK_ACTUATION_REQUIRED',
-            'A área de atuação é obrigatória para o terapeuta selecionado.',
-            400,
-        );
+        throw new AppError('LINK_ACTUATION_REQUIRED', 'A área de atuação é obrigatória.', 400);
     }
 
-    if (Object.keys(data).length === 0) {
-        return existing;
-    }
+    if (Object.keys(data).length === 0) return existing;
 
     const updated = await prisma.terapeuta_cliente.update({
         where: { id: linkId },

@@ -23,6 +23,11 @@ export async function createLink(req: Request<unknown, unknown, LinkTypes.Create
     }
 }
 
+/**
+ * Controller responsável por atualizar um vínculo entre cliente e terapeuta existente.
+ * Em caso de sucesso, retorna o vínculo atualizado já normalizado.
+ * Em caso de erro, propaga um AppError adequado para tratamento pelo middleware global.
+ */
 export async function updateLink(req: Request<unknown, unknown, LinkTypes.UpdateLink>, res: Response, next: NextFunction) {
     try {
         const body = req.body;

@@ -156,8 +156,6 @@ export async function updateLink(input: UpdateLinkInput): Promise<PatientTherapi
       body: JSON.stringify(input)
     });
 
-    console.log(input);
-
     if (!res.ok) {
       let errorMessage = 'Falha ao atualizar vínculo';
       const errorText = await res.text();
@@ -411,7 +409,6 @@ export async function getAllLinks(filters?: LinkFilters): Promise<PatientTherapi
 
   
   const json = await res.json();
-  console.log(json);
   return json as PatientTherapistLink[];
 }
 
