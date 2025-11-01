@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ChevronLeft, ArrowLeftRight, Plus, Users, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -83,30 +83,34 @@ export default function VinculosPage() {
         orderBy: 'recent',
     });
 
-    // Carregar dados iniciais
-    useEffect(() => {
-        loadData();
+    const loadData = useCallback(async (filters?: LinkFiltersType) => {
+    try {
+        setLoading(true);
+        const [linksData, supervisionLinksData, patientsData, therapistsData] = await Promise.all([
+        getAllLinks(filters),
+        getAllSupervisionLinks(filters),
+        getAllPatients(),
+        getAllTherapists(),
+        ]);
+        setLinks(linksData);
+        setSupervisionLinks(supervisionLinksData);
+        setPatients(patientsData);
+        setTherapists(therapistsData);
+    } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+    } finally {
+        setLoading(false);
+    }
     }, []);
 
-    const loadData = async () => {
-        try {
-            setLoading(true);
-            const [linksData, supervisionLinksData, patientsData, therapistsData] = await Promise.all([
-                getAllLinks(),
-                getAllSupervisionLinks(),
-                getAllPatients(),
-                getAllTherapists(),
-            ]);
-            setLinks(linksData);
-            setSupervisionLinks(supervisionLinksData);
-            setPatients(patientsData);
-            setTherapists(therapistsData);
-        } catch (error) {
-            console.error('Erro ao carregar dados:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    // Carregar dados iniciais e reagir aos filtros
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            loadData(filters);
+        }, 500);
+
+        return () => clearTimeout(timeout);
+    }, [filters, loadData]);
 
     const handleCreateLink = () => {
         setEditingLink(null);

@@ -8,7 +8,8 @@ import type {
   TherapistSupervisionLink,
   CreateSupervisionLinkInput,
   UpdateSupervisionLinkInput,
-  SupervisionHierarchy
+  SupervisionHierarchy,
+  LinkFilters
 } from '../types';
 import {
   mockTherapists,
@@ -40,6 +41,9 @@ export async function searchTherapists(role: 'supervisor' | 'clinico', search: s
           const avatarRes = await fetch(`${import.meta.env.VITE_API_URL}/arquivos/getAvatar?ownerId=${t.id}&ownerType=terapeuta`, {
             credentials: 'include',
           });
+
+          if (!avatarRes.ok) return { ...t, avatarUrl: '' };
+
           const data = await avatarRes.json();
           return { ...t, avatarUrl: data.avatarUrl ?? '' };
         } catch {
@@ -49,8 +53,6 @@ export async function searchTherapists(role: 'supervisor' | 'clinico', search: s
     );
 
     return therapistsWithAvatar;
-
-    return (await res.json()) as Terapeuta[];
   } catch (err) {
     console.error('Erro ao buscar terapeutas:', err);
     return [];
@@ -347,26 +349,24 @@ export async function getAllTherapists(): Promise<Terapeuta[]> {
 /**
  * Busca todos os vínculos (para listagens) [feito]
  */
-export async function getAllLinks(): Promise<PatientTherapistLink[]> {
-  try {
-    const res = await fetch('/api/links/getAllLinks', {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-    });
+export async function getAllLinks(filters?: LinkFilters): Promise<PatientTherapistLink[]> {
+  await delay(300);
+  console.log(filters);
 
-    if (!res.ok) {
-      throw new Error('Falha ao carregar vínculos');
-    }
+  const res = await fetch('/api/links/getAllLinks', {
+    method: 'GET',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+  });
 
-    const json = await res.json();
-    return json as PatientTherapistLink[];
-  } catch (error) {
-    console.error('Erro ao buscar vínculos:', error);
-    return [];
+  if (!res.ok) {
+    throw new Error('Falha ao carregar vínculos');
   }
+
+  const json = await res.json();
+  return json as PatientTherapistLink[];
 }
 
 // ==================== FUNÇÕES DE VÍNCULOS DE SUPERVISÃO ====================
@@ -374,8 +374,9 @@ export async function getAllLinks(): Promise<PatientTherapistLink[]> {
 /**
  * Busca todos os vínculos de supervisão [feito]
  */
-export async function getAllSupervisionLinks(): Promise<TherapistSupervisionLink[]> {
+export async function getAllSupervisionLinks(filters?: LinkFilters): Promise<TherapistSupervisionLink[]> {
   await delay(300);
+  console.log(filters);
   
   const res = await fetch('/api/links/getAllSupervisionLinks', {
     method: 'GET',
