@@ -352,7 +352,6 @@ export async function getAllTherapists(): Promise<Terapeuta[]> {
 export async function getAllLinks(filters?: LinkFilters): Promise<PatientTherapistLink[]> {
   await delay(300);
   console.log(filters);
-
   const res = await fetch('/api/links/getAllLinks', {
     method: 'GET',
     credentials: 'include',
@@ -376,14 +375,14 @@ export async function getAllLinks(filters?: LinkFilters): Promise<PatientTherapi
  */
 export async function getAllSupervisionLinks(filters?: LinkFilters): Promise<TherapistSupervisionLink[]> {
   await delay(300);
-  console.log(filters);
-  
+
   const res = await fetch('/api/links/getAllSupervisionLinks', {
-    method: 'GET',
+    method: 'POST',
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json'
     },
+    body: JSON.stringify(filters ?? {}),
   });
 
   if (!res.ok) {
@@ -391,7 +390,7 @@ export async function getAllSupervisionLinks(filters?: LinkFilters): Promise<The
   }
 
   const json = await res.json();
-
+  console.log(json);
   // Tipagem explícita e retorno direto
   return json as TherapistSupervisionLink[];
 }

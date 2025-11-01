@@ -15,7 +15,7 @@ router.post('/transferResponsible', LinkController.transferResponsible);
 router.patch('/updateLink', LinkController.updateLink);
 
 router.post('/createSupervisionLink', SuperLinkController.createSupervisionLinkController);
-router.get('/getAllSupervisionLinks', SuperLinkController.getAllSupervisionLinksController);
+router.post('/getAllSupervisionLinks', SuperLinkController.getAllSupervisionLinksController);
 router.post("/endSupervisionLink", SuperLinkController.endSupervisionLinkController);
 router.post("/archiveSupervisionLink", SuperLinkController.archiveSupervisionLinkController);
 router.patch("/updateSupervisionLink", SuperLinkController.UpdateSupervisionLinkController);

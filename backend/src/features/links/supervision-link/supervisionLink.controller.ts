@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { archiveSupervisionLinkService, createSupervisionLinkService, endSupervisionLinkService, getAllSupervisionLinksService, UpdateSupervisionLinkService } from "./supervisionLink.service.js";
+import { LinkFiltersSchema } from "./types/supervisionLinkFilters.schema.js";
 
 /**
  * Controller responsável por criar um vínculo de supervisão.
@@ -24,7 +25,10 @@ export async function createSupervisionLinkController(req: Request, res: Respons
  */
 export async function getAllSupervisionLinksController(req: Request, res: Response): Promise<Response> {
     try {
-        const result = await getAllSupervisionLinksService();
+        const filters = LinkFiltersSchema.parse(req.body);
+
+        const result = await getAllSupervisionLinksService(filters);
+
         return res.status(200).json(result);
     } catch (error) {
         const message =

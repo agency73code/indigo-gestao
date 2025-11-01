@@ -1,4 +1,4 @@
-import type { CreateSupervisionLinkInput, EndSupervisionLinkInput, RawCreateSupervisionLinkInput, UpdateSupervisionLinkInput } from "./types/supervisionLink.types.js";
+import type { CreateSupervisionLinkInput, EndSupervisionLinkInput, LinkFilters, RawCreateSupervisionLinkInput, UpdateSupervisionLinkInput } from "./types/supervisionLink.types.js";
 import { createSupervisionLink } from "./actions/create.js";
 import { getAllSupervisionLinks } from "./actions/list.js";
 import { updateSupervisionLink } from "./actions/update.js";
@@ -40,8 +40,8 @@ export async function createSupervisionLinkService(
  * Responsável por orquestrar a listagem de vínculos de supervisão.
  * Encaminha a requisição ao action responsável por buscar os dados.
  */
-export async function getAllSupervisionLinksService() {
-    const result = await getAllSupervisionLinks();
+export async function getAllSupervisionLinksService(filters?: LinkFilters) {
+    const result = await getAllSupervisionLinks(filters);
     return result;
 }
 

@@ -37,8 +37,3 @@ export function normalizeSupervisionLinks(
 ) {
     return vinculos.map(normalizeSupervisionLink);
 }
-
-/**
- * Converte o payload recebido do frontend para o formato interno do backend.
- * Tradução reversa do normalizer.
- */
