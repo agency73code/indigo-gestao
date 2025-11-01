@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { searchTherapists } from '../services/links.service';
 import { Search, User, Users, Calendar as CalendarIcon, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -29,35 +30,13 @@ import type {
     Terapeuta,
     CreateSupervisionLinkInput,
     UpdateSupervisionLinkInput,
+    TerapeutaAvatar,
 } from '../types';
-import { searchTherapistsByName } from '../mocks/links.mock';
 
 function parseLocalDate(dateString: string) {
   const [year, month, day] = dateString.split('-').map(Number);
   return new Date(year, month - 1, day);
 }
-
-// Helper para verificar se é cargo de supervisor
-const isSupervisorRole = (cargo: string): boolean => {
-    const supervisorRoles = [
-        'Terapeuta Supervisor',
-        'Supervisor ABA',
-        'Coordenador ABA',
-        'Gerente',
-    ];
-    return supervisorRoles.some((role) => cargo.toLowerCase().includes(role.toLowerCase()));
-};
-
-// Helper para verificar se é terapeuta clínico
-const isClinicalTherapistRole = (cargo: string): boolean => {
-    const clinicalRoles = [
-        'Terapeuta Clínico',
-        'Acompanhante Terapeutico',
-        'Mediador de Conflitos',
-        'Professor Uniindigo'
-    ];
-    return clinicalRoles.some((role) => cargo.toLowerCase().includes(role.toLowerCase()));
-};
 
 export default function SupervisionLinkFormModal({
     open,
@@ -77,13 +56,13 @@ export default function SupervisionLinkFormModal({
     // Estados para busca de terapeutas
     const [supervisorSearch, setSupervisorSearch] = useState('');
     const [therapistSearch, setTherapistSearch] = useState('');
-    const [supervisorResults, setSupervisorResults] = useState<Terapeuta[]>([]);
-    const [therapistResults, setTherapistResults] = useState<Terapeuta[]>([]);
-    const [selectedSupervisor, setSelectedSupervisor] = useState<Terapeuta | null>(null);
-    const [selectedTherapist, setSelectedTherapist] = useState<Terapeuta | null>(null);
+    const [selectedSupervisor, setSelectedSupervisor] = useState<TerapeutaAvatar | null>(null);
+    const [selectedTherapist, setSelectedTherapist] = useState<TerapeutaAvatar | null>(null);
     const [showSupervisorSearch, setShowSupervisorSearch] = useState(false);
     const [showTherapistSearch, setShowTherapistSearch] = useState(false);
     const [showCalendar, setShowCalendar] = useState(false);
+    const [supervisorResults, setSupervisorResults] = useState<Terapeuta[]>([]);
+    const [therapistResults, setTherapistResults] = useState<Terapeuta[]>([]);
 
     // Estados de validação
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -127,59 +106,29 @@ export default function SupervisionLinkFormModal({
         }
     }, [open, initialData, isEdit, therapists]);
 
-    // Efeito para busca de supervisores
+    // Efeito de busca de supervisor
     useEffect(() => {
-        const searchSupervisors = async () => {
-            if (supervisorSearch.length >= 2) {
-                const results = searchTherapistsByName(therapists, supervisorSearch);
-                // Filtrar apenas supervisores
-                const supervisorResults = results.filter((t) =>
-                    t.dadosProfissionais?.[0]?.cargo &&
-                    isSupervisorRole(t.dadosProfissionais[0].cargo)
-                );
-                setSupervisorResults(supervisorResults.slice(0, 10));
-            } else if (supervisorSearch.length === 0) {
-                // Mostrar todos os supervisores quando não há busca
-                const allSupervisors = therapists.filter((t) =>
-                    t.dadosProfissionais?.[0]?.cargo &&
-                    isSupervisorRole(t.dadosProfissionais[0].cargo)
-                );
-                setSupervisorResults(allSupervisors.slice(0, 10));
-            } else {
-                setSupervisorResults([]);
+        const timeout = setTimeout(async () => {
+            if (showSupervisorSearch) {
+                const results = await searchTherapists('supervisor', supervisorSearch);
+                setSupervisorResults(results);
             }
-        };
+        }, 400); // 400ms de debounce
 
-        const timeoutId = setTimeout(searchSupervisors, 300);
-        return () => clearTimeout(timeoutId);
-    }, [supervisorSearch, therapists]);
+        return () => clearTimeout(timeout);
+    }, [supervisorSearch, showSupervisorSearch]);
 
-    // Efeito para busca de terapeutas clínicos
+    // Efeito de busca de terapeuta
     useEffect(() => {
-        const searchClinicalTherapists = async () => {
-            if (therapistSearch.length >= 2) {
-                const results = searchTherapistsByName(therapists, therapistSearch);
-                // Filtrar apenas terapeutas clínicos
-                const clinicalResults = results.filter((t) =>
-                    t.dadosProfissionais?.[0]?.cargo &&
-                    isClinicalTherapistRole(t.dadosProfissionais[0].cargo)
-                );
-                setTherapistResults(clinicalResults.slice(0, 10));
-            } else if (therapistSearch.length === 0) {
-                // Mostrar todos os terapeutas clínicos quando não há busca
-                const allClinical = therapists.filter((t) =>
-                    t.dadosProfissionais?.[0]?.cargo &&
-                    isClinicalTherapistRole(t.dadosProfissionais[0].cargo)
-                );
-                setTherapistResults(allClinical.slice(0, 10));
-            } else {
-                setTherapistResults([]);
+        const timeout = setTimeout(async () => {
+            if (showTherapistSearch) {
+                const results = await searchTherapists('clinico', therapistSearch);
+                setTherapistResults(results);
             }
-        };
+        }, 400);
 
-        const timeoutId = setTimeout(searchClinicalTherapists, 300);
-        return () => clearTimeout(timeoutId);
-    }, [therapistSearch, therapists]);
+        return () => clearTimeout(timeout);
+    }, [therapistSearch, showTherapistSearch]);
 
     const validateForm = () => {
         const newErrors: Record<string, string> = {};
@@ -298,12 +247,7 @@ export default function SupervisionLinkFormModal({
                                     <>
                                         <Avatar className="h-8 w-8">
                                             <AvatarImage 
-                                                src={(selectedSupervisor as any).avatarUrl 
-                                                    ? ((selectedSupervisor as any).avatarUrl.startsWith('/api')
-                                                        ? `${import.meta.env.VITE_API_BASE ?? ''}${(selectedSupervisor as any).avatarUrl}`
-                                                        : (selectedSupervisor as any).avatarUrl)
-                                                    : undefined
-                                                }
+                                                src={selectedSupervisor.avatarUrl || undefined}
                                                 alt={selectedSupervisor.nome}
                                             />
                                             <AvatarFallback className="text-xs">
@@ -356,12 +300,7 @@ export default function SupervisionLinkFormModal({
                                     <>
                                         <Avatar className="h-8 w-8">
                                             <AvatarImage 
-                                                src={(selectedTherapist as any).avatarUrl 
-                                                    ? ((selectedTherapist as any).avatarUrl.startsWith('/api')
-                                                        ? `${import.meta.env.VITE_API_BASE ?? ''}${(selectedTherapist as any).avatarUrl}`
-                                                        : (selectedTherapist as any).avatarUrl)
-                                                    : undefined
-                                                }
+                                                src={selectedTherapist.avatarUrl || undefined}
                                                 alt={selectedTherapist.nome}
                                             />
                                             <AvatarFallback className="text-xs">
@@ -535,12 +474,6 @@ export default function SupervisionLinkFormModal({
                                     <div className="space-y-2">
                                         {supervisorResults.map((supervisor) => {
                                             const supervisorAny = supervisor as any;
-                                            const avatarUrl = supervisorAny.avatarUrl
-                                                ? (supervisorAny.avatarUrl.startsWith('/api')
-                                                    ? `${import.meta.env.VITE_API_BASE ?? ''}${supervisorAny.avatarUrl}`
-                                                    : supervisorAny.avatarUrl)
-                                                : undefined;
-                                            
                                             return (
                                                 <div
                                                     key={supervisor.id}
@@ -549,7 +482,7 @@ export default function SupervisionLinkFormModal({
                                                 >
                                                     <Avatar className="h-8 w-8">
                                                         <AvatarImage 
-                                                            src={avatarUrl} 
+                                                            src={supervisorAny.avatarUrl}
                                                             alt={supervisor.nome}
                                                         />
                                                         <AvatarFallback className="text-xs">
@@ -612,12 +545,6 @@ export default function SupervisionLinkFormModal({
                                     <div className="space-y-2">
                                         {therapistResults.map((therapist) => {
                                             const therapistAny = therapist as any;
-                                            const avatarUrl = therapistAny.avatarUrl
-                                                ? (therapistAny.avatarUrl.startsWith('/api')
-                                                    ? `${import.meta.env.VITE_API_BASE ?? ''}${therapistAny.avatarUrl}`
-                                                    : therapistAny.avatarUrl)
-                                                : undefined;
-                                            
                                             return (
                                                 <div
                                                     key={therapist.id}
@@ -626,7 +553,7 @@ export default function SupervisionLinkFormModal({
                                                 >
                                                     <Avatar className="h-8 w-8">
                                                         <AvatarImage 
-                                                            src={avatarUrl} 
+                                                            src={therapistAny.avatarUrl} 
                                                             alt={therapist.nome}
                                                         />
                                                         <AvatarFallback className="text-xs">

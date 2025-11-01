@@ -154,3 +154,18 @@ export type TransferResponsibleResult = {
     previousResponsible: DBLink;
     newResponsible: DBLink;
 }
+
+export const SUPERVISOR_ROLES = [
+  'Terapeuta Supervisor',
+  'Supervisor ABA',
+  'Coordenador ABA',
+  'Gerente',
+  'Coordenador Executivo',
+];
+
+export const CLINICAL_ROLES = [
+  'Terapeuta Clínico',
+  'Acompanhante Terapeutico',
+  'Mediador de Conflitos',
+  'Professor UniIndigo',
+];

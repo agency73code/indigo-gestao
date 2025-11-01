@@ -91,7 +91,8 @@ export async function getAllClients(req: Request, res: Response, next: NextFunct
 
 export async function getAllTherapists(req: Request, res: Response, next: NextFunction) {
     try {
-        const data = await LinkService.getAllTherapists();
+        const { search = '', role } = req.query;
+        const data = await LinkService.getAllTherapists(search.toString(), role?.toString());
         const normalized = LinkNormalizer.getAllTherapists(data);
         res.json(normalized);
     } catch (err) {

@@ -89,6 +89,7 @@ export async function viewFile(req: Request, res: Response) {
         res.setHeader('Content-Type', metadata.mimeType);
         res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
         res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
+        res.setHeader('Cache-Control', 'public, max-age=86400');
 
         // Envia o stream diretamente
         stream.on('error', (err: unknown) => {
@@ -200,24 +201,9 @@ export async function getAvatar(req: Request, res: Response) {
         if (!avatar) {
             return res.status(404).json({ error: 'Foto de perfil não encontrada.' });
         }
-
-        // Faz stream do arquivo
-        const { metadata, stream } = await getFileStream(avatar.storageId);
-
-        res.setHeader('Content-Type', metadata.mimeType);
-        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-        res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
-
-        stream.on('error', (err: unknown) => {
-            if (err instanceof Error) {
-                console.error('Erro ao enviar avatar:', err.message);
-            } else {
-                console.error('Erro ao enviar avatar:', err);
-            }
-            res.sendStatus(500);
-        });
-
-        stream.pipe(res);
+        
+        const avatarUrl = `/api/arquivos/${avatar.storageId}/view`;
+        return res.json({ avatarUrl });
     } catch (error) {
         console.error('Erro ao obter avatar:', error);
         return res.status(500).json({ error: 'Falha ao carregar foto de perfil.' });

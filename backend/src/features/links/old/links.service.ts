@@ -148,12 +148,32 @@ export async function getAllClients() {
                 orderBy: { id: 'asc' },
             },
         },
+        take: 5,
         orderBy: { nome: 'asc' },
     });
 }
 
-export async function getAllTherapists() {
-    return prisma.terapeuta.findMany({
+export async function getAllTherapists(search?: string, role?: string) {
+    const where: Prisma.terapeutaWhereInput = {};
+
+    // Filtro de nome (busca por texto)
+    if (search && search.trim() !== '') {
+        where.nome = { contains: search.trim().toLowerCase() }
+    }
+
+    if (role) {
+        const cargoNames = role === 'supervisor' ? LinkTypes.SUPERVISOR_ROLES : LinkTypes.CLINICAL_ROLES;
+        where.registro_profissional = {
+            some: {
+                cargo: {
+                    nome: { in: cargoNames },
+                },
+            },
+        };
+    }
+
+    const therapists = await prisma.terapeuta.findMany({
+        where,
         select: {
             id: true,
             nome: true,
@@ -240,13 +260,17 @@ export async function getAllTherapists() {
                 },
             },
         },
+        take: 5,
         orderBy: { nome: 'asc' },
     });
+
+    return therapists;
 }
 
 export async function getAllLinks() {
     return prisma.terapeuta_cliente.findMany({
         select: LINK_SELECT,
+        take: 5,
         orderBy: { atualizado_em: 'desc' },
     });
 }

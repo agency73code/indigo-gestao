@@ -16,8 +16,8 @@ router.patch('/updateLink', LinkController.updateLink);
 
 router.post('/createSupervisionLink', SuperLinkController.createSupervisionLinkController);
 router.get('/getAllSupervisionLinks', SuperLinkController.getAllSupervisionLinksController);
-router.patch("/updateSupervisionLink", SuperLinkController.UpdateSupervisionLinkController);
 router.post("/endSupervisionLink", SuperLinkController.endSupervisionLinkController);
 router.post("/archiveSupervisionLink", SuperLinkController.archiveSupervisionLinkController);
+router.patch("/updateSupervisionLink", SuperLinkController.UpdateSupervisionLinkController);
 
 export default router;
