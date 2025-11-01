@@ -19,8 +19,8 @@ import { Calendar } from '@/components/ui/calendar';
 import { Combobox } from '@/ui/combobox';
 import type { CreateLinkInput, UpdateLinkInput, LinkFormModalProps } from '../types';
 import type { Paciente, Terapeuta } from '../../types/cadastros.types';
-import { searchPatientsByName, searchTherapistsByName } from '../mocks/links.mock';
 import { isSupervisorRole } from '../../constants/access-levels';
+import { searchPatients, searchTherapists } from '../services/links.service';
 
 type ComboboxOption = { value: string; label: string };
 
@@ -210,41 +210,27 @@ export default function LinkFormModal({
         });
     }, [actuationArea]);
 
-    // Efeito para busca de pacientes
     useEffect(() => {
-        const searchPatients = async () => {
-            if (patientSearch.length >= 2) {
-                const results = searchPatientsByName(patients, patientSearch);
-                setPatientResults(results.slice(0, 10)); // Limitar a 10 resultados
-            } else if (patientSearch.length === 0) {
-                // Mostrar todos os pacientes quando não há busca
-                setPatientResults(patients.slice(0, 10));
-            } else {
-                setPatientResults([]);
-            }
-        };
+        const timeout = setTimeout(async () => {
+            if (showTherapistSearch) {
+                const results = await searchTherapists('all', therapistSearch);
+                setTherapistResults(results);
+            } 
+        }, 400);
 
-        const timeoutId = setTimeout(searchPatients, 300);
-        return () => clearTimeout(timeoutId);
-    }, [patientSearch, patients]);
+        return () => clearTimeout(timeout);
+    }, [therapistSearch, showTherapistSearch]);
 
-    // Efeito para busca de terapeutas
     useEffect(() => {
-        const searchTherapists = async () => {
-            if (therapistSearch.length >= 2) {
-                const results = searchTherapistsByName(therapists, therapistSearch);
-                setTherapistResults(results.slice(0, 10)); // Limitar a 10 resultados
-            } else if (therapistSearch.length === 0) {
-                // Mostrar todos os terapeutas quando não há busca
-                setTherapistResults(therapists.slice(0, 10));
-            } else {
-                setTherapistResults([]);
-            }
-        };
+        const timeout = setTimeout(async () => {
+            if (showPatientSearch) {
+                const results = await searchPatients(patientSearch);
+                setPatientResults(results);
+            } 
+        }, 400);
 
-        const timeoutId = setTimeout(searchTherapists, 300);
-        return () => clearTimeout(timeoutId);
-    }, [therapistSearch, therapists]);
+        return () => clearTimeout(timeout);
+    }, [patientSearch, showPatientSearch]);
 
     const validateForm = () => {
         const newErrors: Record<string, string> = {};
@@ -366,12 +352,7 @@ export default function LinkFormModal({
                                     <>
                                         <Avatar className="h-8 w-8">
                                             <AvatarImage 
-                                                src={(selectedPatient as any).avatarUrl 
-                                                    ? ((selectedPatient as any).avatarUrl.startsWith('/api')
-                                                        ? `${import.meta.env.VITE_API_BASE ?? ''}${(selectedPatient as any).avatarUrl}`
-                                                        : (selectedPatient as any).avatarUrl)
-                                                    : undefined
-                                                }
+                                                src={(selectedPatient as any).avatarUrl || undefined}
                                                 alt={selectedPatient.nome}
                                             />
                                             <AvatarFallback className="text-xs">
@@ -419,12 +400,7 @@ export default function LinkFormModal({
                                     <>
                                         <Avatar className="h-8 w-8">
                                             <AvatarImage 
-                                                src={(selectedTherapist as any).avatarUrl 
-                                                    ? ((selectedTherapist as any).avatarUrl.startsWith('/api')
-                                                        ? `${import.meta.env.VITE_API_BASE ?? ''}${(selectedTherapist as any).avatarUrl}`
-                                                        : (selectedTherapist as any).avatarUrl)
-                                                    : undefined
-                                                }
+                                                src={(selectedTherapist as any).avatarUrl || undefined}
                                                 alt={selectedTherapist.nome}
                                             />
                                             <AvatarFallback className="text-xs">

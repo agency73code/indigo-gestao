@@ -77,20 +77,6 @@ async function resolveTherapistActuation(therapistId: string, actuation: string 
 }
 
 export async function createLink(payload: LinkTypes.CreateLink) {
-    if (payload.role === 'responsible') {
-        const existingResponsible = await prisma.terapeuta_cliente.findFirst({
-            where: {
-                cliente_id: payload.patientId,
-                papel: 'responsible',
-                status: 'active',
-            },
-        });
-
-        if (existingResponsible) {
-            throw new AppError('LINK_RESPONSIBLE_EXISTS', 'Já existe um responsável principal ativo para este cliente.', 409);
-        }
-    }
-
     const actuationArea = await resolveTherapistActuation(payload.therapistId, payload.actuationArea);
 
     const created = await prisma.terapeuta_cliente.create({
@@ -110,8 +96,16 @@ export async function createLink(payload: LinkTypes.CreateLink) {
     return created;
 }
 
-export async function getAllClients() {
+export async function getAllClients(search?: string) {
+    const where: Prisma.clienteWhereInput = {};
+
+    // Filtro de nome (busca por texto)
+    if (search && search.trim() !== '') {
+        where.nome = { contains: search.trim().toLowerCase() }
+    }
+
     return prisma.cliente.findMany({
+        where,
         select: {
             id: true,
             nome: true,
@@ -161,7 +155,7 @@ export async function getAllTherapists(search?: string, role?: string) {
         where.nome = { contains: search.trim().toLowerCase() }
     }
 
-    if (role) {
+    if (role && role !== 'all') {
         const cargoNames = role === 'supervisor' ? LinkTypes.SUPERVISOR_ROLES : LinkTypes.CLINICAL_ROLES;
         where.registro_profissional = {
             some: {
@@ -277,7 +271,9 @@ export async function getAllLinks() {
 
 export async function updateLink(payload: LinkTypes.UpdateLink) {
     const linkId = Number(payload.id);
-
+    console.log('============================================')
+    console.log(payload)
+    console.log('============================================')
     if (Number.isNaN(linkId)) {
         throw new AppError('LINK_INVALID_ID', 'Identificador do vínculo inválido.', 400);
     }
@@ -289,29 +285,6 @@ export async function updateLink(payload: LinkTypes.UpdateLink) {
 
     if (!existing) {
         throw new AppError('LINK_NOT_FOUND', 'Vínculo não encontrado.', 404)
-    }
-    
-    const nextRole = payload.role ?? existing.papel;
-    const nextStatus = payload.status ?? existing.status;
-    
-    if (nextRole === 'responsible' && nextStatus === 'active') {
-        const otherResponsible = await prisma.terapeuta_cliente.findFirst({
-            where: {
-                cliente_id: existing.cliente_id,
-                papel: 'responsible',
-                status: 'active',
-                NOT: { id: linkId },
-            },
-            select: { id: true },
-        });
-
-        if (otherResponsible) {
-            throw new AppError(
-                'LINK_RESPONSIBLE_EXISTS',
-                'Já existe um responsável principal ativo para este cliente.',
-                409,
-            );
-        }
     }
 
     const data: Prisma.terapeuta_clienteUpdateInput = {};

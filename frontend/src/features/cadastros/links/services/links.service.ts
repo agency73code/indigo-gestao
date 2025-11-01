@@ -19,10 +19,10 @@ import {
 // Simula delay de rede
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-export async function searchTherapists(role: 'supervisor' | 'clinico', search: string): Promise<Terapeuta[]> {
+export async function searchTherapists(role: 'supervisor' | 'clinico' | 'all', search: string): Promise<Terapeuta[]> {
   try {
     const query = new URLSearchParams();
-    query.set('role', role);
+    if (role && role !== 'all') query.set('role', role);
     if (search.trim()) query.set('search', search.trim());
 
     const res = await fetch(`/api/links/getAllTherapists?${query.toString()}`, {
@@ -59,8 +59,51 @@ export async function searchTherapists(role: 'supervisor' | 'clinico', search: s
   }
 }
 
+export async function searchPatients(search: string): Promise<Paciente[]> {
+  try {
+    const query = new URLSearchParams();
+    if (search.trim()) query.set('search', search.trim());
+
+    const res = await fetch(`/api/links/getAllClients?${query.toString()}`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!res.ok) {
+      throw new Error('Falha ao buscar clientes.');
+    }
+
+    const clients = (await res.json()) as Paciente[];
+
+    // Adiciona avatar se existir
+    const clientsWithAvatar = await Promise.all(
+      clients.map(async (c) => {
+        try {
+          const avatarRes = await fetch(
+            `${import.meta.env.VITE_API_URL}/arquivos/getAvatar?ownerId=${c.id}&ownerType=cliente`,
+            { credentials: 'include' }
+          );
+
+          if (!avatarRes.ok) return { ...c, avatarUrl: '' };
+
+          const data = await avatarRes.json();
+          return { ...c, avatarUrl: data.avatarUrl ?? '' };
+        } catch {
+          return { ...c, avatarUrl: '' };
+        }
+      })
+    );
+
+    return clientsWithAvatar;
+  } catch (err) {
+    console.error('Erro ao buscar clientes:', err);
+    return [];
+  }
+}
+
 /**
- * Cria novo vínculo [feito]
+ * Cria novo vínculo
  * Regras: Apenas 1 responsible ativo por paciente
  */
 export async function createLink(input: CreateLinkInput): Promise<PatientTherapistLink> {
@@ -98,10 +141,10 @@ export async function createLink(input: CreateLinkInput): Promise<PatientTherapi
 }
 
 /**
- * Atualiza vínculo existente [feito]
+ * Atualiza vínculo existente
  */
 export async function updateLink(input: UpdateLinkInput): Promise<PatientTherapistLink> {
-  await delay(600);
+  await delay(400);
 
   try {
     const res = await fetch('/api/links/updateLink', {
@@ -112,6 +155,8 @@ export async function updateLink(input: UpdateLinkInput): Promise<PatientTherapi
       },
       body: JSON.stringify(input)
     });
+
+    console.log(input);
 
     if (!res.ok) {
       let errorMessage = 'Falha ao atualizar vínculo';
@@ -140,7 +185,7 @@ export async function updateLink(input: UpdateLinkInput): Promise<PatientTherapi
 }
 
 /**
- * Transfere responsabilidade [feito]
+ * Transfere responsabilidade
  * O antigo responsável vira co-terapeuta
  */
 export async function transferResponsible(input: TransferResponsibleInput): Promise<void> {
@@ -183,7 +228,7 @@ export async function transferResponsible(input: TransferResponsibleInput): Prom
 }
 
 /**
- * Encerra vínculo (seta endDate e status='ended') [feito]
+ * Encerra vínculo (seta endDate e status='ended')
  */
 export async function endLink(id: string, endDate: string): Promise<void> {
   await delay(500);
@@ -225,7 +270,7 @@ export async function endLink(id: string, endDate: string): Promise<void> {
 }
 
 /**
- * Arquiva vínculo (status='archived') [feito]
+ * Arquiva vínculo (status='archived')
  */
 export async function archiveLink(id: string): Promise<void> {
   await delay(400);
@@ -267,7 +312,7 @@ export async function archiveLink(id: string): Promise<void> {
 }
 
 /**
- * Busca todos os pacientes (para formulários) [feito]
+ * Busca todos os pacientes (para formulários)
  */
 export async function getAllPatients(): Promise<Paciente[]> {
   try {
@@ -307,7 +352,7 @@ export async function getAllPatients(): Promise<Paciente[]> {
 }
 
 /**
- * Busca todos os terapeutas (para formulários) [feito]
+ * Busca todos os terapeutas (para formulários)
  */
 export async function getAllTherapists(): Promise<Terapeuta[]> {
   try {
@@ -347,7 +392,7 @@ export async function getAllTherapists(): Promise<Terapeuta[]> {
 }
 
 /**
- * Busca todos os vínculos (para listagens) [feito]
+ * Busca todos os vínculos (para listagens)
  */
 export async function getAllLinks(filters?: LinkFilters): Promise<PatientTherapistLink[]> {
   await delay(300);
@@ -364,7 +409,9 @@ export async function getAllLinks(filters?: LinkFilters): Promise<PatientTherapi
     throw new Error('Falha ao carregar vínculos');
   }
 
+  
   const json = await res.json();
+  console.log(json);
   return json as PatientTherapistLink[];
 }
 
@@ -374,7 +421,7 @@ export async function getAllLinks(filters?: LinkFilters): Promise<PatientTherapi
  * Busca todos os vínculos de supervisão [feito]
  */
 export async function getAllSupervisionLinks(filters?: LinkFilters): Promise<TherapistSupervisionLink[]> {
-  await delay(300);
+  if (!filters || filters.viewBy !== 'supervision') return [];
 
   const res = await fetch('/api/links/getAllSupervisionLinks', {
     method: 'POST',
@@ -390,7 +437,6 @@ export async function getAllSupervisionLinks(filters?: LinkFilters): Promise<The
   }
 
   const json = await res.json();
-  console.log(json);
   // Tipagem explícita e retorno direto
   return json as TherapistSupervisionLink[];
 }

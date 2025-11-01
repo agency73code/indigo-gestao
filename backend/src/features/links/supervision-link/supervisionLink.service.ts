@@ -6,7 +6,7 @@ import { endSupervisionLink } from "./actions/end.js";
 import { archiveSupervisionLink } from "./actions/archive.js";
 
 /**
- * Responsável por orquestrar a criação de um vínculo de supervisão.
+ * Service Responsável por orquestrar a criação de um vínculo de supervisão.
  * Recebe o payload do controller, valida tipos e encaminha ao action.
  */
 export async function createSupervisionLinkService(

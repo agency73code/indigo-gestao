@@ -5,7 +5,7 @@ export const LinkFiltersSchema = z.object({
     viewBy: z
         .enum([
             VIEW_BY.PATIENT,
-            VIEW_BY.SUPERVISION,
+            VIEW_BY.THERAPIST,
             VIEW_BY.SUPERVISION,
         ])
         .optional(),

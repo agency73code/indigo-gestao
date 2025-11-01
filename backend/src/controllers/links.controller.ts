@@ -81,7 +81,8 @@ export async function transferResponsible(req: Request<unknown, unknown, LinkTyp
 
 export async function getAllClients(req: Request, res: Response, next: NextFunction) {
     try {
-        const data = await LinkService.getAllClients();        
+        const { search = '' } = req.query;
+        const data = await LinkService.getAllClients(search.toString());
         const normalized = LinkNormalizer.getAllClients(data);
         res.json(normalized);
     } catch (err) {
