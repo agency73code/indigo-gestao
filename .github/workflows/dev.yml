@@ -80,4 +80,4 @@ jobs:
             echo "📜 Commit implantado:"
             git log -1 --pretty=format:"%h - %an, %ar : %s"
             echo ""
-            echo "✅ Deploy STAGING finalizado com sucesso!"
+            echo "✅ Deploy DEV finalizado com sucesso!"

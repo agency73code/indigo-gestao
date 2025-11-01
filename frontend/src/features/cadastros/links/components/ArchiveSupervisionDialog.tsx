@@ -47,7 +47,7 @@ export default function ArchiveSupervisionDialog({
                                 <div className="text-sm">
                                     <span className="text-muted-foreground">Data de início:</span>{' '}
                                     <span className="font-medium">
-                                        {new Date(link.startDate).toLocaleDateString('pt-BR')}
+                                        {link.startDate.split('-').reverse().join('/')}
                                     </span>
                                 </div>
                             )}
@@ -55,7 +55,7 @@ export default function ArchiveSupervisionDialog({
                                 <div className="text-sm">
                                     <span className="text-muted-foreground">Data de encerramento:</span>{' '}
                                     <span className="font-medium">
-                                        {new Date(link.endDate).toLocaleDateString('pt-BR')}
+                                        {link.endDate.split('-').reverse().join('/')}
                                     </span>
                                 </div>
                             )}

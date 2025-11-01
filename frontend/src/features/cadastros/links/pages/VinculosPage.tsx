@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ChevronLeft, ArrowLeftRight, Plus, Users, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -83,30 +83,34 @@ export default function VinculosPage() {
         orderBy: 'recent',
     });
 
-    // Carregar dados iniciais
-    useEffect(() => {
-        loadData();
+    const loadData = useCallback(async (filters?: LinkFiltersType) => {
+    try {
+        setLoading(true);
+        const [linksData, supervisionLinksData, patientsData, therapistsData] = await Promise.all([
+        getAllLinks(filters),
+        getAllSupervisionLinks(filters),
+        getAllPatients(),
+        getAllTherapists(),
+        ]);
+        setLinks(linksData);
+        setSupervisionLinks(supervisionLinksData);
+        setPatients(patientsData);
+        setTherapists(therapistsData);
+    } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+    } finally {
+        setLoading(false);
+    }
     }, []);
 
-    const loadData = async () => {
-        try {
-            setLoading(true);
-            const [linksData, supervisionLinksData, patientsData, therapistsData] = await Promise.all([
-                getAllLinks(),
-                getAllSupervisionLinks(),
-                getAllPatients(),
-                getAllTherapists(),
-            ]);
-            setLinks(linksData);
-            setSupervisionLinks(supervisionLinksData);
-            setPatients(patientsData);
-            setTherapists(therapistsData);
-        } catch (error) {
-            console.error('Erro ao carregar dados:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    // Carregar dados iniciais e reagir aos filtros
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            loadData(filters);
+        }, 500);
+
+        return () => clearTimeout(timeout);
+    }, [filters, loadData]);
 
     const handleCreateLink = () => {
         setEditingLink(null);
@@ -155,7 +159,7 @@ export default function VinculosPage() {
                     duration: 4000,
                 });
             }
-            await loadData(); // Recarregar dados
+            await loadData(filters); // Recarregar dados
             setShowModal(false);
         } catch (error: any) {
             console.error('Erro ao salvar vínculo:', error);
@@ -213,7 +217,7 @@ export default function VinculosPage() {
             await endLink(endingLink.id, endDate);
 
             // Recarregar dados para refletir a mudança
-            await loadData();
+            await loadData(filters);
 
             // Fechar diálogo
             setShowEndDialog(false);
@@ -240,13 +244,20 @@ export default function VinculosPage() {
             await archiveLink(archivingLink.id);
 
             // Recarregar dados para refletir a mudança
-            await loadData();
+            await loadData(filters);
 
             // Fechar diálogo
             setShowArchiveDialog(false);
             setArchivingLink(null);
-        } catch (error) {
-            console.error('Erro ao arquivar vínculo:', error);
+            toast.success('Vínculo arquivado com sucesso', {
+                description: 'O vínculo foi movido para o status "Arquivado".',
+                duration: 3000,
+            });
+        } catch (error: any) {
+            toast.error('Erro ao arquivar vínculo', {
+                description: error.message || 'Ocorreu um erro inesperado.',
+                duration: 3000,
+            });
         } finally {
             setArchiveLoading(false);
         }
@@ -264,7 +275,7 @@ export default function VinculosPage() {
             await transferResponsible(data);
 
             // Recarregar dados para refletir a mudança
-            await loadData();
+            await loadData(filters);
 
             // Fechar diálogo
             setShowTransferDialog(false);
@@ -382,12 +393,18 @@ export default function VinculosPage() {
                 description: 'O vínculo foi arquivado com sucesso.',
                 duration: 3000,
             });
-        } catch (error) {
-            console.error('Erro ao arquivar vínculo de supervisão:', error);
-            toast.error('Erro ao arquivar vínculo', {
-                description: 'Ocorreu um erro ao arquivar o vínculo de supervisão.',
-                duration: 4000,
-            });
+        } catch (error: any) {
+            if (error?.message) {
+                toast.error('Erro ao arquivar vínculo', {
+                    description: error?.message,
+                    duration: 4000,
+                });
+            } else {
+                toast.error('Erro ao arquivar vínculo', {
+                    description: 'Ocorreu um erro ao arquivar o vínculo de supervisão.',
+                    duration: 4000,
+                });
+            }
         } finally {
             setArchiveSupervisionLoading(false);
         }

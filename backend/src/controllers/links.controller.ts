@@ -1,7 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
-import * as LinkService from '../features/links/links.service.js';
-import * as LinkNormalizer from '../features/links/links.normalizer.js';
-import * as LinkTypes from '../features/links/links.types.js';
+import * as LinkService from '../features/links/old/links.service.js';
+import * as LinkNormalizer from '../features/links/old/links.normalizer.js';
+import * as LinkTypes from '../features/links/old/links.types.js';
 
 export async function createLink(req: Request<unknown, unknown, LinkTypes.CreateLink>, res: Response, next: NextFunction) {
     try {
@@ -23,6 +23,11 @@ export async function createLink(req: Request<unknown, unknown, LinkTypes.Create
     }
 }
 
+/**
+ * Controller responsável por atualizar um vínculo entre cliente e terapeuta existente.
+ * Em caso de sucesso, retorna o vínculo atualizado já normalizado.
+ * Em caso de erro, propaga um AppError adequado para tratamento pelo middleware global.
+ */
 export async function updateLink(req: Request<unknown, unknown, LinkTypes.UpdateLink>, res: Response, next: NextFunction) {
     try {
         const body = req.body;
@@ -81,7 +86,8 @@ export async function transferResponsible(req: Request<unknown, unknown, LinkTyp
 
 export async function getAllClients(req: Request, res: Response, next: NextFunction) {
     try {
-        const data = await LinkService.getAllClients();        
+        const { search = '' } = req.query;
+        const data = await LinkService.getAllClients(search.toString());
         const normalized = LinkNormalizer.getAllClients(data);
         res.json(normalized);
     } catch (err) {
@@ -91,7 +97,8 @@ export async function getAllClients(req: Request, res: Response, next: NextFunct
 
 export async function getAllTherapists(req: Request, res: Response, next: NextFunction) {
     try {
-        const data = await LinkService.getAllTherapists();
+        const { search = '', role } = req.query;
+        const data = await LinkService.getAllTherapists(search.toString(), role?.toString());
         const normalized = LinkNormalizer.getAllTherapists(data);
         res.json(normalized);
     } catch (err) {
@@ -99,14 +106,19 @@ export async function getAllTherapists(req: Request, res: Response, next: NextFu
     }
 }
 
+/**
+ * Controller responsável por listar todos os vínculos entre clientes e terapeutas,
+ * aplicando filtros opcionais recebidos via query string (ex: status, terapeuta, paciente, etc).
+ * Em caso de sucesso, retorna a lista de vínculos já normalizados.
+ * Em caso de erro, propaga um AppError adequado para tratamento pelo middleware global.
+ */
 export async function getAllLinks(req: Request, res: Response, next: NextFunction) {
     try {
-        const data = await LinkService.getAllLinks();
+        const filters = { ...req.query };
+        const data = await LinkService.getAllLinks(filters);
         const normalized = LinkNormalizer.getAllLinks(data);
         res.json(normalized);
     } catch (err) {
         next(err);
     }
 }
-
-// ajuste build redeploy

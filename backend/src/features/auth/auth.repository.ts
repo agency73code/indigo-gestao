@@ -85,7 +85,7 @@ export async function loginUserByAccessInformation(accessInfo: string, table: Ta
       email: row.email_indigo ?? null,
       perfil_acesso: row.perfil_acesso,
       avatar_url: row.arquivos[0] 
-        ? `${process.env.API_URL}/api/arquivos/view/${row.arquivos[0].arquivo_id}` 
+        ? `${process.env.API_URL}/api/arquivos/${row.arquivos[0].arquivo_id}/view/` 
         : null,
     };
   } else {
@@ -122,7 +122,7 @@ export async function loginUserByAccessInformation(accessInfo: string, table: Ta
       email: row.emailContato ?? null,
       perfil_acesso: row.perfil_acesso!,
       avatar_url: row.arquivos[0] 
-        ? `${process.env.API_URL}/api/arquivos/view/${row.arquivos[0].arquivo_id}` 
+        ? `${process.env.API_URL}/api/arquivos/${row.arquivos[0].arquivo_id}/view/` 
         : null,
     };
   }

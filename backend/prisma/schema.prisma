@@ -211,6 +211,8 @@ model terapeuta {
   endereco              endereco?               @relation(fields: [endereco_id], references: [id])
   cliente               terapeuta_cliente[]
   disciplina            disciplina[]            @relation("disciplinaToterapeuta")
+  supervisionados       vinculo_supervisao[]    @relation("SupervisorVinculo")
+  supervisor            vinculo_supervisao[]    @relation("ClinicoVinculo")
 
   @@index([atividade])
   @@index([nome])
@@ -370,4 +372,25 @@ model terapeuta_cliente {
 
   @@index([terapeuta_id])
   @@index([cliente_id])
+}
+
+model vinculo_supervisao {
+  id                Int       @id @default(autoincrement())
+  supervisor_id     String
+  clinico_id        String
+  nivel_hierarquia  Int?      @default(1)
+  escopo_supervisao String?   @default("direto") // 'direto' | 'equipe'
+  data_inicio       DateTime
+  data_fim          DateTime?
+  status            String    @default("ativo")
+  observacoes       String?
+  criado_em         DateTime  @default(now())
+  atualizado_em     DateTime  @updatedAt
+
+  supervisor   terapeuta    @relation("SupervisorVinculo", fields: [supervisor_id], references: [id], onDelete: Cascade)
+  clinico      terapeuta    @relation("ClinicoVinculo", fields: [clinico_id], references: [id], onDelete: Cascade)
+
+  @@unique([supervisor_id, clinico_id])
+  @@index([supervisor_id])
+  @@index([clinico_id])
 }

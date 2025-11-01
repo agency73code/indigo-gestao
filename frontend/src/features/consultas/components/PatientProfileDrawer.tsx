@@ -606,7 +606,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                         <AvatarWithSkeleton
                             src={
                                 arquivosMap.has('fotoPerfil')
-                                    ? `${import.meta.env.VITE_API_URL}/arquivos/view/${arquivosMap.get('fotoPerfil')?.arquivo_id}`
+                                    ? `${import.meta.env.VITE_API_URL}/arquivos/${arquivosMap.get('fotoPerfil')?.arquivo_id}/view/`
                                     : undefined
                             }
                             alt={patient.nome}
@@ -675,6 +675,8 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                     <ProfilePhotoFieldSimple
                                         ref={profilePhotoRef}
                                         userId={patient?.id || ''}
+                                        fullName={clienteData.nome!}
+                                        birthDate={clienteData.dataNascimento!}
                                         value={profilePhoto}
                                         onChange={(file) => {
                                             setProfilePhoto(file);

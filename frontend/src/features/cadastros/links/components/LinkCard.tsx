@@ -16,13 +16,18 @@ import type { LinkCardProps, PatientTherapistLink } from '../types';
 import { isSupervisorRole } from '../../constants/access-levels';
 
 // Helper para formatar datas
-function formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-    });
+function formatDate(dateString?: string | null): string {
+    if (!dateString) return 'Data não informada';
+
+    // tenta converter diretamente para Date
+    const parsed = new Date(dateString);
+    if (isNaN(parsed.getTime())) return 'Data inválida';
+
+    const day = String(parsed.getDate()).padStart(2, '0');
+    const month = String(parsed.getMonth() + 1).padStart(2, '0');
+    const year = parsed.getFullYear();
+
+    return `${day}/${month}/${year}`;
 }
 
 // Helper para obter iniciais do nome

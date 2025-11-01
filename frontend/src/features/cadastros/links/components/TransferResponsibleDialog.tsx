@@ -13,14 +13,14 @@ import { Label } from '@/components/ui/label';
 import { CalendarIcon, Users, Search, Loader2, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Combobox } from '@/ui/combobox';
-import type { TransferResponsibleDialogProps, TransferResponsibleInput } from '../types';
+import type { TerapeutaAvatar, TransferResponsibleDialogProps, TransferResponsibleInput } from '../types';
 import type { Terapeuta } from '../../types/cadastros.types';
-import { searchTherapistsByName } from '../mocks/links.mock';
+import { searchTherapists } from '../services/links.service';
 
 type ComboboxOption = { value: string; label: string };
 
@@ -53,7 +53,6 @@ export default function TransferResponsibleDialog({
     link,
     patient,
     therapist,
-    therapists,
     loading = false,
 }: TransferResponsibleDialogProps) {
     // Estados do formulário
@@ -64,8 +63,8 @@ export default function TransferResponsibleDialog({
 
     // Estados para busca de terapeutas
     const [therapistSearch, setTherapistSearch] = useState('');
-    const [therapistResults, setTherapistResults] = useState<Terapeuta[]>([]);
-    const [selectedTherapist, setSelectedTherapist] = useState<Terapeuta | null>(null);
+    const [therapistResults, setTherapistResults] = useState<TerapeutaAvatar[]>([]);
+    const [selectedTherapist, setSelectedTherapist] = useState<TerapeutaAvatar | null>(null);
     const [showTherapistSearch, setShowTherapistSearch] = useState(false);
     const [showCalendar, setShowCalendar] = useState(false);
 
@@ -182,26 +181,17 @@ export default function TransferResponsibleDialog({
         });
     }, [newResponsibleActuation]);
 
-    // Efeito para busca de terapeutas (excluir o terapeuta atual)
+    // Efeito de busca de terapeuta (real API)
     useEffect(() => {
-        const searchTherapists = async () => {
-            if (therapistSearch.length >= 2) {
-                const results = searchTherapistsByName(therapists, therapistSearch);
-                // Filtrar o terapeuta atual
-                const filteredResults = results.filter((t) => t.id !== link?.therapistId);
-                setTherapistResults(filteredResults.slice(0, 10));
-            } else if (therapistSearch.length === 0) {
-                // Mostrar todos os terapeutas (exceto o atual) quando não há busca
-                const filteredTherapists = therapists.filter((t) => t.id !== link?.therapistId);
-                setTherapistResults(filteredTherapists.slice(0, 10));
-            } else {
-                setTherapistResults([]);
+        const timeout = setTimeout(async () => {
+            if (showTherapistSearch) {
+                const results = await searchTherapists('clinico', therapistSearch);
+                setTherapistResults(results);
             }
-        };
+        }, 400);
 
-        const timeoutId = setTimeout(searchTherapists, 300);
-        return () => clearTimeout(timeoutId);
-    }, [therapistSearch, therapists, link?.therapistId]);
+        return () => clearTimeout(timeout);
+    }, [therapistSearch, showTherapistSearch]);
 
     const validateForm = () => {
         const newErrors: Record<string, string> = {};
@@ -312,6 +302,10 @@ export default function TransferResponsibleDialog({
                                     {selectedTherapist ? (
                                         <>
                                             <Avatar className="h-8 w-8">
+                                                <AvatarImage
+                                                    src={selectedTherapist.avatarUrl || undefined}
+                                                    alt={selectedTherapist.nome}
+                                                />
                                                 <AvatarFallback className="text-xs">
                                                     {getInitials(selectedTherapist.nome)}
                                                 </AvatarFallback>
@@ -524,6 +518,10 @@ export default function TransferResponsibleDialog({
                                                 onClick={() => handleTherapistSelect(newTherapist)}
                                             >
                                                 <Avatar className="h-8 w-8">
+                                                    <AvatarImage
+                                                        src={newTherapist.avatarUrl || undefined}
+                                                        alt={newTherapist.nome}
+                                                    />
                                                     <AvatarFallback className="text-xs">
                                                         {getInitials(newTherapist.nome)}
                                                     </AvatarFallback>

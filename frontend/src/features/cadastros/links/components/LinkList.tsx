@@ -1,5 +1,12 @@
 import LinkCard from './LinkCard';
-import type { LinkListProps, PatientWithLinks, TherapistWithLinks, SupervisorWithLinks } from '../types';
+import type {
+  LinkListProps,
+  PatientWithLinks,
+  TherapistWithLinks,
+  SupervisorWithLinks,
+  PatientTherapistLink,
+  TherapistSupervisionLink,
+} from '../types';
 
 type GroupedItem = PatientWithLinks | TherapistWithLinks | SupervisorWithLinks;
 
@@ -23,55 +30,17 @@ export default function LinkList({
     const findPatient = (id: string) => patients.find((p) => p.id === id);
     const findTherapist = (id: string) => therapists.find((t) => t.id === id);
 
-    // Filter links based on active filters
-    const filteredLinks = filters.viewBy === 'supervision' ? [] : links.filter((link) => {
-        if (filters.status && filters.status !== 'all' && link.status !== filters.status) {
-            return false;
-        }
-        if (filters.q) {
-            const patient = findPatient(link.patientId);
-            const therapist = findTherapist(link.therapistId);
-            const searchTerm = filters.q.toLowerCase();
-            const patientName = patient?.nome?.toLowerCase() || '';
-            const therapistName = therapist?.nome?.toLowerCase() || '';
-
-            if (!patientName.includes(searchTerm) && !therapistName.includes(searchTerm)) {
-                return false;
-            }
-        }
-        return true;
-    });
-
-    // Filter supervision links
-    const filteredSupervisionLinks = filters.viewBy !== 'supervision' ? [] : supervisionLinks.filter((link) => {
-        if (filters.status && filters.status !== 'all' && link.status !== filters.status) {
-            return false;
-        }
-        if (filters.q) {
-            const supervisor = findTherapist(link.supervisorId);
-            const therapist = findTherapist(link.supervisedTherapistId);
-            const searchTerm = filters.q.toLowerCase();
-            const supervisorName = supervisor?.nome?.toLowerCase() || '';
-            const therapistName = therapist?.nome?.toLowerCase() || '';
-
-            if (!supervisorName.includes(searchTerm) && !therapistName.includes(searchTerm)) {
-                return false;
-            }
-        }
-        return true;
-    });
-
     // Group links by patient or therapist based on viewBy
     const groupedData =
         filters.viewBy === 'patient'
-            ? groupLinksByPatient(filteredLinks)
+            ? groupLinksByPatient(links)
             : filters.viewBy === 'therapist'
-            ? groupLinksByTherapist(filteredLinks)
-            : groupLinksBySupervisor(filteredSupervisionLinks);
+            ? groupLinksByTherapist(links)
+            : groupLinksBySupervisor(supervisionLinks);
 
     const sortedGroupedData = sortGroups(groupedData, filters.orderBy);
 
-    function groupLinksByPatient(links: typeof filteredLinks) {
+    function groupLinksByPatient(links: PatientTherapistLink[]) {
         const grouped = new Map<string, PatientWithLinks>();
 
         links.forEach((link) => {
@@ -91,7 +60,7 @@ export default function LinkList({
         return Array.from(grouped.values());
     }
 
-    function groupLinksByTherapist(links: typeof filteredLinks) {
+    function groupLinksByTherapist(links: PatientTherapistLink[]) {
         const grouped = new Map<string, TherapistWithLinks>();
 
         links.forEach((link) => {
@@ -111,7 +80,7 @@ export default function LinkList({
         return Array.from(grouped.values());
     }
 
-    function groupLinksBySupervisor(links: typeof filteredSupervisionLinks) {
+    function groupLinksBySupervisor(links: TherapistSupervisionLink[]) {
         const grouped = new Map<string, SupervisorWithLinks>();
 
         links.forEach((link) => {

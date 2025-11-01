@@ -14,15 +14,39 @@ export function PerfilSection() {
     const [profilePhoto, setProfilePhoto] = useState<File | string | null>(user?.avatar_url || null);
     const profilePhotoRef = useRef<ProfilePhotoFieldSimpleRef>(null);
     const [showPhotoEditor, setShowPhotoEditor] = useState(false);
+    const [userData, setUserData] = useState<{ nome: string; dataNascimento: string } | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [imageKey, setImageKey] = useState(0);
     const [optimisticAvatarUrl, setOptimisticAvatarUrl] = useState<string | null>(null);
-
+    
     // Atualizar key quando avatar mudar para forçar reload
     useEffect(() => {
         setImageKey(prev => prev + 1);
         setOptimisticAvatarUrl(null); // Limpar preview otimista
     }, [user?.avatar_url]);
+
+    useEffect(() => {
+        if (!user?.id) return;
+    
+        const url = `/api/usuarios/${user.id}`;
+    
+        fetch(url, { credentials: 'include' })
+            .then((res) => {
+                if (!res.ok) {
+                    throw new Error(`Erro HTTP ${res.status}`);
+                }
+                return res.json();
+            })
+            .then((data) => {
+                setUserData({
+                    nome: data.nome,
+                    dataNascimento: data.dataNascimento,
+                });
+            })
+            .catch((err) =>
+                console.error('Erro ao carregar dados do usuário:', err)
+            );
+    }, [user]);
 
     const handlePhotoChange = useCallback((file: File | null) => {
         setProfilePhoto(file);
@@ -45,9 +69,9 @@ export function PerfilSection() {
         // Atualizar o avatar no contexto de autenticação para refletir em toda a aplicação
         updateAvatar(newAvatarUrl);
         
-        setShowPhotoEditor(false);
         setOptimisticAvatarUrl(null);
-    }, [updateAvatar]);
+        setShowPhotoEditor(false);
+        }, [updateAvatar]);
 
     const handleSave = useCallback(async () => {
         setIsSaving(true);
@@ -73,11 +97,13 @@ export function PerfilSection() {
             >
                 <div className="space-y-4">
                     <div className="space-y-2">
-                        {showPhotoEditor ? (
+                        {showPhotoEditor && userData ? (
                             <div className="space-y-2">
                                 <ProfilePhotoFieldSimple
                                     ref={profilePhotoRef}
                                     userId={user?.id || ''}
+                                    fullName={userData.nome}
+                                    birthDate={userData.dataNascimento}
                                     value={profilePhoto}
                                     onChange={handlePhotoChange}
                                     onUploaded={handlePhotoUploaded}

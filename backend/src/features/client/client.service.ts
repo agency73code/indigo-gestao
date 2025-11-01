@@ -4,6 +4,7 @@ import { AppError } from "../../errors/AppError.js";
 import * as ClientType from "./client.types.js";
 import { v4 as uuidv4 } from "uuid";
 import { getTherapistData } from "../../cache/therapistCache.js";
+import { ACCESS_LEVELS } from "../../utils/accessLevels.js";
 
 async function enderecoData(dto: ClientType.Client) {
   return dto.enderecos.map((e) => ({
@@ -643,26 +644,91 @@ export async function list(therapistId: string) {
   for (const reg of registers) {
     const cargo = reg.cargo?.nome?.toLowerCase();
     const area = reg.area_atuacao.nome;
-
     if (!cargo || !area) continue;
+
+    const level = ACCESS_LEVELS[cargo] ?? 0;
+
     // Gerente e Coordenador Executivo veem todos os clientes
-    if (cargo.includes('gerente') || cargo.includes('coordenador executivo')) {
+    if (level >= 5) {
       whereClauses.push({ id: { not: '' } });
       break;
+    }
+    
+    if (cargo.includes('aba')) {
+      if (cargo.includes('supervisor')) {
+        // Supervisor ABA → vê seus próprios registros + coordenador + at
+        whereClauses.push({
+          terapeuta: {
+            some: {
+              OR: [
+                { terapeuta_id: therapistId },
+                { 
+                  terapeuta: { 
+                    registro_profissional: { 
+                      some: { 
+                        area_atuacao: { nome: area },
+                        cargo: { 
+                          nome: { contains: 'coordenador aba' } 
+                        },
+                      },
+                    },
+                  },
+                },
+                {
+                  terapeuta: {
+                    registro_profissional: {
+                      some: {
+                        area_atuacao: { nome: area },
+                        cargo: {
+                          nome: { contains: 'acompanhante terapeutico' } 
+                        },
+                      },
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        });
+      } else if (cargo.includes('coordenador')) {
+        // Coordenador ABA → vê seus registros + AT
+        whereClauses.push({
+          terapeuta: {
+            some: {
+              OR: [
+                { terapeuta_id: therapistId },
+                { 
+                  terapeuta: {
+                    registro_profissional: {
+                      some: {
+                        area_atuacao: { nome: area },
+                        cargo: {
+                          nome: { contains: 'acompanhante terapeutico' },
+                        },
+                      },
+                    },
+                  },
+                },
+              ],
+            },
+          },
+        });
+      }
+      continue;
+    }
+
+    if (level <= 2) {
+      whereClauses.push({
+        terapeuta: { some: { terapeuta_id: therapistId } },
+      });
+      continue;
     }
 
     if (cargo.includes('supervisor')) {
       whereClauses.push({
-        terapeuta: {
-          some: { area_atuacao: area }
-        },
+        terapeuta: { some: { area_atuacao: area } },
       });
-    } else if (cargo.includes('clínico')) {
-      whereClauses.push({
-        terapeuta: {
-          some: { terapeuta_id: therapistId }
-        },
-      });
+      continue;
     }
   }
 

@@ -211,7 +211,7 @@ export async function getClientById(clientId: string) {
         guardianName: client.cuidadores[0]?.nome ?? null,
         age: currentYear - birthYear,
         photoUrl: client.arquivos[0]?.arquivo_id 
-            ? `${process.env.API_URL}/api/arquivos/view/${client.arquivos[0].arquivo_id}` 
+            ? `${process.env.API_URL}/api/arquivos/${client.arquivos[0].arquivo_id}/view/` 
             : null,
     }
 }

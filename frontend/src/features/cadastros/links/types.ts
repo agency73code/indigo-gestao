@@ -250,5 +250,9 @@ export interface ArchiveSupervisionDialogProps {
   loading?: boolean;
 }
 
+export type TerapeutaAvatar = Terapeuta & {
+  avatarUrl?: string | null;
+};
+
 // Re-export necessários
 export type { Paciente, Terapeuta, CadastroFormProps };
