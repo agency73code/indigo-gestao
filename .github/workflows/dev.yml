@@ -49,18 +49,20 @@ jobs:
             # 3) Configura pnpm
             command -v pnpm >/dev/null 2>&1 || (corepack enable && corepack prepare pnpm@latest --activate)
 
-            # 4) Backend: deps + migrações
+            # 4) Instala dependências do workspace (raiz)
+            echo "📦 Instalando dependências do workspace..."
+            pnpm install --frozen-lockfile
+
+            # 5) Backend: migrações + build
             cd backend
             echo "🧱 Buildando backend..."
-            pnpm install --frozen-lockfile
             pnpm dlx prisma migrate deploy
             pnpm dlx prisma generate
             pnpm run build
 
-            # 5) Frontend: build
+            # 6) Frontend: build
             cd ../frontend
             echo "🧱 Buildando frontend..."
-            pnpm install --frozen-lockfile
             pnpm run build
 
             # 6) PM2
