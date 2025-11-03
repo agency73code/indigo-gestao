@@ -9,12 +9,9 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { CalendarIcon, AlertTriangle, Loader2 } from 'lucide-react';
+import { AlertTriangle, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
+import { DateField } from '@/common/components/layout/DateField';
 import type { EndLinkDialogProps } from '../types';
 
 export default function EndLinkDialog({
@@ -25,8 +22,7 @@ export default function EndLinkDialog({
     loading = false,
 }: EndLinkDialogProps) {
     // Estados do formulário
-    const [endDate, setEndDate] = useState<Date>(new Date());
-    const [showCalendar, setShowCalendar] = useState(false);
+    const [endDate, setEndDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
 
     // Estados de validação
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -34,7 +30,7 @@ export default function EndLinkDialog({
     // Efeito para limpar formulário quando abrir
     useEffect(() => {
         if (open) {
-            setEndDate(new Date());
+            setEndDate(format(new Date(), 'yyyy-MM-dd'));
             setErrors({});
         }
     }, [open]);
@@ -46,11 +42,10 @@ export default function EndLinkDialog({
             newErrors.endDate = 'Selecione a data de encerramento';
         } else if (link?.startDate) {
             // Comparar apenas as datas, sem horários
-            const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
-            const startDateOnly = new Date(link.startDate);
-            startDateOnly.setHours(0, 0, 0, 0);
+            const endDateObj = new Date(endDate);
+            const startDateObj = new Date(link.startDate);
             
-            if (endDateOnly < startDateOnly) {
+            if (endDateObj < startDateObj) {
                 newErrors.endDate =
                     'A data de encerramento não pode ser anterior à data de início do vínculo';
             }
@@ -59,9 +54,9 @@ export default function EndLinkDialog({
         // Verificar se a data de encerramento não está no futuro
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+        const endDateObj = new Date(endDate);
         
-        if (endDateOnly > today) {
+        if (endDateObj > today) {
             newErrors.endDate = 'A data de encerramento não pode ser no futuro';
         }
 
@@ -72,7 +67,7 @@ export default function EndLinkDialog({
     const handleSubmit = () => {
         if (!validateForm()) return;
 
-        onConfirm(endDate.toISOString());
+        onConfirm(endDate);
     };
 
     if (!link) return null;
@@ -95,55 +90,26 @@ export default function EndLinkDialog({
                     {/* Data de Encerramento */}
                     <div className="space-y-2">
                         <Label className="text-sm font-medium">Data de Encerramento *</Label>
-                        <Popover open={showCalendar} onOpenChange={setShowCalendar}>
-                            <PopoverTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    className={cn(
-                                        'w-full justify-start text-left font-normal',
-                                        !endDate && 'text-muted-foreground',
-                                        errors.endDate && 'border-destructive',
-                                    )}
-                                >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {endDate
-                                        ? format(endDate, "dd 'de' MMMM 'de' yyyy", {
-                                              locale: ptBR,
-                                          })
-                                        : 'Selecione uma data'}
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className=" p-0" align="start">
-                                <Calendar
-                                    mode="single"
-                                    selected={endDate}
-                                    onSelect={(date) => {
-                                        if (date) {
-                                            setEndDate(date);
-                                            setShowCalendar(false);
-
-                                            // Limpar erro se existir
-                                            if (errors.endDate) {
-                                                setErrors((prev) => ({ ...prev, endDate: '' }));
-                                            }
-                                        }
-                                    }}
-                                    locale={ptBR}
-                                    disabled={(date) => {
-                                        const today = new Date();
-                                        today.setHours(23, 59, 59, 999); // Final do dia atual
-                                        const isFuture = date > today;
-                                        const isBeforeStart =
-                                            link?.startDate && date < new Date(link.startDate);
-                                        return isFuture || Boolean(isBeforeStart);
-                                    }}
-                                    initialFocus
-                                />
-                            </PopoverContent>
-                        </Popover>
-                        {errors.endDate && (
-                            <p className="text-sm text-destructive">{errors.endDate}</p>
-                        )}
+                        <DateField
+                            value={endDate}
+                            onChange={(iso) => {
+                                setEndDate(iso);
+                                if (errors.endDate) {
+                                    setErrors((prev) => ({ ...prev, endDate: '' }));
+                                }
+                            }}
+                            placeholder="Selecione uma data"
+                            error={errors.endDate}
+                            maxDate={new Date()}
+                            minDate={link?.startDate ? new Date(link.startDate) : undefined}
+                            disabled={(date) => {
+                                const today = new Date();
+                                today.setHours(23, 59, 59, 999);
+                                const isFuture = date > today;
+                                const isBeforeStart = link?.startDate && date < new Date(link.startDate);
+                                return isFuture || Boolean(isBeforeStart);
+                            }}
+                        />
                     </div>
 
                     {/* Informações do vínculo atual */}

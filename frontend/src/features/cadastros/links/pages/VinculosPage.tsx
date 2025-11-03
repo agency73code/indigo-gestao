@@ -16,6 +16,7 @@ import {
     EndLinkDialog,
     EndSupervisionLinkDialog,
 } from '../index';
+import BulkConfirmDialog from '../components/BulkConfirmDialog';
 import type {
     PatientTherapistLink,
     TherapistSupervisionLink,
@@ -79,6 +80,23 @@ export default function VinculosPage() {
     const [showEndSupervisionDialog, setShowEndSupervisionDialog] = useState(false);
     const [endingSupervisionLink, setEndingSupervisionLink] = useState<TherapistSupervisionLink | null>(null);
     const [endSupervisionLoading, setEndSupervisionLoading] = useState(false);
+    
+    // Estados para operações em lote
+    const [showBulkEndDialog, setShowBulkEndDialog] = useState(false);
+    const [bulkEndingLinks, setBulkEndingLinks] = useState<PatientTherapistLink[]>([]);
+    const [bulkEndLoading, setBulkEndLoading] = useState(false);
+    
+    const [showBulkArchiveDialog, setShowBulkArchiveDialog] = useState(false);
+    const [bulkArchivingLinks, setBulkArchivingLinks] = useState<PatientTherapistLink[]>([]);
+    const [bulkArchiveLoading, setBulkArchiveLoading] = useState(false);
+    
+    const [showBulkEndSupervisionDialog, setShowBulkEndSupervisionDialog] = useState(false);
+    const [bulkEndingSupervisionLinks, setBulkEndingSupervisionLinks] = useState<TherapistSupervisionLink[]>([]);
+    const [bulkEndSupervisionLoading, setBulkEndSupervisionLoading] = useState(false);
+    
+    const [showBulkArchiveSupervisionDialog, setShowBulkArchiveSupervisionDialog] = useState(false);
+    const [bulkArchivingSupervisionLinks, setBulkArchivingSupervisionLinks] = useState<TherapistSupervisionLink[]>([]);
+    const [bulkArchiveSupervisionLoading, setBulkArchiveSupervisionLoading] = useState(false);
     
     const [filters, setFilters] = useState<LinkFiltersType>({
         viewBy: 'patient',
@@ -476,37 +494,61 @@ export default function VinculosPage() {
 
     // Handlers em lote para supervisão
     const handleBulkEndSupervisionLinks = async (links: TherapistSupervisionLink[]) => {
+        setBulkEndingSupervisionLinks(links);
+        setShowBulkEndSupervisionDialog(true);
+    };
+
+    const handleConfirmBulkEndSupervision = async () => {
+        if (bulkEndingSupervisionLinks.length === 0) return;
+
         try {
+            setBulkEndSupervisionLoading(true);
             const endDate = new Date().toISOString();
-            await Promise.all(links.map(link => endSupervisionLink(link.id, endDate)));
+            await Promise.all(bulkEndingSupervisionLinks.map(link => endSupervisionLink(link.id, endDate)));
             await loadData(filters);
-            toast.success(`${links.length} vínculo${links.length > 1 ? 's' : ''} encerrado${links.length > 1 ? 's' : ''}`, {
-                description: `${links.length} vínculo${links.length > 1 ? 's de supervisão foram encerrados' : ' de supervisão foi encerrado'} com sucesso.`,
+            toast.success(`${bulkEndingSupervisionLinks.length} vínculo${bulkEndingSupervisionLinks.length > 1 ? 's' : ''} encerrado${bulkEndingSupervisionLinks.length > 1 ? 's' : ''}`, {
+                description: `${bulkEndingSupervisionLinks.length} vínculo${bulkEndingSupervisionLinks.length > 1 ? 's de supervisão foram encerrados' : ' de supervisão foi encerrado'} com sucesso.`,
                 duration: 3000,
             });
+            setShowBulkEndSupervisionDialog(false);
+            setBulkEndingSupervisionLinks([]);
         } catch (error: any) {
             console.error('Erro ao encerrar vínculos:', error);
             toast.error('Erro ao encerrar vínculos', {
                 description: error?.message || 'Ocorreu um erro ao encerrar os vínculos de supervisão.',
                 duration: 4000,
             });
+        } finally {
+            setBulkEndSupervisionLoading(false);
         }
     };
 
     const handleBulkArchiveSupervisionLinks = async (links: TherapistSupervisionLink[]) => {
+        setBulkArchivingSupervisionLinks(links);
+        setShowBulkArchiveSupervisionDialog(true);
+    };
+
+    const handleConfirmBulkArchiveSupervision = async () => {
+        if (bulkArchivingSupervisionLinks.length === 0) return;
+
         try {
-            await Promise.all(links.map(link => archiveSupervisionLink(link.id)));
+            setBulkArchiveSupervisionLoading(true);
+            await Promise.all(bulkArchivingSupervisionLinks.map(link => archiveSupervisionLink(link.id)));
             await loadData(filters);
-            toast.success(`${links.length} vínculo${links.length > 1 ? 's' : ''} arquivado${links.length > 1 ? 's' : ''}`, {
-                description: `${links.length} vínculo${links.length > 1 ? 's de supervisão foram arquivados' : ' de supervisão foi arquivado'} com sucesso.`,
+            toast.success(`${bulkArchivingSupervisionLinks.length} vínculo${bulkArchivingSupervisionLinks.length > 1 ? 's' : ''} arquivado${bulkArchivingSupervisionLinks.length > 1 ? 's' : ''}`, {
+                description: `${bulkArchivingSupervisionLinks.length} vínculo${bulkArchivingSupervisionLinks.length > 1 ? 's de supervisão foram arquivados' : ' de supervisão foi arquivado'} com sucesso.`,
                 duration: 3000,
             });
+            setShowBulkArchiveSupervisionDialog(false);
+            setBulkArchivingSupervisionLinks([]);
         } catch (error: any) {
             console.error('Erro ao arquivar vínculos:', error);
             toast.error('Erro ao arquivar vínculos', {
                 description: error?.message || 'Ocorreu um erro ao arquivar os vínculos de supervisão.',
                 duration: 4000,
             });
+        } finally {
+            setBulkArchiveSupervisionLoading(false);
         }
     };
 
@@ -529,38 +571,61 @@ export default function VinculosPage() {
 
     // Handlers em lote para links paciente-terapeuta
     const handleBulkEndLinks = async (links: PatientTherapistLink[]) => {
-        // Usar a data de hoje no formato ISO completo
-        const currentDate = new Date().toISOString();
+        setBulkEndingLinks(links);
+        setShowBulkEndDialog(true);
+    };
+
+    const handleConfirmBulkEndLinks = async () => {
+        if (bulkEndingLinks.length === 0) return;
+
         try {
-            await Promise.all(links.map(link => endLink(link.id, currentDate)));
+            setBulkEndLoading(true);
+            const currentDate = new Date().toISOString();
+            await Promise.all(bulkEndingLinks.map(link => endLink(link.id, currentDate)));
             await loadData(filters);
-            toast.success(`${links.length} vínculo${links.length > 1 ? 's' : ''} encerrado${links.length > 1 ? 's' : ''}`, {
-                description: `${links.length} vínculo${links.length > 1 ? 's foram encerrados' : ' foi encerrado'} com sucesso.`,
+            toast.success(`${bulkEndingLinks.length} vínculo${bulkEndingLinks.length > 1 ? 's' : ''} encerrado${bulkEndingLinks.length > 1 ? 's' : ''}`, {
+                description: `${bulkEndingLinks.length} vínculo${bulkEndingLinks.length > 1 ? 's foram encerrados' : ' foi encerrado'} com sucesso.`,
                 duration: 3000,
             });
+            setShowBulkEndDialog(false);
+            setBulkEndingLinks([]);
         } catch (error: any) {
             console.error('Erro ao encerrar vínculos:', error);
             toast.error('Erro ao encerrar vínculos', {
                 description: error?.message || 'Ocorreu um erro ao encerrar os vínculos.',
                 duration: 4000,
             });
+        } finally {
+            setBulkEndLoading(false);
         }
     };
 
     const handleBulkArchiveLinks = async (links: PatientTherapistLink[]) => {
+        setBulkArchivingLinks(links);
+        setShowBulkArchiveDialog(true);
+    };
+
+    const handleConfirmBulkArchiveLinks = async () => {
+        if (bulkArchivingLinks.length === 0) return;
+
         try {
-            await Promise.all(links.map(link => archiveLink(link.id)));
+            setBulkArchiveLoading(true);
+            await Promise.all(bulkArchivingLinks.map(link => archiveLink(link.id)));
             await loadData(filters);
-            toast.success(`${links.length} vínculo${links.length > 1 ? 's' : ''} arquivado${links.length > 1 ? 's' : ''}`, {
-                description: `${links.length} vínculo${links.length > 1 ? 's foram arquivados' : ' foi arquivado'} com sucesso.`,
+            toast.success(`${bulkArchivingLinks.length} vínculo${bulkArchivingLinks.length > 1 ? 's' : ''} arquivado${bulkArchivingLinks.length > 1 ? 's' : ''}`, {
+                description: `${bulkArchivingLinks.length} vínculo${bulkArchivingLinks.length > 1 ? 's foram arquivados' : ' foi arquivado'} com sucesso.`,
                 duration: 3000,
             });
+            setShowBulkArchiveDialog(false);
+            setBulkArchivingLinks([]);
         } catch (error: any) {
             console.error('Erro ao arquivar vínculos:', error);
             toast.error('Erro ao arquivar vínculos', {
                 description: error?.message || 'Ocorreu um erro ao arquivar os vínculos.',
                 duration: 4000,
             });
+        } finally {
+            setBulkArchiveLoading(false);
         }
     };
 
@@ -820,6 +885,62 @@ export default function VinculosPage() {
                     onConfirm={handleConfirmArchiveSupervision}
                     link={archivingSupervisionLink}
                     loading={archiveSupervisionLoading}
+                />
+
+                {/* Dialogs de confirmação em lote - Links Cliente-Terapeuta */}
+                <BulkConfirmDialog
+                    open={showBulkEndDialog}
+                    onClose={() => {
+                        setShowBulkEndDialog(false);
+                        setBulkEndingLinks([]);
+                    }}
+                    onConfirm={handleConfirmBulkEndLinks}
+                    title="Encerrar Vínculos em Lote"
+                    description={`Tem certeza que deseja encerrar ${bulkEndingLinks.length} vínculo${bulkEndingLinks.length > 1 ? 's' : ''}? Todos serão marcados como encerrados na data de hoje.`}
+                    confirmText={`Encerrar ${bulkEndingLinks.length} vínculo${bulkEndingLinks.length > 1 ? 's' : ''}`}
+                    variant="destructive"
+                    loading={bulkEndLoading}
+                />
+
+                <BulkConfirmDialog
+                    open={showBulkArchiveDialog}
+                    onClose={() => {
+                        setShowBulkArchiveDialog(false);
+                        setBulkArchivingLinks([]);
+                    }}
+                    onConfirm={handleConfirmBulkArchiveLinks}
+                    title="Arquivar Vínculos em Lote"
+                    description={`Tem certeza que deseja arquivar ${bulkArchivingLinks.length} vínculo${bulkArchivingLinks.length > 1 ? 's' : ''}? Esta ação pode ser revertida posteriormente.`}
+                    confirmText={`Arquivar ${bulkArchivingLinks.length} vínculo${bulkArchivingLinks.length > 1 ? 's' : ''}`}
+                    loading={bulkArchiveLoading}
+                />
+
+                {/* Dialogs de confirmação em lote - Links de Supervisão */}
+                <BulkConfirmDialog
+                    open={showBulkEndSupervisionDialog}
+                    onClose={() => {
+                        setShowBulkEndSupervisionDialog(false);
+                        setBulkEndingSupervisionLinks([]);
+                    }}
+                    onConfirm={handleConfirmBulkEndSupervision}
+                    title="Encerrar Vínculos de Supervisão em Lote"
+                    description={`Tem certeza que deseja encerrar ${bulkEndingSupervisionLinks.length} vínculo${bulkEndingSupervisionLinks.length > 1 ? 's' : ''} de supervisão? Todos serão marcados como encerrados na data de hoje.`}
+                    confirmText={`Encerrar ${bulkEndingSupervisionLinks.length} vínculo${bulkEndingSupervisionLinks.length > 1 ? 's' : ''}`}
+                    variant="destructive"
+                    loading={bulkEndSupervisionLoading}
+                />
+
+                <BulkConfirmDialog
+                    open={showBulkArchiveSupervisionDialog}
+                    onClose={() => {
+                        setShowBulkArchiveSupervisionDialog(false);
+                        setBulkArchivingSupervisionLinks([]);
+                    }}
+                    onConfirm={handleConfirmBulkArchiveSupervision}
+                    title="Arquivar Vínculos de Supervisão em Lote"
+                    description={`Tem certeza que deseja arquivar ${bulkArchivingSupervisionLinks.length} vínculo${bulkArchivingSupervisionLinks.length > 1 ? 's' : ''} de supervisão? Esta ação pode ser revertida posteriormente.`}
+                    confirmText={`Arquivar ${bulkArchivingSupervisionLinks.length} vínculo${bulkArchivingSupervisionLinks.length > 1 ? 's' : ''}`}
+                    loading={bulkArchiveSupervisionLoading}
                 />
             </div>
         </div>

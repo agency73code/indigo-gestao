@@ -390,6 +390,26 @@ export async function updateLink(payload: LinkTypes.UpdateLink) {
         throw new AppError('LINK_ACTUATION_REQUIRED', 'A área de atuação é obrigatória.', 400);
     }
 
+    // Tratamento para reativação: endDate = null e status = 'active'
+    if (Object.prototype.hasOwnProperty.call(payload, 'endDate')) {
+        if (payload.endDate === null) {
+            // Reativar vínculo
+            data.data_fim = null;
+            data.status = 'active';
+        } else if (payload.endDate) {
+            const parsedEnd = new Date(payload.endDate);
+            if (Number.isNaN(parsedEnd.getTime())) {
+                throw new AppError('LINK_INVALID_END_DATE', 'Data de término inválida.', 400);
+            }
+            data.data_fim = parsedEnd;
+        }
+    }
+
+    // Tratamento do status
+    if (Object.prototype.hasOwnProperty.call(payload, 'status')) {
+        data.status = payload.status as 'active' | 'ended' | 'archived';
+    }
+
     if (Object.keys(data).length === 0) return existing;
 
     const updated = await prisma.terapeuta_cliente.update({
@@ -398,14 +418,12 @@ export async function updateLink(payload: LinkTypes.UpdateLink) {
         select: LINK_SELECT,
     });
 
-    reopenLink(linkId);
-
     return updated;
 }
 
 /**
- * Service responsável por reabrir um vínculo encerrado entre cliente e terapeuta.
- * Apenas vínculos com status='ended' podem ser reativados.
+ * Service responsável por reabrir um vínculo encerrado ou arquivado entre cliente e terapeuta.
+ * Apenas vínculos com status='ended' ou status='archived' podem ser reativados.
  * Ao reabrir, o status é alterado para 'active' e a data de término (data_fim) é limpa.
  * Em caso de erro (vínculo inexistente ou status inválido), lança um AppError apropriado.
  */
@@ -421,10 +439,10 @@ export async function reopenLink(id: number) {
     throw new AppError('LINK_NOT_FOUND', 'Vínculo não encontrado.', 404);
   }
 
-  if (existing.status !== 'ended') {
+  if (existing.status !== 'ended' && existing.status !== 'archived') {
     throw new AppError(
-      'LINK_NOT_ENDED',
-      'Apenas vínculos encerrados podem ser reabertos.',
+      'LINK_NOT_ENDED_OR_ARCHIVED',
+      'Apenas vínculos encerrados ou arquivados podem ser reabertos.',
       400
     );
   }

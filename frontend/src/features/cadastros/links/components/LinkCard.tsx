@@ -1,4 +1,4 @@
-import { MoreVertical, Calendar, UserCheck, User, Plus } from 'lucide-react';
+import { MoreVertical, Calendar, User, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -98,11 +98,13 @@ export default function LinkCard({
         return renderPatientCard(
             patientWithLinks,
             therapists,
-            onEdit,
             onAddTherapist,
-            onTransferResponsible,
             onEndLink,
             onArchive,
+            onReactivate,
+            onBulkEndLinks,
+            onBulkArchiveLinks,
+            onBulkReactivateLinks,
         );
     }
 
@@ -143,17 +145,27 @@ export default function LinkCard({
 function renderPatientCard(
     { patient, links }: { patient: any; links: PatientTherapistLink[] },
     therapists: any[],
-    onEdit: (link: PatientTherapistLink) => void,
     onAddTherapist: (patientId: string) => void,
-    onTransferResponsible: (link: PatientTherapistLink) => void,
     onEndLink: (link: PatientTherapistLink) => void,
     onArchive: (link: PatientTherapistLink) => void,
+    onReactivate: (link: PatientTherapistLink) => void,
+    onBulkEnd?: (links: PatientTherapistLink[]) => void,
+    onBulkArchive?: (links: PatientTherapistLink[]) => void,
+    onBulkReactivate?: (links: PatientTherapistLink[]) => void,
 ) {
     const [imageLoading, setImageLoading] = useState(true);
-    const responsibleLink = links.find(
-        (link) => link.role === 'responsible' && link.status === 'active',
-    );
-    const coTherapistLinks = links.filter((link) => link.role === 'co' && link.status === 'active');
+    
+    // Separar vínculos por status
+    const activeLinks = links.filter((link) => link.status === 'active');
+    const endedLinks = links.filter((link) => link.status === 'ended');
+    const archivedLinks = links.filter((link) => link.status === 'archived');
+
+    const hasActiveLinks = activeLinks.length > 0;
+    const hasEndedLinks = endedLinks.length > 0;
+    const hasArchivedLinks = archivedLinks.length > 0;
+
+    const responsibleLink = activeLinks.find((link) => link.role === 'responsible');
+    const coTherapistLinks = activeLinks.filter((link) => link.role === 'co');
 
     // Data de início do vínculo responsável ou mais antigo
     const startDate =
@@ -162,7 +174,6 @@ function renderPatientCard(
             ?.startDate;
 
     // Status geral do paciente
-    const hasActiveLinks = links.some((link) => link.status === 'active');
     const overallStatus = hasActiveLinks
         ? 'active'
         : links.some((link) => link.status === 'ended')
@@ -223,42 +234,53 @@ function renderPatientCard(
                                     <MoreVertical className="h-4 w-4" />
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48">
-                                <DropdownMenuItem onClick={() => onEdit(links[0])}>
-                                    Editar vínculos
-                                </DropdownMenuItem>
-
-                                {responsibleLink && (
-                                    <DropdownMenuItem
-                                        onClick={() => onTransferResponsible(responsibleLink)}
-                                    >
-                                        Transferir responsável
-                                    </DropdownMenuItem>
-                                )}
-
+                            <DropdownMenuContent align="end" className="w-60">
                                 <DropdownMenuItem onClick={() => onAddTherapist(patient.id)}>
                                     <Plus className="h-4 w-4 mr-2" />
-                                    Adicionar terapeuta
+                                    Adicionar Terapeuta
                                 </DropdownMenuItem>
 
-                                <DropdownMenuSeparator />
-
-                                {hasActiveLinks && (
-                                    <DropdownMenuItem
-                                        onClick={() =>
-                                            links.forEach(
-                                                (link) =>
-                                                    link.status === 'active' && onEndLink(link),
-                                            )
-                                        }
-                                    >
-                                        Encerrar vínculos
-                                    </DropdownMenuItem>
+                                {hasActiveLinks && onBulkEnd && (
+                                    <>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                            onClick={() => onBulkEnd(activeLinks)}
+                                        >
+                                            Encerrar todos os vínculos ativos
+                                        </DropdownMenuItem>
+                                    </>
                                 )}
 
-                                <DropdownMenuItem onClick={() => links.forEach(onArchive)}>
-                                    Arquivar tudo
-                                </DropdownMenuItem>
+                                {hasEndedLinks && (
+                                    <>
+                                        <DropdownMenuSeparator />
+                                        {onBulkReactivate && (
+                                            <DropdownMenuItem
+                                                onClick={() => onBulkReactivate(endedLinks)}
+                                            >
+                                                Reativar todos os vínculos encerrados
+                                            </DropdownMenuItem>
+                                        )}
+                                        {onBulkArchive && (
+                                            <DropdownMenuItem
+                                                onClick={() => onBulkArchive(endedLinks)}
+                                            >
+                                                Arquivar todos os vínculos encerrados
+                                            </DropdownMenuItem>
+                                        )}
+                                    </>
+                                )}
+
+                                {hasArchivedLinks && onBulkReactivate && (
+                                    <>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                            onClick={() => onBulkReactivate(archivedLinks)}
+                                        >
+                                            Reativar todos os vínculos arquivados
+                                        </DropdownMenuItem>
+                                    </>
+                                )}
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
@@ -267,48 +289,94 @@ function renderPatientCard(
 
             <CardContent className="pt-0 flex flex-col h-full">
                 {/* Lista de terapeutas vinculados */}
-                <div className="space-y-3 flex-1">
-                    <h4 className="text-sm font-medium text-foreground">Terapeutas vinculados:</h4>
+                <div className="space-y-4 flex-1">
+                    {/* Terapeutas Ativos */}
+                    {hasActiveLinks && (
+                        <div className="space-y-2">
+                            <h4 className="text-sm font-medium text-foreground">
+                                Terapeuta(s) Ativo(s):
+                            </h4>
+                            <div className="space-y-2">
+                                {responsibleLink && (
+                                    <TherapistChip
+                                        link={responsibleLink}
+                                        therapists={therapists}
+                                        onEndLink={onEndLink}
+                                        onArchive={onArchive}
+                                        onReactivate={onReactivate}
+                                    />
+                                )}
 
-                    <div className="space-y-2">
-                        {responsibleLink && (
-                            <TherapistChip
-                                link={responsibleLink}
-                                therapists={therapists}
-                                onEdit={onEdit}
-                                onTransferResponsible={onTransferResponsible}
-                                onEndLink={onEndLink}
-                                onArchive={onArchive}
-                            />
-                        )}
+                                {coTherapistLinks.map((link) => (
+                                    <TherapistChip
+                                        key={link.id}
+                                        link={link}
+                                        therapists={therapists}
+                                        onEndLink={onEndLink}
+                                        onArchive={onArchive}
+                                        onReactivate={onReactivate}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
-                        {coTherapistLinks.map((link) => (
-                            <TherapistChip
-                                key={link.id}
-                                link={link}
-                                therapists={therapists}
-                                onEdit={onEdit}
-                                onTransferResponsible={onTransferResponsible}
-                                onEndLink={onEndLink}
-                                onArchive={onArchive}
-                            />
-                        ))}
+                    {/* Terapeutas Encerrados */}
+                    {hasEndedLinks && (
+                        <div className="space-y-2 opacity-70">
+                            <h4 className="text-xs font-medium text-muted-foreground">
+                                Terapeuta(s) Encerrado(s):
+                            </h4>
+                            <div className="space-y-2">
+                                {endedLinks.map((link) => (
+                                    <TherapistChip
+                                        key={link.id}
+                                        link={link}
+                                        therapists={therapists}
+                                        onEndLink={onEndLink}
+                                        onArchive={onArchive}
+                                        onReactivate={onReactivate}
+                                        isEnded
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
-                        {!responsibleLink && coTherapistLinks.length === 0 && (
-                            <p className="text-sm text-muted-foreground italic">
-                                Nenhum terapeuta ativo
-                            </p>
-                        )}
-                    </div>
+                    {/* Terapeutas Arquivados */}
+                    {hasArchivedLinks && (
+                        <div className="space-y-2 opacity-50">
+                            <h4 className="text-xs font-medium text-muted-foreground">
+                                Terapeuta(s) Arquivado(s):
+                            </h4>
+                            <div className="space-y-2">
+                                {archivedLinks.map((link) => (
+                                    <TherapistChip
+                                        key={link.id}
+                                        link={link}
+                                        therapists={therapists}
+                                        onEndLink={onEndLink}
+                                        onArchive={onArchive}
+                                        onReactivate={onReactivate}
+                                        isArchived
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Nenhum terapeuta */}
+                    {!hasActiveLinks && !hasEndedLinks && !hasArchivedLinks && (
+                        <p className="text-sm text-muted-foreground italic">
+                            Nenhum terapeuta vinculado
+                        </p>
+                    )}
                 </div>
 
                 {/* Metadados - Fixo na parte inferior */}
                 {startDate && (
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground pt-4 mt-4 border-t">
-                        <div className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            <span>Desde {formatDate(startDate)}</span>
-                        </div>
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground pt-2 border-t mt-4">
+                        <span>{links.length} terapeuta(s)</span>
                         <span>•</span>
                         <span className="capitalize">{statusBadge.label}</span>
                     </div>
@@ -322,17 +390,19 @@ function renderPatientCard(
 function TherapistChip({
     link,
     therapists,
-    onEdit,
-    onTransferResponsible,
     onEndLink,
     onArchive,
+    onReactivate,
+    isEnded = false,
+    isArchived = false,
 }: {
     link: PatientTherapistLink;
     therapists: any[];
-    onEdit: (link: PatientTherapistLink) => void;
-    onTransferResponsible: (link: PatientTherapistLink) => void;
     onEndLink: (link: PatientTherapistLink) => void;
     onArchive: (link: PatientTherapistLink) => void;
+    onReactivate: (link: PatientTherapistLink) => void;
+    isEnded?: boolean;
+    isArchived?: boolean;
 }) {
     const therapist = therapists.find((t) => t.id === link.therapistId);
     const therapistName = therapist?.nome || 'Carregando...';
@@ -340,19 +410,56 @@ function TherapistChip({
     const isResponsible = therapistCargo ? isSupervisorRole(therapistCargo) : link.role === 'responsible';
 
     return (
-        <div className="grid grid-cols-[200px_1fr_auto] items-center gap-4 p-3 bg-muted/30 rounded-[5px]">
-            {/* Coluna 1: Badge de Atuação */}
-            <Badge
-                variant={isResponsible ? 'default' : 'secondary'}
-                className="text-xs py-0.5 flex items-center p-1 gap-1 w-fit"
-            >
-                {isResponsible ? <UserCheck className="h-3 w-3" /> : <User className="h-3 w-3" />}
-                {link.actuationArea || 'Atuação não definida'}
-            </Badge>
+        <div className={`grid grid-cols-[200px_1fr_auto] items-center gap-4 p-3 rounded-[5px] ${
+            isArchived ? 'bg-muted/10' : isEnded ? 'bg-muted/20' : 'bg-muted/30'
+        }`}>
+            {/* Coluna 1: Badges de Atuação e Status */}
+            <div className="flex flex-wrap gap-1">
+                {/* Badge de Área de Atuação - sempre visível para vínculos ativos */}
+                {!isEnded && !isArchived && (
+                    <Badge
+                        variant={isResponsible ? 'default' : 'secondary'}
+                        className="text-xs py-0.5 flex items-center p-1 gap-1 w-fit"
+                    >
+                        <User className="h-3 w-3" />
+                        {link.actuationArea || 'Atuação não definida'}
+                    </Badge>
+                )}
+                
+                {/* Badge de Data de Início - para vínculos ativos */}
+                {!isEnded && !isArchived && link.startDate && (
+                    <Badge
+                        variant="secondary"
+                        className="text-xs py-0.5 px-1.5"
+                    >
+                        Início {formatDate(link.startDate)}
+                    </Badge>
+                )}
+
+                {/* Badge de Encerramento */}
+                {isEnded && link.endDate && (
+                    <Badge
+                        variant="destructive"
+                        className="text-xs py-0.5 px-1.5"
+                    >
+                        Encerrado {formatDate(link.endDate)}
+                    </Badge>
+                )}
+
+                {/* Badge de Arquivado */}
+                {isArchived && (
+                    <Badge
+                        variant="outline"
+                        className="text-xs py-0.5 px-1.5"
+                    >
+                        Arquivado
+                    </Badge>
+                )}
+            </div>
 
             {/* Coluna 2: Terapeuta (Avatar + Nome + Cargo) */}
             <div className="flex items-center gap-3">
-                <Avatar className="h-8 w-8">
+                <Avatar className={`h-8 w-8 ${isEnded || isArchived ? 'opacity-60' : ''}`}>
                     <AvatarImage 
                         src={therapist?.avatarUrl || undefined } 
                         alt={therapist?.nome || therapistName}
@@ -363,7 +470,9 @@ function TherapistChip({
                     </AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col">
-                    <span className="text-sm font-medium">{therapistName}</span>
+                    <span className={`text-sm font-medium ${isEnded || isArchived ? 'line-through text-muted-foreground' : ''}`}>
+                        {therapistName}
+                    </span>
                     <span className="text-xs text-muted-foreground">
                         {therapistCargo || 'Cargo não definido'}
                     </span>
@@ -383,25 +492,24 @@ function TherapistChip({
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-40">
-                    <DropdownMenuItem onClick={() => onEdit(link)}>Editar</DropdownMenuItem>
-
-                    {link.status === 'active' && (
+                    {link.status === 'active' ? (
+                        <DropdownMenuItem onClick={() => onEndLink(link)}>
+                            Encerrar
+                        </DropdownMenuItem>
+                    ) : link.status === 'ended' ? (
                         <>
-                            {isResponsible && (
-                                <DropdownMenuItem onClick={() => onTransferResponsible(link)}>
-                                    Transferir
-                                </DropdownMenuItem>
-                            )}
-
-                            <DropdownMenuSeparator />
-
-                            <DropdownMenuItem onClick={() => onEndLink(link)}>
-                                Encerrar
+                            <DropdownMenuItem onClick={() => onReactivate(link)}>
+                                Reativar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => onArchive(link)}>
+                                Arquivar
                             </DropdownMenuItem>
                         </>
+                    ) : (
+                        <DropdownMenuItem onClick={() => onReactivate(link)}>
+                            Reativar
+                        </DropdownMenuItem>
                     )}
-
-                    <DropdownMenuItem onClick={() => onArchive(link)}>Arquivar</DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
         </div>
@@ -680,6 +788,14 @@ function PatientChip({
                         className="text-xs py-0.5 px-1.5"
                     >
                         Encerrado {formatDate(link.endDate)}
+                    </Badge>
+                )}
+                {!isEnded && !isArchived && link.startDate && (
+                    <Badge
+                        variant="secondary"
+                        className="text-xs py-0.5 px-1.5"
+                    >
+                        Início {formatDate(link.startDate)}
                     </Badge>
                 )}
                 {isArchived && (
@@ -1201,6 +1317,14 @@ function SupervisedTherapistChip({
                         className="text-xs py-0.5 flex items-center p-1 gap-1 w-fit opacity-80"
                     >
                         Encerrado {formatDate(link.endDate)}
+                    </Badge>
+                )}
+                {!isEnded && !isArchived && link.startDate && (
+                    <Badge
+                        variant="secondary"
+                        className="text-xs py-0.5 flex items-center p-1 gap-1 w-fit"
+                    >
+                        Início {formatDate(link.startDate)}
                     </Badge>
                 )}
                 {isArchived && (

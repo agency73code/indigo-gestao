@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import { searchTherapists } from '../services/links.service';
-import { Search, User, Users, Calendar as CalendarIcon, Loader2 } from 'lucide-react';
+import { Search, User, Users, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { DateField } from '@/common/components/layout/DateField';
 import {
     Select,
     SelectContent,
@@ -23,8 +23,6 @@ import {
     DialogTitle,
     DialogFooter,
 } from '@/components/ui/dialog';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import type {
     SupervisionLinkFormModalProps,
     Terapeuta,
@@ -32,11 +30,6 @@ import type {
     UpdateSupervisionLinkInput,
     TerapeutaAvatar,
 } from '../types';
-
-function parseLocalDate(dateString: string) {
-  const [year, month, day] = dateString.split('-').map(Number);
-  return new Date(year, month - 1, day);
-}
 
 export default function SupervisionLinkFormModal({
     open,
@@ -50,7 +43,7 @@ export default function SupervisionLinkFormModal({
     // Estados do formulário
     const [supervisorId, setSupervisorId] = useState<string>('');
     const [supervisedTherapistId, setSupervisedTherapistId] = useState<string>('');
-    const [startDate, setStartDate] = useState<Date>();
+    const [startDate, setStartDate] = useState<string>('');
     const [notes, setNotes] = useState('');
     const [supervisionScope, setSupervisionScope] = useState<'direct' | 'team'>('direct');
 
@@ -61,7 +54,6 @@ export default function SupervisionLinkFormModal({
     const [selectedTherapist, setSelectedTherapist] = useState<TerapeutaAvatar | null>(null);
     const [showSupervisorSearch, setShowSupervisorSearch] = useState(false);
     const [showTherapistSearch, setShowTherapistSearch] = useState(false);
-    const [showCalendar, setShowCalendar] = useState(false);
     const [supervisorResults, setSupervisorResults] = useState<Terapeuta[]>([]);
     const [therapistResults, setTherapistResults] = useState<Terapeuta[]>([]);
 
@@ -76,7 +68,7 @@ export default function SupervisionLinkFormModal({
         if (open && initialData && isEdit) {
             setSupervisorId(initialData.supervisorId);
             setSupervisedTherapistId(initialData.supervisedTherapistId);
-            setStartDate(parseLocalDate(initialData.startDate));
+            setStartDate(initialData.startDate);
             setNotes(initialData.notes || '');
             setSupervisionScope((initialData as any).supervisionScope || 'direct');
 
@@ -96,7 +88,7 @@ export default function SupervisionLinkFormModal({
             // Modo criação - resetar campos
             setSupervisorId(preSelectedSupervisorId || '');
             setSupervisedTherapistId('');
-            setStartDate(new Date());
+            setStartDate(format(new Date(), 'yyyy-MM-dd'));
             setNotes('');
             setSupervisionScope('direct');
             setSelectedTherapist(null);
@@ -171,14 +163,10 @@ export default function SupervisionLinkFormModal({
             return;
         }
 
-        const formattedStartDate = startDate
-            ? format(startDate, 'yyyy-MM-dd')
-            : new Date().toISOString().split('T')[0];
-
         if (isEdit && initialData?.id) {
             const updateData: UpdateSupervisionLinkInput = {
                 id: initialData.id,
-                startDate: formattedStartDate,
+                startDate: startDate,
                 notes: notes.trim() || null,
                 supervisionScope,
             };
@@ -187,7 +175,7 @@ export default function SupervisionLinkFormModal({
             const createData: CreateSupervisionLinkInput = {
                 supervisorId,
                 supervisedTherapistId,
-                startDate: formattedStartDate,
+                startDate: startDate,
                 notes: notes.trim() || null,
                 supervisionScope,
             };
@@ -352,43 +340,17 @@ export default function SupervisionLinkFormModal({
                     {/* Data de Início */}
                     <div className="space-y-2">
                         <Label className="text-sm font-medium">Data de Início *</Label>
-                        <Popover open={showCalendar} onOpenChange={setShowCalendar}>
-                            <PopoverTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    className={cn(
-                                        'w-full justify-start text-left font-normal',
-                                        !startDate && 'text-muted-foreground',
-                                        errors.startDate && 'border-destructive'
-                                    )}
-                                >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {startDate ? (
-                                        format(startDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
-                                    ) : (
-                                        <span>Selecione a data</span>
-                                    )}
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar
-                                    mode="single"
-                                    selected={startDate}
-                                    onSelect={(date) => {
-                                        setStartDate(date);
-                                        setShowCalendar(false);
-                                        if (errors.startDate) {
-                                            setErrors((prev) => ({ ...prev, startDate: '' }));
-                                        }
-                                    }}
-                                    locale={ptBR}
-                                    initialFocus
-                                />
-                            </PopoverContent>
-                        </Popover>
-                        {errors.startDate && (
-                            <p className="text-sm text-destructive">{errors.startDate}</p>
-                        )}
+                        <DateField
+                            value={startDate}
+                            onChange={(iso) => {
+                                setStartDate(iso);
+                                if (errors.startDate) {
+                                    setErrors((prev) => ({ ...prev, startDate: '' }));
+                                }
+                            }}
+                            placeholder="Selecione a data"
+                            error={errors.startDate}
+                        />
                     </div>
 
                     {/* Escopo de Supervisão */}

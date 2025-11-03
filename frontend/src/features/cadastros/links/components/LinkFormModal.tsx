@@ -9,13 +9,11 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { CalendarIcon, User, Users, Search, Loader2 } from 'lucide-react';
+import { User, Users, Search, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
+import { DateField } from '@/common/components/layout/DateField';
 import { Combobox } from '@/ui/combobox';
 import type { CreateLinkInput, UpdateLinkInput, LinkFormModalProps } from '../types';
 import type { Paciente, Terapeuta } from '../../types/cadastros.types';
@@ -79,7 +77,7 @@ export default function LinkFormModal({
     const [therapistId, setTherapistId] = useState<string>('');
     const [actuationArea, setActuationArea] = useState<string>('');
     const [actuationOptions, setActuationOptions] = useState<ComboboxOption[]>([]);
-    const [startDate, setStartDate] = useState<Date>();
+    const [startDate, setStartDate] = useState<string>('');
 
     // Estados para busca de pacientes/terapeutas
     const [patientSearch, setPatientSearch] = useState('');
@@ -90,7 +88,6 @@ export default function LinkFormModal({
     const [selectedTherapist, setSelectedTherapist] = useState<Terapeuta | null>(null);
     const [showPatientSearch, setShowPatientSearch] = useState(false);
     const [showTherapistSearch, setShowTherapistSearch] = useState(false);
-    const [showCalendar, setShowCalendar] = useState(false);
 
     // Estados de validação
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -106,7 +103,7 @@ export default function LinkFormModal({
             setPatientId(initialData.patientId);
             setTherapistId(initialData.therapistId);
             setActuationArea(initialData.actuationArea || '');
-            setStartDate(new Date(initialData.startDate));
+            setStartDate(initialData.startDate);
 
             // Buscar dados completos do paciente e terapeuta
             const patient = patients.find((p) => p.id === initialData.patientId);
@@ -125,7 +122,7 @@ export default function LinkFormModal({
             setPatientId(initialData.patientId);
             setTherapistId('');
             setActuationArea('');
-            setStartDate(new Date()); // Data atual como padrão
+            setStartDate(format(new Date(), 'yyyy-MM-dd')); // Data atual como padrão
             setSelectedTherapist(null);
             setTherapistSearch('');
             setErrors({});
@@ -141,7 +138,7 @@ export default function LinkFormModal({
             setTherapistId(initialData.therapistId);
             setPatientId('');
             setActuationArea('');
-            setStartDate(new Date()); // Data atual como padrão
+            setStartDate(format(new Date(), 'yyyy-MM-dd')); // Data atual como padrão
             setSelectedPatient(null);
             setPatientSearch('');
             setErrors({});
@@ -157,7 +154,7 @@ export default function LinkFormModal({
             setPatientId('');
             setTherapistId('');
             setActuationArea('');
-            setStartDate(new Date()); // Data atual como padrão
+            setStartDate(format(new Date(), 'yyyy-MM-dd')); // Data atual como padrão
             setSelectedPatient(null);
             setSelectedTherapist(null);
             setPatientSearch('');
@@ -279,7 +276,7 @@ export default function LinkFormModal({
                 patientId: patientId,
                 therapistId: therapistId,
                 role,
-                startDate: startDate!.toISOString(),
+                startDate: startDate,
                 actuationArea: actuationArea,
             };
             onSubmit(createData);
@@ -287,7 +284,7 @@ export default function LinkFormModal({
             const updateData: UpdateLinkInput = {
                 id: initialData!.id,
                 role,
-                startDate: startDate!.toISOString(),
+                startDate: startDate,
                 actuationArea: actuationArea,
             };
             onSubmit(updateData);
@@ -491,46 +488,18 @@ export default function LinkFormModal({
                     {/* Data de Início */}
                     <div className="space-y-2">
                         <Label className="text-sm font-medium">Data de Início *</Label>
-                        <Popover open={showCalendar} onOpenChange={setShowCalendar}>
-                            <PopoverTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    className={cn(
-                                        'w-full justify-start text-left font-normal',
-                                        !startDate && 'text-muted-foreground',
-                                        errors.startDate && 'border-destructive',
-                                    )}
-                                >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {startDate
-                                        ? format(startDate, "dd 'de' MMMM 'de' yyyy", {
-                                              locale: ptBR,
-                                          })
-                                        : 'Selecione uma data'}
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="p-0" align="start">
-                                <Calendar
-                                    mode="single"
-                                    selected={startDate}
-                                    onSelect={(date) => {
-                                        setStartDate(date);
-                                        setShowCalendar(false);
-
-                                        // Limpar erro se existir
-                                        if (errors.startDate) {
-                                            setErrors((prev) => ({ ...prev, startDate: '' }));
-                                        }
-                                    }}
-                                    locale={ptBR}
-                                    toDate={new Date(new Date().getFullYear() + 10, 11, 31)}
-                                    initialFocus
-                                />
-                            </PopoverContent>
-                        </Popover>
-                        {errors.startDate && (
-                            <p className="text-sm text-destructive">{errors.startDate}</p>
-                        )}
+                        <DateField
+                            value={startDate}
+                            onChange={(iso) => {
+                                setStartDate(iso);
+                                if (errors.startDate) {
+                                    setErrors((prev) => ({ ...prev, startDate: '' }));
+                                }
+                            }}
+                            placeholder="Selecione uma data"
+                            error={errors.startDate}
+                            maxDate={new Date(new Date().getFullYear() + 10, 11, 31)}
+                        />
                     </div>
                 </div>
 
