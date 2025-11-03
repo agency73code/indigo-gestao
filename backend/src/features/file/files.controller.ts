@@ -3,6 +3,7 @@ import * as FilesService from './files.service.js';
 import { collectIncomingFiles } from './utils/collectIncomingFiles.js';
 import { getFileStream } from './drive/viewFile.js';
 import { createFolder } from './drive/createFolder.js';
+import { normalizedBirthDate } from './types/files.normalizer.js';
 
 /**
  * Controller responsável pelos uploads de arquivos.
@@ -21,16 +22,18 @@ export async function uploadFile(req: Request, res: Response) {
             return res.status(400).json({ error: 'Campos obrigatórios ausentes.' });
         }
 
+        const BirthDate = normalizedBirthDate(birthDate);
+
         const availableFiles = collectIncomingFiles(req);
         if (availableFiles.length === 0) {
             return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
         }
 
         const rootFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID!;
-        const folderStructure = await createFolder(ownerType, fullName, birthDate, rootFolderId);
+        const folderStructure = await createFolder(ownerType, fullName, BirthDate, rootFolderId);
 
         const uploadPromises = availableFiles.map(({ file, documentType }) => {
-            const tipoDocumento = documentType || file.fieldname || 'arquivo';
+            const tipoDocumento = req.body.documentType || documentType || file.fieldname || 'arquivo';
             return FilesService.uploadAndPersistFile({
                 ownerType,
                 ownerId,
@@ -89,7 +92,7 @@ export async function viewFile(req: Request, res: Response) {
         res.setHeader('Content-Type', metadata.mimeType);
         res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
         res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
-        res.setHeader('Cache-Control', 'public, max-age=86400');
+        res.setHeader('Cache-Control', 'public, must-revalidate, max-age=0');
 
         // Envia o stream diretamente
         stream.on('error', (err: unknown) => {

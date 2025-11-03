@@ -45,8 +45,8 @@ interface CropState {
 export default forwardRef<ProfilePhotoFieldSimpleRef, ProfilePhotoFieldSimpleProps>(function ProfilePhotoFieldSimple(
   {
     userId,
-    fullName,   // veio da sua branch ✅
-    birthDate,  // veio da sua branch ✅
+    fullName,
+    birthDate,
     value,
     onChange,
     onUploaded,
@@ -205,24 +205,6 @@ export default forwardRef<ProfilePhotoFieldSimpleRef, ProfilePhotoFieldSimplePro
             // O upload será feito quando o formulário pai for salvo
             onChange?.(croppedFile);
 
-            // Fazer upload em background (não bloqueia a UI)
-            void (async () => {
-            try {
-                const profileDto = await uploadProfilePhoto(
-                    croppedBlob,
-                    userId,
-                    fullName,
-                    birthDate
-                );
-                if (profileDto) {
-                    onUploaded?.(profileDto);
-                }
-            } catch (uploadError) {
-                console.error('Upload error:', uploadError);
-                toast.error('Erro no upload, mas foto foi processada localmente');
-            }
-            })();
-
             setIsModalOpen(false);
             setImageSrc('');
         } catch (error) {
@@ -233,12 +215,7 @@ export default forwardRef<ProfilePhotoFieldSimpleRef, ProfilePhotoFieldSimplePro
         imageSrc,
         cropState.croppedAreaPixels,
         orientation,
-        userId,
-        fullName,
-        birthDate,
-        uploadProfilePhoto,
         onChange,
-        onUploaded,
     ]);
 
     const handleRemove = useCallback(() => {

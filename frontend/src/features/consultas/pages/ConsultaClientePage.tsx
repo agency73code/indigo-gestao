@@ -342,6 +342,8 @@ export default function ConsultaClientePage() {
                                 files={files}
                                 ownerType="cliente"
                                 ownerId={clienteId}
+                                fullName={clienteData.nome!}
+                                birthDate={clienteData.dataNascimento!}
                                 onUploadSuccess={loadFiles}
                                 onDeleteSuccess={loadFiles}
                             />

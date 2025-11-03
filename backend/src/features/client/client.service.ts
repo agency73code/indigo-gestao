@@ -138,14 +138,27 @@ export async function create(dto: ClientType.Client) {
           telefone: dto.dadosEscola.telefone ?? null,
           email: dto.dadosEscola.email ?? null,
           endereco: {
-            create: {
-              cep: dto.dadosEscola.endereco.cep ?? null,
-              rua: dto.dadosEscola.endereco.logradouro ?? null,
-              numero: dto.dadosEscola.endereco.numero ?? null,
-              bairro: dto.dadosEscola.endereco.bairro ?? null,
-              cidade: dto.dadosEscola.endereco.cidade ?? null,
-              uf: dto.dadosEscola.endereco.uf ?? null,
-              complemento: dto.dadosEscola.endereco.complemento ?? '',
+            connectOrCreate: {
+              where: {
+                unique_endereco: {
+                  cep: dto.dadosEscola.endereco.cep ?? '',
+                  rua: dto.dadosEscola.endereco.logradouro ?? '',
+                  numero: dto.dadosEscola.endereco.numero ?? '',
+                  bairro: dto.dadosEscola.endereco.bairro ?? '',
+                  cidade: dto.dadosEscola.endereco.cidade ?? '',
+                  uf: dto.dadosEscola.endereco.uf ?? '',
+                  complemento: dto.dadosEscola.endereco.complemento ?? '',
+                },
+              },
+              create: {
+                cep: dto.dadosEscola.endereco.cep ?? '',
+                rua: dto.dadosEscola.endereco.logradouro ?? '',
+                numero: dto.dadosEscola.endereco.numero ?? '',
+                bairro: dto.dadosEscola.endereco.bairro ?? '',
+                cidade: dto.dadosEscola.endereco.cidade ?? '',
+                uf: dto.dadosEscola.endereco.uf ?? '',
+                complemento: dto.dadosEscola.endereco.complemento ?? '',
+              },
             },
           },
 

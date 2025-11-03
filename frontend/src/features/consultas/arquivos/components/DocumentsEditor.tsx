@@ -39,6 +39,8 @@ interface DocumentsEditorProps {
   files: FileMeta[];
   ownerType: "cliente" | "terapeuta";
   ownerId: string;
+  fullName: string;
+  birthDate: string;
   onUploadSuccess: () => void;
   onDeleteSuccess: () => void;
 }
@@ -47,6 +49,8 @@ export function DocumentsEditor({
   files,
   ownerType,
   ownerId,
+  fullName,
+  birthDate,
   onUploadSuccess,
   onDeleteSuccess,
 }: DocumentsEditorProps) {
@@ -84,7 +88,7 @@ export function DocumentsEditor({
     );
 
     try {
-      await uploadFile({ ownerType, ownerId, tipo_documento: tipoDoc, file });
+      await uploadFile({ ownerType, ownerId, fullName, birthDate, tipo_documento: tipoDoc, file });
 
       window.dispatchEvent(
         new CustomEvent("consulta:documents:upload:success", {
@@ -188,7 +192,7 @@ export function DocumentsEditor({
     );
 
     try {
-      await uploadFile({ ownerType, ownerId, tipo_documento: tipoDoc, file });
+      await uploadFile({ ownerType, ownerId, fullName, birthDate, tipo_documento: tipoDoc, file });
 
       window.dispatchEvent(
         new CustomEvent("consulta:documents:upload:success", {
