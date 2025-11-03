@@ -556,6 +556,23 @@ function processReportsLocally(reports: SavedReport[], filters?: ReportListFilte
   
   let filtered = [...reports];
   
+  // 🔥 POPULA patient e therapist nos relatórios (se ainda não estiverem)
+  filtered = filtered.map(report => {
+    if (!report.patient) {
+      const patient = mockPatients.find(p => p.id === report.patientId);
+      if (patient) {
+        return { ...report, patient };
+      }
+    }
+    if (!report.therapist) {
+      const therapist = mockTherapists.find(t => t.id === report.therapistId);
+      if (therapist) {
+        return { ...report, therapist };
+      }
+    }
+    return report;
+  });
+  
   if (!filters) {
     // Sem filtros, apenas pagina
     const total = filtered.length;

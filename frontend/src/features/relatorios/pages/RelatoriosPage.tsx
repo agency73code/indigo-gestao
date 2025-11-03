@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ChevronLeft, Plus, FileText, Search, User } from 'lucide-react';
+import { ChevronLeft, Plus, FileText, Search, ChevronDown, ChevronRight, Folder, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { toast } from 'sonner';
 import type {
   SavedReport,
@@ -18,6 +19,16 @@ import {
   getAllTherapists,
 } from '../services/relatorios.service';
 
+// Tipo para controlar estados de expansão
+type ExpansionState = {
+  [patientId: string]: {
+    isOpen: boolean;
+    folders: {
+      [monthKey: string]: boolean;
+    };
+  };
+};
+
 export function RelatoriosPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -28,6 +39,9 @@ export function RelatoriosPage() {
   const [patients, setPatients] = useState<Paciente[]>([]);
   const [therapists, setTherapists] = useState<Terapeuta[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Estado para controlar accordion de clientes e pastas
+  const [expansionState, setExpansionState] = useState<ExpansionState>({});
 
   // 🔄 Lê filtros da URL
   const filters: ReportListFilters = {
@@ -92,7 +106,125 @@ export function RelatoriosPage() {
     navigate(`/app/relatorios/${report.id}`);
   };
 
-  // Agrupa relatórios por cliente
+  // Função para toggle do accordion de cliente
+  const togglePatient = (patientId: string) => {
+    setExpansionState(prev => ({
+      ...prev,
+      [patientId]: {
+        ...prev[patientId],
+        isOpen: !prev[patientId]?.isOpen,
+        folders: prev[patientId]?.folders || {},
+      }
+    }));
+  };
+
+  // Função para toggle de pasta de mês
+  const toggleFolder = (patientId: string, monthKey: string) => {
+    setExpansionState(prev => ({
+      ...prev,
+      [patientId]: {
+        ...prev[patientId],
+        isOpen: prev[patientId]?.isOpen ?? true,
+        folders: {
+          ...(prev[patientId]?.folders || {}),
+          [monthKey]: !prev[patientId]?.folders?.[monthKey],
+        }
+      }
+    }));
+  };
+
+  // Função para obter iniciais do nome
+  const getInitials = (nome: string) => {
+    return nome
+      .split(' ')
+      .map(n => n[0])
+      .slice(0, 2)
+      .join('')
+      .toUpperCase();
+  };
+
+  // Função para calcular idade a partir da data de nascimento
+  const calculateAge = (birthDate: string | null | undefined): number | null => {
+    if (!birthDate) return null;
+    
+    const birth = new Date(birthDate);
+    const today = new Date();
+    
+    // Verifica se a data é válida
+    if (isNaN(birth.getTime())) return null;
+    
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+
+    return age;
+  };
+
+  // Função para obter informações do paciente (com fallbacks)
+  const getPatientInfo = (patientId: string, firstReport?: SavedReport) => {
+    // 1º: Tenta usar patient do relatório (se populado pelo backend)
+    if (firstReport?.patient) {
+      return {
+        nome: firstReport.patient.nome || 'Paciente',
+        cpf: firstReport.patient.cpf,
+        avatarUrl: (firstReport.patient as any)?.avatarUrl,
+        dataNascimento: firstReport.patient.dataNascimento,
+      };
+    }
+
+    // 2º: Busca no array de patients carregados
+    const patient = patients.find(p => p.id === patientId);
+    if (patient) {
+      return {
+        nome: patient.nome || 'Paciente',
+        cpf: patient.cpf,
+        avatarUrl: (patient as any)?.avatarUrl,
+        dataNascimento: patient.dataNascimento,
+      };
+    }
+
+    // 3º: Tenta extrair nome do título do primeiro relatório
+    if (firstReport?.title) {
+      // Padrão comum: "Relatório X - Mês Ano - Nome do Cliente"
+      const titleParts = firstReport.title.split(' - ');
+      if (titleParts.length >= 2) {
+        const possibleName = titleParts[titleParts.length - 1].trim();
+        if (possibleName && possibleName.length > 2) {
+          return {
+            nome: possibleName,
+            cpf: undefined,
+            avatarUrl: undefined,
+            dataNascimento: undefined,
+          };
+        }
+      }
+    }
+
+    // 4º: Fallback final
+    return {
+      nome: 'Paciente',
+      cpf: undefined,
+      avatarUrl: undefined,
+      dataNascimento: undefined,
+    };
+  };
+
+  // Função para formatar mês/ano
+  const getMonthYearLabel = (date: Date) => {
+    return date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  };
+
+  // Função para obter chave do mês (YYYY-MM)
+  const getMonthKey = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    return `${year}-${month}`;
+  };
+
+  // Agrupa relatórios por cliente e depois por mês
   const groupedByPatient = reports.reduce((acc, report) => {
     const patientId = report.patientId;
     if (!acc[patientId]) {
@@ -101,6 +233,29 @@ export function RelatoriosPage() {
     acc[patientId].push(report);
     return acc;
   }, {} as Record<string, SavedReport[]>);
+
+  // Para cada cliente, agrupa relatórios por mês
+  const groupedByPatientAndMonth = Object.entries(groupedByPatient).reduce((acc, [patientId, patientReports]) => {
+    const reportsByMonth: Record<string, SavedReport[]> = {};
+    
+    patientReports.forEach(report => {
+      const reportDate = new Date(report.createdAt);
+      const monthKey = getMonthKey(reportDate);
+      
+      if (!reportsByMonth[monthKey]) {
+        reportsByMonth[monthKey] = [];
+      }
+      reportsByMonth[monthKey].push(report);
+    });
+
+    // Ordena meses do mais recente para o mais antigo
+    const sortedMonths = Object.entries(reportsByMonth).sort((a, b) => {
+      return b[0].localeCompare(a[0]); // Ordem decrescente (mais recente primeiro)
+    });
+
+    acc[patientId] = sortedMonths;
+    return acc;
+  }, {} as Record<string, [string, SavedReport[]][]>);
 
   return (
     <div className="min-h-screen bg-background">
@@ -175,7 +330,7 @@ export function RelatoriosPage() {
           </Button>
         </div>
 
-        {/* Lista de relatórios agrupados por cliente */}
+        {/* Lista de relatórios agrupados por cliente e mês */}
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent" />
@@ -189,98 +344,168 @@ export function RelatoriosPage() {
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {Object.entries(groupedByPatient).map(([patientId, patientReports]) => {
-              const patient = patients.find(p => p.id === patientId);
+          <div className="space-y-3">
+            {Object.entries(groupedByPatientAndMonth).map(([patientId, monthsData]) => {
+              // Pega o primeiro relatório de qualquer mês para extrair dados do paciente
+              const firstReport = monthsData[0]?.[1]?.[0]; // monthsData é array de [monthKey, reports[]]
+              const patientInfo = getPatientInfo(patientId, firstReport);
+              const totalReports = monthsData.reduce((sum, [, reports]) => sum + reports.length, 0);
+              const isPatientOpen = expansionState[patientId]?.isOpen ?? false;
               
-              // Pega as iniciais do nome do cliente
-              const getInitials = (nome: string) => {
-                return nome
-                  .split(' ')
-                  .map(n => n[0])
-                  .slice(0, 2)
-                  .join('')
-                  .toUpperCase();
-              };
+              // Debug - remover depois
+              if (firstReport) {
+                console.log('👤 Patient info para', patientId, ':', {
+                  nome: patientInfo.nome,
+                  dataNascimento: patientInfo.dataNascimento,
+                  idade: patientInfo.dataNascimento ? calculateAge(patientInfo.dataNascimento) : null,
+                  temPatientNoReport: !!firstReport.patient,
+                });
+              }
               
               return (
-                <div key={patientId} className="bg-card rounded-lg border p-4">
-                  {/* Cabeçalho do grupo com foto do cliente */}
-                  <div className="flex items-center gap-3 mb-4 pb-3 border-b">
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src={(patient as any)?.avatarUrl || ''} alt={patient?.nome || 'Cliente'} />
-                      <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                        {patient?.nome ? getInitials(patient.nome) : <User className="h-5 w-5" />}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold">
-                        {patient?.nome || 'Cliente não encontrado'}
-                      </h3>
-                      {patient?.cpf && (
-                        <p className="text-sm text-muted-foreground">
-                          CPF: {patient.cpf}
-                        </p>
-                      )}
-                    </div>
-                    <span className="text-sm text-muted-foreground bg-muted px-3 py-1 rounded-full">
-                      {patientReports.length} {patientReports.length === 1 ? 'relatório' : 'relatórios'}
-                    </span>
-                  </div>
-                  
-                  {/* Lista de relatórios do cliente */}
-                  <div className="space-y-2">
-                    {patientReports.map((report) => {
-                      const therapist = therapists.find(t => t.id === report.therapistId);
+                <Collapsible
+                  key={patientId}
+                  open={isPatientOpen}
+                  onOpenChange={() => togglePatient(patientId)}
+                  className="bg-card rounded-[5px] border overflow-hidden"
+                >
+                  {/* Cabeçalho do Cliente (sempre visível) */}
+                  <CollapsibleTrigger className="w-full">
+                    <div className="flex items-center gap-3 p-4 hover:bg-muted/30 transition-colors">
+                      <div className="shrink-0">
+                        {isPatientOpen ? (
+                          <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                        ) : (
+                          <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                        )}
+                      </div>
                       
-                      return (
-                        <div
-                          key={report.id}
-                          className="flex items-center justify-between p-3 bg-muted/30 rounded-md hover:bg-muted/50 transition-colors cursor-pointer"
-                          onClick={() => handleViewReport(report)}
-                        >
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <FileText className="h-4 w-4 text-primary shrink-0" />
-                              <p className="font-medium truncate">{report.title}</p>
-                            </div>
-                            <div className="flex items-center gap-2 mt-1">
-                              <p className="text-sm text-muted-foreground">
-                                {therapist?.nome || 'Terapeuta não encontrado'}
-                              </p>
-                              <span className="text-muted-foreground">•</span>
-                              <p className="text-sm text-muted-foreground">
-                                {new Date(report.createdAt).toLocaleDateString('pt-BR', {
-                                  day: '2-digit',
-                                  month: 'short',
-                                  year: 'numeric'
+                      <Avatar className="h-12 w-12 shrink-0">
+                        <AvatarImage src={patientInfo.avatarUrl || ''} alt={patientInfo.nome} />
+                        <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                          {getInitials(patientInfo.nome)}
+                        </AvatarFallback>
+                      </Avatar>
+                      
+                      <div className="flex-1 text-left min-w-0">
+                        <h3 className="text-base font-semibold truncate" style={{ fontFamily: 'Sora, sans-serif' }}>
+                          {patientInfo.nome}
+                        </h3>
+                        {patientInfo.dataNascimento && (
+                          <p className="text-sm text-muted-foreground">
+                            {calculateAge(patientInfo.dataNascimento)} anos
+                          </p>
+                        )}
+                        {patientInfo.cpf && !patientInfo.dataNascimento && (
+                          <p className="text-sm text-muted-foreground">
+                            CPF: {patientInfo.cpf}
+                          </p>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-sm text-muted-foreground bg-muted px-3 py-1 rounded-full">
+                          {totalReports} {totalReports === 1 ? 'relatório' : 'relatórios'}
+                        </span>
+                      </div>
+                    </div>
+                  </CollapsibleTrigger>
+
+                  {/* Conteúdo do Cliente (pastas por mês) */}
+                  <CollapsibleContent>
+                    <div className="px-4 pb-4 space-y-2">
+                      {monthsData.map(([monthKey, monthReports]) => {
+                        const monthDate = new Date(monthKey + '-01');
+                        const monthLabel = getMonthYearLabel(monthDate);
+                        const isFolderOpen = expansionState[patientId]?.folders?.[monthKey] ?? false;
+                        
+                        return (
+                          <Collapsible
+                            key={monthKey}
+                            open={isFolderOpen}
+                            onOpenChange={() => toggleFolder(patientId, monthKey)}
+                            className="rounded-[5px] overflow-hidden bg-muted/30"
+                          >
+                            {/* Cabeçalho da Pasta (Mês/Ano) */}
+                            <CollapsibleTrigger className="w-full">
+                              <div className="flex items-center gap-2 p-3 hover:bg-muted/30 transition-colors">
+                                <div className="shrink-0">
+                                  {isFolderOpen ? (
+                                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                  ) : (
+                                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                                  )}
+                                </div>
+                                
+                                <Folder className="h-4 w-4 text-primary shrink-0" />
+                                
+                                <div className="flex-1 text-left">
+                                  <p className="text-sm font-medium capitalize">{monthLabel}</p>
+                                </div>
+                                
+                                <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                                  {monthReports.length}
+                                </span>
+                              </div>
+                            </CollapsibleTrigger>
+
+                            {/* Conteúdo da Pasta (Relatórios do mês) */}
+                            <CollapsibleContent>
+                              <div className="space-y-1 p-2 bg-muted/20">
+                                {monthReports.map((report) => {
+                                  const therapist = therapists.find(t => t.id === report.therapistId);
+                                  
+                                  return (
+                                    <div
+                                      key={report.id}
+                                      className="flex items-center justify-between p-2.5 bg-background rounded-[5px] hover:bg-muted/50 transition-colors cursor-pointer group"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleViewReport(report);
+                                      }}
+                                    >
+                                      <div className="flex-1 min-w-0 flex items-center gap-2">
+                                        <FileText className="h-4 w-4 text-primary shrink-0" />
+                                        <div className="flex-1 min-w-0">
+                                          <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">
+                                            {report.title}
+                                          </p>
+                                          <div className="flex items-center gap-2 mt-0.5">
+                                            <Calendar className="h-3 w-3 text-muted-foreground shrink-0" />
+                                            <p className="text-xs text-muted-foreground">
+                                              {new Date(report.createdAt).toLocaleDateString('pt-BR', {
+                                                day: '2-digit',
+                                                month: 'short',
+                                              })}
+                                            </p>
+                                            <span className="text-muted-foreground">•</span>
+                                            <p className="text-xs text-muted-foreground truncate">
+                                              {therapist?.nome || 'Terapeuta não encontrado'}
+                                            </p>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      
+                                      <div className="shrink-0 ml-2">
+                                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                                          report.status === 'final' 
+                                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
+                                            : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
+                                        }`}>
+                                          {report.status === 'final' ? 'Finalizado' : 'Arquivado'}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  );
                                 })}
-                              </p>
-                              {report.periodStart && report.periodEnd && (
-                                <>
-                                  <span className="text-muted-foreground">•</span>
-                                  <p className="text-sm text-muted-foreground">
-                                    Período: {new Date(report.periodStart).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} - {new Date(report.periodEnd).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                                  </p>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center gap-2 shrink-0 ml-4">
-                            <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
-                              report.status === 'final' 
-                                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
-                                : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
-                            }`}>
-                              {report.status === 'final' ? 'Finalizado' : 'Arquivado'}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
+                              </div>
+                            </CollapsibleContent>
+                          </Collapsible>
+                        );
+                      })}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
               );
             })}
           </div>
