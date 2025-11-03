@@ -92,7 +92,7 @@ export async function viewFile(req: Request, res: Response) {
         res.setHeader('Content-Type', metadata.mimeType);
         res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
         res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
-        res.setHeader('Cache-Control', 'public, max-age=86400');
+        res.setHeader('Cache-Control', 'public, must-revalidate, max-age=0');
 
         // Envia o stream diretamente
         stream.on('error', (err: unknown) => {
