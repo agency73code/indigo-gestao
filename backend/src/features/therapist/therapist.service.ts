@@ -122,14 +122,27 @@ export async function create(dto: TherapistTypes.TherapistForm) {
       professor_uni: dto.professorUnindigo === 'sim',
       
       endereco: {
-        create: {
-          cep: dto.endereco.cep,
-          rua: dto.endereco.rua,
-          numero: dto.endereco.numero,
-          bairro: dto.endereco.bairro,
-          complemento: dto.endereco.complemento ?? '',
-          cidade: dto.endereco.cidade,
-          uf: dto.endereco.estado,
+        connectOrCreate: {
+          where: {
+            unique_endereco: {
+              cep: dto.endereco.cep,
+              rua: dto.endereco.rua,
+              numero: dto.endereco.numero,
+              bairro: dto.endereco.bairro,
+              cidade: dto.endereco.cidade,
+              uf: dto.endereco.estado,
+              complemento: dto.endereco.complemento ?? '',
+            },
+          },
+          create: {
+            cep: dto.endereco.cep,
+            rua: dto.endereco.rua,
+            numero: dto.endereco.numero,
+            bairro: dto.endereco.bairro,
+            cidade: dto.endereco.cidade,
+            uf: dto.endereco.estado,
+            complemento: dto.endereco.complemento ?? '',
+          },
         },
       },
 
@@ -188,14 +201,27 @@ export async function create(dto: TherapistTypes.TherapistForm) {
                 cnpj: dto.cnpj.numero.trim(),
                 razao_social: dto.cnpj.razaoSocial ?? null,
                 endereco: {
-                  create: {
-                    cep: dto.cnpj.endereco?.cep ?? null,
-                    rua: dto.cnpj.endereco?.rua ?? null,
-                    numero: dto.cnpj.endereco?.numero ?? null,
-                    bairro: dto.cnpj.endereco?.bairro ?? null,
-                    complemento: dto.cnpj.endereco?.complemento ?? '',
-                    cidade: dto.cnpj.endereco?.cidade ?? null,
-                    uf: dto.cnpj.endereco?.estado ?? null,
+                  connectOrCreate: {
+                    where: {
+                      unique_endereco: {
+                        cep: dto.cnpj.endereco?.cep ?? '',
+                        rua: dto.cnpj.endereco?.rua ?? '',
+                        numero: dto.cnpj.endereco?.numero ?? '',
+                        bairro: dto.cnpj.endereco?.bairro ?? '',
+                        cidade: dto.cnpj.endereco?.cidade ?? '',
+                        uf: dto.cnpj.endereco?.estado ?? '',
+                        complemento: dto.cnpj.endereco?.complemento ?? '',
+                      },
+                    },
+                    create: {
+                      cep: dto.cnpj.endereco?.cep ?? '',
+                      rua: dto.cnpj.endereco?.rua ?? '',
+                      numero: dto.cnpj.endereco?.numero ?? '',
+                      bairro: dto.cnpj.endereco?.bairro ?? '',
+                      cidade: dto.cnpj.endereco?.cidade ?? '',
+                      uf: dto.cnpj.endereco?.estado ?? '',
+                      complemento: dto.cnpj.endereco?.complemento ?? '',
+                    },
                   },
                 },
               },
