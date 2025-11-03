@@ -161,16 +161,8 @@ export async function getAllTherapists(search?: string, role?: string) {
         where.nome = { contains: search.trim().toLowerCase() }
     }
 
-    if (role && role !== 'all') {
-        const cargoNames = role === 'supervisor' ? LinkTypes.SUPERVISOR_ROLES : LinkTypes.CLINICAL_ROLES;
-        where.registro_profissional = {
-            some: {
-                cargo: {
-                    nome: { in: cargoNames },
-                },
-            },
-        };
-    }
+    // Removido filtro de role para retornar todos os terapeutas
+    console.log('🔍 [BACKEND] getAllTherapists - SEM FILTRO DE ROLE');
 
     const therapists = await prisma.terapeuta.findMany({
         where,
@@ -260,10 +252,10 @@ export async function getAllTherapists(search?: string, role?: string) {
                 },
             },
         },
-        take: 5,
         orderBy: { nome: 'asc' },
     });
 
+    console.log(`✅ [BACKEND] getAllTherapists retornando ${therapists.length} terapeutas`);
     return therapists;
 }
 

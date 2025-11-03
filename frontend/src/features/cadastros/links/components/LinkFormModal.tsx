@@ -80,7 +80,6 @@ export default function LinkFormModal({
     const [actuationArea, setActuationArea] = useState<string>('');
     const [actuationOptions, setActuationOptions] = useState<ComboboxOption[]>([]);
     const [startDate, setStartDate] = useState<Date>();
-    const [notes, setNotes] = useState('');
 
     // Estados para busca de pacientes/terapeutas
     const [patientSearch, setPatientSearch] = useState('');
@@ -99,6 +98,7 @@ export default function LinkFormModal({
     // Determinar se é edição ou criação de novo terapeuta
     const isEdit = !!initialData && !!(initialData as any)?.id;
     const isNewTherapistCreation = !!initialData && !!(initialData as any)?._isNewTherapistCreation;
+    const isNewPatientCreation = !!initialData && !!(initialData as any)?._isNewPatientCreation;
 
     // Efeito para carregar dados iniciais no modo edição
     useEffect(() => {
@@ -107,7 +107,6 @@ export default function LinkFormModal({
             setTherapistId(initialData.therapistId);
             setActuationArea(initialData.actuationArea || '');
             setStartDate(new Date(initialData.startDate));
-            setNotes(initialData.notes || '');
 
             // Buscar dados completos do paciente e terapeuta
             const patient = patients.find((p) => p.id === initialData.patientId);
@@ -127,7 +126,6 @@ export default function LinkFormModal({
             setTherapistId('');
             setActuationArea('');
             setStartDate(new Date()); // Data atual como padrão
-            setNotes('');
             setSelectedTherapist(null);
             setTherapistSearch('');
             setErrors({});
@@ -138,20 +136,35 @@ export default function LinkFormModal({
                 setSelectedPatient(patient);
                 setPatientSearch(patient.nome);
             }
-        } else if (open && (!initialData || (!isEdit && !isNewTherapistCreation))) {
+        } else if (open && initialData && isNewPatientCreation) {
+            // Modo criação de novo paciente - pré-preencher terapeuta
+            setTherapistId(initialData.therapistId);
+            setPatientId('');
+            setActuationArea('');
+            setStartDate(new Date()); // Data atual como padrão
+            setSelectedPatient(null);
+            setPatientSearch('');
+            setErrors({});
+
+            // Buscar e pré-preencher dados do terapeuta
+            const therapist = therapists.find((t) => t.id === initialData.therapistId);
+            if (therapist) {
+                setSelectedTherapist(therapist);
+                setTherapistSearch(therapist.nome);
+            }
+        } else if (open && (!initialData || (!isEdit && !isNewTherapistCreation && !isNewPatientCreation))) {
             // Limpar formulário para criação normal
             setPatientId('');
             setTherapistId('');
             setActuationArea('');
             setStartDate(new Date()); // Data atual como padrão
-            setNotes('');
             setSelectedPatient(null);
             setSelectedTherapist(null);
             setPatientSearch('');
             setTherapistSearch('');
             setErrors({});
         }
-    }, [open, initialData, isEdit, isNewTherapistCreation, patients, therapists]);
+    }, [open, initialData, isEdit, isNewTherapistCreation, isNewPatientCreation, patients, therapists]);
 
     // Efeito para resetar busca de paciente quando modal abre
     useEffect(() => {
@@ -267,7 +280,6 @@ export default function LinkFormModal({
                 therapistId: therapistId,
                 role,
                 startDate: startDate!.toISOString(),
-                notes: notes.trim() || undefined,
                 actuationArea: actuationArea,
             };
             onSubmit(createData);
@@ -276,7 +288,6 @@ export default function LinkFormModal({
                 id: initialData!.id,
                 role,
                 startDate: startDate!.toISOString(),
-                notes: notes.trim() || undefined,
                 actuationArea: actuationArea,
             };
             onSubmit(updateData);
@@ -320,7 +331,9 @@ export default function LinkFormModal({
         ? 'Editar Vínculo'
         : isNewTherapistCreation
           ? 'Adicionar Terapeuta'
-          : 'Novo Vínculo';
+          : isNewPatientCreation
+            ? 'Adicionar Cliente'
+            : 'Novo Vínculo';
 
     return (
         <Dialog open={open} onOpenChange={onClose}>
@@ -344,9 +357,9 @@ export default function LinkFormModal({
                                     'flex items-center gap-3 p-3 border rounded-[5px] cursor-pointer',
                                     'hover:bg-muted/50 transition-colors',
                                     errors.patient ? 'border-destructive' : 'border-input',
-                                    isEdit && 'opacity-60 cursor-not-allowed',
+                                    (isEdit || isNewTherapistCreation) && 'opacity-60 cursor-not-allowed',
                                 )}
-                                onClick={() => !isEdit && setShowPatientSearch(true)}
+                                onClick={() => !(isEdit || isNewTherapistCreation) && setShowPatientSearch(true)}
                             >
                                 {selectedPatient ? (
                                     <>
@@ -375,7 +388,7 @@ export default function LinkFormModal({
                                         </span>
                                     </>
                                 )}
-                                {!isEdit && <Search className="h-4 w-4 text-muted-foreground" />}
+                                {!(isEdit || isNewTherapistCreation) && <Search className="h-4 w-4 text-muted-foreground" />}
                             </div>
                             {errors.patient && (
                                 <p className="text-sm text-destructive mt-1">{errors.patient}</p>
@@ -392,9 +405,9 @@ export default function LinkFormModal({
                                     'flex items-center gap-3 p-3 border rounded-[5px] cursor-pointer',
                                     'hover:bg-muted/50 transition-colors',
                                     errors.therapist ? 'border-destructive' : 'border-input',
-                                    isEdit && 'opacity-60 cursor-not-allowed',
+                                    (isEdit || isNewPatientCreation) && 'opacity-60 cursor-not-allowed',
                                 )}
-                                onClick={() => !isEdit && setShowTherapistSearch(true)}
+                                onClick={() => !(isEdit || isNewPatientCreation) && setShowTherapistSearch(true)}
                             >
                                 {selectedTherapist ? (
                                     <>
@@ -423,7 +436,7 @@ export default function LinkFormModal({
                                         </span>
                                     </>
                                 )}
-                                {!isEdit && <Search className="h-4 w-4 text-muted-foreground" />}
+                                {!(isEdit || isNewPatientCreation) && <Search className="h-4 w-4 text-muted-foreground" />}
                             </div>
                             {errors.therapist && (
                                 <p className="text-sm text-destructive mt-1">{errors.therapist}</p>
@@ -519,22 +532,6 @@ export default function LinkFormModal({
                             <p className="text-sm text-destructive">{errors.startDate}</p>
                         )}
                     </div>
-
-                    {/* Observações */}
-                    <div className="space-y-2">
-                        <Label className="text-sm font-medium">Observações</Label>
-                        <textarea
-                            className="w-full p-3 border border-input rounded-[5px] resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
-                            placeholder="Observações sobre o vínculo (opcional)"
-                            rows={3}
-                            value={notes}
-                            onChange={(e) => setNotes(e.target.value)}
-                            maxLength={500}
-                        />
-                        <p className="text-xs text-muted-foreground text-right">
-                            {notes.length}/500
-                        </p>
-                    </div>
                 </div>
 
                 <DialogFooter className="gap-2 sm:gap-3 flex-col sm:flex-row">
@@ -553,14 +550,16 @@ export default function LinkFormModal({
                     >
                         {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                         <span className="sm:hidden">
-                            {isEdit ? 'Salvar' : isNewTherapistCreation ? 'Adicionar' : 'Criar'}
+                            {isEdit ? 'Salvar' : isNewTherapistCreation ? 'Adicionar' : isNewPatientCreation ? 'Adicionar' : 'Criar'}
                         </span>
                         <span className="hidden sm:inline">
                             {isEdit
                                 ? 'Salvar Alterações'
                                 : isNewTherapistCreation
                                   ? 'Adicionar Terapeuta'
-                                  : 'Criar Vínculo'}
+                                  : isNewPatientCreation
+                                    ? 'Adicionar Cliente'
+                                    : 'Criar Vínculo'}
                         </span>
                     </Button>
                 </DialogFooter>

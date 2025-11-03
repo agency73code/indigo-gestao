@@ -157,12 +157,21 @@ export interface LinkListProps {
   loading?: boolean;
   onEditLink: (link: PatientTherapistLink) => void;
   onAddTherapist: (patientId: string) => void;
+  onAddPatient: (therapistId: string) => void;
   onTransferResponsible: (link: PatientTherapistLink) => void;
   onEndLink: (link: PatientTherapistLink) => void;
   onArchiveLink: (link: PatientTherapistLink) => void;
-  onEditSupervisionLink: (link: TherapistSupervisionLink) => void;
+  onReactivateLink: (link: PatientTherapistLink) => void;
   onEndSupervisionLink: (link: TherapistSupervisionLink) => void;
   onArchiveSupervisionLink: (link: TherapistSupervisionLink) => void;
+  onReactivateSupervisionLink: (link: TherapistSupervisionLink) => void;
+  onAddTherapistToSupervisor?: (supervisorId: string) => void;
+  onBulkEndSupervisionLinks?: (links: TherapistSupervisionLink[]) => void;
+  onBulkArchiveSupervisionLinks?: (links: TherapistSupervisionLink[]) => void;
+  onBulkReactivateSupervisionLinks?: (links: TherapistSupervisionLink[]) => void;
+  onBulkEndLinks?: (links: PatientTherapistLink[]) => void;
+  onBulkArchiveLinks?: (links: PatientTherapistLink[]) => void;
+  onBulkReactivateLinks?: (links: PatientTherapistLink[]) => void;
 }
 
 export interface LinkCardProps {
@@ -177,15 +186,26 @@ export interface LinkCardProps {
   // Listas para lookup de dados
   patients: Paciente[];
   therapists: Terapeuta[];
-  // Ações
+  // Ações individuais
   onEdit: (link: PatientTherapistLink) => void;
   onAddTherapist: (patientId: string) => void;
+  onAddPatient: (therapistId: string) => void;
   onTransferResponsible: (link: PatientTherapistLink) => void;
   onEndLink: (link: PatientTherapistLink) => void;
   onArchive: (link: PatientTherapistLink) => void;
-  onEditSupervision: (link: TherapistSupervisionLink) => void;
+  onReactivate: (link: PatientTherapistLink) => void;
   onEndSupervision: (link: TherapistSupervisionLink) => void;
   onArchiveSupervision: (link: TherapistSupervisionLink) => void;
+  onReactivateSupervision: (link: TherapistSupervisionLink) => void;
+  onAddTherapistToSupervisor?: (supervisorId: string) => void; // Novo: adicionar terapeuta a supervisor
+  // Ações em lote (para supervisão)
+  onBulkEndSupervision?: (links: TherapistSupervisionLink[]) => void;
+  onBulkArchiveSupervision?: (links: TherapistSupervisionLink[]) => void;
+  onBulkReactivateSupervision?: (links: TherapistSupervisionLink[]) => void;
+  // Ações em lote (para links paciente-terapeuta)
+  onBulkEndLinks?: (links: PatientTherapistLink[]) => void;
+  onBulkArchiveLinks?: (links: PatientTherapistLink[]) => void;
+  onBulkReactivateLinks?: (links: PatientTherapistLink[]) => void;
 }
 
 export interface LinkFormModalProps {
@@ -232,6 +252,7 @@ export interface SupervisionLinkFormModalProps {
   initialData?: TherapistSupervisionLink | null;
   therapists: Terapeuta[];
   loading?: boolean;
+  preSelectedSupervisorId?: string; // Para pré-selecionar supervisor ao adicionar terapeuta
 }
 
 export interface EndSupervisionLinkDialogProps {

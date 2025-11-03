@@ -19,12 +19,21 @@ export default function LinkList({
     filters,
     onEditLink,
     onAddTherapist,
+    onAddPatient,
     onEndLink,
     onArchiveLink,
+    onReactivateLink,
     onTransferResponsible,
-    onEditSupervisionLink,
     onEndSupervisionLink,
     onArchiveSupervisionLink,
+    onReactivateSupervisionLink,
+    onAddTherapistToSupervisor,
+    onBulkEndSupervisionLinks,
+    onBulkArchiveSupervisionLinks,
+    onBulkReactivateSupervisionLinks,
+    onBulkEndLinks,
+    onBulkArchiveLinks,
+    onBulkReactivateLinks,
 }: LinkListProps) {
     // Helper functions to find patient/therapist by ID
     const findPatient = (id: string) => patients.find((p) => p.id === id);
@@ -65,6 +74,7 @@ export default function LinkList({
 
         links.forEach((link) => {
             const therapist = findTherapist(link.therapistId);
+            
             if (!therapist || !therapist.id) return;
 
             if (!grouped.has(therapist.id)) {
@@ -84,18 +94,26 @@ export default function LinkList({
         const grouped = new Map<string, SupervisorWithLinks>();
 
         links.forEach((link) => {
-            const supervisor = findTherapist(link.supervisorId);
+            const foundSupervisor = findTherapist(link.supervisorId);
             
-            if (!supervisor || !supervisor.id) return;
+            // Se não encontrar o supervisor, cria um placeholder
+            const supervisor = foundSupervisor || {
+                id: link.supervisorId || 'unknown',
+                nome: 'Supervisor não encontrado',
+                email: '',
+                cpf: '',
+            } as any;
 
-            if (!grouped.has(supervisor.id)) {
-                grouped.set(supervisor.id, {
+            const supervisorId = supervisor.id || 'unknown';
+
+            if (!grouped.has(supervisorId)) {
+                grouped.set(supervisorId, {
                     supervisor,
                     links: [],
                 });
             }
 
-            grouped.get(supervisor.id)!.links.push(link);
+            grouped.get(supervisorId)!.links.push(link);
         });
 
         return Array.from(grouped.values());
@@ -151,12 +169,21 @@ export default function LinkList({
                         therapists={therapists}
                         onEdit={onEditLink}
                         onAddTherapist={onAddTherapist}
+                        onAddPatient={onAddPatient}
                         onEndLink={onEndLink}
                         onArchive={onArchiveLink}
+                        onReactivate={onReactivateLink}
                         onTransferResponsible={onTransferResponsible}
-                        onEditSupervision={onEditSupervisionLink}
                         onEndSupervision={onEndSupervisionLink}
                         onArchiveSupervision={onArchiveSupervisionLink}
+                        onReactivateSupervision={onReactivateSupervisionLink}
+                        onAddTherapistToSupervisor={onAddTherapistToSupervisor}
+                        onBulkEndSupervision={onBulkEndSupervisionLinks}
+                        onBulkArchiveSupervision={onBulkArchiveSupervisionLinks}
+                        onBulkReactivateSupervision={onBulkReactivateSupervisionLinks}
+                        onBulkEndLinks={onBulkEndLinks}
+                        onBulkArchiveLinks={onBulkArchiveLinks}
+                        onBulkReactivateLinks={onBulkReactivateLinks}
                     />
                 );
             })}

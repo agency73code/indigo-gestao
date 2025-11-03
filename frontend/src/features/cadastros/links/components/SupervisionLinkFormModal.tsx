@@ -45,6 +45,7 @@ export default function SupervisionLinkFormModal({
     initialData = null,
     therapists,
     loading = false,
+    preSelectedSupervisorId,
 }: SupervisionLinkFormModalProps) {
     // Estados do formulário
     const [supervisorId, setSupervisorId] = useState<string>('');
@@ -93,18 +94,30 @@ export default function SupervisionLinkFormModal({
             }
         } else if (open && !isEdit) {
             // Modo criação - resetar campos
-            setSupervisorId('');
+            setSupervisorId(preSelectedSupervisorId || '');
             setSupervisedTherapistId('');
             setStartDate(new Date());
             setNotes('');
             setSupervisionScope('direct');
-            setSelectedSupervisor(null);
             setSelectedTherapist(null);
             setSupervisorSearch('');
             setTherapistSearch('');
             setErrors({});
+
+            // Se tem supervisor pré-selecionado, carregar seus dados
+            if (preSelectedSupervisorId) {
+                const supervisor = therapists.find((t) => t.id === preSelectedSupervisorId);
+                if (supervisor) {
+                    setSelectedSupervisor(supervisor);
+                    setSupervisorSearch(supervisor.nome);
+                } else {
+                    setSelectedSupervisor(null);
+                }
+            } else {
+                setSelectedSupervisor(null);
+            }
         }
-    }, [open, initialData, isEdit, therapists]);
+    }, [open, initialData, isEdit, therapists, preSelectedSupervisorId]);
 
     // Efeito de busca de supervisor
     useEffect(() => {

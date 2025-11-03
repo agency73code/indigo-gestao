@@ -4,7 +4,7 @@ import type { LinkFilters } from "../types/supervisionLink.types.js";
 
 /**
  * Busca vínculos de supervisão no banco de dados.
- * Retorna os 10 mais recentes, ordenados por data de criação.
+ * Retorna todos os vínculos, ordenados por data de criação.
  */
 export async function getAllSupervisionLinks(filters?: LinkFilters) {
     const where = buildWhere(filters);
@@ -12,7 +12,6 @@ export async function getAllSupervisionLinks(filters?: LinkFilters) {
 
     const vinculos = await prisma.vinculo_supervisao.findMany({
         where,
-        take: 10,
         orderBy,
         include: {
             supervisor: {
