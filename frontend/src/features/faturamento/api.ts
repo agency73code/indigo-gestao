@@ -7,16 +7,7 @@
  * Patient type matching the format expected by Faturamento forms
  * This matches the structure from @/features/consultas/types/consultas.types
  */
-type Patient = {
-    id: string;
-    nome: string;
-    responsavel?: string;
-    status: 'ATIVO' | 'INATIVO';
-    avatarUrl?: string;
-    pessoa?: {
-        dataNascimento?: string;
-    };
-};
+import type { Patient } from '@/features/consultas/types/consultas.types';
 
 /**
  * Fetch clients filtered by logged-in therapist

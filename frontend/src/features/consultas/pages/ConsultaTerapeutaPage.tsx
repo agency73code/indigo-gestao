@@ -349,6 +349,8 @@ export default function ConsultaTerapeutaPage() {
                                 files={files}
                                 ownerType="terapeuta"
                                 ownerId={terapeutaId}
+                                fullName={terapeutaData.nome}
+                                birthDate={terapeutaData.dataNascimento}
                                 onUploadSuccess={loadFiles}
                                 onDeleteSuccess={loadFiles}
                             />

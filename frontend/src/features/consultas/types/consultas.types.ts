@@ -55,7 +55,7 @@ export interface Patient {
     responsavel?: string;
     status: 'ATIVO' | 'INATIVO';
     avatarUrl?: string;
-    pessoa?: {
+    pessoa: {
         cpf?: string;
         dataNascimento?: string;
         genero?: string;

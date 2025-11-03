@@ -2492,6 +2492,8 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                         files={files}
                                         ownerType="cliente"
                                         ownerId={patient.id}
+                                        fullName={patient.nome!}
+                                        birthDate={patient.pessoa.dataNascimento!}
                                         onUploadSuccess={loadFiles}
                                         onDeleteSuccess={loadFiles}
                                     />
