@@ -44,10 +44,24 @@ export default function EndLinkDialog({
 
         if (!endDate) {
             newErrors.endDate = 'Selecione a data de encerramento';
-        } else if (link?.startDate && endDate < new Date(link.startDate)) {
-            newErrors.endDate =
-                'A data de encerramento deve ser posterior à data de início do vínculo';
-        } else if (endDate > new Date()) {
+        } else if (link?.startDate) {
+            // Comparar apenas as datas, sem horários
+            const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+            const startDateOnly = new Date(link.startDate);
+            startDateOnly.setHours(0, 0, 0, 0);
+            
+            if (endDateOnly < startDateOnly) {
+                newErrors.endDate =
+                    'A data de encerramento não pode ser anterior à data de início do vínculo';
+            }
+        }
+        
+        // Verificar se a data de encerramento não está no futuro
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+        
+        if (endDateOnly > today) {
             newErrors.endDate = 'A data de encerramento não pode ser no futuro';
         }
 

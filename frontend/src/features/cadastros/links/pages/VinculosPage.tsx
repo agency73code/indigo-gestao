@@ -42,6 +42,8 @@ import {
     archiveSupervisionLink,
     endLink,
     endSupervisionLink,
+    reactivateLink,
+    reactivateSupervisionLink,
 } from '../services/links.service';
 
 export default function VinculosPage() {
@@ -70,6 +72,7 @@ export default function VinculosPage() {
     const [showSupervisionModal, setShowSupervisionModal] = useState(false);
     const [supervisionModalLoading, setSupervisionModalLoading] = useState(false);
     const [editingSupervisionLink, setEditingSupervisionLink] = useState<TherapistSupervisionLink | null>(null);
+    const [preSelectedSupervisorId, setPreSelectedSupervisorId] = useState<string | undefined>(undefined);
     const [showArchiveSupervisionDialog, setShowArchiveSupervisionDialog] = useState(false);
     const [archivingSupervisionLink, setArchivingSupervisionLink] = useState<TherapistSupervisionLink | null>(null);
     const [archiveSupervisionLoading, setArchiveSupervisionLoading] = useState(false);
@@ -105,9 +108,14 @@ export default function VinculosPage() {
 
     // Carregar dados iniciais e reagir aos filtros
     useEffect(() => {
+        setLoading(true);
+        
+        // Debounce apenas para busca de texto (campo 'q')
+        const debounceTime = filters.q ? 500 : 0;
+        
         const timeout = setTimeout(() => {
             loadData(filters);
-        }, 500);
+        }, debounceTime);
 
         return () => clearTimeout(timeout);
     }, [filters, loadData]);
@@ -139,6 +147,26 @@ export default function VinculosPage() {
         } as PatientTherapistLink & { _isNewTherapistCreation: boolean };
 
         setEditingLink(newTherapistTemplate);
+        setShowModal(true);
+    };
+
+    const handleAddPatient = (therapistId: string) => {
+        // Criar um objeto especial para indicar criação de novo paciente para o terapeuta
+        const newPatientTemplate = {
+            id: '',
+            patientId: '',
+            therapistId,
+            role: 'responsible' as const, // Padrão como responsável, mas usuário pode alterar
+            startDate: new Date().toISOString(),
+            status: 'active' as const,
+            notes: '',
+            actuationArea: null,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            _isNewPatientCreation: true, // Flag especial para identificar criação
+        } as PatientTherapistLink & { _isNewPatientCreation: boolean };
+
+        setEditingLink(newPatientTemplate);
         setShowModal(true);
     };
 
@@ -292,11 +320,13 @@ export default function VinculosPage() {
 
     const handleCreateSupervisionLink = () => {
         setEditingSupervisionLink(null);
+        setPreSelectedSupervisorId(undefined);
         setShowSupervisionModal(true);
     };
 
-    const handleEditSupervisionLink = (link: TherapistSupervisionLink) => {
-        setEditingSupervisionLink(link);
+    const handleAddTherapistToSupervisor = (supervisorId: string) => {
+        setEditingSupervisionLink(null);
+        setPreSelectedSupervisorId(supervisorId);
         setShowSupervisionModal(true);
     };
 
@@ -317,7 +347,7 @@ export default function VinculosPage() {
                     duration: 4000,
                 });
             }
-            await loadData();
+            await loadData(filters);
             setShowSupervisionModal(false);
         } catch (error: any) {
             console.error('Erro ao salvar vínculo de supervisão:', error);
@@ -357,7 +387,7 @@ export default function VinculosPage() {
         try {
             setEndSupervisionLoading(true);
             await endSupervisionLink(endingSupervisionLink.id, endDate);
-            await loadData();
+            await loadData(filters);
             setShowEndSupervisionDialog(false);
             setEndingSupervisionLink(null);
             toast.success('Vínculo de supervisão encerrado', {
@@ -386,7 +416,7 @@ export default function VinculosPage() {
         try {
             setArchiveSupervisionLoading(true);
             await archiveSupervisionLink(archivingSupervisionLink.id);
-            await loadData();
+            await loadData(filters);
             setShowArchiveSupervisionDialog(false);
             setArchivingSupervisionLink(null);
             toast.success('Vínculo de supervisão arquivado', {
@@ -407,6 +437,147 @@ export default function VinculosPage() {
             }
         } finally {
             setArchiveSupervisionLoading(false);
+        }
+    };
+
+    const handleReactivateSupervisionLink = async (link: TherapistSupervisionLink) => {
+        try {
+            await reactivateSupervisionLink(link.id);
+            await loadData(filters);
+            toast.success('Vínculo de supervisão reativado', {
+                description: 'O vínculo foi reativado com sucesso.',
+                duration: 3000,
+            });
+        } catch (error: any) {
+            console.error('Erro ao reativar vínculo de supervisão:', error);
+            toast.error('Erro ao reativar vínculo', {
+                description: error?.message || 'Ocorreu um erro ao reativar o vínculo de supervisão.',
+                duration: 4000,
+            });
+        }
+    };
+
+    const handleReactivateLink = async (link: PatientTherapistLink) => {
+        try {
+            await reactivateLink(link.id, link.actuationArea);
+            await loadData(filters);
+            toast.success('Vínculo reativado', {
+                description: 'O vínculo foi reativado com sucesso.',
+                duration: 3000,
+            });
+        } catch (error: any) {
+            console.error('Erro ao reativar vínculo:', error);
+            toast.error('Erro ao reativar vínculo', {
+                description: error?.message || 'Ocorreu um erro ao reativar o vínculo.',
+                duration: 4000,
+            });
+        }
+    };
+
+    // Handlers em lote para supervisão
+    const handleBulkEndSupervisionLinks = async (links: TherapistSupervisionLink[]) => {
+        try {
+            const endDate = new Date().toISOString();
+            await Promise.all(links.map(link => endSupervisionLink(link.id, endDate)));
+            await loadData(filters);
+            toast.success(`${links.length} vínculo${links.length > 1 ? 's' : ''} encerrado${links.length > 1 ? 's' : ''}`, {
+                description: `${links.length} vínculo${links.length > 1 ? 's de supervisão foram encerrados' : ' de supervisão foi encerrado'} com sucesso.`,
+                duration: 3000,
+            });
+        } catch (error: any) {
+            console.error('Erro ao encerrar vínculos:', error);
+            toast.error('Erro ao encerrar vínculos', {
+                description: error?.message || 'Ocorreu um erro ao encerrar os vínculos de supervisão.',
+                duration: 4000,
+            });
+        }
+    };
+
+    const handleBulkArchiveSupervisionLinks = async (links: TherapistSupervisionLink[]) => {
+        try {
+            await Promise.all(links.map(link => archiveSupervisionLink(link.id)));
+            await loadData(filters);
+            toast.success(`${links.length} vínculo${links.length > 1 ? 's' : ''} arquivado${links.length > 1 ? 's' : ''}`, {
+                description: `${links.length} vínculo${links.length > 1 ? 's de supervisão foram arquivados' : ' de supervisão foi arquivado'} com sucesso.`,
+                duration: 3000,
+            });
+        } catch (error: any) {
+            console.error('Erro ao arquivar vínculos:', error);
+            toast.error('Erro ao arquivar vínculos', {
+                description: error?.message || 'Ocorreu um erro ao arquivar os vínculos de supervisão.',
+                duration: 4000,
+            });
+        }
+    };
+
+    const handleBulkReactivateSupervisionLinks = async (links: TherapistSupervisionLink[]) => {
+        try {
+            await Promise.all(links.map(link => reactivateSupervisionLink(link.id)));
+            await loadData(filters);
+            toast.success(`${links.length} vínculo${links.length > 1 ? 's' : ''} reativado${links.length > 1 ? 's' : ''}`, {
+                description: `${links.length} vínculo${links.length > 1 ? 's de supervisão foram reativados' : ' de supervisão foi reativado'} com sucesso.`,
+                duration: 3000,
+            });
+        } catch (error: any) {
+            console.error('Erro ao reativar vínculos:', error);
+            toast.error('Erro ao reativar vínculos', {
+                description: error?.message || 'Ocorreu um erro ao reativar os vínculos de supervisão.',
+                duration: 4000,
+            });
+        }
+    };
+
+    // Handlers em lote para links paciente-terapeuta
+    const handleBulkEndLinks = async (links: PatientTherapistLink[]) => {
+        // Usar a data de hoje no formato ISO completo
+        const currentDate = new Date().toISOString();
+        try {
+            await Promise.all(links.map(link => endLink(link.id, currentDate)));
+            await loadData(filters);
+            toast.success(`${links.length} vínculo${links.length > 1 ? 's' : ''} encerrado${links.length > 1 ? 's' : ''}`, {
+                description: `${links.length} vínculo${links.length > 1 ? 's foram encerrados' : ' foi encerrado'} com sucesso.`,
+                duration: 3000,
+            });
+        } catch (error: any) {
+            console.error('Erro ao encerrar vínculos:', error);
+            toast.error('Erro ao encerrar vínculos', {
+                description: error?.message || 'Ocorreu um erro ao encerrar os vínculos.',
+                duration: 4000,
+            });
+        }
+    };
+
+    const handleBulkArchiveLinks = async (links: PatientTherapistLink[]) => {
+        try {
+            await Promise.all(links.map(link => archiveLink(link.id)));
+            await loadData(filters);
+            toast.success(`${links.length} vínculo${links.length > 1 ? 's' : ''} arquivado${links.length > 1 ? 's' : ''}`, {
+                description: `${links.length} vínculo${links.length > 1 ? 's foram arquivados' : ' foi arquivado'} com sucesso.`,
+                duration: 3000,
+            });
+        } catch (error: any) {
+            console.error('Erro ao arquivar vínculos:', error);
+            toast.error('Erro ao arquivar vínculos', {
+                description: error?.message || 'Ocorreu um erro ao arquivar os vínculos.',
+                duration: 4000,
+            });
+        }
+    };
+
+    const handleBulkReactivateLinks = async (links: PatientTherapistLink[]) => {
+        try {
+            await Promise.all(links.map(link => reactivateLink(link.id, link.actuationArea)));
+            await loadData(filters);
+            toast.success(`${links.length} vínculo${links.length > 1 ? 's' : ''} reativado${links.length > 1 ? 's' : ''}`, {
+                description: `${links.length} vínculo${links.length > 1 ? 's foram reativados' : ' foi reativado'} com sucesso.`,
+                duration: 3000,
+            });
+        } catch (error: any) {
+            console.error('Erro ao reativar vínculos:', error);
+            toast.error('Erro ao reativar vínculos', {
+                description: error?.message || 'Ocorreu um erro ao reativar os vínculos.',
+                duration: 4000,
+            });
         }
     };
 
@@ -541,12 +712,21 @@ export default function VinculosPage() {
                     loading={loading}
                     onEditLink={handleEditLink}
                     onAddTherapist={handleAddTherapist}
+                    onAddPatient={handleAddPatient}
                     onEndLink={handleEndLink}
                     onArchiveLink={handleArchiveLink}
+                    onReactivateLink={handleReactivateLink}
                     onTransferResponsible={handleTransferResponsible}
-                    onEditSupervisionLink={handleEditSupervisionLink}
                     onEndSupervisionLink={handleEndSupervisionLink}
                     onArchiveSupervisionLink={handleArchiveSupervisionLink}
+                    onReactivateSupervisionLink={handleReactivateSupervisionLink}
+                    onAddTherapistToSupervisor={handleAddTherapistToSupervisor}
+                    onBulkEndSupervisionLinks={handleBulkEndSupervisionLinks}
+                    onBulkArchiveSupervisionLinks={handleBulkArchiveSupervisionLinks}
+                    onBulkReactivateSupervisionLinks={handleBulkReactivateSupervisionLinks}
+                    onBulkEndLinks={handleBulkEndLinks}
+                    onBulkArchiveLinks={handleBulkArchiveLinks}
+                    onBulkReactivateLinks={handleBulkReactivateLinks}
                 />
 
                 {/* Modal de formulário */}
@@ -615,6 +795,7 @@ export default function VinculosPage() {
                     initialData={editingSupervisionLink}
                     therapists={therapists}
                     loading={supervisionModalLoading}
+                    preSelectedSupervisorId={preSelectedSupervisorId}
                 />
 
                 {/* Dialog de encerramento de vínculo de supervisão */}

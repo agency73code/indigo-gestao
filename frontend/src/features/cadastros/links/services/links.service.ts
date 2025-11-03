@@ -306,6 +306,52 @@ export async function archiveLink(id: string): Promise<void> {
 }
 
 /**
+ * Reativa vínculo encerrado (remove endDate e volta status para 'active')
+ */
+export async function reactivateLink(id: string, actuationArea?: string | null): Promise<void> {
+  await delay(400);
+
+  try {
+    const res = await fetch('/api/links/updateLink', {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ 
+        id, 
+        endDate: null,
+        status: 'active',
+        actuationArea: actuationArea || undefined
+      })
+    });
+
+    if (!res.ok) {
+      let errorMessage = 'Falha ao reativar vínculo';
+      const errorText = await res.text();
+
+      if (errorText) {
+        try {
+          const parsed = JSON.parse(errorText);
+          if (parsed?.message) {
+            errorMessage = parsed.message;
+          }
+        } catch {
+          errorMessage = errorText;
+        }
+      }
+
+      throw new Error(errorMessage);
+    }
+
+    await res.json();
+  } catch (error) {
+    console.error('Erro ao reativar vínculo:', error);
+    throw error;
+  }
+}
+
+/**
  * Busca todos os pacientes (para formulários)
  */
 export async function getAllPatients(): Promise<Paciente[]> {
@@ -432,7 +478,6 @@ export async function getAllSupervisionLinks(filters?: LinkFilters): Promise<The
   }
 
   const json = await res.json();
-  // Tipagem explícita e retorno direto
   return json as TherapistSupervisionLink[];
 }
 
@@ -575,6 +620,46 @@ export async function archiveSupervisionLink(id: string): Promise<void> {
 
   if (!res.ok) {
     let errorMessage = 'Falha ao arquivar vínculo de supervisão';
+    const errorText = await res.text();
+
+    if (errorText) {
+      try {
+        const parsed = JSON.parse(errorText);
+        if (parsed?.message) {
+          errorMessage = parsed.message;
+        }
+      } catch {
+        errorMessage = errorText;
+      }
+    }
+
+    throw new Error(errorMessage);
+  }
+
+  await res.json();
+}
+
+/**
+ * Reativa vínculo de supervisão encerrado (remove endDate e volta status para 'active')
+ */
+export async function reactivateSupervisionLink(id: string): Promise<void> {
+  await delay(400);
+  
+  const res = await fetch('/api/links/updateSupervisionLink', {
+    method: 'PATCH',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ 
+      id, 
+      endDate: null,
+      status: 'active'
+    })
+  });
+
+  if (!res.ok) {
+    let errorMessage = 'Falha ao reativar vínculo de supervisão';
     const errorText = await res.text();
 
     if (errorText) {
