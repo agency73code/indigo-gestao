@@ -70,7 +70,6 @@ export const useProfilePhoto = (): UseProfilePhotoReturn => {
       const response = await fetch(url, {
         method: 'POST',
         body: formData,
-        // Não definir Content-Type, deixar o browser definir com boundary
       });
 
       const responseData = await response.json().catch(() => null);
@@ -98,7 +97,6 @@ export const useProfilePhoto = (): UseProfilePhotoReturn => {
           thumbnailLink: `/api/arquivos/${arquivo.storageId || arquivo.id}/view`,
         };
         
-        toast.success('Foto atualizada com sucesso.');
         return profileDto;
       }
 

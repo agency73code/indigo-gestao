@@ -681,8 +681,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                         onChange={(file) => {
                                             setProfilePhoto(file);
                                         }}
-                                        onUploaded={(profileDto) => {
-                                            console.log('ProfilePhoto uploaded:', profileDto);
+                                        onUploaded={() => {
                                             // Recarregar arquivos para atualizar a lista
                                             if (patient?.id) {
                                                 listFiles({ ownerType: 'cliente', ownerId: patient.id })

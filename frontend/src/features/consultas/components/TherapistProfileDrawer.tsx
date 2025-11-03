@@ -679,11 +679,9 @@ export default function TherapistProfileDrawer({
                                         birthDate={terapeutaData.dataNascimento}
                                         value={profilePhoto}
                                         onChange={(file) => {
-                                            console.log('ProfilePhoto onChange:', file);
                                             setProfilePhoto(file);
                                         }}
-                                        onUploaded={(profileDto) => {
-                                            console.log('ProfilePhoto uploaded:', profileDto);
+                                        onUploaded={() => {
                                             // Recarregar arquivos para atualizar a lista
                                             if (therapist?.id) {
                                                 listFiles({ ownerType: 'terapeuta', ownerId: therapist.id })
