@@ -10,11 +10,11 @@ export interface Therapist {
     conselho?: string; // CRP/CRM
     registroConselho?: string;
     avatarUrl?: string;
-    pessoa?: {
-        cpf?: string;
-        dataNascimento?: string; // ISO
-        genero?: string;
-        observacoes?: string;
+    pessoa: {
+        cpf: string;
+        dataNascimento: string; // ISO
+        genero: string;
+        observacoes: string;
     };
     endereco?: {
         cep?: string;

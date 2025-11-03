@@ -149,31 +149,20 @@ export async function updateTerapeuta(ownerId: string, payload: any): Promise<vo
 export async function uploadFile(params: {
   ownerType: "cliente" | "terapeuta";
   ownerId: string;
+  fullName: string, 
+  birthDate: string,
   tipo_documento: string;
   file: File;
 }): Promise<void> {
-  if (MOCK_ENABLED) {
-    console.log('📤 [MOCK] Simulando upload de arquivo:', {
-      ownerType: params.ownerType,
-      ownerId: params.ownerId,
-      tipo_documento: params.tipo_documento,
-      fileName: params.file.name,
-      fileSize: params.file.size
-    });
-    await mockDelay(1500);
-    console.log('✅ [MOCK] Arquivo enviado com sucesso');
-    return;
-  }
-
   const formData = new FormData();
   formData.append('file', params.file);
-  formData.append('tipo_documento', params.tipo_documento);
+  formData.append('documentType', params.tipo_documento);
+  formData.append('ownerType', params.ownerType);
+  formData.append('ownerId', params.ownerId);
+  formData.append('fullName', params.fullName);
+  formData.append('birthDate', params.birthDate);
 
-  const url = new URL('/api/arquivos', API_BASE_URL);
-  url.searchParams.set('ownerType', params.ownerType);
-  url.searchParams.set('ownerId', params.ownerId);
-
-  const res = await authFetch(url.toString(), {
+  const res = await authFetch('/api/arquivos', {
     method: 'POST',
     body: formData
   });

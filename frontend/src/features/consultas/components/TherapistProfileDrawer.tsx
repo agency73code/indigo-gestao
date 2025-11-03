@@ -1775,6 +1775,8 @@ export default function TherapistProfileDrawer({
                                         files={files}
                                         ownerType="terapeuta"
                                         ownerId={therapist.id}
+                                        fullName={therapist.nome}
+                                        birthDate={therapist.pessoa?.dataNascimento}
                                         onUploadSuccess={loadFiles}
                                         onDeleteSuccess={loadFiles}
                                     />

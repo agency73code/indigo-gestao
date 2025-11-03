@@ -33,7 +33,7 @@ export async function uploadFile(req: Request, res: Response) {
         const folderStructure = await createFolder(ownerType, fullName, BirthDate, rootFolderId);
 
         const uploadPromises = availableFiles.map(({ file, documentType }) => {
-            const tipoDocumento = documentType || file.fieldname || 'arquivo';
+            const tipoDocumento = req.body.documentType || documentType || file.fieldname || 'arquivo';
             return FilesService.uploadAndPersistFile({
                 ownerType,
                 ownerId,
