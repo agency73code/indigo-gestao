@@ -1,4 +1,4 @@
-import { fetchClients } from '../api';
+import { fetchClients, fetchTherapists } from '../api';
 import type { Patient, Therapist, CreateProgramInput } from './types';
 
 // Flag para usar mocks locais durante desenvolvimento
@@ -169,17 +169,23 @@ export async function searchPatients(q?: string): Promise<Patient[]> {
 
 // Função para buscar terapeutas 
 export async function searchTherapists(query?: string): Promise<Therapist[]> {
-    if (USE_LOCAL_MOCKS) {
-        await delay(200);
+    try {
+        const result = await fetchTherapists(query);
+        console.log('🔍 searchTherapists result:', result);
+        return result;
+    } catch (error) {
+        console.error('❌ searchTherapists error:', error);
+        if (USE_LOCAL_MOCKS) {
+            await delay(200);
+            
+            if (!query) return MOCK_THERAPISTS;
+            
+            const searchTerm = query.toLowerCase();
+            return MOCK_THERAPISTS.filter(therapist => 
+                therapist.name.toLowerCase().includes(searchTerm)
+            );
+        }
         
-        if (!query) return MOCK_THERAPISTS;
-        
-        const searchTerm = query.toLowerCase();
-        return MOCK_THERAPISTS.filter(therapist => 
-            therapist.name.toLowerCase().includes(searchTerm)
-        );
+        throw new Error('Erro ao buscar terapeuta');
     }
-    
-    // TODO: Integrar com serviço real de busca de terapeutas
-    throw new Error('API integration not implemented yet');
 }
