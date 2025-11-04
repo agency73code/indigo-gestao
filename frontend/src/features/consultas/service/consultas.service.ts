@@ -140,7 +140,7 @@ export async function updateTerapeuta(ownerId: string, payload: any): Promise<vo
   if (!res.ok) {
     const text = await res.text();
     const data = text ? JSON.parse(text) : null;
-    const msg = data?.message ?? data?.error ?? `Falha ao atualizar terapeuta (${res.status})`;
+    const msg = data?.errors?.[0]?.message ?? `Falha ao atualizar terapeuta (${res.status})`;
     throw new Error(msg);
   }
 }

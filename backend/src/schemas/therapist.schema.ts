@@ -9,7 +9,7 @@ export const therapistSchema = z.object({
   email: z.string().email(),
   emailIndigo: z.string().email(),
   telefone: z.string().transform(strip).optional().nullable().default(null),
-  celular: z.string().transform(strip),
+  celular: z.string({ error: 'Campo celular é obrigatório' }).transform(strip),
   cpf: z
     .string()
     .transform(strip)
