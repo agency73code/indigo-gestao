@@ -20,7 +20,6 @@ export async function createSupervisionLink(data: CreateSupervisionLinkInput) {
         where: {
             supervisor_id: data.supervisorId,
             clinico_id: data.supervisedTherapistId,
-            status: 'active',
         },
     });
 

@@ -85,6 +85,30 @@ async function resolveTherapistActuation(therapistId: string, actuation: string 
 export async function createLink(payload: LinkTypes.CreateLink) {
     const actuationArea = await resolveTherapistActuation(payload.therapistId, payload.actuationArea);
 
+    if (payload.endDate && payload.startDate < payload.endDate) {
+        throw new AppError(
+            'DATE_RANGE_INVALID',
+            'A data de término não pode ser anterior à data de início.',
+            400
+        );
+    }
+
+    const existingLink = await prisma.terapeuta_cliente.findFirst({
+        where: {
+            cliente_id: payload.patientId,
+            terapeuta_id: payload.therapistId,
+        },
+    });
+
+    if (existingLink) {
+        throw new AppError(
+            'LINK_ALREADY_EXISTS',
+            'Já existe um vínculo ativo entre o terapeuta e o cliente.',
+            400
+        );
+    }
+    
+
     const created = await prisma.terapeuta_cliente.create({
         data: {
             cliente_id: payload.patientId,
@@ -153,16 +177,13 @@ export async function getAllClients(search?: string) {
     });
 }
 
-export async function getAllTherapists(search?: string, role?: string) {
+export async function getAllTherapists(search?: string, _role?: string) {
     const where: Prisma.terapeutaWhereInput = {};
 
     // Filtro de nome (busca por texto)
     if (search && search.trim() !== '') {
         where.nome = { contains: search.trim().toLowerCase() }
     }
-
-    // Removido filtro de role para retornar todos os terapeutas
-    console.log('🔍 [BACKEND] getAllTherapists - SEM FILTRO DE ROLE');
 
     const therapists = await prisma.terapeuta.findMany({
         where,
@@ -255,7 +276,6 @@ export async function getAllTherapists(search?: string, role?: string) {
         orderBy: { nome: 'asc' },
     });
 
-    console.log(`✅ [BACKEND] getAllTherapists retornando ${therapists.length} terapeutas`);
     return therapists;
 }
 
