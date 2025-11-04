@@ -50,16 +50,38 @@ export default function CadastroOcpPage() {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        if (user) {
-            setFormState((prev) => ({
-                ...prev,
-                therapist: {
-                    id: user.id,
-                    name: user.name ?? '',
-                    photoUrl: null,
-                },
-            }));
-        }
+        const loadTherapistAvatar = async () => {
+            if (user) {
+                try {
+                    // Buscar avatar do terapeuta logado
+                    const avatarRes = await fetch(`${import.meta.env.VITE_API_URL}/arquivos/getAvatar?ownerId=${user.id}&ownerType=terapeuta`, {
+                        credentials: 'include',
+                    });
+                    const avatarData = await avatarRes.json();
+                    
+                    setFormState((prev) => ({
+                        ...prev,
+                        therapist: {
+                            id: user.id,
+                            name: user.name ?? '',
+                            photoUrl: avatarData.avatarUrl ?? null,
+                        },
+                    }));
+                } catch (error) {
+                    console.error('Erro ao carregar avatar do terapeuta:', error);
+                    setFormState((prev) => ({
+                        ...prev,
+                        therapist: {
+                            id: user.id,
+                            name: user.name ?? '',
+                            photoUrl: null,
+                        },
+                    }));
+                }
+            }
+        };
+        
+        loadTherapistAvatar();
     }, [user]);
 
     // Carregar dados iniciais da URL

@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Skeleton } from '@/components/ui/skeleton';
 import { DateField } from '@/common/components/layout/DateField';
 import type { Patient, Therapist } from '../types';
 import { searchPatients, searchTherapists } from '../services';
@@ -43,6 +45,7 @@ function SelectorModal({
     const [searchQuery, setSearchQuery] = useState('');
     const [items, setItems] = useState<(Patient | Therapist)[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [imageLoadingStates, setImageLoadingStates] = useState<Record<string, boolean>>({});
 
     // Função para gerar iniciais
     const getInitials = (name: string) => {
@@ -66,6 +69,17 @@ function SelectorModal({
                         ? await searchPatients(searchQuery)
                         : await searchTherapists(searchQuery);
                 setItems(results);
+                
+                // Inicializa o estado de loading para todas as imagens
+                const initialLoadingState: Record<string, boolean> = {};
+                results.forEach(item => {
+                    if (item.photoUrl) {
+                        initialLoadingState[item.id] = true;
+                    }
+                });
+                setImageLoadingStates(initialLoadingState);
+                
+                console.log('📸 Items loaded:', results.map(r => ({ id: r.id, name: r.name, photoUrl: r.photoUrl })));
             } catch (error) {
                 console.error(`Erro ao buscar ${type}s:`, error);
             } finally {
@@ -138,19 +152,31 @@ function SelectorModal({
                                         <CardContent className="p-0 sm:p-0">
                                             <div className="flex items-center gap-3">
                                                 <div className="flex-shrink-0">
-                                                    {item.photoUrl ? (
-                                                        <img
-                                                            src={item.photoUrl}
-                                                            alt={`Foto de ${item.name}`}
-                                                            className="w-8 h-8 rounded-full object-cover"
-                                                            width={32}
-                                                            height={32}
-                                                        />
-                                                    ) : (
-                                                        <div className="h-8 w-8 bg-purple-100 rounded-full flex items-center justify-center text-xs font-medium text-purple-600">
+                                                    <Avatar className="w-8 h-8 rounded-full">
+                                                        {imageLoadingStates[item.id] && item.photoUrl && (
+                                                            <Skeleton className="h-8 w-8 rounded-full absolute inset-0" />
+                                                        )}
+                                                        {item.photoUrl ? (
+                                                            <AvatarImage
+                                                                src={item.photoUrl.startsWith('/api')
+                                                                    ? `${import.meta.env.VITE_API_BASE ?? ''}${item.photoUrl}`
+                                                                    : item.photoUrl}
+                                                                alt={`Foto de ${item.name}`}
+                                                                className={imageLoadingStates[item.id] ? 'opacity-0' : 'opacity-100 transition-opacity'}
+                                                                onLoad={() => {
+                                                                    console.log('✅ Image loaded:', item.name, item.photoUrl);
+                                                                    setImageLoadingStates(prev => ({ ...prev, [item.id]: false }));
+                                                                }}
+                                                                onError={() => {
+                                                                    console.error('❌ Image error:', item.name, item.photoUrl);
+                                                                    setImageLoadingStates(prev => ({ ...prev, [item.id]: false }));
+                                                                }}
+                                                            />
+                                                        ) : null}
+                                                        <AvatarFallback className={type === 'patient' ? 'bg-purple-100 text-purple-600 rounded-full' : 'bg-blue-100 text-blue-600 rounded-full'}>
                                                             {getInitials(item.name)}
-                                                        </div>
-                                                    )}
+                                                        </AvatarFallback>
+                                                    </Avatar>
                                                 </div>
 
                                                 <div className="flex-1 min-w-0">
@@ -199,6 +225,8 @@ export default function HeaderInfo({
 }: HeaderInfoProps) {
     const [showPatientSelector, setShowPatientSelector] = useState(false);
     const [showTherapistSelector, setShowTherapistSelector] = useState(false);
+    const [imageLoading, setImageLoading] = useState(true);
+    const [therapistImageLoading, setTherapistImageLoading] = useState(true);
 
     // Função para gerar iniciais
     const getInitials = (name: string) => {
@@ -233,19 +261,31 @@ export default function HeaderInfo({
                         {patient ? (
                             <div className="flex items-center gap-3 p-2 sm:p-3 bg-muted rounded-[5px]">
                                 <div className="flex-shrink-0">
-                                    {patient.photoUrl ? (
-                                        <img
-                                            src={patient.photoUrl}
-                                            alt={`Foto de ${patient.name}`}
-                                            className="w-12 h-12 rounded-full object-cover"
-                                            width={48}
-                                            height={48}
-                                        />
-                                    ) : (
-                                        <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-sm font-medium text-purple-600">
+                                    <Avatar className="w-12 h-12 rounded-full">
+                                        {imageLoading && patient.photoUrl && (
+                                            <Skeleton className="h-12 w-12 rounded-full absolute inset-0" />
+                                        )}
+                                        {patient.photoUrl ? (
+                                            <AvatarImage
+                                                src={patient.photoUrl.startsWith('/api')
+                                                    ? `${import.meta.env.VITE_API_BASE ?? ''}${patient.photoUrl}`
+                                                    : patient.photoUrl}
+                                                alt={`Foto de ${patient.name}`}
+                                                className={imageLoading ? 'opacity-0' : 'opacity-100 transition-opacity'}
+                                                onLoad={() => {
+                                                    console.log('✅ Patient image loaded:', patient.name, patient.photoUrl);
+                                                    setImageLoading(false);
+                                                }}
+                                                onError={() => {
+                                                    console.error('❌ Patient image error:', patient.name, patient.photoUrl);
+                                                    setImageLoading(false);
+                                                }}
+                                            />
+                                        ) : null}
+                                        <AvatarFallback className="bg-purple-100 text-purple-600 rounded-full">
                                             {getInitials(patient.name)}
-                                        </div>
-                                    )}
+                                        </AvatarFallback>
+                                    </Avatar>
                                 </div>
 
                                 <div className="flex-1 min-w-0">
@@ -306,19 +346,31 @@ export default function HeaderInfo({
                         {therapist ? (
                             <div className="flex items-center gap-3 p-2 sm:p-3 bg-muted rounded-md">
                                 <div className="flex-shrink-0">
-                                    {therapist.photoUrl ? (
-                                        <img
-                                            src={therapist.photoUrl}
-                                            alt={`Foto de ${therapist.name}`}
-                                            className="w-12 h-12 rounded-full object-cover"
-                                            width={48}
-                                            height={48}
-                                        />
-                                    ) : (
-                                        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-sm font-medium text-blue-600">
+                                    <Avatar className="w-12 h-12 rounded-full">
+                                        {therapistImageLoading && therapist.photoUrl && (
+                                            <Skeleton className="h-12 w-12 rounded-full absolute inset-0" />
+                                        )}
+                                        {therapist.photoUrl ? (
+                                            <AvatarImage
+                                                src={therapist.photoUrl.startsWith('/api')
+                                                    ? `${import.meta.env.VITE_API_BASE ?? ''}${therapist.photoUrl}`
+                                                    : therapist.photoUrl}
+                                                alt={`Foto de ${therapist.name}`}
+                                                className={therapistImageLoading ? 'opacity-0' : 'opacity-100 transition-opacity'}
+                                                onLoad={() => {
+                                                    console.log('✅ Therapist image loaded:', therapist.name, therapist.photoUrl);
+                                                    setTherapistImageLoading(false);
+                                                }}
+                                                onError={() => {
+                                                    console.error('❌ Therapist image error:', therapist.name, therapist.photoUrl);
+                                                    setTherapistImageLoading(false);
+                                                }}
+                                            />
+                                        ) : null}
+                                        <AvatarFallback className="bg-blue-100 text-blue-600 rounded-full">
                                             {getInitials(therapist.name)}
-                                        </div>
-                                    )}
+                                        </AvatarFallback>
+                                    </Avatar>
                                 </div>
 
                                 <div className="flex-1 min-w-0">
