@@ -475,6 +475,30 @@ export default function VinculosPage() {
         }
     };
 
+    const handleToggleSupervisionScope = async (link: TherapistSupervisionLink) => {
+        try {
+            const newScope = link.supervisionScope === 'direct' ? 'team' : 'direct';
+            const scopeLabel = newScope === 'direct' ? 'Supervisão Direta' : 'Supervisão de Equipe';
+            
+            await updateSupervisionLink({
+                id: link.id,
+                supervisionScope: newScope,
+            });
+            
+            await loadData(filters);
+            toast.success('Tipo de supervisão alterado', {
+                description: `O vínculo foi alterado para ${scopeLabel}.`,
+                duration: 3000,
+            });
+        } catch (error: any) {
+            console.error('Erro ao alterar tipo de supervisão:', error);
+            toast.error('Erro ao alterar tipo de supervisão', {
+                description: error?.message || 'Ocorreu um erro ao alterar o tipo de supervisão.',
+                duration: 4000,
+            });
+        }
+    };
+
     const handleReactivateLink = async (link: PatientTherapistLink) => {
         try {
             await reactivateLink(link.id, link.actuationArea);
@@ -785,6 +809,7 @@ export default function VinculosPage() {
                     onEndSupervisionLink={handleEndSupervisionLink}
                     onArchiveSupervisionLink={handleArchiveSupervisionLink}
                     onReactivateSupervisionLink={handleReactivateSupervisionLink}
+                    onToggleSupervisionScope={handleToggleSupervisionScope}
                     onAddTherapistToSupervisor={handleAddTherapistToSupervisor}
                     onBulkEndSupervisionLinks={handleBulkEndSupervisionLinks}
                     onBulkArchiveSupervisionLinks={handleBulkArchiveSupervisionLinks}

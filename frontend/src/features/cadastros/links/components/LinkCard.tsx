@@ -86,6 +86,7 @@ export default function LinkCard({
     onEndSupervision,
     onArchiveSupervision,
     onReactivateSupervision,
+    onToggleSupervisionScope,
     onAddTherapistToSupervisor,
     onBulkEndSupervision,
     onBulkArchiveSupervision,
@@ -131,6 +132,7 @@ export default function LinkCard({
             onEndSupervision,
             onArchiveSupervision,
             onReactivateSupervision,
+            onToggleSupervisionScope,
             onBulkEndSupervision,
             onBulkArchiveSupervision,
             onBulkReactivateSupervision,
@@ -892,6 +894,7 @@ function renderSupervisionCard(
     onEnd: (link: any) => void,
     onArchive: (link: any) => void,
     onReactivate: (link: any) => void,
+    onToggleScope?: (link: any) => void,
     onBulkEnd?: (links: any[]) => void,
     onBulkArchive?: (links: any[]) => void,
     onBulkReactivate?: (links: any[]) => void,
@@ -1084,6 +1087,7 @@ function renderSupervisionCard(
                                     onEnd={onEnd}
                                     onArchive={onArchive}
                                     onReactivate={onReactivate}
+                                    onToggleScope={onToggleScope}
                                 />
                             ))}
                         </div>
@@ -1103,6 +1107,7 @@ function renderSupervisionCard(
                                     onEnd={onEnd}
                                     onArchive={onArchive}
                                     onReactivate={onReactivate}
+                                    onToggleScope={onToggleScope}
                                 />
                             ))}
                         </div>
@@ -1129,6 +1134,7 @@ function renderSupervisionCard(
                                             onEnd={onEnd}
                                             onArchive={onArchive}
                                             onReactivate={onReactivate}
+                                            onToggleScope={onToggleScope}
                                             isEnded
                                         />
                                     ))}
@@ -1149,6 +1155,7 @@ function renderSupervisionCard(
                                             onEnd={onEnd}
                                             onArchive={onArchive}
                                             onReactivate={onReactivate}
+                                            onToggleScope={onToggleScope}
                                             isEnded
                                         />
                                     ))}
@@ -1178,6 +1185,7 @@ function renderSupervisionCard(
                                             onEnd={onEnd}
                                             onArchive={onArchive}
                                             onReactivate={onReactivate}
+                                            onToggleScope={onToggleScope}
                                             isArchived
                                         />
                                     ))}
@@ -1198,6 +1206,7 @@ function renderSupervisionCard(
                                             onEnd={onEnd}
                                             onArchive={onArchive}
                                             onReactivate={onReactivate}
+                                            onToggleScope={onToggleScope}
                                             isArchived
                                         />
                                     ))}
@@ -1242,6 +1251,7 @@ function SupervisedTherapistChip({
     onEnd,
     onArchive,
     onReactivate,
+    onToggleScope,
     isEnded = false,
     isArchived = false,
 }: {
@@ -1250,6 +1260,7 @@ function SupervisedTherapistChip({
     onEnd: (link: any) => void;
     onArchive: (link: any) => void;
     onReactivate: (link: any) => void;
+    onToggleScope?: (link: any) => void;
     isEnded?: boolean;
     isArchived?: boolean;
 }) {
@@ -1371,12 +1382,23 @@ function SupervisedTherapistChip({
                         <MoreVertical className="h-4 w-4" />
                     </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-40">
-                    {link.status === 'active' ? (
-                        <DropdownMenuItem onClick={() => onEnd(link)}>
-                            Encerrar
-                        </DropdownMenuItem>
-                    ) : link.status === 'ended' ? (
+                <DropdownMenuContent align="end" className="w-56">
+                    {link.status === 'active' && (
+                        <>
+                            {onToggleScope && (
+                                <>
+                                    <DropdownMenuItem onClick={() => onToggleScope(link)}>
+                                        Alternar para {link.supervisionScope === 'direct' ? 'Supervisão de Equipe' : 'Supervisão Direta'}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                </>
+                            )}
+                            <DropdownMenuItem onClick={() => onEnd(link)}>
+                                Encerrar
+                            </DropdownMenuItem>
+                        </>
+                    )}
+                    {link.status === 'ended' && (
                         <>
                             <DropdownMenuItem onClick={() => onReactivate(link)}>
                                 Reativar
@@ -1386,11 +1408,12 @@ function SupervisedTherapistChip({
                                 Arquivar
                             </DropdownMenuItem>
                         </>
-                    ) : link.status === 'archived' ? (
+                    )}
+                    {link.status === 'archived' && (
                         <DropdownMenuItem onClick={() => onReactivate(link)}>
                             Reativar
                         </DropdownMenuItem>
-                    ) : null}
+                    )}
                 </DropdownMenuContent>
             </DropdownMenu>
         </div>

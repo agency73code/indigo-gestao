@@ -27,6 +27,7 @@ export default function LinkList({
     onEndSupervisionLink,
     onArchiveSupervisionLink,
     onReactivateSupervisionLink,
+    onToggleSupervisionScope,
     onAddTherapistToSupervisor,
     onBulkEndSupervisionLinks,
     onBulkArchiveSupervisionLinks,
@@ -177,6 +178,7 @@ export default function LinkList({
                         onEndSupervision={onEndSupervisionLink}
                         onArchiveSupervision={onArchiveSupervisionLink}
                         onReactivateSupervision={onReactivateSupervisionLink}
+                        onToggleSupervisionScope={onToggleSupervisionScope}
                         onAddTherapistToSupervisor={onAddTherapistToSupervisor}
                         onBulkEndSupervision={onBulkEndSupervisionLinks}
                         onBulkArchiveSupervision={onBulkArchiveSupervisionLinks}

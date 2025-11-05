@@ -165,6 +165,7 @@ export interface LinkListProps {
   onEndSupervisionLink: (link: TherapistSupervisionLink) => void;
   onArchiveSupervisionLink: (link: TherapistSupervisionLink) => void;
   onReactivateSupervisionLink: (link: TherapistSupervisionLink) => void;
+  onToggleSupervisionScope?: (link: TherapistSupervisionLink) => void; // Alternar entre supervisão direta e de equipe
   onAddTherapistToSupervisor?: (supervisorId: string) => void;
   onBulkEndSupervisionLinks?: (links: TherapistSupervisionLink[]) => void;
   onBulkArchiveSupervisionLinks?: (links: TherapistSupervisionLink[]) => void;
@@ -197,6 +198,7 @@ export interface LinkCardProps {
   onEndSupervision: (link: TherapistSupervisionLink) => void;
   onArchiveSupervision: (link: TherapistSupervisionLink) => void;
   onReactivateSupervision: (link: TherapistSupervisionLink) => void;
+  onToggleSupervisionScope?: (link: TherapistSupervisionLink) => void; // Alternar entre supervisão direta e de equipe
   onAddTherapistToSupervisor?: (supervisorId: string) => void; // Novo: adicionar terapeuta a supervisor
   // Ações em lote (para supervisão)
   onBulkEndSupervision?: (links: TherapistSupervisionLink[]) => void;
