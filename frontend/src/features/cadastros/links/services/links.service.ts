@@ -383,7 +383,7 @@ export async function getAllPatients(): Promise<Paciente[]> {
         }
       })
     );
-
+    console.log(clientsWithAvatar)
     return clientsWithAvatar;
   } catch (error) {
     console.error('Erro ao buscar clientes:', error);

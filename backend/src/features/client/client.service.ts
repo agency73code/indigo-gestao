@@ -5,6 +5,7 @@ import * as ClientType from "./client.types.js";
 import { v4 as uuidv4 } from "uuid";
 import { getTherapistData } from "../../cache/therapistCache.js";
 import { ACCESS_LEVELS } from "../../utils/accessLevels.js";
+import { defineAbilityFor } from "../../abilities/defineAbility.js";
 
 async function enderecoData(dto: ClientType.Client) {
   return dto.enderecos.map((e) => ({
@@ -118,6 +119,7 @@ export async function create(dto: ClientType.Client) {
           email2: dto.dadosPagamento.email2 ?? null,
           email3: dto.dadosPagamento.email3 ?? null,
           sistemaPagamento: dto.dadosPagamento.sistemaPagamento,
+          prazoReembolso: dto.dadosPagamento.prazoReembolso ?? null,
           numeroProcesso: dto.dadosPagamento.numeroProcesso ?? null,
           nomeAdvogado: dto.dadosPagamento.nomeAdvogado ?? null,
           telefoneAdvogado1: dto.dadosPagamento.telefoneAdvogado1 ?? null,
@@ -660,86 +662,49 @@ export async function list(therapistId: string) {
     if (!cargo || !area) continue;
 
     const level = ACCESS_LEVELS[cargo] ?? 0;
+    const ability = defineAbilityFor(cargo);
+
+    // Autorização base pelo CASL
+    if (ability.can('read', 'Consultar')) continue;
 
     // Gerente e Coordenador Executivo veem todos os clientes
     if (level >= 5) {
       whereClauses.push({ id: { not: '' } });
       break;
     }
-    
-    if (cargo.includes('aba')) {
-      if (cargo.includes('supervisor')) {
-        // Supervisor ABA → vê seus próprios registros + coordenador + at
-        whereClauses.push({
-          terapeuta: {
-            some: {
-              OR: [
-                { terapeuta_id: therapistId },
-                { 
-                  terapeuta: { 
-                    registro_profissional: { 
-                      some: { 
-                        area_atuacao: { nome: area },
-                        cargo: { 
-                          nome: { contains: 'coordenador aba' } 
-                        },
-                      },
-                    },
-                  },
-                },
-                {
-                  terapeuta: {
-                    registro_profissional: {
-                      some: {
-                        area_atuacao: { nome: area },
-                        cargo: {
-                          nome: { contains: 'acompanhante terapeutico' } 
-                        },
-                      },
-                    },
-                  },
-                },
-              ],
-            },
-          },
-        });
-      } else if (cargo.includes('coordenador')) {
-        // Coordenador ABA → vê seus registros + AT
-        whereClauses.push({
-          terapeuta: {
-            some: {
-              OR: [
-                { terapeuta_id: therapistId },
-                { 
-                  terapeuta: {
-                    registro_profissional: {
-                      some: {
-                        area_atuacao: { nome: area },
-                        cargo: {
-                          nome: { contains: 'acompanhante terapeutico' },
-                        },
-                      },
-                    },
-                  },
-                },
-              ],
-            },
-          },
-        });
-      }
-      continue;
-    }
 
-    if (level <= 2) {
+    if (level === 3 || level === 4) {
+      const firstLevel = await prisma.vinculo_supervisao.findMany({
+        where: { supervisor_id: therapistId },
+        select: { clinico_id: true },
+      });
+
+      const firstIds = firstLevel.map(v => v.clinico_id);
+
+      let allIds = [therapistId, ...firstIds];
+
+      if (level === 4 && firstIds.length > 0) {
+        const secondLevel = await prisma.vinculo_supervisao.findMany({
+          where: { supervisor_id: { in: firstIds } },
+          select: { clinico_id: true },
+        });
+
+        const secondIds = secondLevel.map(v => v.clinico_id);
+        allIds = [...new Set([...allIds, ...secondIds])];
+      }
+
       whereClauses.push({
-        terapeuta: { some: { terapeuta_id: therapistId } },
+        terapeuta: {
+          some: { terapeuta_id: { in: allIds } },
+        },
       });
       continue;
     }
 
-    if (cargo.includes('supervisor')) {
+    // Clínicos e ATs
+    if (level <= 2) {
       whereClauses.push({
-        terapeuta: { some: { area_atuacao: area } },
+        terapeuta: { some: { terapeuta_id: therapistId } },
       });
       continue;
     }

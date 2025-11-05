@@ -172,7 +172,7 @@ export async function getAllClients(search?: string) {
                 orderBy: { id: 'asc' },
             },
         },
-        take: 5,
+        //take: 5,
         orderBy: { nome: 'asc' },
     });
 }
