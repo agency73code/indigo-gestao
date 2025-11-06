@@ -40,8 +40,8 @@ export async function createSupervisionLinkService(
  * Responsável por orquestrar a listagem de vínculos de supervisão.
  * Encaminha a requisição ao action responsável por buscar os dados.
  */
-export async function getAllSupervisionLinksService(filters?: LinkFilters) {
-    const result = await getAllSupervisionLinks(filters);
+export async function getAllSupervisionLinksService(userId: string, filters?: LinkFilters) {
+    const result = await getAllSupervisionLinks(userId, filters);
     return result;
 }
 

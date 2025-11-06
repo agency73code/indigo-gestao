@@ -227,7 +227,7 @@ async function seedTherapist(i: number, senha: string) {
 
 async function main() {
   const senha = await bcrypt.hash('Senha123', 10);
-  const quantidade = 200;
+  const quantidade = 100;
   const concurrency = 10;
 
   const batch = [];

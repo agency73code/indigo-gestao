@@ -87,7 +87,8 @@ export async function transferResponsible(req: Request<unknown, unknown, LinkTyp
 export async function getAllClients(req: Request, res: Response, next: NextFunction) {
     try {
         const { search = '' } = req.query;
-        const data = await LinkService.getAllClients(search.toString());
+
+        const data = await LinkService.getAllClients(req.user!.id, search.toString());
         const normalized = LinkNormalizer.getAllClients(data);
         res.json(normalized);
     } catch (err) {
@@ -98,7 +99,7 @@ export async function getAllClients(req: Request, res: Response, next: NextFunct
 export async function getAllTherapists(req: Request, res: Response, next: NextFunction) {
     try {
         const { search = '', role } = req.query;
-        const data = await LinkService.getAllTherapists(search.toString(), role?.toString());
+        const data = await LinkService.getAllTherapists(req.user!.id, search.toString(), role?.toString());
         const normalized = LinkNormalizer.getAllTherapists(data);
         res.json(normalized);
     } catch (err) {
@@ -115,7 +116,7 @@ export async function getAllTherapists(req: Request, res: Response, next: NextFu
 export async function getAllLinks(req: Request, res: Response, next: NextFunction) {
     try {
         const filters = { ...req.query };
-        const data = await LinkService.getAllLinks(filters);
+        const data = await LinkService.getAllLinks(req.user!.id, filters);
         const normalized = LinkNormalizer.getAllLinks(data);
         res.json(normalized);
     } catch (err) {

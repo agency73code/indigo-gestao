@@ -1,4 +1,5 @@
 import { prisma } from "../../../../config/database.js";
+import { getVisibleTherapistIds } from "../../../../utils/visibilityFilter.js";
 import { normalizeSupervisionLinks } from "../normalizers/supervisionLinkNormalizer.js";
 import type { LinkFilters } from "../types/supervisionLink.types.js";
 
@@ -6,12 +7,28 @@ import type { LinkFilters } from "../types/supervisionLink.types.js";
  * Busca vínculos de supervisão no banco de dados.
  * Retorna todos os vínculos, ordenados por data de criação.
  */
-export async function getAllSupervisionLinks(filters?: LinkFilters) {
-    const where = buildWhere(filters);
+export async function getAllSupervisionLinks(userId: string, filters?: LinkFilters) {
+    const whereBase = buildWhere(filters);
     const orderBy = buildOrderBy(filters);
 
-    const vinculos = await prisma.vinculo_supervisao.findMany({
-        where,
+    const visibleIds = await getVisibleTherapistIds(userId);
+
+    const finalWhere =
+        visibleIds && visibleIds.length > 0
+        ? {
+            AND: [
+                whereBase,
+                {
+                OR: [
+                    { supervisor_id: { in: visibleIds } },
+                ],
+                },
+            ],
+            }
+        : whereBase;
+
+    const links = await prisma.vinculo_supervisao.findMany({
+        where: finalWhere,
         orderBy,
         include: {
             supervisor: {
@@ -31,7 +48,7 @@ export async function getAllSupervisionLinks(filters?: LinkFilters) {
         },
     });
 
-    return normalizeSupervisionLinks(vinculos);
+    return normalizeSupervisionLinks(links);
 }
 
 /**

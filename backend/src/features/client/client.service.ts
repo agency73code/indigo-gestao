@@ -4,8 +4,7 @@ import { AppError } from "../../errors/AppError.js";
 import * as ClientType from "./client.types.js";
 import { v4 as uuidv4 } from "uuid";
 import { getTherapistData } from "../../cache/therapistCache.js";
-import { ACCESS_LEVELS } from "../../utils/accessLevels.js";
-import { defineAbilityFor } from "../../abilities/defineAbility.js";
+import { getVisibleTherapistIds } from "../../utils/visibilityFilter.js";
 
 async function enderecoData(dto: ClientType.Client) {
   return dto.enderecos.map((e) => ({
@@ -649,69 +648,18 @@ export async function list(therapistId: string) {
   }
 
   const registers = await getTherapistData(therapistId);
-
   if (!registers.length) {
     throw new AppError('REQUIRED_THERAPIST_REGISTER', 'Terapeuta sem registro profissional.', 400);
   }
 
-  const whereClauses: ClientType.ClientVisibilityFilter[] = [];
-
-  for (const reg of registers) {
-    const cargo = reg.cargo?.nome?.toLowerCase();
-    const area = reg.area_atuacao.nome;
-    if (!cargo || !area) continue;
-
-    const level = ACCESS_LEVELS[cargo] ?? 0;
-    const ability = defineAbilityFor(cargo);
-
-    // Autorização base pelo CASL
-    if (ability.can('read', 'Consultar')) continue;
-
-    // Gerente e Coordenador Executivo veem todos os clientes
-    if (level >= 5) {
-      whereClauses.push({ id: { not: '' } });
-      break;
-    }
-
-    if (level === 3 || level === 4) {
-      const firstLevel = await prisma.vinculo_supervisao.findMany({
-        where: { supervisor_id: therapistId },
-        select: { clinico_id: true },
-      });
-
-      const firstIds = firstLevel.map(v => v.clinico_id);
-
-      let allIds = [therapistId, ...firstIds];
-
-      if (level === 4 && firstIds.length > 0) {
-        const secondLevel = await prisma.vinculo_supervisao.findMany({
-          where: { supervisor_id: { in: firstIds } },
-          select: { clinico_id: true },
-        });
-
-        const secondIds = secondLevel.map(v => v.clinico_id);
-        allIds = [...new Set([...allIds, ...secondIds])];
-      }
-
-      whereClauses.push({
-        terapeuta: {
-          some: { terapeuta_id: { in: allIds } },
-        },
-      });
-      continue;
-    }
-
-    // Clínicos e ATs
-    if (level <= 2) {
-      whereClauses.push({
-        terapeuta: { some: { terapeuta_id: therapistId } },
-      });
-      continue;
-    }
-  }
+  const visibleIds = await getVisibleTherapistIds(therapistId);
 
  return prisma.cliente.findMany({
-  where: { OR: whereClauses },
+  where: {
+    terapeuta: {
+      some: { terapeuta_id: { in: visibleIds } }
+    }
+  },
   select: {
     id:true,
     nome: true,

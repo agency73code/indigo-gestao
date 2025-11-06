@@ -8,7 +8,6 @@ import { LinkFiltersSchema } from "./types/supervisionLinkFilters.schema.js";
  */
 export async function createSupervisionLinkController(req: Request, res: Response): Promise<Response> {
     try {
-        console.log(req.body);
         const result = await createSupervisionLinkService(req.body);
         return res.status(201).json(result);
     } catch (error) {
@@ -27,7 +26,7 @@ export async function getAllSupervisionLinksController(req: Request, res: Respon
     try {
         const filters = LinkFiltersSchema.parse(req.body);
 
-        const result = await getAllSupervisionLinksService(filters);
+        const result = await getAllSupervisionLinksService(req.user!.id, filters);
 
         return res.status(200).json(result);
     } catch (error) {

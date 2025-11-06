@@ -383,7 +383,6 @@ export async function getAllPatients(): Promise<Paciente[]> {
         }
       })
     );
-    console.log(clientsWithAvatar)
     return clientsWithAvatar;
   } catch (error) {
     console.error('Erro ao buscar clientes:', error);
@@ -452,7 +451,7 @@ export async function getAllLinks(filters?: LinkFilters): Promise<PatientTherapi
   }
   
   const json = await res.json();
-  console.log(json)
+  console.log({ 'terapeuta-cliente': json })
   return json as PatientTherapistLink[];
 }
 
@@ -478,6 +477,7 @@ export async function getAllSupervisionLinks(filters?: LinkFilters): Promise<The
   }
 
   const json = await res.json();
+  console.log({ 'terapeuta-terapeuta': json })
   return json as TherapistSupervisionLink[];
 }
 
