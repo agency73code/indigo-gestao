@@ -13,7 +13,7 @@ export async function fetchProgramById(programId: string): Promise<ProgramDetail
     return program;
 }
 
-export async function fetchRecentSessions(programId: string, limit = 5): Promise<SessionListItem[]> {
+export async function fetchRecentSessions(programId: string, _limit = 5): Promise<SessionListItem[]> {
     const res = await fetch(`/api/ocp/programs/${programId}/sessions`, { 
         credentials: 'include' 
     });
