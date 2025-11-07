@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import { Activity } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { useProgramAreas } from '../core/hooks/useProgramConfig';
 
@@ -33,6 +32,8 @@ export default function HubProgramasPage() {
                             'bg-green-500 text-white',
                         ];
 
+                        const IconComponent = area.icon;
+
                         return (
                             <Card
                                 key={area.id}
@@ -53,9 +54,11 @@ export default function HubProgramasPage() {
                                                     {area.subtitle || 'Criar, consultar e acompanhar programas'}
                                                 </p>
                                             </div>
-                                            <div className="bg-white/20 rounded-full p-3 ml-3">
-                                                <Activity className="h-6 w-6" />
-                                            </div>
+                                            {IconComponent && (
+                                                <div className="bg-white/20 rounded-full p-3 ml-3">
+                                                    <IconComponent className="h-6 w-6" />
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </Link>
