@@ -14,12 +14,6 @@ interface DetalheSessaoProps {
 }
 
 export default function DetalheSessao({ sessao, paciente, programa, onBack }: DetalheSessaoProps) {
-    // Log de carregamento
-    console.log('[Event] sessao:detalhe:load:success', {
-        sessionId: sessao.id,
-        patientId: paciente.id,
-    });
-
     // Agregar contagens por estímulo
     const countsByStimulus = useMemo(
         () => aggregateByStimulus(sessao.registros),
@@ -73,7 +67,7 @@ export default function DetalheSessao({ sessao, paciente, programa, onBack }: De
                 defaultSort="severity"
             />
 
-            <SessionNotes notes={null} />
+            <SessionNotes notes={sessao.observacoes ?? null} />
         </div>
     );
 }

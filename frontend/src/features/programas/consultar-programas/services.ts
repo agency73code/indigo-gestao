@@ -35,6 +35,31 @@ export async function getPatientById(patientId: string): Promise<Patient | null>
         headers: { 'Accept': 'application/json' },
     });
 
+    if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`Erro ao buscar paciente (${res.status}): ${text}`);
+    }
+
     const json = await res.json();
-    return json.data;
+    const data = json.data;
+
+    if (!data) return null;
+
+    try {
+        // 🔄 mesma chamada que o fetchClients faz
+        const avatarRes = await fetch(
+            `${import.meta.env.VITE_API_URL}/arquivos/getAvatar?ownerId=${data.id}&ownerType=cliente`,
+            { credentials: 'include' }
+        );
+
+        const avatarData = await avatarRes.json();
+
+        return {
+            ...data,
+            photoUrl: avatarData.avatarUrl ?? null,
+        };
+    } catch (error) {
+        console.error('❌ Erro ao buscar avatar do paciente:', error);
+        return { ...data, photoUrl: null };
+    }
 }

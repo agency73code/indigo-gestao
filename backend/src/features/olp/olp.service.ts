@@ -109,7 +109,7 @@ export async function getClientById(clientId: string) {
         name: client.nome,
         guardianName: client.cuidadores[0]?.nome ?? null,
         age: currentYear - birthYear,
-        photoUrl: `${process.env.API_URL}api/arquivos/getAvatar?ownerType=cliente&ownerId=${client.id}`
+        photoUrl: `/api/arquivos/getAvatar?ownerType=cliente&ownerId=${client.id}`,
     }
 }
 
@@ -262,6 +262,7 @@ export async function listSessionsByClient(clientId: string) {
             cliente_id: true,
             terapeuta_id: true,
             data_criacao: true,
+            observacoes_sessao: true,
             ocp: {
                 select: {
                     id: true,

@@ -136,6 +136,7 @@ export interface SessionDTO {
   cliente_id: string;
   terapeuta_id: string;
   data_criacao: Date;
+  observacoes_sessao: string | null;
   ocp: {
     id: number;
     nome_programa: string;
@@ -154,6 +155,7 @@ export interface Session {
   objetivo: string;
   prazoInicio: string;
   prazoFim: string | null;
+  observacoes: string | null;
   registros: {
     tentativa: number;
     resultado: 'acerto' | 'erro' | 'ajuda';

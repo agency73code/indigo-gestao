@@ -43,6 +43,7 @@ export function mapSessionList(dto: OcpTypes.SessionDTO[]): OcpTypes.Session[] {
         objetivo: s.ocp?.objetivo_programa ?? '',
         prazoInicio: s.ocp?.criado_em.toISOString(),
         prazoFim: null,
+        observacoes: s.observacoes_sessao ?? null,
         registros: s.trials.map((t) => ({
             tentativa: t.ordem,
             resultado: translateResult(t.resultado),
