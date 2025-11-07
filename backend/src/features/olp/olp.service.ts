@@ -401,17 +401,41 @@ export async function getKpis(filtros: OcpType.KpisFilters) {
     };
 }
 
-export async function getStimulusReport() {
-  return prisma.estimulo_ocp.findMany({
-    select: {
-      id: true,
-      nome: true,
+export async function getStimulusReport(clientId?: string, programId?: string) {
+    const where: {
+        ocp: {
+            cliente_id?: string;
+            id?: number;
+        };
+    } = {
+        ocp: {},
+    };
+
+    if (clientId) {
+        where.ocp.cliente_id = clientId;
     }
-  })
+
+    if (programId) {
+        where.ocp.id = Number(programId);
+    }
+
+    return prisma.estimulo_ocp.findMany({
+        where,
+        select: {
+            id: true,
+            nome: true,
+        },
+        orderBy: {
+            nome: 'asc',
+        },
+    });
 }
 
-export async function getProgramsReport() {
+export async function getProgramsReport(clientId?: string) {
+    const where = clientId ? { cliente_id: clientId } : {};
+    
   const ocps = await prisma.ocp.findMany({
+    where,
     select: {
       id: true,
       nome_programa: true,

@@ -310,13 +310,10 @@ export default function CadastroOcpPage() {
                 // Navegar para detalhes do programa
                 navigate(`/app/programas/${result.id}`);
             }
-        } catch (error) {
-            console.error('Erro ao salvar programa:', error);
-            toast.error(
-                error instanceof Error
-                    ? error.message
-                    : 'Erro ao salvar programa. Tente novamente.',
-            );
+        } catch (err) {
+            console.error('Erro ao salvar programa:', err);
+            const errorMessage = err instanceof Error ? err.message : 'Erro ao salvar programa';
+            toast.error(errorMessage);
         } finally {
             setIsSaving(false);
         }

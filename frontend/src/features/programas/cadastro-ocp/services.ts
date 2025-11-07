@@ -42,8 +42,22 @@ export async function createProgram(payload: CreateProgramInput): Promise<{ id: 
     });
 
     if (!res.ok) {
+    let errorMessage = `Erro ao criar programa (${res.status})`;
+
+    try {
+        const data = await res.json();
+        if (typeof data?.message === 'string') {
+        errorMessage = data.message;
+        }
+    } catch {
+        // Se não for JSON, tenta pegar texto
         const text = await res.text();
-        throw new Error(`Erro ao criar programa (${res.status}): ${text}`);
+        if (text) {
+        errorMessage = text;
+        }
+    }
+
+    throw new Error(errorMessage);
     }
 
     const json = await res.json();

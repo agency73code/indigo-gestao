@@ -5,6 +5,7 @@ import { generateResetToken } from "../../utils/resetToken.js";
 import { AppError } from "../../errors/AppError.js";
 import { ACCESS_LEVELS } from '../../utils/accessLevels.js';
 import { invalidateTherapistCache } from "../../cache/therapistCache.js";
+import { getVisibleTherapistIds } from "../../utils/visibilityFilter.js";
 
 async function resolveAreaAtuacaoId(
   areaAtuacaoId: TherapistTypes.TherapistProfessionalDataInput['areaAtuacaoId'],
@@ -282,8 +283,21 @@ export async function getById(therapistId: string) {
   });
 }
 
-export async function getTherapistReport() {
+export async function getTherapistReport(therapistId: string) {
+  const visibleIds = await getVisibleTherapistIds(therapistId);
+
+  if (!visibleIds.length) {
+    throw new AppError(
+      'NO_VISIBLE_THERAPISTS',
+      'Nenhum terapeuta visível para este usuário.',
+      403
+    );
+  }
+
   return prisma.terapeuta.findMany({
+    where: {
+      id: { in: visibleIds }
+    },
     select: {
       id: true,
       nome: true,
