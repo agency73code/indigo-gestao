@@ -26,15 +26,8 @@ export default function DateSection({
 
     const formatISOToDate = (isoString: string | null | undefined) => {
         if (!isoString) return '';
-        try {
-            const date = new Date(isoString);
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        } catch {
-            return '';
-        }
+        // Corta qualquer parte de horário e devolve só a data
+        return isoString.split('T')[0];
     };
 
     return (
@@ -78,7 +71,7 @@ export default function DateSection({
                         minDate={prazoInicio ? new Date(formatISOToDate(prazoInicio)) : undefined}
                     />
                     <p className="text-xs text-muted-foreground">
-                        Data prevista para finalização do programa (opcional)
+                        Data prevista para finalização do programa
                     </p>
                 </div>
 

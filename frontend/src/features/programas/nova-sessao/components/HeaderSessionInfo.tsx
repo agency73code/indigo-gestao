@@ -26,11 +26,10 @@ export default function HeaderSessionInfo({ patient, program }: HeaderSessionInf
     };
 
     const formatDate = (dateString: string) => {
-        try {
-            return new Date(dateString).toLocaleDateString('pt-BR');
-        } catch {
-            return dateString;
-        }
+        if (!dateString) return '';
+        // evita o deslocamento de fuso: lê apenas a parte da data
+        const [year, month, day] = dateString.split('T')[0].split('-');
+        return `${day}/${month}/${year}`;
     };
 
     const daysLeftInfo = () => {

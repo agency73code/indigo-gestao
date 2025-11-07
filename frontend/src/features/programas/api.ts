@@ -20,7 +20,9 @@ function ageCalc(birthDate: string) {
 }
 
 export async function fetchProgram(programId: string): Promise<ProgramDetail> {
-    const res = await fetch(`/api/ocp/programs/${programId}`, { credentials: 'include' });
+    const res = await fetch(`/api/ocp/programs/${programId}`, { 
+        credentials: 'include' 
+    });
     if (!res.ok) throw new Error(`Erro ao buscar programas: ${res.statusText}`);
 
     const json = await res.json();
@@ -79,7 +81,6 @@ export async function fetchClients(q?: string): Promise<Patient[]> {
                     credentials: 'include',
                 });
                 const avatarData = await avatarRes.json();
-                console.log('🖼️ Avatar data for', p.name, ':', avatarData);
                 return {
                     id: p.id,
                     name: p.name,
@@ -120,11 +121,11 @@ export async function fetchTherapists(q?: string): Promise<Therapist[]> {
     }
 
     const json = await res.json();
-    const data = (json?.data ?? []) as Array<{
+    const data = (Array.isArray(json) ? json : json?.data ?? []) as Array<{
         id: string;
         nome: string;
     }>;
-    
+
     const therapistsWithAvatar = await Promise.all(
         data.map(async (t) => {
             try {
@@ -132,7 +133,6 @@ export async function fetchTherapists(q?: string): Promise<Therapist[]> {
                     credentials: 'include',
                 });
                 const avatarData = await avatarRes.json();
-                console.log('🖼️ Avatar data for therapist', t.nome, ':', avatarData);
                 return {
                     id: t.id,
                     name: t.nome,

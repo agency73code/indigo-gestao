@@ -31,12 +31,7 @@ export async function getVisibleTherapistIds(therapistId: string): Promise<strin
   if (!ability.can('read', 'Consultar')) return [];
 
   // --- Nível administrativo total ---
-  if (maxLevel >= 5) {
-    const allTherapists = await prisma.terapeuta.findMany({
-      select: { id: true },
-    });
-    return allTherapists.map(t => t.id);
-  }
+  if (maxLevel >= 5)  return [];
 
   // --- Nível intermediário (coordenação/supervisão) ---
   // Uma única query para cada nível hierárquico

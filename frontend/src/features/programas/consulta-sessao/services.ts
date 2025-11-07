@@ -61,7 +61,6 @@ export async function listSessionsByPatient(
   try {
     // Construir URL com query params
     const url = new URL(`/api/ocp/clients/${patientId}/sessions`, window.location.origin);
-    
     // Adiciona filtros se houver
     if (q) url.searchParams.set('q', q);
     if (dateRange && dateRange !== 'all') url.searchParams.set('dateRange', dateRange);
@@ -275,7 +274,7 @@ export async function findProgramSessionById(sessionId: string): Promise<Program
       method: 'GET',
       credentials: 'include',
     });
-    
+
     if (!res.ok) throw new Error(`Erro ao buscar a sessão: ${res.statusText}`);
     
     const data = await res.json();

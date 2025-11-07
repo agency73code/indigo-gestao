@@ -36,6 +36,7 @@ export default function CadastroOcpPage() {
         programName: '',
         goalTitle: '',
         goalDescription: '',
+        shortTermGoalDescription: '',
         stimuli: [],
         stimuliApplicationDescription: '',
         criteria: '',
@@ -194,6 +195,10 @@ export default function CadastroOcpPage() {
             errors.therapistId = 'Selecione um terapeuta';
         }
 
+        if (!formState.prazoFim) {
+            errors.prazoFim = 'Selecione a data de fim';
+        }
+
         if (!formState.goalTitle.trim()) {
             errors.goalTitle = 'Título do objetivo é obrigatório';
         } else if (formState.goalTitle.trim().length < 3) {
@@ -279,22 +284,21 @@ export default function CadastroOcpPage() {
 
         try {
             const payload: CreateProgramInput = {
-                patientId: formState.patient!.id,
-                therapistId: formState.therapist!.id,
-                name: formState.programName.trim() || null,
-                goalTitle: formState.goalTitle.trim(),
-                goalDescription: formState.goalDescription.trim() || null,
-                stimuli: formState.stimuli.filter((s) => s.label.trim()), // Remove estímulos vazios
-                stimuliApplicationDescription:
-                    formState.stimuliApplicationDescription.trim() || null,
-                criteria: formState.criteria.trim() || null,
-                notes: formState.notes.trim() || null,
-                prazoInicio: formState.prazoInicio.trim() || undefined,
-                prazoFim: formState.prazoFim.trim() || undefined,
+                patientId: formState.patient!.id, // [cliente]
+                therapistId: formState.therapist!.id, // [terapeuta]
+                name: formState.programName.trim() || null, // [Nome do programa]
+                prazoInicio: formState.prazoInicio.trim() || undefined, // [Data de início]
+                prazoFim: formState.prazoFim.trim() || undefined, // [Data de fim]
+                goalTitle: formState.goalTitle.trim(), // [Titulo do objetivo]
+                goalDescription: formState.goalDescription.trim() || null, // [Descrição objetivo a longo prazo]
+                criteria: formState.criteria.trim() || null, // [Critério de Aprendizagem]
+                shortTermGoalDescription: formState.shortTermGoalDescription.trim() || null, // [Descrição detalhada do objetivo a curto prazo]
+                stimuliApplicationDescription: formState.stimuliApplicationDescription.trim() || null, // [Descrição da Aplicação]
+                stimuli: formState.stimuli.filter((s) => s.label.trim()), // [Estimulos]
+                notes: formState.notes.trim() || null, // [Observações gerais]
             };
 
             const result = await createProgram(payload);
-
             toast.success('Programa criado com sucesso!');
 
             if (startSession) {
@@ -325,6 +329,7 @@ export default function CadastroOcpPage() {
             formState.programName.trim() ||
             formState.goalTitle.trim() ||
             formState.goalDescription.trim() ||
+            formState.shortTermGoalDescription.trim() ||
             formState.stimuli.some((s) => s.label.trim()) ||
             formState.criteria.trim() ||
             formState.notes.trim();
@@ -422,10 +427,12 @@ export default function CadastroOcpPage() {
                     <StimuliList
                         stimuli={formState.stimuli}
                         stimuliApplicationDescription={formState.stimuliApplicationDescription}
-                        goalDescription={formState.goalDescription}
+                        shortTermGoalDescription={formState.shortTermGoalDescription}
                         onChange={handleStimuliChange}
                         onApplicationDescriptionChange={handleStimuliApplicationDescriptionChange}
-                        onGoalDescriptionChange={handleGoalDescriptionChange}
+                        onShortTermGoalDescriptionChange={(desc) =>
+                            setFormState((prev) => ({ ...prev, shortTermGoalDescription: desc }))
+                        }
                         errors={{ stimuli: errors.stimuli }}
                     />
 

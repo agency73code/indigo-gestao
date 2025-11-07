@@ -8,11 +8,13 @@ import { auth } from '../middleware/auth.middleware.js';
 
 const router: ExpressRouter = Router();
 
-router.get('/', auth, TherapistController.list);
-router.get('/relatorio', auth, TherapistController.getTherapistReport);
-router.get('/bancos', auth, TherapistController.listBanks);
-router.get('/:therapistId', auth, TherapistController.getById);
-router.patch('/:therapistId', auth, requireAbility('manage', 'Cadastro'), TherapistController.update);
-router.post('/cadastrar', auth, requireAbility('manage', 'Cadastro'), TherapistController.create);
+router.use(auth);
+
+router.get('/', requireAbility('manage', 'Cadastro'), TherapistController.list);
+router.get('/relatorio', TherapistController.getTherapistReport);
+router.get('/bancos', TherapistController.listBanks);
+router.get('/:therapistId', TherapistController.getById);
+router.patch('/:therapistId', requireAbility('manage', 'Cadastro'), TherapistController.update);
+router.post('/cadastrar', requireAbility('manage', 'Cadastro'), TherapistController.create);
 
 export default router;

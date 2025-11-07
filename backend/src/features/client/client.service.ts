@@ -654,52 +654,57 @@ export async function list(therapistId: string) {
 
   const visibleIds = await getVisibleTherapistIds(therapistId);
 
- return prisma.cliente.findMany({
-  where: {
-    terapeuta: {
-      some: { terapeuta_id: { in: visibleIds } }
-    }
-  },
-  select: {
-    id:true,
-    nome: true,
-    emailContato: true,
-    cuidadores: {
-      select: {
-        telefone: true,
-        nome: true,
-        cpf: true,
+  const where: Prisma.clienteWhereInput = 
+    visibleIds.length === 0
+      ? {}
+      : {
+        terapeuta: {
+          some: { terapeuta_id: { in: visibleIds } },
+        },
+      };
+
+  return prisma.cliente.findMany({
+    where,
+    select: {
+      id:true,
+      nome: true,
+      emailContato: true,
+      cuidadores: {
+        select: {
+          telefone: true,
+          nome: true,
+          cpf: true,
+        },
+        take: 1,
       },
-      take: 1,
-    },
-    status: true,
-    dataNascimento: true,
-    enderecos: {
-      select: {
-        endereco: {
-          select: {
-            cep: true,
-            rua: true,
-            numero: true,
-            bairro: true,
-            cidade: true,
-            uf: true,
-            complemento: true,
+      status: true,
+      dataNascimento: true,
+      enderecos: {
+        select: {
+          endereco: {
+            select: {
+              cep: true,
+              rua: true,
+              numero: true,
+              bairro: true,
+              cidade: true,
+              uf: true,
+              complemento: true,
+            },
           },
         },
       },
-    },
-    arquivos: {
-      select: {
-        tipo: true,
-        mime_type: true,
-        arquivo_id: true,
-        tamanho: true,
-        data_upload: true,
+      arquivos: {
+        select: {
+          tipo: true,
+          mime_type: true,
+          arquivo_id: true,
+          tamanho: true,
+          data_upload: true,
+        },
       },
-    },
-  }
- });
+    }
+  });
 }
 
 export async function getClientReport() {

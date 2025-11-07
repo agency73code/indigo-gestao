@@ -7,10 +7,11 @@ export type createOCP = {
     goalTitle: string;
     goalDescription?: string | null;
     criteria?: string | null;
+    shortTermGoalDescription: string | null;
+    stimuliApplicationDescription: string | null;
     notes?: string | null;
     stimuli: {
         label: string;
-        description?: string;
         active: boolean;
         order: number;
     }[];
@@ -44,7 +45,6 @@ export type getOCP = {
 export type OcpStimuloDTO = {
   id_estimulo: number;
   nome: string | null;
-  descricao: string | null;
   status: boolean;
 };
 
@@ -55,26 +55,28 @@ export type OcpDetailDTO = {
   cliente: {
     nome: string | null;
     dataNascimento: Date | null;
-    cuidadores?: { nome: string | null }[];
-    arquivos: { arquivo_id: string | null }[];
+    cuidadores: { nome: string | null }[]; // take: 1, mas tipa como array
   };
-  criador_id: string;
-  criador: { nome: string };
+  data_inicio: Date;
+  data_fim: Date;
+  terapeuta_id: string;
+  terapeuta: { nome: string };
   criado_em: Date;
   objetivo_programa: string | null;
   objetivo_descricao: string | null;
+  descricao_aplicacao: string | null;
+  objetivo_curto: string | null;
   estimulo_ocp?: OcpStimuloDTO[];
-  dominio_criterio?: string | null;
-  observacao_geral?: string | null;
+  criterio_aprendizagem: string | null;
+  observacao_geral: string | null;
   status: string;
-  data_inicio: Date;
-  data_fim: Date;
 };
 
 export type CreateSessionInput = {
   programId: number;
   patientId: string;
   therapistId: string;
+  notes: string | null;
   attempts: {
     stimulusId: string;
     attemptNumber: number;
@@ -83,22 +85,24 @@ export type CreateSessionInput = {
 };
 
 export type UpdateProgramInput = {
-    id: string;
-    name?: string | null;
-    goalTitle?: string;
-    goalDescription?: string | null;
-    stimuli?: { 
-        id?: string; 
-        label: string; 
-        description?: string | null; 
-        active: boolean; 
-        order: number 
-    }[];
-    criteria?: string | null;
-    notes?: string | null;
-    status?: 'active' | 'archived';
-    prazoInicio?: string; // Data de início do programa
-    prazoFim?: string; // Data de fim do programa
+  id: number;
+  name: string;
+  goalTitle: string | null;
+  goalDescription: string | null;
+  shortTermGoalDescription: string | null;
+  stimuliApplicationDescription: string | null;
+  stimuli: {
+    id?: string;
+    label: string;
+    description?: string | null;
+    active: boolean;
+    order: number;
+  }[];
+  criteria: string | null;
+  notes: string | null;
+  status: 'active' | 'archived';
+  prazoInicio: string;
+  prazoFim: string;
 };
 
 export type ClientRowDTO = {
@@ -176,7 +180,7 @@ export type ProgramSelectResult = {
     }[];
     dataNascimento: Date | null;
   };
-  criador: {
+  terapeuta: {
     id: string;
     nome: string;
   };
@@ -188,7 +192,6 @@ export type ProgramSelectResult = {
   estimulo_ocp: {
     id: number;
     nome: string | null;
-    descricao: string | null;
     status: boolean;
   }[];
   status: string;

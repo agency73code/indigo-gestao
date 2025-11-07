@@ -245,8 +245,18 @@ export async function create(dto: TherapistTypes.TherapistForm) {
   return therapist
 };
 
-export async function list():Promise<TherapistTypes.TherapistDB[]> {
+export async function list(q?: string):Promise<TherapistTypes.TherapistDB[]> {
+    const where = q
+    ? {
+        nome: {
+          contains: q,
+        },
+      }
+    : undefined;
+
   return prisma.terapeuta.findMany({
+    ...(where && { where }),
+    orderBy: { nome: 'asc' },
     include: {
       endereco: true,
       formacao: { include: { pos_graduacao: true } },

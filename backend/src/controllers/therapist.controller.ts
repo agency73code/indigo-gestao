@@ -89,11 +89,14 @@ export async function update(req: Request, res: Response, next: NextFunction) {
 
 export async function list(req: Request, res: Response, next: NextFunction) {
     try {
-        const therapists = await TherapistService.list();
-        const normalized = therapists.map(TherapistNormalizer.normalizeTherapistSession);
-        res.json(normalized);
+      const q = (req.query.q as string) || undefined;
+      console.log(q);
+      console.log('=====================================')
+      const therapists = await TherapistService.list(q);
+      const normalized = therapists.map(TherapistNormalizer.normalizeTherapistSession);
+      res.json(normalized);
     } catch (error) {
-        next(error);
+      next(error);
     }
 }
 

@@ -1,4 +1,4 @@
-import type * as OcpTypes from "./ocp.types.js";
+import type * as OcpTypes from "./types/olp.types.js";
 import { differenceInYears } from 'date-fns';
 
 export function mapOcpDetail(dto: OcpTypes.OcpDetailDTO) {
@@ -9,24 +9,27 @@ export function mapOcpDetail(dto: OcpTypes.OcpDetailDTO) {
         patientName: dto.cliente.nome,
         patientGuardian: dto.cliente.cuidadores?.[0]?.nome,
         patientAge: differenceInYears(new Date(), dto.cliente.dataNascimento!),
-        therapistId: dto.criador_id,
-        therapistName: dto.criador.nome,
+        patientPhotoUrl: null,
+        prazoInicio: dto.data_inicio,
+        prazoFim: dto.data_fim,
+        therapistId: dto.terapeuta_id,
+        therapistName: dto.terapeuta.nome,
+        therapistPhotoUrl: null,
         createdAt: dto.criado_em.toISOString(),
         goalTitle: dto.objetivo_programa ?? "",
         goalDescription: dto.objetivo_descricao ?? "",
+        longTermGoalDescription: dto.objetivo_descricao,
+        shortTermGoalDescription: dto.objetivo_curto,
+        stimuliApplicationDescription: dto.descricao_aplicacao,
         stimuli: dto.estimulo_ocp?.map((s: OcpTypes.OcpStimuloDTO, idx: number) => ({
             id: s.id_estimulo.toString(),
             order: idx + 1,
             label: s.nome ?? '',
-            description: s.descricao ?? '',
             active: s.status,
         })) ?? [],
-        criteria: dto.dominio_criterio ?? '',
+        criteria: dto.criterio_aprendizagem,
         notes: dto.observacao_geral ?? '',
-        status: dto.status as "active" | "archived",
-        patientPhotoUrl: dto.cliente.arquivos[0]?.arquivo_id,
-        prazoInicio: dto.data_inicio,
-        prazoFim: dto.data_fim,
+        status: dto.status === 'ativado' ? "active" : "archived",
     }
 }
 
@@ -79,7 +82,7 @@ export function mapOcpReturn(dto: OcpTypes.ProgramRowDTO) {
         id: dto.id.toString(),
         title: dto.nome_programa,
         objective: dto.objetivo_programa,
-        status: dto.status as 'active' | 'archived',
+        status: dto.status === 'ativado' ? 'active' : 'archived',
         lastSession: dto.atualizado_em.toISOString(),
         patientId: dto.cliente_id,
     };
@@ -94,8 +97,8 @@ export function mapOcpProgramSession(dto: OcpTypes.ProgramSelectResult) {
         patientGuardian: dto.cliente.cuidadores[0]?.nome,
         patientAge: new Date().getFullYear() - dto.cliente.dataNascimento!.getFullYear(),
         patientPhotoUrl: null,
-        therapistId: dto.criador.id,
-        therapistName: dto.criador.nome,
+        therapistId: dto.terapeuta.id,
+        therapistName: dto.terapeuta.nome,
         createdAt: dto.criado_em.toISOString(),
         prazoInicio: dto.data_inicio.toISOString(),
         prazoFim: dto.data_fim.toISOString(),
@@ -105,7 +108,6 @@ export function mapOcpProgramSession(dto: OcpTypes.ProgramSelectResult) {
             id: String(e.id),
             order: idx + 1,
             label: e.nome ?? '',
-            description: e.descricao ?? '',
             active: e.status,
         })),
         status: dto.status,

@@ -24,24 +24,31 @@ export default function HeaderProgram({ program }: HeaderProgramProps) {
             .slice(0, 2);
     };
 
-    const formatDate = (dateString: string) => {
-        try {
-            return new Date(dateString).toLocaleDateString('pt-BR');
-        } catch {
-            return dateString;
-        }
+    const formatDate = (dateInput: string | Date) => {
+    try {
+        const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+        const corrected = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
+        return corrected.toLocaleDateString('pt-BR');
+    } catch {
+        return String(dateInput);
+    }
+    };
+
+    const parseLocalDate = (dateString: string) => {
+        const d = new Date(dateString);
+        return new Date(d.getTime() + d.getTimezoneOffset() * 60000);
     };
 
     const daysLeftInfo = () => {
         if (!program.prazoInicio || !program.prazoFim) return null;
 
         const now = new Date();
-        const end = new Date(program.prazoFim);
-        const start = new Date(program.prazoInicio);
+        const end = parseLocalDate(program.prazoFim);
+        const start = parseLocalDate(program.prazoInicio);
         const diff = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
         if (isNaN(diff)) return null;
         const status = now > end ? 'finalizado' : `restam ${diff} dias`;
-        const period = `${formatDate(start.toISOString())} — ${formatDate(end.toISOString())}`;
+        const period = `${formatDate(start)} — ${formatDate(end)}`;
         return { status, period };
     };
 

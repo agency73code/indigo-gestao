@@ -14,18 +14,18 @@ export async function getAllClients(userId: string, search?: string) {
     const visibleIds = await getVisibleTherapistIds(userId);
 
     const finalWhere: Prisma.clienteWhereInput =
-        visibleIds && visibleIds.length > 0
-        ? {
+    !visibleIds || visibleIds.length === 0
+        ? whereBase
+        : {
             AND: [
                 whereBase,
                 {
-                terapeuta: {
-                    some: { terapeuta_id: { in: visibleIds } },
-                },
+                    terapeuta: {
+                        some: { terapeuta_id: { in: visibleIds } },
+                    },
                 },
             ],
-            }
-        : whereBase;
+        };
 
     return prisma.cliente.findMany({
         where: finalWhere,

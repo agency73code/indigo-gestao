@@ -1,6 +1,6 @@
-import type { Request, Response } from 'express';
-import * as OcpService from '../features/ocp/ocp.service.js';
-import * as OcpNormalizer from '../features/ocp/ocp.normalizer.js';
+import type { NextFunction, Request, Response } from 'express';
+import * as OcpService from './olp.service.js';
+import * as OcpNormalizer from './olp.normalizer.js';
 
 export async function createProgram(req: Request, res: Response) {
     try {
@@ -19,13 +19,13 @@ export async function createSession(req: Request, res: Response) {
         if (!req.params.programId) return res.status(400).json({ success: false, message: 'ID do programa não informado' });
         const programId = parseInt(req.params.programId, 10);
 
-        const { patientId, attempts } = req.body;
+        const { patientId, notes, attempts } = req.body;
         if (!patientId || !Array.isArray(attempts)) return res.status(400).json({ error: "Dados inválidos para criar sessão" });
 
         const therapistId = req.user?.id;
         if (!therapistId) return res.status(401).json({ error: "Usuário não autenticado" });
 
-        const session = await OcpService.createSession({ programId, patientId, therapistId, attempts });
+        const session = await OcpService.createSession({ programId, patientId, therapistId, notes, attempts });
         res.status(201).json(session);
     } catch (err) {
         console.error(err);
@@ -33,7 +33,7 @@ export async function createSession(req: Request, res: Response) {
     }
 }
 
-export async function updateProgram(req: Request, res: Response) {
+export async function updateProgram(req: Request, res: Response, next: NextFunction) {
     try {
         if (!req.params.programId) return res.status(400).json({ success: false, message: 'ID do programa não informado' });
         const programId = parseInt(req.params.programId, 10);
@@ -41,10 +41,9 @@ export async function updateProgram(req: Request, res: Response) {
         const ocp = await OcpService.updateProgram(programId, req.body);
         if (!ocp) return res.status(404).json({ success: false, message: 'OCP não encontrado' });
 
-        return res.status(201).json({ data: ocp });
+        return res.status(200).json({ data: ocp });
     } catch (error) {
-        console.error(error);
-        return res.status(400).json({ success: false, message: 'Erro programa não encontrado' });
+        next(error);
     }
 }
 
@@ -119,7 +118,9 @@ export async function listClientPrograms(req: Request, res: Response) {
     const sort = (req.query.sort as 'recent' | 'alphabetic') ?? 'recent';
 
     if (!clientId) return res.status(400).json({ success: false, message: 'ClientId é obrigatório' });
+
     const rows = await OcpService.listByClientId(clientId, page, 10, status, q, sort);
+
     return res.json({ success: true, data: rows.map(OcpNormalizer.mapOcpReturn) });
 }
 

@@ -8,25 +8,25 @@ import type { StimulusInput } from '../types';
 interface StimuliListProps {
     stimuli: StimulusInput[];
     stimuliApplicationDescription?: string;
-    goalDescription?: string;
+    shortTermGoalDescription?: string;
     onChange: (stimuli: StimulusInput[]) => void;
     onApplicationDescriptionChange?: (description: string) => void;
-    onGoalDescriptionChange?: (description: string) => void;
+    onShortTermGoalDescriptionChange?: (description: string) => void;
     errors?: {
         stimuli?: string;
         stimulusErrors?: { [key: string]: { label?: string } };
         stimuliApplicationDescription?: string;
-        goalDescription?: string;
+        shortTermGoalDescription?: string;
     };
 }
 
 export default function StimuliList({
     stimuli,
     stimuliApplicationDescription = '',
-    goalDescription = '',
+    shortTermGoalDescription = '',
     onChange,
     onApplicationDescriptionChange,
-    onGoalDescriptionChange,
+    onShortTermGoalDescriptionChange,
     errors,
 }: StimuliListProps) {
     const generateId = () => `stimulus_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -128,17 +128,17 @@ export default function StimuliList({
                     <textarea
                         id="goal-description"
                         placeholder="Descreva mais detalhadamente o que se espera alcançar com este objetivo..."
-                        value={goalDescription}
-                        onChange={(e) => onGoalDescriptionChange?.(e.target.value)}
+                        value={shortTermGoalDescription}
+                        onChange={(e) => onShortTermGoalDescriptionChange?.(e.target.value)}
                         maxLength={1000}
                         rows={3}
                         className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
                     />
-                    {errors?.goalDescription && (
-                        <p className="text-sm text-destructive">{errors.goalDescription}</p>
+                    {errors?.shortTermGoalDescription && (
+                        <p className="text-sm text-destructive">{errors.shortTermGoalDescription}</p>
                     )}
                     <p className="text-xs text-muted-foreground">
-                        {goalDescription.length}/1000 caracteres
+                        {shortTermGoalDescription.length}/1000 caracteres
                     </p>
                 </div>
 

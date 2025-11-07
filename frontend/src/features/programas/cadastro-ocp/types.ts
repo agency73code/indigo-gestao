@@ -27,6 +27,7 @@ export type CreateProgramInput = {
     name?: string | null;
     goalTitle: string;
     goalDescription?: string | null;
+    shortTermGoalDescription: string | null;
     stimuli: StimulusInput[]; // pelo menos 1, label não vazio
     stimuliApplicationDescription?: string | null; // Descrição geral de aplicação dos estímulos
     criteria?: string | null;
@@ -43,6 +44,7 @@ export type ValidationErrors = {
     goalTitle?: string;
     stimuli?: string;
     general?: string;
+    prazoFim?: string;
 };
 
 // Estado do formulário
@@ -52,6 +54,7 @@ export type FormState = {
     programName: string;
     goalTitle: string;
     goalDescription: string;
+    shortTermGoalDescription: string;
     stimuli: StimulusInput[];
     stimuliApplicationDescription: string;
     criteria: string;
