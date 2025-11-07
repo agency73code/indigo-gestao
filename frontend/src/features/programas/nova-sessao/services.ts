@@ -1,37 +1,14 @@
 import type { ProgramDetail, SessionState } from './types';
 import * as Api from '../api';
-
-const USE_LOCAL_MOCKS = true;
-
 import { searchPatients } from '@/features/programas/consultar-programas/services';
 import { listPrograms } from '@/features/programas/consultar-programas/services';
-import { mockProgramDetail } from '@/features/programas/detalhe-ocp/mocks/program.mock';
 
 export const searchPatientsForSession = searchPatients;
 export const listProgramsForSession = listPrograms;
 
 export async function getProgramDetail(programId: string): Promise<ProgramDetail> {
-    try {
-        const program = await Api.fetchProgram(programId);
-        
-        // TODO: Remover este mock quando o backend adicionar o campo stimuliApplicationDescription
-        // Mock temporário para simular a descrição da aplicação
-        if (!program.stimuliApplicationDescription) {
-            program.stimuliApplicationDescription = 
-                'Aplique os estímulos nas sessões diárias, utilizando reforçadores preferidos e alternando contextos (sala, pátio e refeitório) para favorecer a generalização.';
-        }
-        
-        return program;
-    } catch (error) {
-        if (USE_LOCAL_MOCKS) {
-            await new Promise(resolve => setTimeout(resolve, 300));
-            return {
-                ...mockProgramDetail,
-                id: programId,
-            };
-        }
-        throw error;
-    }
+    const program = await Api.fetchProgram(programId);
+    return program;
 }
 
 export async function saveSession(sessionData: { 
@@ -40,35 +17,22 @@ export async function saveSession(sessionData: {
     attempts: SessionState['attempts'];
     notes?: string;
 }): Promise<{ id: string }> {
-    try {
-        const res = await fetch(`/api/ocp/programs/${sessionData.programId}/sessions`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ 
-                patientId: sessionData.patientId, 
-                attempts: sessionData.attempts,
-                notes: sessionData.notes,
-            }),
-        });
-        
-        if (!res.ok) {
-            throw new Error('Erro ao salvar sessão');
-        }
-
-        return res.json();
-    }catch (error) {
-        if (USE_LOCAL_MOCKS) {
-            await new Promise(resolve => setTimeout(resolve, 800));
-            
-            console.log('Sessão salva (mock):', sessionData);
-            
-            return {
-                id: `session-${Date.now()}`
-            };
-        }
-        throw error
+    const res = await fetch(`/api/ocp/programs/${sessionData.programId}/sessions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ 
+            patientId: sessionData.patientId, 
+            attempts: sessionData.attempts,
+            notes: sessionData.notes,
+        }),
+    });
+    
+    if (!res.ok) {
+        throw new Error('Erro ao salvar sessão');
     }
+
+    return res.json();
 }
 
 export function calculateSessionSummary(attempts: SessionState['attempts']): SessionState['summary'] {
@@ -81,7 +45,7 @@ export function calculateSessionSummary(attempts: SessionState['attempts']): Ses
             totalAttempts: 0,
         };
     }
-    console.log('teste')
+
     const promptedAttempts = attempts.filter(attempt => attempt.type === 'prompted').length
     const independentAttempts = attempts.filter(attempt => attempt.type === 'independent').length;
     

@@ -28,16 +28,18 @@ function normalizeStatus(status: string | null | undefined): 'active' | 'ended' 
 }
 
 export function normalizeLink(link: LinkTypes.DBLink) {
+    console.log(JSON.stringify(link))
+    console.log("============================================")
     return {
         id: String(link.id),
         patientId: link.cliente_id,
         therapistId: link.terapeuta_id,
         role: normalizeRole(link.papel),
-        startDate: link.data_inicio.toISOString(),
-        endDate: link.data_fim ? link.data_fim.toISOString() : null,
+        startDate: link.data_inicio,
+        endDate: link.data_fim ? link.data_fim : null,
         status: normalizeStatus(link.status),
         notes: link.observacoes ?? null,
-        actuationArea: link.area_atuacao ?? null,
+        actuationArea: link.terapeuta?.registro_profissional?.[0]?.area_atuacao?.nome ?? null,
         createdAt: link.criado_em.toISOString(),
         updatedAt: link.atualizado_em.toISOString(),
     }

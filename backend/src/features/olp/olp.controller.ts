@@ -1,15 +1,26 @@
-import type { Request, Response } from 'express';
-import * as OcpService from '../features/ocp/ocp.service.js';
-import * as OcpNormalizer from '../features/ocp/ocp.normalizer.js';
+import type { NextFunction, Request, Response } from 'express';
+import * as OcpService from './olp.service.js';
+import * as OcpNormalizer from './olp.normalizer.js';
+import { Prisma } from '@prisma/client';
 
 export async function createProgram(req: Request, res: Response) {
     try {
         const ocp = await OcpService.createProgram(req.body);
         return res.status(201).json({ data: ocp });
     } catch (error) {
-        console.error(error);
+        console.error('Erro ao criar programa:', error);
+
+        // Detecta erro de restrição única
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
         return res.status(400).json({
-            error: error instanceof Error ? error.message : 'Erro inesperado',
+            success: false,
+            message: 'Há estímulos duplicados na lista. Verifique e remova os repetidos antes de salvar.',
+        });
+        }
+
+        return res.status(400).json({
+            success: false,
+            message: error instanceof Error ? error.message : 'Erro inesperado',
         });
     }
 }
@@ -19,13 +30,13 @@ export async function createSession(req: Request, res: Response) {
         if (!req.params.programId) return res.status(400).json({ success: false, message: 'ID do programa não informado' });
         const programId = parseInt(req.params.programId, 10);
 
-        const { patientId, attempts } = req.body;
+        const { patientId, notes, attempts } = req.body;
         if (!patientId || !Array.isArray(attempts)) return res.status(400).json({ error: "Dados inválidos para criar sessão" });
 
         const therapistId = req.user?.id;
         if (!therapistId) return res.status(401).json({ error: "Usuário não autenticado" });
 
-        const session = await OcpService.createSession({ programId, patientId, therapistId, attempts });
+        const session = await OcpService.createSession({ programId, patientId, therapistId, notes, attempts });
         res.status(201).json(session);
     } catch (err) {
         console.error(err);
@@ -33,7 +44,7 @@ export async function createSession(req: Request, res: Response) {
     }
 }
 
-export async function updateProgram(req: Request, res: Response) {
+export async function updateProgram(req: Request, res: Response, next: NextFunction) {
     try {
         if (!req.params.programId) return res.status(400).json({ success: false, message: 'ID do programa não informado' });
         const programId = parseInt(req.params.programId, 10);
@@ -41,10 +52,9 @@ export async function updateProgram(req: Request, res: Response) {
         const ocp = await OcpService.updateProgram(programId, req.body);
         if (!ocp) return res.status(404).json({ success: false, message: 'OCP não encontrado' });
 
-        return res.status(201).json({ data: ocp });
+        return res.status(200).json({ data: ocp });
     } catch (error) {
-        console.error(error);
-        return res.status(400).json({ success: false, message: 'Erro programa não encontrado' });
+        next(error);
     }
 }
 
@@ -119,7 +129,9 @@ export async function listClientPrograms(req: Request, res: Response) {
     const sort = (req.query.sort as 'recent' | 'alphabetic') ?? 'recent';
 
     if (!clientId) return res.status(400).json({ success: false, message: 'ClientId é obrigatório' });
+
     const rows = await OcpService.listByClientId(clientId, page, 10, status, q, sort);
+
     return res.json({ success: true, data: rows.map(OcpNormalizer.mapOcpReturn) });
 }
 
@@ -154,7 +166,11 @@ export async function getKpis(req: Request, res: Response) {
 
 export async function getProgramsReport(req: Request, res: Response) {
     try {
-        const data = await OcpService.getProgramsReport();
+        const clientId = typeof req.query.clientId === 'string'
+            ? req.query.clientId
+            : undefined;
+
+        const data = await OcpService.getProgramsReport(clientId);
         res.json({ data })
     } catch (error) {
         console.error(error);
@@ -167,8 +183,12 @@ export async function getProgramsReport(req: Request, res: Response) {
 
 export async function getStimulusReport(req: Request, res: Response) {
     try {
-        const data = await OcpService.getStimulusReport();
-        res.json({ data })
+        const clientId = req.query.clientId as string | undefined;
+        const programId = req.query.programaId as string | undefined;
+
+        const data = await OcpService.getStimulusReport(clientId, programId);
+
+        res.json({ data });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ 

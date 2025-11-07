@@ -110,6 +110,14 @@ export interface DBLink {
     area_atuacao: string | null;
     criado_em: Date;
     atualizado_em: Date;
+
+    terapeuta?: {
+        registro_profissional?: {
+            area_atuacao?: {
+                nome?: string;
+            };
+        }[];
+    };
 }
 
 export type CreateLink = {

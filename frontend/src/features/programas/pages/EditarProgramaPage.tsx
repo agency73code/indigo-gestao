@@ -33,6 +33,7 @@ export default function EditarProgramaPage() {
     // Estados do formulário
     const [goalTitle, setGoalTitle] = useState('');
     const [goalDescription, setGoalDescription] = useState('');
+    const [shortTermGoalDescription, setShortTermGoalDescription] = useState('');
     const [stimuliApplicationDescription, setStimuliApplicationDescription] = useState('');
     const [stimuli, setStimuli] = useState<UpdateProgramInput['stimuli']>([]);
     const [criteria, setCriteria] = useState('');
@@ -64,6 +65,7 @@ export default function EditarProgramaPage() {
             // Pré-preencher formulário
             setGoalTitle(programData.goalTitle);
             setGoalDescription(programData.goalDescription || '');
+            setShortTermGoalDescription(programData.shortTermGoalDescription || '');
             setStimuliApplicationDescription(programData.stimuliApplicationDescription || '');
             setStimuli(
                 programData.stimuli.map((s) => ({
@@ -148,6 +150,7 @@ export default function EditarProgramaPage() {
                 name: program?.name,
                 goalTitle,
                 goalDescription: goalDescription || null,
+                shortTermGoalDescription: shortTermGoalDescription || null,
                 stimuliApplicationDescription: stimuliApplicationDescription || null,
                 stimuli,
                 criteria: criteria || null,
@@ -170,6 +173,7 @@ export default function EditarProgramaPage() {
             console.error('Erro ao salvar programa:', err);
             const errorMessage = err instanceof Error ? err.message : 'Erro ao salvar programa';
             toast.error(errorMessage);
+            
             setValidationErrors({
                 general: errorMessage,
             });
@@ -197,6 +201,7 @@ export default function EditarProgramaPage() {
                 name: program?.name,
                 goalTitle,
                 goalDescription: goalDescription || null,
+                shortTermGoalDescription: shortTermGoalDescription || null,
                 stimuliApplicationDescription: stimuliApplicationDescription || null,
                 stimuli,
                 criteria: criteria || null,
@@ -351,10 +356,10 @@ export default function EditarProgramaPage() {
                 {/* Editor de estímulos */}
                 <StimuliEditor
                     stimuli={stimuli || []}
-                    goalDescription={goalDescription}
+                    shortTermGoalDescription={shortTermGoalDescription}
                     stimuliApplicationDescription={stimuliApplicationDescription}
                     onStimuliChange={setStimuli}
-                    onGoalDescriptionChange={setGoalDescription}
+                    onShortTermGoalDescriptionChange={setShortTermGoalDescription}
                     onStimuliApplicationDescriptionChange={setStimuliApplicationDescription}
                     errors={validationErrors}
                 />

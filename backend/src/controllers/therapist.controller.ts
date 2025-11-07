@@ -26,7 +26,8 @@ export async function create(req: Request, res: Response, next: NextFunction) {
 
 export async function getTherapistReport(req: Request, res: Response, next: NextFunction) {
   try {
-    const data = await TherapistService.getTherapistReport();
+    const therapistId = req.user?.id;
+    const data = await TherapistService.getTherapistReport(therapistId!);
     res.json({ data })
   } catch (err) {
     next(err);
@@ -89,11 +90,14 @@ export async function update(req: Request, res: Response, next: NextFunction) {
 
 export async function list(req: Request, res: Response, next: NextFunction) {
     try {
-        const therapists = await TherapistService.list();
-        const normalized = therapists.map(TherapistNormalizer.normalizeTherapistSession);
-        res.json(normalized);
+      const q = (req.query.q as string) || undefined;
+      console.log(q);
+      console.log('=====================================')
+      const therapists = await TherapistService.list(q);
+      const normalized = therapists.map(TherapistNormalizer.normalizeTherapistSession);
+      res.json(normalized);
     } catch (error) {
-        next(error);
+      next(error);
     }
 }
 

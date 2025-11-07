@@ -13,7 +13,7 @@ interface StimuliEditorProps {
         active: boolean;
         order: number;
     }[];
-    goalDescription: string;
+    shortTermGoalDescription: string;
     stimuliApplicationDescription: string;
     onStimuliChange: (
         stimuli: {
@@ -24,17 +24,17 @@ interface StimuliEditorProps {
             order: number;
         }[],
     ) => void;
-    onGoalDescriptionChange: (description: string) => void;
+    onShortTermGoalDescriptionChange: (description: string) => void;
     onStimuliApplicationDescriptionChange: (description: string) => void;
     errors?: ValidationErrors;
 }
 
 export default function StimuliEditor({
     stimuli,
-    goalDescription,
+    shortTermGoalDescription,
     stimuliApplicationDescription,
     onStimuliChange,
-    onGoalDescriptionChange,
+    onShortTermGoalDescriptionChange,
     onStimuliApplicationDescriptionChange,
     errors,
 }: StimuliEditorProps) {
@@ -132,17 +132,17 @@ export default function StimuliEditor({
                     <textarea
                         id="goal-description"
                         placeholder="Descreva mais detalhadamente o que se espera alcançar com este programa..."
-                        value={goalDescription}
-                        onChange={(e) => onGoalDescriptionChange(e.target.value)}
+                        value={shortTermGoalDescription}
+                        onChange={(e) => onShortTermGoalDescriptionChange(e.target.value)}
                         maxLength={1000}
                         rows={3}
                         className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
                     />
-                    {errors?.goalDescription && (
-                        <p className="text-sm text-destructive">{errors.goalDescription}</p>
+                    {errors?.shortTermGoalDescription && (
+                        <p className="text-sm text-destructive">{errors.shortTermGoalDescription}</p>
                     )}
                     <p className="text-xs text-muted-foreground">
-                        {goalDescription.length}/1000 caracteres
+                        {shortTermGoalDescription.length}/1000 caracteres
                     </p>
                 </div>
 

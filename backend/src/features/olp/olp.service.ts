@@ -1,116 +1,28 @@
 import { prisma } from "../../config/database.js";
 import { Prisma } from '@prisma/client'
-import * as OcpType from "./ocp.types.js";
-import * as OcpNormalizer from './ocp.normalizer.js';
+import * as OcpType from "./types/olp.types.js";
+import * as OcpNormalizer from './olp.normalizer.js';
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { program, session } from "./actions/create.js";
+import { programUpdate } from "./actions/update.js";
+import { updateProgramSchema } from "./types/olp.schema.js";
+import { getVisibleTherapistIds } from "../../utils/visibilityFilter.js";
 
 export async function createProgram(data: OcpType.createOCP) {
-    return prisma.ocp.create({
-        data: {
-            cliente: { connect: { id: data.clientId } },
-            criador: { connect: { id: data.therapistId } },
-            nome_programa: data.name ?? data.goalTitle,
-            data_inicio: new Date(data.prazoInicio),
-            data_fim: new Date (data.prazoFim),
-            objetivo_programa: data.goalTitle,
-            objetivo_descricao: data.goalDescription ?? null,
-            dominio_criterio: data.criteria ?? null,
-            observacao_geral: data.notes ?? null,
-            estimulo_ocp: {
-                create: data.stimuli.map((s) => ({
-                    nome: s.label,
-                    descricao: s.description ?? null,
-                    status: s.active,
-                    estimulo: {
-                        connectOrCreate: {
-                            where: { nome: s.label },
-                            create: {
-                                nome: s.label,
-                                descricao: s.description ?? null
-                            }
-                        }
-                    },
-                })),
-            },
-        },
-    });
+    const result = await program(data);
+    return result;
 }
 
 export async function createSession(input: OcpType.CreateSessionInput) {
-    const { programId, patientId, therapistId, attempts } = input;
-
-    return await prisma.sessao.create({
-        data: {
-            ocp_id: programId,
-            cliente_id: patientId,
-            terapeuta_id: therapistId,
-            data_criacao: new Date(),
-            trials: {
-                create: attempts.map((a) => ({
-                    estimulos_ocp_id: parseInt(a.stimulusId, 10),
-                    ordem: a.attemptNumber,
-                    resultado: a.type,
-                })),
-            },
-        },
-        select: { id: true },
-    });
+    const result = await session(input);
+    return result;
 }
 
 export async function updateProgram(programId: number, input: OcpType.UpdateProgramInput) {
-    await prisma.ocp.update({
-        where: { id: programId },
-        data: {
-            ...(input.goalTitle !== undefined && { objetivo_programa: input.goalTitle }),
-            ...(input.goalDescription !== undefined && { objetivo_descricao: input.goalDescription }),
-            ...(input.criteria !== undefined && { dominio_criterio: input.criteria }),
-            ...(input.notes !== undefined && { observacao_geral: input.notes }),
-            ...(input.status !== undefined && { status: input.status }),
-            ...(input.prazoInicio !== undefined && { data_inicio: new Date(input.prazoInicio) }),
-            ...(input.prazoFim !== undefined && { data_fim: new Date(input.prazoFim) }),
-        },
-        include: { estimulo_ocp: true },
-    });
-
-    if (input.stimuli) {
-        await Promise.all(
-            input.stimuli.map(async (s) =>{
-                if (s.id) {
-                    return prisma.estimulo_ocp.update({
-                        where: { id: Number(s.id) },
-                        data: {
-                            ...(s.label !== undefined && { nome: s.label }),
-                            ...(s.description !== undefined && { descricao: s.description }),
-                            ...(s.active !== undefined && { status: s.active }),
-                        },
-                    });
-                } else {
-                    const newStimuli = await prisma.estimulo.create({
-                        data: {
-                            nome: s.label,
-                            descricao: s.description ?? null,
-                        },
-                    });
-
-                    return prisma.estimulo_ocp.create({
-                        data: {
-                            id_estimulo: newStimuli.id,
-                            id_ocp: programId,
-                            nome: s.label,
-                            descricao: s.description ?? null,
-                            status : s.active ?? true,
-                        },
-                    });
-                }
-            })
-        );
-    }
-
-    return prisma.ocp.findUnique({
-        where: { id: programId },
-        include: { estimulo_ocp: true },
-    });
+    const parsed = updateProgramSchema.parse({ ...input, id: programId });
+    const result = await programUpdate(programId, parsed);
+    return result;
 }
 
 export async function getProgramById(programId: string) {
@@ -130,18 +42,12 @@ export async function getProgramById(programId: string) {
                         take: 1,
                     },
                     dataNascimento: true,
-                    arquivos: {
-                        where: {
-                            tipo: 'fotoPerfil'
-                        },
-                        select: {
-                            arquivo_id: true,
-                        }
-                    }
                 }
             },
-            criador_id: true,
-            criador: {
+            data_inicio: true,
+            data_fim: true,
+            terapeuta_id: true,
+            terapeuta: {
                 select: {
                     nome: true,
                 }
@@ -149,20 +55,19 @@ export async function getProgramById(programId: string) {
             criado_em: true,
             objetivo_programa: true,
             objetivo_descricao: true,
+            descricao_aplicacao: true,
+            objetivo_curto: true,
             estimulo_ocp: {
                 select: {
                     id_estimulo: true,
                     nome: true,
-                    descricao: true,
                     status: true,
                 },
-                orderBy: { id: 'asc' }
+                orderBy: { id_estimulo: 'desc' }
             },
-            dominio_criterio: true,
+            criterio_aprendizagem: true,
             observacao_geral: true,
             status: true,
-            data_fim: true,
-            data_inicio: true,
         }
     });
 }
@@ -191,12 +96,6 @@ export async function getClientById(clientId: string) {
                     nome: true,
                 },
             },
-            arquivos: {
-                where: {
-                    tipo: 'fotoPerfil',
-                },
-                select: { arquivo_id: true, }
-            }
         },
     });
 
@@ -210,9 +109,7 @@ export async function getClientById(clientId: string) {
         name: client.nome,
         guardianName: client.cuidadores[0]?.nome ?? null,
         age: currentYear - birthYear,
-        photoUrl: client.arquivos[0]?.arquivo_id 
-            ? `${process.env.API_URL}/api/arquivos/${client.arquivos[0].arquivo_id}/view/` 
-            : null,
+        photoUrl: `/api/arquivos/getAvatar?ownerType=cliente&ownerId=${client.id}`,
     }
 }
 
@@ -236,7 +133,7 @@ export async function getProgramId(programId: string) {
                             dataNascimento: true,
                         },
                     },
-                    criador: {
+                    terapeuta: {
                         select: {
                             id: true,
                             nome: true
@@ -251,7 +148,6 @@ export async function getProgramId(programId: string) {
                         select: {
                             id: true,
                             nome: true,
-                            descricao: true,
                             status: true,
                         },
                     },
@@ -265,24 +161,35 @@ export async function getProgramId(programId: string) {
 }
 
 export async function listClientsByTherapist(therapistId: string, q?: string) {
+    const visibleIds = await getVisibleTherapistIds(therapistId);
+
+    const where: Prisma.clienteWhereInput = {
+        ...(visibleIds.length > 0
+        ? {
+            terapeuta: {
+                some: {
+                    terapeuta_id: { in: visibleIds },
+                    status: "active",
+                },
+            },
+            }
+        : {}),
+        ...(q
+        ? {
+            OR: [
+                { nome: { contains: q } },
+                {
+                    cuidadores: {
+                        some: { nome: { contains: q } },
+                    },
+                },
+            ],
+            }
+        : {}),
+    };
+
     return prisma.cliente.findMany({
-        where: {
-            terapeuta: { some: { terapeuta_id: therapistId } },
-            ...(q
-                ? {
-                    OR: [
-                        { nome: { contains: q } },
-                        {
-                            cuidadores: {
-                                some: {
-                                    nome: { contains: q },
-                                },
-                            },
-                        },
-                    ],
-                }
-            : {}),
-        },
+        where,
         select: {
             id: true,
             nome: true,
@@ -305,27 +212,35 @@ export async function listByClientId(
     q?: string, 
     sort: 'recent' | 'alphabetic' = 'recent'
 ) {
+    const translateStatus =
+        status === 'active' ? 'ativado' :
+        status === 'archived' ? 'arquivado' :
+        undefined;
+
+    // cria o objeto base
+    const where: Prisma.ocpWhereInput = {
+        cliente_id: clientId,
+        ...(translateStatus && { status: translateStatus }), // só inclui se existir
+    };
+
+    // adiciona o filtro de busca se q existir
+    if (q) {
+        where.OR = [
+            { nome_programa: { contains: q } },
+            { objetivo_programa: { contains: q } },
+            { objetivo_descricao: { contains: q } },
+        ];
+    }
+
     return await prisma.ocp.findMany({
-        where: { 
-            cliente_id: clientId,
-            ...(status !== 'all' ? { status } : {}),
-            ...(q
-                ? {
-                    OR: [
-                        { nome_programa: { contains: q } },
-                        { objetivo_programa: { contains: q } },
-                        { objetivo_descricao: { contains: q } },
-                    ],
-                }
-                : {}),
-        },
+        where,
         select: {
             id: true,
             cliente_id: true,
             nome_programa: true,
             objetivo_programa: true,
             objetivo_descricao: true,
-            dominio_criterio: true,
+            criterio_aprendizagem: true,
             observacao_geral: true,
             status: true,
             criado_em: true,
@@ -347,6 +262,7 @@ export async function listSessionsByClient(clientId: string) {
             cliente_id: true,
             terapeuta_id: true,
             data_criacao: true,
+            observacoes_sessao: true,
             ocp: {
                 select: {
                     id: true,
@@ -486,17 +402,41 @@ export async function getKpis(filtros: OcpType.KpisFilters) {
     };
 }
 
-export async function getStimulusReport() {
-  return prisma.estimulo_ocp.findMany({
-    select: {
-      id: true,
-      nome: true,
+export async function getStimulusReport(clientId?: string, programId?: string) {
+    const where: {
+        ocp: {
+            cliente_id?: string;
+            id?: number;
+        };
+    } = {
+        ocp: {},
+    };
+
+    if (clientId) {
+        where.ocp.cliente_id = clientId;
     }
-  })
+
+    if (programId) {
+        where.ocp.id = Number(programId);
+    }
+
+    return prisma.estimulo_ocp.findMany({
+        where,
+        select: {
+            id: true,
+            nome: true,
+        },
+        orderBy: {
+            nome: 'asc',
+        },
+    });
 }
 
-export async function getProgramsReport() {
+export async function getProgramsReport(clientId?: string) {
+    const where = clientId ? { cliente_id: clientId } : {};
+    
   const ocps = await prisma.ocp.findMany({
+    where,
     select: {
       id: true,
       nome_programa: true,

@@ -2,8 +2,11 @@ import { Router } from 'express';
 import type { Router as ExpressRouter } from 'express';
 import * as LinkController from '../controllers/links.controller.js';
 import * as SuperLinkController from '../features/links/supervision-link/supervisionLink.controller.js';
+import { auth } from '../middleware/auth.middleware.js';
 
 const router: ExpressRouter = Router();
+
+router.use(auth);
 
 router.get('/getAllClients', LinkController.getAllClients);
 router.get('/getAllTherapists', LinkController.getAllTherapists);

@@ -22,12 +22,11 @@ import type { Sessao as SessionDetail } from '../../programas/consulta-sessao/ty
 import type { Filters, KpisRelatorio, SerieLinha, PrazoPrograma } from '../gerar-relatorio/types';
 import type { SavedReport } from '../types';
 import { ReportExporter } from '../gerar-relatorio/print/ReportExporter';
+import { useAuth } from '@/features/auth';
 
 export function GerarRelatorioPage() {
+    const { user } = useAuth();
     const [searchParams, setSearchParams] = useSearchParams();
-
-    console.log('[RelatorioMensalPage] Componente renderizou');
-
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
     const [observacaoClinica, setObservacaoClinica] = useState<string>('');
     const [saveDialogOpen, setSaveDialogOpen] = useState(false);
@@ -43,9 +42,9 @@ export function GerarRelatorioPage() {
     const [sessionsError, setSessionsError] = useState<string | null>(null);
 
     // Estados para os filtros (programas, estímulos, terapeutas)
-    const [programas, setProgramas] = useState<{ id: string; nome: string }[]>([]);
-    const [estimulos, setEstimulos] = useState<{ id: string; nome: string }[]>([]);
-    const [terapeutas, setTerapeutas] = useState<{ id: string; nome: string }[]>([]);
+    const [programas, _setProgramas] = useState<{ id: string; nome: string }[]>([]);
+    const [estimulos, _setEstimulos] = useState<{ id: string; nome: string }[]>([]);
+    const [terapeutas, _setTerapeutas] = useState<{ id: string; nome: string }[]>([]);
 
     // 🔄 Lê filtros da URL
     const [filters, setFilters] = useState<Filters>(() => {
@@ -93,7 +92,8 @@ export function GerarRelatorioPage() {
         const periodoStart = searchParams.get('periodoStart');
         const periodoEnd = searchParams.get('periodoEnd');
         
-        setFilters({
+        setFilters(prev => ({
+            ...prev,
             pacienteId: searchParams.get('pacienteId') || undefined,
             periodo: periodo === 'custom' && periodoStart && periodoEnd
                 ? { mode: 'custom', start: periodoStart, end: periodoEnd }
@@ -102,64 +102,10 @@ export function GerarRelatorioPage() {
             estimuloId: searchParams.get('estimuloId') || undefined,
             terapeutaId: searchParams.get('terapeutaId') || undefined,
             comparar: searchParams.get('comparar') === 'true',
-        });
-    }, [searchParams]);
-
-    // Buscar opções de filtros (programas, estímulos, terapeutas)
-    useEffect(() => {
-        const fetchFilterOptions = async () => {
-            try {
-                const [programasRes, estimulosRes, terapeutasRes] = await Promise.all([
-                    fetch('/api/ocp/reports/filters/programs', { credentials: 'include' }),
-                    fetch('/api/ocp/reports/filters/stimulus', { credentials: 'include' }),
-                    fetch('/api/terapeutas/relatorio', { credentials: 'include' }),
-                ]);
-
-                const programasData = await programasRes.json();
-                const estimulosData = await estimulosRes.json();
-                const terapeutasData = await terapeutasRes.json();
-
-                // Garantir que sempre sejam arrays - seguindo padrão da API
-                const programasArray = Array.isArray(programasData?.data)
-                    ? programasData.data
-                    : Array.isArray(programasData?.programas)
-                      ? programasData.programas
-                      : Array.isArray(programasData)
-                        ? programasData
-                        : [];
-
-                const estimulosArray = Array.isArray(estimulosData?.data)
-                    ? estimulosData.data
-                    : Array.isArray(estimulosData?.estimulos)
-                      ? estimulosData.estimulos
-                      : Array.isArray(estimulosData)
-                        ? estimulosData
-                        : [];
-
-                const terapeutasArray = Array.isArray(terapeutasData?.data)
-                    ? terapeutasData.data
-                    : Array.isArray(terapeutasData?.terapeutas)
-                      ? terapeutasData.terapeutas
-                      : Array.isArray(terapeutasData)
-                        ? terapeutasData
-                        : [];
-
-                console.log('Terapeutas carregados:', terapeutasArray); // Debug
-
-                setProgramas(programasArray);
-                setEstimulos(estimulosArray);
-                setTerapeutas(terapeutasArray);
-            } catch (error) {
-                console.error('Erro ao carregar opções de filtros:', error);
-                // Em caso de erro, definir arrays vazios
-                setProgramas([]);
-                setEstimulos([]);
-                setTerapeutas([]);
-            }
-        };
-
-        fetchFilterOptions();
+        }));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
 
     const loadData = useCallback(async (currentFilters: Filters) => {
         try {
@@ -232,6 +178,17 @@ export function GerarRelatorioPage() {
         }
     }, [filters, selectedPatient, loadData]);
 
+    useEffect(() => {
+        if (user?.id) {
+            setFilters((prev) => {
+                if (!prev.terapeutaId) {
+                    return { ...prev, terapeutaId: user.id };
+                }
+                return prev;
+            });
+        }
+    }, [user])
+
     const sanitizeForFileName = (value: string) =>
         value
             .normalize('NFD')
@@ -269,9 +226,12 @@ export function GerarRelatorioPage() {
         syncFiltersToUrl(newFilters);
     };
 
-    const handleFiltersChange = (newFilters: Filters) => {
-        setFilters(newFilters);
-        syncFiltersToUrl(newFilters);
+    const handleFiltersChange = (newFilters: Partial<Filters>) => {
+        setFilters((prev) => {
+            const merged = { ...prev, ...newFilters };
+            syncFiltersToUrl(merged);
+            return merged;
+        });
     };
 
     // Handler para salvar o relatório (COM GERAÇÃO DE PDF)
@@ -497,7 +457,10 @@ export function GerarRelatorioPage() {
 
                         {/* Filtros interativos - só aparece na tela */}
                         <div className="no-print">
-                            <FiltersBar value={filters} onChange={handleFiltersChange} />
+                            <FiltersBar 
+                                value={filters} 
+                                onChange={handleFiltersChange} 
+                            />
                         </div>
 
                         {/* Resumo de filtros - só aparece no PDF */}

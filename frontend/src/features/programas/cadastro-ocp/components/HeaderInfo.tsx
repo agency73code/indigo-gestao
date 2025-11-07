@@ -78,8 +78,6 @@ function SelectorModal({
                     }
                 });
                 setImageLoadingStates(initialLoadingState);
-                
-                console.log('📸 Items loaded:', results.map(r => ({ id: r.id, name: r.name, photoUrl: r.photoUrl })));
             } catch (error) {
                 console.error(`Erro ao buscar ${type}s:`, error);
             } finally {

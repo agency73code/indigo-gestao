@@ -185,7 +185,7 @@ export async function deleteFile(req: Request, res: Response) {
 
 /**
  * Controller: retorna a foto de perfil do cliente/terapeuta.
- * Endpoint: GET /api/arquivos/novo-avatar?ownerType=cliente&ownerId=123
+ * Endpoint: GET /api/arquivos/getAvatar?ownerType=cliente&ownerId=123
  */
 export async function getAvatar(req: Request, res: Response) {
     const ownerType = req.query.ownerType as 'cliente' | 'terapeuta';
@@ -202,7 +202,7 @@ export async function getAvatar(req: Request, res: Response) {
         // Localiza o arquivo de foto de perfil
         const avatar = files.find((f) => f.tipo_documento === 'fotoPerfil');
         if (!avatar) {
-            return res.status(404).json({ error: 'Foto de perfil não encontrada.' });
+            return res.status(200).json({ avatarUrl: null });
         }
         
         const avatarUrl = `/api/arquivos/${avatar.storageId}/view`;

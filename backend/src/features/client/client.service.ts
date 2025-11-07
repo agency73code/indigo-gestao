@@ -4,7 +4,7 @@ import { AppError } from "../../errors/AppError.js";
 import * as ClientType from "./client.types.js";
 import { v4 as uuidv4 } from "uuid";
 import { getTherapistData } from "../../cache/therapistCache.js";
-import { ACCESS_LEVELS } from "../../utils/accessLevels.js";
+import { getVisibleTherapistIds } from "../../utils/visibilityFilter.js";
 
 async function enderecoData(dto: ClientType.Client) {
   return dto.enderecos.map((e) => ({
@@ -118,6 +118,7 @@ export async function create(dto: ClientType.Client) {
           email2: dto.dadosPagamento.email2 ?? null,
           email3: dto.dadosPagamento.email3 ?? null,
           sistemaPagamento: dto.dadosPagamento.sistemaPagamento,
+          prazoReembolso: dto.dadosPagamento.prazoReembolso ?? null,
           numeroProcesso: dto.dadosPagamento.numeroProcesso ?? null,
           nomeAdvogado: dto.dadosPagamento.nomeAdvogado ?? null,
           telefoneAdvogado1: dto.dadosPagamento.telefoneAdvogado1 ?? null,
@@ -647,146 +648,63 @@ export async function list(therapistId: string) {
   }
 
   const registers = await getTherapistData(therapistId);
-
   if (!registers.length) {
     throw new AppError('REQUIRED_THERAPIST_REGISTER', 'Terapeuta sem registro profissional.', 400);
   }
 
-  const whereClauses: ClientType.ClientVisibilityFilter[] = [];
+  const visibleIds = await getVisibleTherapistIds(therapistId);
 
-  for (const reg of registers) {
-    const cargo = reg.cargo?.nome?.toLowerCase();
-    const area = reg.area_atuacao.nome;
-    if (!cargo || !area) continue;
+  const where: Prisma.clienteWhereInput = 
+    visibleIds.length === 0
+      ? {}
+      : {
+        terapeuta: {
+          some: { terapeuta_id: { in: visibleIds } },
+        },
+      };
 
-    const level = ACCESS_LEVELS[cargo] ?? 0;
-
-    // Gerente e Coordenador Executivo veem todos os clientes
-    if (level >= 5) {
-      whereClauses.push({ id: { not: '' } });
-      break;
-    }
-    
-    if (cargo.includes('aba')) {
-      if (cargo.includes('supervisor')) {
-        // Supervisor ABA → vê seus próprios registros + coordenador + at
-        whereClauses.push({
-          terapeuta: {
-            some: {
-              OR: [
-                { terapeuta_id: therapistId },
-                { 
-                  terapeuta: { 
-                    registro_profissional: { 
-                      some: { 
-                        area_atuacao: { nome: area },
-                        cargo: { 
-                          nome: { contains: 'coordenador aba' } 
-                        },
-                      },
-                    },
-                  },
-                },
-                {
-                  terapeuta: {
-                    registro_profissional: {
-                      some: {
-                        area_atuacao: { nome: area },
-                        cargo: {
-                          nome: { contains: 'acompanhante terapeutico' } 
-                        },
-                      },
-                    },
-                  },
-                },
-              ],
-            },
-          },
-        });
-      } else if (cargo.includes('coordenador')) {
-        // Coordenador ABA → vê seus registros + AT
-        whereClauses.push({
-          terapeuta: {
-            some: {
-              OR: [
-                { terapeuta_id: therapistId },
-                { 
-                  terapeuta: {
-                    registro_profissional: {
-                      some: {
-                        area_atuacao: { nome: area },
-                        cargo: {
-                          nome: { contains: 'acompanhante terapeutico' },
-                        },
-                      },
-                    },
-                  },
-                },
-              ],
-            },
-          },
-        });
-      }
-      continue;
-    }
-
-    if (level <= 2) {
-      whereClauses.push({
-        terapeuta: { some: { terapeuta_id: therapistId } },
-      });
-      continue;
-    }
-
-    if (cargo.includes('supervisor')) {
-      whereClauses.push({
-        terapeuta: { some: { area_atuacao: area } },
-      });
-      continue;
-    }
-  }
-
- return prisma.cliente.findMany({
-  where: { OR: whereClauses },
-  select: {
-    id:true,
-    nome: true,
-    emailContato: true,
-    cuidadores: {
-      select: {
-        telefone: true,
-        nome: true,
-        cpf: true,
+  return prisma.cliente.findMany({
+    where,
+    select: {
+      id:true,
+      nome: true,
+      emailContato: true,
+      cuidadores: {
+        select: {
+          telefone: true,
+          nome: true,
+          cpf: true,
+        },
+        take: 1,
       },
-      take: 1,
-    },
-    status: true,
-    dataNascimento: true,
-    enderecos: {
-      select: {
-        endereco: {
-          select: {
-            cep: true,
-            rua: true,
-            numero: true,
-            bairro: true,
-            cidade: true,
-            uf: true,
-            complemento: true,
+      status: true,
+      dataNascimento: true,
+      enderecos: {
+        select: {
+          endereco: {
+            select: {
+              cep: true,
+              rua: true,
+              numero: true,
+              bairro: true,
+              cidade: true,
+              uf: true,
+              complemento: true,
+            },
           },
         },
       },
-    },
-    arquivos: {
-      select: {
-        tipo: true,
-        mime_type: true,
-        arquivo_id: true,
-        tamanho: true,
-        data_upload: true,
+      arquivos: {
+        select: {
+          tipo: true,
+          mime_type: true,
+          arquivo_id: true,
+          tamanho: true,
+          data_upload: true,
+        },
       },
-    },
-  }
- });
+    }
+  });
 }
 
 export async function getClientReport() {

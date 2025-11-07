@@ -15,6 +15,7 @@ export type Sessao = {
   objetivo: string;
   prazoInicio: string; // ISO
   prazoFim: string; // ISO
+  observacoes?: string | null;
   registros: RegistroTentativa[];
 };
 

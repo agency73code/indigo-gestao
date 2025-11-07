@@ -15,27 +15,14 @@ interface FiltersBarProps {
 
 export function FiltersBar({ value, onChange }: FiltersBarProps) {
     const [isExpanded, setIsExpanded] = useState(false);
-    const [terapeutas, setTerapeutas] = useState<{ id: string; nome: string }[]>([
-        // mock inicial
-        { id: 'ter-1', nome: 'Dr. Ana Silva' },
-        { id: 'ter-2', nome: 'Dr. Carlos Mendes' },
-    ]);
-    const [programas, setProgramas] = useState<{ id: string; nome: string }[]>([
-        { id: 'prog-1', nome: 'Desenvolvimento Cognitivo' },
-        { id: 'prog-2', nome: 'Habilidades Sociais' },
-        { id: 'prog-3', nome: 'Comunicação' },
-    ]);
-    const [estimulos, setEstimulos] = useState<{ id: string; nome: string }[]>([
-        { id: 'est-1', nome: 'Contar até 10' },
-        { id: 'est-2', nome: 'Identificar cores' },
-        { id: 'est-3', nome: 'Formar palavras' },
-    ]);
-
+    const [terapeutas, setTerapeutas] = useState<{ id: string; nome: string }[]>([]);
+    const [programas, setProgramas] = useState<{ id: string; nome: string }[]>([]);
+    const [estimulos, setEstimulos] = useState<{ id: string; nome: string }[]>([]);
     useEffect(() => {
         fetchAndSet('/api/terapeutas/relatorio', setTerapeutas, 'terapeutas');
-        fetchAndSet('/api/ocp/reports/filters/programs', setProgramas, 'programas');
-        fetchAndSet('/api/ocp/reports/filters/stimulus', setEstimulos, 'estimulos');
-    }, []);
+        fetchAndSet(`/api/ocp/reports/filters/programs?clientId=${value.pacienteId}`, setProgramas, 'programas');
+        fetchAndSet(`/api/ocp/reports/filters/stimulus?clientId=${value.pacienteId}${value.programaId ? `&programaId=${value.programaId}` : ''}`, setEstimulos, 'estimulos');
+    }, [value]);
 
     const updateFilter = (key: keyof Filters, newValue: any) => {
         onChange({ ...value, [key]: newValue });

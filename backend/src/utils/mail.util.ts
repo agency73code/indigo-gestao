@@ -40,7 +40,6 @@ export async function sendWelcomeEmail({
     };
 
     try {
-        console.log(`Enviando e-mail para ${to}`);
         return transporter.sendMail(mailOptions);
     } catch (err: unknown) {
         if (err instanceof Error) {
@@ -78,7 +77,6 @@ export async function sendPasswordResetEmail({ to, name, token, }: { to: string,
     };
 
     try {
-        console.log(`Enviando e-mail de reset para ${to}`);
         return transporter.sendMail(mailOptions);
     } catch (err: unknown) {
         if (err instanceof Error) {
