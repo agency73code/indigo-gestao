@@ -2,7 +2,7 @@
 // Cards de atalho para criar programas e registrar sessões
 
 import { useNavigate } from 'react-router-dom';
-import { PlusCircle, ClipboardList, FileText, FolderOpen } from 'lucide-react';
+import { ClipboardList, FolderOpen } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { toConfig } from '../config';
 
@@ -11,36 +11,20 @@ export default function AreaHubTOPage() {
 
   const shortcuts = [
     {
-      icon: PlusCircle,
-      title: 'Criar OLP',
-      description: 'Novo Objetivo de Longo Prazo',
-      path: toConfig.routes.createOlp,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100 dark:bg-blue-900/20',
-    },
-    {
-      icon: PlusCircle,
-      title: 'Criar OCP',
-      description: 'Novo Objetivo de Curto Prazo',
-      path: toConfig.routes.createOcp,
-      color: 'text-green-600',
-      bgColor: 'bg-green-100 dark:bg-green-900/20',
-    },
-    {
       icon: ClipboardList,
       title: 'Registrar Sessão',
       description: 'Nova sessão de atendimento',
       path: toConfig.routes.registerSession,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-100 dark:bg-purple-900/20',
+      iconColor: 'text-purple-600',
+      bgColor: 'bg-[#E9D5FF]',
     },
     {
       icon: FolderOpen,
       title: 'Consultar Sessões',
       description: 'Histórico de atendimentos',
       path: toConfig.routes.listSessions,
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-100 dark:bg-orange-900/20',
+      iconColor: 'text-orange-600',
+      bgColor: 'bg-[#FED7AA]',
     },
   ];
 
@@ -54,30 +38,29 @@ export default function AreaHubTOPage() {
         >
           {toConfig.label}
         </h1>
-        <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-          Gerencie programas e sessões de Terapia Ocupacional
-        </p>
+        
       </div>
 
       {/* Shortcuts Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="space-y-5 p-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {shortcuts.map((shortcut) => {
           const Icon = shortcut.icon;
           return (
             <Card
               key={shortcut.path}
-              className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-primary/50 rounded-[5px]"
+              className="cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] border border-border/40 rounded-xl bg-[#F1F5F9]"
               onClick={() => navigate(shortcut.path)}
             >
-              <CardHeader className="space-y-4">
-                <div className={`h-12 w-12 rounded-lg ${shortcut.bgColor} flex items-center justify-center`}>
-                  <Icon className={`h-6 w-6 ${shortcut.color}`} />
+              <CardHeader className="space-y-3 p-2">
+                <div className={`h-14 w-14 rounded-xl ${shortcut.bgColor} flex items-center justify-center`}>
+                  <Icon className={`h-7 w-7 ${shortcut.iconColor}`} />
                 </div>
-                <div>
-                  <CardTitle className="text-base sm:text-lg font-medium">
+                <div className="space-y-1">
+                  <CardTitle className="text-lg font-semibold text-foreground">
                     {shortcut.title}
                   </CardTitle>
-                  <CardDescription className="text-xs sm:text-sm mt-1">
+                  <CardDescription className="text-sm text-muted-foreground">
                     {shortcut.description}
                   </CardDescription>
                 </div>
@@ -85,26 +68,8 @@ export default function AreaHubTOPage() {
             </Card>
           );
         })}
+        </div>
       </div>
-
-      {/* Info complementar */}
-      <Card className="border-l-4 border-l-blue-500 bg-blue-50/50 dark:bg-blue-950/20 rounded-[5px]">
-        <CardHeader>
-          <div className="flex items-start gap-3">
-            <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
-            <div>
-              <CardTitle className="text-sm sm:text-base text-blue-900 dark:text-blue-100 font-medium">
-                Sobre os registros TO
-              </CardTitle>
-              <CardDescription className="text-xs sm:text-sm text-blue-700 dark:text-blue-300 mt-2 leading-relaxed">
-                Nas sessões de Terapia Ocupacional são registrados dados complementares para cada objetivo: 
-                resultado (Sim/Não/Parcial/N.A.), descrição do desempenho, frequência, duração, observações clínicas 
-                e anexos (documentos).
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
     </div>
   );
 }

@@ -9,32 +9,32 @@ export default function HubFaturamentoPage() {
             description: 'Lançar horas e valores de um atendimento',
             icon: FilePlus,
             href: '/app/faturamento/registrar-lancamento',
-            bgColor: 'bg-[var(--card-primary)]',
-            textColor: 'text-white',
+            iconColor: 'text-indigo-600',
+            bgColor: 'bg-[#E0E7FF]',
         },
         {
             title: 'Minhas horas',
             description: 'Histórico e totais das suas sessões',
             icon: Clock,
             href: '/app/faturamento/minhas-horas',
-            bgColor: 'bg-green-500',
-            textColor: 'text-white',
+            iconColor: 'text-green-600',
+            bgColor: 'bg-[#D1FAE5]',
         },
         {
             title: 'Gestão (gerente)',
             description: 'Listagem global com filtros por cliente e terapeuta',
             icon: Table2,
             href: '/app/faturamento/gestao',
-            bgColor: 'bg-purple-500',
-            textColor: 'text-white',
+            iconColor: 'text-purple-600',
+            bgColor: 'bg-[#E9D5FF]',
         },
         {
             title: 'Relatórios/Exportar',
             description: 'Exportar lançamentos filtrados',
             icon: Download,
             href: '/app/faturamento/relatorios',
-            bgColor: 'bg-gray-500',
-            textColor: 'text-white',
+            iconColor: 'text-gray-600',
+            bgColor: 'bg-[#E5E7EB]',
         },
     ];
 
@@ -52,36 +52,35 @@ export default function HubFaturamentoPage() {
             </div>
 
             {/* Main Action Cards */}
-            <div className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {mainActions.map((action, index) => (
-                        <Card
-                            key={index}
-                            className={`overflow-hidden hover:shadow-md p-1 md:p-4 lg:p-8 transition-shadow rounded-[5px] ${action.bgColor} ${action.textColor}`}
-                        >
+            <div className="space-y-5 p-0">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {mainActions.map((action, index) => {
+                        const Icon = action.icon;
+                        return (
                             <Link
+                                key={index}
                                 to={action.href}
-                                className="block h-full"
+                                className="block"
                                 aria-label={`${action.title}: ${action.description}`}
                             >
-                                <div className="p-4">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex-1 space-y-1">
-                                            <h3 className="font-medium text-base sm:text-lg">
+                                <Card className="cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] border border-border/40 rounded-xl bg-[#F1F5F9] h-full">
+                                    <CardHeader className="space-y-5 p-2">
+                                        <div className={`h-14 w-14 rounded-xl ${action.bgColor} flex items-center justify-center`}>
+                                            <Icon className={`h-7 w-7 ${action.iconColor}`} />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <CardTitle className="text-lg font-semibold text-foreground">
                                                 {action.title}
-                                            </h3>
-                                            <p className="text-xs sm:text-sm opacity-90">
+                                            </CardTitle>
+                                            <p className="text-sm text-muted-foreground">
                                                 {action.description}
                                             </p>
                                         </div>
-                                        <div className="bg-white/20 rounded-full p-3 ml-3">
-                                            <action.icon className="h-6 w-6" />
-                                        </div>
-                                    </div>
-                                </div>
+                                    </CardHeader>
+                                </Card>
                             </Link>
-                        </Card>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
 

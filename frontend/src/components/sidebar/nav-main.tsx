@@ -1,11 +1,10 @@
 import { ChevronRight, type LucideIcon } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
     SidebarGroup,
-    SidebarGroupLabel,
     SidebarMenu,
     SidebarMenuAction,
     SidebarMenuButton,
@@ -33,6 +32,22 @@ export function NavMain({
         }[];
     }[];
 }) {
+    const location = useLocation();
+    
+    // Função para verificar se a rota está ativa
+    const isRouteActive = (itemUrl: string, subItems?: { url: string }[]) => {
+        // Verifica se a rota atual corresponde ao item principal
+        if (location.pathname === itemUrl) return true;
+        
+        // Verifica se alguma subrota está ativa
+        if (subItems) {
+            return subItems.some(subItem => location.pathname.startsWith(subItem.url));
+        }
+        
+        // Para rotas que têm caminhos filhos (ex: /app/programas)
+        return location.pathname.startsWith(itemUrl) && itemUrl !== '/';
+    };
+    
     // Estado para controlar quais menus estão abertos - com persistência
     const [openItems, setOpenItems] = useState<Record<string, boolean>>(() => {
         // Tenta recuperar do localStorage primeiro
@@ -71,31 +86,32 @@ export function NavMain({
 
     return (
         <SidebarGroup>
-            <SidebarGroupLabel style={{ fontFamily: 'Sora, sans-serif' }}>
-                Platform
-            </SidebarGroupLabel>
-            <SidebarMenu>
-                {items.map((item) => (
-                    <RequireAbility
-                        key={item.title}
-                        action={item.ability?.action ?? 'read'}
-                        subject={item.ability?.subject ?? 'Dashboard'}
-                    >
-                        <Collapsible
+            
+            <SidebarMenu className="gap-2">
+                {items.map((item) => {
+                    const isActive = isRouteActive(item.url, item.items);
+                    
+                    return (
+                        <RequireAbility
                             key={item.title}
-                            asChild
-                            open={openItems[item.title] || false}
-                            onOpenChange={() => toggleItem(item.title)}
+                            action={item.ability?.action ?? 'read'}
+                            subject={item.ability?.subject ?? 'Dashboard'}
                         >
-                            <SidebarMenuItem>
-                                <SidebarMenuButton asChild tooltip={item.title}>
-                                    <Link to={item.url}>
-                                        <item.icon />
-                                        <span style={{ fontFamily: 'Sora, sans-serif' }}>
-                                            {item.title}
-                                        </span>
-                                    </Link>
-                                </SidebarMenuButton>
+                            <Collapsible
+                                key={item.title}
+                                asChild
+                                open={openItems[item.title] || false}
+                                onOpenChange={() => toggleItem(item.title)}
+                            >
+                                <SidebarMenuItem>
+                                    <SidebarMenuButton asChild tooltip={item.title} isActive={isActive}>
+                                        <Link to={item.url}>
+                                            <item.icon />
+                                            <span style={{ fontFamily: 'Sora, sans-serif', fontWeight: 300 }}>
+                                                {item.title}
+                                            </span>
+                                        </Link>
+                                    </SidebarMenuButton>
                                 {item.items?.length ? (
                                     <>
                                         <CollapsibleTrigger asChild>
@@ -105,28 +121,33 @@ export function NavMain({
                                             </SidebarMenuAction>
                                         </CollapsibleTrigger>
                                         <CollapsibleContent>
-                                            <SidebarMenuSub>
-                                                {item.items?.map((subItem) => (
-                                                    <RequireAbility
-                                                    key={subItem.title}
-                                                    action={subItem.ability?.action ?? 'read'}
-                                                    subject={subItem.ability?.subject ?? 'Dashboard'}
-                                                    >
-                                                        <SidebarMenuSubItem key={subItem.title}>
-                                                            <SidebarMenuSubButton asChild>
-                                                                <Link to={subItem.url}>
-                                                                    <span
-                                                                        style={{
-                                                                            fontFamily: 'Sora, sans-serif',
-                                                                        }}
-                                                                    >
-                                                                        {subItem.title}
-                                                                    </span>
-                                                                </Link>
-                                                            </SidebarMenuSubButton>
-                                                        </SidebarMenuSubItem>
-                                                    </RequireAbility>
-                                                ))}
+                                            <SidebarMenuSub className="gap-1.5 ml-3.5 border-l pl-3">
+                                                {item.items?.map((subItem) => {
+                                                    const isSubActive = location.pathname.startsWith(subItem.url);
+                                                    
+                                                    return (
+                                                        <RequireAbility
+                                                            key={subItem.title}
+                                                            action={subItem.ability?.action ?? 'read'}
+                                                            subject={subItem.ability?.subject ?? 'Dashboard'}
+                                                        >
+                                                            <SidebarMenuSubItem key={subItem.title}>
+                                                                <SidebarMenuSubButton asChild isActive={isSubActive}>
+                                                                    <Link to={subItem.url}>
+                                                                        <span
+                                                                            style={{
+                                                                                fontFamily: 'Sora, sans-serif',
+                                                                                fontWeight: 300,
+                                                                            }}
+                                                                        >
+                                                                            {subItem.title}
+                                                                        </span>
+                                                                    </Link>
+                                                                </SidebarMenuSubButton>
+                                                            </SidebarMenuSubItem>
+                                                        </RequireAbility>
+                                                    );
+                                                })}
                                             </SidebarMenuSub>
                                         </CollapsibleContent>
                                     </>
@@ -134,7 +155,8 @@ export function NavMain({
                             </SidebarMenuItem>
                         </Collapsible>
                     </RequireAbility>
-                ))}
+                    );
+                })}
             </SidebarMenu>
         </SidebarGroup>
     );

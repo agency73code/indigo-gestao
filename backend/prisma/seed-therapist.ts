@@ -33,7 +33,7 @@ function createPerson() {
     phone: faker.phone.number().replace(/\D/g, ''),
     birthDate: faker.date.birthdate({ min: 25, max: 49, mode: 'age' }),
     address: {
-      cep: faker.location.zipCode(),
+      cep: faker.location.zipCode('########'),
       rua: faker.location.streetAddress(),
       numero: faker.location.buildingNumber(),
       bairro: faker.helpers.arrayElement([
@@ -64,7 +64,7 @@ function createCorp() {
     cnpj: faker.helpers.replaceSymbols('##############'),
     razao_social: `${faker.company.name()} ${faker.helpers.arrayElement(['LTDA', 'ME', 'EIRELI', 'S.A.'])}`,
     address: {
-      cep: faker.location.zipCode(),
+      cep: faker.location.zipCode('########'),
       rua: faker.location.streetAddress(),
       numero: faker.location.buildingNumber(),
       bairro: faker.helpers.arrayElement([

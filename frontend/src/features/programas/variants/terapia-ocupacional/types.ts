@@ -34,3 +34,50 @@ export interface ToSessionResponse {
     success: boolean;
     message?: string;
 }
+
+// ============ CONSULTA DE SESSÕES ============
+
+// Item de sessão TO na listagem
+export interface ToSessionListItem {
+    id: string;
+    date: string; // ISO date
+    patientId: string;
+    patientName: string;
+    therapistId: string;
+    therapistName: string;
+    programName: string;
+    goalTitle: string;
+    achieved: ToAchieved;
+    frequency?: number | null;
+    durationMin?: number | null;
+}
+
+// Detalhe completo da sessão TO
+export interface ToSessionDetail {
+    id: string;
+    date: string; // ISO date
+    patientId: string;
+    patientName: string;
+    patientAge?: number;
+    patientPhotoUrl?: string;
+    patientGuardianName?: string;
+    therapistId: string;
+    therapistName: string;
+    programId: string;
+    programName: string;
+    goalTitle: string;
+    goalDescription?: string;
+    // Dados específicos de TO
+    achieved: ToAchieved;
+    frequency?: number | null;
+    durationMin?: number | null;
+    performanceNotes: string;
+    clinicalNotes?: string | null;
+    // Arquivos anexados
+    attachments?: Array<{
+        url: string;
+        name: string;
+        type?: string;
+    }>;
+}
+

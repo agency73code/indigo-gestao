@@ -174,7 +174,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                 </div>
                                 <div className="flex flex-col items-center text-center text-sm leading-tight">
                                     <span
-                                        className="font-medium block mb-1"
+                                        className="font-light block mb-1"
                                         style={{ fontFamily: 'Sora, sans-serif' }}
                                     >
                                         Instituto Índigo

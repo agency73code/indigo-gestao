@@ -55,6 +55,12 @@ const AreaHubTOPage = lazy(
 const RegistrarSessaoToPage = lazy(
     () => import('@/features/programas/variants/terapia-ocupacional/pages/RegistrarSessaoToPage'),
 );
+const ConsultarSessoesToPage = lazy(
+    () => import('@/features/programas/variants/terapia-ocupacional/pages/ConsultarSessoesToPage'),
+);
+const DetalheSessaoToPage = lazy(
+    () => import('@/features/programas/variants/terapia-ocupacional/pages/DetalheSessaoToPage'),
+);
 const AreaHubMovimentoPage = lazy(
     () => import('@/features/programas/variants/movimento/pages/AreaHubMovimentoPage'),
 );
@@ -212,6 +218,24 @@ export const router = createBrowserRouter([
                                     </Suspense>
                                 ),
                                 handle: { breadcrumb: 'Registrar Sessão', title: 'Registrar Sessão - TO' },
+                            },
+                            {
+                                path: 'programas/terapia-ocupacional/sessoes',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <ConsultarSessoesToPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Consultar Sessões', title: 'Consultar Sessões - TO' },
+                            },
+                            {
+                                path: 'programas/terapia-ocupacional/sessoes/:sessaoId',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <DetalheSessaoToPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Detalhe da Sessão', title: 'Detalhe da Sessão - TO' },
                             },
                             {
                                 path: 'programas/movimento',

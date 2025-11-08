@@ -27,7 +27,7 @@ function createPerson(type: string) {
       ? faker.date.birthdate({ min: 3, max: 12, mode: 'age' })
       : faker.date.birthdate({ min: 25, max: 49, mode: 'age' }),
     address: {
-      cep: faker.location.zipCode(),
+      cep: faker.location.zipCode('########'),
       rua: faker.location.streetAddress(),
       numero: faker.location.buildingNumber(),
       bairro: faker.helpers.arrayElement([
@@ -97,7 +97,7 @@ function createSchool() {
     email,
 
     address: {
-      cep: faker.location.zipCode(),
+      cep: faker.location.zipCode('########'),
       rua: faker.location.streetAddress(),
       numero: faker.location.buildingNumber(),
       bairro: faker.helpers.arrayElement([

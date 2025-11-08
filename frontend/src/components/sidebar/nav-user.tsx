@@ -96,7 +96,7 @@ export function NavUser() {
                         align="start"
                         sideOffset={4}
                     >
-                        <DropdownMenuLabel className="p-0 font-normal">
+                        <DropdownMenuLabel className="p-0 font-light">
                             <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                                 <Avatar className="h-8 w-8 rounded-full" key={avatarUrl}>
                                     {imageLoading && shouldShowImage && (
