@@ -22,11 +22,17 @@ const routeToTitleMap: Record<string, string> = {
     '/app/configuracoes/notificacoes': 'Notificações',
     '/app/configuracoes/seguranca': 'Segurança',
     '/app/configuracoes/integracoes': 'Integrações',
-    '/app/programas': 'Programas de Treino (OCP)',
+    '/app/programas': 'Programas / Objetivos',
+    '/app/programas/fono-psico': 'Fonoaudiologia & Psicopedagogia',
+    '/app/programas/terapia-ocupacional': 'Terapia Ocupacional',
+    '/app/programas/movimento': 'Sessão de Movimento',
+    '/app/programas/musicoterapia': 'Musicoterapia',
     '/app/programas/lista': 'Listar Programas',
     '/app/programas/novo': 'Criar Programa',
     '/app/programas/sessoes/nova': 'Registrar Sessão',
     '/app/programas/sessoes/consultar': 'Consultar Sessão',
+    '/app/programas/terapia-ocupacional/sessoes': 'Consultar Sessões - TO',
+    '/app/programas/terapia-ocupacional/sessoes/registrar': 'Registrar Sessão - TO',
     '/app/programas/relatorios/mensal': 'Relatório Geral',
     '/app/relatorios': 'Relatórios',
     '/app/relatorios/lista': 'Relatórios Salvos',
@@ -152,6 +158,41 @@ export function useBreadcrumb(): BreadcrumbItem[] {
                     { label: sessionLabel },
                 ];
             }
+        }
+
+        // Breadcrumbs específicos para TO
+        if (pathname.startsWith('/app/programas/terapia-ocupacional/sessoes/')) {
+            const segments = pathname.split('/');
+            const leaf = segments[5]; // sessoes/:id ou sessoes/registrar
+
+            if (leaf === 'registrar') {
+                return [
+                    { label: 'Programas', href: '/app/programas' },
+                    { label: 'Terapia Ocupacional', href: '/app/programas/terapia-ocupacional' },
+                    { label: 'Registrar Sessão' },
+                ];
+            }
+
+            if (leaf && leaf !== 'registrar') {
+                // Detalhe de sessão TO
+                const sessionLabel = state?.sessionDate
+                    ? new Date(state.sessionDate).toLocaleDateString('pt-BR')
+                    : `Sessão`;
+
+                return [
+                    { label: 'Programas', href: '/app/programas' },
+                    { label: 'Terapia Ocupacional', href: '/app/programas/terapia-ocupacional' },
+                    { label: 'Consultar Sessões', href: preservePacienteId('/app/programas/terapia-ocupacional/sessoes') },
+                    { label: sessionLabel },
+                ];
+            }
+
+            // Lista de sessões TO
+            return [
+                { label: 'Programas', href: '/app/programas' },
+                { label: 'Terapia Ocupacional', href: '/app/programas/terapia-ocupacional' },
+                { label: 'Consultar Sessões' },
+            ];
         }
 
         if (pathname.startsWith('/app/relatorios/') && pathname !== '/app/relatorios/novo') {

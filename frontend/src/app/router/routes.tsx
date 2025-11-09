@@ -22,6 +22,7 @@ import { VinculosPage } from '../../features/cadastros/links';
 import ConsultaHubPage from '../../features/consultas/pages/ConsultaHubPage';
 import TestDocumentsPage from '../../features/consultas/pages/TestDocumentsPage';
 import HubPage from '../../features/programas/pages/HubPage';
+import HubProgramasPage from '../../features/programas/pages/HubProgramasPage';
 import { RelatoriosHubPage, RelatoriosPage, GerarRelatorioPage, VisualizarRelatorioPage } from '../../features/relatorios';
 import ConsultaOcpPage from '../../features/programas/pages/ConsultaOcpPage';
 import CadastroOcpPage from '../../features/programas/pages/CadastroOcpPage';
@@ -46,6 +47,26 @@ const ConsultarSessaoPage = lazy(
     () => import('@/features/programas/sessoes/pages/ConsultarSessao'),
 );
 const DetalheSessaoPage = lazy(() => import('@/features/programas/sessoes/pages/DetalheSessao'));
+
+// Lazy imports para as páginas de área
+const AreaHubTOPage = lazy(
+    () => import('@/features/programas/variants/terapia-ocupacional/pages/AreaHubTOPage'),
+);
+const RegistrarSessaoToPage = lazy(
+    () => import('@/features/programas/variants/terapia-ocupacional/pages/RegistrarSessaoToPage'),
+);
+const ConsultarSessoesToPage = lazy(
+    () => import('@/features/programas/variants/terapia-ocupacional/pages/ConsultarSessoesToPage'),
+);
+const DetalheSessaoToPage = lazy(
+    () => import('@/features/programas/variants/terapia-ocupacional/pages/DetalheSessaoToPage'),
+);
+const AreaHubMovimentoPage = lazy(
+    () => import('@/features/programas/variants/movimento/pages/AreaHubMovimentoPage'),
+);
+const AreaHubMusiPage = lazy(
+    () => import('@/features/programas/variants/musicoterapia/pages/AreaHubMusiPage'),
+);
 
 export const router = createBrowserRouter([
     {
@@ -166,9 +187,73 @@ export const router = createBrowserRouter([
                                 path: 'programas',
                                 element: (
                                     <Suspense fallback={suspenseFallback}>
+                                        <HubProgramasPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Programas', title: 'Programas' },
+                            },
+                            {
+                                path: 'programas/fono-psico',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
                                         <HubPage />
                                     </Suspense>
                                 ),
+                                handle: { breadcrumb: 'Fonoaudiologia & Psicopedagogia', title: 'Fono & Psico' },
+                            },
+                            {
+                                path: 'programas/terapia-ocupacional',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <AreaHubTOPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Terapia Ocupacional', title: 'Terapia Ocupacional' },
+                            },
+                            {
+                                path: 'programas/terapia-ocupacional/sessoes/registrar',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <RegistrarSessaoToPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Registrar Sessão', title: 'Registrar Sessão - TO' },
+                            },
+                            {
+                                path: 'programas/terapia-ocupacional/sessoes',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <ConsultarSessoesToPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Consultar Sessões', title: 'Consultar Sessões - TO' },
+                            },
+                            {
+                                path: 'programas/terapia-ocupacional/sessoes/:sessaoId',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <DetalheSessaoToPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Detalhe da Sessão', title: 'Detalhe da Sessão - TO' },
+                            },
+                            {
+                                path: 'programas/movimento',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <AreaHubMovimentoPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Sessão de Movimento', title: 'Movimento' },
+                            },
+                            {
+                                path: 'programas/musicoterapia',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <AreaHubMusiPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Musicoterapia', title: 'Musicoterapia' },
                             },
                             {
                                 path: 'programas/lista',
