@@ -286,18 +286,12 @@ export async function getById(therapistId: string) {
 export async function getTherapistReport(therapistId: string) {
   const visibleIds = await getVisibleTherapistIds(therapistId);
 
-  if (!visibleIds.length) {
-    throw new AppError(
-      'NO_VISIBLE_THERAPISTS',
-      'Nenhum terapeuta visível para este usuário.',
-      403
-    );
-  }
+  const where = visibleIds.length > 0
+    ? { id: { in: visibleIds } }
+    : {};
 
   return prisma.terapeuta.findMany({
-    where: {
-      id: { in: visibleIds }
-    },
+    where,
     select: {
       id: true,
       nome: true,

@@ -179,14 +179,20 @@ export function GerarRelatorioPage() {
     }, [filters, selectedPatient, loadData]);
 
     useEffect(() => {
-        if (user?.id) {
-            setFilters((prev) => {
-                if (!prev.terapeutaId) {
-                    return { ...prev, terapeutaId: user.id };
-                }
-                return prev;
-            });
-        }
+        const isHighLevel = user?.perfil_acesso === 'gerente' || user?.perfil_acesso === 'coordenador executivo';
+
+        setFilters(prev => {
+            // caso gerente/coordenador -> limpa terapeutaId
+            if (isHighLevel && prev.terapeutaId) {
+            console.log('Removendo terapeutaId por perfil de alto nível');
+            return { ...prev, terapeutaId: undefined };
+            }
+
+            if (user?.id && !isHighLevel && !prev.terapeutaId) {
+                return { ...prev, terapeutaId: user.id };
+            }
+            return prev;
+        });
     }, [user])
 
     const sanitizeForFileName = (value: string) =>
@@ -226,12 +232,9 @@ export function GerarRelatorioPage() {
         syncFiltersToUrl(newFilters);
     };
 
-    const handleFiltersChange = (newFilters: Partial<Filters>) => {
-        setFilters((prev) => {
-            const merged = { ...prev, ...newFilters };
-            syncFiltersToUrl(merged);
-            return merged;
-        });
+    const handleFiltersChange = (newFilters: Filters) => {
+        setFilters(newFilters);
+        syncFiltersToUrl(newFilters);
     };
 
     // Handler para salvar o relatório (COM GERAÇÃO DE PDF)

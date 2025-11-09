@@ -18,11 +18,23 @@ export function FiltersBar({ value, onChange }: FiltersBarProps) {
     const [terapeutas, setTerapeutas] = useState<{ id: string; nome: string }[]>([]);
     const [programas, setProgramas] = useState<{ id: string; nome: string }[]>([]);
     const [estimulos, setEstimulos] = useState<{ id: string; nome: string }[]>([]);
+
     useEffect(() => {
         fetchAndSet('/api/terapeutas/relatorio', setTerapeutas, 'terapeutas');
-        fetchAndSet(`/api/ocp/reports/filters/programs?clientId=${value.pacienteId}`, setProgramas, 'programas');
-        fetchAndSet(`/api/ocp/reports/filters/stimulus?clientId=${value.pacienteId}${value.programaId ? `&programaId=${value.programaId}` : ''}`, setEstimulos, 'estimulos');
-    }, [value]);
+    }, []);
+
+    useEffect(() => {
+        if (value.pacienteId) {
+            fetchAndSet(`/api/ocp/reports/filters/programs?clientId=${value.pacienteId}`, setProgramas, 'programas');
+        }
+    }, [value.pacienteId]);
+
+    useEffect(() => {
+        if (value.pacienteId) {
+            const url = `/api/ocp/reports/filters/stimulus?clientId=${value.pacienteId}${value.programaId ? `&programaId=${value.programaId}` : ''}`;
+            fetchAndSet(url, setEstimulos, 'estimulos');
+        }
+    }, [value.pacienteId, value.programaId]);
 
     const updateFilter = (key: keyof Filters, newValue: any) => {
         onChange({ ...value, [key]: newValue });

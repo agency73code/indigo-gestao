@@ -297,13 +297,11 @@ export async function getKpis(filtros: OcpType.KpisFilters) {
         where.trials = {
             some: {
                 estimulosOcp: {
-                    estimulo: {
-                        id: Number(filtros.estimuloId),
-                    },
+                    id: Number(filtros.estimuloId),
                 },
             },
         };
-    };
+    }
     if (filtros.terapeutaId) where.terapeuta_id = filtros.terapeutaId;
 
   if (filtros.periodo.mode === "30d") {

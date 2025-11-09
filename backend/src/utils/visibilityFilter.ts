@@ -6,6 +6,7 @@ import { prisma } from "../config/database.js";
 
 export async function getVisibleTherapistIds(therapistId: string): Promise<string[]> {
   const registers = await getTherapistData(therapistId);
+
   if (!registers.length) {
     throw new AppError(
       'REQUIRED_THERAPIST_REGISTER',
