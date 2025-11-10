@@ -4,7 +4,7 @@ import { cpf } from "cpf-cnpj-validator";
 const strip = (val: string) => val.replace(/[^\dA-Za-z]/g, "");
 
 const caregiverAddressSchema = z.object({
-  cep: z.string().transform(strip),
+  cep: z.string().min(1, 'CEP é obrigatório').transform(strip),
   logradouro: z.string().min(1, 'Rua é obrigatório'),
   numero: z.string().min(1, 'Numero é obrigatório'),
   complemento: z.string().optional().nullable().default(''),
@@ -20,16 +20,16 @@ const caregiverSchema = z.object({
   cpf: z
     .string()
     .transform(strip)
-    .refine((val) => cpf.isValid(val), { message: 'CPF inválido' }),
+    .refine((val) => cpf.isValid(val), { message: 'CPF do responsável inválido' }),
   profissao: z.string().optional().nullable().default(null),
   escolaridade: z.string().min(1, 'Escolaridade é obrigatório'),
-  telefone: z.string().transform(strip),
+  telefone: z.string().min(1, 'Telefone do responsável é obrigatório').transform(strip),
   email: z.email({ message: 'E-mail inválido' }),
   endereco: caregiverAddressSchema,
 });
 
 const clientAddressSchema = z.object({
-  cep: z.string().transform(strip),
+  cep: z.string().min(1, 'CEP é obrigatório').transform(strip),
   logradouro: z.string().min(1, 'Rua é obrigatório'),
   numero: z.string().min(1, 'Numero é obrigatório'),
   complemento: z.string().optional().nullable().default(''),
@@ -43,10 +43,10 @@ const clientAddressSchema = z.object({
 const paymentSchema = z.object({
   nomeTitular: z.string().min(1, 'Nome do titular é obrigatório'),
   numeroCarteirinha: z.string().transform(strip).optional().nullable().default(null),
-  telefone1: z.string().transform(strip),
+  telefone1: z.string().min(1, 'Ao menos 1 telefone de pagamento é obrigatório').transform(strip),
   telefone2: z.string().transform(strip).optional().nullable().default(null),
   telefone3: z.string().transform(strip).optional().nullable().default(null),
-  email1: z.email({ message: 'E-mail de pagamento inválido' }),
+  email1: z.email({ message: 'E-mail de pagamento inválido' }).min(1, 'Ao menos 1 e-mail de pagamento é obrigatório'),
   email2: z.email({ message: 'E-mail de pagamento 2 inválido' }).optional().nullable().default(null),
   email3: z.email({ message: 'E-mail de pagamento 3 inválido' }).optional().nullable().default(null),
   sistemaPagamento: z.enum(['reembolso', 'liminar', 'particular']),
@@ -67,7 +67,7 @@ const paymentSchema = z.object({
 });
 
 const schoolAddressSchema = z.object({
-  cep: z.string().transform(strip),
+  cep: z.string().min(1, 'CEP é obrigatório').transform(strip),
   logradouro: z.string().min(1, 'Rua é obrigatório'),
   numero: z.string().min(1, 'Numero é obrigatório'),
   complemento: z.string().optional().nullable().default(''),
@@ -78,7 +78,7 @@ const schoolAddressSchema = z.object({
 
 const schoolContactSchema = z.object({
   nome: z.string().min(1, 'Nome de contanto da escola é obrigatório'),
-  telefone: z.string().transform(strip),
+  telefone: z.string().min(1, 'Telefone de contanto da escola é obrigatório').transform(strip),
   email: z
     .string()
     .email({ message: 'E-mail de contato da escola inválido' })
@@ -137,10 +137,10 @@ export const UpdateClientSchema = z
     cpf: z
       .string()
       .transform(strip)
-      .refine((val) => cpf.isValid(val), { message: 'CPF inválido' }),
-    dataNascimento: z.coerce.date(),
+      .refine((val) => cpf.isValid(val), { message: 'CPF principal inválido' }),
+    dataNascimento: z.coerce.date({ message: 'Data de nascimento é obrigatória' }),
     emailContato: z.email({ message: 'E-mail inválido' }),
-    dataEntrada: z.coerce.date(),
+    dataEntrada: z.coerce.date({ message: 'Data de entrada é obrigatória' }),
     dataSaida: nullableDate.default(null),
     cuidadores: z.array(caregiverSchema),
     enderecos: z.array(clientAddressSchema),
@@ -148,7 +148,15 @@ export const UpdateClientSchema = z
     dadosEscola: schoolSchema,
     arquivos: z.array(optionalFileSchema).optional(),
   })
-  .strict();
+  .strict()
+  .refine(
+    (data) =>
+      !data.dataSaida || data.dataSaida >= data.dataEntrada,
+    {
+      message: 'A data de saída não pode ser anterior à data de entrada',
+      path: ['dataSaida'],
+    },
+  );
 
 export type ClientSchemaInput = z.infer<typeof ClientSchema>;
 export type UpdateClientSchemaInput = z.infer<typeof UpdateClientSchema>;

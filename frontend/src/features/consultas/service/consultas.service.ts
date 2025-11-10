@@ -117,7 +117,11 @@ export async function updateCliente(ownerId: string, payload: any): Promise<void
   if (!res.ok) {
     const text = await res.text();
     const data = text ? JSON.parse(text) : null;
-    const msg = data?.message ?? data?.error ?? `Falha ao atualizar cliente (${res.status})`;
+    const msg =
+      data?.errors?.[0]?.message ??
+      data?.message ??
+      data?.error ??
+      `Falha ao atualizar cliente (${res.status})`;
     throw new Error(msg);
   }
 }
