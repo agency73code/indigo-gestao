@@ -13,6 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
+import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 import { HeaderInfo } from '@/features/programas/cadastro-ocp';
 import type { Patient, Therapist } from '@/features/programas/cadastro-ocp/types';
 import { toSessionsService } from '../services/toSessions.service';
@@ -56,6 +57,11 @@ export default function RegistrarSessaoToPage() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const { user } = useAuth();
+    const { setPageTitle } = usePageTitle();
+
+    useEffect(() => {
+        setPageTitle('Registrar Sessão - TO');
+    }, [setPageTitle]);
 
     const [formState, setFormState] = useState<FormState>({
         patient: null,
@@ -263,20 +269,8 @@ export default function RegistrarSessaoToPage() {
 
     return (
         <div className="flex flex-col min-h-full w-full p-0 sm:p-0 pt-0 sm:py-4">
-            {/* Header - Seguindo padrão do sistema */}
-            <div className="pb-4">
-                <div className="space-y-2 px-2 lg:px-4">
-                    <h1
-                        style={{ fontFamily: 'Sora, sans-serif' }}
-                        className="text-xl sm:text-2xl font-medium text-primary leading-tight"
-                    >
-                        Registrar Sessão de Terapia Ocupacional
-                    </h1>
-                </div>
-            </div>
-
             {/* Main Content */}
-            <main className="flex-1 px-1 sm:px-3 pb-60 sm:pb-30 w-full">
+            <main className="flex-1 px-1 sm:px-3 pb-60 sm:pb-30 w-full pt-4">
                 <div className="space-y-4 md:max-w-none mx-auto">
                     {/* Cabeçalho com Cliente e Terapeuta - Seguindo padrão do sistema */}
                     <HeaderInfo

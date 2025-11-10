@@ -78,10 +78,32 @@ export function NavMain({
     }, [openItems]);
 
     const toggleItem = (title: string) => {
-        setOpenItems((prev) => ({
-            ...prev,
-            [title]: !prev[title],
-        }));
+        setOpenItems((prev) => {
+            // Se o item clicado já está aberto, apenas fecha ele
+            if (prev[title]) {
+                return {
+                    ...prev,
+                    [title]: false,
+                };
+            }
+            
+            // Se o item clicado está fechado, fecha todos os outros e abre apenas ele
+            const newState: Record<string, boolean> = {};
+            items.forEach((item) => {
+                newState[item.title] = item.title === title;
+            });
+            return newState;
+        });
+    };
+
+    const closeAllMenus = () => {
+        setOpenItems(() => {
+            const newState: Record<string, boolean> = {};
+            items.forEach((item) => {
+                newState[item.title] = false;
+            });
+            return newState;
+        });
     };
 
     return (
@@ -104,8 +126,20 @@ export function NavMain({
                                 onOpenChange={() => toggleItem(item.title)}
                             >
                                 <SidebarMenuItem>
-                                    <SidebarMenuButton asChild tooltip={item.title} isActive={isActive}>
-                                        <Link to={item.url}>
+                                    <SidebarMenuButton 
+                                        asChild 
+                                        tooltip={item.title} 
+                                        isActive={isActive}
+                                    >
+                                        <Link 
+                                            to={item.url}
+                                            onClick={() => {
+                                                // Se o item não tem subitens, fecha todos os menus
+                                                if (!item.items?.length) {
+                                                    closeAllMenus();
+                                                }
+                                            }}
+                                        >
                                             <item.icon />
                                             <span style={{ fontFamily: 'Sora, sans-serif', fontWeight: 300 }}>
                                                 {item.title}

@@ -449,7 +449,7 @@ export function SessionsTable({ rows }: SessionsTableProps) {
                             <TooltipTrigger asChild>
                                 <span
                                     className="font-medium"
-                                    aria-label="Programas / objetivos ativos"
+                                    aria-label="Programas & objetivos ativos"
                                 >
                                     {row.getValue<number>('ocpActive')}
                                 </span>

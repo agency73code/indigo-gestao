@@ -187,7 +187,7 @@ function renderPatientCard(
     const age = calculateAge(patient.dataNascimento);
 
     return (
-        <Card className="rounded-[5px] hover:shadow-md transition-shadow h-full flex flex-col">
+        <Card className="rounded-lg hover:shadow-md transition-shadow h-full flex flex-col">
             <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3 flex-1">
@@ -412,7 +412,7 @@ function TherapistChip({
     const isResponsible = therapistCargo ? isSupervisorRole(therapistCargo) : link.role === 'responsible';
 
     return (
-        <div className={`grid grid-cols-[200px_1fr_auto] items-center gap-4 p-3 rounded-[5px] ${
+        <div className={`grid grid-cols-[200px_1fr_auto] items-center gap-4 p-3 rounded-lg ${
             isArchived ? 'bg-muted/10' : isEnded ? 'bg-muted/20' : 'bg-muted/30'
         }`}>
             {/* Coluna 1: Badges de Atuação e Status */}
@@ -550,7 +550,7 @@ function renderTherapistCard(
     const therapistInitials = getInitials(therapist.nome);
 
     return (
-        <Card className="rounded-[5px] hover:shadow-md transition-shadow h-full flex flex-col">
+        <Card className="rounded-lg hover:shadow-md transition-shadow h-full flex flex-col">
             <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3 flex-1">
@@ -779,7 +779,7 @@ function PatientChip({
     const patientInitials = getInitials(patientName);
 
     return (
-        <div className={`grid grid-cols-[200px_1fr_auto] items-center gap-4 p-3 rounded-[5px] ${
+        <div className={`grid grid-cols-[200px_1fr_auto] items-center gap-4 p-3 rounded-lg ${
             isArchived ? 'bg-muted/10' : isEnded ? 'bg-muted/20' : 'bg-muted/30'
         }`}>
             {/* Badges de Status */}
@@ -941,7 +941,7 @@ function renderSupervisionCard(
         : null;
 
     return (
-        <Card className="rounded-[5px] hover:shadow-md transition-shadow h-full flex flex-col">
+        <Card className="rounded-lg hover:shadow-md transition-shadow h-full flex flex-col">
             <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3 flex-1">
@@ -1294,7 +1294,7 @@ function SupervisedTherapistChip({
     const isIndirect = hierarchyLevel > 1;
 
     return (
-        <div className={`grid grid-cols-[200px_1fr_auto] items-center gap-4 p-3 rounded-[5px] ${
+        <div className={`grid grid-cols-[200px_1fr_auto] items-center gap-4 p-3 rounded-lg ${
             isArchived ? 'bg-muted/10 opacity-50' : isEnded ? 'bg-muted/20 opacity-70' : 'bg-muted/30'
         }`}>
             {/* Coluna 1: Badges de Atuação e Escopo */}

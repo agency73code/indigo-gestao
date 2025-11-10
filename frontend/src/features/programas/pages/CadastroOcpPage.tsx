@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 import {
     HeaderInfo,
     GoalSection,
@@ -25,6 +26,11 @@ import { useAuth } from '@/features/auth/hooks/useAuth';
 export default function CadastroOcpPage() {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
+    const { setPageTitle } = usePageTitle();
+
+    useEffect(() => {
+        setPageTitle('Novo Programa / Objetivos');
+    }, [setPageTitle]);
 
     // Estado para controlar a visibilidade da SaveBar
     const [showSaveBar, setShowSaveBar] = useState(false);
@@ -350,14 +356,14 @@ export default function CadastroOcpPage() {
     if (isLoading) {
         return (
             <div className="flex flex-col min-h-full w-full">
-                <div className="px-4 sm:px-6 py-4 sm:py-6">
+                <div className="px-4 sm:px-6 py-4 sm:py-4">
                     <div className="animate-pulse space-y-4">
                         <div className="h-8 bg-muted rounded w-1/3"></div>
                         <div className="h-4 bg-muted rounded w-1/2"></div>
                     </div>
                 </div>
                 <main className="flex-1 px-4 sm:px-6 pb-56 w-full">
-                    <div className="space-y-6 max-w-4xl md:max-w-none mx-auto">
+                    <div className="space-y-4 max-w-4xl md:max-w-none mx-auto">
                         {Array.from({ length: 4 }).map((_, i) => (
                             <div key={i} className="h-40 bg-muted rounded-lg animate-pulse"></div>
                         ))}
@@ -369,24 +375,9 @@ export default function CadastroOcpPage() {
 
     return (
         <div className="flex flex-col min-h-full w-full p-0 sm:p-0 pt-0 sm:py-4">
-            {/* Header */}
-            <div className="pb-4">
-                <div className="space-y-2 px-2 lg:px-4">
-                    <h1
-                        style={{ fontFamily: 'Sora, sans-serif' }}
-                        className="text-xl sm:text-2xl font-medium text-primary leading-tight"
-                    >
-                        Novo Programa / Objetivos
-                    </h1>
-                    {/* <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-                        Crie um programa / objetivo de treino personalizado para o cliente
-                    </p> */}
-                </div>
-            </div>
-
             {/* Conteúdo principal */}
-            <main className="flex-1 px-1 sm:px-3 pb-60 sm:pb-30 w-full">
-                <div className="space-y-6 md:max-w-none mx-auto">   
+            <main className="flex-1 px-1 sm:px-4 pb-60 sm:pb-30 w-full">
+                <div className="space-y-4 md:max-w-none mx-auto">   
                     {/* Informações do cabeçalho */}
                     <HeaderInfo
                         patient={formState.patient}

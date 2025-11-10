@@ -3,6 +3,7 @@ import { useParams, useLocation } from 'react-router-dom';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { FileDown } from 'lucide-react';
+import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 import {
     HeaderProgram,
     GoalSection,
@@ -147,6 +148,7 @@ const PRINT_PAGE_STYLE = `
 export default function DetalheProgramaPage() {
     const { programaId } = useParams<{ programaId: string }>();
     const location = useLocation();
+    const { setPageTitle, setHeaderActions } = usePageTitle();
 
     const [program, setProgram] = useState<ProgramDetail | null>(null);
     const [sessions, setSessions] = useState<SessionListItem[]>([]);
@@ -263,6 +265,9 @@ export default function DetalheProgramaPage() {
             setProgram(programData);
             setSessions(sessionsData);
             setRefreshKey(Date.now());
+            
+            // Atualizar título da página
+            setPageTitle(programData.name || 'Programa');
 
             // Carregar dados do gráfico em paralelo (não bloqueia a página)
             setChartLoading(true);
@@ -291,15 +296,33 @@ export default function DetalheProgramaPage() {
         loadData();
     }, [location.pathname, programaId, loadData]);
 
+    // Configurar botão de extrair relatório no header
+    useEffect(() => {
+        if (program) {
+            setHeaderActions(
+                <Button type="button" onClick={handlePrint} className="gap-2 rounded-full h-10">
+                    <FileDown className="h-4 w-4" />
+                    Extrair Relatório (PDF)
+                </Button>
+            );
+        } else {
+            setHeaderActions(null);
+        }
+        return () => {
+            setHeaderActions(null);
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [program?.id]);
+
     if (loading) {
         return (
             <div className="min-h-screen bg-background pb-28">
-                <div className="max-w-lg md:max-w-none mx-auto md:mx-4 lg:mx-8 p-4 space-y-6">
-                    <Skeleton className="h-48 w-full rounded-[5px]" />
-                    <Skeleton className="h-32 w-full rounded-[5px]" />
-                    <Skeleton className="h-40 w-full rounded-[5px]" />
-                    <Skeleton className="h-56 w-full rounded-[5px]" />
-                    <Skeleton className="h-32 w-full rounded-[5px]" />
+                <div className="max-w-lg md:max-w-none mx-auto md:mx-4 lg:mx-8 p-4 space-y-4">
+                    <Skeleton className="h-48 w-full rounded-lg" />
+                    <Skeleton className="h-32 w-full rounded-lg" />
+                    <Skeleton className="h-40 w-full rounded-lg" />
+                    <Skeleton className="h-56 w-full rounded-lg" />
+                    <Skeleton className="h-32 w-full rounded-lg" />
                 </div>
             </div>
         );
@@ -319,25 +342,6 @@ export default function DetalheProgramaPage() {
 
     return (
         <div className="flex flex-col gap-0">
-            {/* Cabeçalho com título e botão de exportar (não imprime) */}
-            <div className="flex items-center justify-between px-6 pt-4 pb-0 no-print">
-                <div className="flex-1">
-                    <h1
-                        className="text-2xl font-medium text-primary"
-                        style={{ fontFamily: 'Sora, sans-serif' }}
-                    >
-                        {program.name || 'Programa sem nome'}
-                    </h1>
-                    {/* <p className="text-sm text-muted-foreground mt-1">
-                        {program.patientName} • {program.goalTitle}
-                    </p> */}
-                </div>
-                <Button type="button" onClick={handlePrint} className="h-12 gap-2 rounded-[5px]">
-                    <FileDown className="h-4 w-4" aria-hidden />
-                    Extrair Relatório (PDF)
-                </Button>
-            </div>
-
             {/* Área de impressão */}
             <div ref={printAreaRef} data-print-root className="flex flex-col">
                 {/* Header para PDF (só aparece na impressão) */}
@@ -370,7 +374,7 @@ export default function DetalheProgramaPage() {
                 {/* Conteúdo principal */}
                 <div data-print-content className="flex flex-col">
                     <div className="min-h-screen bg-background pb-28 sm:p-0 my-4">
-                        <div className=" md:max-w-none mx-auto md:mx-0 lg:mx-4 space-y-6">
+                        <div className=" md:max-w-none mx-auto md:mx-0 lg:mx-4 space-y-4">
                             {/* Header com informacoes do paciente e programa */}
                             <HeaderProgram key={refreshKey} program={program} />
 

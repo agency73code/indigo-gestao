@@ -50,7 +50,7 @@ export default function ToolbarConsulta({
                     placeholder={placeholder}
                     value={localValue}
                     onChange={(e) => setLocalValue(e.target.value)}
-                    className="pl-10 h-12"
+                    className="pl-10"
                 />
             </div>
 

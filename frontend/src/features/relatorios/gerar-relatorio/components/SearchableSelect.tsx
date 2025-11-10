@@ -71,10 +71,10 @@ export default function SearchableSelect({
                 className="w-full justify-between h-10 px-3 text-left font-normal"
                 onClick={() => setIsOpen(!isOpen)}
             >
-                <span className={selectedOption ? 'text-foreground' : 'text-muted-foreground'}>
+                <span className={`truncate ${selectedOption ? 'text-foreground' : 'text-muted-foreground'}`}>
                     {selectedOption ? selectedOption.nome : placeholder}
                 </span>
-                <ChevronDown className="h-4 w-4 opacity-50" />
+                <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
             </Button>
 
             {/* Dropdown */}
@@ -101,8 +101,8 @@ export default function SearchableSelect({
                             className="w-full text-left px-3 py-2 text-sm hover:bg-muted/50 flex items-center gap-2"
                             onClick={handleClear}
                         >
-                            <X className="h-3 w-3" />
-                            Limpar seleção
+                            <X className="h-3 w-3 shrink-0" />
+                            <span className="truncate">Limpar seleção</span>
                         </button>
 
                         {isLoading ? (
@@ -118,10 +118,11 @@ export default function SearchableSelect({
                                 <button
                                     key={option.id}
                                     type="button"
-                                    className={`w-full text-left px-3 py-2 text-sm hover:bg-muted/50 ${
+                                    className={`w-full text-left px-3 py-2 text-sm hover:bg-muted/50 truncate ${
                                         value === option.id ? 'bg-muted' : ''
                                     }`}
                                     onClick={() => handleSelect(option.id)}
+                                    title={option.nome}
                                 >
                                     {option.nome}
                                 </button>

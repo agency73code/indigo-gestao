@@ -1,11 +1,30 @@
 import { Outlet } from 'react-router-dom';
-import { Component } from 'react';
+import { Component, createContext, useContext, useState } from 'react';
 import type { ReactNode } from 'react';
-import Header from '../components/Header';
 import { AppSidebar } from '@/components/sidebar/app-sidebar';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AbilityProvider } from '@/features/auth/abilities/AbilityProvider';
 import PageTransition from '@/shared/components/layout/PageTransition';
+import ThemeToggle from '../components/ThemeToggle';
+import { Button } from '@/components/ui/button';
+import { Bell } from 'lucide-react';
+
+type PageTitleContextType = {
+    pageTitle: string;
+    setPageTitle: (title: string) => void;
+    headerActions: ReactNode;
+    setHeaderActions: (actions: ReactNode) => void;
+};
+
+const PageTitleContext = createContext<PageTitleContextType | null>(null);
+
+export function usePageTitle() {
+    const context = useContext(PageTitleContext);
+    if (!context) {
+        throw new Error('usePageTitle must be used within PageTitleProvider');
+    }
+    return context;
+}
 
 interface ErrorBoundaryState {
     hasError: boolean;
@@ -56,23 +75,60 @@ class ErrorBoundary extends Component<
 }
 
 export default function AppLayout() {
+    const [pageTitle, setPageTitle] = useState('');
+    const [headerActions, setHeaderActions] = useState<ReactNode>(null);
+
     return (
         <ErrorBoundary>
             <SidebarProvider>
                 <AbilityProvider>
-                    <div className="flex min-h-screen w-full">
-                        <AppSidebar />
-                        <div className="flex flex-1 flex-col min-h-screen p-3">
-                            <Header />
-                             <main className="flex-1 bg-background overflow-auto">
-                                  <ErrorBoundary>
-                                      <PageTransition>
-                                          <Outlet />
-                                      </PageTransition>
-                                  </ErrorBoundary>
-                              </main>
+                    <PageTitleContext.Provider value={{ pageTitle, setPageTitle, headerActions, setHeaderActions }}>
+                        <div className="flex min-h-screen w-full">
+                            <AppSidebar />
+                            <div className="flex flex-1 flex-col min-h-screen p-1 bg-[#F1F5F9]">
+                                {/* Card externo branco */}
+                                <div className="flex-1 bg-background rounded-3xl p-2 flex flex-col gap-3">
+                                    {/* Espaço superior para título e botões */}
+                                    <div className="h-12 flex items-center justify-between pt-0 px-1">
+                                        {/* Botão sidebar e título */}
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-10 w-10 rounded-full bg-header-bg hover:bg-header-bg/80 flex items-center justify-center transition-colors cursor-pointer">
+                                                <SidebarTrigger className="text-black hover:bg-transparent hover:text-black" />
+                                            </div>
+                                            {pageTitle && (
+                                                <h1 className="text-2xl font-medium text-primary" style={{ fontFamily: 'Sora, sans-serif' }}>
+                                                    {pageTitle}
+                                                </h1>
+                                            )}
+                                        </div>
+                                        
+                                        {/* Botões de notificação e theme */}
+                                        <div className="flex items-center gap-3 ml-auto">
+                                            {headerActions}
+                                            <Button variant="ghost" size="sm" className="h-10 w-10 p-0 relative rounded-full bg-header-bg hover:bg-header-bg/80 transition-colors">
+                                                <Bell className="h-4 w-4 text-black" />
+                                                <span className="absolute top-0 right-0 h-3 w-3 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center">
+                                                    2
+                                                </span>
+                                            </Button>
+                                            <div className="h-10 w-10 rounded-full bg-black dark:bg-white flex items-center justify-center">
+                                                <ThemeToggle />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Card interno com o conteúdo da página */}
+                                    <main className="flex-1 overflow-auto bg-background border border-gray-200/50 rounded-3xl shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+                                        <ErrorBoundary>
+                                            <PageTransition>
+                                                <Outlet />
+                                            </PageTransition>
+                                        </ErrorBoundary>
+                                    </main>
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    </PageTitleContext.Provider>
                 </AbilityProvider>
             </SidebarProvider>
         </ErrorBoundary>

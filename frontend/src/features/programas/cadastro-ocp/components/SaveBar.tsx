@@ -31,11 +31,10 @@ function SaveButtons({
             <div className="max-w-62 mx-auto flex flex-col sm:flex-row gap-3 sm:gap-4">
                 {/* Botões principais */}
                 <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 flex-1">
-                    <Button
+                                        <Button
                         onClick={onSave}
-                        disabled={!canSave || isSaving}
-                        className="flex-1 p-3 rounded-[5px] sm:flex-none h-12 sm:h-11 gap-2 font-medium"
-                        size="lg"
+                        disabled={isSaving}
+                        className="flex-1 p-3 rounded-full sm:flex-none h-12 sm:h-11 gap-2 font-medium"
                     >
                         {isSaving ? (
                             <>
@@ -54,7 +53,7 @@ function SaveButtons({
                         onClick={onSaveAndStart}
                         disabled={!canSave || isSaving}
                         variant="secondary"
-                        className="flex-1 p-3 rounded-[5px] sm:flex-none h-12 sm:h-11 gap-2 font-medium"
+                        className="flex-1 p-3 rounded-full sm:flex-none h-12 sm:h-11 gap-2 font-medium"
                         size="lg"
                     >
                         <Play className="h-4 w-4" />

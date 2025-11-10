@@ -37,13 +37,13 @@ export default function ThemeToggle() {
             variant="ghost"
             size="icon"
             onClick={toggleTheme}
-            className="h-9 w-9"
+            className="h-full w-full hover:bg-transparent"
             aria-label={isDark ? 'Ativar modo claro' : 'Ativar modo escuro'}
         >
             {isDark ? (
-                <Sun className="h-4 w-4 transition-all" />
+                <Sun className="h-4 w-4 text-black transition-all" />
             ) : (
-                <Moon className="h-4 w-4 transition-all" />
+                <Moon className="h-4 w-4 text-white transition-all" />
             )}
         </Button>
     );

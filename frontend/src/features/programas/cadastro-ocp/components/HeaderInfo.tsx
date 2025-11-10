@@ -129,7 +129,7 @@ function SelectorModal({
                             {isLoading ? (
                                 <div className="space-y-2">
                                     {Array.from({ length: 3 }).map((_, i) => (
-                                        <Card key={i} className="rounded-[5px]">
+                                        <Card key={i} className="rounded-lg">
                                             <CardContent>
                                                 <div className="animate-pulse space-y-2">
                                                     <div className="h-4 bg-muted rounded w-3/4"></div>
@@ -144,7 +144,7 @@ function SelectorModal({
                                     <Card
                                         padding="medium"
                                         key={item.id}
-                                        className="cursor-pointer hover:shadow-md transition-shadow rounded-[5px]"
+                                        className="cursor-pointer hover:shadow-md transition-shadow rounded-lg"
                                         onClick={() => handleSelect(item)}
                                     >
                                         <CardContent className="p-0 sm:p-0">
@@ -248,7 +248,7 @@ export default function HeaderInfo({
         <>
             <div className="space-y-4">
                 {/* Paciente */}
-                <Card  className="rounded-[5px] px-6 py-8 md:px-8 md:py-10 lg:px-8 lg:py-0">
+                <Card  className="rounded-lg px-6 py-8 md:px-8 md:py-10 lg:px-8 lg:py-0">
                     <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                         <CardTitle className="text-base flex items-center gap-2">
                             <User className="h-4 w-4" />
@@ -257,7 +257,7 @@ export default function HeaderInfo({
                     </CardHeader>
                     <CardContent className=" pb-3 sm:pb-6">
                         {patient ? (
-                            <div className="flex items-center gap-3 p-2 sm:p-3 bg-muted rounded-[5px]">
+                            <div className="flex items-center gap-3 p-2 sm:p-3 bg-muted rounded-lg">
                                 <div className="flex-shrink-0">
                                     <Avatar className="w-12 h-12 rounded-full">
                                         {imageLoading && patient.photoUrl && (
@@ -333,7 +333,7 @@ export default function HeaderInfo({
                 </Card>
 
                 {/* Terapeuta */}
-                <Card className="rounded-[5px] p-1 sm:p-4 px-6 py-8 md:px-8 md:py-10 lg:px-8 lg:py-0">
+                <Card className="rounded-lg p-1 sm:p-4 px-6 py-8 md:px-8 md:py-10 lg:px-8 lg:py-0">
                     <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                         <CardTitle className="text-base flex items-center gap-2">
                             <UserCheck className="h-4 w-4" />
@@ -342,7 +342,7 @@ export default function HeaderInfo({
                     </CardHeader>
                     <CardContent className="pb-3 sm:pb-6">
                         {therapist ? (
-                            <div className="flex items-center gap-3 p-2 sm:p-3 bg-muted rounded-md">
+                            <div className="flex items-center gap-3 p-2 sm:p-3 bg-muted rounded-lg">
                                 <div className="flex-shrink-0">
                                     <Avatar className="w-12 h-12 rounded-full">
                                         {therapistImageLoading && therapist.photoUrl && (
@@ -410,7 +410,7 @@ export default function HeaderInfo({
                 </Card>
 
                 {/* Informações do programa */}
-                <Card className="rounded-[5px] px-6 py-8 md:px-8 md:py-10 lg:px-8 lg:py-0">
+                <Card className="rounded-lg px-6 py-8 md:px-8 md:py-10 lg:px-8 lg:py-0">
                     <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                         <CardTitle className="text-base flex items-center gap-2">
                             <Calendar className="h-4 w-4" />

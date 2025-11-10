@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { SectionHeader } from '@/components/configuracoes/SectionHeader';
 import { Settings, User, Bell, Shield, Zap } from 'lucide-react';
+import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 import {
     PerfilSection,
     PreferenciasSection,
@@ -15,6 +16,11 @@ import {
 export default function ConfiguracoesPage() {
     const location = useLocation();
     const navigate = useNavigate();
+    const { setPageTitle } = usePageTitle();
+
+    useEffect(() => {
+        setPageTitle('Configurações');
+    }, [setPageTitle]);
 
     // Determinar tab ativa baseada na URL
     const getActiveTabFromPath = () => {
@@ -68,16 +74,6 @@ export default function ConfiguracoesPage() {
 
     return (
         <div className="container mx-auto py-6 px-4 max-w-6xl">
-            {/* Header */}
-            <div className="mb-8">
-                <div className="flex items-center gap-3 mb-2">
-                    <Settings className="w-6 h-6 text-primary" />
-                    <h1 className="text-2xl font-semibold text-foreground">Configurações</h1>
-                </div>
-                <p className="text-muted-foreground">
-                    Gerencie suas preferências, segurança e integrações da plataforma.
-                </p>
-            </div>
 
             {/* Tabs */}
             <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">

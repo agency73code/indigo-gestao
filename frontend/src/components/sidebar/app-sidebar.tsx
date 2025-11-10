@@ -1,6 +1,5 @@
 'use client';
 import * as React from 'react';
-import indigoLogo from '@/assets/logos/indigo.svg';
 import {
     Frame,
     LayoutDashboard,
@@ -21,13 +20,9 @@ import { NavUser } from '@/components/sidebar/nav-user';
 import {
     Sidebar,
     SidebarContent,
-    SidebarFooter,
     SidebarHeader,
-    SidebarMenu,
-    SidebarMenuButton,
-    SidebarMenuItem,
+    SidebarSeparator,
 } from '@/components/ui/sidebar';
-import { useAuth } from '@/features/auth/hooks/useAuth';
 import type { Actions, Subjects } from '@/features/auth/abilities/ability';
 import type { LucideIcon } from 'lucide-react';
 
@@ -90,7 +85,7 @@ const data: {
             ],
         },
         {
-            title: 'Programas/Objetivos',
+            title: 'Programas & Objetivos',
             url: '/app/programas',
             icon: Activity,
             items: [
@@ -148,54 +143,18 @@ const data: {
     ],
 };
 
-function capitalize(word: string) {
-    if (!word) return '';
-    return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-}
-
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-    const { user } = useAuth();
-    const displayAcesso = capitalize(user?.perfil_acesso ?? '-');
-    const displayAvatar = indigoLogo;
-
     return (
-        <Sidebar variant="inset" {...props} className="no-print">
-            <SidebarHeader className="pt-">
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" asChild>
-                            <a className="flex pt-4 flex-col min-h-fit items-center" href="#">
-                                <div className="mb-4">
-                                    <img
-                                        src={displayAvatar}
-                                        alt={data.user.name}
-                                        className="w-24 h-24 rounded-full border border-border"
-                                    />
-                                </div>
-                                <div className="flex flex-col items-center text-center text-sm leading-tight">
-                                    <span
-                                        className="font-light block mb-1"
-                                        style={{ fontFamily: 'Sora, sans-serif' }}
-                                    >
-                                        Instituto Índigo
-                                    </span>
-                                    <span className="text-xs block text-muted-foreground">
-                                        {displayAcesso}
-                                    </span>
-                                </div>
-                            </a>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </SidebarMenu>
+        <Sidebar variant="inset" {...props} className="no-print bg-[#F1F5F9] p-1 pr-0">
+            <SidebarHeader className="pt-3 pb-2">
+                <NavUser />
             </SidebarHeader>
             <SidebarContent className="pt-2">
                 <NavMain items={data.navMain} />
+                <SidebarSeparator className="mx-0 bg-border/40" />
                 <NavProjects projects={data.projects} />
                 <NavSecondary items={data.navSecondary} className="mt-auto" />
             </SidebarContent>
-            <SidebarFooter className="md:hidden">
-                <NavUser />
-            </SidebarFooter>
         </Sidebar>
     );
 }

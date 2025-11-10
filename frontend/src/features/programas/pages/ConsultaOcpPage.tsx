@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 import {
-    HeaderSection,
     PatientSelector,
     SearchAndFilters,
     ProgramList,
-    CreateProgramFab,
     type Patient,
     type SearchAndFiltersState,
 } from '../consultar-programas/components';
@@ -13,6 +14,11 @@ import {
 export default function ConsultaOcpPage() {
     const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
+    const { setPageTitle } = usePageTitle();
+
+    useEffect(() => {
+        setPageTitle('Consultar Programas & Objetivos');
+    }, [setPageTitle]);
 
     // Estados principais
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
@@ -60,15 +66,9 @@ export default function ConsultaOcpPage() {
         ];
 
     return (
-        <div className="flex flex-col min-h-full w-full p-1 sm:p-4">
-            <div className="py-4 lg:py-0">
-                <HeaderSection
-                    title="Consultar Programas & Objetivos"
-                />
-            </div>
-
-            <main className="flex-1 pb-20 sm:pb-24">
-                <div className="space-y-4 sm:space-y-6 max-w-full">
+        <div className="flex flex-col min-h-full w-full">
+            <main className="flex-1 pb-20 sm:pb-24 px-4 pt-4">
+                <div className="space-y-4 max-w-full">
                     {/* Seleção de Paciente */}
                     <PatientSelector
                         selected={selectedPatient}
@@ -77,13 +77,26 @@ export default function ConsultaOcpPage() {
                     />
 
                     {/* Busca e Filtros */}
-                    <SearchAndFilters
-                        q={searchState.q}
-                        status={searchState.status}
-                        sort={searchState.sort}
-                        onChange={(changes) => handleSearchChange({ ...searchState, ...changes })}
-                        disabled={!selectedPatient}
-                    />
+                    <div className="flex items-center gap-4">
+                        <div className="flex-1">
+                            <SearchAndFilters
+                                q={searchState.q}
+                                status={searchState.status}
+                                sort={searchState.sort}
+                                onChange={(changes) => handleSearchChange({ ...searchState, ...changes })}
+                                disabled={!selectedPatient}
+                            />
+                        </div>
+                        <Button
+                            onClick={handleCreateProgram}
+                            disabled={!selectedPatient}
+                            size="icon"
+                            className="h-10 w-10 rounded-full flex-shrink-0"
+                            title="Adicionar programa"
+                        >
+                            <Plus className="h-5 w-5" />
+                        </Button>
+                    </div>
 
                     {/* Lista de Programas */}
                     <ProgramList
@@ -94,13 +107,6 @@ export default function ConsultaOcpPage() {
                     />
                 </div>
             </main>
-
-            {/* FAB para Criar Programa */}
-            <CreateProgramFab
-                disabled={!selectedPatient}
-                onClick={handleCreateProgram}
-                patientName={selectedPatient?.name}
-            />
         </div>
     );
 }

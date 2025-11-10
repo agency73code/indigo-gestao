@@ -53,7 +53,7 @@ export default function PerformanceChart({
 }: PerformanceChartProps) {
     if (loading) {
         return (
-            <Card className="rounded-[5px]">
+            <Card className="rounded-lg">
                 <CardHeader>
                     <CardTitle>Evolução do Desempenho</CardTitle>
                 </CardHeader>
@@ -89,7 +89,7 @@ export default function PerformanceChart({
 
     return (
         <Card
-            className={`px-6 py-6 md:px-8 md:py-10 lg:px-8 lg:py-8 mx-0 rounded-[5px] ${className ?? ''}`}
+            className={`px-6 py-6 md:px-8 md:py-10 lg:px-8 lg:py-8 mx-0 rounded-lg ${className ?? ''}`}
         >
             <CardHeader>
                 <div className="mb-2 flex items-center gap-2">

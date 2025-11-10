@@ -5,13 +5,19 @@ import { useEffect, useState } from 'react';
 import { getCardsOverview } from '@/lib/api';
 import type { Actions, Subjects } from '@/features/auth/abilities/ability';
 import { RequireAbility } from '@/features/auth/abilities/RequireAbility';
+import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 
 export default function ConsultaHubPage() {
+    const { setPageTitle } = usePageTitle();
     const [totalTerapeutas, setTotalTerapeutas] = useState(24);
     const [totalClientes, setTotalClientes] = useState(156);
     const [novosTerapeutas, setNovosTerapeutas] = useState(3);
     const [novosClientes, setNovosClientes] = useState(12);
     const [totalRegistros, setTotalRegistros] = useState(180);
+    
+    useEffect(() => {
+        setPageTitle('Consultar');
+    }, [setPageTitle]);
 
     type ActionConfig = {
         title: string;
@@ -67,21 +73,8 @@ export default function ConsultaHubPage() {
 
     return (
         <div className="flex flex-col min-h-full w-full px-1 py-4 md:p-4 sm:p-4 lg:p-4 space-y-4">
-            {/* Header Section */}
-            <div className="space-y-2">
-                <h1
-                    style={{ fontFamily: 'Sora, sans-serif' }}
-                    className="text-2xl sm:text-2xl font-medium text-primary"
-                >
-                    Consultar
-                </h1>
-                {/* <p className="text-sm sm:text-base text-muted-foreground">
-                    Visualize e gerencie os registros do sistema
-                </p> */}
-            </div>
-
             {/* Main Action Cards */}
-            <div className="space-y-5 p-1">
+            <div className="space-y-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {mainActions.map((action, index) => {
                         const Icon = action.icon;
@@ -96,13 +89,13 @@ export default function ConsultaHubPage() {
                                     className="block"
                                     aria-label={`${action.title}: ${action.description}`}
                                 >
-                                    <Card className="cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] border border-border/40 rounded-xl bg-[#F1F5F9] h-full">
+                                    <Card className="cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] border border-border/40 rounded-lg bg-[#F1F5F9] h-full">
                                         <CardHeader className="space-y-3 p-2">
-                                            <div className={`h-14 w-14 rounded-xl ${action.bgColor} flex items-center justify-center`}>
+                                            <div className={`h-14 w-14 rounded-lg ${action.bgColor} flex items-center justify-center`}>
                                                 <Icon className={`h-7 w-7 ${action.iconColor}`} />
                                             </div>
                                             <div className="space-y-1">
-                                                <CardTitle className="text-lg font-semibold text-foreground">
+                                                <CardTitle className="text-lg font-medium text-foreground">
                                                     {action.title}
                                                 </CardTitle>
                                                 <p className="text-sm text-muted-foreground">
@@ -128,7 +121,7 @@ export default function ConsultaHubPage() {
                 </h2>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <Card className="rounded-[5px]">
+                    <Card className="rounded-lg">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Total Terapeutas</CardTitle>
                             <User className="h-5 w-5 text-muted-foreground" />
@@ -139,7 +132,7 @@ export default function ConsultaHubPage() {
                         </CardContent>
                     </Card>
 
-                    <Card className="rounded-[5px]">
+                    <Card className="rounded-lg">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Total Clientes</CardTitle>
                             <Users className="h-5 w-5 text-muted-foreground" />
@@ -150,7 +143,7 @@ export default function ConsultaHubPage() {
                         </CardContent>
                     </Card>
 
-                    <Card className="rounded-[5px]">
+                    <Card className="rounded-lg">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Registros Ativos</CardTitle>
                             <BarChart3 className="h-5 w-5 text-muted-foreground" />

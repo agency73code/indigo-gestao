@@ -147,7 +147,7 @@ const TherapistTable = memo(function TherapistTable({
     }
 
     return (
-        <div className="border rounded-[5px] p">
+        <div className="border rounded-lg overflow-hidden">
             <div className="md:hidden divide-y">
                 {therapists.map((therapist) => (
                     <div key={therapist.id} className="p-4 space-y-3">
@@ -235,7 +235,7 @@ const TherapistTable = memo(function TherapistTable({
                     <thead className="bg-muted/50">
                         <tr>
                             <th
-                                className="text-left p-3 cursor-pointer hover:bg-muted/70 transition-colors"
+                                className="text-left p-3 cursor-pointer hover:bg-muted/70 transition-colors first:rounded-tl-lg"
                                 onClick={() => onSort('nome')}
                             >
                                 <div className="flex items-center gap-2 font-medium text-sm">
@@ -268,7 +268,7 @@ const TherapistTable = memo(function TherapistTable({
                                     {getSortIcon('status')}
                                 </div>
                             </th>
-                            <th className="text-center p-3 font-medium text-sm">Ações</th>
+                            <th className="text-center p-3 font-medium text-sm last:rounded-tr-lg">Ações</th>
                         </tr>
                     </thead>
                     <tbody>

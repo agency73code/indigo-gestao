@@ -104,7 +104,7 @@ function StatusBadge({
             <TooltipTrigger asChild>
                 <Badge
                     variant="outline"
-                    className={`gap-2 py-1 rounded-[5px] ${config.badge}`}
+                    className={`gap-2 py-1 rounded-lg ${config.badge}`}
                     data-testid={testId}
                 >
                     <Icon className="h-4 w-4" />
@@ -167,7 +167,7 @@ export default function SessionsList({ sessions, program }: SessionsListProps) {
 
     if (sessions.length === 0) {
         return (
-            <Card className="rounded-[5px]">
+            <Card className="rounded-lg">
                 <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
                     <CardTitle className="text-base flex items-center gap-2">
                         <Calendar className="h-4 w-4" />
@@ -189,7 +189,7 @@ export default function SessionsList({ sessions, program }: SessionsListProps) {
     }
 
     return (
-        <Card className="rounded-[5px] px-6 py-0 md:px-8 md:py-10 lg:px-8 lg:py-2" data-print-block>
+        <Card className="rounded-lg px-6 py-0 md:px-8 md:py-10 lg:px-8 lg:py-2" data-print-block>
             <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                 <div className="flex items-center justify-between">
                     <CardTitle className="text-base flex items-center gap-2">

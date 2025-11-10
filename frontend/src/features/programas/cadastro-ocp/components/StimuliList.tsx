@@ -98,7 +98,7 @@ export default function StimuliList({
     };
 
     return (
-        <Card padding="none" className="rounded-[5px] px-6 py-8 md:px-8 md:py-10 lg:px-8 lg:py-0">
+        <Card padding="none" className="rounded-lg px-6 py-8 md:px-8 md:py-10 lg:px-8 lg:py-0">
             <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                 <div className="flex items-center justify-between">
                     <CardTitle className="text-base flex items-center gap-2">
@@ -206,7 +206,7 @@ export default function StimuliList({
                         <Button
                             type="button"
                             onClick={handleAddStimulus}
-                            className="w-full flex items-center gap-2 mt-4 h-12 rounded-[5px]"
+                            className="w-full flex items-center gap-2 mt-4 h-12 rounded-full"
                         >
                             <Plus className="w-4 h-4" />
                             Adicionar outro Estímulo

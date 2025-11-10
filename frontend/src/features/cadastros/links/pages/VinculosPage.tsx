@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ChevronLeft, ArrowLeftRight, Plus, Users, Search } from 'lucide-react';
+import { Plus, Users, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useNavigate } from 'react-router-dom';
+import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 import { toast } from 'sonner';
 import {
     LinkList,
@@ -48,12 +48,16 @@ import {
 } from '../services/links.service';
 
 export default function VinculosPage() {
-    const navigate = useNavigate();
+    const { setPageTitle } = usePageTitle();
     const [links, setLinks] = useState<PatientTherapistLink[]>([]);
     const [supervisionLinks, setSupervisionLinks] = useState<TherapistSupervisionLink[]>([]);
     const [patients, setPatients] = useState<Paciente[]>([]);
     const [therapists, setTherapists] = useState<Terapeuta[]>([]);
     const [loading, setLoading] = useState(true);
+    
+    useEffect(() => {
+        setPageTitle('Vínculos');
+    }, [setPageTitle]);
     
     // Estados para vínculos cliente-terapeuta
     const [showModal, setShowModal] = useState(false);
@@ -672,44 +676,8 @@ export default function VinculosPage() {
 
     return (
         <div className="min-h-screen bg-background">
-            {/* Header com botão voltar */}
-            <div className="px-0 sm:px-4 py-3 sm:pt-4 pb-0">
-                <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="p-1.5 sm:p-2 shrink-0"
-                            onClick={() => navigate(-1)}
-                        >
-                            <ChevronLeft className="h-4 w-4" />
-                        </Button>
-                        <div className="min-w-0 flex-1">
-                            <h1
-                                style={{ fontFamily: 'Sora, sans-serif' }}
-                                className="text-lg sm:text-2xl font-medium text-primary leading-tight"
-                            >
-                                {/* Mobile: Título em duas linhas */}
-                                <span className="sm:hidden">
-                                    Vínculos
-                                    <br />
-                                    <span className="flex items-center gap-1">
-                                        Cliente <ArrowLeftRight className="h-4 w-4" /> Terapeuta
-                                    </span>
-                                </span>
-                                {/* Desktop: Título em uma linha */}
-                                <span className="hidden sm:flex items-center gap-2">
-                                    Vínculos 
-                                </span>
-                            </h1>
-                            
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             {/* Conteúdo principal */}
-            <div className="px-1 lg:px-4 py-4 space-y-4">
+            <div className="px-1 lg:px-4 pt-4 space-y-4">
                 {/* Linha com Filtros e Botões */}
                 <div className="flex items-center gap-4">
                     {/* Busca - Esquerda */}
@@ -719,7 +687,7 @@ export default function VinculosPage() {
                             placeholder="Buscar por nome, e-mail..."
                             value={filters.q || ''}
                             onChange={(e) => setFilters({ ...filters, q: e.target.value })}
-                            className="pl-10 h-12 rounded-[5px]"
+                            className="pl-10"
                         />
                     </div>
 
@@ -729,7 +697,7 @@ export default function VinculosPage() {
                         onValueChange={(value) => setFilters({ ...filters, status: value as any })}
                     >
                         <SelectTrigger
-                            className="w-[170px] h-12! min-h-12 rounded-[5px]"
+                            className="w-[170px]"
                             aria-label="Filtrar por status"
                         >
                             <span className="text-sm">
@@ -750,7 +718,7 @@ export default function VinculosPage() {
                     <div className="flex gap-2 ml-auto">
                         <Button
                             onClick={handleCreateLink}
-                            className="h-12 rounded-[5px] shrink-0 px-4"
+                            className="shrink-0 px-4"
                             variant="default"
                         >
                             <Plus className="h-4 w-4 mr-2" />
@@ -758,7 +726,7 @@ export default function VinculosPage() {
                         </Button>
                         <Button
                             onClick={handleCreateSupervisionLink}
-                            className="h-12 rounded-[5px] shrink-0 px-4"
+                            className="shrink-0 px-4"
                             variant="outline"
                         >
                             <Users className="h-4 w-4 mr-2" />
@@ -769,22 +737,19 @@ export default function VinculosPage() {
 
                 {/* Tabs de visualização - Largura total */}
                 <Tabs value={filters.viewBy} onValueChange={(value) => setFilters({ ...filters, viewBy: value as any })}>
-                    <TabsList className="grid w-full grid-cols-3 h-10 rounded-[5px] p-1">
+                    <TabsList className="grid w-full grid-cols-3 h-10 p-1">
                         <TabsTrigger
                             value="patient"
-                            className="rounded-[5px] data-[state=active]:rounded-[5px]"
                         >
                             Cliente
                         </TabsTrigger>
                         <TabsTrigger
                             value="therapist"
-                            className="rounded-[5px] data-[state=active]:rounded-[5px]"
                         >
                             Terapeuta
                         </TabsTrigger>
                         <TabsTrigger
                             value="supervision"
-                            className="rounded-[5px] data-[state=active]:rounded-[5px]"
                         >
                             Supervisão
                         </TabsTrigger>

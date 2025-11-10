@@ -1,6 +1,6 @@
-import { Search, Badge, Filter } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import type { SearchAndFiltersState } from '../types';
 
 interface SearchAndFiltersProps {
@@ -11,6 +11,17 @@ interface SearchAndFiltersProps {
     onChange: (next: Partial<SearchAndFiltersState>) => void;
 }
 
+const STATUS_OPTIONS = [
+    { value: 'all' as const, label: 'Todos' },
+    { value: 'active' as const, label: 'Ativo' },
+    { value: 'archived' as const, label: 'Arquivado' },
+];
+
+const SORT_OPTIONS = [
+    { value: 'recent' as const, label: 'Mais recente' },
+    { value: 'alphabetic' as const, label: 'Alfabética' },
+];
+
 export default function SearchAndFilters({
     disabled = false,
     q,
@@ -18,10 +29,23 @@ export default function SearchAndFilters({
     sort,
     onChange,
 }: SearchAndFiltersProps) {
+    // Função para exibir o label customizado no Select de Status
+    const getStatusLabel = () => {
+        const option = STATUS_OPTIONS.find(opt => opt.value === status);
+        return option?.label || 'Status';
+    };
+
+    // Função para exibir o label customizado no Select de Ordenação
+    const getSortLabel = () => {
+        const option = SORT_OPTIONS.find(opt => opt.value === sort);
+        return option?.label || 'Ordenar';
+    };
+
     return (
-        <div className="space-y-3 sm:space-y-6">
-            <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+        <div className="flex items-center justify-between gap-4 w-full">
+            {/* Busca - Esquerda */}
+            <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input
                     placeholder="Buscar por objetivo ou nome do programa"
                     value={q}
@@ -31,52 +55,49 @@ export default function SearchAndFilters({
                 />
             </div>
 
-            <div className="space-y-3 sm:space-y-0 sm:flex sm:flex-wrap sm:gap-4">
-                <div className="flex items-center gap-2 flex-wrap">
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                        <Badge className="h-4 w-4" />
-                        <span className="text-sm font-medium">Status:</span>
-                    </div>
-                    <div className="flex gap-2 flex-wrap">
-                        {(['all', 'active', 'archived'] as const).map((statusOption) => (
-                            <Button
-                                key={statusOption}
-                                variant={status === statusOption ? 'default' : 'outline'}
-                                size="sm"
-                                onClick={() => onChange({ status: statusOption })}
-                                disabled={disabled}
-                                className="h-8 text-xs sm:text-sm"
-                            >
-                                {statusOption === 'all'
-                                    ? 'Todos'
-                                    : statusOption === 'active'
-                                      ? 'Ativo'
-                                      : 'Arquivado'}
-                            </Button>
+            {/* Filtros - Direita */}
+            <div className="flex items-center gap-4">
+                {/* Filtro de Status */}
+                <Select
+                    value={status}
+                    onValueChange={(value) => onChange({ status: value as 'active' | 'archived' | 'all' })}
+                    disabled={disabled}
+                >
+                    <SelectTrigger
+                        className="w-[170px]"
+                        aria-label="Filtrar por status"
+                    >
+                        <span className="text-sm">{getStatusLabel()}</span>
+                    </SelectTrigger>
+                    <SelectContent>
+                        {STATUS_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                            </SelectItem>
                         ))}
-                    </div>
-                </div>
+                    </SelectContent>
+                </Select>
 
-                <div className="flex items-center gap-2 flex-wrap">
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                        <Filter className="h-4 w-4" />
-                        <span className="text-sm font-medium">Ordenar:</span>
-                    </div>
-                    <div className="flex gap-2 flex-wrap">
-                        {(['recent', 'alphabetic'] as const).map((sortOption) => (
-                            <Button
-                                key={sortOption}
-                                variant={sort === sortOption ? 'default' : 'outline'}
-                                size="sm"
-                                onClick={() => onChange({ sort: sortOption })}
-                                disabled={disabled}
-                                className="h-8 text-xs sm:text-sm"
-                            >
-                                {sortOption === 'recent' ? 'Mais recente' : 'Alfabética'}
-                            </Button>
+                {/* Filtro de Ordenação */}
+                <Select
+                    value={sort}
+                    onValueChange={(value) => onChange({ sort: value as 'recent' | 'alphabetic' })}
+                    disabled={disabled}
+                >
+                    <SelectTrigger
+                        className="w-[170px]"
+                        aria-label="Ordenar por"
+                    >
+                        <span className="text-sm">{getSortLabel()}</span>
+                    </SelectTrigger>
+                    <SelectContent>
+                        {SORT_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                            </SelectItem>
                         ))}
-                    </div>
-                </div>
+                    </SelectContent>
+                </Select>
             </div>
         </div>
     );

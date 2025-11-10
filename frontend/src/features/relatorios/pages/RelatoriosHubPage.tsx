@@ -2,12 +2,18 @@ import { Link } from 'react-router-dom';
 import { FileText, FilePlus, Search, Archive } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEffect, useState } from 'react';
+import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 
 export function RelatoriosHubPage() {
     const [totalRelatorios, setTotalRelatorios] = useState(0);
     const [relatoriosFinalizados, setRelatoriosFinalizados] = useState(0);
     const [relatoriosArquivados, setRelatoriosArquivados] = useState(0);
     const [relatoriosMesAtual, setRelatoriosMesAtual] = useState(0);
+    const { setPageTitle } = usePageTitle();
+
+    useEffect(() => {
+        setPageTitle('Relatórios');
+    }, [setPageTitle]);
 
     const mainActions = [
         {
@@ -39,16 +45,6 @@ export function RelatoriosHubPage() {
 
     return (
         <div className="flex flex-col min-h-full w-full p-0 pt-4 md:p-4 lg:p-4 space-y-4">
-            {/* Header Section */}
-            <div className="space-y-0 p">
-                <h1
-                    style={{ fontFamily: 'Sora, sans-serif' }}
-                    className="text-2xl sm:text-2xl font-medium text-primary"
-                >
-                    Relatórios
-                </h1>
-            </div>
-
             {/* Main Action Cards */}
             <div className="space-y-5 p-1">
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -61,13 +57,13 @@ export function RelatoriosHubPage() {
                                 className="block"
                                 aria-label={`${action.title}: ${action.description}`}
                             >
-                                <Card className="cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] border border-border/40 rounded-xl bg-[#F1F5F9] h-full">
+                                <Card className="cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] border border-border/40 rounded-lg bg-[#F1F5F9] h-full">
                                     <CardHeader className="space-y-3 p-2">
-                                        <div className={`h-14 w-14 rounded-xl ${action.bgColor} flex items-center justify-center`}>
+                                        <div className={`h-14 w-14 rounded-lg ${action.bgColor} flex items-center justify-center`}>
                                             <Icon className={`h-7 w-7 ${action.iconColor}`} />
                                         </div>
                                         <div className="space-y-1">
-                                            <CardTitle className="text-lg font-semibold text-foreground">
+                                            <CardTitle className="text-lg font-medium text-foreground">
                                                 {action.title}
                                             </CardTitle>
                                             <p className="text-sm text-muted-foreground">
@@ -92,7 +88,7 @@ export function RelatoriosHubPage() {
                 </h2>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <Card className="rounded-[5px]">
+                    <Card className="rounded-lg">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">
                                 Total de Relatórios
@@ -107,7 +103,7 @@ export function RelatoriosHubPage() {
                         </CardContent>
                     </Card>
 
-                    <Card className="rounded-[5px]">
+                    <Card className="rounded-lg">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">
                                 Finalizados
@@ -122,7 +118,7 @@ export function RelatoriosHubPage() {
                         </CardContent>
                     </Card>
 
-                    <Card className="rounded-[5px]">
+                    <Card className="rounded-lg">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">
                                 Arquivados
@@ -137,7 +133,7 @@ export function RelatoriosHubPage() {
                         </CardContent>
                     </Card>
 
-                    <Card className="rounded-[5px]">
+                    <Card className="rounded-lg">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">
                                 Este Mês

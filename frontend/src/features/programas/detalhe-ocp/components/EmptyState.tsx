@@ -20,7 +20,7 @@ export default function EmptyState({
     const defaultIcon = icon || <FileText className="h-12 w-12 text-muted-foreground/50" />;
 
     return (
-        <Card className="rounded-[5px]">
+        <Card className="rounded-lg">
             <CardContent className="">
                 <div className="flex flex-col items-center text-center space-y-4">
                     {defaultIcon}

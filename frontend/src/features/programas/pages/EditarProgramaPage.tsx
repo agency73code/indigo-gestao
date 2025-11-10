@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
+import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 import {
     HeaderInfo,
     DateSection,
@@ -25,6 +26,11 @@ export default function EditarProgramaPage() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const patientId = searchParams.get('patientId');
+    const { setPageTitle } = usePageTitle();
+
+    useEffect(() => {
+        setPageTitle('Editar Programa');
+    }, [setPageTitle]);
 
     const [program, setProgram] = useState<ProgramDetail | null>(null);
     const [loading, setLoading] = useState(true);

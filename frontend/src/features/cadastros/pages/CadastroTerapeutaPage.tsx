@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { CardHeader, CardTitle } from '@/ui/card';
+import { CardHeader } from '@/ui/card';
 import { Button } from '@/ui/button';
 import { ChevronLeft, ChevronRight, CheckCircle, XCircle, X } from 'lucide-react';
 import type { Terapeuta } from '../types/cadastros.types';
+import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 import {
     maskCPF,
     isValidCPF,
@@ -37,6 +38,13 @@ const STEPS = [
 ];
 
 export default function CadastroTerapeutaPage() {
+    // ✅ Definir título da página
+    const { setPageTitle } = usePageTitle();
+    
+    useEffect(() => {
+        setPageTitle('Cadastro de Terapeuta');
+    }, [setPageTitle]);
+    
     const navigate = useNavigate();
     const [currentStep, setCurrentStep] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
@@ -528,9 +536,6 @@ export default function CadastroTerapeutaPage() {
     return (
         <div className="container mx-auto px-1 sm:px-6 md:px-6 py-6 md:py-8">
             <CardHeader className="p-0">
-                <CardTitle className="text-xl sm:text-2xl mb-6 md:mb-8 text-primary font-medium">
-                    Cadastro de Terapeuta
-                </CardTitle>
                 <MultiStepProgress
                     currentStep={currentStep}
                     totalSteps={STEPS.length}

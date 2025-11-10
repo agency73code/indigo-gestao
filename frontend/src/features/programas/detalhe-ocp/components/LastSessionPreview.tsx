@@ -116,7 +116,7 @@ function StatusBadge({ summary, statusTestId, tooltipTestId }: StatusBadgeProps)
             <TooltipTrigger asChild>
                 <Badge
                     variant="outline"
-                    className={`gap-2 p-2 rounded-[5px] ${config.cls}`}
+                    className={`gap-2 p-2 rounded-lg ${config.cls}`}
                     data-testid={statusTestId}
                 >
                     <Icon className="h-4 w-4" />
@@ -257,7 +257,7 @@ export default function LastSessionPreview({ lastSession, patientId }: LastSessi
     );
 
     return (
-        <Card className="rounded-[5px] px-6 py-0 md:px-8 md:py-10 lg:px-8 lg:py-2" data-print-block>
+        <Card className="rounded-lg px-6 py-0 md:px-8 md:py-10 lg:px-8 lg:py-2" data-print-block>
             <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                 <div className="flex flex-col gap-3">
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -313,7 +313,7 @@ export default function LastSessionPreview({ lastSession, patientId }: LastSessi
                             {summaries.map((summary) => (
                                 <div
                                     key={summary.stimulusId}
-                                    className="border rounded-[5px]"
+                                    className="border rounded-lg"
                                     data-testid={`stim-summary-row-${summary.stimulusId}`}
                                 >
                                     <div className="px-4 py-3 bg-muted/30">
@@ -323,13 +323,13 @@ export default function LastSessionPreview({ lastSession, patientId }: LastSessi
                                     </div>
                                     <div className="px-4 py-3">
                                         <div className="flex flex-wrap items-center gap-3">
-                                            <Badge variant="outline" className="p-2 rounded-[5px]">
+                                            <Badge variant="outline" className="p-2 rounded-lg">
                                                 Erro: {summary.counts.erro}
                                             </Badge>
-                                            <Badge variant="outline" className="p-2 rounded-[5px]">
+                                            <Badge variant="outline" className="p-2 rounded-lg">
                                                 Ajuda: {summary.counts.ajuda}
                                             </Badge>
-                                            <Badge variant="outline" className="p-2 rounded-[5px]">
+                                            <Badge variant="outline" className="p-2 rounded-lg">
                                                 Indep.: {summary.counts.indep}
                                             </Badge>
                                             <div className="ml-auto flex items-center gap-3">
@@ -340,7 +340,7 @@ export default function LastSessionPreview({ lastSession, patientId }: LastSessi
                                                 />
                                                 <Badge
                                                     variant="outline"
-                                                    className="font-semibold p-2 rounded-[5px]"
+                                                    className="font-semibold p-2 rounded-lg"
                                                 >
                                                     Total: {summary.status.total}
                                                 </Badge>

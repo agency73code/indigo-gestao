@@ -5,8 +5,16 @@ import { useEffect, useState } from 'react';
 import { getCardsOverview } from '@/lib/api';
 import { RequireAbility } from '@/features/auth/abilities/RequireAbility';
 import type { Actions, Subjects } from '@/features/auth/abilities/ability';
+import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 
 export default function CadastroHubPage() {
+    // ✅ Definir título da página
+    const { setPageTitle } = usePageTitle();
+    
+    useEffect(() => {
+        setPageTitle('Cadastro');
+    }, [setPageTitle]);
+    
     const [totalTerapeutas, setTotalTerapeutas] = useState(24);
     const [totalClientes, setTotalClientes] = useState(156);
     const [novosTerapeutas, setNovosTerapeutas] = useState(3);
@@ -57,19 +65,8 @@ export default function CadastroHubPage() {
 
     return (
         <div className="flex flex-col min-h-full w-full p-0 pt-4 md:p-4 lg:p-4 space-y-4">
-            {/* Header Section */}
-            <div className="space-y-0 p">
-                <h1
-                    style={{ fontFamily: 'Sora, sans-serif' }}
-                    className="text-2xl sm:text-2xl font-medium text-primary"
-                >
-                    Cadastro
-                </h1>
-                
-            </div>
-
             {/* Main Action Cards */}
-            <div className="space-y-5 p-1">
+            <div className="space-y-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 ">
                     {mainActions.map((action, index) => {
                         const Icon = action.icon;
@@ -84,13 +81,13 @@ export default function CadastroHubPage() {
                                     className="block"
                                     aria-label={`${action.title}: ${action.description}`}
                                 >
-                                    <Card className="cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] border border-border/40 rounded-xl bg-[#F1F5F9] h-full">
+                                    <Card className="cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] border border-border/40 rounded-lg bg-[#F1F5F9] h-full">
                                         <CardHeader className="space-y-5 p-1">
-                                            <div className={`h-14 w-14 rounded-xl ${action.bgColor} flex items-center justify-center`}>
+                                            <div className={`h-14 w-14 rounded-lg ${action.bgColor} flex items-center justify-center`}>
                                                 <Icon className={`h-7 w-7 ${action.iconColor}`} />
                                             </div>
                                             <div className="space-y-1">
-                                                <CardTitle className="text-lg font-semibold text-foreground">
+                                                <CardTitle className="text-lg font-medium text-foreground">
                                                     {action.title}
                                                 </CardTitle>
                                                 <p className="text-sm text-muted-foreground">
@@ -116,7 +113,7 @@ export default function CadastroHubPage() {
                 </h2>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <Card className="rounded-[5px]">
+                    <Card className="rounded-lg">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">
                                 Cadastros Este Mês
@@ -129,7 +126,7 @@ export default function CadastroHubPage() {
                         </CardContent>
                     </Card>
 
-                    <Card className="rounded-[5px]">
+                    <Card className="rounded-lg">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">
                                 Terapeutas Cadastrados
@@ -142,7 +139,7 @@ export default function CadastroHubPage() {
                         </CardContent>
                     </Card>
 
-                    <Card className="rounded-[5px]">
+                    <Card className="rounded-lg">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">
                                 Clientes Cadastrados

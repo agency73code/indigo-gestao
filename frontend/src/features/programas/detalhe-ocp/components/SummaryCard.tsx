@@ -60,7 +60,7 @@ export default function SummaryCard({
             {/* Grid de três cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4" data-print-kpi-grid>
                 {/* Card 1: Acerto Geral */}
-                <Card className="rounded-[5px] py-6 m-0">
+                <Card className="rounded-lg py-6 m-0">
                     <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
                             <CardTitle className="text-base font-semibold">Acerto geral</CardTitle>
@@ -91,7 +91,7 @@ export default function SummaryCard({
                 </Card>
 
                 {/* Card 2: Independência */}
-                <Card className="rounded-[5px] py-6 m-0">
+                <Card className="rounded-lg py-6 m-0">
                     <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
                             <CardTitle className="text-base font-semibold">Independência</CardTitle>
@@ -120,7 +120,7 @@ export default function SummaryCard({
                 </Card>
 
                 {/* Card 3: Tentativas */}
-                <Card className="rounded-[5px]">
+                <Card className="rounded-lg">
                     <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
                             <CardTitle className="text-base font-semibold">Tentativas</CardTitle>

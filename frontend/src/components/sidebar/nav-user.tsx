@@ -1,4 +1,4 @@
-import { BadgeCheck, ChevronsUpDown, LogOut } from 'lucide-react';
+import { BadgeCheck, ChevronDown, LogOut } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -21,6 +21,9 @@ export function NavUser() {
     const [imageLoading, setImageLoading] = useState(true);
     const [imageError, setImageError] = useState(false);
     const displayName = user?.name ?? '-';
+    const displayRole = user?.perfil_acesso 
+        ? user.perfil_acesso.charAt(0).toUpperCase() + user.perfil_acesso.slice(1).toLowerCase()
+        : '-';
     const displayEmail = user?.email ?? '-';
     const initials = user?.name ? user.name
         .split(' ')
@@ -63,11 +66,11 @@ export function NavUser() {
                     <DropdownMenuTrigger asChild>
                         <SidebarMenuButton
                             size="lg"
-                            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground rounded-full"
                         >
-                            <Avatar className="h-8 w-8 rounded-full" key={avatarUrl}>
+                            <Avatar className="h-10 w-10 rounded-full" key={avatarUrl}>
                                 {imageLoading && shouldShowImage && (
-                                    <Skeleton className="h-8 w-8 rounded-full absolute inset-0" />
+                                    <Skeleton className="h-10 w-10 rounded-full absolute inset-0" />
                                 )}
                                 {shouldShowImage && (
                                     <AvatarImage 
@@ -85,9 +88,9 @@ export function NavUser() {
                             </Avatar>
                             <div className="grid flex-1 text-left text-sm leading-tight">
                                 <span className="truncate font-semibold">{displayName}</span>
-                                <span className="truncate text-xs">{displayEmail}</span>
+                                <span className="truncate text-xs">{displayRole}</span>
                             </div>
-                            <ChevronsUpDown className="ml-auto size-4" />
+                            <ChevronDown className="ml-auto size-4" />
                         </SidebarMenuButton>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
@@ -98,9 +101,9 @@ export function NavUser() {
                     >
                         <DropdownMenuLabel className="p-0 font-light">
                             <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                                <Avatar className="h-8 w-8 rounded-full" key={avatarUrl}>
+                                <Avatar className="h-10 w-10 rounded-full" key={avatarUrl}>
                                     {imageLoading && shouldShowImage && (
-                                        <Skeleton className="h-8 w-8 rounded-full absolute inset-0" />
+                                        <Skeleton className="h-10 w-10 rounded-full absolute inset-0" />
                                     )}
                                     {shouldShowImage && (
                                         <AvatarImage 

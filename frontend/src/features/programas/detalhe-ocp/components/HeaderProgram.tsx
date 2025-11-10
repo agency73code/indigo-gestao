@@ -63,7 +63,7 @@ export default function HeaderProgram({ program }: HeaderProgramProps) {
 
     const prazo = daysLeftInfo();
     return (
-        <Card className="rounded-[5px] px-6 py-0 md:px-8 md:py-10 lg:px-8 lg:py-0" data-print-block>
+        <Card className="rounded-lg px-6 py-0 md:px-8 md:py-10 lg:px-8 lg:py-0" data-print-block>
             <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                 <div className="flex items-center gap-2 mb-2">
                     <Button

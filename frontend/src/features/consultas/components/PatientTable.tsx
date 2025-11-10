@@ -146,7 +146,7 @@ const PatientTable = memo(function PatientTable({
     }
 
     return (
-        <div className="border rounded-[5px]">
+        <div className="border rounded-lg overflow-hidden">
             <div className="md:hidden divide-y">
                 {patients.map((patient) => (
                     <div key={patient.id} className="p-4 space-y-3">
@@ -229,7 +229,7 @@ const PatientTable = memo(function PatientTable({
                     <thead className="bg-muted/50">
                         <tr>
                             <th
-                                className="text-left p-3 cursor-pointer hover:bg-muted/70 transition-colors"
+                                className="text-left p-3 cursor-pointer hover:bg-muted/70 transition-colors first:rounded-tl-lg"
                                 onClick={() => onSort('nome')}
                             >
                                 <div className="flex items-center gap-2 font-medium text-sm">
@@ -253,7 +253,7 @@ const PatientTable = memo(function PatientTable({
                                     {getSortIcon('status')}
                                 </div>
                             </th>
-                            <th className="text-center p-3 font-medium text-sm">Ações</th>
+                            <th className="text-center p-3 font-medium text-sm last:rounded-tr-lg">Ações</th>
                         </tr>
                     </thead>
                     <tbody>

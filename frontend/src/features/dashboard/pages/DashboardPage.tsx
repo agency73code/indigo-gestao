@@ -9,6 +9,7 @@ import { getDashboardOverview } from '@/lib/api/dashboard';
 import { listSessions } from '@/lib/api/sessions';
 import type { DashboardOverview, TrendPoint } from '@/lib/types/dashboard';
 import type { SessionRow } from '@/lib/types/sessions';
+import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 
 type RangeDataset = Record<AccuracyRange, TrendPoint[]>;
 
@@ -63,10 +64,15 @@ const buildViewData = (ranges: RangeDataset) => ({
 }) satisfies Partial<Record<AccuracyView, Partial<Record<AccuracyRange, TrendPoint[]>>>>;
 
 export default function DashboardPage() {
+    const { setPageTitle } = usePageTitle();
     const [overview, setOverview] = useState<DashboardOverview | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [sessions, setSessions] = useState<SessionRow[]>([]);
     const [isLoadingSessions, setIsLoadingSessions] = useState(true);
+
+    useEffect(() => {
+        setPageTitle('Dashboard');
+    }, [setPageTitle]);
 
     useEffect(() => {
         let active = true;

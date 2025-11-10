@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 import {
     PatientSelector,
     ProgramSelector,
@@ -28,6 +29,12 @@ import type {
 } from '../types.ts';
 
 export default function CadastroSessaoPage() {
+    const { setPageTitle } = usePageTitle();
+
+    useEffect(() => {
+        setPageTitle('Nova Sessão');
+    }, [setPageTitle]);
+
     const [showSaveBar, setShowSaveBar] = useState(false);
 
     const handleSaveBarVisibility = useCallback(() => {

@@ -95,7 +95,7 @@ export default function PatientSelector({
 
     return (
         <>
-            <Card padding="none" className="rounded-[5px] p-1 sm:p-0">
+            <Card padding="none" className="rounded-lg p-1 sm:p-0">
                 <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
                     <CardTitle className="text-base flex items-center gap-2">
                         <User className="h-4 w-4" />
@@ -104,7 +104,7 @@ export default function PatientSelector({
                 </CardHeader>
                 <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
                     {selected ? (
-                        <div className="flex items-center gap-3 p-2 sm:p-3 bg-muted rounded-[5px]">
+                        <div className="flex items-center gap-3 p-2 sm:p-3 bg-muted rounded-lg">
                             {/* Avatar do cliente selecionado */}
                             <Avatar className="h-12 w-12 !rounded-full" style={{ borderRadius: '50%' }}>
                                 {imageLoading[`selected-${selected.id}`] !== false && selected.photoUrl && (
@@ -214,7 +214,7 @@ export default function PatientSelector({
                                                 <Card
                                                     padding="none"
                                                     key={i}
-                                                    className="rounded-[5px]"
+                                                    className="rounded-lg"
                                                 >
                                                     <CardContent className="p-4">
                                                         <div className="animate-pulse space-y-2">
@@ -230,7 +230,7 @@ export default function PatientSelector({
                                             <Card
                                                 padding="none"
                                                 key={patient.id}
-                                                className="cursor-pointer hover:shadow-md transition-shadow rounded-[5px]"
+                                                className="cursor-pointer hover:shadow-md transition-shadow rounded-lg"
                                                 onClick={() => handleSelectPatient(patient)}
                                             >
                                                 <CardContent className="p-4">

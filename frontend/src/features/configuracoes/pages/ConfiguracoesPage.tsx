@@ -15,10 +15,16 @@ import { SettingsCard } from '@/components/configuracoes/SettingsCard';
 import { SwitchField } from '@/components/configuracoes/SwitchField';
 import { PerfilSection } from '@/features/configuracoes/components/PerfilSection';
 import { Settings, User, Bell, Shield, Zap, X, Check } from 'lucide-react';
+import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 
 export default function ConfiguracoesPage() {
     const location = useLocation();
     const navigate = useNavigate();
+    const { setPageTitle } = usePageTitle();
+
+    useEffect(() => {
+        setPageTitle('Configurações');
+    }, [setPageTitle]);
 
     // Determinar tab ativa baseada na URL
     const getActiveTabFromPath = () => {
@@ -68,20 +74,6 @@ export default function ConfiguracoesPage() {
 
     return (
         <div className="flex flex-col top-0 left-0 w-full h-full px-4 py-4">
-            {/* Header */}
-            <div className="mb-4">
-                <div className="flex items-center gap-3">
-                    <Settings className="w-6 h-6 text-primary" />
-                    <h1
-                        style={{ fontFamily: 'sora' }}
-                        className="text-2xl font-medium text-primary"
-                    >
-                        Configurações
-                    </h1>
-                </div>
-                
-            </div>
-
             {/* Tabs */}
             <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 mb-4">

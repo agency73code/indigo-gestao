@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button } from '@/ui/button';
@@ -12,14 +12,21 @@ import {
 } from '../components/cliente';
 import MultiStepProgress from '../components/MultiStepProgress';
 import type { Cliente } from '../types/cadastros.types';
-import { CardTitle } from '@/ui/card';
 import { CardHeader } from '@/components/ui/card';
 import { cadastrarCliente } from '@/lib/api';
 import { isValidCPF, onlyDigits, isValidEmail, isValidCEP } from '@/common/utils/mask';
+import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 
 const STEPS = ['Dados Pessoais', 'Endereço', 'Arquivos', 'Dados Pagamento', 'Dados Escola'];
 
 export default function CadastroClientePage() {
+    // ✅ Definir título da página
+    const { setPageTitle } = usePageTitle();
+    
+    useEffect(() => {
+        setPageTitle('Cadastro de Cliente');
+    }, [setPageTitle]);
+    
     const navigate = useNavigate();
     const [currentStep, setCurrentStep] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
@@ -664,10 +671,9 @@ export default function CadastroClientePage() {
     };
 
     return (
-        <div className="container mx-auto p-6">
+        <div className="container mx-auto p-4">
             {/* Header */}
             <CardHeader className="p-0">
-                <CardTitle className="text-2xl mb-8 text-primary font-medium">Cadastro de Cliente</CardTitle>
                 <MultiStepProgress
                     currentStep={currentStep}
                     totalSteps={STEPS.length}

@@ -1,9 +1,9 @@
 import { startTransition, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
-import HeaderSection from '@/features/programas/consultar-programas/components/HeaderSection';
 import PatientSelector from '@/features/programas/consultar-programas/components/PatientSelector';
 import type { Patient } from '@/features/programas/consultar-programas/types';
+import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 import { ListaSessoes, SearchAndFilters, CreateSessionFab } from '../consulta-sessao/components';
 import * as services from '../consulta-sessao/services';
 import { getPatientById } from '../consultar-programas/services';
@@ -20,6 +20,11 @@ const DEFAULT_FILTERS: SessaoFiltersState = {
 export default function ConsultaSessao() {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
+    const { setPageTitle } = usePageTitle();
+
+    useEffect(() => {
+        setPageTitle('Consultar Sessão');
+    }, [setPageTitle]);
 
     const [filters, setFilters] = useState<SessaoFiltersState>(DEFAULT_FILTERS);
     const [patient, setPatient] = useState<Patient | null>(null);
@@ -246,14 +251,7 @@ export default function ConsultaSessao() {
 
     return (
         <div className="flex flex-col min-h-full w-full">
-            <div className="px-0 sm:px-4 pt-4 sm:pt-4">
-                <HeaderSection
-                    title="Consultar Sessão"
-                    // subtitle="Selecione um cliente para visualizar o historico e os resultados das sessoes."
-                />
-            </div>
-
-            <main className="flex-1 px-0 sm:px-4 pb-20 sm:pb-24 w-full">
+            <main className="flex-1 px-0 sm:px-4 pb-20 sm:pb-24 w-full pt-4 sm:pt-4">
                 <div className="space-y-4 sm:space-y-6 mx-auto w-full">
                     <PatientSelector
                         selected={patient ?? undefined}

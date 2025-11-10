@@ -1,3 +1,6 @@
+// Filtros para Consulta de Sessões TO
+// Segue o mesmo padrão visual da sessão base (SearchAndFilters)
+
 import { Search, Filter, CalendarRange, Target, User } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
@@ -7,30 +10,36 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { SessaoFiltersState } from '../types';
 
-interface SearchAndFiltersProps extends SessaoFiltersState {
+export interface ToSessionsFiltersState {
+  q: string;
+  dateRange: 'all' | 'last7' | 'last30' | 'year';
+  program: string; // 'all' ou nome do programa
+  therapist: string; // 'all' ou nome do terapeuta
+  sort: 'date-desc' | 'date-asc' | 'program-asc';
+}
+
+interface ToSessionsFiltersProps extends ToSessionsFiltersState {
   disabled?: boolean;
   programOptions: string[];
   therapistOptions: string[];
-  onChange: (next: Partial<SessaoFiltersState>) => void;
+  onChange: (next: Partial<ToSessionsFiltersState>) => void;
 }
 
-const DATE_RANGE_OPTIONS: Array<{ value: SessaoFiltersState['dateRange']; label: string }> = [
+const DATE_RANGE_OPTIONS: Array<{ value: ToSessionsFiltersState['dateRange']; label: string }> = [
   { value: 'all', label: 'Todas' },
   { value: 'last7', label: '7 dias' },
   { value: 'last30', label: '30 dias' },
   { value: 'year', label: 'Este ano' },
 ];
 
-const SORT_OPTIONS: Array<{ value: SessaoFiltersState['sort']; label: string }> = [
+const SORT_OPTIONS: Array<{ value: ToSessionsFiltersState['sort']; label: string }> = [
   { value: 'date-desc', label: 'Mais recente' },
   { value: 'date-asc', label: 'Mais antiga' },
-  { value: 'accuracy-desc', label: 'Maior acerto' },
-  { value: 'accuracy-asc', label: 'Menor acerto' },
+  { value: 'program-asc', label: 'Programa (A-Z)' },
 ];
 
-export default function SearchAndFilters({
+export default function ToSessionsFilters({
   disabled = false,
   q,
   dateRange,
@@ -40,7 +49,7 @@ export default function SearchAndFilters({
   programOptions,
   therapistOptions,
   onChange,
-}: SearchAndFiltersProps) {
+}: ToSessionsFiltersProps) {
   // Função para exibir o label customizado no Select de Data
   const getDateRangeLabel = () => {
     const option = DATE_RANGE_OPTIONS.find(opt => opt.value === dateRange);
@@ -76,7 +85,7 @@ export default function SearchAndFilters({
           </span>
           <Select
             value={dateRange}
-            onValueChange={(value) => onChange({ dateRange: value as SessaoFiltersState['dateRange'] })}
+            onValueChange={(value) => onChange({ dateRange: value as ToSessionsFiltersState['dateRange'] })}
             disabled={disabled}
           >
             <SelectTrigger className="w-full h-12 rounded-[5px]">
@@ -99,7 +108,7 @@ export default function SearchAndFilters({
           </span>
           <Select
             value={program}
-            onValueChange={(value) => onChange({ program: value as SessaoFiltersState['program'] })}
+            onValueChange={(value) => onChange({ program: value })}
             disabled={disabled || programOptions.length === 0}
           >
             <SelectTrigger className="w-full h-12 rounded-[5px]">
@@ -123,9 +132,7 @@ export default function SearchAndFilters({
           </span>
           <Select
             value={therapist}
-            onValueChange={(value) =>
-              onChange({ therapist: value as SessaoFiltersState['therapist'] })
-            }
+            onValueChange={(value) => onChange({ therapist: value })}
             disabled={disabled || therapistOptions.length === 0}
           >
             <SelectTrigger className="w-full h-12 rounded-[5px]">
@@ -149,7 +156,7 @@ export default function SearchAndFilters({
           </span>
           <Select
             value={sort}
-            onValueChange={(value) => onChange({ sort: value as SessaoFiltersState['sort'] })}
+            onValueChange={(value) => onChange({ sort: value as ToSessionsFiltersState['sort'] })}
             disabled={disabled}
           >
             <SelectTrigger className="w-full h-12 rounded-[5px]">

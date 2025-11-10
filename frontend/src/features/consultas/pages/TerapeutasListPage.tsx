@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
-import { CardContent, CardHeader, CardTitle } from '@/ui/card';
+import { CardContent } from '@/ui/card';
 import { Button } from '@/ui/button';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -7,11 +7,19 @@ import ToolbarConsulta from '../components/ToolbarConsulta';
 import TherapistTable from '../components/TherapistTable';
 import type { Therapist, SortState, PaginationState } from '../types/consultas.types';
 import { listTherapists } from '../services/therapist.service';
+import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 
 // Lazy load do Drawer (só carrega quando necessário)
 const TherapistProfileDrawer = lazy(() => import('../components/TherapistProfileDrawer'));
 
 export default function TerapeutasListPage() {
+    // ✅ Definir título da página
+    const { setPageTitle } = usePageTitle();
+    
+    useEffect(() => {
+        setPageTitle('Consultar Terapeutas');
+    }, [setPageTitle]);
+    
     // ✅ NOVO: URL como source of truth para filtros
     const [searchParams, setSearchParams] = useSearchParams();
     
@@ -136,14 +144,8 @@ export default function TerapeutasListPage() {
     }
 
     return (
-        <div className="flex flex-col top-0 left-0 w-full h-full sm:p-4">
-            <CardHeader className="p-0 pb-4">
-                <CardTitle className="text-2xl font-medium text-primary">
-                    Consultar Terapeutas
-                </CardTitle>
-                
-            </CardHeader>
-            <CardContent className="space-y-1 px-0">
+        <div className="flex flex-col top-0 left-0 w-full h-full">
+            <CardContent className="space-y-1 px-4 pt-4 pb-4">
                 <div className="flex gap-4">
                     <div className="flex-1">
                         <ToolbarConsulta
@@ -155,7 +157,7 @@ export default function TerapeutasListPage() {
                     </div>
                     <div className="flex gap-2">
                         <Link to="/app/cadastro/terapeuta">
-                            <Button className="h-12 gap-2">
+                            <Button className="gap-2">
                                 <Plus className="h-4 w-4" />
                                 Adicionar
                             </Button>
@@ -167,16 +169,18 @@ export default function TerapeutasListPage() {
                     <p className='text-sm text-red-500'>{error}</p>
                 )}
 
-                <TherapistTable
-                    therapists={therapists}
-                    loading={loading}
-                    onViewProfile={handleViewProfile}
-                    sortState={sortState}
-                    onSort={handleSort}
-                />
+                <div className="">
+                    <TherapistTable
+                        therapists={therapists}
+                        loading={loading}
+                        onViewProfile={handleViewProfile}
+                        sortState={sortState}
+                        onSort={handleSort}
+                    />
+                </div>
 
                 {!loading && pagination.total > 0 && (
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mt-4">
                         <div className="text-sm text-muted-foreground sm:text-left text-center">
                             Mostrando {(currentPage - 1) * pagination.pageSize + 1} a{' '}
                             {Math.min(currentPage * pagination.pageSize, pagination.total)} de{' '}
