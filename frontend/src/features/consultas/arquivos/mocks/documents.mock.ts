@@ -9,6 +9,7 @@ export interface MockDocument {
   tamanho: number;
   tipo_conteudo: string;
   data_envio: string;
+  descricao_documento?: string;
 }
 
 // Mock de documentos para visualização
