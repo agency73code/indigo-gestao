@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import { prisma } from "../../config/database.js";
 import * as TherapistTypes from './therapist.types.js';
 import { brMoneyToNumber } from '../../utils/brMoney.js';
@@ -5,7 +6,9 @@ import { generateResetToken } from "../../utils/resetToken.js";
 import { AppError } from "../../errors/AppError.js";
 import { ACCESS_LEVELS } from '../../utils/accessLevels.js';
 import { invalidateTherapistCache } from "../../cache/therapistCache.js";
-import { getVisibleTherapistIds } from "../../utils/visibilityFilter.js";
+import { getVisibilityScope } from "../../utils/visibilityFilter.js";
+
+const MANAGER_LEVEL = ACCESS_LEVELS['gerente'] ?? 5;
 
 async function resolveAreaAtuacaoId(
   areaAtuacaoId: TherapistTypes.TherapistProfessionalDataInput['areaAtuacaoId'],
@@ -284,11 +287,21 @@ export async function getById(therapistId: string) {
 }
 
 export async function getTherapistReport(therapistId: string) {
-  const visibleIds = await getVisibleTherapistIds(therapistId);
+  const visibility = await getVisibilityScope(therapistId);
 
-  const where = visibleIds.length > 0
-    ? { id: { in: visibleIds } }
-    : {};
+  if (visibility.scope === 'none') {
+    return [];
+  }
+
+  const where: Prisma.terapeutaWhereInput = {};
+
+  if (visibility.scope === 'partial') {
+    where.id = { in: visibility.therapistIds };
+  }
+
+  if (visibility.maxAccessLevel < MANAGER_LEVEL) {
+    where.atividade = true;
+  }
 
   return prisma.terapeuta.findMany({
     where,

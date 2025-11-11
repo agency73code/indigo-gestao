@@ -1,7 +1,11 @@
+import type { Prisma } from "@prisma/client";
 import { prisma } from "../../../../config/database.js";
-import { getVisibleTherapistIds } from "../../../../utils/visibilityFilter.js";
+import { getVisibilityScope } from "../../../../utils/visibilityFilter.js";
 import { normalizeSupervisionLinks } from "../normalizers/supervisionLinkNormalizer.js";
 import type { LinkFilters } from "../types/supervisionLink.types.js";
+import { ACCESS_LEVELS } from "../../../../utils/accessLevels.js";
+
+const MANAGER_LEVEL = ACCESS_LEVELS['gerente'] ?? 5;
 
 /**
  * Busca vínculos de supervisão no banco de dados.
@@ -11,21 +15,28 @@ export async function getAllSupervisionLinks(userId: string, filters?: LinkFilte
     const whereBase = buildWhere(filters);
     const orderBy = buildOrderBy(filters);
 
-    const visibleIds = await getVisibleTherapistIds(userId);
+    const visibility = await getVisibilityScope(userId);
+
+    if (visibility.scope === 'none') {
+        return [];
+    }
+
+    const extraFilters: Prisma.vinculo_supervisaoWhereInput[] = [];
+
+    if (visibility.scope === 'partial') {
+        extraFilters.push({
+            OR: [{ supervisor_id: { in: visibility.therapistIds } }],
+        });
+    }
+
+    if (visibility.maxAccessLevel < MANAGER_LEVEL) {
+        extraFilters.push({ status: 'ativo' });
+    }
 
     const finalWhere =
-        visibleIds && visibleIds.length > 0
-        ? {
-            AND: [
-                whereBase,
-                {
-                OR: [
-                    { supervisor_id: { in: visibleIds } },
-                ],
-                },
-            ],
-            }
-        : whereBase;
+        extraFilters.length > 0
+            ? { AND: [whereBase, ...extraFilters] }
+            : whereBase;
 
     const links = await prisma.vinculo_supervisao.findMany({
         where: finalWhere,
