@@ -138,6 +138,7 @@ model arquivos {
   clienteId   String?
   terapeutaId String?
   tipo        String?
+  descricao_documento String?
   arquivo_id  String?
   mime_type   String?
   tamanho     Int?

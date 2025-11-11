@@ -10,6 +10,7 @@ export type FileMeta = {
   tamanho: number;
   tipo_conteudo: string;
   data_envio: string;
+  descricao_documento?: string | null;
 };
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
@@ -153,10 +154,11 @@ export async function updateTerapeuta(ownerId: string, payload: any): Promise<vo
 export async function uploadFile(params: {
   ownerType: "cliente" | "terapeuta";
   ownerId: string;
-  fullName: string, 
+  fullName: string,
   birthDate: string,
   tipo_documento: string;
   file: File;
+  descricao_documento?: string;
 }): Promise<void> {
   const formData = new FormData();
   formData.append('file', params.file);
@@ -165,6 +167,9 @@ export async function uploadFile(params: {
   formData.append('ownerId', params.ownerId);
   formData.append('fullName', params.fullName);
   formData.append('birthDate', params.birthDate);
+  if (params.descricao_documento) {
+    formData.append('descricao_documento', params.descricao_documento);
+  }
 
   const res = await authFetch('/api/arquivos', {
     method: 'POST',
@@ -181,13 +186,6 @@ export async function uploadFile(params: {
 
 // Delete de arquivo
 export async function deleteFile(fileId: string): Promise<void> {
-  if (MOCK_ENABLED) {
-    console.log('🗑️ [MOCK] Simulando exclusão de arquivo:', fileId);
-    await mockDelay(800);
-    console.log('✅ [MOCK] Arquivo excluído com sucesso');
-    return;
-  }
-
   const res = await authFetch(`${API_BASE_URL}/arquivos/${fileId}`, {
     method: 'DELETE',
   });
@@ -212,8 +210,15 @@ function normalizeFileMeta(raw: unknown): FileMeta {
   const tipoCandidate = value['tipo_documento'] ?? value['tipo'] ?? 'documento';
   const tipo_documento = typeof tipoCandidate === 'string' ? tipoCandidate : 'documento';
 
+  const descricaoCandidate = value['descricao_documento'] ?? value['descricao'];
+  const descricao_documento = typeof descricaoCandidate === 'string' && descricaoCandidate.trim().length > 0
+    ? descricaoCandidate
+    : null;
+
   const nomeCandidate = value['nome'];
-  const nome = typeof nomeCandidate === 'string' && nomeCandidate.trim().length > 0 ? nomeCandidate : tipo_documento;
+  const nome = typeof nomeCandidate === 'string' && nomeCandidate.trim().length > 0
+    ? nomeCandidate
+    : tipo_documento ?? tipo_documento;
 
   const tamanhoCandidate = value['tamanho'] ?? value['size'] ?? 0;
   const tamanho = typeof tamanhoCandidate === 'number' ? tamanhoCandidate : Number.parseInt(String(tamanhoCandidate), 10) || 0;
@@ -236,5 +241,6 @@ function normalizeFileMeta(raw: unknown): FileMeta {
     tamanho,
     tipo_conteudo,
     data_envio,
+    descricao_documento,
   };
 }

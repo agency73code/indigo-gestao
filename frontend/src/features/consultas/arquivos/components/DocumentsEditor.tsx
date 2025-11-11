@@ -77,22 +77,44 @@ export function DocumentsEditor({
       return;
     }
 
+    const descricaoDocumento = tipoDoc === 'outros' ? descricaoOutros.trim() : undefined;
+
     setUploading(true);
     setUploadError(null);
 
     // Dispatch evento de início
     window.dispatchEvent(
       new CustomEvent("consulta:documents:upload:click", {
-        detail: { ownerType, ownerId, tipo_documento: tipoDoc, fileName: file.name },
+        detail: {
+          ownerType,
+          ownerId,
+          tipo_documento:tipoDoc,
+          descricao_documento: descricaoDocumento,
+          fileName: file.name
+        },
       })
     );
 
     try {
-      await uploadFile({ ownerType, ownerId, fullName, birthDate, tipo_documento: tipoDoc, file });
+      await uploadFile({
+        ownerType,
+        ownerId,
+        fullName,
+        birthDate,
+        tipo_documento: tipoDoc,
+        descricao_documento: descricaoDocumento,
+        file,
+      });
 
       window.dispatchEvent(
         new CustomEvent("consulta:documents:upload:success", {
-          detail: { ownerType, ownerId, tipo_documento: tipoDoc, fileName: file.name },
+          detail: {
+            ownerType,
+            ownerId,
+            tipo_documento: tipoDoc,
+            descricao_documento: descricaoDocumento,
+            fileName: file.name,
+          },
         })
       );
 
@@ -110,7 +132,14 @@ export function DocumentsEditor({
 
       window.dispatchEvent(
         new CustomEvent("consulta:documents:upload:error", {
-          detail: { ownerType, ownerId, tipo_documento: tipoDoc, fileName: file.name, error: msg },
+          detail: {
+            ownerType,
+            ownerId,
+            tipo_documento: tipoDoc,
+            descricao_documento: descricaoDocumento,
+            fileName: file.name,
+            error: msg,
+          },
         })
       );
     } finally {
@@ -182,21 +211,43 @@ export function DocumentsEditor({
       return;
     }
 
+    const descricaoDocumento = tipoDoc === 'outros' ? descricaoOutros.trim() : undefined;
+
     setUploading(true);
     setUploadError(null);
 
     window.dispatchEvent(
       new CustomEvent("consulta:documents:upload:click", {
-        detail: { ownerType, ownerId, tipo_documento: tipoDoc, fileName: file.name },
+        detail: {
+          ownerType,
+          ownerId,
+          tipo_documento: tipoDoc,
+          descricao_documento: descricaoDocumento,
+          fileName: file.name,
+        },
       })
     );
 
     try {
-      await uploadFile({ ownerType, ownerId, fullName, birthDate, tipo_documento: tipoDoc, file });
+      await uploadFile({
+        ownerType,
+        ownerId,
+        fullName,
+        birthDate,
+        tipo_documento: tipoDoc,
+        descricao_documento: descricaoDocumento,
+        file,
+      });
 
       window.dispatchEvent(
         new CustomEvent("consulta:documents:upload:success", {
-          detail: { ownerType, ownerId, tipo_documento: tipoDoc, fileName: file.name },
+          detail: {
+            ownerType,
+            ownerId,
+            tipo_documento: tipoDoc,
+            descricao_documento: descricaoDocumento,
+            fileName: file.name,
+          },
         })
       );
 
@@ -213,7 +264,14 @@ export function DocumentsEditor({
 
       window.dispatchEvent(
         new CustomEvent("consulta:documents:upload:error", {
-          detail: { ownerType, ownerId, tipo_documento: tipoDoc, fileName: file.name, error: msg },
+          detail: {
+            ownerType,
+            ownerId,
+            tipo_documento: tipoDoc,
+            descricao_documento: descricaoDocumento,
+            fileName: file.name,
+            error: msg,
+          },
         })
       );
     } finally {
@@ -327,7 +385,9 @@ export function DocumentsEditor({
             >
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <p className="font-medium text-sm truncate">{file.nome}</p>
+                  <p className="font-medium text-sm truncate">
+                  {file.descricao_documento ?? file.nome}
+                  </p>
                   <Badge variant="secondary" className="text-xs">
                     {file.tipo_documento}
                   </Badge>

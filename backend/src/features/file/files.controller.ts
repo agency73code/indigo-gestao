@@ -18,6 +18,21 @@ export async function uploadFile(req: Request, res: Response) {
             birthDate: string;
         };
 
+        const normalizeBodyString = (value: unknown) => {
+            if (typeof value === 'string') {
+                return value;
+            }
+            if (Array.isArray(value)) {
+                const [first] = value;
+                return typeof first === 'string' ? first : undefined;
+            }
+            return undefined;
+        };
+
+        const documentTypeFromBody = normalizeBodyString((req.body as Record<string, unknown>).documentType);
+        const descricaoFromBody = normalizeBodyString((req.body as Record<string, unknown>).descricao_documento);
+        const descricaoNormalizada = descricaoFromBody?.trim() ?? '';
+
         if (!ownerType || !ownerId || !fullName || !birthDate) {
             return res.status(400).json({ error: 'Campos obrigatórios ausentes.' });
         }
@@ -33,13 +48,18 @@ export async function uploadFile(req: Request, res: Response) {
         const folderStructure = await createFolder(ownerType, fullName, BirthDate, rootFolderId);
 
         const uploadPromises = availableFiles.map(({ file, documentType }) => {
-            const tipoDocumento = req.body.documentType || documentType || file.fieldname || 'arquivo';
+            const tipoDocumento = documentTypeFromBody || documentType || file.fieldname || 'arquivo';
+            const descricaoDocumento =
+                tipoDocumento === 'outros' && descricaoNormalizada.length > 0
+                    ? descricaoNormalizada
+                    : undefined;
             return FilesService.uploadAndPersistFile({
                 ownerType,
                 ownerId,
                 fullName,
                 birthDate,
                 documentType: tipoDocumento,
+                documentDescription: descricaoDocumento ?? '',
                 file,
                 folderIds: folderStructure,
             });

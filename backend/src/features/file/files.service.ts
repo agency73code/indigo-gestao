@@ -11,6 +11,7 @@ interface UploadInput {
     fullName: string;
     birthDate: string;
     documentType: string;
+    documentDescription?: string | null;
     file: Express.Multer.File;
 }
 
@@ -23,6 +24,7 @@ interface UploadResult {
     tipo_conteudo: string;
     data_envio: string;
     webViewLink?: string | undefined;
+    descricao_documento?: string | null;
 }
 
 /**
@@ -33,6 +35,9 @@ export async function uploadAndPersistFile(input: UploadInput & { folderIds?: { 
     if (!rootFolderId) {
         throw new Error('Pasta raiz do Google Drive não configurada (GOOGLE_DRIVE_FOLDER_ID).');
     }
+
+    const rawDescription = input.documentDescription?.trim();
+    const normalizedDescription = rawDescription && rawDescription.length > 0 ? rawDescription : null;
 
     // Cria (ou encontra) a estrutura de pastas
     const { parentId, documentosId } = input.folderIds
@@ -48,13 +53,18 @@ export async function uploadAndPersistFile(input: UploadInput & { folderIds?: { 
     const targetFolderId =
         input.documentType === 'fotoPerfil' ? parentId : documentosId;
 
-    const driveMeta = await uploadFile(input.documentType, input.file, targetFolderId);
+    const driveDocumentLabel = normalizedDescription && input.documentType === 'outros'
+        ? `${input.documentType}-${normalizedDescription}`
+        : input.documentType;
+
+    const driveMeta = await uploadFile(driveDocumentLabel, input.file, targetFolderId);
 
     // Persiste metadados no banco
     const record = await persistFileRecord({
         ownerType: input.ownerType,
         ownerId: input.ownerId,
         tipo: input.documentType,
+        descricaoDocumento: normalizedDescription,
         storageId: driveMeta.id,
         mimeType: input.file.mimetype,
         size: input.file.size,
@@ -64,11 +74,12 @@ export async function uploadAndPersistFile(input: UploadInput & { folderIds?: { 
         id: record.id.toString(),
         storageId: record.arquivo_id!,
         tipo_documento: record.tipo!,
-        nome: record.tipo ?? driveMeta.name,
+        nome: record.descricao_documento ?? record.tipo ?? driveMeta.name,
         tamanho: Number(record.tamanho ?? input.file.size),
         tipo_conteudo: record.mime_type ?? input.file.mimetype,
         data_envio: (record.data_upload ?? new Date()).toISOString(),
         webViewLink: driveMeta.webViewLink,
+        descricao_documento: record.descricao_documento ?? normalizedDescription,
     };
 }
 
@@ -77,6 +88,7 @@ async function persistFileRecord({
     ownerType,
     ownerId,
     tipo,
+    descricaoDocumento,
     storageId,
     mimeType,
     size,
@@ -84,19 +96,26 @@ async function persistFileRecord({
     ownerType: OwnerType;
     ownerId: string;
     tipo: string;
+    descricaoDocumento: string | null;
     storageId: string;
     mimeType: string;
     size: number;
 }) {
-    const where =
-        ownerType === 'cliente'
-        ? { clienteId: ownerId, tipo }
-        : { terapeutaId: ownerId, tipo };
+    const whereBase = ownerType === 'cliente'
+        ? { clienteId: ownerId }
+        : { terapeutaId: ownerId };
+
+    const where = {
+        ...whereBase,
+        tipo,
+        descricao_documento: descricaoDocumento,
+    }
 
     const existing = await prisma.arquivos.findFirst({ where });
 
     const data = {
         tipo,
+        descricao_documento: descricaoDocumento,
         arquivo_id: storageId,
         mime_type: mimeType,
         tamanho: size,
@@ -126,13 +145,14 @@ export async function listFiles(ownerType: 'cliente' | 'terapeuta', ownerId: str
         id: r.id.toString(),
         storageId: r.arquivo_id ?? '',
         tipo_documento: r.tipo ?? 'documento',
-        nome: r.tipo ?? r.arquivo_id ?? `Arquivo ${r.id}`,
+        nome: r.descricao_documento ?? r.tipo ?? r.arquivo_id ?? `Arquivo ${r.id}`,
         tamanho: Number(r.tamanho ?? 0),
         tipo_conteudo: r.mime_type ?? 'application/octet-stream',
         data_envio: r.data_upload?.toISOString() ?? new Date().toISOString(),
         webViewLink: r.arquivo_id
             ? `https://drive.google.com/file/d/${r.arquivo_id}/view?usp=drivesdk`
             : undefined,
+        descricao_documento: r.descricao_documento ?? undefined
     }));
 }
 
