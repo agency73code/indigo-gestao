@@ -1,6 +1,6 @@
 import { Info } from 'lucide-react';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitleHub } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { DashboardOverview } from '@/lib/types/dashboard';
 
@@ -88,13 +88,15 @@ export function DashboardCards({ overview }: DashboardCardsProps) {
                             key={metric.key}
                             aria-label={metric.ariaLabel}
                             role="region"
-                            className="rounded-[5px] border bg-card"
+                            padding="hub"
+                            className="rounded-lg border-0 shadow-none"
+                            style={{ backgroundColor: 'var(--hub-card-background)' }}
                         >
                             <CardHeader className="flex flex-row items-start justify-between space-y-0">
                                 <div className="space-y-2">
-                                    <CardTitle className="text-base font-semibold text-foreground">
+                                    <CardTitleHub className="text-base">
                                         {metric.title}
-                                    </CardTitle>
+                                    </CardTitleHub>
                                     <p className="text-sm text-muted-foreground">{label}</p>
                                 </div>
                                 <Tooltip>

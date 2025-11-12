@@ -2,14 +2,15 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import html2pdf from 'html2pdf.js';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Save, FileDown, FileText } from 'lucide-react';
 import { FiltersBar } from '../gerar-relatorio/components/FiltersBar';
 import { KpiCards } from '../gerar-relatorio/components/KpiCards';
 import { DualLineProgress } from '../gerar-relatorio/components/DualLineProgress';
 import { PatientSelector, type Patient } from '../../programas/consultar-programas/components';
 import { OcpDeadlineCard } from '../gerar-relatorio/components/OcpDeadlineCard';
-import { AttentionStimuliBlock } from '../gerar-relatorio/components/AttentionStimuliBlock';
+import { AttentionStimuliCard } from '../../programas/relatorio-geral/components/AttentionStimuliCard';
 import { SaveReportDialog } from '../components';
-import { FileText } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { RichTextEditor } from '../../../components/ui/rich-text-editor';
 import {
@@ -17,15 +18,15 @@ import {
     fetchSerieLinha,
     fetchPrazoPrograma,
 } from '../gerar-relatorio/services/relatorio.service';
-import { listSessionsByPatient } from '../../programas/consulta-sessao/services';
-import type { Sessao as SessionDetail } from '../../programas/consulta-sessao/types';
 import type { Filters, KpisRelatorio, SerieLinha, PrazoPrograma } from '../gerar-relatorio/types';
 import type { SavedReport } from '../types';
 import { ReportExporter } from '../gerar-relatorio/print/ReportExporter';
 import { useAuth } from '@/features/auth';
+import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 
 export function GerarRelatorioPage() {
     const { user } = useAuth();
+    const { setPageTitle, setHeaderActions } = usePageTitle();
     const [searchParams, setSearchParams] = useSearchParams();
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
     const [observacaoClinica, setObservacaoClinica] = useState<string>('');
@@ -34,12 +35,9 @@ export function GerarRelatorioPage() {
     const [kpis, setKpis] = useState<KpisRelatorio | null>(null);
     const [serieLinha, setSerieLinha] = useState<SerieLinha[]>([]);
     const [prazoPrograma, setPrazoPrograma] = useState<PrazoPrograma | null>(null);
-    const [sessions, setSessions] = useState<SessionDetail[]>([]);
 
     const [loadingKpis, setLoadingKpis] = useState(true);
     const [loadingCharts, setLoadingCharts] = useState(true);
-    const [loadingSessions, setLoadingSessions] = useState(false);
-    const [sessionsError, setSessionsError] = useState<string | null>(null);
 
     // Estados para os filtros (programas, estímulos, terapeutas)
     const [programas, _setProgramas] = useState<{ id: string; nome: string }[]>([]);
@@ -131,46 +129,6 @@ export function GerarRelatorioPage() {
             setLoadingCharts(false);
         }
     }, []);
-
-    useEffect(() => {
-        if (!selectedPatient) {
-            setSessions([]);
-            setSessionsError(null);
-            setLoadingSessions(false);
-            return;
-        }
-
-        let isCancelled = false;
-
-        const loadSessions = async () => {
-            setLoadingSessions(true);
-            setSessionsError(null);
-
-            try {
-                const response = await listSessionsByPatient(selectedPatient.id);
-                if (!isCancelled) {
-                    // 🔄 Extrai items da resposta paginada
-                    setSessions(response.items || []);
-                }
-            } catch (error) {
-                console.error('Erro ao carregar sessões do paciente:', error);
-                if (!isCancelled) {
-                    setSessions([]);
-                    setSessionsError('Não foi possível carregar as sessões do paciente.');
-                }
-            } finally {
-                if (!isCancelled) {
-                    setLoadingSessions(false);
-                }
-            }
-        };
-
-        loadSessions();
-
-        return () => {
-            isCancelled = true;
-        };
-    }, [selectedPatient]);
 
     useEffect(() => {
         if (selectedPatient) {
@@ -424,6 +382,42 @@ export function GerarRelatorioPage() {
         return terapeuta?.nome || filters.terapeutaId;
     };
 
+    // Configurar título e botões do header
+    useEffect(() => {
+        setPageTitle('Painel de Progresso - Programas & Objetivos');
+    }, [setPageTitle]);
+
+    useEffect(() => {
+        if (selectedPatient) {
+            setHeaderActions(
+                <div className="flex items-center gap-3">
+                    <Button
+                        onClick={() => setSaveDialogOpen(true)}
+                        className="h-10 rounded-full gap-2"
+                        variant="default"
+                    >
+                        <Save className="h-4 w-4" />
+                        Salvar Relatório
+                    </Button>
+                    <Button
+                        onClick={() => {
+                            toast.info('Funcionalidade em desenvolvimento');
+                        }}
+                        className="h-10 rounded-full gap-2"
+                        variant="outline"
+                    >
+                        <FileDown className="h-4 w-4" />
+                        Exportar PDF
+                    </Button>
+                </div>
+            );
+        } else {
+            setHeaderActions(null);
+        }
+
+        return () => setHeaderActions(null);
+    }, [selectedPatient, setHeaderActions]);
+
     return (
         <div className="flex flex-col w-full h-full">
             {selectedPatient ? (
@@ -431,8 +425,9 @@ export function GerarRelatorioPage() {
                     <ReportExporter 
                         documentTitle={documentTitle}
                         onSave={() => setSaveDialogOpen(true)}
+                        hideButton={true}
                     >
-                        <div className="space-y-4 md:space-y-6 px-6 pb-6">
+                        <div className="space-y-4 p-4">
                         {/* Bloco de Cliente - aparece em tela e PDF */}
                         <div data-print-program-header>
                             <PatientSelector
@@ -510,11 +505,11 @@ export function GerarRelatorioPage() {
 
                         {/* Estímulos que precisam de atenção */}
                         <section data-print-block data-print-wide>
-                            <AttentionStimuliBlock
-                                sessions={sessions}
-                                filters={filters}
-                                loading={loadingSessions}
-                                error={sessionsError}
+                            <AttentionStimuliCard
+                                pacienteId={selectedPatient?.id || ''}
+                                programaId={filters.programaId}
+                                terapeutaId={filters.terapeutaId}
+                                periodo={filters.periodo}
                             />
                         </section>
 

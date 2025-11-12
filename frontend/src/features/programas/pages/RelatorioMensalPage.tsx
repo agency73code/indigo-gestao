@@ -5,7 +5,7 @@ import { KpiCards } from '../relatorio-geral/components/KpiCards';
 import { DualLineProgress } from '../relatorio-geral/components/DualLineProgress';
 import { PatientSelector, type Patient } from '../consultar-programas/components';
 import { OcpDeadlineCard } from '../relatorio-geral/components/OcpDeadlineCard';
-import { AttentionStimuliBlock } from '../relatorio-geral/components/AttentionStimuliBlock';
+import { AttentionStimuliCard } from '../relatorio-geral/components/AttentionStimuliCard';
 import { FileText } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { RichTextEditor } from '../../../components/ui/rich-text-editor';
@@ -14,8 +14,6 @@ import {
     fetchSerieLinha,
     fetchPrazoPrograma,
 } from '../relatorio-geral/services/relatorio.service';
-import { listSessionsByPatient } from '../consulta-sessao/services';
-import type { Sessao as SessionDetail } from '../consulta-sessao/types';
 import type { Filters, KpisRelatorio, SerieLinha, PrazoPrograma } from '../relatorio-geral/types';
 import { ReportExporter } from '../relatorio-geral/print/ReportExporter';
 
@@ -30,12 +28,9 @@ export default function RelatorioMensalPage() {
     const [kpis, setKpis] = useState<KpisRelatorio | null>(null);
     const [serieLinha, setSerieLinha] = useState<SerieLinha[]>([]);
     const [prazoPrograma, setPrazoPrograma] = useState<PrazoPrograma | null>(null);
-    const [sessions, setSessions] = useState<SessionDetail[]>([]);
 
     const [loadingKpis, setLoadingKpis] = useState(true);
     const [loadingCharts, setLoadingCharts] = useState(true);
-    const [loadingSessions, setLoadingSessions] = useState(false);
-    const [sessionsError, setSessionsError] = useState<string | null>(null);
 
     // Estados para os filtros (programas, estímulos, terapeutas)
     const [programas, setProgramas] = useState<{ id: string; nome: string }[]>([]);
@@ -131,46 +126,6 @@ export default function RelatorioMensalPage() {
             setLoadingCharts(false);
         }
     };
-
-    useEffect(() => {
-        if (!selectedPatient) {
-            setSessions([]);
-            setSessionsError(null);
-            setLoadingSessions(false);
-            return;
-        }
-
-        let isCancelled = false;
-
-        const loadSessions = async () => {
-            setLoadingSessions(true);
-            setSessionsError(null);
-
-            try {
-                const data = await listSessionsByPatient(selectedPatient.id);
-                if (!isCancelled) {
-                    // Garantir que sempre seja um array
-                    setSessions(Array.isArray(data) ? data : []);
-                }
-            } catch (error) {
-                console.error('Erro ao carregar sessões do paciente:', error);
-                if (!isCancelled) {
-                    setSessions([]);
-                    setSessionsError('Não foi possível carregar as sessões do paciente.');
-                }
-            } finally {
-                if (!isCancelled) {
-                    setLoadingSessions(false);
-                }
-            }
-        };
-
-        loadSessions();
-
-        return () => {
-            isCancelled = true;
-        };
-    }, [selectedPatient]);
 
     useEffect(() => {
         if (selectedPatient) {
@@ -333,11 +288,11 @@ export default function RelatorioMensalPage() {
 
                         {/* Estímulos que precisam de atenção */}
                         <section data-print-block data-print-wide>
-                            <AttentionStimuliBlock
-                                sessions={sessions}
-                                filters={filters}
-                                loading={loadingSessions}
-                                error={sessionsError}
+                            <AttentionStimuliCard
+                                pacienteId={selectedPatient?.id || ''}
+                                programaId={filters.programaId}
+                                terapeutaId={filters.terapeutaId}
+                                periodo={filters.periodo}
                             />
                         </section>
 

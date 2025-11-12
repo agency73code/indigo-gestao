@@ -83,13 +83,20 @@ export default function AppLayout() {
             <SidebarProvider>
                 <AbilityProvider>
                     <PageTitleContext.Provider value={{ pageTitle, setPageTitle, headerActions, setHeaderActions }}>
-                        <div className="flex min-h-screen w-full">
+                        <div 
+                            className="flex h-screen w-full overflow-hidden"
+                            style={{ 
+                                background: 'radial-gradient(circle at 0% 50%, #C9D8EF 0%, #E9E4F0 100%)' 
+                            }}
+                        >
                             <AppSidebar />
-                            <div className="flex flex-1 flex-col min-h-screen p-1 bg-[#F1F5F9]">
+                            <div className="flex flex-1 flex-col h-screen p-1 overflow-hidden">
                                 {/* Card externo branco */}
-                                <div className="flex-1 bg-background rounded-3xl p-2 flex flex-col gap-3">
+                                <div 
+                                    className="flex-1 rounded-3xl p-2 flex flex-col gap-3 overflow-hidden bg-white dark:bg-[#1a1a1a]"
+                                >
                                     {/* Espaço superior para título e botões */}
-                                    <div className="h-12 flex items-center justify-between pt-0 px-1">
+                                    <div className="h-12 flex items-center justify-between pt-0 px-1 flex-shrink-0">
                                         {/* Botão sidebar e título */}
                                         <div className="flex items-center gap-3">
                                             <div className="h-10 w-10 rounded-full bg-header-bg hover:bg-header-bg/80 flex items-center justify-center transition-colors cursor-pointer">
@@ -118,7 +125,7 @@ export default function AppLayout() {
                                     </div>
                                     
                                     {/* Card interno com o conteúdo da página */}
-                                    <main className="flex-1 overflow-auto bg-background border border-gray-200/50 rounded-3xl shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
+                                    <main className="flex-1 overflow-auto bg-[var(--bg-main)] border border-gray-200/10 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] min-h-0">
                                         <ErrorBoundary>
                                             <PageTransition>
                                                 <Outlet />

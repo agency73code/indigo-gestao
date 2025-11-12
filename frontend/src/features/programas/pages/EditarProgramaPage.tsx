@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Save, Copy, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import ActionBar from '@/components/ui/action-bar';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 import {
     HeaderInfo,
@@ -11,7 +14,6 @@ import {
     CriteriaSection,
     NotesSection,
     StatusToggle,
-    SaveBar,
     ValidationErrors,
 } from '../editar-ocp';
 import { fetchProgramById, updateProgram, createProgramVersion } from '../editar-ocp/services';
@@ -333,7 +335,7 @@ export default function EditarProgramaPage() {
     }
 
     return (
-        <div className="min-h-screen bg-background pb-4">
+        <div className="min-h-screen bg-background pb-32">
             <div className="max-w-lg md:max-w-none p-0 lg:p-4 space-y-6">
                 {/* Header com informações read-only */}
                 <HeaderInfo program={program} />
@@ -384,15 +386,53 @@ export default function EditarProgramaPage() {
                 <StatusToggle status={status} onStatusChange={setStatus} />
             </div>
 
-            {/* Barra de salvamento fixa */}
-            <SaveBar
-                onSave={handleSave}
-                onSaveAsVersion={handleSaveAsVersion}
-                onCancel={handleCancel}
-                isSaving={isSaving}
-                isCreatingVersion={isCreatingVersion}
-                hasChanges={hasChanges}
-            />
+            {/* Barra de ação fixa no rodapé */}
+            <ActionBar>
+                <Button
+                    onClick={handleSave}
+                    disabled={isSaving || isCreatingVersion || !hasChanges}
+                    className="h-11 rounded-full gap-2"
+                >
+                    {isSaving ? (
+                        <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground" />
+                            Salvando...
+                        </>
+                    ) : (
+                        <>
+                            <Save className="h-4 w-4" />
+                            Salvar alterações
+                        </>
+                    )}
+                </Button>
+
+                <Button
+                    onClick={handleSaveAsVersion}
+                    disabled={isSaving || isCreatingVersion}
+                    variant="outline"
+                    className="h-11 rounded-full gap-2"
+                    title="Salvar como nova versão"
+                >
+                    {isCreatingVersion ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
+                    ) : (
+                        <>
+                            <Copy className="h-4 w-4" />
+                            Nova versão
+                        </>
+                    )}
+                </Button>
+
+                <Button
+                    onClick={handleCancel}
+                    disabled={isSaving || isCreatingVersion}
+                    variant="ghost"
+                    className="h-11 rounded-full gap-2"
+                >
+                    <X className="h-4 w-4" />
+                    Cancelar
+                </Button>
+            </ActionBar>
         </div>
     );
 }

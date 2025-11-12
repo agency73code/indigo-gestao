@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Plus, ClipboardEdit, FileText, Eye, BarChart3, Search } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardTitleHub } from '@/components/ui/card';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 import { useEffect } from 'react';
 
@@ -60,15 +60,19 @@ export default function HubPage() {
                                 className="block"
                                 aria-label={`${action.title}: ${action.description}`}
                             >
-                                <Card className="cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] border border-border/40 rounded-lg bg-[#F1F5F9] h-full">
-                                    <CardHeader className="space-y-5 p-2">
+                                <Card 
+                                    padding="hub" 
+                                    className="cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] border border-border/40 rounded-lg h-full"
+                                    style={{ backgroundColor: 'var(--hub-card-background)' }}
+                                >
+                                    <CardHeader className="space-y-5">
                                         <div className={`h-14 w-14 rounded-lg ${action.bgColor} flex items-center justify-center`}>
                                             <Icon className={`h-7 w-7 ${action.iconColor}`} />
                                         </div>
                                         <div className="space-y-1">
-                                            <CardTitle className="text-lg font-medium text-foreground">
+                                            <CardTitleHub className="text-lg">
                                                 {action.title}
-                                            </CardTitle>
+                                            </CardTitleHub>
                                             <p className="text-sm text-muted-foreground">
                                                 {action.description}
                                             </p>

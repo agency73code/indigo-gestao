@@ -15,6 +15,7 @@ const cardVariants = cva(
         lg: "px-6 py-12 md:px-12 md:py-12 lg:px-16 lg:py-16",
         small: "px-6 py-2 md:px-8 md:py-10 lg:px-8 lg:py-0",
         medium: "px-4 py-4 md:px-4 md:py-4 lg:px-4 lg:py-4",
+        hub: "p-6", // Padding específico para cards do hub
       },
       // Densidade opcional 
       density: {
@@ -65,6 +66,24 @@ const CardTitle = React.forwardRef<
 ));
 CardTitle.displayName = "CardTitle";
 
+// Variante específica para títulos de cards do Hub
+const CardTitleHub = React.forwardRef<
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLHeadingElement>
+>(({ className, ...props }, ref) => (
+  <h3
+    ref={ref}
+    style={{ 
+      fontFamily: "var(--hub-card-title-font-family)",
+      fontWeight: "var(--hub-card-title-font-weight)",
+      color: "var(--hub-card-title-color)"
+    }}
+    className={cn("leading-none tracking-tight", className)}
+    {...props}
+  />
+));
+CardTitleHub.displayName = "CardTitleHub";
+
 const CardDescription = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
@@ -89,4 +108,4 @@ const CardFooter = React.forwardRef<
 ));
 CardFooter.displayName = "CardFooter";
 
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent };
+export { Card, CardHeader, CardFooter, CardTitle, CardTitleHub, CardDescription, CardContent };

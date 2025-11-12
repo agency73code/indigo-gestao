@@ -19,6 +19,7 @@
     --sidebar-ring: hsl(217.2 91.2% 59.8%);
     --radius: 0.65rem;
     --background: oklch(1 0 0);
+    --bg-main: rgba(255, 255, 255, 0.8);
     --foreground: oklch(0.141 0.005 285.823);
     --card: oklch(1 0 0);
     --card-foreground: oklch(0.141 0.005 285.823);
@@ -53,6 +54,14 @@
     --chart-primary-foreground: #8CC3FC;
     --chart-secondary-foreground: #2B7FFF;
     --header-bg: #FAFAFA;
+    --blue-moon-gradient: radial-gradient(circle at 0% 50%, #C9D8EF 0%, #E9E4F0 100%);
+    --blue-moon-gradient-start: #C9D8EF;
+    --blue-moon-gradient-end: #E9E4F0;
+    --container-background: rgba(255, 255, 255, 0.85);
+    --hub-card-title-font-family: 'Sora', sans-serif;
+    --hub-card-title-font-weight: 500;
+    --hub-card-title-color: rgba(0, 0, 0, 0.87);
+    --hub-card-background: #FAFAFA;
 }
 
 body {
@@ -60,11 +69,12 @@ body {
 }
 
 .dark {
-    --background: oklch(0.141 0.005 285.823);
+    --background: rgba(0, 0, 0, 0.27);
+    --bg-main: oklch(17.673% 0.005 17.415);
     --foreground: oklch(0.985 0 0);
-    --card: oklch(0.21 0.006 285.885);
+    --card: oklch(0.25 0.008 285.885);
     --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.21 0.006 285.885);
+    --popover: oklch(0.25 0.008 285.885);
     --popover-foreground: oklch(0.985 0 0);
     --primary: oklch(0.985 0 0);
     --primary-foreground: oklch(0.379 0.146 265.522);
@@ -75,7 +85,7 @@ body {
     --accent: oklch(0.274 0.006 286.033);
     --accent-foreground: oklch(0.985 0 0);
     --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
+    --border: oklch(0.25 0.002 286 / 5%);
     --input: oklch(1 0 0 / 15%);
     --ring: oklch(0.488 0.243 264.376);
     --chart-1: oklch(0.488 0.243 264.376);
@@ -91,6 +101,14 @@ body {
     --sidebar-accent-foreground: oklch(0.985 0 0);
     --sidebar-border: oklch(1 0 0 / 10%);
     --sidebar-ring: oklch(0.488 0.243 264.376);
+    --blue-moon-gradient: radial-gradient(circle at 0% 50%, #5A7EDA 0%, #51FDD4 100%);
+    --blue-moon-gradient-start: #5A7EDA;
+    --blue-moon-gradient-end: #51FDD4;
+    --container-background: rgba(33, 33, 33, 0.8);
+    --hub-card-title-font-family: 'Sora', sans-serif;
+    --hub-card-title-font-weight: 500;
+    --hub-card-title-color: hsl(220, 9%, 70%);
+    --hub-card-background: #212125;
 }
 
 @theme inline {
@@ -130,6 +148,12 @@ body {
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
     --color-header-bg: var(--header-bg);
+    --color-blue-moon-gradient: var(--blue-moon-gradient);
+    --color-blue-moon-gradient-start: var(--blue-moon-gradient-start);
+    --color-blue-moon-gradient-end: var(--blue-moon-gradient-end);
+    --color-container-background: var(--container-background);
+    --color-hub-card-title: var(--hub-card-title-color);
+    --color-hub-card-background: var(--hub-card-background);
 }
 
 @layer base {

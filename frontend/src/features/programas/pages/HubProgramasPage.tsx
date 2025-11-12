@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Card, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardHeader, CardTitleHub } from '@/components/ui/card';
 import { useProgramAreas } from '../core/hooks/useProgramConfig';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 import { useEffect } from 'react';
@@ -42,17 +42,21 @@ export default function HubProgramasPage() {
                                 className="block"
                                 aria-label={`${area.title}: Acessar programas e sessões`}
                             >
-                                <Card className="cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] border border-border/40 rounded-lg bg-[#F1F5F9] h-full">
-                                    <CardHeader className="space-y-5 p-2">
+                                <Card 
+                                    padding="hub" 
+                                    className="cursor-pointer hover:scale-[1.02] transition-all rounded-lg h-full border-0 shadow-none"
+                                    style={{ backgroundColor: 'var(--hub-card-background)' }}
+                                >
+                                    <CardHeader className="space-y-5">
                                         {IconComponent && (
                                             <div className={`h-14 w-14 rounded-lg ${bgColors[index]} flex items-center justify-center`}>
                                                 <IconComponent className={`h-7 w-7 ${iconColors[index]}`} />
                                             </div>
                                         )}
                                         <div className="space-y-1">
-                                            <CardTitle className="text-lg font-medium text-foreground">
+                                            <CardTitleHub className="text-lg">
                                                 {area.title}
-                                            </CardTitle>
+                                            </CardTitleHub>
                                             <p className="text-sm text-muted-foreground">
                                                 {area.subtitle || 'Criar, consultar e acompanhar programas'}
                                             </p>

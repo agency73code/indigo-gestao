@@ -1,10 +1,12 @@
 import { startTransition, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Plus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import PatientSelector from '@/features/programas/consultar-programas/components/PatientSelector';
 import type { Patient } from '@/features/programas/consultar-programas/types';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
-import { ListaSessoes, SearchAndFilters, CreateSessionFab } from '../consulta-sessao/components';
+import { ListaSessoes, SearchAndFilters } from '../consulta-sessao/components';
 import * as services from '../consulta-sessao/services';
 import { getPatientById } from '../consultar-programas/services';
 import type { Sessao, SessaoFiltersState } from '../consulta-sessao/types';
@@ -251,8 +253,8 @@ export default function ConsultaSessao() {
 
     return (
         <div className="flex flex-col min-h-full w-full">
-            <main className="flex-1 px-0 sm:px-4 pb-20 sm:pb-24 w-full pt-4 sm:pt-4">
-                <div className="space-y-4 sm:space-y-6 mx-auto w-full">
+            <main className="flex-1 pb-20 sm:pb-4 px-4 pt-4 ">
+                <div className="space-y-4 max-w-full">
                     <PatientSelector
                         selected={patient ?? undefined}
                         onSelect={handleSelectPatient}
@@ -260,6 +262,7 @@ export default function ConsultaSessao() {
                         autoOpenIfEmpty={false}
                     />
 
+                    {/* Busca */}
                     <SearchAndFilters
                         disabled={!patient}
                         q={filters.q}
@@ -270,6 +273,17 @@ export default function ConsultaSessao() {
                         programOptions={programOptions}
                         therapistOptions={therapistOptions}
                         onChange={handleFiltersChange}
+                        renderButton={
+                            <Button
+                                onClick={handleCreateSession}
+                                disabled={!patient}
+                                size="icon"
+                                className="h-10 w-10 rounded-full flex-shrink-0"
+                                title="Adicionar sessão"
+                            >
+                                <Plus className="h-5 w-5" />
+                            </Button>
+                        }
                     />
 
                     {!patient && !loading && (
@@ -302,13 +316,6 @@ export default function ConsultaSessao() {
                     )}
                 </div>
             </main>
-
-            {/* FAB para Adicionar Sessão */}
-            <CreateSessionFab
-                disabled={!patient}
-                onClick={handleCreateSession}
-                patientName={patient?.name}
-            />
         </div>
     );
 }

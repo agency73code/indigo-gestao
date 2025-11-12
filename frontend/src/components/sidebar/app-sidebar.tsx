@@ -145,7 +145,11 @@ const data: {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     return (
-        <Sidebar variant="inset" {...props} className="no-print bg-[#F1F5F9] p-1 pr-0">
+        <Sidebar 
+            variant="inset" 
+            {...props} 
+            className="no-print p-1 pr-0"
+        >
             <SidebarHeader className="pt-3 pb-2">
                 <NavUser />
             </SidebarHeader>

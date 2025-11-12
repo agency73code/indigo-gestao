@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { Save, Play, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 import {
     HeaderInfo,
@@ -8,7 +10,6 @@ import {
     StimuliList,
     CriteriaSection,
     NotesSection,
-    SaveBar,
     fetchPatientById,
     fetchTherapistById,
     createProgram,
@@ -32,8 +33,6 @@ export default function CadastroOcpPage() {
         setPageTitle('Novo Programa / Objetivos');
     }, [setPageTitle]);
 
-    // Estado para controlar a visibilidade da SaveBar
-    const [showSaveBar, setShowSaveBar] = useState(false);
     const { user } = useAuth();
     // Estados do formulário
     const [formState, setFormState] = useState<FormState>({
@@ -159,35 +158,6 @@ export default function CadastroOcpPage() {
             setFormState((prev) => ({ ...prev, stimuli: [initialStimulus] }));
         }
     }, [formState.stimuli.length, isLoading]);
-
-    // Controlar visibilidade da SaveBar baseado no scroll
-    useEffect(() => {
-        const handleScroll = () => {
-            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-            const scrollHeight = document.documentElement.scrollHeight;
-            const clientHeight = window.innerHeight;
-
-            // Mostrar SaveBar quando estiver nos últimos 50% da página
-            const scrollPercentage = (scrollTop + clientHeight) / scrollHeight;
-            const shouldShow = scrollPercentage > 0.9;
-
-            setShowSaveBar(shouldShow);
-        };
-
-        // Adicionar listener
-        window.addEventListener('scroll', handleScroll, { passive: true });
-
-        // Verificar posição inicial (sempre mostrar se página for pequena)
-        const isShortPage = document.documentElement.scrollHeight <= window.innerHeight * 1.5;
-        if (isShortPage) {
-            setShowSaveBar(true);
-        } else {
-            handleScroll();
-        }
-
-        // Cleanup
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
 
     // Validação
     const validateForm = (): ValidationErrors => {
@@ -374,9 +344,9 @@ export default function CadastroOcpPage() {
     }
 
     return (
-        <div className="flex flex-col min-h-full w-full p-0 sm:p-0 pt-0 sm:py-4">
+        <div className="flex flex-col min-h-full w-full p-0 sm:p-0 pt-">
             {/* Conteúdo principal */}
-            <main className="flex-1 px-1 sm:px-4 pb-60 sm:pb-30 w-full">
+            <main className="flex-1 px-1 sm:px-4 py-4 w-full">
                 <div className="space-y-4 md:max-w-none mx-auto">   
                     {/* Informações do cabeçalho */}
                     <HeaderInfo
@@ -429,25 +399,49 @@ export default function CadastroOcpPage() {
                 </div>
             </main>
 
-            {/* Barra de salvamento com animação suave */}
-            <div
-                className={`fixed bottom-0 left-0 right-0 transition-all duration-700 ease-out ${
-                    showSaveBar ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
-                }`}
-                style={{
-                    transform: showSaveBar ? 'translateY(0)' : 'translateY(100%)',
-                    transition:
-                        'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease-out',
-                }}
-            >
-                <SaveBar
-                    onSave={() => handleSave(false)}
-                    onSaveAndStart={() => handleSave(true)}
-                    onCancel={handleCancel}
-                    isSaving={isSaving}
-                    canSave={canSave()}
-                    patientName={formState.patient?.name}
-                />
+            {/* Barra de ação no final da página (não fixa) */}
+            <div className="bg-background border-t">
+                <div className="px-4 py-4 sm:px-6">
+                    <div className="max-w-lg mx-auto flex items-center justify-end gap-3">
+                        <Button
+                            onClick={() => handleSave(false)}
+                            disabled={!canSave() || isSaving}
+                            className="h-11 rounded-full gap-2"
+                        >
+                            {isSaving ? (
+                                <>
+                                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                                    Salvando...
+                                </>
+                            ) : (
+                                <>
+                                    <Save className="h-4 w-4" />
+                                    Salvar Programa
+                                </>
+                            )}
+                        </Button>
+
+                        <Button
+                            onClick={() => handleSave(true)}
+                            disabled={!canSave() || isSaving}
+                            variant="secondary"
+                            className="h-11 rounded-full gap-2"
+                        >
+                            <Play className="h-4 w-4" />
+                            Salvar e Iniciar Sessão
+                        </Button>
+
+                        <Button
+                            onClick={handleCancel}
+                            variant="ghost"
+                            disabled={isSaving}
+                            className="h-11 rounded-full gap-2"
+                        >
+                            <X className="h-4 w-4" />
+                            Cancelar
+                        </Button>
+                    </div>
+                </div>
             </div>
 
             {/* Validação global se necessário */}
