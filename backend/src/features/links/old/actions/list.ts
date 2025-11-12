@@ -1,7 +1,10 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "../../../../config/database.js";
 import type { LinkFilters } from "../links.types.js";
-import { getVisibleTherapistIds } from "../../../../utils/visibilityFilter.js";
+import { getVisibilityScope } from "../../../../utils/visibilityFilter.js";
+import { ACCESS_LEVELS } from "../../../../utils/accessLevels.js";
+
+const MANAGER_LEVEL = ACCESS_LEVELS['gerente'] ?? 5;
 
 export async function getAllClients(userId: string, search?: string) {
     const whereBase: Prisma.clienteWhereInput = {};
@@ -11,21 +14,35 @@ export async function getAllClients(userId: string, search?: string) {
         whereBase.nome = { contains: search.trim().toLowerCase() }
     }
 
-    const visibleIds = await getVisibleTherapistIds(userId);
+    const visibility = await getVisibilityScope(userId);
+
+    if (visibility.scope === 'none') {
+        return [];
+    }
+
+    const extraFilters: Prisma.clienteWhereInput[] = [];
+
+    if (visibility.scope === 'partial') {
+        extraFilters.push({
+            terapeuta: {
+                some: {
+                    terapeuta_id: { in: visibility.therapistIds },
+                    ...(visibility.maxAccessLevel < MANAGER_LEVEL
+                        ? { status: 'active' }
+                        : {}),
+                },
+            },
+        });
+    }
+
+    if (visibility.maxAccessLevel < MANAGER_LEVEL) {
+        extraFilters.push({ status: 'ativo' });
+    }
 
     const finalWhere: Prisma.clienteWhereInput =
-    !visibleIds || visibleIds.length === 0
-        ? whereBase
-        : {
-            AND: [
-                whereBase,
-                {
-                    terapeuta: {
-                        some: { terapeuta_id: { in: visibleIds } },
-                    },
-                },
-            ],
-        };
+        extraFilters.length > 0
+            ? { AND: [whereBase, ...extraFilters] }
+            : whereBase;
 
     return prisma.cliente.findMany({
         where: finalWhere,
@@ -77,11 +94,26 @@ export async function getAllTherapists(userId: string, search?: string, _role?: 
         whereBase.nome = { contains: search.trim().toLowerCase() }
     }
 
-    const visibleIds = await getVisibleTherapistIds(userId);
+    const visibility = await getVisibilityScope(userId);
+    console.log('VISIBILITY:', visibility);
+
+    if (visibility.scope === 'none') {
+        return [];
+    }
+
+    const extraFilters: Prisma.terapeutaWhereInput[] = [];
+
+    if (visibility.scope === 'partial') {
+        extraFilters.push({ id: { in: visibility.therapistIds } });
+    }
+
+    if (visibility.maxAccessLevel < MANAGER_LEVEL) {
+        extraFilters.push({ atividade: true });
+    }
 
     const finalWhere: Prisma.terapeutaWhereInput =
-        visibleIds && visibleIds.length > 0
-        ? { AND: [whereBase, { id: { in: visibleIds } }] }
+        extraFilters.length > 0
+        ? { AND: [whereBase, ...extraFilters] }
         : whereBase;
 
     const therapists = await prisma.terapeuta.findMany({
@@ -174,7 +206,7 @@ export async function getAllTherapists(userId: string, search?: string, _role?: 
         },
         orderBy: { nome: 'asc' },
     });
-
+    console.log('THERAPISTS:', therapists);
     return therapists;
 }
 
@@ -182,11 +214,25 @@ export async function getAllLinks(userId: string, filters?: LinkFilters) {
     const whereBase = buildWhere(filters);
     const orderBy = buildOrderBy(filters);
 
-    const visibleIds = await getVisibleTherapistIds(userId);
+    const visibility = await getVisibilityScope(userId);
+
+    if (visibility.scope === 'none') {
+        return [];
+    }
+
+    const extraFilters: Prisma.terapeuta_clienteWhereInput[] = [];
+
+    if (visibility.scope === 'partial') {
+        extraFilters.push({ terapeuta_id: { in: visibility.therapistIds } });
+    }
+
+    if (visibility.maxAccessLevel < MANAGER_LEVEL) {
+        extraFilters.push({ status: 'active' });
+    }
 
     const finalWhere =
-        visibleIds && visibleIds.length > 0
-        ? { AND: [whereBase, { terapeuta_id: { in: visibleIds } }] }
+        extraFilters.length > 0
+        ? { AND: [whereBase, ...extraFilters] }
         : whereBase;
 
     const links = await prisma.terapeuta_cliente.findMany({
@@ -224,7 +270,7 @@ function buildWhere(filters?: LinkFilters) {
 
     // Filtro de status
     if (status && status !== 'all') {
-        where.status = status;
+        where.status = translateStatusFilter(status);
     }
 
     // Filtro de busca textual
@@ -266,4 +312,20 @@ function buildWhere(filters?: LinkFilters) {
 function buildOrderBy(filters?: LinkFilters) {
     const recent = filters?.orderBy === 'recent';
     return { atualizado_em: recent ? 'desc' : 'asc' } as const;
+}
+
+/**
+ * Converte o status do frontend (en-US) para o formato do banco (pt-BR).
+ */
+function translateStatusFilter(status: LinkFilters['status']) {
+    switch (status) {
+        case 'active':
+            return 'ativo';
+        case 'ended':
+            return 'encerrado';
+        case 'archived':
+            return 'arquivado';
+        default:
+            return undefined;
+    }
 }

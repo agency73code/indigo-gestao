@@ -7,7 +7,10 @@ import { ptBR } from "date-fns/locale";
 import { program, session } from "./actions/create.js";
 import { programUpdate } from "./actions/update.js";
 import { updateProgramSchema } from "./types/olp.schema.js";
-import { getVisibleTherapistIds } from "../../utils/visibilityFilter.js";
+import { getVisibilityScope } from "../../utils/visibilityFilter.js";
+import { ACCESS_LEVELS } from "../../utils/accessLevels.js";
+
+const MANAGER_LEVEL = ACCESS_LEVELS['gerente'] ?? 5;
 
 export async function createProgram(data: OcpType.createOCP) {
     const result = await program(data);
@@ -161,31 +164,37 @@ export async function getProgramId(programId: string) {
 }
 
 export async function listClientsByTherapist(therapistId: string, q?: string) {
-    const visibleIds = await getVisibleTherapistIds(therapistId);
+    const visibility = await getVisibilityScope(therapistId);
+    if (visibility.scope === 'none') {
+        return [];
+    }
+
+    const restrictStatus = visibility.maxAccessLevel < MANAGER_LEVEL;
 
     const where: Prisma.clienteWhereInput = {
-        ...(visibleIds.length > 0
-        ? {
-            terapeuta: {
-                some: {
-                    terapeuta_id: { in: visibleIds },
-                    status: "active",
-                },
-            },
-            }
-        : {}),
-        ...(q
-        ? {
-            OR: [
-                { nome: { contains: q } },
-                {
-                    cuidadores: {
-                        some: { nome: { contains: q } },
+        ...(visibility.scope === 'partial'
+            ? {
+                terapeuta: {
+                    some: {
+                        terapeuta_id: { in: visibility.therapistIds },
+                        ...(restrictStatus ? { status: 'active' } : {}),
                     },
                 },
-            ],
             }
-        : {}),
+            : {}),
+        ...(restrictStatus ? { status: 'ativo' } : {}),
+        ...(q
+            ? {
+                OR: [
+                    { nome: { contains: q } },
+                    {
+                        cuidadores: {
+                            some: { nome: { contains: q } },
+                        },
+                    },
+                ],
+            }
+            : {}),
     };
 
     return prisma.cliente.findMany({

@@ -28,8 +28,6 @@ function normalizeStatus(status: string | null | undefined): 'active' | 'ended' 
 }
 
 export function normalizeLink(link: LinkTypes.DBLink) {
-    console.log(JSON.stringify(link))
-    console.log("============================================")
     return {
         id: String(link.id),
         patientId: link.cliente_id,

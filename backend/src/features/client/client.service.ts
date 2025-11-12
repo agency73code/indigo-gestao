@@ -3,8 +3,11 @@ import { Prisma } from '@prisma/client'
 import { AppError } from "../../errors/AppError.js";
 import * as ClientType from "./client.types.js";
 import { v4 as uuidv4 } from "uuid";
-import { getTherapistData } from "../../cache/therapistCache.js";
-import { getVisibleTherapistIds } from "../../utils/visibilityFilter.js";
+import { getVisibilityScope } from "../../utils/visibilityFilter.js";
+import { ACCESS_LEVELS } from "../../utils/accessLevels.js";
+
+const MANAGER_LEVEL = ACCESS_LEVELS['gerente'] ?? 5;
+
 
 async function enderecoData(dto: ClientType.Client) {
   return dto.enderecos.map((e) => ({
@@ -647,21 +650,28 @@ export async function list(therapistId: string) {
     throw new AppError('REQUIRED_THERAPIST_ID', 'ID do terapeuta é obrigatório.', 400);
   }
 
-  const registers = await getTherapistData(therapistId);
-  if (!registers.length) {
-    throw new AppError('REQUIRED_THERAPIST_REGISTER', 'Terapeuta sem registro profissional.', 400);
+  const visibility = await getVisibilityScope(therapistId);
+
+  if (visibility.scope === 'none') {
+    return [];
   }
 
-  const visibleIds = await getVisibleTherapistIds(therapistId);
+  const where: Prisma.clienteWhereInput = {};
 
-  const where: Prisma.clienteWhereInput = 
-    visibleIds.length === 0
-      ? {}
-      : {
-        terapeuta: {
-          some: { terapeuta_id: { in: visibleIds } },
-        },
-      };
+  if (visibility.scope === 'partial') {
+    where.terapeuta = {
+      some: {
+        terapeuta_id: { in: visibility.therapistIds },
+        ...(visibility.maxAccessLevel < MANAGER_LEVEL
+          ? { status: 'active' }
+          : {}),
+      },
+    };
+  }
+
+  if (visibility.maxAccessLevel < MANAGER_LEVEL) {
+    where.status = 'ativo';
+  }
 
   return prisma.cliente.findMany({
     where,

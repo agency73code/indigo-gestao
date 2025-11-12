@@ -4,7 +4,12 @@ import { ACCESS_LEVELS } from "./accessLevels.js";
 import { defineAbilityFor } from "../abilities/defineAbility.js";
 import { prisma } from "../config/database.js";
 
-export async function getVisibleTherapistIds(therapistId: string): Promise<string[]> {
+export type VisibilityScope =
+  | { scope: "none"; therapistIds: []; maxAccessLevel: number }
+  | { scope: "all"; therapistIds: null; maxAccessLevel: number }
+  | { scope: "partial"; therapistIds: string[]; maxAccessLevel: number };
+
+export async function getVisibilityScope(therapistId: string): Promise<VisibilityScope> {
   const registers = await getTherapistData(therapistId);
 
   if (!registers.length) {
@@ -17,22 +22,29 @@ export async function getVisibleTherapistIds(therapistId: string): Promise<strin
 
   // --- Normaliza e identifica o maior nível de acesso ---
   const cargos = registers
-    .map(r =>
+    .map((r) =>
       r.cargo?.nome
         ?.toLowerCase()
-        .normalize('NFD')
-        .replace(/\p{Diacritic}/gu, '')
+        .normalize("NFD")
+        .replace(/\p{Diacritic}/gu, ""),
     )
-    .filter(Boolean);
+    .filter(Boolean) as string[];
 
-  const maxLevel = Math.max(...cargos.map(c => ACCESS_LEVELS[c!] ?? 0));
-  const ability = defineAbilityFor(cargos[0]!);
+  const levels = cargos.map((c) => ACCESS_LEVELS[c] ?? 0);
+  const maxLevel = levels.length > 0 ? Math.max(...levels) : 0;
+  const abilityRole = cargos[0] ?? "";
+  const ability = defineAbilityFor(abilityRole);
 
   // --- Sem permissão CASL ---
-  if (!ability.can('read', 'Consultar')) return [];
+  if (!ability.can("read", "Consultar")) {
+    return { scope: "none", therapistIds: [], maxAccessLevel: maxLevel };
+  }
 
   // --- Nível administrativo total ---
-  if (maxLevel >= 5)  return [];
+  if (maxLevel >= 5) {
+    // Retornamos null para sinalizar acesso total e diferenciar de `scope: "none"`.
+    return { scope: "all", therapistIds: null, maxAccessLevel: maxLevel };
+  }
 
   // --- Nível intermediário (coordenação/supervisão) ---
   // Uma única query para cada nível hierárquico
@@ -41,7 +53,7 @@ export async function getVisibleTherapistIds(therapistId: string): Promise<strin
     select: { clinico_id: true },
   });
 
-  const firstIds = firstLevel.map(v => v.clinico_id);
+  const firstIds = firstLevel.map((v) => v.clinico_id);
 
   let secondIds: string[] = [];
   if (maxLevel === 4 && firstIds.length > 0) {
@@ -49,14 +61,26 @@ export async function getVisibleTherapistIds(therapistId: string): Promise<strin
       where: { supervisor_id: { in: firstIds } },
       select: { clinico_id: true },
     });
-    secondIds = secondLevel.map(v => v.clinico_id);
+    secondIds = secondLevel.map((v) => v.clinico_id);
   }
 
   // --- Junta todos os IDs ---
   const allIds = new Set<string>([therapistId, ...firstIds, ...secondIds]);
 
   // --- Níveis clínico/AT: só ele mesmo ---
-  if (maxLevel <= 2) return [therapistId];
+  if (maxLevel <= 2) {
+    return { scope: "partial", therapistIds: [therapistId], maxAccessLevel: maxLevel };
+  }
 
-  return Array.from(allIds);
+  return {
+    scope: "partial",
+    therapistIds: Array.from(allIds),
+    maxAccessLevel: maxLevel,
+  };
+}
+
+// Mantido por compatibilidade. Para novos usos prefira `getVisibilityScope`.
+export async function getVisibleTherapistIds(therapistId: string): Promise<string[]> {
+  const visibility = await getVisibilityScope(therapistId);
+  return visibility.scope === "partial" ? visibility.therapistIds : [];
 }
