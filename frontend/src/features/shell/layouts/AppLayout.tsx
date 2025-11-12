@@ -86,7 +86,7 @@ export default function AppLayout() {
                         <div 
                             className="flex h-screen w-full overflow-hidden"
                             style={{ 
-                                background: 'radial-gradient(circle at 0% 50%, #C9D8EF 0%, #E9E4F0 100%)' 
+                                background: 'var(--blue-moon-gradient)' 
                             }}
                         >
                             <AppSidebar />
@@ -103,7 +103,14 @@ export default function AppLayout() {
                                                 <SidebarTrigger className="text-black hover:bg-transparent hover:text-black" />
                                             </div>
                                             {pageTitle && (
-                                                <h1 className="text-2xl font-medium text-primary" style={{ fontFamily: 'Sora, sans-serif' }}>
+                                                <h1 
+                                                    className="text-primary" 
+                                                    style={{ 
+                                                        fontSize: 'var(--page-title-font-size)',
+                                                        fontWeight: 'var(--page-title-font-weight)',
+                                                        fontFamily: 'var(--page-title-font-family)'
+                                                    }}
+                                                >
                                                     {pageTitle}
                                                 </h1>
                                             )}

@@ -1,32 +1,26 @@
-import { Save, Copy, X } from 'lucide-react';
+import { Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface SaveBarProps {
     onSave: () => void;
-    onSaveAsVersion: () => void;
     onCancel: () => void;
     isLoading?: boolean;
     isSaving?: boolean;
-    isCreatingVersion?: boolean;
     hasChanges?: boolean;
 }
 
 // Componente reutilizável para os botões de salvamento
 function SaveButtons({
     onSave,
-    onSaveAsVersion,
     onCancel,
     disabled,
     isSaving,
-    isCreatingVersion,
     hasChanges,
 }: {
     onSave: () => void;
-    onSaveAsVersion: () => void;
     onCancel: () => void;
     disabled: boolean;
     isSaving: boolean;
-    isCreatingVersion: boolean;
     hasChanges: boolean;
 }) {
     return (
@@ -49,22 +43,6 @@ function SaveButtons({
                             <Save className="h-4 w-4 mr-2" />
                             Salvar alterações
                         </>
-                    )}
-                </Button>
-
-                {/* Botão secundário - Nova versão */}
-                <Button
-                    onClick={onSaveAsVersion}
-                    disabled={disabled}
-                    variant="outline"
-                    className="h-12 text-sm font-medium px-3"
-                    size="lg"
-                    title="Salvar como nova versão"
-                >
-                    {isCreatingVersion ? (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
-                    ) : (
-                        <Copy className="h-4 w-4" />
                     )}
                 </Button>
             </div>
@@ -98,14 +76,12 @@ function SaveButtons({
 
 export default function SaveBar({
     onSave,
-    onSaveAsVersion,
     onCancel,
     isLoading = false,
     isSaving = false,
-    isCreatingVersion = false,
     hasChanges = false,
 }: SaveBarProps) {
-    const disabled = isLoading || isSaving || isCreatingVersion;
+    const disabled = isLoading || isSaving;
 
     return (
         <>
@@ -114,11 +90,9 @@ export default function SaveBar({
                 <div className="max-w-lg mx-auto p-4">
                     <SaveButtons
                         onSave={onSave}
-                        onSaveAsVersion={onSaveAsVersion}
                         onCancel={onCancel}
                         disabled={disabled}
                         isSaving={isSaving}
-                        isCreatingVersion={isCreatingVersion}
                         hasChanges={hasChanges}
                     />
                 </div>
@@ -129,11 +103,9 @@ export default function SaveBar({
                 <div className="max-w-screen-xl mx-auto px-6 py-4">
                     <SaveButtons
                         onSave={onSave}
-                        onSaveAsVersion={onSaveAsVersion}
                         onCancel={onCancel}
                         disabled={disabled}
                         isSaving={isSaving}
-                        isCreatingVersion={isCreatingVersion}
                         hasChanges={hasChanges}
                     />
                 </div>

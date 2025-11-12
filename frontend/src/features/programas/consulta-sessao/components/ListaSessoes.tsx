@@ -7,9 +7,10 @@
     AlertCircle,
     Info,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitleHub } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { Sessao } from '../types';
 import { resumirSessao } from '../services';
@@ -81,13 +82,17 @@ export default function ListaSessoes({ sessoes, onVerDetalhes }: ListaSessoesPro
 
     if (sessoes.length === 0) {
         return (
-            <Card className="rounded-[5px]">
-                <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
-                    <CardTitle className="text-base flex items-center gap-2">
-                        <Calendar className="h-4 w-4" /> Sessões
-                    </CardTitle>
+            <Card 
+                padding="hub"
+                className="rounded-lg border-0 shadow-none"
+                style={{ backgroundColor: 'var(--hub-card-background)' }}
+            >
+                <CardHeader>
+                    <CardTitleHub className="text-base flex items-center gap-2">
+                        <Calendar className="h-4 w-4" /> Sessões recentes
+                    </CardTitleHub>
                 </CardHeader>
-                <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+                <CardContent>
                     <div className="text-center py-6 text-sm text-muted-foreground">
                         Nenhuma sessão encontrada.
                     </div>
@@ -97,97 +102,105 @@ export default function ListaSessoes({ sessoes, onVerDetalhes }: ListaSessoesPro
     }
 
     return (
-        <Card className="rounded-[5px] px-6 py-2 md:px-8 md:py-4 lg:px-6 lg:py-0">
-            <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
-                <div className="flex items-center justify-between">
-                    <CardTitle className="text-base flex items-center gap-2">
-                        <Calendar className="h-4 w-4" /> Sessões recentes
-                    </CardTitle>
-                </div>
-            </CardHeader>
-            <CardContent className="pb-3 sm:pb-6">
-                <TooltipProvider>
-                    <div className="space-y-3">
-                        {sessoes.map((sessao) => {
-                            const resumo = resumirSessao(sessao);
-                            const statusKind = calcStatus(resumo.independencia, resumo.tentativas);
-                            const statusConfig = getStatusConfig(statusKind);
-                            const StatusIcon = statusConfig.icon;
-                            const independenciaFormatada = Math.round(resumo.independencia);
+        <div className="grid gap-4 sm:gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2">
+            <TooltipProvider>
+                {sessoes.map((sessao) => {
+                    const resumo = resumirSessao(sessao);
+                    const statusKind = calcStatus(resumo.independencia, resumo.tentativas);
+                    const statusConfig = getStatusConfig(statusKind);
+                    const StatusIcon = statusConfig.icon;
+                    const independenciaFormatada = Math.round(resumo.independencia);
 
-                            return (
-                                <div
-                                    key={sessao.id}
-                                    className="flex items-center justify-between p-4 border border-border rounded-md hover:bg-muted/50 transition-colors"
-                                >
-                                    <div className="flex-1 space-y-2">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-sm font-medium">
-                                                {formatDate(sessao.data)}
-                                            </span>
-                                            <span className="text-xs text-muted-foreground">
-                                                {formatPercentage(resumo.acerto)} acerto
-                                            </span>
-                                        </div>
-                                        <div className="text-sm">
-                                            <span className="font-medium text-muted-foreground">
-                                                Programa:{' '}
-                                            </span>
-                                            <span className="font-semibold text-foreground">
-                                                {sessao.programa}
-                                            </span>
-                                        </div>
-                                        <div className="text-sm">
-                                            <span className="font-medium text-muted-foreground">
-                                                Objetivo:{' '}
-                                            </span>
-                                            <span className="text-muted-foreground">
-                                                {sessao.objetivo}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center gap-3 flex-wrap">
-                                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                                <User className="h-3.5 w-3.5" />
-                                                <span>{sessao.terapeutaNome}</span>
-                                            </div>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <Badge
-                                                        variant="outline"
-                                                        className={`gap-1 px-2 py-1 rounded-[5px] ${statusConfig.cls}`}
-                                                    >
-                                                        <StatusIcon className="h-3.5 w-3.5" />
-                                                        <span className="text-xs whitespace-nowrap">
-                                                            {statusKind === 'insuficiente'
-                                                                ? statusConfig.label
-                                                                : `${statusConfig.label} - ${independenciaFormatada}%`}
-                                                        </span>
-                                                    </Badge>
-                                                </TooltipTrigger>
-                                                <TooltipContent className="max-w-[220px] text-xs">
-                                                    Percentual de respostas independentes nesta
-                                                    sessão. Cálculo: INDEP / TOTAL.
-                                                    {statusKind !== 'insuficiente' &&
-                                                        ` (${independenciaFormatada}% de ${resumo.tentativas} tentativas)`}
-                                                </TooltipContent>
-                                            </Tooltip>
-                                        </div>
+                    return (
+                        <Card
+                            key={sessao.id}
+                            padding="hub"
+                            className="cursor-pointer hover:shadow-md transition-shadow rounded-lg border-0 shadow-none"
+                            style={{ backgroundColor: 'var(--hub-card-background)' }}
+                            onClick={() => onVerDetalhes(sessao.id)}
+                            aria-label={`Ver detalhes da sessão de ${formatDate(sessao.data)}`}
+                        >
+                            <CardHeader className="space-y-3 pb-3">
+                                <div className="flex justify-between items-start gap-3">
+                                    <div className="flex-1 min-w-0">
+                                        <CardTitleHub className="text-base mb-1">
+                                            {formatDate(sessao.data)}
+                                        </CardTitleHub>
+                                        <p className="text-sm text-muted-foreground">
+                                            {formatPercentage(resumo.acerto)} acerto
+                                        </p>
                                     </div>
                                     <Button
                                         variant="ghost"
                                         size="sm"
-                                        className="h-8 w-8 p-0 ml-3 shrink-0"
-                                        onClick={() => onVerDetalhes(sessao.id)}
-                                        aria-label="Ver sessão"
+                                        className="h-8 w-8 p-0 flex-shrink-0"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onVerDetalhes(sessao.id);
+                                        }}
+                                        aria-label="Ver detalhes"
                                     >
                                         <Eye className="h-4 w-4" />
                                     </Button>
                                 </div>
-                            );
-                        })}
-                    </div>
-                </TooltipProvider>
-            </CardContent>
-        </Card>
+                            </CardHeader>
+
+                            <CardContent className="space-y-3 pt-0">
+                                {/* Programa */}
+                                <div className="space-y-1">
+                                    <p className="text-xs font-medium text-muted-foreground">
+                                        Programa:
+                                    </p>
+                                    <p className="text-sm font-semibold text-foreground line-clamp-1">
+                                        {sessao.programa}
+                                    </p>
+                                </div>
+
+                                {/* Objetivo */}
+                                <div className="space-y-1">
+                                    <p className="text-xs font-medium text-muted-foreground">
+                                        Objetivo:
+                                    </p>
+                                    <p className="text-xs text-muted-foreground line-clamp-2">
+                                        {sessao.objetivo}
+                                    </p>
+                                </div>
+
+                                <Separator className="my-3" />
+
+                                {/* Footer com terapeuta e status */}
+                                <div className="flex items-center justify-between text-xs">
+                                    <div className="flex items-center gap-1.5 text-muted-foreground">
+                                        <User className="h-3.5 w-3.5" />
+                                        <span className="line-clamp-1">{sessao.terapeutaNome}</span>
+                                    </div>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Badge
+                                                variant="outline"
+                                                className={`gap-1 px-2 py-1 rounded-[5px] ${statusConfig.cls}`}
+                                            >
+                                                <StatusIcon className="h-3.5 w-3.5" />
+                                                <span className="text-xs whitespace-nowrap">
+                                                    {statusKind === 'insuficiente'
+                                                        ? statusConfig.label
+                                                        : `${statusConfig.label} - ${independenciaFormatada}%`}
+                                                </span>
+                                            </Badge>
+                                        </TooltipTrigger>
+                                        <TooltipContent className="max-w-[220px] text-xs">
+                                            Percentual de respostas independentes nesta
+                                            sessão. Cálculo: INDEP / TOTAL.
+                                            {statusKind !== 'insuficiente' &&
+                                                ` (${independenciaFormatada}% de ${resumo.tentativas} tentativas)`}
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    );
+                })}
+            </TooltipProvider>
+        </div>
     );
 }

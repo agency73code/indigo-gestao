@@ -15,7 +15,7 @@ export default function StatusToggle({ status, onStatusChange }: StatusTogglePro
     };
 
     return (
-        <Card padding="small" className="rounded-[5px] mb-36 lg:mb-2">
+        <Card padding="small" className="rounded-[5px] mb-16 lg:mb-2">
             <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                 <CardTitle className="text-base flex items-center gap-2">
                     {isActive ? (

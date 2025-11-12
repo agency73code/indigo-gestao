@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import type { ReactNode } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitleHub } from '@/components/ui/card';
 import {
     ChartContainer,
     ChartTooltip,
@@ -53,9 +53,13 @@ export default function PerformanceChart({
 }: PerformanceChartProps) {
     if (loading) {
         return (
-            <Card className="rounded-lg">
+            <Card 
+                padding="hub" 
+                className="rounded-lg border-0 shadow-none"
+                style={{ backgroundColor: 'var(--hub-card-background)' }}
+            >
                 <CardHeader>
-                    <CardTitle>Evolução do Desempenho</CardTitle>
+                    <CardTitleHub>Evolução do Desempenho</CardTitleHub>
                 </CardHeader>
                 <CardContent>
                     <div className="h-[300px] w-full bg-muted animate-pulse rounded" />
@@ -89,12 +93,14 @@ export default function PerformanceChart({
 
     return (
         <Card
-            className={`px-6 py-6 md:px-8 md:py-10 lg:px-8 lg:py-8 mx-0 rounded-lg ${className ?? ''}`}
+            padding="hub"
+            className={`rounded-lg border-0 shadow-none ${className ?? ''}`}
+            style={{ backgroundColor: 'var(--hub-card-background)' }}
         >
             <CardHeader>
                 <div className="mb-2 flex items-center gap-2">
-                    <CardTitle>{chartTitle}</CardTitle>
-                    <span className="rounded-full border px-2 py-0.5 text-xs text-muted-foreground">
+                    <CardTitleHub>{chartTitle}</CardTitleHub>
+                    <span className="rounded-full border border-border/40 dark:border-white/15 px-2 py-0.5 text-xs text-muted-foreground">
                         {chartMetaLabel}
                     </span>
                 </div>

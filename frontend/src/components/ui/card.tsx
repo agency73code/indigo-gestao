@@ -59,8 +59,12 @@ const CardTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h3
     ref={ref}
-    style={{ fontFamily: "Sora, sans-serif" }}
-    className={cn("font-semibold leading-none tracking-tight text-primary", className)}
+    style={{ 
+      fontFamily: "var(--card-title-font-family)",
+      fontWeight: "var(--card-title-font-weight)",
+      fontSize: "var(--card-title-font-size)"
+    }}
+    className={cn("leading-none tracking-tight text-primary", className)}
     {...props}
   />
 ));

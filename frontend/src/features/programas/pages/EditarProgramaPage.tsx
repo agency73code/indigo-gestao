@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Save, Copy, X } from 'lucide-react';
+import { Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ActionBar from '@/components/ui/action-bar';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
@@ -16,7 +16,7 @@ import {
     StatusToggle,
     ValidationErrors,
 } from '../editar-ocp';
-import { fetchProgramById, updateProgram, createProgramVersion } from '../editar-ocp/services';
+import { fetchProgramById, updateProgram } from '../editar-ocp/services';
 import type {
     ProgramDetail,
     UpdateProgramInput,
@@ -54,7 +54,6 @@ export default function EditarProgramaPage() {
     const [validationErrors, setValidationErrors] = useState<ValidationErrorsType>({});
     const [hasChanges, setHasChanges] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
-    const [isCreatingVersion, setIsCreatingVersion] = useState(false);
 
     const loadProgram = async () => {
         if (!programaId) {
@@ -190,56 +189,6 @@ export default function EditarProgramaPage() {
         }
     };
 
-    const handleSaveAsVersion = async () => {
-        const errors = validateForm();
-        setValidationErrors(errors);
-
-        if (Object.keys(errors).length > 0) {
-            toast.error('Preencha todos os campos obrigatórios');
-            return;
-        }
-
-        if (!programaId) return;
-
-        try {
-            setIsCreatingVersion(true);
-
-            const updateData: UpdateProgramInput = {
-                id: programaId,
-                name: program?.name,
-                goalTitle,
-                goalDescription: goalDescription || null,
-                shortTermGoalDescription: shortTermGoalDescription || null,
-                stimuliApplicationDescription: stimuliApplicationDescription || null,
-                stimuli,
-                criteria: criteria || null,
-                notes: notes || null,
-                status,
-                prazoInicio: prazoInicio || undefined,
-                prazoFim: prazoFim || undefined,
-            };
-
-            const { id: newProgramId } = await createProgramVersion(updateData);
-
-            toast.success('Nova versão do programa criada com sucesso!');
-
-            // Navegar para o detalhe da nova versão
-            const detailUrl = patientId
-                ? `/app/programas/${newProgramId}?patientId=${patientId}`
-                : `/app/programas/${newProgramId}`;
-            navigate(detailUrl);
-        } catch (err) {
-            console.error('Erro ao criar nova versão:', err);
-            const errorMessage = err instanceof Error ? err.message : 'Erro ao criar nova versão';
-            toast.error(errorMessage);
-            setValidationErrors({
-                general: errorMessage,
-            });
-        } finally {
-            setIsCreatingVersion(false);
-        }
-    };
-
     const handleCancel = () => {
         if (!program) return;
 
@@ -335,7 +284,7 @@ export default function EditarProgramaPage() {
     }
 
     return (
-        <div className="min-h-screen bg-background pb-32">
+        <div className="min-h-screen bg-background pb-4">
             <div className="max-w-lg md:max-w-none p-0 lg:p-4 space-y-6">
                 {/* Header com informações read-only */}
                 <HeaderInfo program={program} />
@@ -346,7 +295,6 @@ export default function EditarProgramaPage() {
                     prazoFim={prazoFim}
                     onPrazoInicioChange={setPrazoInicio}
                     onPrazoFimChange={setPrazoFim}
-                    hasChanges={hasChanges}
                 />
 
                 {/* Erros de validação */}
@@ -390,7 +338,7 @@ export default function EditarProgramaPage() {
             <ActionBar>
                 <Button
                     onClick={handleSave}
-                    disabled={isSaving || isCreatingVersion || !hasChanges}
+                    disabled={isSaving || !hasChanges}
                     className="h-11 rounded-full gap-2"
                 >
                     {isSaving ? (
@@ -407,25 +355,8 @@ export default function EditarProgramaPage() {
                 </Button>
 
                 <Button
-                    onClick={handleSaveAsVersion}
-                    disabled={isSaving || isCreatingVersion}
-                    variant="outline"
-                    className="h-11 rounded-full gap-2"
-                    title="Salvar como nova versão"
-                >
-                    {isCreatingVersion ? (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
-                    ) : (
-                        <>
-                            <Copy className="h-4 w-4" />
-                            Nova versão
-                        </>
-                    )}
-                </Button>
-
-                <Button
                     onClick={handleCancel}
-                    disabled={isSaving || isCreatingVersion}
+                    disabled={isSaving}
                     variant="ghost"
                     className="h-11 rounded-full gap-2"
                 >

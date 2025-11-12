@@ -254,11 +254,12 @@ export default function StimulusBlockPanel({
                                 <TooltipTrigger asChild>
                                     <div className="relative">
                                         <Button
-                                            className={`h-20 w-full rounded-[5px] justify-start px-4 bg-muted hover:bg-muted/70 border-border transition-all select-none touch-none ${
+                                            className={`h-20 w-full rounded-lg justify-start px-4 border border-border/40 dark:border-white/15 transition-all select-none touch-none ${
                                                 gesture.isLongPressing
                                                     ? 'scale-95 ring-2 ring-blue-500'
                                                     : ''
                                             }`}
+                                            style={{ backgroundColor: 'var(--hub-card-background)' }}
                                             variant="outline"
                                             disabled={paused}
                                             {...gesture.handlers}

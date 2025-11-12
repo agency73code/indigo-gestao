@@ -1,10 +1,8 @@
-import { ArrowLeft, Calendar, User, UserCheck } from 'lucide-react';
+import { Calendar, User, UserCheck } from 'lucide-react';
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useNavigate } from 'react-router-dom';
 import type { ProgramDetail } from '../types';
 
 interface HeaderInfoProps {
@@ -12,7 +10,6 @@ interface HeaderInfoProps {
 }
 
 export default function HeaderInfo({ program }: HeaderInfoProps) {
-    const navigate = useNavigate();
     const [imageLoading, setImageLoading] = useState(true);
     const [therapistImageLoading, setTherapistImageLoading] = useState(true);
 
@@ -33,30 +30,8 @@ export default function HeaderInfo({ program }: HeaderInfoProps) {
         }
     };
 
-    const handleGoBack = () => {
-        navigate(`/app/programas/${program.id}`);
-    };
-
     return (
         <div className="space-y-4 ">
-            {/* Header com botão voltar */}
-            <Card padding="small" className="rounded-[5px]">
-                <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
-                    <div className="flex items-center gap-2 mb-2">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={handleGoBack}
-                            className="h-8 w-8 p-0"
-                            aria-label="Voltar"
-                        >
-                            <ArrowLeft className="h-4 w-4" />
-                        </Button>
-                        <CardTitle className="text-base">Editar Programa</CardTitle>
-                    </div>
-                </CardHeader>
-            </Card>
-
             {/* Informações do Cliente */}
             <Card padding="small" className="rounded-[5px]">
                 <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">

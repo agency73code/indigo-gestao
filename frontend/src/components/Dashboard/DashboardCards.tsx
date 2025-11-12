@@ -115,7 +115,10 @@ export function DashboardCards({ overview }: DashboardCardsProps) {
                                 </Tooltip>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                <p className="text-3xl font-semibold tracking-tight text-foreground">
+                                <p 
+                                    className="text-3xl tracking-tight text-foreground"
+                                    style={{ fontWeight: 'var(--dashboard-number-font-weight)' }}
+                                >
                                     {formattedValue}
                                 </p>
                                 <a

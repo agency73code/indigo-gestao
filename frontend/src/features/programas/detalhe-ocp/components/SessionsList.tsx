@@ -8,7 +8,7 @@ import {
     Info,
     MinusCircle,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitleHub } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -167,19 +167,23 @@ export default function SessionsList({ sessions, program }: SessionsListProps) {
 
     if (sessions.length === 0) {
         return (
-            <Card className="rounded-lg">
-                <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
-                    <CardTitle className="text-base flex items-center gap-2">
+            <Card 
+                padding="hub" 
+                className="rounded-lg border-0 shadow-none"
+                style={{ backgroundColor: 'var(--hub-card-background)' }}
+            >
+                <CardHeader className="pb-3">
+                    <CardTitleHub className="text-base flex items-center gap-2">
                         <Calendar className="h-4 w-4" />
                         Sessoes
-                    </CardTitle>
+                    </CardTitleHub>
                 </CardHeader>
-                <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+                <CardContent>
                     <div className="text-center py-6">
                         <p className="text-sm text-muted-foreground mb-4">
                             Nenhuma sessao registrada ainda.
                         </p>
-                        <Button onClick={handleNewSession} size="sm" className="h-9">
+                        <Button onClick={handleNewSession} size="sm" className="h-9 rounded-full">
                             Registrar primeira sessao
                         </Button>
                     </div>
@@ -189,38 +193,44 @@ export default function SessionsList({ sessions, program }: SessionsListProps) {
     }
 
     return (
-        <Card className="rounded-lg px-6 py-0 md:px-8 md:py-10 lg:px-8 lg:py-2" data-print-block>
-            <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
+        <Card 
+            padding="hub" 
+            className="rounded-lg border-0 shadow-none" 
+            style={{ backgroundColor: 'var(--hub-card-background)' }}
+            data-print-block
+        >
+            <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                    <CardTitle className="text-base flex items-center gap-2">
+                    <CardTitleHub className="text-base flex items-center gap-2">
                         <Calendar className="h-4 w-4" />
                         Sessoes recentes
-                    </CardTitle>
+                    </CardTitleHub>
                     <Button
                         variant="outline"
                         size="sm"
-                        className="text-xs no-print"
+                        className="text-xs no-print rounded-full"
                         onClick={handleSeeAll}
                     >
                         Ver todas
                     </Button>
                 </div>
             </CardHeader>
-            <CardContent className="pb-3 sm:pb-6">
-                <div className="space-y-3">
+            <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {sessionsWithSummaries.map(({ session, counts, status }) => {
                         return (
                             <div
                                 key={session.id}
-                                className="flex items-center justify-between p-3 border border-border rounded-md hover:bg-muted/50 transition-colors"
+                                className="border border-border/40 dark:border-white/15 rounded-lg hover:bg-muted/30 dark:hover:bg-white/5 transition-colors overflow-hidden"
+                                style={{ backgroundColor: 'var(--hub-nested-card-background)' }}
                                 data-testid={`sess-rec-row-${session.id}`}
                             >
-                                <div className="flex-1 space-y-2">
+                                <div className="p-4 space-y-2 border-b border-border/40 dark:border-white/15">
                                     <div className="flex items-center justify-between">
                                         <span className="text-sm font-medium">
                                             {formatDate(session.date)}
                                         </span>
-                                        <Badge variant="outline" className="font-semibold">
+                                        <Badge variant="outline" className="font-semibold border-border/40 dark:border-white/15">
                                             {formatPercentage(session.overallScore)} acerto
                                         </Badge>
                                     </div>
@@ -229,23 +239,25 @@ export default function SessionsList({ sessions, program }: SessionsListProps) {
                                         <User className="h-3 w-3" />
                                         {session.therapistName}
                                     </div>
+                                </div>
 
+                                <div className="p-4 flex items-center justify-between">
                                     <StatusBadge
                                         summary={{ ...status, counts }}
                                         testId={`sess-rec-indep-status-${session.id}`}
                                         tooltipId={`sess-rec-indep-tip-${session.id}`}
                                     />
-                                </div>
 
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-8 w-8 p-0 ml-3"
-                                    onClick={() => handleViewSession(session)}
-                                    aria-label="Ver sessao"
-                                >
-                                    <Eye className="h-4 w-4" />
-                                </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-9 w-9 p-0 flex-shrink-0 border-border/40 dark:border-white/15"
+                                        onClick={() => handleViewSession(session)}
+                                        aria-label="Ver sessao"
+                                    >
+                                        <Eye className="h-4 w-4" />
+                                    </Button>
+                                </div>
                             </div>
                         );
                     })}

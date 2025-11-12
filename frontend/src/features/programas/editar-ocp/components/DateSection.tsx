@@ -8,7 +8,6 @@ interface DateSectionProps {
     prazoFim?: string | null;
     onPrazoInicioChange: (date: string) => void;
     onPrazoFimChange: (date: string) => void;
-    hasChanges?: boolean;
 }
 
 export default function DateSection({
@@ -16,7 +15,6 @@ export default function DateSection({
     prazoFim,
     onPrazoInicioChange,
     onPrazoFimChange,
-    hasChanges = false,
 }: DateSectionProps) {
     const formatDateToISO = (date: string) => {
         if (!date) return '';
@@ -36,11 +34,6 @@ export default function DateSection({
                 <CardTitle className="text-base flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
                     Prazo do Programa
-                    {hasChanges && (
-                        <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
-                            Alterado
-                        </span>
-                    )}
                 </CardTitle>
             </CardHeader>
             <CardContent className="pb-3 sm:pb-6 space-y-4">

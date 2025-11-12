@@ -37,12 +37,13 @@ export default function StimulusRow({
     const shouldShowDescription =
         stimulusDescription.length > 0 && stimulusDescription !== applicationDescription;
 
-    const containerClassName = `border border-border rounded-md p-3 ${muted ? 'opacity-70' : ''}`;
-
     const toggle = () => setIsOpen((prev) => !prev);
 
     return (
-        <div className={containerClassName}>
+        <div 
+            className={`border border-border/40 dark:border-white/15 rounded-lg p-4 ${muted ? 'opacity-70' : ''}`}
+            style={{ backgroundColor: 'var(--hub-nested-card-background)' }}
+        >
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3">
                 <div className="flex items-center gap-3">
                     <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
@@ -75,7 +76,7 @@ export default function StimulusRow({
                 </div>
             </div>
 
-            {isOpen && <Separator className="mt-3 -mx-3" />}
+            {isOpen && <Separator className="mt-3 -mx-4 dark:bg-white/15" />}
 
             <StimulusEvolutionInline
                 programId={programId}

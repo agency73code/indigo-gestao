@@ -61,7 +61,20 @@
     --hub-card-title-font-family: 'Sora', sans-serif;
     --hub-card-title-font-weight: 500;
     --hub-card-title-color: rgba(0, 0, 0, 0.87);
-    --hub-card-background: #FAFAFA;
+    --hub-card-background: #F2F2F2;
+    --hub-nested-card-background: #FFFFFF;
+    
+    /* Title variables - centralized for all titles */
+    --page-title-font-size: 1.5rem;
+    --page-title-font-weight: 400;
+    --page-title-font-family: 'Sora', sans-serif;
+    
+    --card-title-font-size: 1rem;
+    --card-title-font-weight: 500;
+    --card-title-font-family: 'Sora', sans-serif;
+    
+    /* Dashboard card numbers */
+    --dashboard-number-font-weight: 400;
 }
 
 body {
@@ -85,7 +98,7 @@ body {
     --accent: oklch(0.274 0.006 286.033);
     --accent-foreground: oklch(0.985 0 0);
     --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(0.25 0.002 286 / 5%);
+    --border: oklch(1 0 0 / 15%);
     --input: oklch(1 0 0 / 15%);
     --ring: oklch(0.488 0.243 264.376);
     --chart-1: oklch(0.488 0.243 264.376);
@@ -101,14 +114,15 @@ body {
     --sidebar-accent-foreground: oklch(0.985 0 0);
     --sidebar-border: oklch(1 0 0 / 10%);
     --sidebar-ring: oklch(0.488 0.243 264.376);
-    --blue-moon-gradient: radial-gradient(circle at 0% 50%, #5A7EDA 0%, #51FDD4 100%);
-    --blue-moon-gradient-start: #5A7EDA;
-    --blue-moon-gradient-end: #51FDD4;
-    --container-background: rgba(33, 33, 33, 0.8);
+    --blue-moon-gradient: radial-gradient(circle at 0% 50%, #000000 0%, #0a0a0a 100%);
+    --blue-moon-gradient-start: #000000;
+    --blue-moon-gradient-end: #0a0a0a;
+    --container-background: rgba(10, 10, 10, 0.8);
     --hub-card-title-font-family: 'Sora', sans-serif;
     --hub-card-title-font-weight: 500;
     --hub-card-title-color: hsl(220, 9%, 70%);
     --hub-card-background: #212125;
+    --hub-nested-card-background: #2a2a2e;
 }
 
 @theme inline {

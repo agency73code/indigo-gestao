@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitleHub } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { TrendingUp, CircleHelp } from 'lucide-react';
@@ -24,10 +24,14 @@ export default function SessionSummary({ counts, planned, worked, status }: Sess
             {/* Grid de três cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Card 1: Tentativas */}
-                <Card className="rounded-[5px]">
+                <Card 
+                    padding="hub"
+                    className="rounded-lg border-0 shadow-none"
+                    style={{ backgroundColor: 'var(--hub-card-background)' }}
+                >
                     <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
-                            <CardTitle className="text-base font-semibold">Tentativas</CardTitle>
+                            <CardTitleHub className="text-base">Tentativas</CardTitleHub>
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
@@ -47,19 +51,27 @@ export default function SessionSummary({ counts, planned, worked, status }: Sess
                         </p>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-4xl font-bold mb-3" data-testid="sess-tentativas">
+                        <div 
+                            className="text-4xl tracking-tight mb-3" 
+                            style={{ fontWeight: 'var(--dashboard-number-font-weight)' }}
+                            data-testid="sess-tentativas"
+                        >
                             {totalTentativas}
                         </div>
                     </CardContent>
                 </Card>
 
                 {/* Card 2: Estímulos trabalhados */}
-                <Card className="rounded-[5px]">
+                <Card 
+                    padding="hub"
+                    className="rounded-lg border-0 shadow-none"
+                    style={{ backgroundColor: 'var(--hub-card-background)' }}
+                >
                     <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
-                            <CardTitle className="text-base font-semibold">
+                            <CardTitleHub className="text-base">
                                 Estímulos trabalhados
-                            </CardTitle>
+                            </CardTitleHub>
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
@@ -81,17 +93,25 @@ export default function SessionSummary({ counts, planned, worked, status }: Sess
                         </p>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-4xl font-bold mb-3" data-testid="sess-estimulos">
+                        <div 
+                            className="text-4xl tracking-tight mb-3" 
+                            style={{ fontWeight: 'var(--dashboard-number-font-weight)' }}
+                            data-testid="sess-estimulos"
+                        >
                             {planned ? `${worked}/${planned}` : worked}
                         </div>
                     </CardContent>
                 </Card>
 
                 {/* Card 3: Status geral */}
-                <Card className="rounded-[5px]">
+                <Card 
+                    padding="hub"
+                    className="rounded-lg border-0 shadow-none"
+                    style={{ backgroundColor: 'var(--hub-card-background)' }}
+                >
                     <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
-                            <CardTitle className="text-base font-semibold">Status geral</CardTitle>
+                            <CardTitleHub className="text-base">Status geral</CardTitleHub>
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
