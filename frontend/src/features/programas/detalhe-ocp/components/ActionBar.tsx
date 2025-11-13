@@ -1,45 +1,14 @@
 import { Plus, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import ActionBar from '@/components/ui/action-bar';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { ProgramDetail } from '../types';
 
-interface ActionBarProps {
+interface ProgramActionBarProps {
     program: ProgramDetail;
 }
 
-// Componente reutilizável para os botões de ação
-function ActionButtons({
-    onRegisterSession,
-    onEditProgram,
-}: {
-    onRegisterSession: () => void;
-    onEditProgram: () => void;
-}) {
-    return (
-        <div className="flex gap-3 w-full max-w-sm">
-            <Button
-                onClick={onRegisterSession}
-                className="flex-1 h-12 text-sm font-medium"
-                size="lg"
-            >
-                <Plus className="h-4 w-4 mr-2" />
-                Registrar Sessão
-            </Button>
-
-            <Button
-                onClick={onEditProgram}
-                variant="outline"
-                className="flex-1 h-12 text-sm font-medium"
-                size="lg"
-            >
-                <Edit className="h-4 w-4 mr-2" />
-                Editar Programa
-            </Button>
-        </div>
-    );
-}
-
-export default function ActionBar({ program }: ActionBarProps) {
+export default function ProgramActionBar({ program }: ProgramActionBarProps) {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
 
@@ -65,26 +34,23 @@ export default function ActionBar({ program }: ActionBarProps) {
     };
 
     return (
-        <>
-            {/* Variante Mobile - fixa no rodapé */}
-            <div className="md:hidden fixed bottom-0 left-0 w-full z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75 border-t border-border py-3 no-print">
-                <div className="max-w-lg mx-auto p-4 flex justify-center">
-                    <ActionButtons
-                        onRegisterSession={handleRegisterSession}
-                        onEditProgram={handleEditProgram}
-                    />
-                </div>
-            </div>
+        <ActionBar>
+            <Button
+                onClick={handleRegisterSession}
+                className="h-11 rounded-full gap-2"
+            >
+                <Plus className="h-4 w-4" />
+                Registrar Sessão
+            </Button>
 
-            {/* Variante Desktop/Tablet - sticky dentro do container */}
-            <div className="hidden md:block sticky bottom-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75 border-t border-border no-print">
-                <div className="max-w-screen-xl mx-auto px-6 py-3 flex items-center justify-center">
-                    <ActionButtons
-                        onRegisterSession={handleRegisterSession}
-                        onEditProgram={handleEditProgram}
-                    />
-                </div>
-            </div>
-        </>
+            <Button
+                onClick={handleEditProgram}
+                variant="outline"
+                className="h-11 rounded-full gap-2"
+            >
+                <Edit className="h-4 w-4" />
+                Editar Programa
+            </Button>
+        </ActionBar>
     );
 }

@@ -2,7 +2,8 @@ import type {
   KpisRelatorio, 
   SerieLinha, 
   PrazoPrograma,
-  Sessao 
+  Sessao,
+  AttentionStimulusItem
 } from '../types';
 
 export const mockKpis: KpisRelatorio = {
@@ -49,3 +50,136 @@ export const mockSessoes: Sessao[] = [
     ]
   }
 ];
+
+export const mockAttentionStimuli: AttentionStimulusItem[] = [
+  {
+    id: 'est-12',
+    label: 'Identificar cores primárias',
+    counts: {
+      erro: 15,
+      ajuda: 8,
+      indep: 12
+    },
+    total: 35,
+    independence: 34.3,
+    status: 'atencao'
+  },
+  {
+    id: 'est-45',
+    label: 'Contar de 1 a 10',
+    counts: {
+      erro: 10,
+      ajuda: 12,
+      indep: 18
+    },
+    total: 40,
+    independence: 45.0,
+    status: 'atencao'
+  },
+  {
+    id: 'est-78',
+    label: 'Reconhecer formas geométricas',
+    counts: {
+      erro: 8,
+      ajuda: 10,
+      indep: 22
+    },
+    total: 40,
+    independence: 55.0,
+    status: 'atencao'
+  },
+  {
+    id: 'est-23',
+    label: 'Nomear animais domésticos',
+    counts: {
+      erro: 5,
+      ajuda: 7,
+      indep: 18
+    },
+    total: 30,
+    independence: 60.0,
+    status: 'atencao'
+  }
+];
+
+// Mocks específicos por janela de sessões
+export const mockAttentionStimuliByWindow = {
+  1: [ // Última 1 sessão - pior desempenho
+    {
+      id: 'est-12',
+      label: 'Identificar cores primárias',
+      counts: { erro: 5, ajuda: 3, indep: 2 },
+      total: 10,
+      independence: 20.0,
+      status: 'atencao' as const
+    },
+    {
+      id: 'est-45',
+      label: 'Contar de 1 a 10',
+      counts: { erro: 4, ajuda: 4, indep: 3 },
+      total: 11,
+      independence: 27.3,
+      status: 'atencao' as const
+    }
+  ],
+  3: [ // Últimas 3 sessões - desempenho médio
+    {
+      id: 'est-12',
+      label: 'Identificar cores primárias',
+      counts: { erro: 10, ajuda: 6, indep: 8 },
+      total: 24,
+      independence: 33.3,
+      status: 'atencao' as const
+    },
+    {
+      id: 'est-45',
+      label: 'Contar de 1 a 10',
+      counts: { erro: 7, ajuda: 8, indep: 12 },
+      total: 27,
+      independence: 44.4,
+      status: 'atencao' as const
+    },
+    {
+      id: 'est-78',
+      label: 'Reconhecer formas geométricas',
+      counts: { erro: 5, ajuda: 7, indep: 15 },
+      total: 27,
+      independence: 55.6,
+      status: 'atencao' as const
+    }
+  ],
+  5: [ // Últimas 5 sessões - dados completos
+    {
+      id: 'est-12',
+      label: 'Identificar cores primárias',
+      counts: { erro: 15, ajuda: 8, indep: 12 },
+      total: 35,
+      independence: 34.3,
+      status: 'atencao' as const
+    },
+    {
+      id: 'est-45',
+      label: 'Contar de 1 a 10',
+      counts: { erro: 10, ajuda: 12, indep: 18 },
+      total: 40,
+      independence: 45.0,
+      status: 'atencao' as const
+    },
+    {
+      id: 'est-78',
+      label: 'Reconhecer formas geométricas',
+      counts: { erro: 8, ajuda: 10, indep: 22 },
+      total: 40,
+      independence: 55.0,
+      status: 'atencao' as const
+    },
+    {
+      id: 'est-23',
+      label: 'Nomear animais domésticos',
+      counts: { erro: 5, ajuda: 7, indep: 18 },
+      total: 30,
+      independence: 60.0,
+      status: 'atencao' as const
+    }
+  ]
+};

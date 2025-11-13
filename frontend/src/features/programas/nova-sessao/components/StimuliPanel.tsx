@@ -168,19 +168,11 @@ export default function StimuliPanel({
 
         setPausedMap((prev) => ({ ...prev, [ativoId]: true }));
 
-        // Limpa as tentativas temporárias quando pausar (não finalizado)
-        setTempAttempts((prev) => {
-            const copia = { ...prev };
-            delete copia[ativoId];
-            return copia;
-        });
+        // NÃO limpa as tentativas temporárias quando pausar
+        // As informações devem ser mantidas para quando retomar
 
-        // Limpa os contadores também
-        setCountsMap((prev) => {
-            const copia = { ...prev };
-            delete copia[ativoId];
-            return copia;
-        });
+        // NÃO limpa os contadores também
+        // Mantém os contadores para quando retomar
 
         setAtivoId(null);
     };

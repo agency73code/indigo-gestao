@@ -1,6 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { Save, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import ActionBar from '@/components/ui/action-bar';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 import {
     PatientSelector,
@@ -12,7 +15,6 @@ import {
     AttemptsRegister,
     SessionSummary,
     SessionObservations,
-    SaveBar,
 } from '../components/index.ts';
 import {
     searchPatientsForSession,
@@ -35,33 +37,6 @@ export default function CadastroSessaoPage() {
         setPageTitle('Nova Sessão');
     }, [setPageTitle]);
 
-    const [showSaveBar, setShowSaveBar] = useState(false);
-
-    const handleSaveBarVisibility = useCallback(() => {
-        const scrollY = window.scrollY;
-        const windowHeight = window.innerHeight;
-        const docHeight = document.documentElement.scrollHeight;
-        const saveBarElement = document.getElementById('save-bar-container');
-        const saveBarHeight = saveBarElement?.offsetHeight ?? 0;
-
-        // Ajusta o calculo para desconsiderar a altura da SaveBar quando ela ja esta visivel
-        const threshold = docHeight - saveBarHeight - 80;
-        setShowSaveBar(scrollY + windowHeight >= threshold);
-    }, []);
-
-    useEffect(() => {
-        window.addEventListener('scroll', handleSaveBarVisibility);
-        window.addEventListener('resize', handleSaveBarVisibility);
-        handleSaveBarVisibility();
-        return () => {
-            window.removeEventListener('scroll', handleSaveBarVisibility);
-            window.removeEventListener('resize', handleSaveBarVisibility);
-        };
-    }, [handleSaveBarVisibility]);
-
-    useEffect(() => {
-        handleSaveBarVisibility();
-    }, [handleSaveBarVisibility, showSaveBar]);
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
 
@@ -279,19 +254,6 @@ export default function CadastroSessaoPage() {
         sessionState.attempts.length > 0
     );
 
-    const getValidationMessage = () => {
-        if (!selectedPatient) {
-            return 'Selecione um cliente';
-        }
-        if (!selectedProgram) {
-            return 'Selecione um programa / Objetivo';
-        }
-        if (sessionState.attempts.length === 0) {
-            return 'Registre ao menos 1 tentativa';
-        }
-        return '';
-    };
-
     return (
         <div className="flex flex-col w-full">
             {/* Container principal */}
@@ -368,17 +330,37 @@ export default function CadastroSessaoPage() {
                 </div>
             </main>
 
-            {/* Save Bar só aparece ao final da página */}
-            {selectedPatient && selectedProgram && showSaveBar && (
-                <div id="save-bar-container">
-                    <SaveBar
-                        onSave={handleSave}
-                        onCancel={handleCancel}
-                        isSaving={savingSession}
-                        canSave={canSave}
-                        validationMessage={getValidationMessage()}
-                    />
-                </div>
+            {/* Barra de ação fixa no rodapé */}
+            {selectedPatient && selectedProgram && (
+                <ActionBar>
+                    <Button
+                        onClick={handleSave}
+                        disabled={!canSave || savingSession}
+                        className="h-11 rounded-full gap-2"
+                    >
+                        {savingSession ? (
+                            <>
+                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                                Salvando sessão...
+                            </>
+                        ) : (
+                            <>
+                                <Save className="h-4 w-4" />
+                                Salvar Sessão
+                            </>
+                        )}
+                    </Button>
+
+                    <Button
+                        onClick={handleCancel}
+                        variant="outline"
+                        disabled={savingSession}
+                        className="h-11 rounded-full gap-2"
+                    >
+                        <X className="h-4 w-4" />
+                        Cancelar
+                    </Button>
+                </ActionBar>
             )}
         </div>
     );

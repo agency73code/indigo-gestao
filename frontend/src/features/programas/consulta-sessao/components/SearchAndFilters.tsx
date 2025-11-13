@@ -1,4 +1,5 @@
 import { Search, Filter, CalendarRange, Target, User } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -14,6 +15,7 @@ interface SearchAndFiltersProps extends SessaoFiltersState {
   programOptions: string[];
   therapistOptions: string[];
   onChange: (next: Partial<SessaoFiltersState>) => void;
+  renderButton?: ReactNode;
 }
 
 const DATE_RANGE_OPTIONS: Array<{ value: SessaoFiltersState['dateRange']; label: string }> = [
@@ -40,6 +42,7 @@ export default function SearchAndFilters({
   programOptions,
   therapistOptions,
   onChange,
+  renderButton,
 }: SearchAndFiltersProps) {
   // Função para exibir o label customizado no Select de Data
   const getDateRangeLabel = () => {
@@ -62,25 +65,25 @@ export default function SearchAndFilters({
           placeholder="Buscar por programa, objetivo ou profissional"
           value={q}
           onChange={(e) => onChange({ q: e.target.value })}
-          className="pl-10 h-12 rounded-[5px]"
+          className="pl-10 h-10 rounded-full"
           disabled={disabled}
         />
       </div>
 
-      {/* Linha 2: Filtros em Grid */}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        {/* Data - Select Dropdown */}
-        <div className="space-y-2">
-          <span className="text-xs font-medium text-muted-foreground flex items-center gap-2">
-            <CalendarRange className="h-4 w-4" /> Data
-          </span>
+      {/* Linha 2: Filtros à esquerda e Botão à direita */}
+      <div className="flex items-center gap-3">
+        <div className="flex gap-3 flex-wrap">
+          {/* Data - Select Dropdown */}
           <Select
             value={dateRange}
             onValueChange={(value) => onChange({ dateRange: value as SessaoFiltersState['dateRange'] })}
             disabled={disabled}
           >
-            <SelectTrigger className="w-full h-12 rounded-[5px]">
-              <span className="text-sm">{getDateRangeLabel()}</span>
+            <SelectTrigger className="h-10 rounded-full w-auto min-w-[120px]">
+              <div className="flex items-center gap-2">
+                <CalendarRange className="h-4 w-4" />
+                <span className="text-sm">{getDateRangeLabel()}</span>
+              </div>
             </SelectTrigger>
             <SelectContent>
               {DATE_RANGE_OPTIONS.map((option) => (
@@ -90,20 +93,18 @@ export default function SearchAndFilters({
               ))}
             </SelectContent>
           </Select>
-        </div>
 
-        {/* Programa - Select Dropdown */}
-        <div className="space-y-2">
-          <span className="text-xs font-medium text-muted-foreground flex items-center gap-2">
-            <Target className="h-4 w-4" /> Programa
-          </span>
+          {/* Programa - Select Dropdown */}
           <Select
             value={program}
             onValueChange={(value) => onChange({ program: value as SessaoFiltersState['program'] })}
             disabled={disabled || programOptions.length === 0}
           >
-            <SelectTrigger className="w-full h-12 rounded-[5px]">
-              <SelectValue placeholder="Todos os programas" />
+            <SelectTrigger className="h-10 rounded-full w-auto min-w-[180px]">
+              <div className="flex items-center gap-2">
+                <Target className="h-4 w-4" />
+                <SelectValue placeholder="Todos os programas" />
+              </div>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos os programas</SelectItem>
@@ -114,13 +115,8 @@ export default function SearchAndFilters({
               ))}
             </SelectContent>
           </Select>
-        </div>
 
-        {/* Profissional - Select Dropdown */}
-        <div className="space-y-2">
-          <span className="text-xs font-medium text-muted-foreground flex items-center gap-2">
-            <User className="h-4 w-4" /> Profissional
-          </span>
+          {/* Profissional - Select Dropdown */}
           <Select
             value={therapist}
             onValueChange={(value) =>
@@ -128,8 +124,11 @@ export default function SearchAndFilters({
             }
             disabled={disabled || therapistOptions.length === 0}
           >
-            <SelectTrigger className="w-full h-12 rounded-[5px]">
-              <SelectValue placeholder="Todos os profissionais" />
+            <SelectTrigger className="h-10 rounded-full w-auto min-w-[200px]">
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4" />
+                <SelectValue placeholder="Todos os profissionais" />
+              </div>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos os profissionais</SelectItem>
@@ -140,20 +139,18 @@ export default function SearchAndFilters({
               ))}
             </SelectContent>
           </Select>
-        </div>
 
-        {/* Ordenar por - Select Dropdown */}
-        <div className="space-y-2">
-          <span className="text-xs font-medium text-muted-foreground flex items-center gap-2">
-            <Filter className="h-4 w-4" /> Ordenar por
-          </span>
+          {/* Ordenar por - Select Dropdown */}
           <Select
             value={sort}
             onValueChange={(value) => onChange({ sort: value as SessaoFiltersState['sort'] })}
             disabled={disabled}
           >
-            <SelectTrigger className="w-full h-12 rounded-[5px]">
-              <span className="text-sm">{getSortLabel()}</span>
+            <SelectTrigger className="h-10 rounded-full w-auto min-w-[150px]">
+              <div className="flex items-center gap-2">
+                <Filter className="h-4 w-4" />
+                <span className="text-sm">{getSortLabel()}</span>
+              </div>
             </SelectTrigger>
             <SelectContent>
               {SORT_OPTIONS.map((option) => (
@@ -164,6 +161,9 @@ export default function SearchAndFilters({
             </SelectContent>
           </Select>
         </div>
+
+        {/* Botão à direita */}
+        {renderButton && <div className="ml-auto flex-shrink-0">{renderButton}</div>}
       </div>
     </div>
   );

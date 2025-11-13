@@ -1,10 +1,8 @@
-import { ArrowLeft, Calendar, Clock } from 'lucide-react';
+import { Calendar, Clock } from 'lucide-react';
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useNavigate } from 'react-router-dom';
 import type { ProgramDetail } from '../types';
 
 interface HeaderProgramProps {
@@ -12,7 +10,6 @@ interface HeaderProgramProps {
 }
 
 export default function HeaderProgram({ program }: HeaderProgramProps) {
-    const navigate = useNavigate();
     const [imageLoading, setImageLoading] = useState(true);
 
     const getInitials = (name: string) => {
@@ -52,37 +49,20 @@ export default function HeaderProgram({ program }: HeaderProgramProps) {
         return { status, period };
     };
 
-    const handleGoBack = () => {
-        // Tenta voltar para a página anterior, se não conseguir vai para a lista de programas
-        if (window.history.length > 1) {
-            navigate(-1);
-        } else {
-            navigate('/app/programas/lista');
-        }
-    };
-
     const prazo = daysLeftInfo();
     return (
-        <Card className="rounded-lg px-6 py-0 md:px-8 md:py-10 lg:px-8 lg:py-0" data-print-block>
-            <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
-                <div className="flex items-center gap-2 mb-2">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleGoBack}
-                        className="h-8 w-8 p-0 no-print"
-                        aria-label="Voltar"
-                    >
-                        <ArrowLeft className="h-4 w-4" />
-                    </Button>
-                    <CardTitle className="text-base flex items-center gap-2">
-                        Detalhe do Programa / Objetivo  
-                    </CardTitle>
-                </div>
-            </CardHeader>
-            <CardContent className="pb-3 sm:pb-6 space-y-4">
+        <Card 
+            padding="hub"
+            className="rounded-lg border-0 shadow-none" 
+            style={{ backgroundColor: 'var(--hub-card-background)' }}
+            data-print-block
+        >
+            <CardContent className="space-y-4">
                 {/* Informações do Paciente */}
-                <div className="flex items-center gap-3 p-3 bg-muted rounded-md">
+                <div 
+                    className="flex items-center gap-3 p-4 border border-border/40 dark:border-white/15 rounded-lg"
+                    style={{ backgroundColor: 'var(--hub-nested-card-background)' }}
+                >
                     <div className="flex-shrink-0">
                         <Avatar className="w-12 h-12 rounded-full">
                             {imageLoading && program.patientPhotoUrl && (
@@ -142,7 +122,7 @@ export default function HeaderProgram({ program }: HeaderProgramProps) {
                 )}
 
                 {/* Prazo do Programa */}
-                <div className="pt-2 border-t flex items-center justify-between text-sm">
+                <div className="pt-2 border-t border-border/40 dark:border-white/15 flex items-center justify-between text-sm">
                     <span className="text-muted-foreground flex items-center gap-1">
                         <Clock className="h-3 w-3" /> Prazo do programa
                     </span>

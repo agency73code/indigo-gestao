@@ -58,3 +58,34 @@ export type LinhaBarras = {
   ajuda: number;
 };
 
+// Tipos para Estímulos que precisam de atenção
+export type AttentionStimulusItem = {
+  id: string;
+  label: string;
+  counts: {
+    erro: number;
+    ajuda: number;
+    indep: number;
+  };
+  total: number;
+  independence: number; // % de independência
+  status: 'atencao' | 'mediano' | 'positivo' | 'insuficiente';
+};
+
+export type AttentionStimuliParams = {
+  pacienteId: string;
+  programaId?: string;
+  terapeutaId?: string;
+  periodo?: {
+    mode: '30d' | '90d' | 'custom';
+    start?: string;
+    end?: string;
+  };
+  lastSessions: 1 | 3 | 5; // Filtro de últimas N sessões
+};
+
+export type AttentionStimuliResponse = {
+  items: AttentionStimulusItem[];
+  total: number;
+  hasSufficientData: boolean; // Se tem tentativas suficientes (>= 5)
+};

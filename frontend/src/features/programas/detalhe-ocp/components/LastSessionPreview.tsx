@@ -6,7 +6,7 @@ import {
     Info,
     MinusCircle,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitleHub } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { SessionAttempt } from '@/features/programas/nova-sessao/types';
@@ -257,17 +257,22 @@ export default function LastSessionPreview({ lastSession, patientId }: LastSessi
     );
 
     return (
-        <Card className="rounded-lg px-6 py-0 md:px-8 md:py-10 lg:px-8 lg:py-2" data-print-block>
-            <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
+        <Card 
+            padding="hub" 
+            className="rounded-lg border-0 shadow-none" 
+            style={{ backgroundColor: 'var(--hub-card-background)' }}
+            data-print-block
+        >
+            <CardHeader className="pb-3">
                 <div className="flex flex-col gap-3">
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                        <CardTitle
+                        <CardTitleHub
                             className="text-base flex items-center gap-2"
                             data-testid="ultima-sessao-title"
                         >
                             <Clock className="h-4 w-4" />
                             Ultima sessao - desempenho por estimulo ({formatDate(lastSession.date)})
-                        </CardTitle>
+                        </CardTitleHub>
                         <Badge variant="outline" data-testid="ultima-sessao-meta-badge">
                             Meta: Independencia &gt;= 80%
                         </Badge>
@@ -298,7 +303,7 @@ export default function LastSessionPreview({ lastSession, patientId }: LastSessi
                     </div>
                 </div>
             </CardHeader>
-            <CardContent className="pb-3 sm:pb-6">
+            <CardContent>
                 <TooltipProvider>
                     {loading ? (
                         <div className="text-sm text-muted-foreground">
@@ -313,23 +318,24 @@ export default function LastSessionPreview({ lastSession, patientId }: LastSessi
                             {summaries.map((summary) => (
                                 <div
                                     key={summary.stimulusId}
-                                    className="border rounded-lg"
+                                    className="border border-border/40 dark:border-white/15 rounded-lg overflow-hidden"
+                                    style={{ backgroundColor: 'var(--hub-nested-card-background)' }}
                                     data-testid={`stim-summary-row-${summary.stimulusId}`}
                                 >
-                                    <div className="px-4 py-3 bg-muted/30">
+                                    <div className="px-4 py-3 bg-muted/10 dark:bg-white/5 border-b border-border/40 dark:border-white/15">
                                         <div className="font-medium text-sm truncate">
                                             {summary.stimulusLabel}
                                         </div>
                                     </div>
                                     <div className="px-4 py-3">
                                         <div className="flex flex-wrap items-center gap-3">
-                                            <Badge variant="outline" className="p-2 rounded-lg">
+                                            <Badge variant="outline" className="p-2 rounded-lg border-border/40 dark:border-white/15">
                                                 Erro: {summary.counts.erro}
                                             </Badge>
-                                            <Badge variant="outline" className="p-2 rounded-lg">
+                                            <Badge variant="outline" className="p-2 rounded-lg border-border/40 dark:border-white/15">
                                                 Ajuda: {summary.counts.ajuda}
                                             </Badge>
-                                            <Badge variant="outline" className="p-2 rounded-lg">
+                                            <Badge variant="outline" className="p-2 rounded-lg border-border/40 dark:border-white/15">
                                                 Indep.: {summary.counts.indep}
                                             </Badge>
                                             <div className="ml-auto flex items-center gap-3">
@@ -340,7 +346,7 @@ export default function LastSessionPreview({ lastSession, patientId }: LastSessi
                                                 />
                                                 <Badge
                                                     variant="outline"
-                                                    className="font-semibold p-2 rounded-lg"
+                                                    className="font-semibold p-2 rounded-lg border-border/40 dark:border-white/15"
                                                 >
                                                     Total: {summary.status.total}
                                                 </Badge>

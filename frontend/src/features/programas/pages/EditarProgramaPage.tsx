@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Save, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import ActionBar from '@/components/ui/action-bar';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 import {
     HeaderInfo,
@@ -11,10 +14,9 @@ import {
     CriteriaSection,
     NotesSection,
     StatusToggle,
-    SaveBar,
     ValidationErrors,
 } from '../editar-ocp';
-import { fetchProgramById, updateProgram, createProgramVersion } from '../editar-ocp/services';
+import { fetchProgramById, updateProgram } from '../editar-ocp/services';
 import type {
     ProgramDetail,
     UpdateProgramInput,
@@ -52,7 +54,6 @@ export default function EditarProgramaPage() {
     const [validationErrors, setValidationErrors] = useState<ValidationErrorsType>({});
     const [hasChanges, setHasChanges] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
-    const [isCreatingVersion, setIsCreatingVersion] = useState(false);
 
     const loadProgram = async () => {
         if (!programaId) {
@@ -188,56 +189,6 @@ export default function EditarProgramaPage() {
         }
     };
 
-    const handleSaveAsVersion = async () => {
-        const errors = validateForm();
-        setValidationErrors(errors);
-
-        if (Object.keys(errors).length > 0) {
-            toast.error('Preencha todos os campos obrigatórios');
-            return;
-        }
-
-        if (!programaId) return;
-
-        try {
-            setIsCreatingVersion(true);
-
-            const updateData: UpdateProgramInput = {
-                id: programaId,
-                name: program?.name,
-                goalTitle,
-                goalDescription: goalDescription || null,
-                shortTermGoalDescription: shortTermGoalDescription || null,
-                stimuliApplicationDescription: stimuliApplicationDescription || null,
-                stimuli,
-                criteria: criteria || null,
-                notes: notes || null,
-                status,
-                prazoInicio: prazoInicio || undefined,
-                prazoFim: prazoFim || undefined,
-            };
-
-            const { id: newProgramId } = await createProgramVersion(updateData);
-
-            toast.success('Nova versão do programa criada com sucesso!');
-
-            // Navegar para o detalhe da nova versão
-            const detailUrl = patientId
-                ? `/app/programas/${newProgramId}?patientId=${patientId}`
-                : `/app/programas/${newProgramId}`;
-            navigate(detailUrl);
-        } catch (err) {
-            console.error('Erro ao criar nova versão:', err);
-            const errorMessage = err instanceof Error ? err.message : 'Erro ao criar nova versão';
-            toast.error(errorMessage);
-            setValidationErrors({
-                general: errorMessage,
-            });
-        } finally {
-            setIsCreatingVersion(false);
-        }
-    };
-
     const handleCancel = () => {
         if (!program) return;
 
@@ -344,7 +295,6 @@ export default function EditarProgramaPage() {
                     prazoFim={prazoFim}
                     onPrazoInicioChange={setPrazoInicio}
                     onPrazoFimChange={setPrazoFim}
-                    hasChanges={hasChanges}
                 />
 
                 {/* Erros de validação */}
@@ -384,15 +334,36 @@ export default function EditarProgramaPage() {
                 <StatusToggle status={status} onStatusChange={setStatus} />
             </div>
 
-            {/* Barra de salvamento fixa */}
-            <SaveBar
-                onSave={handleSave}
-                onSaveAsVersion={handleSaveAsVersion}
-                onCancel={handleCancel}
-                isSaving={isSaving}
-                isCreatingVersion={isCreatingVersion}
-                hasChanges={hasChanges}
-            />
+            {/* Barra de ação fixa no rodapé */}
+            <ActionBar>
+                <Button
+                    onClick={handleSave}
+                    disabled={isSaving || !hasChanges}
+                    className="h-11 rounded-full gap-2"
+                >
+                    {isSaving ? (
+                        <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground" />
+                            Salvando...
+                        </>
+                    ) : (
+                        <>
+                            <Save className="h-4 w-4" />
+                            Salvar alterações
+                        </>
+                    )}
+                </Button>
+
+                <Button
+                    onClick={handleCancel}
+                    disabled={isSaving}
+                    variant="ghost"
+                    className="h-11 rounded-full gap-2"
+                >
+                    <X className="h-4 w-4" />
+                    Cancelar
+                </Button>
+            </ActionBar>
         </div>
     );
 }

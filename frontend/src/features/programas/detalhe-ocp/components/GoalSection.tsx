@@ -1,5 +1,5 @@
 ﻿import { Target } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitleHub } from '@/components/ui/card';
 import type { ProgramDetail } from '../types';
 
 interface GoalSectionProps {
@@ -11,25 +11,33 @@ export default function GoalSection({ program }: GoalSectionProps) {
         program.longTermGoalDescription ?? program.goalDescription ?? null;
 
     return (
-        <Card className="rounded-lg px-6 py-0 md:px-6 md:py-6 lg:px-8 lg:py-0" data-print-block>
-            <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
-                <CardTitle className="text-base flex items-center gap-2">
+        <Card 
+            padding="hub"
+            className="rounded-lg border-0 shadow-none" 
+            style={{ backgroundColor: 'var(--hub-card-background)' }}
+            data-print-block
+        >
+            <CardHeader className="pb-3">
+                <CardTitleHub className="text-base flex items-center gap-2">
                     <Target className="h-4 w-4" />
                     Objetivo do Programa a Longo Prazo
-                </CardTitle>
+                </CardTitleHub>
             </CardHeader>
-            <CardContent className="pb-3 sm:pb-6 space-y-4">
+            <CardContent className="space-y-4">
                 <div className="flex flex-wrap items-start gap-1 text-sm">
                     <span className="font-medium text-muted-foreground">Título do objetivo:</span>
-                    <span className="font-semibold text-foreground">{program.goalTitle}</span>
+                    <span className="font-medium text-foreground">{program.goalTitle}</span>
                 </div>
 
                 {longTermGoalDescription && (
-                    <div className="space-y-3 mt-4">
-                        <p className="text-sm font-medium text-primary mb-1">
+                    <div className="space-y-3">
+                        <p className="text-sm font-medium mb-1">
                             Descrição detalhada do objetivo a longo prazo:
                         </p>
-                        <div className="p-3 bg-muted rounded-md">
+                        <div 
+                            className="p-4 border border-border/40 dark:border-white/15 rounded-lg"
+                            style={{ backgroundColor: 'var(--hub-nested-card-background)' }}
+                        >
                             <p className="text-sm text-muted-foreground leading-relaxed">
                                 {longTermGoalDescription}
                             </p>

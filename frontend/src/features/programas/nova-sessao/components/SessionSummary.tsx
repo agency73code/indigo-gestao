@@ -1,5 +1,5 @@
-import { TrendingUp, CircleHelp } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { TrendingUp, CircleHelp, Target, Activity } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitleHub } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { SessionSummary } from '../types';
 
@@ -14,10 +14,7 @@ export default function SessionSummary({ summary }: SessionSummaryProps) {
         return (
             <div className="space-y-4 mb-24 sm:mb-0">
                 {/* Título da seção */}
-                <div className="flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5 text-muted-foreground" />
-                    <h2 className="text-lg font-semibold">Resumo da Sessão</h2>
-                </div>
+                
                 <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-[5px]">
                     <TrendingUp className="h-8 w-8 mx-auto mb-2 opacity-50" />
                     <p className="text-sm">Resumo será exibido após registrar tentativas</p>
@@ -29,46 +26,31 @@ export default function SessionSummary({ summary }: SessionSummaryProps) {
     return (
         <div className="space-y-4 mb-32 lg:mb-0">
             {/* Título da seção */}
-            <div className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-muted-foreground" />
-                <h2 className="text-lg font-semibold">Resumo da Sessão</h2>
-            </div>
 
             {/* Grid de três cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Card 1: Total de Tentativas */}
-                <Card className="rounded-[5px]">
-                    <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between">
-                            <CardTitle className="text-base font-semibold">Tentativas</CardTitle>
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <CircleHelp className="h-4 w-4 text-muted-foreground cursor-help" />
-                                    </TooltipTrigger>
-                                    <TooltipContent className="max-w-[220px]">
-                                        <p className="text-xs">
-                                            Total de tentativas registradas nesta sessão, incluindo
-                                            erros, ajudas e respostas independentes.
-                                        </p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
+                {/* Card 1: Acerto geral */}
+                <Card 
+                    padding="hub"
+                    className="rounded-lg border-0 shadow-none"
+                    style={{ backgroundColor: 'var(--hub-card-background)' }}
+                >
+                    <CardHeader className="space-y-5">
+                        <div className="h-14 w-14 rounded-lg bg-[#D1FAE5] flex items-center justify-center">
+                            <Target className="h-7 w-7 text-green-600" />
                         </div>
-                        <p className="text-sm text-muted-foreground mt-1">
-                            Total de tentativas registradas
-                        </p>
+                        <div className="space-y-1">
+                            <CardTitleHub className="text-lg">Acerto geral</CardTitleHub>
+                            <p className="text-sm text-muted-foreground">
+                                Tentativas independentes
+                            </p>
+                        </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-3xl font-bold">{totalAttempts}</div>
-                    </CardContent>
-                </Card>
-
-                {/* Card 2: Acerto geral */}
-                <Card className="rounded-[5px]">
-                    <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between">
-                            <CardTitle className="text-base font-semibold">Acerto geral</CardTitle>
+                        <div className="flex items-baseline gap-2">
+                            <div className="text-3xl font-medium text-green-700 dark:text-green-400">
+                                {Math.round(overallAccuracy)}%
+                            </div>
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
@@ -84,22 +66,29 @@ export default function SessionSummary({ summary }: SessionSummaryProps) {
                                 </Tooltip>
                             </TooltipProvider>
                         </div>
-                        <p className="text-sm text-muted-foreground mt-1">
-                            Tentativas independentes
-                        </p>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-3xl font-bold text-green-600">
-                            {Math.round(overallAccuracy)}%
-                        </div>
                     </CardContent>
                 </Card>
 
-                {/* Card 3: Independência */}
-                <Card className="rounded-[5px]">
-                    <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between">
-                            <CardTitle className="text-base font-semibold">Independência</CardTitle>
+                {/* Card 2: Independência */}
+                <Card 
+                    padding="hub"
+                    className="rounded-lg border-0 shadow-none"
+                    style={{ backgroundColor: 'var(--hub-card-background)' }}
+                >
+                    <CardHeader className="space-y-5">
+                        <div className="h-14 w-14 rounded-lg bg-[#DBEAFE] flex items-center justify-center">
+                            <TrendingUp className="h-7 w-7 text-blue-600" />
+                        </div>
+                        <div className="space-y-1">
+                            <CardTitleHub className="text-lg">Independência</CardTitleHub>
+                            <p className="text-sm text-muted-foreground">Respostas sem ajuda</p>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex items-baseline gap-2">
+                            <div className="text-3xl font-medium text-blue-700 dark:text-blue-400">
+                                {Math.round(independenceRate)}%
+                            </div>
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
@@ -115,11 +104,42 @@ export default function SessionSummary({ summary }: SessionSummaryProps) {
                                 </Tooltip>
                             </TooltipProvider>
                         </div>
-                        <p className="text-sm text-muted-foreground mt-1">Respostas sem ajuda</p>
+                    </CardContent>
+                </Card>
+
+                {/* Card 3: Tentativas */}
+                <Card 
+                    padding="hub"
+                    className="rounded-lg border-0 shadow-none"
+                    style={{ backgroundColor: 'var(--hub-card-background)' }}
+                >
+                    <CardHeader className="space-y-5">
+                        <div className="h-14 w-14 rounded-lg bg-[#E0E7FF] flex items-center justify-center">
+                            <Activity className="h-7 w-7 text-indigo-600" />
+                        </div>
+                        <div className="space-y-1">
+                            <CardTitleHub className="text-lg">Tentativas</CardTitleHub>
+                            <p className="text-sm text-muted-foreground">
+                                Total de tentativas registradas
+                            </p>
+                        </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-3xl font-bold text-blue-600">
-                            {Math.round(independenceRate)}%
+                        <div className="flex items-baseline gap-2">
+                            <div className="text-3xl font-medium text-purple-700 dark:text-purple-400">{totalAttempts}</div>
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <CircleHelp className="h-4 w-4 text-muted-foreground cursor-help" />
+                                    </TooltipTrigger>
+                                    <TooltipContent className="max-w-[220px]">
+                                        <p className="text-xs">
+                                            Total de tentativas registradas nesta sessão, incluindo
+                                            erros, ajudas e respostas independentes.
+                                        </p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
                         </div>
                     </CardContent>
                 </Card>

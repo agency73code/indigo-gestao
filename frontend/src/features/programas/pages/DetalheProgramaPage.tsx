@@ -373,7 +373,7 @@ export default function DetalheProgramaPage() {
 
                 {/* Conteúdo principal */}
                 <div data-print-content className="flex flex-col">
-                    <div className="min-h-screen bg-background pb-28 sm:p-0 my-4">
+                    <div className="min-h-screen mt-4 pb-28 sm:p-0 rounded-lg">
                         <div className=" md:max-w-none mx-auto md:mx-0 lg:mx-4 space-y-4">
                             {/* Header com informacoes do paciente e programa */}
                             <HeaderProgram key={refreshKey} program={program} />

@@ -1,5 +1,5 @@
-import { BarChart3, CircleHelp } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { BarChart3, CircleHelp, Target, TrendingUp, Activity } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitleHub } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { SessionListItem } from '../types';
 import type { SerieLinha } from '../../relatorio-geral/types';
@@ -60,10 +60,27 @@ export default function SummaryCard({
             {/* Grid de três cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4" data-print-kpi-grid>
                 {/* Card 1: Acerto Geral */}
-                <Card className="rounded-lg py-6 m-0">
-                    <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between">
-                            <CardTitle className="text-base font-semibold">Acerto geral</CardTitle>
+                <Card 
+                    padding="hub" 
+                    className="rounded-lg border-0 shadow-none"
+                    style={{ backgroundColor: 'var(--hub-card-background)' }}
+                >
+                    <CardHeader className="space-y-5">
+                        <div className="h-14 w-14 rounded-lg bg-[#D1FAE5] flex items-center justify-center">
+                            <Target className="h-7 w-7 text-green-600" />
+                        </div>
+                        <div className="space-y-1">
+                            <CardTitleHub className="text-lg">Acerto geral</CardTitleHub>
+                            <p className="text-sm text-muted-foreground">
+                                Média das últimas {validSessions.length} sessões
+                            </p>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex items-baseline gap-2">
+                            <div className="text-3xl font-medium text-green-700 dark:text-green-400">
+                                {formatPercentage(overallAverage)}
+                            </div>
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
@@ -79,22 +96,29 @@ export default function SummaryCard({
                                 </Tooltip>
                             </TooltipProvider>
                         </div>
-                        <p className="text-sm text-muted-foreground mt-1">
-                            Média das últimas {validSessions.length} sessões
-                        </p>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-4xl font-bold text-green-600">
-                            {formatPercentage(overallAverage)}
-                        </div>
                     </CardContent>
                 </Card>
 
                 {/* Card 2: Independência */}
-                <Card className="rounded-lg py-6 m-0">
-                    <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between">
-                            <CardTitle className="text-base font-semibold">Independência</CardTitle>
+                <Card 
+                    padding="hub" 
+                    className="rounded-lg border-0 shadow-none"
+                    style={{ backgroundColor: 'var(--hub-card-background)' }}
+                >
+                    <CardHeader className="space-y-5">
+                        <div className="h-14 w-14 rounded-lg bg-[#DBEAFE] flex items-center justify-center">
+                            <TrendingUp className="h-7 w-7 text-blue-600" />
+                        </div>
+                        <div className="space-y-1">
+                            <CardTitleHub className="text-lg">Independência</CardTitleHub>
+                            <p className="text-sm text-muted-foreground">Taxa média</p>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex items-baseline gap-2">
+                            <div className="text-3xl font-medium text-blue-700 dark:text-blue-400">
+                                {formatPercentage(independenceAverage)}
+                            </div>
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
@@ -110,20 +134,31 @@ export default function SummaryCard({
                                 </Tooltip>
                             </TooltipProvider>
                         </div>
-                        <p className="text-sm text-muted-foreground mt-1">Taxa média</p>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-4xl font-bold text-blue-600">
-                            {formatPercentage(independenceAverage)}
-                        </div>
                     </CardContent>
                 </Card>
 
                 {/* Card 3: Tentativas */}
-                <Card className="rounded-lg">
-                    <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between">
-                            <CardTitle className="text-base font-semibold">Tentativas</CardTitle>
+                <Card 
+                    padding="hub" 
+                    className="rounded-lg border-0 shadow-none"
+                    style={{ backgroundColor: 'var(--hub-card-background)' }}
+                >
+                    <CardHeader className="space-y-5">
+                        <div className="h-14 w-14 rounded-lg bg-[#E0E7FF] flex items-center justify-center">
+                            <Activity className="h-7 w-7 text-indigo-600" />
+                        </div>
+                        <div className="space-y-1">
+                            <CardTitleHub className="text-lg">Tentativas</CardTitleHub>
+                            <p className="text-sm text-muted-foreground">
+                                Em {totalSessions} sessões
+                            </p>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex items-baseline gap-2">
+                            <div className="text-3xl font-medium text-purple-700 dark:text-purple-400">
+                                {totalAttempts}
+                            </div>
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
@@ -139,12 +174,6 @@ export default function SummaryCard({
                                 </Tooltip>
                             </TooltipProvider>
                         </div>
-                        <p className="text-sm text-muted-foreground mt-1">
-                            Em {totalSessions} sessões
-                        </p>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-4xl font-bold">{totalAttempts}</div>
                     </CardContent>
                 </Card>
             </div>

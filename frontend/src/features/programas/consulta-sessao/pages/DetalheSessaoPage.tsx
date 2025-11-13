@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
+import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 import type { Patient } from '@/features/programas/consultar-programas/types';
 import { getPatientById } from '@/features/programas/consultar-programas/services';
 import type { ProgramDetail } from '@/features/programas/detalhe-ocp/types';
@@ -18,6 +19,7 @@ export default function DetalheSessaoPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const locationState = location.state as LocationState | null;
+  const { setPageTitle } = usePageTitle();
 
   const pacienteIdFromQuery = useMemo(() => searchParams.get('pacienteId'), [searchParams]);
 
@@ -26,6 +28,14 @@ export default function DetalheSessaoPage() {
   const [program, setProgram] = useState<ProgramDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (patient) {
+      setPageTitle(`Sessão de ${patient.name}`);
+    } else {
+      setPageTitle('Detalhes da Sessão');
+    }
+  }, [patient, setPageTitle]);
   useEffect(() => {
     let cancelled = false;
     const loadSession = async () => {
