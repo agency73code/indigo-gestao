@@ -23,6 +23,7 @@ export async function createSession(input: OcpType.CreateSessionInput) {
 }
 
 export async function updateProgram(programId: number, input: OcpType.UpdateProgramInput) {
+    console.log(JSON.stringify(input.stimuli));
     const parsed = updateProgramSchema.parse({ ...input, id: programId });
     const result = await programUpdate(programId, parsed);
     return result;
@@ -299,37 +300,46 @@ export async function listSessionsByClient(clientId: string) {
 }
 
 export async function getKpis(filtros: OcpType.KpisFilters) {
-  const where: Prisma.sessaoWhereInput = {};
+    const where: Prisma.sessaoWhereInput = {};
     if (filtros.pacienteId) where.cliente_id = filtros.pacienteId;
     if (filtros.programaId) where.ocp_id = Number(filtros.programaId);
-    if (filtros.estimuloId) {
+
+    const stimulusId = filtros.estimuloId ? Number(filtros.estimuloId) : undefined;
+
+    if (stimulusId) {
         where.trials = {
             some: {
                 estimulosOcp: {
-                    id: Number(filtros.estimuloId),
+                    id: stimulusId,
                 },
             },
         };
     }
     if (filtros.terapeutaId) where.terapeuta_id = filtros.terapeutaId;
 
-  if (filtros.periodo.mode === "30d") {
-    where.data_criacao = { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) };
-  }
-  if (filtros.periodo.mode === "90d") {
-    where.data_criacao = { gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) };
-  }
-  if (filtros.periodo.mode === "custom" && filtros.periodo.start && filtros.periodo.end) {
-    where.data_criacao = {
-      gte: new Date(filtros.periodo.start),
-      lte: new Date(filtros.periodo.end),
-    };
-  }
+    if (filtros.periodo.mode === "30d") {
+        where.data_criacao = { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) };
+    }
+    if (filtros.periodo.mode === "90d") {
+        where.data_criacao = { gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) };
+    }
+    if (filtros.periodo.mode === "custom" && filtros.periodo.start && filtros.periodo.end) {
+        where.data_criacao = {
+            gte: new Date(filtros.periodo.start),
+            lte: new Date(filtros.periodo.end),
+        };
+    }
 
-  const sessions = await prisma.sessao.findMany({
-    where,
-    include: { trials: true },
-  });
+    const sessions = await prisma.sessao.findMany({
+        where,
+        include: {
+            trials: stimulusId
+                ? {
+                    where: { estimulos_ocp_id: stimulusId },
+                }
+                : true,
+        },
+    });
 
     const totalSessions = sessions.length;
     const allTrials = sessions.flatMap(s => s.trials);

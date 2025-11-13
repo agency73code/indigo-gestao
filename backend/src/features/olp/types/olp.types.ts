@@ -92,7 +92,7 @@ export type UpdateProgramInput = {
   shortTermGoalDescription: string | null;
   stimuliApplicationDescription: string | null;
   stimuli: {
-    id?: string;
+    id?: string | undefined;
     label: string;
     description?: string | null;
     active: boolean;

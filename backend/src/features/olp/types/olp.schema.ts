@@ -21,7 +21,7 @@ export const updateProgramSchema = z.object({
     stimuli: z
         .array(
             z.object({
-                id: z.string(),
+                id: z.string().optional(),
                 label: z.string().min(1, 'O nome do estímulo é obrigatório.'),
                 active: z.boolean(),
                 order: z.number(),

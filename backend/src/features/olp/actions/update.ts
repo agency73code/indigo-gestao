@@ -3,7 +3,9 @@ import type { UpdateProgramInput } from "../types/olp.types.js";
 
 export async function programUpdate(programId: number, input: UpdateProgramInput) {
     return await prisma.$transaction(async (tx) => {
-        const newStimuliIds = input.stimuli.map((s) => Number(s.id));
+    const newStimuliIds = input.stimuli
+        .filter((s) => s.id) // só pega os que têm id
+        .map((s) => Number(s.id));
 
         // Desativar os vínculos que não estão mais no input
         await tx.estimulo_ocp.updateMany({
@@ -16,27 +18,43 @@ export async function programUpdate(programId: number, input: UpdateProgramInput
 
         // Fazer upsert (atualiza se existe, cria se não)
         for (const s of input.stimuli) {
-            await tx.estimulo_ocp.upsert({
-                where: {
-                    id_estimulo_id_ocp: {
-                        id_estimulo: Number(s.id),
-                        id_ocp: programId,
-                    },
-                },
-                update: {
+            let stimulusId: number;
+
+        if (!s.id) {
+            // Criar novo estímulo base
+            const newStimulus = await tx.estimulo.create({
+                data: {
                     nome: s.label,
-                    status: s.active,
-                },
-                create: {
-                    id_estimulo: Number(s.id),
-                    id_ocp: programId,
-                    nome: s.label,
-                    status: s.active,
                 },
             });
+
+            stimulusId = newStimulus.id;
+        } else {
+            stimulusId = Number(s.id);
         }
 
-        // Atualizar o resto do OCP
+        // Criar ou atualizar vínculo com OCP
+        await tx.estimulo_ocp.upsert({
+            where: {
+                id_estimulo_id_ocp: {
+                    id_estimulo: stimulusId,
+                    id_ocp: programId,
+                },
+            },
+            update: {
+                nome: s.label,
+                status: s.active,
+            },
+            create: {
+                id_estimulo: stimulusId,
+                id_ocp: programId,
+                nome: s.label,
+                status: s.active,
+            },
+        });
+        }
+
+        // Atualizar dados do OCP
         const ocp = await tx.ocp.update({
             where: { id: programId },
             data: {
@@ -47,10 +65,10 @@ export async function programUpdate(programId: number, input: UpdateProgramInput
                 objetivo_descricao: input.goalDescription,
                 objetivo_curto: input.shortTermGoalDescription,
                 descricao_aplicacao: input.stimuliApplicationDescription,
-                status: input.status === 'active' ? 'ativado' : 'arquivado',
+                status: input.status === "active" ? "ativado" : "arquivado",
                 criterio_aprendizagem: input.criteria,
                 observacao_geral: input.notes,
-            }
+            },
         });
 
         return ocp;
