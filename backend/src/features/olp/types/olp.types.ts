@@ -164,6 +164,31 @@ export interface Session {
   }[];
 }
 
+export interface AttentionStimulusItem {
+  id: string;
+  label: string;
+  counts: {
+    erro: number;
+    ajuda: number;
+    indep: number;
+  };
+  total: number;
+  independence: number;
+  status: 'atencao' | 'mediano' | 'positivo' | 'insuficiente';
+}
+
+export type AttentionStimuliFilters = {
+  pacienteId: string;
+  programaId?: string | undefined;
+  terapeutaId?: string | undefined;
+  periodo?: {
+    mode: '30d' | '90d' | 'custom';
+    start?: string | undefined;
+    end?: string | undefined;
+  };
+  lastSessions: 1 | 3 | 5;
+};
+
 export interface UnmappedSession {
   id: number;
   data_criacao: Date;

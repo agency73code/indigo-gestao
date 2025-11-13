@@ -452,16 +452,158 @@ export async function getStimulusReport(clientId?: string, programId?: string) {
 export async function getProgramsReport(clientId?: string) {
     const where = clientId ? { cliente_id: clientId } : {};
     
-  const ocps = await prisma.ocp.findMany({
-    where,
-    select: {
-      id: true,
-      nome_programa: true,
-    }
-  })
+    const ocps = await prisma.ocp.findMany({
+        where,
+        select: {
+            id: true,
+            nome_programa: true,
+        }
+    })
 
-  return ocps.map((o) => ({
-    id: o.id,
-    nome: o.nome_programa,
-  }))
+    return ocps.map((o) => ({
+        id: o.id,
+        nome: o.nome_programa,
+    }))
+}
+
+export async function getAttentionStimuli(filters: OcpType.AttentionStimuliFilters) {
+    const where: Prisma.sessaoWhereInput = {
+        cliente_id: filters.pacienteId,
+    };
+
+    if (filters.programaId) {
+        where.ocp_id = Number(filters.programaId);
+    }
+
+    if (filters.terapeutaId) {
+        where.terapeuta_id = filters.terapeutaId;
+    }
+
+    if (filters.periodo) {
+        if (filters.periodo.mode === '30d') {
+            where.data_criacao = { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) };
+        } else if (filters.periodo.mode === '90d') {
+            where.data_criacao = { gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) };
+        } else if (filters.periodo.mode === 'custom' && filters.periodo.start && filters.periodo.end) {
+            where.data_criacao = {
+                gte: new Date(filters.periodo.start),
+                lte: new Date(filters.periodo.end),
+            };
+        }
+    }
+
+    const sessions = await prisma.sessao.findMany({
+        where,
+        orderBy: { data_criacao: 'desc' },
+        take: filters.lastSessions,
+        select: {
+            id: true,
+            trials: {
+                select : {
+                    resultado: true,
+                    estimulos_ocp_id: true,
+                    estimulosOcp: {
+                        select: {
+                            id: true,
+                            id_estimulo: true,
+                            nome: true,
+                            estimulo: {
+                                select: {
+                                    id: true,
+                                    nome: true,
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    });
+
+    type AggregateEntry = {
+        id: string;
+        label: string;
+        counts: { erro: number; ajuda: number; indep: number };
+        total: number;
+    };
+
+    const aggregates = new Map<number, AggregateEntry>();
+
+    for (const session of sessions) {
+        for (const trial of session.trials) {
+            if (!trial.estimulosOcp) continue;
+
+            const stimulusId = trial.estimulos_ocp_id;
+            const current = aggregates.get(stimulusId);
+
+            const label = trial.estimulosOcp.nome
+                ?? trial.estimulosOcp.estimulo?.nome
+                ?? `Estímulo ${stimulusId}`;
+            
+            const entry = current ?? {
+                id: String(trial.estimulosOcp.id),
+                label,
+                counts: { erro: 0, ajuda: 0, indep: 0 },
+                total: 0,
+            };
+
+            if (current && current.label === `Estímulo ${stimulusId}` && label !== current.label) {
+                current.label = label;
+            }
+
+            entry.total += 1;
+
+            if (trial.resultado === 'error') {
+                entry.counts.erro += 1;
+            } else if (trial.resultado === 'prompted') {
+                entry.counts.ajuda += 1;
+            } else if (trial.resultado === 'independent') {
+                entry.counts.indep += 1;
+            }
+
+            aggregates.set(stimulusId, entry);
+        }
+    }
+
+    let hasSufficientData = false;
+
+    const items = Array.from(aggregates.values()).map<OcpType.AttentionStimulusItem>((entry) => {
+        const independence = entry.total > 0
+            ? Math.round((entry.counts.indep / entry.total) * 100)
+            : 0;
+        
+        let status: OcpType.AttentionStimulusItem['status'];
+        if (entry.total < 5) {
+            status = 'insuficiente';
+        } else if (independence <= 60) {
+            status = 'atencao';
+        } else if (independence <= 80) {
+            status = 'mediano';
+        } else {
+            status = 'positivo';
+        }
+
+        if (entry.total >= 5) {
+            hasSufficientData = true;
+        }
+
+        return {
+            id: entry.id,
+            label: entry.label,
+            counts: { ...entry.counts },
+            total: entry.total,
+            independence,
+            status,
+        };
+    });
+
+    const attentionItems = items
+        .filter((item) => item.status === 'atencao')
+        .sort((a, b) => a.independence - b.independence);
+    
+    return {
+        items: attentionItems,
+        total: attentionItems.length,
+        hasSufficientData,
+    };
 }

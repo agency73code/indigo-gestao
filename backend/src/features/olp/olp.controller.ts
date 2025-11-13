@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from 'express';
 import * as OcpService from './olp.service.js';
 import * as OcpNormalizer from './olp.normalizer.js';
 import { Prisma } from '@prisma/client';
+import type { AttentionStimuliFilters } from './types/olp.types.js';
 
 export async function createProgram(req: Request, res: Response) {
     try {
@@ -194,6 +195,52 @@ export async function getStimulusReport(req: Request, res: Response) {
         return res.status(500).json({ 
             success: false, 
             message: 'Erro ao buscar informações do relatório' 
+        });
+    }
+}
+
+export async function getAttentionStimuli(req: Request, res: Response) {
+    try {
+        const pacienteId = req.query.pacienteId as string | undefined;
+        if (!pacienteId) {
+            return res.status(400).json({
+                success: false,
+                message: 'pacienteId é obrigatório'
+            });
+        }
+
+        const lastSessionsParam = parseInt(req.query.lastSessions as string, 10);
+        const lastSessions: AttentionStimuliFilters['lastSessions'] = [1, 3, 5].includes(lastSessionsParam)
+            ? (lastSessionsParam as AttentionStimuliFilters['lastSessions'])
+            : 5;
+
+        const filters: AttentionStimuliFilters = {
+            pacienteId,
+            lastSessions,
+            programaId: typeof req.query.programaId === 'string' ? req.query.programaId : undefined,
+            terapeutaId: typeof req.query.terapeutaId === 'string' ? req.query.terapeutaId : undefined,
+        };
+
+        const periodoMode = req.query.periodoMode as '30d' | '90d' | 'custom' | undefined;
+        const periodoStart = req.query.periodoStart as string | undefined;
+        const periodoEnd = req.query.periodoEnd as string | undefined;
+
+        if (periodoMode) {
+            filters.periodo = {
+                mode: periodoMode,
+                start: periodoStart,
+                end: periodoEnd,
+            };
+        }
+
+        const data = await OcpService.getAttentionStimuli(filters);
+
+        return res.json(data);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            message: 'Erro ao buscar estímulos que precisam de atenção'
         });
     }
 }
