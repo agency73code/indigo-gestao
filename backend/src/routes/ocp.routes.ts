@@ -17,6 +17,7 @@ router.get('/sessions/:programId', OlpController.getProgramId);
 router.get('/reports/kpis/:filters', OlpController.getKpis);
 router.get('/reports/filters/programs', OlpController.getProgramsReport);
 router.get('/reports/filters/stimulus', OlpController.getStimulusReport);
+router.get('/reports/attention-stimuli', OlpController.getAttentionStimuli);
 router.post('/create', OlpController.createProgram);
 router.post('/programs/:programId/sessions', OlpController.createSession);
 router.patch('/programs/:programId', OlpController.updateProgram);
