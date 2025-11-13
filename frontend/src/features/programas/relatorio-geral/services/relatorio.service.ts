@@ -8,7 +8,7 @@ import type {
 } from '../types';
 import { mockAttentionStimuliByWindow } from '../mocks/relatorio.mock';
 
-const USE_MOCK = true; // Trocar para false quando backend estiver pronto
+const USE_MOCK = false; // Trocar para false quando backend estiver pronto
 
 
 async function callKpiReportsApi(_filtros: Filters) {
