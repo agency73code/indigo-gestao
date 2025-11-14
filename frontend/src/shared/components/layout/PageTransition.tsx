@@ -9,41 +9,19 @@ interface PageTransitionProps {
 const pageVariants: Variants = {
     initial: {
         opacity: 0,
-        y: 20,
-        scale: 0.98,
     },
     animate: {
         opacity: 1,
-        y: 0,
-        scale: 1,
         transition: {
-            duration: 0.4,
-            ease: 'easeOut',
-            staggerChildren: 0.1,
+            duration: 0.15,
+            ease: [0.4, 0, 0.2, 1],
         },
     },
     exit: {
         opacity: 0,
-        y: -20,
-        scale: 0.98,
         transition: {
-            duration: 0.3,
-            ease: 'easeOut',
-        },
-    },
-};
-
-const childVariants: Variants = {
-    initial: {
-        opacity: 0,
-        y: 20,
-    },
-    animate: {
-        opacity: 1,
-        y: 0,
-        transition: {
-            duration: 0.3,
-            ease: 'easeOut',
+            duration: 0.15,
+            ease: [0.4, 0, 0.2, 1],
         },
     },
 };
@@ -59,9 +37,9 @@ export default function PageTransition({ children }: PageTransitionProps) {
                 initial="initial"
                 animate="animate"
                 exit="exit"
-                className="w-full"
+                className="w-full h-full bg-white dark:bg-[#000000]"
             >
-                <motion.div variants={childVariants}>{children}</motion.div>
+                {children}
             </motion.div>
         </AnimatePresence>
     );

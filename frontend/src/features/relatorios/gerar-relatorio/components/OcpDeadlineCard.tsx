@@ -193,7 +193,7 @@ export function OcpDeadlineCard({
                     </div>
 
                     {/* Dois cartões resumidos */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                    <div className="grid grid-cols-2 gap-4 md:gap-6">
                         <div className="rounded-lg bg-muted p-4">
                             <div className="text-xs text-muted-foreground uppercase tracking-wide">
                                 Status

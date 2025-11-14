@@ -96,7 +96,7 @@ export default function AppLayout() {
                                     className="flex-1 rounded-3xl p-2 flex flex-col gap-3 overflow-hidden bg-white dark:bg-[#1a1a1a]"
                                 >
                                     {/* Espaço superior para título e botões */}
-                                    <div className="h-12 flex items-center justify-between pt-0 px-1 flex-shrink-0">
+                                    <div className="h-12 flex items-center justify-between pt-0 px-1 flex-shrink-0 no-print">
                                         {/* Botão sidebar e título */}
                                         <div className="flex items-center gap-3">
                                             <div className="h-10 w-10 rounded-full bg-header-bg hover:bg-header-bg/80 flex items-center justify-center transition-colors cursor-pointer">

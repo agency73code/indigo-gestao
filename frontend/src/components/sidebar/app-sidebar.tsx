@@ -65,24 +65,15 @@ const data: {
             ],
         },
         {
-            title: 'Cadastro',
-            url: '/app/cadastros',
-            icon: UserPlus,
-            ability: { action: 'create', subject: 'Cadastro' },
-            items: [
-                { title: 'Cadastrar Terapeuta', url: '/app/cadastro/terapeuta', ability: { action: 'manage', subject: 'all' } },
-                { title: 'Cadastrar Cliente', url: '/app/cadastro/cliente' },
-                { title: 'Vínculos', url: '/app/cadastros/vinculos' },
-            ],
+            title: 'Cliente',
+            url: '/app/consultar/pacientes',
+            icon: UserRoundSearchIcon,
         },
         {
-            title: 'Consultar',
-            url: '/app/consultar',
-            icon: UserRoundSearchIcon,
-            items: [
-                { title: 'Terapeuta', url: '/app/consultar/terapeutas', ability: { action: 'manage', subject: 'all' } },
-                { title: 'Cliente', url: '/app/consultar/pacientes' },
-            ],
+            title: 'Terapeuta',
+            url: '/app/consultar/terapeutas',
+            icon: UserPlus,
+            ability: { action: 'manage', subject: 'all' },
         },
         {
             title: 'Programas & Objetivos',
@@ -97,12 +88,8 @@ const data: {
         },
         {
             title: 'Relatórios',
-            url: '/app/relatorios',
+            url: '/app/relatorios/lista',
             icon: FileText,
-            items: [
-                { title: 'Relatórios Salvos', url: '/app/relatorios/lista' },
-                { title: 'Gerar Relatório', url: '/app/relatorios/novo' },
-            ],
         },
         {
             title: 'Faturamento',

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { FilePlus, Clock, Table2, Download } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitleHub } from '@/components/ui/card';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 import { useEffect } from 'react';
 
@@ -60,15 +60,19 @@ export default function HubFaturamentoPage() {
                                 className="block"
                                 aria-label={`${action.title}: ${action.description}`}
                             >
-                                <Card className="cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] border border-border/40 rounded-lg bg-[#F1F5F9] h-full">
-                                    <CardHeader className="space-y-5 p-2">
+                                <Card 
+                                    padding="hub" 
+                                    className="cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] border border-border/40 rounded-lg h-full"
+                                    style={{ backgroundColor: 'var(--hub-card-background)' }}
+                                >
+                                    <CardHeader className="space-y-3">
                                         <div className={`h-14 w-14 rounded-lg ${action.bgColor} flex items-center justify-center`}>
                                             <Icon className={`h-7 w-7 ${action.iconColor}`} />
                                         </div>
                                         <div className="space-y-1">
-                                            <CardTitle className="text-lg font-medium text-foreground">
+                                            <CardTitleHub className="text-lg">
                                                 {action.title}
-                                            </CardTitle>
+                                            </CardTitleHub>
                                             <p className="text-sm text-muted-foreground">
                                                 {action.description}
                                             </p>
@@ -84,48 +88,78 @@ export default function HubFaturamentoPage() {
             {/* Quick Stats Cards */}
             <div className="space-y-4">
                 <h2
-                    style={{ fontFamily: 'Sora, sans-serif' }}
-                    className="text-lg sm:text-xl font-medium text-foreground"
+                    style={{ 
+                        fontFamily: 'Sora, sans-serif',
+                        fontWeight: 'var(--hub-section-title-font-weight)'
+                    }}
+                    className="text-lg sm:text-xl text-foreground"
                 >
                     Visão Geral
                 </h2>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <Card className="rounded-lg">
+                    <Card 
+                        padding="hub"
+                        className="rounded-lg border-0 shadow-none"
+                        style={{ backgroundColor: 'var(--hub-card-background)' }}
+                    >
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Horas no Mês</CardTitle>
+                            <CardTitleHub className="text-base">Horas no Mês</CardTitleHub>
                             <Clock className="h-5 w-5 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">45h</div>
+                            <div 
+                                className="text-2xl tracking-tight"
+                                style={{ fontWeight: 'var(--dashboard-number-font-weight)' }}
+                            >
+                                45h
+                            </div>
                             <p className="text-xs text-muted-foreground">
                                 +8h desde a semana passada
                             </p>
                         </CardContent>
                     </Card>
 
-                    <Card className="rounded-lg">
+                    <Card 
+                        padding="hub"
+                        className="rounded-lg border-0 shadow-none"
+                        style={{ backgroundColor: 'var(--hub-card-background)' }}
+                    >
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
+                            <CardTitleHub className="text-base">
                                 Total de Lançamentos
-                            </CardTitle>
+                            </CardTitleHub>
                             <FilePlus className="h-5 w-5 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">28</div>
+                            <div 
+                                className="text-2xl tracking-tight"
+                                style={{ fontWeight: 'var(--dashboard-number-font-weight)' }}
+                            >
+                                28
+                            </div>
                             <p className="text-xs text-muted-foreground">
                                 12 pendentes, 16 aprovados
                             </p>
                         </CardContent>
                     </Card>
 
-                    <Card className="rounded-lg">
+                    <Card 
+                        padding="hub"
+                        className="rounded-lg border-0 shadow-none"
+                        style={{ backgroundColor: 'var(--hub-card-background)' }}
+                    >
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Valor Estimado</CardTitle>
+                            <CardTitleHub className="text-base">Valor Estimado</CardTitleHub>
                             <Download className="h-5 w-5 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">R$ 2.250</div>
+                            <div 
+                                className="text-2xl tracking-tight"
+                                style={{ fontWeight: 'var(--dashboard-number-font-weight)' }}
+                            >
+                                R$ 2.250
+                            </div>
                             <p className="text-xs text-muted-foreground">
                                 +12% desde o mês passado
                             </p>

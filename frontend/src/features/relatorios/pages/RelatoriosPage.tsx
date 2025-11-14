@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ChevronLeft, Plus, FileText, Search, ChevronDown, ChevronRight, Folder, Calendar } from 'lucide-react';
+import { Plus, FileText, ChevronDown, ChevronRight, Folder, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { toast } from 'sonner';
+import { usePageTitle } from '@/features/shell/layouts/AppLayout';
+import ToolbarConsulta from '@/features/consultas/components/ToolbarConsulta';
 import type {
   SavedReport,
   Paciente,
@@ -32,6 +33,7 @@ type ExpansionState = {
 export function RelatoriosPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { setPageTitle } = usePageTitle();
   
   const [reports, setReports] = useState<SavedReport[]>([]);
   const [total, setTotal] = useState(0);
@@ -75,8 +77,9 @@ export function RelatoriosPage() {
 
   // Carregar dados quando filtros mudarem
   useEffect(() => {
+    setPageTitle('Relatórios');
     loadData();
-  }, [searchParams]); // Recarrega quando URL muda
+  }, [searchParams, setPageTitle]); // Recarrega quando URL muda
 
   const loadData = async () => {
     try {
@@ -259,75 +262,52 @@ export function RelatoriosPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="px-0 sm:px-4 py-3 sm:pt-4 pb-0">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="p-1.5 sm:p-2 shrink-0"
-              onClick={() => navigate(-1)}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <div className="min-w-0 flex-1">
-              <h1
-                style={{ fontFamily: 'Sora, sans-serif' }}
-                className="text-lg sm:text-2xl font-medium text-primary leading-tight"
-              >
-                Relatórios
-              </h1>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Conteúdo principal */}
       <div className="px-1 lg:px-4 py-4 space-y-4">
         {/* Linha com Filtros e Botão */}
-        <div className="flex items-center gap-4">
-          {/* Busca - Esquerda */}
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            <Input
+        <div className="flex gap-4">
+          <div className="flex-1">
+            <ToolbarConsulta
+              searchValue={filters.q || ''}
+              onSearchChange={(value) => updateFilters({ q: value })}
               placeholder="Buscar por título, cliente..."
-              value={filters.q || ''}
-              onChange={(e) => updateFilters({ q: e.target.value })}
-              className="pl-10 h-12 rounded-[5px]"
+              showFilters={false}
             />
           </div>
-
-          {/* Filtro de Status */}
-          <Select
-            value={filters.status || 'all'}
-            onValueChange={(value) => updateFilters({ status: value as any })}
-          >
-            <SelectTrigger
-              className="w-[170px] h-12! min-h-12 rounded-[5px]"
-              aria-label="Filtrar por status"
-            >
-              <span className="text-sm">
-                {filters.status === 'all' || !filters.status ? 'Todos' : 
-                 filters.status === 'final' ? 'Finalizados' : 'Arquivados'}
-              </span>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="final">Finalizados</SelectItem>
-              <SelectItem value="archived">Arquivados</SelectItem>
-            </SelectContent>
-          </Select>
           
-          {/* Botão Novo Relatório - Direita */}
-          <Button
-            onClick={() => navigate('/app/relatorios/novo')}
-            className="h-12 rounded-[5px] shrink-0 px-4"
-            variant="default"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            <span>Novo Relatório</span>
-          </Button>
+          <div className="flex gap-2 items-start">
+            {/* Filtro de Status */}
+            <Select
+              value={filters.status || 'all'}
+              onValueChange={(value) => updateFilters({ status: value as any })}
+            >
+              <SelectTrigger
+                className="w-[170px]"
+                style={{ borderRadius: 'var(--radius) !important' }}
+                aria-label="Filtrar por status"
+              >
+                <span className="text-sm">
+                  {filters.status === 'all' || !filters.status ? 'Todos' : 
+                   filters.status === 'final' ? 'Finalizados' : 'Arquivados'}
+                </span>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="final">Finalizados</SelectItem>
+                <SelectItem value="archived">Arquivados</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Botão Novo Relatório */}
+            <Button
+              onClick={() => navigate('/app/relatorios/novo')}
+              className="gap-2"
+              variant="default"
+            >
+              <Plus className="h-4 w-4" />
+              Novo Relatório
+            </Button>
+          </div>
         </div>
 
         {/* Lista de relatórios agrupados por cliente e mês */}
@@ -367,7 +347,11 @@ export function RelatoriosPage() {
                   key={patientId}
                   open={isPatientOpen}
                   onOpenChange={() => togglePatient(patientId)}
-                  className="bg-card rounded-[5px] border overflow-hidden"
+                  className="border overflow-hidden"
+                  style={{ 
+                    backgroundColor: 'var(--hub-card-background)',
+                    borderRadius: 'var(--radius)'
+                  }}
                 >
                   {/* Cabeçalho do Cliente (sempre visível) */}
                   <CollapsibleTrigger className="w-full">
@@ -424,7 +408,11 @@ export function RelatoriosPage() {
                             key={monthKey}
                             open={isFolderOpen}
                             onOpenChange={() => toggleFolder(patientId, monthKey)}
-                            className="rounded-[5px] overflow-hidden bg-muted/30"
+                            className="overflow-hidden"
+                            style={{ 
+                              backgroundColor: 'var(--hub-nested-card-background)',
+                              borderRadius: 'var(--radius)'
+                            }}
                           >
                             {/* Cabeçalho da Pasta (Mês/Ano) */}
                             <CollapsibleTrigger className="w-full">
@@ -451,14 +439,15 @@ export function RelatoriosPage() {
 
                             {/* Conteúdo da Pasta (Relatórios do mês) */}
                             <CollapsibleContent>
-                              <div className="space-y-1 p-2 bg-muted/20">
+                              <div className="space-y-1 p-2" style={{ backgroundColor: 'var(--hub-nested-card-background)' }}>
                                 {monthReports.map((report) => {
                                   const therapist = therapists.find(t => t.id === report.therapistId);
                                   
                                   return (
                                     <div
                                       key={report.id}
-                                      className="flex items-center justify-between p-2.5 bg-background rounded-[5px] hover:bg-muted/50 transition-colors cursor-pointer group"
+                                      className="flex items-center justify-between p-2.5 bg-background hover:bg-muted/50 transition-colors cursor-pointer group"
+                                      style={{ borderRadius: 'var(--radius)' }}
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         handleViewReport(report);
