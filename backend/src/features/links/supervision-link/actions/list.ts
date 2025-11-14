@@ -25,7 +25,10 @@ export async function getAllSupervisionLinks(userId: string, filters?: LinkFilte
 
     if (visibility.scope === 'partial') {
         extraFilters.push({
-            OR: [{ supervisor_id: { in: visibility.therapistIds } }],
+            OR: [
+                { supervisor_id: { in: visibility.therapistIds } },
+                { clinico_id: { in: visibility.therapistIds } },
+            ],
         });
     }
 

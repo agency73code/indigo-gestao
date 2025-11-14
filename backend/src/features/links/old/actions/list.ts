@@ -104,7 +104,16 @@ export async function getAllTherapists(userId: string, search?: string, _role?: 
     const extraFilters: Prisma.terapeutaWhereInput[] = [];
 
     if (visibility.scope === 'partial') {
-        extraFilters.push({ id: { in: visibility.therapistIds } });
+        extraFilters.push({
+            OR: [
+                { id: { in: visibility.therapistIds } },
+                {
+                    supervisionados: {
+                        some: { clinico_id: { in: visibility.therapistIds } },
+                    },
+                },
+            ],
+        });
     }
 
     if (visibility.maxAccessLevel < MANAGER_LEVEL) {

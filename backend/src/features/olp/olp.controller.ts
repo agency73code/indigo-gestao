@@ -141,7 +141,13 @@ export async function listSessionsByClient(req: Request, res: Response) {
         const { clientId } = req.params;
         if (!clientId) return res.status(400).json({ sucess: false, message: 'ID do paciente é obrigatório' });
 
-        const sessions = await OcpService.listSessionsByClient(clientId);
+        const sortParam = req.query.sort;
+        const sort =
+            sortParam === 'accuracy-asc' || sortParam === 'accuracy-desc'
+                ? sortParam
+                : 'recent';
+        
+        const sessions = await OcpService.listSessionsByClient(clientId, sort);
         return res.json ({ data: OcpNormalizer.mapSessionList(sessions) });
     } catch (error) {
         console.error(error);

@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
+import { useAbility } from '@/features/auth/abilities/useAbility';
 import { toast } from 'sonner';
 import {
     LinkList,
@@ -49,6 +50,8 @@ import {
 
 export default function VinculosPage() {
     const { setPageTitle } = usePageTitle();
+    const ability = useAbility();
+    const canManageAll = ability.can('manage', 'all');
     const [links, setLinks] = useState<PatientTherapistLink[]>([]);
     const [supervisionLinks, setSupervisionLinks] = useState<TherapistSupervisionLink[]>([]);
     const [patients, setPatients] = useState<Paciente[]>([]);
@@ -715,24 +718,26 @@ export default function VinculosPage() {
                     </Select>
                     
                     {/* Botões - Direita */}
-                    <div className="flex gap-2 ml-auto">
-                        <Button
-                            onClick={handleCreateLink}
-                            className="shrink-0 px-4"
-                            variant="default"
-                        >
-                            <Plus className="h-4 w-4 mr-2" />
-                            <span>Vínculo Cliente</span>
-                        </Button>
-                        <Button
-                            onClick={handleCreateSupervisionLink}
-                            className="shrink-0 px-4"
-                            variant="outline"
-                        >
-                            <Users className="h-4 w-4 mr-2" />
-                            <span>Vínculo Supervisão</span>
-                        </Button>
-                    </div>
+                    {canManageAll && (
+                        <div className="flex gap-2 ml-auto">
+                            <Button
+                                onClick={handleCreateLink}
+                                className="shrink-0 px-4"
+                                variant="default"
+                            >
+                                <Plus className="h-4 w-4 mr-2" />
+                                <span>Vínculo Cliente</span>
+                            </Button>
+                            <Button
+                                onClick={handleCreateSupervisionLink}
+                                className="shrink-0 px-4"
+                                variant="outline"
+                            >
+                                <Users className="h-4 w-4 mr-2" />
+                                <span>Vínculo Supervisão</span>
+                            </Button>
+                        </div>
+                    )}
                 </div>
 
                 {/* Tabs de visualização - Largura total */}
