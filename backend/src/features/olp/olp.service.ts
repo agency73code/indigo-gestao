@@ -2,7 +2,7 @@ import { prisma } from "../../config/database.js";
 import { Prisma } from '@prisma/client'
 import * as OcpType from "./types/olp.types.js";
 import * as OcpNormalizer from './olp.normalizer.js';
-import { format } from "date-fns";
+import { endOfDay, format, parseISO, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { program, session } from "./actions/create.js";
 import { programUpdate } from "./actions/update.js";
@@ -264,8 +264,18 @@ export async function listByClientId(
     });
 }
 
-export async function listSessionsByClient(clientId: string) {
-    return prisma.sessao.findMany({
+type SessionSort = 'recent' | 'accuracy-asc' | 'accuracy-desc';
+
+function calculateSessionAccuracy(session: OcpType.SessionDTO) {
+    const totalTrials = session.trials.length;
+    if (!totalTrials) return null;
+
+    const successfulTrials = session.trials.filter(trial => trial.resultado !== 'error').length;
+    return successfulTrials / totalTrials;
+}
+
+export async function listSessionsByClient(clientId: string, sort: SessionSort = 'recent') {
+    const sessions = await prisma.sessao.findMany({
         where: { cliente_id: clientId },
         select: {
             id: true,
@@ -296,7 +306,32 @@ export async function listSessionsByClient(clientId: string) {
                 orderBy: { ordem: 'asc' },
             },
         },
+        orderBy: { data_criacao: 'desc' },
     });
+
+    if (sort === 'recent') return sessions;
+
+    const direction = sort === 'accuracy-asc' ? 'asc' : 'desc';
+
+    return [...sessions].sort((a, b) => {
+        const accuracyA = calculateSessionAccuracy(a);
+        const accuracyB = calculateSessionAccuracy(b);
+
+        if (accuracyA === null && accuracyB === null) {
+            return b.data_criacao.getTime() - a.data_criacao.getTime();
+        }
+
+        if (accuracyA === null) return 1;
+        if (accuracyB === null) return -1;
+
+        if (accuracyA === accuracyB) {
+            return b.data_criacao.getTime() - a.data_criacao.getTime();
+        }
+
+        return direction === 'asc'
+            ? accuracyA - accuracyB
+            : accuracyB - accuracyA;
+    })
 }
 
 export async function getKpis(filtros: OcpType.KpisFilters) {
@@ -324,10 +359,15 @@ export async function getKpis(filtros: OcpType.KpisFilters) {
         where.data_criacao = { gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) };
     }
     if (filtros.periodo.mode === "custom" && filtros.periodo.start && filtros.periodo.end) {
-        where.data_criacao = {
-            gte: new Date(filtros.periodo.start),
-            lte: new Date(filtros.periodo.end),
-        };
+        const startDate = parseISO(filtros.periodo.start);
+        const endDate = parseISO(filtros.periodo.end);
+
+        if (!Number.isNaN(startDate.getTime()) && !Number.isNaN(endDate.getTime())) {
+            where.data_criacao = {
+                gte: startOfDay(startDate),
+                lte: endOfDay(endDate),
+            };
+        }
     }
 
     const sessions = await prisma.sessao.findMany({
@@ -485,10 +525,15 @@ export async function getAttentionStimuli(filters: OcpType.AttentionStimuliFilte
         } else if (filters.periodo.mode === '90d') {
             where.data_criacao = { gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) };
         } else if (filters.periodo.mode === 'custom' && filters.periodo.start && filters.periodo.end) {
-            where.data_criacao = {
-                gte: new Date(filters.periodo.start),
-                lte: new Date(filters.periodo.end),
-            };
+            const startDate = parseISO(filters.periodo.start);
+            const endDate = parseISO(filters.periodo.end);
+
+            if (!Number.isNaN(startDate.getTime()) && !Number.isNaN(endDate.getTime())) {
+                where.data_criacao = {
+                    gte: startOfDay(startDate),
+                    lte: endOfDay(endDate),
+                };
+            }
         }
     }
 
