@@ -32,10 +32,18 @@ const PRINT_PAGE_STYLE = `
     
     @bottom-right {
       content: "Página " counter(page) " de " counter(pages);
-      font-size: 12px;
+      font-size: 11px;
       color: hsl(var(--primary));
-      font-family: 'Sora', system-ui, -apple-system, sans-serif;
+      font-family: 'Sora', sans-serif;
       font-weight: 500;
+    }
+    
+    @bottom-left {
+      content: "";
+    }
+    
+    @bottom-center {
+      content: "";
     }
   }
   
@@ -67,11 +75,31 @@ const PRINT_PAGE_STYLE = `
       display: block !important; 
     }
     
+    /* Ocultar elementos que não devem aparecer na impressão */
     .no-print, 
     [data-screen-only], 
     nav, 
     header[role="banner"], 
-    [data-role="toolbar"] {
+    [data-role="toolbar"],
+    /* Remover toasts e notificações */
+    [data-sonner-toaster],
+    [data-toast],
+    [class*="toast"],
+    [class*="Toaster"],
+    /* Remover header principal da aplicação */
+    header,
+    [data-header],
+    /* Remover barra de ferramentas do editor de texto */
+    .tiptap-toolbar,
+    .editor-toolbar,
+    [data-toolbar],
+    .ProseMirror-menubar,
+    .ql-toolbar,
+    /* Remover controles de edição do Rich Text */
+    [class*="toolbar"],
+    [class*="RichText"] button,
+    [class*="editor"] [role="toolbar"],
+    .rdw-editor-toolbar {
       display: none !important;
     }
 
@@ -140,6 +168,35 @@ const PRINT_PAGE_STYLE = `
       align-items: stretch;
     }
 
+    /* Adicionar cor de fundo nos cards de KPI */
+    [data-print-kpi-grid] > * {
+      background-color: hsl(var(--muted)) !important;
+      border: 1px solid hsl(var(--border)) !important;
+      border-radius: 8px !important;
+      padding: 1rem !important;
+    }
+
+    /* Garantir que ícones nos cards não sejam cortados */
+    [data-print-kpi-grid] svg,
+    [data-print-kpi-grid] [class*="icon"],
+    [data-print-kpi-grid] .lucide {
+      overflow: visible !important;
+      flex-shrink: 0 !important;
+      min-width: 16px !important;
+      min-height: 16px !important;
+    }
+
+    /* Ajustar espaçamento interno dos cards KPI */
+    [data-print-kpi-grid] [class*="CardHeader"],
+    [data-print-kpi-grid] [class*="card-header"] {
+      padding-bottom: 8px !important;
+    }
+
+    [data-print-kpi-grid] [class*="CardContent"],
+    [data-print-kpi-grid] [class*="card-content"] {
+      padding-top: 0 !important;
+    }
+
     /* largura "desktop" pro gráfico e cards */
     [data-print-chart],
     [data-print-wide] {
@@ -180,6 +237,10 @@ const PRINT_PAGE_STYLE = `
       max-width: 100% !important;
       padding: 0 !important;
       margin: 0 0 6mm 0 !important; /* Adiciona espaçamento inferior */
+      background-color: hsl(var(--muted) / 0.3) !important;
+      border: 1px solid hsl(var(--border)) !important;
+      border-radius: 8px !important;
+      padding: 1rem !important;
     }
     
     [data-print-filters-summary] > *,
@@ -190,6 +251,7 @@ const PRINT_PAGE_STYLE = `
     
     [data-print-filters-summary] h3 {
       margin-bottom: 2mm !important;
+      font-weight: 600 !important;
     }
     
     /* Grid de chips - distribuir uniformemente em 4 colunas como os KPIs */
@@ -212,10 +274,43 @@ const PRINT_PAGE_STYLE = `
       font-size: 12px;
       text-align: left;
       box-sizing: border-box;
+      background-color: white !important;
     }
     
     [data-print-hide-in-filters] { 
       display: none !important; 
+    }
+
+    /* Rich Text Editor - manter apenas o conteúdo */
+    .ProseMirror {
+      border: none !important;
+      padding: 0.5rem !important;
+      min-height: auto !important;
+    }
+
+    /* Observação Clínica - estilização para impressão */
+    [data-print-block]:has(.ProseMirror) {
+      background-color: hsl(var(--muted) / 0.3) !important;
+      border: 1px solid hsl(var(--border)) !important;
+      border-radius: 8px !important;
+      padding: 1rem !important;
+    }
+
+    /* PatientSelector e blocos de cliente - manter estilo */
+    [data-print-program-header] {
+      margin-bottom: 1rem !important;
+    }
+
+    /* Garantir que botões de ação não apareçam */
+    [data-print-program-header] button:not([data-print-keep]),
+    [data-print-block] button:not([data-print-keep]) {
+      display: none !important;
+    }
+
+    /* Manter informações do paciente visíveis */
+    [data-print-program-header] [class*="patient"],
+    [data-print-program-header] [class*="Patient"] {
+      display: block !important;
     }
   }
 `;
@@ -225,7 +320,7 @@ export function ReportExporter({
     children,
     documentTitle,
     reportTitle = DEFAULT_REPORT_TITLE,
-    pageTitle = 'Painel de Progresso - Programas & Objetivos',
+    pageTitle = 'xx',
     pageSubtitle = 'Análise completa do desempenho e evolução do cliente',
     hideButton = false,
     onPrintReady,

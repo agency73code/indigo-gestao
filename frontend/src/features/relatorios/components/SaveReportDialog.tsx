@@ -47,22 +47,42 @@ export function SaveReportDialog({
   }, [open, defaultTitle]);
 
   const handleSave = async () => {
+    console.log('🟡 [DIALOG] Iniciando salvamento...');
+    console.log('🟡 [DIALOG] Título:', title);
+    
     if (!title.trim()) {
+      console.log('⚠️ [DIALOG] Título vazio');
       setError('O título do relatório é obrigatório');
       return;
     }
 
     try {
+      console.log('🟡 [DIALOG] Chamando onSave...');
       setSaving(true);
       setError(null);
       
+      // FECHA O MODAL PRIMEIRO
+      onOpenChange(false);
+      
+      // Aguarda modal fechar completamente
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
       const report = await onSave(title.trim());
       
-      setSavedReport(report);
-      setSaved(true);
+      console.log('✅ [DIALOG] Relatório salvo:', report);
+      
+      // Se não foi via print manual, mostra resultado
+      if (report.pdfUrl !== 'local-download' && !report.id.startsWith('local-')) {
+        setSavedReport(report);
+        setSaved(true);
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao salvar relatório');
+      console.error('❌ [DIALOG] Erro capturado:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao salvar relatório';
+      console.error('❌ [DIALOG] Mensagem de erro:', errorMessage);
+      setError(errorMessage);
     } finally {
+      console.log('🟡 [DIALOG] Finalizando (setSaving false)...');
       setSaving(false);
     }
   };

@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import html2pdf from 'html2pdf.js';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Save, FileDown, FileText } from 'lucide-react';
@@ -23,6 +22,11 @@ import type { SavedReport } from '../types';
 import { ReportExporter } from '../gerar-relatorio/print/ReportExporter';
 import { useAuth } from '@/features/auth';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
+import { 
+    saveReportToBackend, 
+    exportPdfDirectly,
+    sanitizeForFileName
+} from '../services/pdf-export.service';
 
 export function GerarRelatorioPage() {
     const { user } = useAuth();
@@ -40,9 +44,14 @@ export function GerarRelatorioPage() {
     const [loadingCharts, setLoadingCharts] = useState(true);
 
     // Estados para os filtros (programas, estímulos, terapeutas)
-    const [programas, _setProgramas] = useState<{ id: string; nome: string }[]>([]);
-    const [estimulos, _setEstimulos] = useState<{ id: string; nome: string }[]>([]);
-    const [terapeutas, _setTerapeutas] = useState<{ id: string; nome: string }[]>([]);
+    const [programas, setProgramas] = useState<{ id: string; nome: string }[]>([]);
+    const [estimulos, setEstimulos] = useState<{ id: string; nome: string }[]>([]);
+    const [terapeutas, setTerapeutas] = useState<{ id: string; nome: string }[]>([]);
+    
+    // Estados para os nomes dos filtros selecionados
+    const [programaNome, setProgramaNome] = useState<string>('');
+    const [estimuloNome, setEstimuloNome] = useState<string>('');
+    const [terapeutaNome, setTerapeutaNome] = useState<string>('');
 
     // 🔄 Lê filtros da URL
     const [filters, setFilters] = useState<Filters>(() => {
@@ -61,6 +70,77 @@ export function GerarRelatorioPage() {
             comparar: searchParams.get('comparar') === 'true',
         };
     });
+
+    // Carregar terapeutas
+    useEffect(() => {
+        console.log('🔄 Carregando terapeutas...');
+        fetch('/api/terapeutas/relatorio')
+            .then(res => {
+                console.log('📡 Resposta terapeutas:', res.status);
+                return res.json();
+            })
+            .then(response => {
+                console.log('📦 Response completo terapeutas:', response);
+                const data = response.data || response; // Tentar response.data primeiro
+                console.log('📦 Dados terapeutas recebidos:', data);
+                if (Array.isArray(data)) {
+                    setTerapeutas(data);
+                    console.log('✅ Terapeutas salvos:', data.length);
+                } else {
+                    console.warn('⚠️ Dados terapeutas não é array:', data);
+                }
+            })
+            .catch(err => console.error('❌ Erro ao carregar terapeutas:', err));
+    }, []);
+
+    // Carregar programas quando houver paciente
+    useEffect(() => {
+        if (filters.pacienteId) {
+            console.log('🔄 Carregando programas para paciente:', filters.pacienteId);
+            fetch(`/api/ocp/reports/filters/programs?clientId=${filters.pacienteId}`)
+                .then(res => {
+                    console.log('📡 Resposta programas:', res.status);
+                    return res.json();
+                })
+                .then(response => {
+                    console.log('📦 Response completo programas:', response);
+                    const data = response.data || response; // Tentar response.data primeiro
+                    console.log('📦 Dados programas recebidos:', data);
+                    if (Array.isArray(data)) {
+                        setProgramas(data);
+                        console.log('✅ Programas salvos:', data.length);
+                    } else {
+                        console.warn('⚠️ Dados programas não é array:', data);
+                    }
+                })
+                .catch(err => console.error('❌ Erro ao carregar programas:', err));
+        }
+    }, [filters.pacienteId]);
+
+    // Carregar estímulos quando houver paciente/programa
+    useEffect(() => {
+        if (filters.pacienteId) {
+            const url = `/api/ocp/reports/filters/stimulus?clientId=${filters.pacienteId}${filters.programaId ? `&programaId=${filters.programaId}` : ''}`;
+            console.log('🔄 Carregando estímulos:', url);
+            fetch(url)
+                .then(res => {
+                    console.log('📡 Resposta estímulos:', res.status);
+                    return res.json();
+                })
+                .then(response => {
+                    console.log('📦 Response completo estímulos:', response);
+                    const data = response.data || response; // Tentar response.data primeiro
+                    console.log('📦 Dados estímulos recebidos:', data);
+                    if (Array.isArray(data)) {
+                        setEstimulos(data);
+                        console.log('✅ Estímulos salvos:', data.length);
+                    } else {
+                        console.warn('⚠️ Dados estímulos não é array:', data);
+                    }
+                })
+                .catch(err => console.error('❌ Erro ao carregar estímulos:', err));
+        }
+    }, [filters.pacienteId, filters.programaId]);
 
     // 🔄 Sincroniza filtros com URL
     const syncFiltersToUrl = useCallback((newFilters: Filters) => {
@@ -103,6 +183,28 @@ export function GerarRelatorioPage() {
         }));
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    // Atualizar nomes quando os arrays mudarem
+    useEffect(() => {
+        if (filters.programaId && programas.length > 0) {
+            const programa = programas.find(p => String(p.id) === String(filters.programaId));
+            setProgramaNome(programa?.nome || '');
+        }
+    }, [filters.programaId, programas]);
+
+    useEffect(() => {
+        if (filters.estimuloId && estimulos.length > 0) {
+            const estimulo = estimulos.find(e => String(e.id) === String(filters.estimuloId));
+            setEstimuloNome(estimulo?.nome || '');
+        }
+    }, [filters.estimuloId, estimulos]);
+
+    useEffect(() => {
+        if (filters.terapeutaId && terapeutas.length > 0) {
+            const terapeuta = terapeutas.find(t => t.id === filters.terapeutaId);
+            setTerapeutaNome(terapeuta?.nome || '');
+        }
+    }, [filters.terapeutaId, terapeutas]);
 
 
     const loadData = useCallback(async (currentFilters: Filters) => {
@@ -153,14 +255,6 @@ export function GerarRelatorioPage() {
         });
     }, [user])
 
-    const sanitizeForFileName = (value: string) =>
-        value
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .replace(/[^a-zA-Z0-9]+/g, '_')
-            .replace(/^_+|_+$/g, '')
-            .toLowerCase();
-
     const documentTitle = useMemo(() => {
         if (!selectedPatient) {
             return undefined;
@@ -201,147 +295,120 @@ export function GerarRelatorioPage() {
             throw new Error('Nenhum paciente selecionado');
         }
 
-        // PASSO 1: Gerar PDF da tela atual
-        toast.info('Gerando PDF do relatório...', { duration: 2000 });
-        
+        if (!user?.id) {
+            throw new Error('Usuário não autenticado');
+        }
+
+        // Validar se há dados para salvar
+        if (!kpis) {
+            toast.error('Aguarde o carregamento dos dados do relatório');
+            throw new Error('Dados do relatório ainda não foram carregados');
+        }
+
+        // Localizar o elemento do relatório
         const reportElement = document.querySelector('[data-report-exporter]') as HTMLElement;
         if (!reportElement) {
             throw new Error('Conteúdo do relatório não encontrado');
         }
 
-        // Configurações do PDF
-        const pdfFileName = `relatorio_${sanitizeForFileName(selectedPatient.name)}_${new Date().toISOString().split('T')[0]}.pdf`;
-        
-        const opt = {
-            margin: 10,
-            filename: pdfFileName,
-            image: { type: 'jpeg' as const, quality: 0.98 },
-            html2canvas: { 
-                scale: 2, 
-                useCORS: true,
-                logging: false,
-                letterRendering: true
-            },
-            jsPDF: { 
-                unit: 'mm', 
-                format: 'a4', 
-                orientation: 'portrait' as const
+        // Calcular start e end baseado no modo do período
+        const calculatePeriodDates = () => {
+            if (filters.periodo.mode === 'custom') {
+                return {
+                    start: filters.periodo.start || new Date().toISOString().split('T')[0],
+                    end: filters.periodo.end || new Date().toISOString().split('T')[0],
+                };
             }
+
+            const days = filters.periodo.mode === '90d' ? 90 : 30;
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - days);
+
+            return {
+                start: startDate.toISOString().split('T')[0],
+                end: endDate.toISOString().split('T')[0],
+            };
         };
 
-        let pdfBlob: Blob;
-        try {
-            pdfBlob = await html2pdf()
-                .set(opt)
-                .from(reportElement)
-                .output('blob');
-        } catch (error) {
-            console.error('Erro ao gerar PDF:', error);
-            throw new Error('Erro ao gerar PDF do relatório');
-        }
+        const { start, end } = calculatePeriodDates();
 
-        // PASSO 2: Determinar o período com base nos filtros
-        let periodStart: string;
-        let periodEnd: string = new Date().toISOString().split('T')[0]; // ISO Date (YYYY-MM-DD)
-
-        if (filters.periodo.mode === 'custom' && filters.periodo.start && filters.periodo.end) {
-            periodStart = filters.periodo.start;
-            periodEnd = filters.periodo.end;
-        } else if (filters.periodo.mode === '90d') {
-            const startDate = new Date();
-            startDate.setDate(startDate.getDate() - 90);
-            periodStart = startDate.toISOString().split('T')[0];
-        } else {
-            // Default: 30 dias
-            const startDate = new Date();
-            startDate.setDate(startDate.getDate() - 30);
-            periodStart = startDate.toISOString().split('T')[0];
-        }
-
-        // PASSO 3: Construir FormData com PDF + dados do relatório
-        toast.info('Salvando relatório...', { duration: 2000 });
-
-        const formData = new FormData();
-        formData.append('pdf', pdfBlob, pdfFileName);
-        formData.append('title', title);
-        formData.append('type', 'mensal');
-        formData.append('patientId', selectedPatient.id);
-        formData.append('therapistId', ''); // TODO: pegar do contexto de autenticação
-        formData.append('periodStart', periodStart);
-        formData.append('periodEnd', periodEnd);
-        formData.append('clinicalObservations', observacaoClinica);
-        formData.append('status', 'final');
-
-        // Adicionar dados estruturados (filtros e dados gerados)
-        const periodo: import('../types').ReportPeriod = {
-            mode: filters.periodo.mode,
-            start: periodStart,
-            end: periodEnd,
-        };
-
-        const structuredData = {
-            filters: {
-                pacienteId: selectedPatient.id,
-                periodo,
-                programaId: filters.programaId,
-                estimuloId: filters.estimuloId,
-                terapeutaId: filters.terapeutaId,
-                comparar: filters.comparar,
+        // Preparar dados gerados do relatório
+        const generatedData = {
+            kpis: {
+                acerto: kpis.acerto || 0,
+                independencia: kpis.independencia || 0,
+                tentativas: kpis.tentativas || 0,
+                sessoes: kpis.sessoes || 0,
+                assiduidade: kpis.assiduidade,
+                gapIndependencia: kpis.gapIndependencia,
             },
-            generatedData: {
-                kpis: kpis ? {
-                    acerto: kpis.acerto || 0,
-                    independencia: kpis.independencia || 0,
-                    tentativas: kpis.tentativas || 0,
-                    sessoes: kpis.sessoes || 0,
-                    assiduidade: kpis.assiduidade,
-                    gapIndependencia: kpis.gapIndependencia,
-                } : {
-                    acerto: 0,
-                    independencia: 0,
-                    tentativas: 0,
-                    sessoes: 0,
+            graphic: serieLinha.map(item => ({
+                x: item.x || '',
+                acerto: item.acerto || 0,
+                independencia: item.independencia || 0,
+            })),
+            programDeadline: prazoPrograma ? {
+                percent: prazoPrograma.percent || 0,
+                label: prazoPrograma.label || '',
+                inicio: prazoPrograma.inicio,
+                fim: prazoPrograma.fim,
+            } : undefined,
+        };
+
+        // Usar o serviço otimizado para salvar
+        try {
+            const savedReport = await saveReportToBackend({
+                title,
+                patientId: selectedPatient.id,
+                patientName: selectedPatient.name,
+                therapistId: user.id,
+                filters: {
+                    pacienteId: selectedPatient.id,
+                    periodo: {
+                        mode: filters.periodo.mode,
+                        start,
+                        end,
+                    },
+                    programaId: filters.programaId,
+                    estimuloId: filters.estimuloId,
+                    terapeutaId: filters.terapeutaId,
+                    comparar: filters.comparar,
                 },
-                graphic: serieLinha.map(item => ({
-                    x: item.x || '',
-                    acerto: item.acerto || 0,
-                    independencia: item.independencia || 0,
-                })),
-                programDeadline: prazoPrograma ? {
-                    percent: prazoPrograma.percent || 0,
-                    label: prazoPrograma.label || '',
-                    inicio: prazoPrograma.inicio,
-                    fim: prazoPrograma.fim,
-                } : undefined,
-            },
-        };
-
-        formData.append('data', JSON.stringify(structuredData));
-
-        // PASSO 4: Enviar para o backend
-        try {
-            const response = await fetch(`${import.meta.env.VITE_API_BASE || ''}/api/relatorios`, {
-                method: 'POST',
-                body: formData,
-                credentials: 'include',
+                generatedData,
+                clinicalObservations: observacaoClinica || '',
+                reportElement,
             });
 
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.message || 'Erro ao salvar relatório');
-            }
-
-            const savedReport: SavedReport = await response.json();
-            
-            toast.success('Relatório salvo com sucesso!');
-            
             return savedReport;
         } catch (error) {
-            console.error('Erro ao salvar relatório:', error);
-            toast.error(error instanceof Error ? error.message : 'Erro ao salvar relatório');
+            // Erro já tratado pelo serviço
             throw error;
         }
     };
+
+    // Handler para exportar PDF diretamente (sem salvar)
+    const handleExportPdf = useCallback(async () => {
+        if (!selectedPatient) {
+            toast.error('Nenhum paciente selecionado');
+            return;
+        }
+
+        const reportElement = document.querySelector('[data-report-exporter]') as HTMLElement;
+        if (!reportElement) {
+            toast.error('Conteúdo do relatório não encontrado');
+            return;
+        }
+
+        const pdfFileName = `relatorio_${sanitizeForFileName(selectedPatient.name)}_${new Date().toISOString().split('T')[0]}.pdf`;
+
+        try {
+            await exportPdfDirectly(reportElement, pdfFileName);
+        } catch (error) {
+            console.error('Erro ao exportar PDF:', error);
+            // Toast já exibido pelo serviço
+        }
+    }, [selectedPatient]);
 
     // Labels para o resumo de filtros no PDF
     const getPeriodoLabel = () => {
@@ -357,40 +424,28 @@ export function GerarRelatorioPage() {
 
     const getProgramaLabel = () => {
         if (!filters.programaId) return 'Todos os programas';
-        if (!Array.isArray(programas)) return 'Todos os programas';
-        const programa = programas.find((p) => p.id === filters.programaId);
-        return programa?.nome || filters.programaId;
+        return programaNome || `Programa ${filters.programaId}`;
     };
 
     const getEstimuloLabel = () => {
         if (!filters.estimuloId) return 'Todos os estímulos';
-        if (!Array.isArray(estimulos)) return 'Todos os estímulos';
-        const estimulo = estimulos.find((e) => e.id === filters.estimuloId);
-        return estimulo?.nome || filters.estimuloId;
+        return estimuloNome || `Estímulo ${filters.estimuloId}`;
     };
 
     const getTerapeutaLabel = () => {
         if (!filters.terapeutaId) return 'Todos os terapeutas';
-        if (!Array.isArray(terapeutas)) {
-            console.warn('Terapeutas não é um array:', terapeutas);
-            return 'Todos os terapeutas';
-        }
-        console.log('Buscando terapeuta com ID:', filters.terapeutaId);
-        console.log('Lista de terapeutas disponível:', terapeutas);
-        const terapeuta = terapeutas.find((t) => t.id === filters.terapeutaId);
-        console.log('Terapeuta encontrado:', terapeuta);
-        return terapeuta?.nome || filters.terapeutaId;
+        return terapeutaNome || filters.terapeutaId;
     };
 
     // Configurar título e botões do header
     useEffect(() => {
-        setPageTitle('Painel de Progresso - Programas & Objetivos');
+        setPageTitle('Relatórios de Progresso');
     }, [setPageTitle]);
 
     useEffect(() => {
         if (selectedPatient) {
             setHeaderActions(
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 no-print">
                     <Button
                         onClick={() => setSaveDialogOpen(true)}
                         className="h-10 rounded-full gap-2"
@@ -400,9 +455,7 @@ export function GerarRelatorioPage() {
                         Salvar Relatório
                     </Button>
                     <Button
-                        onClick={() => {
-                            toast.info('Funcionalidade em desenvolvimento');
-                        }}
+                        onClick={handleExportPdf}
                         className="h-10 rounded-full gap-2"
                         variant="outline"
                     >
@@ -416,10 +469,10 @@ export function GerarRelatorioPage() {
         }
 
         return () => setHeaderActions(null);
-    }, [selectedPatient, setHeaderActions]);
+    }, [selectedPatient, setHeaderActions, handleExportPdf]);
 
     return (
-        <div className="flex flex-col w-full h-full">
+        <div className="flex flex-col w-full">
             {selectedPatient ? (
                 <>
                     <ReportExporter 
@@ -427,7 +480,7 @@ export function GerarRelatorioPage() {
                         onSave={() => setSaveDialogOpen(true)}
                         hideButton={true}
                     >
-                        <div className="space-y-4 p-4">
+                        <div data-print-content className="space-y-4 p-4">
                         {/* Bloco de Cliente - aparece em tela e PDF */}
                         <div data-print-program-header>
                             <PatientSelector
@@ -535,19 +588,9 @@ export function GerarRelatorioPage() {
                 />
                 </>
             ) : (
-                <div className="flex flex-col w-full h-full">
-                    <div className="px-6 pt-6 pb-2">
-                        <h1
-                            className="text-2xl font-medium text-primary"
-                            style={{ fontFamily: 'Sora, sans-serif' }}
-                        >
-                            Painel de Progresso - Programas & Objetivos
-                        </h1>
-                        <p className="text-sm text-muted-foreground mt-1">
-                            Análise completa do desempenho e evolução do cliente
-                        </p>
-                    </div>
-                    <div className="space-y-4 md:space-y-6 px-6 pb-6">
+                <div className="flex flex-col w-full">
+                    
+                    <div className="space-y-4 md:space-y-6 px-4 pb-4 pt-4 flex-1">
                         <PatientSelector
                             selected={selectedPatient}
                             onSelect={handlePatientSelect}

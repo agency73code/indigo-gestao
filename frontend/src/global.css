@@ -59,19 +59,22 @@
     --blue-moon-gradient-end: #E9E4F0;
     --container-background: rgba(255, 255, 255, 0.85);
     --hub-card-title-font-family: 'Sora', sans-serif;
-    --hub-card-title-font-weight: 500;
+    --hub-card-title-font-weight: 400;
     --hub-card-title-color: rgba(0, 0, 0, 0.87);
     --hub-card-background: #F2F2F2;
     --hub-nested-card-background: #FFFFFF;
     
     /* Title variables - centralized for all titles */
-    --page-title-font-size: 1.5rem;
+    --page-title-font-size: 1.2rem;
     --page-title-font-weight: 400;
     --page-title-font-family: 'Sora', sans-serif;
     
     --card-title-font-size: 1rem;
-    --card-title-font-weight: 500;
+    --card-title-font-weight: 400;
     --card-title-font-family: 'Sora', sans-serif;
+    
+    /* Hub section title - Visão Geral */
+    --hub-section-title-font-weight: 400;
     
     /* Dashboard card numbers */
     --dashboard-number-font-weight: 400;
@@ -119,7 +122,7 @@ body {
     --blue-moon-gradient-end: #0a0a0a;
     --container-background: rgba(10, 10, 10, 0.8);
     --hub-card-title-font-family: 'Sora', sans-serif;
-    --hub-card-title-font-weight: 500;
+    --hub-card-title-font-weight: 300;
     --hub-card-title-color: hsl(220, 9%, 70%);
     --hub-card-background: #212125;
     --hub-nested-card-background: #2a2a2e;

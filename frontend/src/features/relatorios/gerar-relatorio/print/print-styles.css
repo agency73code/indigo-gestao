@@ -1,0 +1,264 @@
+@media print {
+  html, body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    overflow: visible !important;
+    font-size: 18px;
+    transform: scale(1) !important;
+    zoom: 1 !important;
+  }
+
+  /* Força largura total no PDF */
+  [data-print-root] { 
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important; 
+    padding: 1rem !important;
+    padding-top: 1rem !important;
+    transform: none !important;
+  }
+
+  /* Cabeçalho do PDF com padding superior */
+  [data-print-meta-header] {
+    padding-top: 0.5rem !important;
+    margin-bottom: 0rem !important;
+  }
+
+  /* Remove limitações de largura das divs internas */
+  [data-print-root] > * {
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  /* Container principal ocupa 100% */
+  [data-print-content],
+  [data-print-content] > *,
+  [data-print-content] .min-h-screen {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  /* Forçar containers que normalmente têm max-width */
+  .max-w-lg,
+  .max-w-xl,
+  .max-w-2xl,
+  .max-w-3xl,
+  .max-w-4xl,
+  .max-w-5xl,
+  .max-w-6xl,
+  .max-w-7xl,
+  .max-w-screen-sm,
+  .max-w-screen-md,
+  .max-w-screen-lg,
+  .max-w-screen-xl {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  /* Cards ocupam largura total */
+  [data-print-block] {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  [data-print-only] { 
+    display: block !important; 
+  }
+  
+  .no-print, 
+  [data-screen-only] {
+    display: none !important;
+  }
+
+  /* Gráficos ocupam largura total */
+  [data-print-chart] canvas,
+  [data-print-chart] svg,
+  [data-print-wide] canvas,
+  [data-print-wide] svg {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Grid de KPIs em 4 colunas */
+  [data-print-kpi-grid] {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 1rem !important;
+  }
+
+  /* Remove scrollbars */
+  * {
+    overflow: visible !important;
+    scrollbar-width: none !important;
+  }
+  *::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  /* Ajusta padding das seções para melhor uso do espaço */
+  [data-print-block] {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  /* Ocultar elementos */
+  .tiptap-toolbar,
+  .editor-toolbar,
+  [data-toolbar],
+  .ProseMirror-menubar,
+  .ql-toolbar,
+  [class*="toolbar"],
+  [class*="RichText"] button,
+  [class*="editor"] [role="toolbar"],
+  .rdw-editor-toolbar,
+  [data-sonner-toaster],
+  [data-toast],
+  [class*="toast"],
+  [class*="Toaster"],
+  header,
+  [data-header],
+  [role="banner"],
+  nav,
+  [role="navigation"] {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  /* Ocultar todos os botões de ação do header */
+  header *,
+  [data-header] *,
+  [role="banner"] * {
+    display: none !important;
+  }
+
+  /* Remover bordas do ProseMirror */
+  .ProseMirror {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    padding: 1rem !important;
+    min-height: auto !important;
+    background: transparent !important;
+  }
+
+  /* Observação Clínica - estilo de card igual ao Hub */
+  [data-print-block]:has(.ProseMirror) {
+    background-color: white !important;
+    border: 1px solid hsl(var(--border)) !important;
+    border-radius: 8px !important;
+    padding: 0 !important;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1) !important;
+  }
+
+  /* Título da Observação Clínica */
+  [data-print-block]:has(.ProseMirror) label {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    font-weight: 600 !important;
+    font-size: 1rem !important;
+    padding: 1rem 1rem 0.5rem 1rem !important;
+    margin: 0 !important;
+    color: hsl(var(--foreground)) !important;
+  }
+
+  /* Ocultar botões */
+  [data-print-program-header] button,
+  [data-print-block] button {
+    display: none !important;
+  }
+
+  /* Filtros - estilo de card igual ao Hub */
+  [data-print-filters-summary] { 
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 1.5rem !important;
+    margin: 0 0 1rem 0 !important;
+    background-color: white !important;
+    border: 1px solid hsl(var(--border)) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1) !important;
+  }
+
+  /* Remove espaçamento extra das divs internas */
+  [data-print-filters-summary] > div,
+  [data-print-filters-summary] .space-y-2 {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  
+  [data-print-filters-summary] h3 {
+    margin: 0 0 1rem 0 !important;
+    padding: 0 !important;
+    font-weight: 600 !important;
+    font-size: 1rem !important;
+    color: hsl(var(--primary)) !important;
+    font-family: 'Sora', sans-serif !important;
+  }
+  
+  /* Grid de chips */
+  [data-print-filters-summary] .flex {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 0.75rem !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  
+  /* Cada chip individual */
+  [data-print-filters-summary] .chip,
+  [data-print-filters-summary] span.chip {
+    display: block !important;
+    width: 100% !important;
+    padding: 0.75rem 1rem !important;
+    border-radius: 6px !important;
+    border: 1px solid hsl(var(--border)) !important;
+    font-size: 0.875rem !important;
+    line-height: 1.25rem !important;
+    background-color: hsl(var(--muted)) !important;
+    color: hsl(var(--foreground)) !important;
+    box-sizing: border-box !important;
+    text-align: left !important;
+  }
+
+  /* Negrito nos labels dentro dos chips */
+  [data-print-filters-summary] .chip strong,
+  [data-print-filters-summary] span.chip strong {
+    font-weight: 600 !important;
+    color: hsl(var(--foreground)) !important;
+  }
+
+  /* KPI Cards com estilo de card igual ao Hub */
+  [data-print-kpi-grid] > * {
+    background-color: white !important;
+    border: 1px solid hsl(var(--border)) !important;
+    border-radius: 8px !important;
+    padding: 1rem !important;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1) !important;
+  }
+}
+
+@page { 
+  size: A4; 
+  margin: 8mm 6mm 12mm 6mm;
+  
+  @bottom-right {
+    content: "Página " counter(page) " de " counter(pages);
+    font-size: 12px;
+    color: hsl(var(--primary));
+    font-family: 'Sora', system-ui, -apple-system, sans-serif;
+    font-weight: 400;
+  }
+}

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { CardContent } from '@/ui/card';
 import { Button } from '@/ui/button';
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Link as LinkIcon } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import ToolbarConsulta from '../components/ToolbarConsulta';
 import TherapistTable from '../components/TherapistTable';
@@ -156,6 +156,12 @@ export default function TerapeutasListPage() {
                         />
                     </div>
                     <div className="flex gap-2">
+                        <Link to="/app/cadastros/vinculos">
+                            <Button variant="outline" className="gap-2">
+                                <LinkIcon className="h-4 w-4" />
+                                Vincular
+                            </Button>
+                        </Link>
                         <Link to="/app/cadastro/terapeuta">
                             <Button className="gap-2">
                                 <Plus className="h-4 w-4" />

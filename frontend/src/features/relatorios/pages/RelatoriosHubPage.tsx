@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { FileText, FilePlus, Search, Archive } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardTitleHub } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitleHub } from '@/components/ui/card';
 import { useEffect, useState } from 'react';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 
@@ -85,67 +85,106 @@ export function RelatoriosHubPage() {
             {/* Quick Stats Cards */}
             <div className="space-y-4">
                 <h2
-                    style={{ fontFamily: 'Sora, sans-serif' }}
-                    className="text-lg sm:text-xl font-medium text-foreground"
+                    style={{ 
+                        fontFamily: 'Sora, sans-serif',
+                        fontWeight: 'var(--hub-section-title-font-weight)'
+                    }}
+                    className="text-lg sm:text-xl text-foreground"
                 >
                     Visão Geral
                 </h2>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <Card className="rounded-lg">
+                    <Card 
+                        padding="hub"
+                        className="rounded-lg border-0 shadow-none"
+                        style={{ backgroundColor: 'var(--hub-card-background)' }}
+                    >
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
+                            <CardTitleHub className="text-base">
                                 Total de Relatórios
-                            </CardTitle>
+                            </CardTitleHub>
                             <FileText className="h-5 w-5 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{totalRelatorios}</div>
+                            <div 
+                                className="text-2xl tracking-tight"
+                                style={{ fontWeight: 'var(--dashboard-number-font-weight)' }}
+                            >
+                                {totalRelatorios}
+                            </div>
                             <p className="text-xs text-muted-foreground">
                                 Total de relatórios no sistema
                             </p>
                         </CardContent>
                     </Card>
 
-                    <Card className="rounded-lg">
+                    <Card 
+                        padding="hub"
+                        className="rounded-lg border-0 shadow-none"
+                        style={{ backgroundColor: 'var(--hub-card-background)' }}
+                    >
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
+                            <CardTitleHub className="text-base">
                                 Finalizados
-                            </CardTitle>
+                            </CardTitleHub>
                             <FileText className="h-5 w-5 text-green-600" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{relatoriosFinalizados}</div>
+                            <div 
+                                className="text-2xl tracking-tight"
+                                style={{ fontWeight: 'var(--dashboard-number-font-weight)' }}
+                            >
+                                {relatoriosFinalizados}
+                            </div>
                             <p className="text-xs text-muted-foreground">
                                 Relatórios completos
                             </p>
                         </CardContent>
                     </Card>
 
-                    <Card className="rounded-lg">
+                    <Card 
+                        padding="hub"
+                        className="rounded-lg border-0 shadow-none"
+                        style={{ backgroundColor: 'var(--hub-card-background)' }}
+                    >
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
+                            <CardTitleHub className="text-base">
                                 Arquivados
-                            </CardTitle>
+                            </CardTitleHub>
                             <Archive className="h-5 w-5 text-gray-600" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{relatoriosArquivados}</div>
+                            <div 
+                                className="text-2xl tracking-tight"
+                                style={{ fontWeight: 'var(--dashboard-number-font-weight)' }}
+                            >
+                                {relatoriosArquivados}
+                            </div>
                             <p className="text-xs text-muted-foreground">
                                 Relatórios arquivados
                             </p>
                         </CardContent>
                     </Card>
 
-                    <Card className="rounded-lg">
+                    <Card 
+                        padding="hub"
+                        className="rounded-lg border-0 shadow-none"
+                        style={{ backgroundColor: 'var(--hub-card-background)' }}
+                    >
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
+                            <CardTitleHub className="text-base">
                                 Este Mês
-                            </CardTitle>
+                            </CardTitleHub>
                             <FilePlus className="h-5 w-5 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{relatoriosMesAtual}</div>
+                            <div 
+                                className="text-2xl tracking-tight"
+                                style={{ fontWeight: 'var(--dashboard-number-font-weight)' }}
+                            >
+                                {relatoriosMesAtual}
+                            </div>
                             <p className="text-xs text-muted-foreground">
                                 Relatórios gerados este mês
                             </p>

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { User, Users, BarChart3 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardTitleHub } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitleHub } from '@/components/ui/card';
 import { useEffect, useState } from 'react';
 import { getCardsOverview } from '@/lib/api';
 import type { Actions, Subjects } from '@/features/auth/abilities/ability';
@@ -118,42 +118,72 @@ export default function ConsultaHubPage() {
             {/* Quick Stats Cards */}
             <div className="space-y-4">
                 <h2
-                    style={{ fontFamily: 'Sora, sans-serif' }}
-                    className="text-lg sm:text-xl font-medium text-foreground"
+                    style={{ 
+                        fontFamily: 'Sora, sans-serif',
+                        fontWeight: 'var(--hub-section-title-font-weight)'
+                    }}
+                    className="text-lg sm:text-xl text-foreground"
                 >
                     Visão Geral
                 </h2>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <Card className="rounded-lg">
+                    <Card 
+                        padding="hub"
+                        className="rounded-lg border-0 shadow-none"
+                        style={{ backgroundColor: 'var(--hub-card-background)' }}
+                    >
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Total Terapeutas</CardTitle>
+                            <CardTitleHub className="text-base">Total Terapeutas</CardTitleHub>
                             <User className="h-5 w-5 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{totalTerapeutas}</div>
+                            <div 
+                                className="text-2xl tracking-tight"
+                                style={{ fontWeight: 'var(--dashboard-number-font-weight)' }}
+                            >
+                                {totalTerapeutas}
+                            </div>
                             <p className="text-xs text-muted-foreground">{`+${novosTerapeutas} desde o mês passado`}</p>
                         </CardContent>
                     </Card>
 
-                    <Card className="rounded-lg">
+                    <Card 
+                        padding="hub"
+                        className="rounded-lg border-0 shadow-none"
+                        style={{ backgroundColor: 'var(--hub-card-background)' }}
+                    >
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Total Clientes</CardTitle>
+                            <CardTitleHub className="text-base">Total Clientes</CardTitleHub>
                             <Users className="h-5 w-5 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{totalClientes}</div>
+                            <div 
+                                className="text-2xl tracking-tight"
+                                style={{ fontWeight: 'var(--dashboard-number-font-weight)' }}
+                            >
+                                {totalClientes}
+                            </div>
                             <p className="text-xs text-muted-foreground">{`+${novosClientes} novos este mês`}</p>
                         </CardContent>
                     </Card>
 
-                    <Card className="rounded-lg">
+                    <Card 
+                        padding="hub"
+                        className="rounded-lg border-0 shadow-none"
+                        style={{ backgroundColor: 'var(--hub-card-background)' }}
+                    >
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">Registros Ativos</CardTitle>
+                            <CardTitleHub className="text-base">Registros Ativos</CardTitleHub>
                             <BarChart3 className="h-5 w-5 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{totalRegistros}</div>
+                            <div 
+                                className="text-2xl tracking-tight"
+                                style={{ fontWeight: 'var(--dashboard-number-font-weight)' }}
+                            >
+                                {totalRegistros}
+                            </div>
                             <p className="text-xs text-muted-foreground">
                                 Total de registros ativos
                             </p>
