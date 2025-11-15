@@ -1,5 +1,5 @@
 import { useState, memo } from 'react';
-import { ChevronUp, ChevronDown, Eye, User } from 'lucide-react';
+import { ChevronUp, ChevronDown, ArrowUpRight, User } from 'lucide-react';
 import { Button } from '@/ui/button';
 import type { Therapist, SortState } from '../types/consultas.types';
 
@@ -129,6 +129,43 @@ const TherapistTable = memo(function TherapistTable({
         return <span className={`${baseClasses} ${statusClasses}`}>{displayText}</span>;
     };
 
+    const getEspecialidadeBadge = (especialidade: string | undefined) => {
+        if (!especialidade) return <span className="text-sm" style={{ color: 'var(--table-text)' }}>Não informado</span>;
+
+        const especialidadeColors: Record<string, { bg: string; text: string }> = {
+            'Fonoaudiologia': { bg: '#E3F2FD', text: '#4A6A8F' },
+            'Psicomotricidade': { bg: '#F3E5F5', text: '#7A6A8F' },
+            'Fisioterapia': { bg: '#E8F5E9', text: '#5A8F6A' },
+            'Terapia Ocupacional': { bg: '#FFF3E0', text: '#A57A5A' },
+            'Psicopedagogia': { bg: '#FCE4EC', text: '#8F6A7A' },
+            'Educador Físico': { bg: '#E0F2F1', text: '#5A8F85' },
+            'Terapia ABA': { bg: '#F1F8E9', text: '#758F5A' },
+            'Musicoterapia': { bg: '#EDE7F6', text: '#7A6AA5' },
+            'Pedagogia': { bg: '#FFF9C4', text: '#A5955A' },
+            'Neuropsicologia': { bg: '#E1F5FE', text: '#5A7EA5' },
+            'Nutrição': { bg: '#FFEBEE', text: '#A56A6A' },
+        };
+
+        const colors = especialidadeColors[especialidade] || { 
+            bg: 'rgba(25, 22, 29, 0.06)', 
+            text: 'var(--table-text)' 
+        };
+
+        return (
+            <span 
+                className="text-[14px] font-normal inline-block px-3 py-1" 
+                style={{ 
+                    fontFamily: 'Inter, sans-serif', 
+                    backgroundColor: colors.bg, 
+                    color: colors.text,
+                    borderRadius: '24px'
+                }}
+            >
+                {especialidade}
+            </span>
+        );
+    };
+
     const getInitials = (name: string) => {
         return name
             .split(' ')
@@ -147,8 +184,8 @@ const TherapistTable = memo(function TherapistTable({
     }
 
     return (
-        <div className="border rounded-lg overflow-hidden">
-            <div className="md:hidden divide-y">
+        <div className="flex flex-col min-h-0 rounded-lg overflow-hidden" style={{ backgroundColor: 'var(--table-bg)' }}>
+            <div className="md:hidden divide-y" style={{ borderColor: 'var(--table-border)' }}>
                 {therapists.map((therapist) => (
                     <div key={therapist.id} className="p-4 space-y-3">
                         <div className="flex items-start justify-between gap-3">
@@ -163,9 +200,9 @@ const TherapistTable = memo(function TherapistTable({
                                     <p className="font-medium text-sm text-foreground">
                                         {therapist.nome}
                                     </p>
-                                    <p className="text-xs text-muted-foreground">
-                                        {therapist.especialidade || 'Não informado'}
-                                    </p>
+                                    <div className="mt-1">
+                                        {getEspecialidadeBadge(therapist.especialidade)}
+                                    </div>
                                 </div>
                             </div>
                             <div className="text-right">
@@ -211,7 +248,7 @@ const TherapistTable = memo(function TherapistTable({
                                         onClick={() => onViewProfile(therapist)}
                                         className="gap-2"
                                     >
-                                        <Eye className="w-4 h-4" />
+                                        <ArrowUpRight className="w-4 h-4" />
                                         Visualizar
                                     </Button>
                                 </div>
@@ -225,17 +262,17 @@ const TherapistTable = memo(function TherapistTable({
                 <table className="w-full table-fixed">
                     <colgroup>
                         <col className="w-[23%]" />
+                        <col className="w-[18%]" />
+                        <col className="w-[17%] hidden lg:table-column" />
+                        <col className="w-[15%] hidden xl:table-column" />
+                        <col className="w-[6%]" />
                         <col className="w-[14%]" />
-                        <col className="w-[12%]" />
-                        <col className="w-[18%] hidden lg:table-column" />
-                        <col className="w-[12%] hidden xl:table-column" />
-                        <col className="w-[10%]" />
-                        <col className="w-[11%]" />
                     </colgroup>
-                    <thead className="bg-muted/50">
+                    <thead className="sticky top-0 z-10 shadow-sm" style={{ backgroundColor: 'var(--table-header-bg)' }}>
                         <tr>
                             <th
-                                className="text-left p-3 cursor-pointer hover:bg-muted/70 transition-colors first:rounded-tl-lg"
+                                className="text-left p-3 cursor-pointer transition-colors first:rounded-tl-lg"
+                                style={{ color: 'var(--table-text-secondary)' }}
                                 onClick={() => onSort('nome')}
                             >
                                 <div className="flex items-center gap-2 font-medium text-sm">
@@ -244,7 +281,8 @@ const TherapistTable = memo(function TherapistTable({
                                 </div>
                             </th>
                             <th
-                                className="text-left p-3 cursor-pointer hover:bg-muted/70 transition-colors"
+                                className="text-left p-3 cursor-pointer transition-colors"
+                                style={{ color: 'var(--table-text-secondary)' }}
                                 onClick={() => onSort('especialidade')}
                             >
                                 <div className="flex items-center gap-2 font-medium text-sm">
@@ -252,15 +290,15 @@ const TherapistTable = memo(function TherapistTable({
                                     {getSortIcon('especialidade')}
                                 </div>
                             </th>
-                            <th className="text-left p-3 font-medium text-sm">Conselho/Registro</th>
-                            <th className="text-left p-3 font-medium text-sm hidden lg:table-cell">
-                                E-mail
+                            <th className="text-left p-3 font-medium text-sm hidden lg:table-cell" style={{ color: 'var(--table-text-secondary)' }}>
+                                Cargo
                             </th>
-                            <th className="text-left p-3 font-medium text-sm hidden xl:table-cell">
+                            <th className="text-left p-3 font-medium text-sm hidden xl:table-cell" style={{ color: 'var(--table-text-secondary)' }}>
                                 Telefone
                             </th>
                             <th
-                                className="text-left p-3 cursor-pointer hover:bg-muted/70 transition-colors"
+                                className="text-left p-3 cursor-pointer transition-colors"
+                                style={{ color: 'var(--table-text-secondary)' }}
                                 onClick={() => onSort('status')}
                             >
                                 <div className="flex items-center gap-2 font-medium text-sm">
@@ -268,14 +306,19 @@ const TherapistTable = memo(function TherapistTable({
                                     {getSortIcon('status')}
                                 </div>
                             </th>
-                            <th className="text-center p-3 font-medium text-sm last:rounded-tr-lg">Ações</th>
+                            <th className="text-center p-3 font-medium text-sm last:rounded-tr-lg" style={{ color: 'var(--table-text-secondary)' }}>Ações</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="divide-y" style={{ borderColor: 'var(--table-border)' }}>
                         {therapists.map((therapist) => (
                             <tr
                                 key={therapist.id}
-                                className="border-t hover:bg-muted/50 transition-colors"
+                                className="transition-colors"
+                                style={{ 
+                                    backgroundColor: 'var(--table-bg)',
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-row-hover)'}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--table-bg)'}
                             >
                                 <td className="p-3">
                                     <div className="flex items-center gap-2.5">
@@ -286,32 +329,22 @@ const TherapistTable = memo(function TherapistTable({
                                             size="sm"
                                         />
                                         <div className="min-w-0 flex-1">
-                                            <div className="font-medium text-sm text-foreground break-words">
+                                            <div className="font-medium text-sm break-words" style={{ color: 'var(--table-text)' }}>
                                                 {therapist.nome}
                                             </div>
                                         </div>
                                     </div>
                                 </td>
                                 <td className="p-3">
-                                    <span className="text-sm text-foreground break-words">
-                                        {therapist.especialidade || 'Não informado'}
-                                    </span>
-                                </td>
-                                <td className="p-3">
-                                    <div className="text-sm text-foreground">
-                                        <div className="truncate">{therapist.conselho || 'N/A'}</div>
-                                        <div className="text-muted-foreground text-xs truncate">
-                                            {therapist.registroConselho || 'N/A'}
-                                        </div>
-                                    </div>
+                                    {getEspecialidadeBadge(therapist.especialidade)}
                                 </td>
                                 <td className="p-3 hidden lg:table-cell">
-                                    <span className="text-sm text-foreground break-words">
-                                        {therapist.email || 'Não informado'}
+                                    <span className="text-sm break-words" style={{ color: 'var(--table-text)' }}>
+                                        {therapist.cargo || 'Não informado'}
                                     </span>
                                 </td>
                                 <td className="p-3 hidden xl:table-cell">
-                                    <span className="text-sm text-foreground whitespace-nowrap">
+                                    <span className="text-sm whitespace-nowrap" style={{ color: 'var(--table-text)' }}>
                                         {therapist.telefone || 'Não informado'}
                                     </span>
                                 </td>
@@ -323,10 +356,11 @@ const TherapistTable = memo(function TherapistTable({
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => onViewProfile(therapist)}
-                                        className="flex items-center gap-2 mx-auto"
+                                        className="hover:bg-transparent hover:underline font-normal gap-2 text-[14px] cursor-pointer group px-4 py-2"
+                                        style={{ fontFamily: 'Inter, sans-serif', color: 'var(--table-text)' }}
                                     >
-                                        <Eye className="w-4 h-4" />
-                                        <span className="hidden sm:inline">Visualizar</span>
+                                        Visualizar
+                                        <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                                     </Button>
                                 </td>
                             </tr>

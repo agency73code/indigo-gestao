@@ -64,6 +64,15 @@
     --hub-card-background: #F2F2F2;
     --hub-nested-card-background: #FFFFFF;
     
+    /* Table variables */
+    --table-bg: #FFFFFF;
+    --table-header-bg: #F2F2F2;
+    --table-row-hover: #F9FAFB;
+    --table-text: #1F2937;
+    --table-text-secondary: #374151;
+    --table-badge-bg: rgba(25, 22, 29, 0.06);
+    --table-border: #E5E7EB;
+    
     /* Title variables - centralized for all titles */
     --page-title-font-size: 1.2rem;
     --page-title-font-weight: 400;
@@ -127,6 +136,15 @@ body {
     --hub-card-title-color: hsl(220, 9%, 70%);
     --hub-card-background: #212125;
     --hub-nested-card-background: #2a2a2e;
+    
+    /* Table variables - Dark mode */
+    --table-bg: #1a1a1a;
+    --table-header-bg: #2a2a2e;
+    --table-row-hover: #2e2e32;
+    --table-text: #e5e5e5;
+    --table-text-secondary: #a1a1aa;
+    --table-badge-bg: rgba(255, 255, 255, 0.08);
+    --table-border: rgba(255, 255, 255, 0.1);
 }
 
 @theme inline {

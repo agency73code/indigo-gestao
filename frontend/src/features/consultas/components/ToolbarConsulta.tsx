@@ -43,14 +43,14 @@ export default function ToolbarConsulta({
     }, [localValue, debounceMs]);
 
     return (
-        <div className={`flex items-center gap-4 mb-4 ${className}`}>
-            <div className="relative flex-1 max-w-md">
+        <div className={`flex items-center gap-4 w-full ${className}`}>
+            <div className="relative w-full">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input
                     placeholder={placeholder}
                     value={localValue}
                     onChange={(e) => setLocalValue(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 h-10 rounded-full py-0 w-full"
                 />
             </div>
 
@@ -58,7 +58,7 @@ export default function ToolbarConsulta({
                 <Button
                     variant="outline"
                     onClick={onFiltersClick}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 h-[30px]"
                 >
                     <Filter className="w-4 h-4" />
                     Filtros

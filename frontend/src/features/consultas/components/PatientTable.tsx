@@ -1,5 +1,5 @@
 import { useState, memo } from 'react';
-import { ChevronUp, ChevronDown, Eye, Users } from 'lucide-react';
+import { ArrowUpRight, Users } from 'lucide-react';
 import { Button } from '@/ui/button';
 import type { Patient, SortState } from '../types/consultas.types';
 
@@ -103,25 +103,14 @@ const PatientTable = memo(function PatientTable({
     patients,
     loading = false,
     onViewProfile,
-    sortState,
-    onSort,
 }: PatientTableProps) {
-    const getSortIcon = (field: string) => {
-        if (sortState.field !== field) return null;
-        return sortState.direction === 'asc' ? (
-            <ChevronUp className="w-4 h-4" />
-        ) : (
-            <ChevronDown className="w-4 h-4" />
-        );
-    };
-
     const getStatusBadge = (status: string) => {
-        const baseClasses = 'px-2 py-1 text-xs font-medium rounded-full';
+        const baseClasses = 'px-3 py-1 text-xs font-medium rounded-full';
         const normalizedStatus = status?.toUpperCase() || '';
         const isActive = normalizedStatus === 'ATIVO';
         const statusClasses = isActive
-            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-            : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
+            ? 'bg-[#D8F2E3] text-[#065F46]'
+            : 'bg-[#FBDDDF] text-[#991B1B]';
         
         const displayText = isActive ? 'Ativo' : 'Inativo';
 
@@ -137,6 +126,19 @@ const PatientTable = memo(function PatientTable({
             .slice(0, 2);
     };
 
+    // Calcular idade a partir da data de nascimento
+    const calculateAge = (birthDate: string | null | undefined): number | null => {
+        if (!birthDate) return null;
+        const today = new Date();
+        const birth = new Date(birthDate);
+        let age = today.getFullYear() - birth.getFullYear();
+        const monthDiff = today.getMonth() - birth.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+            age--;
+        }
+        return age;
+    };
+
     if (loading) {
         return <LoadingSkeleton />;
     }
@@ -146,168 +148,157 @@ const PatientTable = memo(function PatientTable({
     }
 
     return (
-        <div className="border rounded-lg overflow-hidden">
-            <div className="md:hidden divide-y">
-                {patients.map((patient) => (
-                    <div key={patient.id} className="p-4 space-y-3">
-                        <div className="flex items-start justify-between gap-3">
-                            <div className="flex items-center gap-3">
-                                <AvatarWithSkeleton
-                                    src={patient.avatarUrl}
-                                    alt={patient.nome}
-                                    initials={getInitials(patient.nome)}
-                                    size="md"
-                                />
-                                <div>
-                                    <p className="font-medium text-sm text-foreground">
-                                        {patient.nome}
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="text-right">
-                                <span className="font-semibold text-foreground block text-xs mb-1">
-                                    Status
-                                </span>
-                                {getStatusBadge(patient.status)}
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-1 gap-3 text-xs text-muted-foreground">
-                            <div className="flex flex-col gap-3 sm:grid sm:grid-cols-2">
-                                <div>
-                                    <span className="font-semibold text-foreground block text-xs">
-                                        E-mail
-                                    </span>
-                                    <span className="block text-sm text-foreground">
-                                        {patient.email || 'Não informado'}
-                                    </span>
-                                </div>
-                                <div className="sm:text-right">
-                                    <span className="font-semibold text-foreground block text-xs">
-                                        Responsável
-                                    </span>
-                                    <span className="block text-sm text-foreground">
-                                        {patient.responsavel || 'Não informado'}
-                                    </span>
-                                </div>
-                            </div>
-                            <div className="flex flex-col gap-3 sm:grid sm:grid-cols-[1fr_auto] sm:items-center">
-                                <div>
-                                    <span className="font-semibold text-foreground block text-xs">
-                                        Telefone
-                                    </span>
-                                    <span className="block text-sm text-foreground">
-                                        {patient.telefone || 'Não informado'}
-                                    </span>
-                                </div>
-                                <div className="flex justify-end">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => onViewProfile(patient)}
-                                        className="gap-2"
-                                    >
-                                        <Eye className="w-4 h-4" />
-                                        Visualizar
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            <div className="hidden md:block overflow-x-auto">
-                <table className="w-full table-fixed">
-                    <colgroup>
-                        <col className="w-[26%]" />
-                        <col className="w-[20%] hidden md:table-column" />
-                        <col className="w-[14%] hidden lg:table-column" />
-                        <col className="w-[18%]" />
-                        <col className="w-[10%]" />
-                        <col className="w-[12%]" />
-                    </colgroup>
-                    <thead className="bg-muted/50">
+        <div className="flex flex-col min-h-0 rounded-lg overflow-hidden" style={{ backgroundColor: 'var(--table-bg)' }}>
+            {/* Tabela Desktop */}
+            <div className="hidden md:block overflow-auto scroll-pt-16">    
+                <table className="w-full">
+                    <thead className="sticky top-0 z-10 shadow-sm" style={{ backgroundColor: 'var(--table-header-bg)' }}>
                         <tr>
-                            <th
-                                className="text-left p-3 cursor-pointer hover:bg-muted/70 transition-colors first:rounded-tl-lg"
-                                onClick={() => onSort('nome')}
-                            >
-                                <div className="flex items-center gap-2 font-medium text-sm">
-                                    Nome
-                                    {getSortIcon('nome')}
-                                </div>
+                            <th className="text-left p-4 font-medium text-xs first:rounded-tl-lg" style={{ fontFamily: 'Inter, sans-serif', color: 'var(--table-text-secondary)' }}>
+                                Nome
                             </th>
-                            <th className="text-left p-3 font-medium text-sm hidden md:table-cell">
-                                E-mail
+                            <th className="text-left p-4 font-medium text-xs" style={{ fontFamily: 'Inter, sans-serif', color: 'var(--table-text-secondary)' }}>
+                                Idade
                             </th>
-                            <th className="text-left p-3 font-medium text-sm hidden lg:table-cell">
+                            <th className="text-left p-4 font-medium text-xs" style={{ fontFamily: 'Inter, sans-serif', color: 'var(--table-text-secondary)' }}>
                                 Telefone
                             </th>
-                            <th className="text-left p-3 font-medium text-sm">Responsável</th>
-                            <th
-                                className="text-left p-3 cursor-pointer hover:bg-muted/70 transition-colors"
-                                onClick={() => onSort('status')}
-                            >
-                                <div className="flex items-center gap-2 font-medium text-sm">
-                                    Status
-                                    {getSortIcon('status')}
-                                </div>
+                            <th className="text-left p-4 font-medium text-xs" style={{ fontFamily: 'Inter, sans-serif', color: 'var(--table-text-secondary)' }}>
+                                Responsável
                             </th>
-                            <th className="text-center p-3 font-medium text-sm last:rounded-tr-lg">Ações</th>
+                            <th className="text-left p-4 font-medium text-xs" style={{ fontFamily: 'Inter, sans-serif', color: 'var(--table-text-secondary)' }}>
+                                Status
+                            </th>
+                            <th className="text-center p-4 font-medium text-xs last:rounded-tr-lg" style={{ fontFamily: 'Inter, sans-serif', color: 'var(--table-text-secondary)' }}>
+                                Ações
+                            </th>
                         </tr>
                     </thead>
-                    <tbody>
-                        {patients.map((patient) => (
-                            <tr
-                                key={patient.id}
-                                className="border-t hover:bg-muted/50 transition-colors"
-                            >
-                                <td className="p-3">
-                                    <div className="flex items-center gap-2.5">
-                                        <AvatarWithSkeleton
-                                            src={patient.avatarUrl}
-                                            alt={patient.nome}
-                                            initials={getInitials(patient.nome)}
-                                            size="sm"
-                                        />
-                                        <div className="min-w-0 flex-1">
-                                            <div className="font-medium text-sm text-foreground break-words">
-                                                {patient.nome}
+                    <tbody className="divide-y" style={{ borderColor: 'var(--table-border)' }}>
+                        {patients.map((patient) => {
+                            const age = calculateAge(patient.pessoa?.dataNascimento);
+                            return (
+                                <tr
+                                    key={patient.id}
+                                    className="transition-colors"
+                                    style={{ 
+                                        backgroundColor: 'var(--table-bg)',
+                                    }}
+                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-row-hover)'}
+                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--table-bg)'}
+                                >
+                                    <td className="p-3">
+                                        <div className="flex items-center gap-3">
+                                            <AvatarWithSkeleton
+                                                src={patient.avatarUrl}
+                                                alt={patient.nome}
+                                                initials={getInitials(patient.nome)}
+                                                size="sm"
+                                            />
+                                            <div className="min-w-0 flex-1">
+                                                <div className="font-medium text-[14px] truncate" style={{ fontFamily: 'Inter, sans-serif', color: 'var(--table-text)' }}>
+                                                    {patient.nome}
+                                                </div>
                                             </div>
                                         </div>
+                                    </td>
+                                    <td className="p-3">
+                                        <span className="text-[14px] font-normal inline-block px-3 py-0.5" style={{ fontFamily: 'Inter, sans-serif', color: 'var(--table-text)', backgroundColor: 'var(--table-badge-bg)', borderRadius: '24px' }}>
+                                            {age !== null ? age : '-'}
+                                        </span>
+                                    </td>
+                                    <td className="p-3">
+                                        <span className="text-[14px] font-normal inline-block px-3 py-0.5 whitespace-nowrap" style={{ fontFamily: 'Inter, sans-serif', color: 'var(--table-text)' }}>
+                                            {patient.telefone || '-'}
+                                        </span>
+                                    </td>
+                                    <td className="p-3">
+                                        <span className="text-[14px] font-normal inline-block px-3 py-0.5 truncate" style={{ fontFamily: 'Inter, sans-serif', color: 'var(--table-text)' }}>
+                                            {patient.responsavel || '-'}
+                                        </span>
+                                    </td>
+                                    <td className="p-3">
+                                        {getStatusBadge(patient.status)}
+                                    </td>
+                                    <td className="p-3 text-center">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => onViewProfile(patient)}
+                                            className="hover:bg-transparent hover:underline font-normal gap-2 text-[14px] cursor-pointer group px-4 py-2"
+                                            style={{ fontFamily: 'Inter, sans-serif', color: 'var(--table-text)' }}
+                                        >
+                                            Visualizar
+                                            <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                                        </Button>
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            </div>
+
+            {/* Versão Mobile */}
+            <div className="md:hidden overflow-auto divide-y divide-gray-100">
+                {patients.map((patient) => {
+                    const age = calculateAge(patient.pessoa?.dataNascimento);
+                    return (
+                        <div key={patient.id} className="p-4 space-y-3 hover:bg-gray-50">
+                            <div className="flex items-start justify-between gap-3">
+                                <div className="flex items-center gap-3">
+                                    <AvatarWithSkeleton
+                                        src={patient.avatarUrl}
+                                        alt={patient.nome}
+                                        initials={getInitials(patient.nome)}
+                                        size="md"
+                                    />
+                                    <div>
+                                        <p className="font-medium text-[14px] text-[#1F2937]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                                            {patient.nome}
+                                        </p>
+                                        <p className="text-xs text-[#6B7280]">
+                                            {age !== null ? `${age} anos` : 'Idade não informada'}
+                                        </p>
                                     </div>
-                                </td>
-                                <td className="p-3 hidden md:table-cell">
-                                    <span className="text-sm text-foreground break-words">
-                                        {patient.email || 'Não informado'}
+                                </div>
+                                <div className="text-right">
+                                    {getStatusBadge(patient.status)}
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 gap-3 text-xs">
+                                <div>
+                                    <span className="font-semibold text-[#374151] block text-xs mb-1">
+                                        Telefone
                                     </span>
-                                </td>
-                                <td className="p-3 hidden lg:table-cell">
-                                    <span className="text-sm text-foreground whitespace-nowrap">
-                                        {patient.telefone || 'Não informado'}
+                                    <span className="block text-[14px] font-normal text-[#1F2937]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                                        {patient.telefone || '-'}
                                     </span>
-                                </td>
-                                <td className="p-3">
-                                    <span className="text-sm text-foreground break-words">
-                                        {patient.responsavel || 'Não informado'}
+                                </div>
+                                <div>
+                                    <span className="font-semibold text-[#374151] block text-xs mb-1">
+                                        Responsável
                                     </span>
-                                </td>
-                                <td className="p-3">{getStatusBadge(patient.status)}</td>
-                                <td className="p-3 text-center">
+                                    <span className="block text-[14px] font-normal text-[#1F2937]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                                        {patient.responsavel || '-'}
+                                    </span>
+                                </div>
+                                <div className="flex justify-end pt-2">
                                     <Button
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => onViewProfile(patient)}
-                                        className="flex items-center gap-2 mx-auto"
+                                        className="gap-2 text-[#1F2937] hover:text-[#1F2937] hover:bg-transparent hover:underline font-normal text-[14px] cursor-pointer group px-4 py-2"
+                                        style={{ fontFamily: 'Inter, sans-serif' }}
                                     >
-                                        <Eye className="w-4 h-4" />
-                                        <span className="hidden sm:inline">Visualizar</span>
+                                        Visualizar
+                                        <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                                     </Button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })}
             </div>
         </div>
     );

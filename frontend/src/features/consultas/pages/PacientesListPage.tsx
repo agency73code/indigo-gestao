@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
-import { CardContent } from '@/ui/card';
 import { Button } from '@/ui/button';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -14,11 +13,16 @@ const PatientProfileDrawer = lazy(() => import('../components/PatientProfileDraw
 
 export default function PacientesListPage() {
     // ✅ Definir título da página
-    const { setPageTitle } = usePageTitle();
+    const { setPageTitle, setNoMainContainer } = usePageTitle();
     
     useEffect(() => {
-        setPageTitle('Consultar Clientes');
-    }, [setPageTitle]);
+        setPageTitle('Clientes');
+        setNoMainContainer(true); // Desativa o container branco do AppLayout
+        
+        return () => {
+            setNoMainContainer(false); // Restaura ao sair da página
+        };
+    }, [setPageTitle, setNoMainContainer]);
     
     // ✅ NOVO: URL como source of truth para filtros
     const [searchParams, setSearchParams] = useSearchParams();
@@ -144,96 +148,154 @@ export default function PacientesListPage() {
     }
 
     return (
-        <div className="flex flex-col top-0 left-0 w-full h-full">
-            <CardContent className="space-y-1 px-4 pt-4 pb-4">
-                <div className="flex gap-4">
-                    <div className="flex-1">
+        <div className="flex flex-col h-full overflow-hidden ">
+            {/* Header com busca e botão */}
+            <div className="flex-none pb-4">
+                <div className="flex items-center justify-between gap-4">
+                    {/* Barra de busca à esquerda */}
+                    <div className="flex-1 max-w-[480px] flex items-center">
                         <ToolbarConsulta
                             searchValue={searchTerm}
                             onSearchChange={handleSearchChange}
-                            placeholder="Buscar por nome, e-mail, telefone ou responsável..."
+                            placeholder="Busca..."
                             showFilters={false}
                         />
                     </div>
-                    <div className="flex gap-2">
+                    
+                    {/* Botão Adicionar à direita */}
+                    <div className="flex items-center">
                         <Link to="/app/cadastro/cliente">
                             <Button className="gap-2">
                                 <Plus className="h-4 w-4" />
-                                Adicionar Cliente
+                                Adicionar
                             </Button>
                         </Link>
                     </div>
                 </div>
+            </div>
 
-                <PatientTable
-                    patients={patients}
-                    loading={loading}
-                    onViewProfile={handleViewProfile}
-                    sortState={sortState}
-                    onSort={handleSort}
-                />
+            {/* Container da tabela */}
+            <div className="flex-1 overflow-hidden">
+                <div className="h-full flex flex-col">
+                    <PatientTable
+                        patients={patients}
+                        loading={loading}
+                        onViewProfile={handleViewProfile}
+                        sortState={sortState}
+                        onSort={handleSort}
+                    />
 
-                {!loading && error && (
-                    <div className='text-sm text-red-600 text-center'>{error}</div>
-                )}
+                    {!loading && error && (
+                        <div className='text-sm text-red-600 text-center py-4'>{error}</div>
+                    )}
+                </div>
+            </div>
 
-                {!loading && pagination.total > 0 && (
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mt-4">
-                        <div className="text-sm text-muted-foreground sm:text-left text-center">
-                            Mostrando {(currentPage - 1) * pagination.pageSize + 1} a{' '}
-                            {Math.min(currentPage * pagination.pageSize, pagination.total)} de{' '}
-                            {pagination.total} resultados
+            
+            {/* Footer com paginação - caixa separada */}
+            {!loading && pagination.total > 0 && (
+                <div className="flex-none mt-2">
+                    <div className="rounded-[40px] px-2 py-2 flex items-center justify-between" style={{ backgroundColor: 'var(--header-bg)' }}>
+                        {/* Dropdown de itens por página */}
+                        <div className="flex items-center gap-2">
+                            
                         </div>
 
+                        {/* Paginação */}
                         {totalPages > 1 && (
-                            <div className="flex items-center justify-center gap-2 sm:justify-end">
+                            <div className="flex items-center gap-1">
+                                {/* Botão anterior */}
                                 <Button
-                                    variant="outline"
-                                    size="sm"
+                                    variant="ghost"
+                                    size="icon"
                                     onClick={() =>
                                         handlePageChange(Math.max(1, currentPage - 1))
                                     }
                                     disabled={currentPage === 1}
-                                    className="sm:flex items-center gap-2"
+                                    className="h-8 w-8 rounded-lg"
                                 >
                                     <ChevronLeft className="w-4 h-4" />
-                                    <span className="hidden sm:inline">Anterior</span>
                                 </Button>
 
-                                <div className="flex items-center space-x-1">
-                                    {visiblePages.map((page) => (
+                                {/* Primeira página */}
+                                {visiblePages[0] > 1 && (
+                                    <>
                                         <Button
-                                            key={page}
-                                            variant={
-                                                page === currentPage ? 'default' : 'outline'
-                                            }
+                                            variant="ghost"
                                             size="sm"
-                                            onClick={() => handlePageChange(page)}
-                                            className="min-w-10"
+                                            onClick={() => handlePageChange(1)}
+                                            className="h-8 min-w-8 px-2 rounded-lg"
+                                            style={{ color: 'var(--table-text)' }}
                                         >
-                                            {page}
+                                            1
                                         </Button>
-                                    ))}
-                                </div>
+                                        {visiblePages[0] > 2 && (
+                                            <span className="px-2" style={{ color: 'var(--table-text-secondary)' }}>...</span>
+                                        )}
+                                    </>
+                                )}
 
+                                {/* Páginas visíveis */}
+                                {visiblePages.map((page) => (
+                                    <Button
+                                        key={page}
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handlePageChange(page)}
+                                        className={`h-8 min-w-8 px-2 rounded-lg ${
+                                            page === currentPage 
+                                                ? 'font-medium' 
+                                                : ''
+                                        }`}
+                                        style={{ 
+                                            color: 'var(--table-text)',
+                                            backgroundColor: page === currentPage ? 'var(--table-badge-bg)' : 'transparent'
+                                        }}
+                                    >
+                                        {page}
+                                    </Button>
+                                ))}
+
+                                {/* Última página */}
+                                {visiblePages[visiblePages.length - 1] < totalPages && (
+                                    <>
+                                        {visiblePages[visiblePages.length - 1] < totalPages - 1 && (
+                                            <span className="px-2" style={{ color: 'var(--table-text-secondary)' }}>...</span>
+                                        )}
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handlePageChange(totalPages)}
+                                            className="h-8 min-w-8 px-2 rounded-lg"
+                                            style={{ color: 'var(--table-text)' }}
+                                        >
+                                            {totalPages}
+                                        </Button>
+                                    </>
+                                )}
+
+                                {/* Botão próximo */}
                                 <Button
-                                    variant="outline"
-                                    size="sm"
+                                    variant="ghost"
+                                    size="icon"
                                     onClick={() =>
                                         handlePageChange(Math.min(totalPages, currentPage + 1))
                                     }
                                     disabled={currentPage === totalPages}
-                                    className="sm:flex items-center gap-2"
+                                    className="h-8 w-8 rounded-lg"
                                 >
                                     <ChevronRight className="w-4 h-4" />
-                                    <span className="hidden sm:inline">Próxima</span>
                                 </Button>
                             </div>
                         )}
-                    </div>
-                )}
-            </CardContent>
 
+                        {/* Ícones de visualização */}
+                        <div className="flex items-center gap-1">
+                           
+                        </div>
+                    </div>
+                </div>
+            )}        
             {/* Lazy load do Drawer com Suspense */}
             {drawerOpen && (
                 <Suspense fallback={null}>
@@ -245,5 +307,6 @@ export default function PacientesListPage() {
                 </Suspense>
             )}
         </div>
+        
     );
 }

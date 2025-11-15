@@ -124,6 +124,7 @@ export function normalizeTherapistSession(db: TherapistTypes.TherapistDB) {
         telefone: db.telefone ?? db.celular,
         status: db.atividade ? 'ATIVO' : 'INATIVO',
         especialidade: db.registro_profissional?.[0]?.area_atuacao?.nome ?? '',
+        cargo: db.registro_profissional?.[0]?.cargo?.nome ?? '',
         conselho: 'CRP',
         registroConselho: db.registro_profissional?.[0]?.numero_conselho ?? '',
         avatarUrl: fotoPerfil?.arquivo_id

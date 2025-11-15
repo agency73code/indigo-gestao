@@ -7,6 +7,7 @@ export interface Therapist {
     telefone?: string;
     status: 'ATIVO' | 'INATIVO';
     especialidade?: string;
+    cargo?: string;
     conselho?: string; // CRP/CRM
     registroConselho?: string;
     avatarUrl?: string;

@@ -31,7 +31,7 @@ export default function ConsultaHubPage() {
 
     const mainActions: ActionConfig[] = [
         {
-            title: 'Consultar Terapeutas',
+            title: 'Terapeutas',
             description: 'Visualize e gerencie os terapeutas cadastrados no sistema',
             icon: User,
             href: '/app/consultar/terapeutas',
@@ -40,7 +40,7 @@ export default function ConsultaHubPage() {
             ability: { action: 'manage', subject: 'Consultar' },
         },
         {
-            title: 'Consultar Clientes',
+            title: 'Clientes',
             description: 'Visualize e gerencie os clientes cadastrados no sistema',
             icon: Users,
             href: '/app/consultar/pacientes',
