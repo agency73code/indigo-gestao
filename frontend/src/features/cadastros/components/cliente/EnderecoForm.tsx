@@ -1,5 +1,5 @@
-import { Input } from '@/ui/input';
-import { Label } from '@/ui/label';
+import { InputField } from '@/ui/input-field';
+import { SelectField } from '@/ui/select-field';
 import { Button } from '@/ui/button';
 import { X } from 'lucide-react';
 import { useEffect } from 'react';
@@ -53,9 +53,16 @@ export default function EnderecoForm({
     }, [data, index, endereco.logradouro, endereco.bairro, endereco.cidade, endereco.uf]);
 
     return (
-        <div className="border rounded-lg p-4 space-y-4 relative">
+        <div className="space-y-4 relative">
             <div className="flex items-center justify-between">
-                <h4 className="font-medium">
+                <h4 
+                    style={{ 
+                        fontFamily: "var(--hub-card-title-font-family)",
+                        fontWeight: "var(--hub-card-title-font-weight)",
+                        color: "var(--hub-card-title-color)"
+                    }}
+                    className="leading-none tracking-tight"
+                >
                     {index === 0 ? 'Endereço Principal' : `Endereço ${index + 1}`}
                 </h4>
                 {index > 0 && (
@@ -72,211 +79,137 @@ export default function EnderecoForm({
             </div>
 
             {/* Residência de */}
-            <div className="grid grid-cols-1 gap-4 mb-4">
-                <div className="space-y-2">
-                    <Label htmlFor={`residenciaDe-${index}`}>Residência de *</Label>
-                    <select
-                        id={`residenciaDe-${index}`}
-                        value={endereco.residenciaDe || ''}
-                        onChange={(e) => onUpdate(index, 'residenciaDe', e.target.value)}
-                        className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
-                            errors[`enderecos.${index}.residenciaDe`] ? 'border-destructive' : ''
-                        }`}
-                    >
-                        <option value="">Selecione quem reside neste endereço</option>
-                        <option value="paciente">Cliente</option>
-                        <option value="mae">Mãe</option>
-                        <option value="pai">Pai</option>
-                        <option value="outro">Outro (especificar)</option>
-                    </select>
-                    {errors[`enderecos.${index}.residenciaDe`] && (
-                        <p className="text-sm text-destructive">
-                            {errors[`enderecos.${index}.residenciaDe`]}
-                        </p>
-                    )}
-                </div>
+            <div className="space-y-4">
+                <SelectField
+                    label="Residência de *"
+                    id={`residenciaDe-${index}`}
+                    value={endereco.residenciaDe || ''}
+                    onChange={(e) => onUpdate(index, 'residenciaDe', e.target.value)}
+                    error={errors[`enderecos.${index}.residenciaDe`]}
+                >
+                    <option value="">Selecione quem reside neste endereço</option>
+                    <option value="paciente">Cliente</option>
+                    <option value="mae">Mãe</option>
+                    <option value="pai">Pai</option>
+                    <option value="outro">Outro (especificar)</option>
+                </SelectField>
 
                 {/* Campo para especificar "Outro" */}
                 {endereco.residenciaDe === 'outro' && (
-                    <div className="space-y-2">
-                        <Label htmlFor={`outroResidencia-${index}`}>Especificar *</Label>
-                        <Input
-                            id={`outroResidencia-${index}`}
-                            value={endereco.outroResidencia || ''}
-                            onChange={(e) => onUpdate(index, 'outroResidencia', e.target.value)}
-                            placeholder="Especifique quem reside neste endereço"
-                            className={
-                                errors[`enderecos.${index}.outroResidencia`]
-                                    ? 'border-destructive'
-                                    : ''
-                            }
-                        />
-                        {errors[`enderecos.${index}.outroResidencia`] && (
-                            <p className="text-sm text-destructive">
-                                {errors[`enderecos.${index}.outroResidencia`]}
-                            </p>
-                        )}
-                    </div>
+                    <InputField
+                        label="Especificar *"
+                        id={`outroResidencia-${index}`}
+                        value={endereco.outroResidencia || ''}
+                        onChange={(e) => onUpdate(index, 'outroResidencia', e.target.value)}
+                        placeholder="Especifique quem reside neste endereço"
+                        error={errors[`enderecos.${index}.outroResidencia`]}
+                    />
                 )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* CEP */}
-                <div className="space-y-2">
-                    <Label htmlFor={`cep-${index}`}>CEP {index === 0 ? '*' : ''}</Label>
-                    <Input
-                        id={`cep-${index}`}
-                        value={endereco.cep || ''}
-                        onChange={(e) => onUpdate(index, 'cep', maskCEP(e.target.value))}
-                        onBlur={() => onBlur(`enderecos.${index}.cep`)}
-                        placeholder="00000-000"
-                        className={errors[`enderecos.${index}.cep`] ? 'border-destructive' : ''}
-                    />
-                    {error && <p className="text-sm text-destructive">{error}</p>}
-                    {errors[`enderecos.${index}.cep`] && (
-                        <p className="text-sm text-destructive">
-                            {errors[`enderecos.${index}.cep`]}
-                        </p>
-                    )}
-                </div>
+                <InputField
+                    label={`CEP ${index === 0 ? '*' : ''}`}
+                    id={`cep-${index}`}
+                    value={endereco.cep || ''}
+                    onChange={(e) => onUpdate(index, 'cep', maskCEP(e.target.value))}
+                    onBlur={() => onBlur(`enderecos.${index}.cep`)}
+                    placeholder="00000-000"
+                    error={error || errors[`enderecos.${index}.cep`]}
+                />
 
                 {/* Logradouro */}
-                <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor={`logradouro-${index}`}>
-                        Logradouro {index === 0 ? '*' : ''}
-                    </Label>
-                    <Input
+                <div className="md:col-span-2">
+                    <InputField
+                        label={`Logradouro ${index === 0 ? '*' : ''}`}
                         id={`logradouro-${index}`}
                         value={endereco.logradouro || ''}
                         onChange={(e) => onUpdate(index, 'logradouro', e.target.value)}
                         placeholder="Rua, Avenida, etc."
-                        className={
-                            errors[`enderecos.${index}.logradouro`] ? 'border-destructive' : ''
-                        }
+                        error={errors[`enderecos.${index}.logradouro`]}
                     />
-                    {errors[`enderecos.${index}.logradouro`] && (
-                        <p className="text-sm text-destructive">
-                            {errors[`enderecos.${index}.logradouro`]}
-                        </p>
-                    )}
                 </div>
 
                 {/* Número */}
-                <div className="space-y-2">
-                    <Label htmlFor={`numero-${index}`}>Número {index === 0 ? '*' : ''}</Label>
-                    <Input
-                        id={`numero-${index}`}
-                        value={endereco.numero || ''}
-                        onChange={(e) => onUpdate(index, 'numero', e.target.value)}
-                        placeholder="123"
-                        className={errors[`enderecos.${index}.numero`] ? 'border-destructive' : ''}
-                    />
-                    {errors[`enderecos.${index}.numero`] && (
-                        <p className="text-sm text-destructive">
-                            {errors[`enderecos.${index}.numero`]}
-                        </p>
-                    )}
-                </div>
+                <InputField
+                    label={`Número ${index === 0 ? '*' : ''}`}
+                    id={`numero-${index}`}
+                    value={endereco.numero || ''}
+                    onChange={(e) => onUpdate(index, 'numero', e.target.value)}
+                    placeholder="123"
+                    error={errors[`enderecos.${index}.numero`]}
+                />
 
                 {/* Complemento */}
-                <div className="space-y-2">
-                    <Label htmlFor={`complemento-${index}`}>
-                        Complemento {index === 0 ? '*' : ''}
-                    </Label>
-                    <Input
-                        id={`complemento-${index}`}
-                        value={endereco.complemento || ''}
-                        onChange={(e) => onUpdate(index, 'complemento', e.target.value)}
-                        placeholder="Apto, Casa, etc."
-                        className={
-                            errors[`enderecos.${index}.complemento`] ? 'border-destructive' : ''
-                        }
-                    />
-                    {errors[`enderecos.${index}.complemento`] && (
-                        <p className="text-sm text-destructive">
-                            {errors[`enderecos.${index}.complemento`]}
-                        </p>
-                    )}
-                </div>
+                <InputField
+                    label={`Complemento ${index === 0 ? '*' : ''}`}
+                    id={`complemento-${index}`}
+                    value={endereco.complemento || ''}
+                    onChange={(e) => onUpdate(index, 'complemento', e.target.value)}
+                    placeholder="Apto, Casa, etc."
+                    error={errors[`enderecos.${index}.complemento`]}
+                />
 
                 {/* Bairro */}
-                <div className="space-y-2">
-                    <Label htmlFor={`bairro-${index}`}>Bairro {index === 0 ? '*' : ''}</Label>
-                    <Input
-                        id={`bairro-${index}`}
-                        value={endereco.bairro || ''}
-                        onChange={(e) => onUpdate(index, 'bairro', e.target.value)}
-                        placeholder="Nome do bairro"
-                        className={errors[`enderecos.${index}.bairro`] ? 'border-destructive' : ''}
-                    />
-                    {errors[`enderecos.${index}.bairro`] && (
-                        <p className="text-sm text-destructive">
-                            {errors[`enderecos.${index}.bairro`]}
-                        </p>
-                    )}
-                </div>
+                <InputField
+                    label={`Bairro ${index === 0 ? '*' : ''}`}
+                    id={`bairro-${index}`}
+                    value={endereco.bairro || ''}
+                    onChange={(e) => onUpdate(index, 'bairro', e.target.value)}
+                    placeholder="Nome do bairro"
+                    error={errors[`enderecos.${index}.bairro`]}
+                />
 
                 {/* Cidade */}
-                <div className="space-y-2">
-                    <Label htmlFor={`cidade-${index}`}>Cidade {index === 0 ? '*' : ''}</Label>
-                    <Input
+                <div className="md:col-span-2">
+                    <InputField
+                        label={`Cidade ${index === 0 ? '*' : ''}`}
                         id={`cidade-${index}`}
                         value={endereco.cidade || ''}
                         onChange={(e) => onUpdate(index, 'cidade', e.target.value)}
                         placeholder="Nome da cidade"
-                        className={errors[`enderecos.${index}.cidade`] ? 'border-destructive' : ''}
+                        error={errors[`enderecos.${index}.cidade`]}
                     />
-                    {errors[`enderecos.${index}.cidade`] && (
-                        <p className="text-sm text-destructive">
-                            {errors[`enderecos.${index}.cidade`]}
-                        </p>
-                    )}
                 </div>
 
                 {/* UF */}
-                <div className="space-y-2">
-                    <Label htmlFor={`uf-${index}`}>UF {index === 0 ? '*' : ''}</Label>
-                    <select
-                        id={`uf-${index}`}
-                        value={endereco.uf || ''}
-                        onChange={(e) => onUpdate(index, 'uf', e.target.value)}
-                        className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${errors[`enderecos.${index}.uf`] ? 'border-destructive' : ''}`}
-                    >
-                        <option value="">Selecione o estado</option>
-                        <option value="AC">Acre</option>
-                        <option value="AL">Alagoas</option>
-                        <option value="AP">Amapá</option>
-                        <option value="AM">Amazonas</option>
-                        <option value="BA">Bahia</option>
-                        <option value="CE">Ceará</option>
-                        <option value="DF">Distrito Federal</option>
-                        <option value="ES">Espírito Santo</option>
-                        <option value="GO">Goiás</option>
-                        <option value="MA">Maranhão</option>
-                        <option value="MT">Mato Grosso</option>
-                        <option value="MS">Mato Grosso do Sul</option>
-                        <option value="MG">Minas Gerais</option>
-                        <option value="PA">Pará</option>
-                        <option value="PB">Paraíba</option>
-                        <option value="PR">Paraná</option>
-                        <option value="PE">Pernambuco</option>
-                        <option value="PI">Piauí</option>
-                        <option value="RJ">Rio de Janeiro</option>
-                        <option value="RN">Rio Grande do Norte</option>
-                        <option value="RS">Rio Grande do Sul</option>
-                        <option value="RO">Rondônia</option>
-                        <option value="RR">Roraima</option>
-                        <option value="SC">Santa Catarina</option>
-                        <option value="SP">São Paulo</option>
-                        <option value="SE">Sergipe</option>
-                        <option value="TO">Tocantins</option>
-                    </select>
-                    {errors[`enderecos.${index}.uf`] && (
-                        <p className="text-sm text-destructive">
-                            {errors[`enderecos.${index}.uf`]}
-                        </p>
-                    )}
-                </div>
+                <SelectField
+                    label={`UF ${index === 0 ? '*' : ''}`}
+                    id={`uf-${index}`}
+                    value={endereco.uf || ''}
+                    onChange={(e) => onUpdate(index, 'uf', e.target.value)}
+                    error={errors[`enderecos.${index}.uf`]}
+                >
+                    <option value="">Selecione o estado</option>
+                    <option value="AC">Acre</option>
+                    <option value="AL">Alagoas</option>
+                    <option value="AP">Amapá</option>
+                    <option value="AM">Amazonas</option>
+                    <option value="BA">Bahia</option>
+                    <option value="CE">Ceará</option>
+                    <option value="DF">Distrito Federal</option>
+                    <option value="ES">Espírito Santo</option>
+                    <option value="GO">Goiás</option>
+                    <option value="MA">Maranhão</option>
+                    <option value="MT">Mato Grosso</option>
+                    <option value="MS">Mato Grosso do Sul</option>
+                    <option value="MG">Minas Gerais</option>
+                    <option value="PA">Pará</option>
+                    <option value="PB">Paraíba</option>
+                    <option value="PR">Paraná</option>
+                    <option value="PE">Pernambuco</option>
+                    <option value="PI">Piauí</option>
+                    <option value="RJ">Rio de Janeiro</option>
+                    <option value="RN">Rio Grande do Norte</option>
+                    <option value="RS">Rio Grande do Sul</option>
+                    <option value="RO">Rondônia</option>
+                    <option value="RR">Roraima</option>
+                    <option value="SC">Santa Catarina</option>
+                    <option value="SP">São Paulo</option>
+                    <option value="SE">Sergipe</option>
+                    <option value="TO">Tocantins</option>
+                </SelectField>
             </div>
         </div>
     );

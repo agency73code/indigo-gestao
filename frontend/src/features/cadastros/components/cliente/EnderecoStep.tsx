@@ -114,12 +114,7 @@ export default function EnderecoStep({ data, onUpdate, errors, onBlur }: Enderec
 
     return (
         <div className="space-y-6">
-            <div>
-                <h3 className="text-lg font-semibold">Endereço</h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                    Informe os endereços do cliente. Campos marcados com * são obrigatórios.
-                </p>
-            </div>
+            
 
             {/* Endereços */}
             {enderecos.map((endereco, index) => (

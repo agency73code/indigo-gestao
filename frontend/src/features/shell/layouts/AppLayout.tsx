@@ -8,12 +8,19 @@ import PageTransition from '@/shared/components/layout/PageTransition';
 import ThemeToggle from '../components/ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { Bell } from 'lucide-react';
+import { BackButton } from '@/components/layout/BackButton';
 
 type PageTitleContextType = {
     pageTitle: string;
     setPageTitle: (title: string) => void;
     headerActions: ReactNode;
     setHeaderActions: (actions: ReactNode) => void;
+    noMainContainer: boolean;
+    setNoMainContainer: (value: boolean) => void;
+    showBackButton: boolean;
+    setShowBackButton: (value: boolean) => void;
+    onBackClick?: () => void;
+    setOnBackClick: (callback?: () => void) => void;
 };
 
 const PageTitleContext = createContext<PageTitleContextType | null>(null);
@@ -77,12 +84,26 @@ class ErrorBoundary extends Component<
 export default function AppLayout() {
     const [pageTitle, setPageTitle] = useState('');
     const [headerActions, setHeaderActions] = useState<ReactNode>(null);
+    const [noMainContainer, setNoMainContainer] = useState(false);
+    const [showBackButton, setShowBackButton] = useState(false);
+    const [onBackClick, setOnBackClick] = useState<(() => void) | undefined>(undefined);
 
     return (
         <ErrorBoundary>
             <SidebarProvider>
                 <AbilityProvider>
-                    <PageTitleContext.Provider value={{ pageTitle, setPageTitle, headerActions, setHeaderActions }}>
+                    <PageTitleContext.Provider value={{ 
+                        pageTitle, 
+                        setPageTitle, 
+                        headerActions, 
+                        setHeaderActions, 
+                        noMainContainer, 
+                        setNoMainContainer,
+                        showBackButton,
+                        setShowBackButton,
+                        onBackClick,
+                        setOnBackClick
+                    }}>
                         <div 
                             className="flex h-screen w-full overflow-hidden"
                             style={{ 
@@ -97,10 +118,13 @@ export default function AppLayout() {
                                 >
                                     {/* Espaço superior para título e botões */}
                                     <div className="h-12 flex items-center justify-between pt-0 px-1 flex-shrink-0 no-print">
-                                        {/* Botão sidebar e título */}
+                                        {/* Botão voltar (condicional), sidebar e título */}
                                         <div className="flex items-center gap-3">
+                                            {showBackButton && (
+                                                <BackButton onClick={onBackClick} />
+                                            )}
                                             <div className="h-10 w-10 rounded-full bg-header-bg hover:bg-header-bg/80 flex items-center justify-center transition-colors cursor-pointer">
-                                                <SidebarTrigger className="text-black hover:bg-transparent hover:text-black" />
+                                                <SidebarTrigger className="text-black dark:text-white hover:bg-transparent hover:text-black dark:hover:text-white" />
                                             </div>
                                             {pageTitle && (
                                                 <h1 
@@ -120,7 +144,7 @@ export default function AppLayout() {
                                         <div className="flex items-center gap-3 ml-auto">
                                             {headerActions}
                                             <Button variant="ghost" size="sm" className="h-10 w-10 p-0 relative rounded-full bg-header-bg hover:bg-header-bg/80 transition-colors">
-                                                <Bell className="h-4 w-4 text-black" />
+                                                <Bell className="h-4 w-4 text-black dark:text-white" />
                                                 <span className="absolute top-0 right-0 h-3 w-3 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center">
                                                     2
                                                 </span>
@@ -131,14 +155,24 @@ export default function AppLayout() {
                                         </div>
                                     </div>
                                     
-                                    {/* Card interno com o conteúdo da página */}
-                                    <main className="flex-1 overflow-auto bg-[var(--bg-main)] border border-gray-200/10 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] min-h-0">
-                                        <ErrorBoundary>
-                                            <PageTransition>
-                                                <Outlet />
-                                            </PageTransition>
-                                        </ErrorBoundary>
-                                    </main>
+                                    {/* Card interno com o conteúdo da página - ou renderização direta */}
+                                    {noMainContainer ? (
+                                        <div className="flex-1 overflow-auto min-h-0">
+                                            <ErrorBoundary>
+                                                <PageTransition>
+                                                    <Outlet />
+                                                </PageTransition>
+                                            </ErrorBoundary>
+                                        </div>
+                                    ) : (
+                                        <main className="flex-1 overflow-auto bg-[var(--bg-main)] border border-gray-200/10 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] min-h-0">
+                                            <ErrorBoundary>
+                                                <PageTransition>
+                                                    <Outlet />
+                                                </PageTransition>
+                                            </ErrorBoundary>
+                                        </main>
+                                    )}
                                 </div>
                             </div>
                         </div>

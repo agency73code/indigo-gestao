@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Input } from '@/ui/input';
-import { Label } from '@/ui/label';
-import { DateField } from '@/common/components/layout/DateField';
+import { InputField } from '@/ui/input-field';
+import { DateFieldWithLabel } from '@/ui/date-field-with-label';
+import { SelectFieldRadix, SelectItem } from '@/ui/select-field-radix';
+import { ComboboxField } from '@/ui/combobox-field';
 import { Button } from '@/ui/button';
-import { Combobox } from '@/ui/combobox';
 import { Plus, X } from 'lucide-react';
 import { fetchProfessionalMetadata } from '@/lib/api';
 import type { Terapeuta } from '../../types/cadastros.types';
@@ -127,24 +127,13 @@ export default function DadosProfissionaisStep({
     };
 
     return (
-        <div className="space-y-4 md:space-y-6">
-            <div>
-                <h3 className="text-base sm:text-lg font-semibold">Dados Profissionais</h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                    Informe os dados profissionais do terapeuta. Campos marcados com * são
-                    obrigatórios.
-                </p>
-            </div>
+        <div className="space-y-4 md:space-y-4">
+           
 
             {/* Conjuntos de Dados Profissionais */}
             {dadosProfissionais.map((dadoProfissional, index) => (
-                <div key={index} className="border rounded-lg p-4 space-y-4 relative">
+                <div key={index} className="relative">
                     <div className="flex items-center justify-between">
-                        <h4 className="font-medium">
-                            {index === 0
-                                ? 'Área de Atuação Principal'
-                                : `Área de Atuação ${index + 1}`}
-                        </h4>
                         {index > 0 && (
                             <Button
                                 type="button"
@@ -160,63 +149,43 @@ export default function DadosProfissionaisStep({
 
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 md:gap-4">
                         {/* Área de Atuação */}
-                        <div className="space-y-2">
-                            <Label htmlFor={`areaAtuacao-${index}`}>
-                                Área de Atuação {index === 0 ? '*' : ''}
-                            </Label>
-                            <Combobox
-                                options={areaOptions}
-                                value={
-                                    dadoProfissional.areaAtuacaoId &&
-                                    dadoProfissional.areaAtuacaoId !== ''
-                                        ? String(dadoProfissional.areaAtuacaoId)
-                                        : ''
-                                }
-                                onValueChange={(value) =>
-                                    handleAreaAtuacaoSelect(index, value)
-                                }
-                                placeholder="Selecione a área de atuação"
-                                searchPlaceholder="Buscar área de atuação..."
-                                emptyMessage="Nenhuma área de atuação encontrada."
-                                error={!!errors[`dadosProfissionais.${index}.areaAtuacao`]}
-                            />
-                            {errors[`dadosProfissionais.${index}.areaAtuacao`] && (
-                                <p className="text-sm text-destructive">
-                                    {errors[`dadosProfissionais.${index}.areaAtuacao`]}
-                                </p>
-                            )}
-                        </div>
+                        <ComboboxField
+                            label={`Área de Atuação ${index === 0 ? '*' : ''}`}
+                            options={areaOptions}
+                            value={
+                                dadoProfissional.areaAtuacaoId &&
+                                dadoProfissional.areaAtuacaoId !== ''
+                                    ? String(dadoProfissional.areaAtuacaoId)
+                                    : ''
+                            }
+                            onValueChange={(value) => handleAreaAtuacaoSelect(index, value)}
+                            placeholder="Selecione a área de atuação"
+                            searchPlaceholder="Buscar área de atuação..."
+                            emptyMessage="Nenhuma área de atuação encontrada."
+                            error={errors[`dadosProfissionais.${index}.areaAtuacao`]}
+                        />
 
                         {/* Cargo */}
-                        <div className="space-y-2">
-                            <Label htmlFor={`cargo-${index}`}>Cargo {index === 0 ? '*' : ''}</Label>
-                            <Combobox
-                                options={cargoOptions}
-                                value={
-                                    dadoProfissional.cargoId &&
-                                    dadoProfissional.cargoId !== ''
-                                        ? String(dadoProfissional.cargoId)
-                                        : ''
-                                }
-                                onValueChange={(value) =>
-                                    handleCargoSelect(index, value)
-                                }
-                                placeholder="Selecione o cargo"
-                                searchPlaceholder="Buscar cargo..."
-                                emptyMessage="Nenhum cargo encontrado."
-                                error={!!errors[`dadosProfissionais.${index}.cargo`]}
-                            />
-                            {errors[`dadosProfissionais.${index}.cargo`] && (
-                                <p className="text-sm text-destructive">
-                                    {errors[`dadosProfissionais.${index}.cargo`]}
-                                </p>
-                            )}
-                        </div>
+                        <ComboboxField
+                            label={`Cargo ${index === 0 ? '*' : ''}`}
+                            options={cargoOptions}
+                            value={
+                                dadoProfissional.cargoId &&
+                                dadoProfissional.cargoId !== ''
+                                    ? String(dadoProfissional.cargoId)
+                                    : ''
+                            }
+                            onValueChange={(value) => handleCargoSelect(index, value)}
+                            placeholder="Selecione o cargo"
+                            searchPlaceholder="Buscar cargo..."
+                            emptyMessage="Nenhum cargo encontrado."
+                            error={errors[`dadosProfissionais.${index}.cargo`]}
+                        />
 
                         {/* Número do Conselho */}
-                        <div className="space-y-2">
-                            <Label htmlFor={`numeroConselho-${index}`}>Número do Conselho</Label>
-                            <Input
+                        <div>
+                            <InputField
+                                label="Número do Conselho"
                                 id={`numeroConselho-${index}`}
                                 value={dadoProfissional.numeroConselho || ''}
                                 onChange={(e) =>
@@ -227,17 +196,8 @@ export default function DadosProfissionaisStep({
                                     )
                                 }
                                 placeholder="Ex: CRP 06/123456"
-                                className={
-                                    errors[`dadosProfissionais.${index}.numeroConselho`]
-                                        ? 'border-destructive'
-                                        : ''
-                                }
+                                error={errors[`dadosProfissionais.${index}.numeroConselho`]}
                             />
-                            {errors[`dadosProfissionais.${index}.numeroConselho`] && (
-                                <p className="text-sm text-destructive">
-                                    {errors[`dadosProfissionais.${index}.numeroConselho`]}
-                                </p>
-                            )}
                         </div>
                     </div>
                 </div>
@@ -254,71 +214,53 @@ export default function DadosProfissionaisStep({
                 Adicionar outra Área de Atuação
             </Button>
 
-            <div className="border rounded-[5px] p-4 space-y-3">
-                <div className="space-y-2 md:max-w-sm">
-                    <Label htmlFor="professorUnindigo">É um professor(a) UniÍndigo?</Label>
-                    <select
-                        id="professorUnindigo"
+            {/* Professor UniÍndigo e Disciplina + Datas de Início e Fim */}
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 md:gap-4">
+                <div>
+                    <SelectFieldRadix
+                        label="É um professor(a) UniÍndigo?"
                         value={data.professorUnindigo || ''}
-                        onChange={(e) => onUpdate('professorUnindigo', e.target.value)}
-                        aria-describedby="professorUnindigo-help"
-                        className={`flex h-10 w-full rounded-[5px] border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${errors.professorUnindigo ? 'border-destructive' : ''}`}
+                        onValueChange={(value) => onUpdate('professorUnindigo', value)}
+                        error={errors.professorUnindigo}
+                        placeholder="Selecione"
                     >
-                        <option value="">Selecione</option>
-                        <option value="sim">Sim</option>
-                        <option value="nao">Não</option>
-                    </select>
-                    <p className="text-xs text-muted-foreground mt-1">
-                        {data.professorUnindigo === 'sim'
-                            ? 'Informe a disciplina no campo abaixo.'
-                            : data.professorUnindigo === 'nao'
-                              ? 'Marque “Sim” apenas se o profissional leciona na UniÍndigo.'
-                              : 'Selecione uma opção.'}
-                    </p>
+                        <SelectItem value="sim">Sim</SelectItem>
+                        <SelectItem value="nao">Não</SelectItem>
+                    </SelectFieldRadix>
                 </div>
 
                 {data.professorUnindigo === 'sim' && (
-                    <div className="space-y-2 md:max-w-sm">
-                        <Label htmlFor="disciplinaUniindigo">Disciplina</Label>
-                        <Input
+                    <div>
+                        <InputField
+                            label="Disciplina"
                             id="disciplinaUniindigo"
                             value={data.disciplinaUniindigo || ''}
                             onChange={(e) => onUpdate('disciplinaUniindigo', e.target.value)}
                             placeholder="Informe a disciplina"
-                            className={errors.disciplinaUniindigo ? 'border-destructive' : ''}
+                            error={errors.disciplinaUniindigo}
                         />
-                        {errors.disciplinaUniindigo && (
-                            <p className="text-sm text-destructive">{errors.disciplinaUniindigo}</p>
-                        )}
                     </div>
                 )}
-            </div>
 
-            {/* Datas de Início e Fim */}
-
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4">
-                <div className="space-y-2">
-                    <Label htmlFor="dataInicio">Data de Início *</Label>
-                    <DateField
+                <div>
+                    <DateFieldWithLabel
+                        label="Data de Início *"
                         value={data.dataInicio || ''}
                         onChange={(iso) => onUpdate('dataInicio', iso)}
                         placeholder="dd/mm/aaaa"
+                        error={errors.dataInicio}
                     />
-                    {errors.dataInicio && (
-                        <p className="text-sm text-destructive">{errors.dataInicio}</p>
-                    )}
                 </div>
 
-                <div className="space-y-2">
-                    <Label htmlFor="dataFim">Data de Fim</Label>
-                    <DateField
+                <div>
+                    <DateFieldWithLabel
+                        label="Data de Fim"
                         value={data.dataFim || ''}
                         onChange={(iso) => onUpdate('dataFim', iso)}
                         placeholder="dd/mm/aaaa"
                         error={errors.dataFim}
                         clearable={true}
                     />
-                    {errors.dataFim && <p className="text-sm text-destructive">{errors.dataFim}</p>}
                 </div>
             </div>
         </div>

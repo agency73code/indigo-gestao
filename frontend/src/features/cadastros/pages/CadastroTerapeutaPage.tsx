@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { CardHeader } from '@/ui/card';
 import { Button } from '@/ui/button';
-import { ChevronLeft, ChevronRight, CheckCircle, XCircle, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, CheckCircle, XCircle, X, User, MapPin, Briefcase, GraduationCap, FileText, Building2 } from 'lucide-react';
 import type { Terapeuta } from '../types/cadastros.types';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 import {
@@ -19,7 +18,7 @@ import {
     maskPixKey,
 } from '@/common/utils/mask';
 // Componentes dos steps
-import MultiStepProgress from '../components/MultiStepProgress';
+import VerticalStepSidebar from '../components/VerticalStepSidebar';
 import DadosPessoaisStep from '../components/terapeuta/DadosPessoaisStep';
 import EnderecoStep from '../components/terapeuta/EnderecoStep';
 import DadosProfissionaisStep from '../components/terapeuta/DadosProfissionaisStep';
@@ -37,13 +36,30 @@ const STEPS = [
     'Dados CNPJ',
 ];
 
+const STEP_ICONS = [
+    User,          // 1. Dados Pessoais
+    MapPin,        // 2. Endereço
+    Briefcase,     // 3. Dados Profissionais
+    GraduationCap, // 4. Formação
+    FileText,      // 5. Arquivos
+    Building2,     // 6. Dados CNPJ
+];
+
 export default function CadastroTerapeutaPage() {
     // ✅ Definir título da página
-    const { setPageTitle } = usePageTitle();
+    const { setPageTitle, setNoMainContainer, setShowBackButton } = usePageTitle();
     
     useEffect(() => {
         setPageTitle('Cadastro de Terapeuta');
-    }, [setPageTitle]);
+        setNoMainContainer(true); // Remove o container main para essa página
+        setShowBackButton(true); // Mostra o botão de voltar
+        
+        // Cleanup: restaura o container quando sair da página
+        return () => {
+            setNoMainContainer(false);
+            setShowBackButton(false);
+        };
+    }, [setPageTitle, setNoMainContainer, setShowBackButton]);
     
     const navigate = useNavigate();
     const [currentStep, setCurrentStep] = useState(1);
@@ -471,7 +487,7 @@ export default function CadastroTerapeutaPage() {
             });
 
             setTimeout(() => {
-                navigate('/app/cadastros');
+                navigate('/app/terapeuta');
             }, 1000);
         } catch (error) {
             console.error('Erro ao cadastrar terapeuta:', error);
@@ -534,48 +550,66 @@ export default function CadastroTerapeutaPage() {
     };
 
     return (
-        <div className="container mx-auto px-1 sm:px-6 md:px-6 py-6 md:py-8">
-            <CardHeader className="p-0">
-                <MultiStepProgress
+        <div className="flex h-full gap-1">
+            {/* Sidebar Vertical com Steps - Card Separado */}
+            <div className="w-64 flex-shrink-0" style={{ 
+                backgroundColor: 'var(--header-bg)',
+                borderRadius: '16px'
+            }}>
+                <VerticalStepSidebar
                     currentStep={currentStep}
                     totalSteps={STEPS.length}
                     steps={STEPS}
+                    stepIcons={STEP_ICONS}
+                    onStepClick={(step) => setCurrentStep(step)}
                 />
-            </CardHeader>
-            <div>{renderCurrentStep()}</div>
-            <div className="flex justify-between items-center gap-3 flex-nowrap w-full mt-8 pt-6 border-t">
-                <Button
-                    type="button"
-                    variant="outline"
-                    onClick={prevStep}
-                    disabled={currentStep === 1}
-                    className="flex items-center gap-2 whitespace-nowrap"
-                >
-                    <ChevronLeft className="w-4 h-4" /> Anterior
-                </Button>
-                {currentStep === STEPS.length ? (
+            </div>
+
+            {/* Card Principal com Formulário */}
+            <div 
+                className="flex-1 flex flex-col min-w-0 p-4"
+                style={{ 
+                    backgroundColor: 'var(--header-bg)',
+                    borderRadius: '16px'
+                }}
+            >
+                {/* Form Content */}
+                <div className="flex-1 overflow-auto">
+                    {renderCurrentStep()}
+                </div>
+
+                {/* Navigation Buttons */}
+                <div className="flex justify-between pt-4 border-t border-border">
                     <Button
-                        onClick={handleSubmit}
-                        disabled={isLoading}
-                        className="flex items-center gap-2 whitespace-nowrap"
+                        variant="outline"
+                        onClick={prevStep}
+                        disabled={currentStep === 1 || isLoading}
                     >
-                        {isLoading ? (
-                            <>
-                                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>{' '}
-                                Cadastrando...
-                            </>
-                        ) : (
-                            'Finalizar Cadastro'
-                        )}
+                        <ArrowLeft className="w-4 h-4 mr-2" />
+                        Anterior
                     </Button>
-                ) : (
-                    <Button
-                        onClick={nextStep}
-                        className="flex items-center gap-2 whitespace-nowrap"
-                    >
-                        Próximo <ChevronRight className="w-4 h-4" />
-                    </Button>
-                )}
+
+                    {currentStep < STEPS.length ? (
+                        <Button onClick={nextStep} disabled={isLoading}>
+                            Próximo
+                            <ArrowRight className="w-4 h-4 ml-2" />
+                        </Button>
+                    ) : (
+                        <Button onClick={handleSubmit} disabled={isLoading}>
+                            {isLoading ? (
+                                <>
+                                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                                    Cadastrando...
+                                </>
+                            ) : (
+                                <>
+                                    <Check className="w-4 h-4 mr-2" />
+                                    Finalizar Cadastro
+                                </>
+                            )}
+                        </Button>
+                    )}
+                </div>
             </div>
         </div>
     );

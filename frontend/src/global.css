@@ -59,7 +59,7 @@
     --blue-moon-gradient-end: #E9E4F0;
     --container-background: rgba(255, 255, 255, 0.85);
     --hub-card-title-font-family: 'Sora', sans-serif;
-    --hub-card-title-font-weight: 400;
+    --hub-card-title-font-weight: 300;
     --hub-card-title-color: rgba(0, 0, 0, 0.87);
     --hub-card-background: #F2F2F2;
     --hub-nested-card-background: #FFFFFF;
@@ -117,12 +117,13 @@ body {
     --sidebar-accent-foreground: oklch(0.985 0 0);
     --sidebar-border: oklch(1 0 0 / 10%);
     --sidebar-ring: oklch(0.488 0.243 264.376);
+    --header-bg: #2a2a2e;
     --blue-moon-gradient: radial-gradient(circle at 0% 50%, #000000 0%, #0a0a0a 100%);
     --blue-moon-gradient-start: #000000;
     --blue-moon-gradient-end: #0a0a0a;
     --container-background: rgba(10, 10, 10, 0.8);
     --hub-card-title-font-family: 'Sora', sans-serif;
-    --hub-card-title-font-weight: 300;
+    --hub-card-title-font-weight: 400;
     --hub-card-title-color: hsl(220, 9%, 70%);
     --hub-card-background: #212125;
     --hub-nested-card-background: #2a2a2e;
@@ -177,7 +178,35 @@ body {
     * {
         @apply border-border outline-ring/50;
     }
+    
+    /* Remove autocomplete background */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
+    input:-webkit-autofill:active {
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: hsl(var(--foreground));
+        transition: background-color 5000s ease-in-out 0s;
+        box-shadow: inset 0 0 20px 20px hsl(var(--card));
+    }
+    
+    /* Scrollbar transparente/invisível */
+    * {
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE and Edge */
+    }
+    
+    *::-webkit-scrollbar {
+        display: none; /* Chrome, Safari, Opera */
+    }
+    
     body {
         @apply bg-background text-foreground;
+    }
+    
+    /* Estilização do dropdown do select */
+    select option {
+        border-radius: 8px;
+        padding: 8px 12px;
     }
 }

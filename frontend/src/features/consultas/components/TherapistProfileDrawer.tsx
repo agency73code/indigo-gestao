@@ -1098,9 +1098,7 @@ export default function TherapistProfileDrawer({
                                                 {chavePixError && (
                                                     <p className="text-sm text-red-500 mt-1">{chavePixError}</p>
                                                 )}
-                                                <p className="text-xs text-muted-foreground">
-                                                    Selecione o tipo e informe a chave no formato correspondente.
-                                                </p>
+                                                
                                             </div>
 
                                             <div className="space-y-2">

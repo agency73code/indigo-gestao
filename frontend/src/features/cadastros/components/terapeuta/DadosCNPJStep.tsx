@@ -1,8 +1,8 @@
-import { Input } from '@/ui/input';
-import { Label } from '@/ui/label';
 import { useEffect, useState } from 'react';
 import { useCepLookup } from '../../hooks/useCepLookup';
 import type { Terapeuta } from '../../types/cadastros.types';
+import { InputField } from '@/ui/input-field';
+import { SelectFieldRadix, SelectItem } from '@/ui/select-field-radix';
 
 interface DadosCNPJStepProps {
     data: Partial<Terapeuta>;
@@ -53,7 +53,16 @@ export default function DadosCNPJStep({ data, onUpdate, errors }: DadosCNPJStepP
 
     return (
         <div className="space-y-4 md:space-y-6">
-            <h3 className="text-base sm:text-lg font-semibold">Dados do CNPJ (Opcional)</h3>
+            <h3 
+                style={{ 
+                    fontFamily: "var(--hub-card-title-font-family)",
+                    fontWeight: "var(--hub-card-title-font-weight)",
+                    color: "var(--hub-card-title-color)"
+                }}
+                className="text-base sm:text-lg leading-none tracking-tight"
+            >
+                Dados do CNPJ (Opcional)
+            </h3>
 
             <div className="bg-muted/50 p-4 rounded-lg">
                 <p className="text-sm text-muted-foreground mb-4">
@@ -92,43 +101,27 @@ export default function DadosCNPJStep({ data, onUpdate, errors }: DadosCNPJStepP
                     <div className="space-y-4">
                         <h4 className="text-md font-medium text-primary">Dados da Empresa</h4>
 
-                        <div className="grid grid-cols-1 gap-3 md:gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="cnpjNumero">CNPJ</Label>
-                                <Input
-                                    id="cnpjNumero"
-                                    value={data.cnpj?.numero || ''}
-                                    onChange={(e) => handleCNPJChange('numero', e.target.value)}
-                                    placeholder="00.000.000/0000-00"
-                                    className={errors['cnpj.numero'] ? 'border-destructive' : ''}
-                                />
-                                {errors['cnpj.numero'] && (
-                                    <p className="text-sm text-destructive">
-                                        {errors['cnpj.numero']}
-                                    </p>
-                                )}
-                            </div>
-                        </div>
+                        <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-4">
+                            <InputField
+                                id="cnpjNumero"
+                                label="CNPJ"
+                                value={data.cnpj?.numero || ''}
+                                onChange={(e) => handleCNPJChange('numero', e.target.value)}
+                                placeholder="00.000.000/0000-00"
+                                error={errors['cnpj.numero']}
+                            />
 
-                        <div className="grid grid-cols-1 gap-3 md:gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="razaoSocial">Razão Social</Label>
-                                <Input
+                            <div className="md:col-span-2">
+                                <InputField
                                     id="razaoSocial"
+                                    label="Razão Social"
                                     value={data.cnpj?.razaoSocial || ''}
                                     onChange={(e) =>
                                         handleCNPJChange('razaoSocial', e.target.value)
                                     }
                                     placeholder="Nome da empresa conforme registro"
-                                    className={
-                                        errors['cnpj.razaoSocial'] ? 'border-destructive' : ''
-                                    }
+                                    error={errors['cnpj.razaoSocial']}
                                 />
-                                {errors['cnpj.razaoSocial'] && (
-                                    <p className="text-sm text-destructive">
-                                        {errors['cnpj.razaoSocial']}
-                                    </p>
-                                )}
                             </div>
                         </div>
                     </div>
@@ -138,24 +131,21 @@ export default function DadosCNPJStep({ data, onUpdate, errors }: DadosCNPJStepP
                         <h4 className="text-md font-medium text-primary">Endereço da Empresa</h4>
 
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 md:gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="cnpjCep">CEP</Label>
-                                <Input
-                                    id="cnpjCep"
-                                    value={data.cnpj?.endereco?.cep || ''}
-                                    onChange={(e) =>
-                                        handleCNPJEnderecoChange('cep', e.target.value)
-                                    }
-                                    placeholder="00000-000"
-                                />
-                            </div>
-                            {cepError && (
-                                <p className='text-sm text-destructive'>{cepError}</p>
-                            )}
-                            <div className="space-y-2 md:col-span-2">
-                                <Label htmlFor="cnpjRua">Rua</Label>
-                                <Input
+                            <InputField
+                                id="cnpjCep"
+                                label="CEP"
+                                value={data.cnpj?.endereco?.cep || ''}
+                                onChange={(e) =>
+                                    handleCNPJEnderecoChange('cep', e.target.value)
+                                }
+                                placeholder="00000-000"
+                                error={cepError || ''}
+                            />
+                            
+                            <div className="md:col-span-2">
+                                <InputField
                                     id="cnpjRua"
+                                    label="Rua"
                                     value={data.cnpj?.endereco?.rua || ''}
                                     onChange={(e) =>
                                         handleCNPJEnderecoChange('rua', e.target.value)
@@ -166,97 +156,84 @@ export default function DadosCNPJStep({ data, onUpdate, errors }: DadosCNPJStepP
                         </div>
 
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 md:gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="cnpjNumero">Número</Label>
-                                <Input
-                                    id="cnpjNumeroEndereco"
-                                    value={data.cnpj?.endereco?.numero || ''}
-                                    onChange={(e) =>
-                                        handleCNPJEnderecoChange('numero', e.target.value)
-                                    }
-                                    placeholder="123"
-                                />
-                            </div>
+                            <InputField
+                                id="cnpjNumeroEndereco"
+                                label="Número"
+                                value={data.cnpj?.endereco?.numero || ''}
+                                onChange={(e) =>
+                                    handleCNPJEnderecoChange('numero', e.target.value)
+                                }
+                                placeholder="123"
+                            />
 
-                            <div className="space-y-2">
-                                <Label htmlFor="cnpjComplemento">Complemento</Label>
-                                <Input
-                                    id="cnpjComplemento"
-                                    value={data.cnpj?.endereco?.complemento || ''}
-                                    onChange={(e) =>
-                                        handleCNPJEnderecoChange('complemento', e.target.value)
-                                    }
-                                    placeholder="Sala, Andar..."
-                                />
-                            </div>
+                            <InputField
+                                id="cnpjComplemento"
+                                label="Complemento"
+                                value={data.cnpj?.endereco?.complemento || ''}
+                                onChange={(e) =>
+                                    handleCNPJEnderecoChange('complemento', e.target.value)
+                                }
+                                placeholder="Sala, Andar..."
+                            />
 
-                            <div className="space-y-2">
-                                <Label htmlFor="cnpjBairro">Bairro</Label>
-                                <Input
-                                    id="cnpjBairro"
-                                    value={data.cnpj?.endereco?.bairro || ''}
-                                    onChange={(e) =>
-                                        handleCNPJEnderecoChange('bairro', e.target.value)
-                                    }
-                                    placeholder="Nome do bairro"
-                                />
-                            </div>
+                            <InputField
+                                id="cnpjBairro"
+                                label="Bairro"
+                                value={data.cnpj?.endereco?.bairro || ''}
+                                onChange={(e) =>
+                                    handleCNPJEnderecoChange('bairro', e.target.value)
+                                }
+                                placeholder="Nome do bairro"
+                            />
 
-                            <div className="space-y-2">
-                                <Label htmlFor="cnpjCidade">Cidade</Label>
-                                <Input
-                                    id="cnpjCidade"
-                                    value={data.cnpj?.endereco?.cidade || ''}
-                                    onChange={(e) =>
-                                        handleCNPJEnderecoChange('cidade', e.target.value)
-                                    }
-                                    placeholder="Nome da cidade"
-                                />
-                            </div>
+                            <InputField
+                                id="cnpjCidade"
+                                label="Cidade"
+                                value={data.cnpj?.endereco?.cidade || ''}
+                                onChange={(e) =>
+                                    handleCNPJEnderecoChange('cidade', e.target.value)
+                                }
+                                placeholder="Nome da cidade"
+                            />
                         </div>
 
                         <div className="grid grid-cols-1 gap-3 md:gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="cnpjEstado">Estado</Label>
-                                <select
-                                    id="cnpjEstado"
-                                    value={data.cnpj?.endereco?.estado || ''}
-                                    onChange={(e) =>
-                                        handleCNPJEnderecoChange('estado', e.target.value)
-                                    }
-                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                >
-                                    <option value="">Selecione o estado</option>
-                                    <option value="AC">Acre</option>
-                                    <option value="AL">Alagoas</option>
-                                    <option value="AP">Amapá</option>
-                                    <option value="AM">Amazonas</option>
-                                    <option value="BA">Bahia</option>
-                                    <option value="CE">Ceará</option>
-                                    <option value="DF">Distrito Federal</option>
-                                    <option value="ES">Espírito Santo</option>
-                                    <option value="GO">Goiás</option>
-                                    <option value="MA">Maranhão</option>
-                                    <option value="MT">Mato Grosso</option>
-                                    <option value="MS">Mato Grosso do Sul</option>
-                                    <option value="MG">Minas Gerais</option>
-                                    <option value="PA">Pará</option>
-                                    <option value="PB">Paraíba</option>
-                                    <option value="PR">Paraná</option>
-                                    <option value="PE">Pernambuco</option>
-                                    <option value="PI">Piauí</option>
-                                    <option value="RJ">Rio de Janeiro</option>
-                                    <option value="RN">Rio Grande do Norte</option>
-                                    <option value="RS">Rio Grande do Sul</option>
-                                    <option value="RO">Rondônia</option>
-                                    <option value="RR">Roraima</option>
-                                    <option value="SC">Santa Catarina</option>
-                                    <option value="SP">São Paulo</option>
-                                    <option value="SE">Sergipe</option>
-                                    <option value="TO">Tocantins</option>
-                                    {/* Adicionar outros estados conforme necessário */}
-                                </select>
-                            </div>
+                            <SelectFieldRadix
+                                label="Estado"
+                                value={data.cnpj?.endereco?.estado || ''}
+                                onValueChange={(value) =>
+                                    handleCNPJEnderecoChange('estado', value)
+                                }
+                                placeholder="Selecione o estado"
+                            >
+                                <SelectItem value="AC">Acre</SelectItem>
+                                <SelectItem value="AL">Alagoas</SelectItem>
+                                <SelectItem value="AP">Amapá</SelectItem>
+                                <SelectItem value="AM">Amazonas</SelectItem>
+                                <SelectItem value="BA">Bahia</SelectItem>
+                                <SelectItem value="CE">Ceará</SelectItem>
+                                <SelectItem value="DF">Distrito Federal</SelectItem>
+                                <SelectItem value="ES">Espírito Santo</SelectItem>
+                                <SelectItem value="GO">Goiás</SelectItem>
+                                <SelectItem value="MA">Maranhão</SelectItem>
+                                <SelectItem value="MT">Mato Grosso</SelectItem>
+                                <SelectItem value="MS">Mato Grosso do Sul</SelectItem>
+                                <SelectItem value="MG">Minas Gerais</SelectItem>
+                                <SelectItem value="PA">Pará</SelectItem>
+                                <SelectItem value="PB">Paraíba</SelectItem>
+                                <SelectItem value="PR">Paraná</SelectItem>
+                                <SelectItem value="PE">Pernambuco</SelectItem>
+                                <SelectItem value="PI">Piauí</SelectItem>
+                                <SelectItem value="RJ">Rio de Janeiro</SelectItem>
+                                <SelectItem value="RN">Rio Grande do Norte</SelectItem>
+                                <SelectItem value="RS">Rio Grande do Sul</SelectItem>
+                                <SelectItem value="RO">Rondônia</SelectItem>
+                                <SelectItem value="RR">Roraima</SelectItem>
+                                <SelectItem value="SC">Santa Catarina</SelectItem>
+                                <SelectItem value="SP">São Paulo</SelectItem>
+                                <SelectItem value="SE">Sergipe</SelectItem>
+                                <SelectItem value="TO">Tocantins</SelectItem>
+                            </SelectFieldRadix>
                         </div>
                     </div>
                 </div>

@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Input } from '@/ui/input';
-import { Label } from '@/ui/label';
+import { InputField } from '@/ui/input-field';
+import { DateFieldWithLabel } from '@/ui/date-field-with-label';
+import { SelectFieldRadix, SelectItem } from '@/ui/select-field-radix';
 import { Combobox } from '@/ui/combobox';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Terapeuta } from '../../types/cadastros.types';
-import { DateField } from '@/common/components/layout/DateField';
 import { FALLBACK_BRAZILIAN_BANKS, formatBankLabel, type Bank } from '@/common/constants/banks';
 import { fetchBrazilianBanks } from '@/lib/api';
+import { cn } from '@/lib/utils';
 
 import {
     maskCPF,
@@ -120,259 +120,240 @@ export default function DadosPessoaisStep({
 
     return (
         <div className="space-y-4 md:space-y-6">
-            <div>
-                <h3 className="text-base  sm:text-lg font-semibold text-primary">Dados Pessoais</h3>
-                <p className="text-xs sm:text-xs  text-muted-foreground mt-1">
-                    Informe os dados pessoais do terapeuta. Campos marcados com * são obrigatórios.
-                </p>
-            </div>
+            
 
             {/* Primeira linha: Nome (2/4) | CPF (1/4) | Data de Nascimento (1/4) */}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 md:gap-4">
-                <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="nome">Nome Completo *</Label>
-                    <Input
+                <div className="md:col-span-2">
+                    <InputField
+                        label="Nome Completo *"
                         id="nome"
                         value={data.nome || ''}
                         onChange={(e) => onUpdate('nome', maskPersonName(e.target.value))}
                         onBlur={(e) => onUpdate('nome', maskPersonName(e.target.value).trim())}
                         placeholder="Digite o nome completo"
-                        className={errors.nome ? 'border-destructive' : ''}
+                        error={errors.nome}
                     />
-                    {errors.nome && <p className="text-sm text-destructive">{errors.nome}</p>}
                 </div>
 
-                <div className="space-y-2">
-                    <Label htmlFor="cpf">CPF *</Label>
-                    <Input
+                <div>
+                    <InputField
+                        label="CPF *"
                         id="cpf"
                         value={data.cpf || ''}
                         onChange={(e) => onUpdate('cpf', maskCPF(e.target.value))}
                         placeholder="000.000.000-00"
-                        className={errors.cpf ? 'border-destructive' : ''}
-                        aria-invalid={!!errors.cpf}
-                        aria-describedby={errors.cpf ? 'cpf-error' : undefined}
+                        error={errors.cpf}
                     />
-                    <p id="cpf-error" className="text-sm text-destructive">
-                        {errors.cpf}
-                    </p>
                 </div>
 
-                <div className="space-y-2">
-                    <Label htmlFor="dataNascimento">Data de nascimento *</Label>
-                    <DateField
+                <div>
+                    <DateFieldWithLabel
+                        label="Data de nascimento *"
                         value={data.dataNascimento || ''}
                         onChange={(iso) => onUpdate('dataNascimento', iso)}
                         placeholder="dd/mm/aaaa"
+                        error={errors.dataNascimento}
                     />
-                    {errors.dataNascimento && (
-                        <p className="text-sm text-destructive">{errors.dataNascimento}</p>
-                    )}
                 </div>
             </div>
 
-            {/* Segunda linha: Email | Email Índigo | Celular | Telefone */}
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-6 md:gap-4">
-                <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="email">E-mail *</Label>
-                    <Input
+            {/* Segunda linha: Email | Celular */}
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-4 md:gap-4">
+                <div className="md:col-span-3">
+                    <InputField
+                        label="E-mail *"
                         id="email"
                         type="email"
                         value={data.email || ''}
                         onChange={(e) => onUpdate('email', e.target.value)}
                         onBlur={() => onBlurField?.('email')}
                         placeholder="email@exemplo.com"
-                        className={errors.email ? 'border-destructive' : ''}
-                        aria-invalid={!!errors.email}
-                        aria-describedby={errors.email ? 'email-error' : undefined}
+                        error={errors.email}
                     />
-                    {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                 </div>
 
-                <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="emailIndigo">E-mail Índigo *</Label>
-                    <Input
+                <div>
+                    <InputField
+                        label="Celular *"
+                        id="celular"
+                        value={data.celular || ''}
+                        onChange={(e) => onUpdate('celular', maskBRPhone(e.target.value))}
+                        placeholder="(11) 99999-9999"
+                        error={errors.celular}
+                    />
+                </div>
+            </div>
+
+            {/* Terceira linha: Email Índigo | Telefone */}
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-4 md:gap-4">
+                <div className="md:col-span-3">
+                    <InputField
+                        label="E-mail Índigo *"
                         id="emailIndigo"
                         type="email"
                         value={data.emailIndigo || ''}
                         onChange={(e) => onUpdate('emailIndigo', e.target.value)}
                         onBlur={() => onBlurField?.('emailIndigo')}
                         placeholder="email@indigo.com"
-                        className={errors.emailIndigo ? 'border-destructive' : ''}
-                        aria-invalid={!!errors.emailIndigo}
-                        aria-describedby={errors.emailIndigo ? 'emailIndigo-error' : undefined}
+                        error={errors.emailIndigo}
                     />
-                    {errors.emailIndigo && (
-                        <p className="text-sm text-destructive">{errors.emailIndigo}</p>
-                    )}
                 </div>
 
-                <div className="space-y-2">
-                    <Label htmlFor="celular">Celular *</Label>
-                    <Input
-                        id="celular"
-                        value={data.celular || ''}
-                        onChange={(e) => onUpdate('celular', maskBRPhone(e.target.value))}
-                        placeholder="(11) 99999-9999"
-                        className={errors.celular ? 'border-destructive' : ''}
-                    />
-                    {errors.celular && <p className="text-sm text-destructive">{errors.celular}</p>}
-                </div>
-
-                <div className="space-y-2">
-                    <Label htmlFor="telefone">Telefone</Label>
-                    <Input
+                <div>
+                    <InputField
+                        label="Telefone"
                         id="telefone"
                         value={data.telefone || ''}
                         onChange={(e) => onUpdate('telefone', maskBRPhone(e.target.value))}
                         placeholder="(11) 3333-4444"
-                        className={errors.telefone ? 'border-destructive' : ''}
+                        error={errors.telefone}
                     />
-                    {errors.telefone && (
-                        <p className="text-sm text-destructive">{errors.telefone}</p>
-                    )}
                 </div>
             </div>
 
             {/* Seção Veículo */}
-            <div className="space-y-4 md:space-y-6 border-t pt-6">
-                <div className="space-y-2">
-                    <Label htmlFor="possuiVeiculo">Possui Veículo? *</Label>
-                    <select
-                        id="possuiVeiculo"
-                        value={data.possuiVeiculo || ''}
-                        onChange={(e) => onUpdate('possuiVeiculo', e.target.value)}
-                        className={`flex h-10 w-full rounded-[5px] border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
-                            errors.possuiVeiculo ? 'border-destructive' : ''
-                        }`}
-                    >
-                        <option value="">Selecione</option>
-                        <option value="sim">Sim</option>
-                        <option value="nao">Não</option>
-                    </select>
-                    {errors.possuiVeiculo && (
-                        <p className="text-sm text-destructive">{errors.possuiVeiculo}</p>
+            <div className="space-y-4 md:space-y-6">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 md:gap-4">
+                    <div>
+                        <SelectFieldRadix
+                            label="Possui Veículo? *"
+                            value={data.possuiVeiculo || ''}
+                            onValueChange={(value) => onUpdate('possuiVeiculo', value)}
+                            placeholder="Selecione"
+                            error={errors.possuiVeiculo}
+                        >
+                            <SelectItem value="sim">Sim</SelectItem>
+                            <SelectItem value="nao">Não</SelectItem>
+                        </SelectFieldRadix>
+                    </div>
+
+                    {/* Campos condicionais do veículo na mesma linha */}
+                    {data.possuiVeiculo === 'sim' && (
+                        <>
+                            <div>
+                                <InputField
+                                    label="Placa do Veículo *"
+                                    id="placaVeiculo"
+                                    value={data.placaVeiculo || ''}
+                                    onChange={(e) =>
+                                        onUpdate('placaVeiculo', maskPlate(e.target.value))
+                                    }
+                                    placeholder="ABC-1234"
+                                    error={errors.placaVeiculo}
+                                />
+                            </div>
+
+                            <div className="md:col-span-2">
+                                <InputField
+                                    label="Modelo do Veículo *"
+                                    id="modeloVeiculo"
+                                    value={data.modeloVeiculo || ''}
+                                    onChange={(e) => onUpdate('modeloVeiculo', e.target.value)}
+                                    placeholder="Ex: Honda Civic"
+                                    error={errors.modeloVeiculo}
+                                />
+                            </div>
+                        </>
                     )}
                 </div>
-
-                {/* Campos condicionais do veículo */}
-                {data.possuiVeiculo === 'sim' && (
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="placaVeiculo">Placa do Veículo *</Label>
-                            <Input
-                                id="placaVeiculo"
-                                value={data.placaVeiculo || ''}
-                                onChange={(e) =>
-                                    onUpdate('placaVeiculo', maskPlate(e.target.value))
-                                }
-                                placeholder="ABC-1234"
-                                className={errors.placaVeiculo ? 'border-destructive' : ''}
-                            />
-                            {errors.placaVeiculo && (
-                                <p className="text-sm text-destructive">{errors.placaVeiculo}</p>
-                            )}
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="modeloVeiculo">Modelo do Veículo *</Label>
-                            <Input
-                                id="modeloVeiculo"
-                                value={data.modeloVeiculo || ''}
-                                onChange={(e) => onUpdate('modeloVeiculo', e.target.value)}
-                                placeholder="Ex: Honda Civic"
-                                className={errors.modeloVeiculo ? 'border-destructive' : ''}
-                            />
-                            {errors.modeloVeiculo && (
-                                <p className="text-sm text-destructive">{errors.modeloVeiculo}</p>
-                            )}
-                        </div>
-                    </div>
-                )}
             </div>
+
             <div>
-                <h3 className="text-base sm:text-lg font-semibold text-primary font-sora">
+                <h3 
+                    style={{ 
+                        fontFamily: "var(--hub-card-title-font-family)",
+                        fontWeight: "var(--hub-card-title-font-weight)",
+                        color: "var(--hub-card-title-color)"
+                    }}
+                    className="text-base sm:text-lg leading-none tracking-tight"
+                >
                     Dados para pagamento
                 </h3>
-                <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                    Informe os dados necessários para cadastro bancário do terapeuta.
-                </p>
+                
             </div>
+
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 md:gap-4">
-                <div className="space-y-2">
-                    <Label htmlFor="banco">Banco *</Label>
-                    <Combobox
-                        options={bankOptions}
-                        value={data.banco || ''}
-                        onValueChange={(value) => onUpdate('banco', value)}
-                        placeholder={bankPlaceholder}
-                        searchPlaceholder="Buscar banco..."
-                        emptyMessage={bankEmptyMessage}
-                        error={!!errors.banco}
-                        disabled={banksLoading || bankOptions.length === 0}
-                        aria-label="Banco"
-                        aria-required="true"
-                        data-testid="field-banco"
-                    />
+                <div className="relative w-full">
+                    <div
+                        className={cn(
+                            'flex flex-col h-full w-full rounded-lg border border-input bg-card px-4 pt-2 pb-3 shadow-sm transition-all overflow-visible',
+                            'focus-within:outline-none focus-within:border-ring focus-within:shadow-[0_0_0_1px_hsl(var(--ring))]',
+                            errors.banco && 'border-destructive'
+                        )}
+                    >
+                        <label className="text-xs font-medium text-muted-foreground mb-1 pointer-events-none">
+                            Banco <span className="text-destructive">*</span>
+                        </label>
+                        <Combobox
+                            options={bankOptions}
+                            value={data.banco || ''}
+                            onValueChange={(value) => onUpdate('banco', value)}
+                            placeholder={bankPlaceholder}
+                            searchPlaceholder="Buscar banco..."
+                            emptyMessage={bankEmptyMessage}
+                            error={!!errors.banco}
+                            disabled={banksLoading || bankOptions.length === 0}
+                            aria-label="Banco"
+                            aria-required="true"
+                            data-testid="field-banco"
+                            className="border-0 shadow-none p-0 h-auto bg-transparent"
+                        />
+                    </div>
                     {banksMessage && !errors.banco && (
-                        <p className="text-xs text-muted-foreground">{banksMessage}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{banksMessage}</p>
                     )}
-                    {errors.banco && <p className="text-sm text-destructive">{errors.banco}</p>}
+                    {errors.banco && <p className="text-xs text-destructive mt-1">{errors.banco}</p>}
                 </div>
 
-                <div className="space-y-2">
-                    <Label htmlFor="agencia">Agência *</Label>
-                    <Input
+                <div>
+                    <InputField
+                        label="Agência *"
                         id="agencia"
                         value={data.agencia || ''}
                         onChange={(e) => onUpdate('agencia', onlyDigits(e.target.value))}
                         placeholder="Digite o número da agência"
-                        className={errors.agencia ? 'border-destructive' : ''}
+                        error={errors.agencia}
                     />
-                    {errors.agencia && <p className="text-sm text-destructive">{errors.agencia}</p>}
                 </div>
 
-                <div className="space-y-2">
-                    <Label htmlFor="conta">Conta *</Label>
-                    <Input
+                <div>
+                    <InputField
+                        label="Conta *"
                         id="conta"
                         value={data.conta || ''}
                         onChange={(e) => onUpdate('conta', onlyDigits(e.target.value))}
                         placeholder="Digite o número da conta"
-                        className={errors.conta ? 'border-destructive' : ''}
+                        error={errors.conta}
                     />
-                    {errors.conta && <p className="text-sm text-destructive">{errors.conta}</p>}
                 </div>
+            </div>
 
-                <div className="space-y-2 md:col-span-3">
-                    <Label htmlFor="pixTipo">Tipo de Chave Pix *</Label>
-                    <Tabs
+            {/* Linha de Tipo de Chave Pix, Chave Pix e Valor Acordado */}
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-12 md:gap-4">
+                <div className="md:col-span-3">
+                    <SelectFieldRadix
+                        label="Tipo de Chave Pix *"
                         value={data.pixTipo || ''}
-                        onValueChange={(value: string) => {
+                        onValueChange={(value) => {
                             onUpdate('pixTipo', value);
                             // Limpa a chave ao trocar de tipo
                             onUpdate('chavePix', '');
                         }}
-                        className="w-full"
+                        placeholder="Selecione o tipo"
+                        error={errors.pixTipo}
                     >
-                        <TabsList
-                            className="grid w-full rounded-[5px] grid-cols-5"
-                            aria-label="Tipo de chave Pix"
-                            data-testid="pix-type"
-                        >
-                            <TabsTrigger value="email" className='rounded-[5px]'>E-mail</TabsTrigger>
-                            <TabsTrigger value="telefone" className='rounded-[5px]'>Telefone</TabsTrigger>
-                            <TabsTrigger value="cpf" className='rounded-[5px]'>CPF</TabsTrigger>
-                            <TabsTrigger value="aleatoria" className='rounded-[5px]'>Chave aleatória</TabsTrigger>
-                            <TabsTrigger value="cnpj" className='rounded-[5px]'>CNPJ</TabsTrigger>
-                        </TabsList>
-                    </Tabs>
-                    {errors.pixTipo && <p className="text-sm text-destructive">{errors.pixTipo}</p>}
+                        <SelectItem value="email">E-mail</SelectItem>
+                        <SelectItem value="telefone">Telefone</SelectItem>
+                        <SelectItem value="cpf">CPF</SelectItem>
+                        <SelectItem value="aleatoria">Chave aleatória</SelectItem>
+                        <SelectItem value="cnpj">CNPJ</SelectItem>
+                    </SelectFieldRadix>
                 </div>
 
-                <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="chavePix">Chave Pix *</Label>
-                    <Input
+                <div className="md:col-span-6">
+                    <InputField
+                        label="Chave Pix *"
                         id="chavePix"
                         type="text"
                         value={data.chavePix || ''}
@@ -384,43 +365,28 @@ export default function DadosPessoaisStep({
                             if (data.pixTipo && data.chavePix) {
                                 const validation = validatePixKey(data.pixTipo, data.chavePix);
                                 if (!validation.valid) {
-                                    // Atualiza erro via callback se disponível
                                     onBlurField?.('chavePix');
                                 }
                             }
                         }}
                         placeholder={getPixPlaceholder(data.pixTipo)}
                         disabled={!data.pixTipo}
-                        className={errors.chavePix ? 'border-destructive' : ''}
-                        aria-describedby="chavePix-help"
-                        data-testid="pix-key"
+                        error={errors.chavePix}
                     />
-                    <p id="chavePix-help" className="text-xs text-muted-foreground">
-                        Selecione o tipo e informe a chave no formato correspondente.
-                    </p>
-                    {errors.chavePix && (
-                        <p className="text-sm text-destructive">{errors.chavePix}</p>
-                    )}
+                    
                 </div>
-                <div className="space-y-2 md:col-span-1">
-                    <Label htmlFor="valorHoraAcordado">Valor acordado por hora</Label>
-                    <Input
+
+                <div className="md:col-span-3">
+                    <InputField
+                        label="Valor acordado por hora"
                         id="valorHoraAcordado"
-                        // [-] era type="number"
                         type="text"
-                        inputMode="numeric"
-                        value={data.valorHoraAcordado ?? ''} // pode ser string mascarada no estado
+                        value={data.valorHoraAcordado ?? ''}
                         onChange={(e) => onUpdate('valorHoraAcordado', maskBRL(e.target.value))}
                         placeholder="R$ 0,00"
-                        aria-describedby="valorHoraAcordado-help"
-                        className={errors.valorHoraAcordado ? 'border-destructive' : ''}
+                        error={errors.valorHoraAcordado}
                     />
-                    <p id="valorHoraAcordado-help" className="text-xs text-muted-foreground">
-                        Valor bruto acordado por hora de atendimento.
-                    </p>
-                    {errors.valorHoraAcordado && (
-                        <p className="text-sm text-destructive">{errors.valorHoraAcordado}</p>
-                    )}
+                    
                 </div>
             </div>
         </div>

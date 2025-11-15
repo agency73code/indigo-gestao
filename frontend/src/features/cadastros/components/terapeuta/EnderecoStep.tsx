@@ -1,5 +1,5 @@
-import { Input } from '@/ui/input';
-import { Label } from '@/ui/label';
+import { InputField } from '@/ui/input-field';
+import { SelectFieldRadix, SelectItem } from '@/ui/select-field-radix';
 import type { Terapeuta } from '../../types/cadastros.types';
 import { useCepLookup } from '../../hooks/useCepLookup';
 import { useCallback, useEffect } from 'react';
@@ -51,62 +51,47 @@ export default function EnderecoStep({ data, onUpdate, errors }: EnderecoStepPro
 
     return (
         <div className="space-y-4 md:space-y-6">
-            <div>
-                <h3 className="text-lg font-semibold text-primary font-sora">Endereço Pessoal</h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                    Preencha todos os campos com o endereço pessoal do terapeuta para registro.{' '}
-                </p>
-            </div>
+            
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 md:gap-4">
-                <div className="space-y-2">
-                    <Label htmlFor="cep">CEP *</Label>
-                    <Input
+                <div>
+                    <InputField
+                        label="CEP *"
                         id="cep"
                         value={data.endereco?.cep || ''}
                         onChange={(e) => handleEnderecoChange('cep', maskCEP(e.target.value))}
                         placeholder="00000-000"
-                        className={errors['endereco.cep'] ? 'border-destructive' : ''}
+                        error={errors['endereco.cep'] || cepError || undefined}
                     />
-                    {cepError && <p className="text-sm text-destructive">{cepError}</p>}
-                    {errors['endereco.cep'] && (
-                        <p className="text-sm text-destructive">{errors['endereco.cep']}</p>
-                    )}
                 </div>
 
-                <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="rua">rua *</Label>
-                    <Input
+                <div className="md:col-span-2">
+                    <InputField
+                        label="Rua *"
                         id="rua"
                         value={data.endereco?.rua || ''}
                         onChange={(e) => handleEnderecoChange('rua', e.target.value)}
                         placeholder="Nome da rua"
-                        className={errors['endereco.rua'] ? 'border-destructive' : ''}
+                        error={errors['endereco.rua']}
                     />
-                    {errors['endereco.rua'] && (
-                        <p className="text-sm text-destructive">{errors['endereco.rua']}</p>
-                    )}
                 </div>
             </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 md:gap-4">
-                <div className="space-y-2">
-                    <Label htmlFor="numero">Número *</Label>
-                    <Input
+                <div>
+                    <InputField
+                        label="Número *"
                         id="numero"
                         value={data.endereco?.numero || ''}
                         onChange={(e) => handleEnderecoChange('numero', e.target.value)}
                         placeholder="123"
-                        className={errors['endereco.numero'] ? 'border-destructive' : ''}
+                        error={errors['endereco.numero']}
                     />
-                    {errors['endereco.numero'] && (
-                        <p className="text-sm text-destructive">{errors['endereco.numero']}</p>
-                    )}
                 </div>
 
-                <div className="space-y-2">
-                    <Label htmlFor="complemento">Complemento</Label>
-                    <Input
+                <div>
+                    <InputField
+                        label="Complemento"
                         id="complemento"
                         value={data.endereco?.complemento || ''}
                         onChange={(e) => handleEnderecoChange('complemento', e.target.value)}
@@ -114,78 +99,66 @@ export default function EnderecoStep({ data, onUpdate, errors }: EnderecoStepPro
                     />
                 </div>
 
-                <div className="space-y-2">
-                    <Label htmlFor="bairro">Bairro *</Label>
-                    <Input
+                <div>
+                    <InputField
+                        label="Bairro *"
                         id="bairro"
                         value={data.endereco?.bairro || ''}
                         onChange={(e) => handleEnderecoChange('bairro', e.target.value)}
                         placeholder="Nome do bairro"
-                        className={errors['endereco.bairro'] ? 'border-destructive' : ''}
+                        error={errors['endereco.bairro']}
                     />
-                    {errors['endereco.bairro'] && (
-                        <p className="text-sm text-destructive">{errors['endereco.bairro']}</p>
-                    )}
                 </div>
 
-                <div className="space-y-2">
-                    <Label htmlFor="cidade">Cidade *</Label>
-                    <Input
+                <div>
+                    <InputField
+                        label="Cidade *"
                         id="cidade"
                         value={data.endereco?.cidade || ''}
                         onChange={(e) => handleEnderecoChange('cidade', e.target.value)}
                         placeholder="Nome da cidade"
-                        className={errors['endereco.cidade'] ? 'border-destructive' : ''}
+                        error={errors['endereco.cidade']}
                     />
-                    {errors['endereco.cidade'] && (
-                        <p className="text-sm text-destructive">{errors['endereco.cidade']}</p>
-                    )}
                 </div>
             </div>
 
             <div className="grid grid-cols-1 gap-3 md:gap-4">
-                <div className="space-y-2">
-                    <Label htmlFor="estado">Estado *</Label>
-                    <select
-                        id="estado"
+                <div>
+                    <SelectFieldRadix
+                        label="Estado *"
                         value={data.endereco?.estado || ''}
-                        onChange={(e) => handleEnderecoChange('estado', e.target.value)}
-                        className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
-                            errors['endereco.estado'] ? 'border-destructive' : ''
-                        }`}
+                        onValueChange={(value) => handleEnderecoChange('estado', value)}
+                        error={errors['endereco.estado']}
+                        placeholder="Selecione o estado"
                     >
-                        <option value="">Selecione o estado</option>
-                        <option value="AC">Acre</option>
-                        <option value="AL">Alagoas</option>
-                        <option value="AP">Amapá</option>
-                        <option value="AM">Amazonas</option>
-                        <option value="BA">Bahia</option>
-                        <option value="CE">Ceará</option>
-                        <option value="DF">Distrito Federal</option>
-                        <option value="ES">Espírito Santo</option>
-                        <option value="GO">Goiás</option>
-                        <option value="MA">Maranhão</option>
-                        <option value="MT">Mato Grosso</option>
-                        <option value="MS">Mato Grosso do Sul</option>
-                        <option value="MG">Minas Gerais</option>
-                        <option value="PA">Pará</option>
-                        <option value="PB">Paraíba</option>
-                        <option value="PR">Paraná</option>
-                        <option value="PE">Pernambuco</option>
-                        <option value="PI">Piauí</option>
-                        <option value="RJ">Rio de Janeiro</option>
-                        <option value="RN">Rio Grande do Norte</option>
-                        <option value="RS">Rio Grande do Sul</option>
-                        <option value="RO">Rondônia</option>
-                        <option value="RR">Roraima</option>
-                        <option value="SC">Santa Catarina</option>
-                        <option value="SP">São Paulo</option>
-                        <option value="SE">Sergipe</option>
-                        <option value="TO">Tocantins</option>
-                    </select>
-                    {errors['endereco.estado'] && (
-                        <p className="text-sm text-destructive">{errors['endereco.estado']}</p>
-                    )}
+                        <SelectItem value="AC">Acre</SelectItem>
+                        <SelectItem value="AL">Alagoas</SelectItem>
+                        <SelectItem value="AP">Amapá</SelectItem>
+                        <SelectItem value="AM">Amazonas</SelectItem>
+                        <SelectItem value="BA">Bahia</SelectItem>
+                        <SelectItem value="CE">Ceará</SelectItem>
+                        <SelectItem value="DF">Distrito Federal</SelectItem>
+                        <SelectItem value="ES">Espírito Santo</SelectItem>
+                        <SelectItem value="GO">Goiás</SelectItem>
+                        <SelectItem value="MA">Maranhão</SelectItem>
+                        <SelectItem value="MT">Mato Grosso</SelectItem>
+                        <SelectItem value="MS">Mato Grosso do Sul</SelectItem>
+                        <SelectItem value="MG">Minas Gerais</SelectItem>
+                        <SelectItem value="PA">Pará</SelectItem>
+                        <SelectItem value="PB">Paraíba</SelectItem>
+                        <SelectItem value="PR">Paraná</SelectItem>
+                        <SelectItem value="PE">Pernambuco</SelectItem>
+                        <SelectItem value="PI">Piauí</SelectItem>
+                        <SelectItem value="RJ">Rio de Janeiro</SelectItem>
+                        <SelectItem value="RN">Rio Grande do Norte</SelectItem>
+                        <SelectItem value="RS">Rio Grande do Sul</SelectItem>
+                        <SelectItem value="RO">Rondônia</SelectItem>
+                        <SelectItem value="RR">Roraima</SelectItem>
+                        <SelectItem value="SC">Santa Catarina</SelectItem>
+                        <SelectItem value="SP">São Paulo</SelectItem>
+                        <SelectItem value="SE">Sergipe</SelectItem>
+                        <SelectItem value="TO">Tocantins</SelectItem>
+                    </SelectFieldRadix>
                 </div>
             </div>
         </div>

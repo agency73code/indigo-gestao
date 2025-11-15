@@ -10,9 +10,8 @@ import {
     DadosEscolaStep,
     ArquivosStep,
 } from '../components/cliente';
-import MultiStepProgress from '../components/MultiStepProgress';
+import VerticalStepSidebar from '../components/VerticalStepSidebar';
 import type { Cliente } from '../types/cadastros.types';
-import { CardHeader } from '@/components/ui/card';
 import { cadastrarCliente } from '@/lib/api';
 import { isValidCPF, onlyDigits, isValidEmail, isValidCEP } from '@/common/utils/mask';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
@@ -21,11 +20,19 @@ const STEPS = ['Dados Pessoais', 'Endereço', 'Arquivos', 'Dados Pagamento', 'Da
 
 export default function CadastroClientePage() {
     // ✅ Definir título da página
-    const { setPageTitle } = usePageTitle();
+    const { setPageTitle, setNoMainContainer, setShowBackButton } = usePageTitle();
     
     useEffect(() => {
         setPageTitle('Cadastro de Cliente');
-    }, [setPageTitle]);
+        setNoMainContainer(true); // Remove o container main para essa página
+        setShowBackButton(true); // Mostra o botão de voltar
+        
+        // Cleanup: restaura o container quando sair da página
+        return () => {
+            setNoMainContainer(false);
+            setShowBackButton(false);
+        };
+    }, [setPageTitle, setNoMainContainer, setShowBackButton]);
     
     const navigate = useNavigate();
     const [currentStep, setCurrentStep] = useState(1);
@@ -622,9 +629,9 @@ export default function CadastroClientePage() {
                 },
             });
 
-            // Redireciona para a página de cadastros (hub) após um breve delay
+            // Redireciona para a página de consulta de clientes após um breve delay
             setTimeout(() => {
-                navigate('/app/cadastros');
+                navigate('/app/consultas/clientes');
             }, 1000);
         } catch (error) {
             console.error('Erro ao cadastrar cliente:', error);
@@ -671,50 +678,65 @@ export default function CadastroClientePage() {
     };
 
     return (
-        <div className="container mx-auto p-4">
-            {/* Header */}
-            <CardHeader className="p-0">
-                <MultiStepProgress
+        <div className="flex h-full gap-1">
+            {/* Sidebar Vertical com Steps - Card Separado */}
+            <div className="w-64 flex-shrink-0" style={{ 
+                backgroundColor: 'var(--header-bg)',
+                borderRadius: '16px'
+            }}>
+                <VerticalStepSidebar
                     currentStep={currentStep}
                     totalSteps={STEPS.length}
                     steps={STEPS}
+                    onStepClick={(step) => setCurrentStep(step)}
                 />
-            </CardHeader>
+            </div>
 
-            {/* Form Content */}
-            <div className="">{renderCurrentStep()}</div>
+            {/* Card Principal com Formulário */}
+            <div 
+                className="flex-1 flex flex-col min-w-0 p-4"
+                style={{ 
+                    backgroundColor: 'var(--header-bg)',
+                    borderRadius: '16px'
+                }}
+            >
+                {/* Form Content */}
+                <div className="flex-1 overflow-auto">
+                    {renderCurrentStep()}
+                </div>
 
-            {/* Navigation Buttons */}
-            <div className="flex justify-between mt-8">
-                <Button
-                    variant="outline"
-                    onClick={prevStep}
-                    disabled={currentStep === 1 || isLoading}
-                >
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Anterior
-                </Button>
-
-                {currentStep < STEPS.length ? (
-                    <Button onClick={nextStep} disabled={isLoading}>
-                        Próximo
-                        <ArrowRight className="w-4 h-4 ml-2" />
+                {/* Navigation Buttons */}
+                <div className="flex justify-between pt-4 border-t border-border">
+                    <Button
+                        variant="outline"
+                        onClick={prevStep}
+                        disabled={currentStep === 1 || isLoading}
+                    >
+                        <ArrowLeft className="w-4 h-4 mr-2" />
+                        Anterior
                     </Button>
-                ) : (
-                    <Button onClick={handleSubmit} disabled={isLoading}>
-                        {isLoading ? (
-                            <>
-                                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                                Cadastrando...
-                            </>
-                        ) : (
-                            <>
-                                <Check className="w-4 h-4 mr-2" />
-                                Finalizar Cadastro
-                            </>
-                        )}
-                    </Button>
-                )}
+
+                    {currentStep < STEPS.length ? (
+                        <Button onClick={nextStep} disabled={isLoading}>
+                            Próximo
+                            <ArrowRight className="w-4 h-4 ml-2" />
+                        </Button>
+                    ) : (
+                        <Button onClick={handleSubmit} disabled={isLoading}>
+                            {isLoading ? (
+                                <>
+                                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                                    Cadastrando...
+                                </>
+                            ) : (
+                                <>
+                                    <Check className="w-4 h-4 mr-2" />
+                                    Finalizar Cadastro
+                                </>
+                            )}
+                        </Button>
+                    )}
+                </div>
             </div>
         </div>
     );

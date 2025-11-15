@@ -37,7 +37,7 @@ export default function PageTransition({ children }: PageTransitionProps) {
                 initial="initial"
                 animate="animate"
                 exit="exit"
-                className="w-full h-full bg-white dark:bg-[#000000]"
+                className="w-full h-full bg-white dark:bg-[#1A1A1A]"
             >
                 {children}
             </motion.div>
