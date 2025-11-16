@@ -657,6 +657,8 @@ export default function TherapistProfileDrawer({
                                 size="sm" 
                                 onClick={handleEditClick} 
                                 className="h-10 gap-2 font-normal font-sora hover:scale-105 transition-transform"
+                                style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem' }}
+
                             >
                                 <Edit2 className="h-4 w-4" />
                                 Editar
@@ -704,15 +706,12 @@ export default function TherapistProfileDrawer({
                     <div className="flex-1 min-h-0 bg-header-bg rounded-2xl overflow-hidden flex flex-col shadow-sm ">
                         {/* Content - rolável com todos os campos dos cadastros */}
                         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 overflow-y-auto">
-                            <div className="space-y-8 pb-16 p-6">
+                            <div className="space-y-8 pb-16 p-4">
                                 
                                 {/* Seção 1: Dados Pessoais (DadosPessoaisStep) */}
                                 {currentStep === 1 && (
                         <div>
-                            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={{ fontFamily: 'Sora, sans-serif' }}>
-                                <User className="w-5 h-5" />
-                                Dados Pessoais
-                            </h3>
+                            
 
                             {/* Foto de Perfil - aparece apenas em modo de edição */}
                             {isEditMode && (
@@ -1035,7 +1034,7 @@ export default function TherapistProfileDrawer({
 
                             {/* Dados para pagamento */}
                             <div className="mt-6">
-                                <h4 className="text-md font-semibold mb-3">Dados para pagamento</h4>
+                                <h4 className="text-md font-regular mb-3" style={{ fontFamily: 'Sora, sans-serif' }}>Dados para pagamento</h4>
                                 
                                 {isEditMode ? (
                                     <>
@@ -1208,10 +1207,7 @@ export default function TherapistProfileDrawer({
                         {/* Seção 2: Endereço (EnderecoStep) */}
                         {currentStep === 2 && (
                         <div>
-                            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={{ fontFamily: 'Sora, sans-serif' }}>
-                                <MapPin className="w-5 h-5" />
-                                Endereço
-                            </h3>
+                            
                             <div className="space-y-4">
                                 {isEditMode ? (
                                     <>
@@ -1338,17 +1334,14 @@ export default function TherapistProfileDrawer({
                         {/* Seção 3: Dados Profissionais (DadosProfissionaisStep) */}
                         {currentStep === 3 && (
                         <div>
-                            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={{ fontFamily: 'Sora, sans-serif' }}>
-                                <Briefcase className="w-5 h-5" />
-                                Dados Profissionais
-                            </h3>
+                            
 
                             {isEditMode ? (
                                 <div className="space-y-4">
                                     {dadosProfissionaisFields.map((field, index) => (
-                                        <div key={field.id} className="p-4 border rounded-lg bg-muted/30">
+                                        <div key={field.id} className="bg-muted/30">
                                             <div className="flex items-center justify-between mb-3">
-                                                <h4 className="font-medium">Área de Atuação {index + 1}</h4>
+                                                <h4 className="font-regular" style={{ fontFamily: 'Sora, sans-serif' }}>Área de Atuação {index + 1}</h4>
                                                 {dadosProfissionaisFields.length > 1 && (
                                                     <Button
                                                         type="button"
@@ -1430,9 +1423,9 @@ export default function TherapistProfileDrawer({
                                                 {terapeutaData.dadosProfissionais.map((dados, index) => (
                                                     <div
                                                         key={index}
-                                                        className="p-4 border rounded-lg bg-muted/30"
+                                                        className="bg-muted/30"
                                                     >
-                                                        <h4 className="font-medium mb-3">
+                                                        <h4 className="font-regular mb-3" style={{ fontFamily: 'Sora, sans-serif' }}>
                                                             Área de Atuação {index + 1}
                                                         </h4>
                                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1546,10 +1539,6 @@ export default function TherapistProfileDrawer({
                         {/* Seção 4: Formação (FormacaoStep) */}
                         {currentStep === 4 && (
                         <div>
-                            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={{ fontFamily: 'Sora, sans-serif' }}>
-                                <GraduationCap className="w-5 h-5" />
-                                Formação
-                            </h3>
                             
                             {isEditMode ? (
                                 <>
@@ -1803,10 +1792,7 @@ export default function TherapistProfileDrawer({
                         {/* Seção 5: Arquivos (ArquivosStep) */}
                         {currentStep === 5 && (
                         <div>
-                            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={{ fontFamily: 'Sora, sans-serif' }}>
-                                <FileText className="w-5 h-5" />
-                                Arquivos
-                            </h3>
+                        
                             {isEditMode ? (
                                 filesLoading ? (
                                     <div className="flex items-center justify-center py-8">
@@ -1832,10 +1818,6 @@ export default function TherapistProfileDrawer({
                         {/* Seção 6: Dados CNPJ */}
                         {currentStep === 6 && (
                         <div>
-                            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={{ fontFamily: 'Sora, sans-serif' }}>
-                                <Building className="w-5 h-5" />
-                                Dados CNPJ
-                            </h3>
 
                             {isEditMode ? (
                                 <>
@@ -1924,7 +1906,7 @@ export default function TherapistProfileDrawer({
 
                                             {/* Endereço do CNPJ */}
                                             <div className="space-y-4">
-                                                <h4 className="text-md font-medium text-primary" style={{ fontFamily: 'Sora, sans-serif' }}>Endereço da Empresa</h4>
+                                                <h4 className="text-md font-regular text-primary" style={{ fontFamily: 'Sora, sans-serif' }}>Endereço da Empresa</h4>
 
                                                 {/* Linha 1: CEP, Cidade, Estado */}
                                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -2057,7 +2039,7 @@ export default function TherapistProfileDrawer({
 
                                             {/* Endereço da empresa */}
                                             <div className="mt-4 space-y-4">
-                                                <h4 className="font-medium mb-3">Endereço da Empresa</h4>
+                                                <h4 className="font-regular mb-3" style={{ fontFamily: 'Sora, sans-serif' }}>Endereço da Empresa</h4>
                                                 
                                                 {/* Linha 1: CEP, Cidade, Estado */}
                                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
