@@ -18,6 +18,17 @@ import { updateTerapeuta, listFiles, type FileMeta } from '../service/consultas.
 import { fetchProfessionalMetadata, fetchBrazilianBanks } from '@/lib/api';
 import { FALLBACK_BRAZILIAN_BANKS, formatBankLabel, type Bank } from '@/common/constants/banks';
 import * as mask from '@/common/utils/mask';
+import SimpleStepSidebar from './SimpleStepSidebar';
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
+
+const STEPS = [
+    'Dados Pessoais',
+    'Endereço',
+    'Dados Profissionais',
+    'Formação',
+    'Arquivos',
+    'Dados CNPJ'
+];
 
 interface AvatarWithSkeletonProps {
     src: string | null | undefined;
@@ -75,6 +86,7 @@ export default function TherapistProfileDrawer({
     open,
     onClose,
 }: TherapistProfileDrawerProps) {
+    const [currentStep, setCurrentStep] = useState(1);
     const [isEditMode, setIsEditMode] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [saveError, setSaveError] = useState<string | null>(null);
@@ -608,48 +620,51 @@ export default function TherapistProfileDrawer({
         }
     };
 
+    if (!therapist) return null;
+
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
-            <div className="relative w-full max-w-4xl max-h-[90vh] bg-background border rounded-lg shadow-2xl flex flex-col">
+        <Sheet open={open} onOpenChange={onClose}>
+            <SheetContent side="right" className="w-[75vw] max-w-[1400px] p-0 flex flex-col gap-0">
                 {/* Header - shrink-0 mantém fixo */}
-                <div className="flex items-center gap-4 p-6 border-b bg-muted/30 shrink-0">
-                    <div className="relative h-16 w-16 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center text-lg font-medium text-purple-600 dark:text-purple-300">
-                        <AvatarWithSkeleton
-                            src={displayAvatar}
-                            alt={therapist.nome}
-                            initials={getInitials(therapist.nome)}
-                        />
-                    </div>
-                    <div className="flex-1">
-                        <h2 className="text-xl font-semibold text-foreground">{therapist.nome}</h2>
-                        <div className="flex items-center gap-2 mt-2">
-                            {getStatusBadge(therapist.status)}
-                            {therapist.especialidade && (
-                                <span className="text-sm text-muted-foreground">
-                                    {therapist.especialidade}
-                                </span>
-                            )}
-                        </div>
-                    </div>
-
-                    {!isEditMode ? (
-                        <Button 
-                            variant="default" 
-                            size="sm" 
-                            onClick={handleEditClick} 
-                            className="h-8 gap-2"
-                        >
-                            <Edit2 className="h-4 w-4" />
-                            Editar
-                        </Button>
-                    ) : (
-                        <EditingBadge />
-                    )}
-
-                    <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0">
-                        <X className="h-4 w-4" />
+                <div className="flex items-center gap-4 px-4 py-4 bg-background shrink-0 rounded-2xl">
+                    {/* Botão X - Esquerda */}
+                    <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={onClose} 
+                        className="h-10 w-10 p-0 rounded-full hover:bg-accent hover:scale-105 transition-transform bg-header-bg"
+                    >
+                        <X className="h-5 w-5" />
                     </Button>
+
+                    {/* Nome do Terapeuta - Alinhado à esquerda */}
+                    <SheetTitle 
+                        className="text-foreground" 
+                        style={{ 
+                            fontSize: 'var(--page-title-font-size)',
+                            fontWeight: 'var(--page-title-font-weight)',
+                            fontFamily: 'var(--page-title-font-family)'
+                        }}
+                    >
+                        {therapist.nome}
+                    </SheetTitle>
+
+                    {/* Botão Editar - Direita com margin-left auto */}
+                    <div className="ml-auto">
+                        {!isEditMode ? (
+                            <Button 
+                                variant="default" 
+                                size="sm" 
+                                onClick={handleEditClick} 
+                                className="h-10 gap-2 font-normal font-sora hover:scale-105 transition-transform"
+                            >
+                                <Edit2 className="h-4 w-4" />
+                                Editar
+                            </Button>
+                        ) : (
+                            <EditingBadge />
+                        )}
+                    </div>
                 </div>
 
                 {/* Error Message */}
@@ -659,10 +674,40 @@ export default function TherapistProfileDrawer({
                     </div>
                 )}
 
-                {/* Content - rolável com todos os campos dos cadastros */}
-                <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 overflow-y-auto">
-                    <div className="space-y-8 pb-16 p-4">
-                        {/* Seção 1: Dados Pessoais (DadosPessoaisStep) */}
+                {/* Layout: Sidebar + Content */}
+                <div className="flex flex-1 min-h-0 p-2 gap-2 bg-background rounded-2xl">
+                    {/* Sidebar de Navegação */}
+                    <div className="w-64 bg-header-bg rounded-2xl shrink-0 shadow-sm flex flex-col">
+                        {/* Avatar e Status no topo */}
+                        <div className="flex flex-col items-center gap-3 p-4">
+                            <div className="relative h-24 w-24 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center text-2xl font-medium text-purple-600 dark:text-purple-300">
+                                <AvatarWithSkeleton
+                                    src={displayAvatar}
+                                    alt={therapist.nome}
+                                    initials={getInitials(therapist.nome)}
+                                />
+                            </div>
+                            {getStatusBadge(therapist.status)}
+                        </div>
+                        
+                        {/* Steps */}
+                        <SimpleStepSidebar
+                            currentStep={currentStep}
+                            totalSteps={STEPS.length}
+                            steps={STEPS}
+                            stepIcons={[User, MapPin, Briefcase, GraduationCap, FileText, Building]}
+                            onStepClick={setCurrentStep}
+                        />
+                    </div>
+
+                    {/* Content Area */}
+                    <div className="flex-1 min-h-0 bg-header-bg rounded-2xl overflow-hidden flex flex-col shadow-sm ">
+                        {/* Content - rolável com todos os campos dos cadastros */}
+                        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 overflow-y-auto">
+                            <div className="space-y-8 pb-16 p-6">
+                                
+                                {/* Seção 1: Dados Pessoais (DadosPessoaisStep) */}
+                                {currentStep === 1 && (
                         <div>
                             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={{ fontFamily: 'Sora, sans-serif' }}>
                                 <User className="w-5 h-5" />
@@ -1158,11 +1203,10 @@ export default function TherapistProfileDrawer({
                                 )}
                             </div>
                         </div>
-
-                        {/* Separador */}
-                        <div className="border-t border-border"></div>
+                                )}
 
                         {/* Seção 2: Endereço (EnderecoStep) */}
+                        {currentStep === 2 && (
                         <div>
                             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={{ fontFamily: 'Sora, sans-serif' }}>
                                 <MapPin className="w-5 h-5" />
@@ -1289,11 +1333,10 @@ export default function TherapistProfileDrawer({
                                 )}
                             </div>
                         </div>
-
-                        {/* Separador */}
-                        <div className="border-t border-gray-200"></div>
+                        )}
 
                         {/* Seção 3: Dados Profissionais (DadosProfissionaisStep) */}
+                        {currentStep === 3 && (
                         <div>
                             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={{ fontFamily: 'Sora, sans-serif' }}>
                                 <Briefcase className="w-5 h-5" />
@@ -1498,11 +1541,10 @@ export default function TherapistProfileDrawer({
                                 )}
                             </div>
                         </div>
-
-                        {/* Separador */}
-                        <div className="border-t border-gray-200"></div>
+                        )}
 
                         {/* Seção 4: Formação (FormacaoStep) */}
+                        {currentStep === 4 && (
                         <div>
                             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={{ fontFamily: 'Sora, sans-serif' }}>
                                 <GraduationCap className="w-5 h-5" />
@@ -1756,8 +1798,10 @@ export default function TherapistProfileDrawer({
                                 </>
                             )}
                         </div>
+                        )}
 
                         {/* Seção 5: Arquivos (ArquivosStep) */}
+                        {currentStep === 5 && (
                         <div>
                             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={{ fontFamily: 'Sora, sans-serif' }}>
                                 <FileText className="w-5 h-5" />
@@ -1783,11 +1827,10 @@ export default function TherapistProfileDrawer({
                                 <DocumentsTable ownerType="terapeuta" ownerId={therapist.id} />
                             )}
                         </div>
-
-                        {/* Separador */}
-                        <div className="border-t border-gray-200"></div>
+                        )}
 
                         {/* Seção 6: Dados CNPJ */}
+                        {currentStep === 6 && (
                         <div>
                             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={{ fontFamily: 'Sora, sans-serif' }}>
                                 <Building className="w-5 h-5" />
@@ -2071,10 +2114,11 @@ export default function TherapistProfileDrawer({
                                 </>
                             )}
                         </div>
+                        )}
 
                         {/* Espaço extra para garantir scroll completo */}
                         <div className="h-4"></div>
-                    </div>
+                            </div>
 
                     {/* Action Buttons (Edit Mode) - Sticky Footer */}
                     {isEditMode && (
@@ -2104,7 +2148,9 @@ export default function TherapistProfileDrawer({
                         </div>
                     )}
                 </form>
-            </div>
-        </div>
+                    </div>
+                </div>
+            </SheetContent>
+        </Sheet>
     );
 }
