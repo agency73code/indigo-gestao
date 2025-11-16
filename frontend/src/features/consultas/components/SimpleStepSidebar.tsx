@@ -28,7 +28,7 @@ export default function SimpleStepSidebar({
                         <div key={index} className="flex flex-col">
                             {/* Step Item */}
                             <div 
-                                className={`flex items-center gap-3 py-3 rounded-lg px-2 transition-colors ${
+                                className={`flex items-center gap-2 py-2 rounded-lg px-2 transition-colors ${
                                     isCurrent ? 'bg-primary/10' : 'hover:bg-muted/50'
                                 } ${onStepClick ? 'cursor-pointer' : ''}`}
                                 onClick={() => onStepClick?.(stepNumber)}

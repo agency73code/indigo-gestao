@@ -704,15 +704,12 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                     <div className="flex-1 min-h-0 bg-header-bg rounded-lg overflow-hidden flex flex-col shadow-sm">
                         {/* Content - rolável com todos os campos dos cadastros */}
                         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 overflow-y-auto">
-                            <div className="space-y-8 pb-16 p-6">
+                            <div className="space-y-8 pb-16 p-4">
                                 
                                 {/* Dados Pessoais */}
                                 {currentStep === 1 && (
                         <div>
-                            <h3 className="text-lg font-semibold mb-6 flex items-center gap-2" style={{ fontFamily: 'Sora, sans-serif' }}>
-                                <User className="w-5 h-5" />
-                                Dados Pessoais
-                            </h3>
+                      
 
                             {/* Foto de Perfil - aparece apenas em modo de edição */}
                             {isEditMode && (
@@ -835,19 +832,18 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                             {/* Seção Cuidadores */}
                             {caregiversToRender && caregiversToRender.length > 0 && (
                                 <div className="mt-6">
-                                    <h4 className="font-medium mb-4" style={{ fontFamily: 'Sora, sans-serif' }}>Cuidadores</h4>
                                     <div className="space-y-4">
                                         {caregiversToRender.map((cuidador, index) => {
                                             const relation = isEditMode ? cuidador.relacao : cuidador.relacao;
                                             return (
-                                                <div key={index} className="p-4 border rounded-lg bg-muted/30 space-y-4">
+                                                <div key={index} className="space-y-4">
                                                     <div className="flex items-center justify-between flex-wrap gap-2">
-                                                        <h5 className="font-medium text-sm" style={{ fontFamily: 'Sora, sans-serif' }}>
+                                                        <h5 className="font-regular text-sm" style={{ fontFamily: 'Sora, sans-serif' }}>
                                                             Cuidador {index + 1}
                                                         </h5>
                                                         <div className="flex items-center gap-2">
                                                             {!isEditMode && relation && caregiverRelationLabels[relation] && (
-                                                                <span className="text-xs text-muted-foreground">
+                                                                <span className="text-xs text-muted-foreground" style={{ fontFamily: 'Sora, sans-serif' }}>
                                                                     Relação: {caregiverRelationLabels[relation]}
                                                                 </span>
                                                             )}
@@ -1019,7 +1015,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
 
                                                             {/* Endereço */}
                                                             <div className="space-y-2">
-                                                                <h6 className="text-xs font-medium text-muted-foreground">Endereço</h6>
+                                                                <h6 className="text-xs font-regular text-muted-foreground" style={{ fontFamily: 'Sora, sans-serif' }}>Endereço</h6>
                                                                 <div className="space-y-4">
                                                                     {/* Linha 1: CEP | Cidade | UF */}
                                                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1145,10 +1141,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                         {/* Endereços */}
                         {currentStep === 2 && (
                         <div>
-                            <h3 className="text-lg font-semibold mb-6 flex items-center gap-2" style={{ fontFamily: 'Sora, sans-serif' }}>
-                                <MapPin className="w-5 h-5" />
-                                Endereços
-                            </h3>
+                            
 
                             {isEditMode ? (
                                 addressesToRender && addressesToRender.length > 0 ? (
@@ -1334,10 +1327,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                         {/* Dados Pagamento */}
                         {currentStep === 3 && (
                         <div>
-                            <h3 className="text-lg font-semibold mb-6 flex items-center gap-2" style={{ fontFamily: 'Sora, sans-serif' }}>
-                                <CreditCard className="w-5 h-5" />
-                                Dados Pagamento
-                            </h3>
+                           
 
                             {/* Dados básicos do titular */}
                             {isEditMode ? (
@@ -2238,10 +2228,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                         {/* Dados Escola */}
                         {currentStep === 4 && (
                         <div>
-                            <h3 className="text-lg font-semibold mb-6 flex items-center gap-2" style={{ fontFamily: 'Sora, sans-serif' }}>
-                                <GraduationCap className="w-5 h-5" />
-                                Dados Escola
-                            </h3>
+
 
                             {isEditMode ? (
                                 <div className="space-y-6">
@@ -2482,7 +2469,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                     </div>
                                     {schoolData?.endereco && (
                                         <div className="space-y-4">
-                                            <h4 className="text-md font-medium" style={{ fontFamily: 'Sora, sans-serif' }}>Endereço da Escola</h4>
+                                            <h4 className="text-md font-regular" style={{ fontFamily: 'Sora, sans-serif' }}>Endereço da Escola</h4>
                                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                                 {/* Linha 1: CEP | Cidade | UF */}
                                                 <ReadOnlyField label="CEP" value={maskCEP(schoolData.endereco.cep ?? '')} />
@@ -2501,9 +2488,9 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                     )}
                                     {schoolData?.contatos && schoolData.contatos.length > 0 && (
                                         <div className="space-y-4">
-                                            <h4 className="text-md font-medium" style={{ fontFamily: 'Sora, sans-serif' }}>Contatos</h4>
+                                            <h4 className="text-md font-regular" style={{ fontFamily: 'Sora, sans-serif' }}>Contatos</h4>
                                             {schoolData.contatos.map((contato, index) => (
-                                                <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border rounded-lg">
+                                                <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                     <ReadOnlyField label="Nome" value={maskPersonName(contato.nome ?? '')} />
                                                     <ReadOnlyField label="Telefone" value={maskBRPhone(contato.telefone ?? '')} />
                                                     <ReadOnlyField label="Email" value={normalizeEmail(contato.email ?? '')} />
@@ -2520,9 +2507,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                         {/* Arquivos */}
                         {currentStep === 5 && (
                         <div>
-                            <h3 className="text-lg font-semibold mb-6 flex items-center gap-2" style={{ fontFamily: 'Sora, sans-serif' }}>
-                                📎 Arquivos
-                            </h3>
+                            
                             {isEditMode ? (
                                 filesLoading ? (
                                     <div className="flex items-center justify-center py-8">
