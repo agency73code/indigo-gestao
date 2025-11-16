@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
-import { X, User, MapPin, CreditCard, GraduationCap, Save, Loader2, Edit2, Plus, Trash2 } from 'lucide-react';
+import { X, User, MapPin, CreditCard, GraduationCap, Save, Loader2, Edit2, Plus, Trash2, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/ui/label';
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import ReadOnlyField from './ReadOnlyField';
 import { EditingBadge } from './EditingBadge';
 import type { Patient, ClientFormValues } from '../types/consultas.types';
@@ -12,6 +13,7 @@ import DocumentsTable from '../arquivos/components/DocumentsTable';
 import { DocumentsEditor } from '../arquivos/components/DocumentsEditor';
 import { updateCliente, listFiles, type FileMeta } from '../service/consultas.service';
 import ProfilePhotoFieldSimple, { type ProfilePhotoFieldSimpleRef } from '@/components/profile/ProfilePhotoFieldSimple';
+import SimpleStepSidebar from './SimpleStepSidebar';
 import {
     maskPersonName,
     maskCPF,
@@ -22,6 +24,14 @@ import {
     maskCEP,
     maskBRL,
 } from '@/common/utils/mask';
+
+const STEPS = [
+    'Dados Pessoais',
+    'Endereços',
+    'Dados de Pagamento',
+    'Dados Escola',
+    'Arquivos'
+];
 
 interface AvatarWithSkeletonProps {
     src: string | null | undefined;
@@ -171,6 +181,7 @@ function emptyToNull(value?: string | null) {
 }
 
 export default function PatientProfileDrawer({ patient, open, onClose }: PatientProfileDrawerProps) {
+    const [currentStep, setCurrentStep] = useState(1);
     const [isEditMode, setIsEditMode] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [saveError, setSaveError] = useState<string | null>(null);
@@ -596,60 +607,52 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
     const paymentData = isEditMode ? watchDadosPagamento : clienteData.dadosPagamento;
     const schoolData = isEditMode ? watchDadosEscola : clienteData.dadosEscola;
 
+    if (!patient) return null;
+
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
-            <div className="relative w-full max-w-4xl max-h-[90vh] bg-background border rounded-lg shadow-2xl flex flex-col">
-                {/* Header - shrink-0 mantém fixo */}
-                <div className="flex items-center gap-4 p-6 border-b bg-muted/30 shrink-0">
-                    <div className="relative h-16 w-16 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center text-lg font-medium text-purple-600 dark:text-purple-300">
-                        <AvatarWithSkeleton
-                            src={
-                                arquivosMap.has('fotoPerfil')
-                                    ? `${import.meta.env.VITE_API_URL}/arquivos/${arquivosMap.get('fotoPerfil')?.arquivo_id}/view/`
-                                    : undefined
-                            }
-                            alt={patient.nome}
-                            initials={getInitials(patient.nome)}
-                        />
-                    </div>
-                    <div className="flex-1">
-                        <h2 className="text-xl font-semibold text-foreground">{patient.nome}</h2>
-                        <div className="flex items-center gap-2 mt-2">
-                            <span
-                                className={`px-2 py-1 text-xs font-medium rounded-full ${
-                                    patient.status?.toUpperCase() === 'ATIVO'
-                                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                                        : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
-                                }`}
-                            >
-                                {patient.status?.toUpperCase() === 'ATIVO' ? 'Ativo' : 'Inativo'}
-                            </span>
-                            {patient.responsavel && (
-                                <span className="text-sm text-muted-foreground">
-                                    Responsável: {patient.responsavel}
-                                </span>
-                            )}
-                        </div>
-                    </div>
-
-                    {!isEditMode ? (
-                        <Button 
-                            variant="default" 
-                            size="sm" 
-                            onClick={handleEditClick} 
-                            className="h-8 gap-2"
-                        >
-                            <Edit2 className="h-4 w-4" />
-                            Editar
-                        </Button>
-                    ) : (
-                        <EditingBadge />
-                    )}
-
-                    <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0">
-                        <X className="h-4 w-4" />
+        <Sheet open={open} onOpenChange={onClose}>
+            <SheetContent side="right" className="w-[75vw] max-w-[1400px] p-0 flex flex-col gap-0 rounded-2xl">
+                {/* Header */}
+                <div className="flex items-center gap-4 px-6 py-4 bg-background shrink-0 rounded-2xl">
+                    {/* Botão X - Esquerda */}
+                    <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={onClose} 
+                        className="h-10 w-10 p-0 rounded-full hover:bg-accent hover:scale-105 transition-transform bg-header-bg"
+                    >
+                        <X className="h-5 w-5" />
                     </Button>
+
+                    {/* Nome do Cliente - Alinhado à esquerda */}
+                    <SheetTitle 
+                        className="text-primary" 
+                        style={{ 
+                            fontSize: 'var(--page-title-font-size)',
+                            fontWeight: 'var(--page-title-font-weight)',
+                            fontFamily: 'var(--page-title-font-family)'
+                        }}
+                    >
+                        {patient.nome}
+                    </SheetTitle>
+
+                    {/* Botão Editar - Direita com margin-left auto */}
+                    <div className="ml-auto">
+                        {!isEditMode ? (
+                            <Button 
+                                variant="default" 
+                                size="sm" 
+                                onClick={handleEditClick} 
+                                className="h-10 gap-2 font-normal font-sora hover:scale-105 transition-transform"
+                                style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem' }}
+                            >
+                                <Edit2 className="h-4 w-4" />
+                                Editar
+                            </Button>
+                        ) : (
+                            <EditingBadge />
+                        )}
+                    </div>
                 </div>
 
                 {/* Error Message */}
@@ -659,10 +662,52 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                     </div>
                 )}
 
-                {/* Content - flex: 1 1 auto; min-height: 0; overflow-y: auto; para scroll */}
-                <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 overflow-y-auto">
-                    <div className="p-6 space-y-8">
-                        {/* Dados Pessoais */}
+                {/* Layout: Sidebar + Content */}
+                <div className="flex flex-1 min-h-0 p-2 gap-2 bg-background pt-0 rounded-2xl">
+                    {/* Sidebar de Navegação */}
+                    <div className="w-64 bg-header-bg rounded-2xl shrink-0 shadow-sm flex flex-col">
+                        {/* Avatar e Status no topo */}
+                        <div className="flex flex-col items-center gap-3 p-4">
+                            <div className="relative h-24 w-24 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center text-2xl font-medium text-purple-600 dark:text-purple-300">
+                                <AvatarWithSkeleton
+                                    src={
+                                        arquivosMap.has('fotoPerfil')
+                                            ? `${import.meta.env.VITE_API_URL}/arquivos/${arquivosMap.get('fotoPerfil')?.arquivo_id}/view/`
+                                            : undefined
+                                    }
+                                    alt={patient.nome}
+                                    initials={getInitials(patient.nome)}
+                                />
+                            </div>
+                            <span
+                                className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                    patient.status?.toUpperCase() === 'ATIVO'
+                                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                                        : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                                }`}
+                            >
+                                {patient.status?.toUpperCase() === 'ATIVO' ? 'Ativo' : 'Inativo'}
+                            </span>
+                        </div>
+                        
+                        {/* Steps */}
+                        <SimpleStepSidebar
+                            currentStep={currentStep}
+                            totalSteps={STEPS.length}
+                            steps={STEPS}
+                            stepIcons={[User, MapPin, CreditCard, GraduationCap, FileText]}
+                            onStepClick={setCurrentStep}
+                        />
+                    </div>
+
+                    {/* Content Area */}
+                    <div className="flex-1 min-h-0 bg-header-bg rounded-lg overflow-hidden flex flex-col shadow-sm">
+                        {/* Content - rolável com todos os campos dos cadastros */}
+                        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 overflow-y-auto">
+                            <div className="space-y-8 pb-16 p-6">
+                                
+                                {/* Dados Pessoais */}
+                                {currentStep === 1 && (
                         <div>
                             <h3 className="text-lg font-semibold mb-6 flex items-center gap-2" style={{ fontFamily: 'Sora, sans-serif' }}>
                                 <User className="w-5 h-5" />
@@ -1095,11 +1140,10 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                 </div>
                             )}
                         </div>
-
-                        {/* Separador */}
-                        <div className="border-t border-gray-200"></div>
+                                )}
 
                         {/* Endereços */}
+                        {currentStep === 2 && (
                         <div>
                             <h3 className="text-lg font-semibold mb-6 flex items-center gap-2" style={{ fontFamily: 'Sora, sans-serif' }}>
                                 <MapPin className="w-5 h-5" />
@@ -1285,11 +1329,10 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                 <p className="text-muted-foreground">Nenhum endereço informado</p>
                             )}
                         </div>
-
-                        {/* Separador */}
-                        <div className="border-t border-gray-200"></div>
+                        )}
 
                         {/* Dados Pagamento */}
+                        {currentStep === 3 && (
                         <div>
                             <h3 className="text-lg font-semibold mb-6 flex items-center gap-2" style={{ fontFamily: 'Sora, sans-serif' }}>
                                 <CreditCard className="w-5 h-5" />
@@ -2190,11 +2233,10 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                 </div>
                             )}
                         </div>
-
-                        {/* Separador */}
-                        <div className="border-t border-gray-200"></div>
+                        )}
 
                         {/* Dados Escola */}
+                        {currentStep === 4 && (
                         <div>
                             <h3 className="text-lg font-semibold mb-6 flex items-center gap-2" style={{ fontFamily: 'Sora, sans-serif' }}>
                                 <GraduationCap className="w-5 h-5" />
@@ -2473,11 +2515,10 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                 </div>
                             )}
                         </div>
-
-                        {/* Separador */}
-                        <div className="border-t border-gray-200"></div>
+                        )}
 
                         {/* Arquivos */}
+                        {currentStep === 5 && (
                         <div>
                             <h3 className="text-lg font-semibold mb-6 flex items-center gap-2" style={{ fontFamily: 'Sora, sans-serif' }}>
                                 📎 Arquivos
@@ -2502,6 +2543,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                 <DocumentsTable ownerType="cliente" ownerId={patient.id} />
                             )}
                         </div>
+                        )}
 
                         {/* Espaço extra para garantir scroll completo */}
                         <div className="h-4"></div>
@@ -2509,7 +2551,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
 
                     {/* Action Buttons (Edit Mode) - Sticky Footer */}
                     {isEditMode && (
-                        <div className="border-t p-4 bg-background flex justify-end gap-3 shr   ink-0">
+                        <div className="border-t p-4 bg-background flex justify-end gap-3 shrink-0">
                             <Button type="button" variant="outline" onClick={handleCancelClick} disabled={isSaving}>
                                 <X className="h-4 w-4 mr-2" />
                                 Cancelar
@@ -2530,7 +2572,9 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                         </div>
                     )}
                 </form>
-            </div>
-        </div>
+                    </div>
+                </div>
+            </SheetContent>
+        </Sheet>
     );
 }

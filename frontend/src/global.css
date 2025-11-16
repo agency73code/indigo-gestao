@@ -94,7 +94,8 @@ body {
 }
 
 .dark {
-    --background: rgba(0, 0, 0, 0.27);
+
+    --background: rgba(0, 0, 0, 0.8);
     --bg-main: oklch(17.673% 0.005 17.415);
     --foreground: oklch(0.985 0 0);
     --card: oklch(0.25 0.008 285.885);
