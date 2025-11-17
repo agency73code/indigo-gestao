@@ -4,7 +4,6 @@ import {
     Frame,
     LayoutDashboard,
     LifeBuoy,
-    PieChart,
     Send,
     Settings2,
     UserPlus,

@@ -1,5 +1,5 @@
 import { Outlet, useLocation } from 'react-router-dom';
-import { Component, createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
+import { Component, createContext, useContext, useState, useMemo, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { AppSidebar } from '@/components/sidebar/app-sidebar';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
