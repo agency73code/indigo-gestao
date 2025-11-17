@@ -24,10 +24,6 @@ export default function ConsultaSessao() {
     const [searchParams, setSearchParams] = useSearchParams();
     const { setPageTitle } = usePageTitle();
 
-    useEffect(() => {
-        setPageTitle('Consultar Sessão');
-    }, [setPageTitle]);
-
     const [filters, setFilters] = useState<SessaoFiltersState>(DEFAULT_FILTERS);
     const [patient, setPatient] = useState<Patient | null>(null);
     const [sessions, setSessions] = useState<Sessao[]>([]);
@@ -38,6 +34,12 @@ export default function ConsultaSessao() {
     const [isUpdatingUrl, setIsUpdatingUrl] = useState(false);
 
     const pacienteIdFromQuery = useMemo(() => searchParams.get('pacienteId'), [searchParams]);
+
+    // Configurar título
+    useEffect(() => {
+        console.log('[ConsultaSessao] Setando título');
+        setPageTitle('Consultar Sessão');
+    }, [setPageTitle]);
 
     const syncFiltersToParams = useCallback(
         (nextFilters: SessaoFiltersState, patientId: string | null) => {

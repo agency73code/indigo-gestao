@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { X, User, MapPin, Briefcase, Building, GraduationCap, FileText, Car, Save, Loader2, Edit2, Plus, Trash2 } from 'lucide-react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
+import { CloseButton } from '@/components/layout/CloseButton';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/ui/label';
 import { Combobox } from '@/ui/combobox';
@@ -628,14 +629,7 @@ export default function TherapistProfileDrawer({
                 {/* Header - shrink-0 mantém fixo */}
                 <div className="flex items-center gap-4 px-4 py-4 bg-background shrink-0 rounded-2xl">
                     {/* Botão X - Esquerda */}
-                    <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={onClose} 
-                        className="h-10 w-10 p-0 rounded-full hover:bg-accent hover:scale-105 transition-transform bg-header-bg"
-                    >
-                        <X className="h-5 w-5" />
-                    </Button>
+                    <CloseButton onClick={onClose} />
 
                     {/* Nome do Terapeuta - Alinhado à esquerda */}
                     <SheetTitle 

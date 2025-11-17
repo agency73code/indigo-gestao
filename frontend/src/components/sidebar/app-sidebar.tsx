@@ -58,11 +58,6 @@ const data: {
             url: '/app',
             icon: LayoutDashboard,
             isActive: true,
-            items: [
-                { title: 'Atendimentos', url: '/app/atendimentos' },
-                { title: 'Planejamento', url: '/app/planejamento' },
-                { title: 'Financeiro', url: '/app/financeiro' },
-            ],
         },
         {
             title: 'Cliente',
@@ -80,10 +75,10 @@ const data: {
             url: '/app/programas',
             icon: Activity,
             items: [
-                { title: 'Consultar Programas', url: '/app/programas/lista' },
-                { title: 'Novo Programa', url: '/app/programas/novo' },
-                { title: 'Consultar Sessão', url: '/app/programas/sessoes/consultar' },
-                { title: 'Nova Sessão', url: '/app/programas/sessoes/nova' },
+                { title: 'Fono e Psicopedagogia', url: '/app/programas/fono-psico' },
+                { title: 'Terapia Ocupacional', url: '/app/programas/terapia-ocupacional' },
+                { title: 'Sessão de Movimento', url: '/app/programas/movimento' },
+                { title: 'Musicoterapia', url: '/app/programas/musicoterapia' },
             ],
         },
         {
@@ -116,7 +111,7 @@ const data: {
         },
     ],
     navSecondary: [
-        { title: 'Support', url: '#', icon: LifeBuoy },
+        { title: 'Suporte', url: '#', icon: LifeBuoy },
         { title: 'Feedback', url: '#', icon: Send },
     ],
     projects: [
@@ -126,7 +121,6 @@ const data: {
             target: '_blank',
             icon: Frame,
         },
-        { name: 'Lançamento curso', url: '#', icon: PieChart },
     ],
 };
 

@@ -32,9 +32,7 @@ export default function EditarProgramaPage() {
 
     useEffect(() => {
         setPageTitle('Editar Programa');
-    }, [setPageTitle]);
-
-    const [program, setProgram] = useState<ProgramDetail | null>(null);
+    }, [setPageTitle]);    const [program, setProgram] = useState<ProgramDetail | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
