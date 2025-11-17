@@ -266,12 +266,12 @@ export async function listByClientId(
 
 type SessionSort = 'recent' | 'accuracy-asc' | 'accuracy-desc';
 
-function calculateSessionAccuracy(session: OcpType.SessionDTO) {
+function calculateSessionIndependency(session: OcpType.SessionDTO) {
     const totalTrials = session.trials.length;
     if (!totalTrials) return null;
 
-    const successfulTrials = session.trials.filter(trial => trial.resultado !== 'error').length;
-    return successfulTrials / totalTrials;
+    const independentTrials = session.trials.filter(trial => trial.resultado === 'independent').length;
+    return independentTrials / totalTrials;
 }
 
 export async function listSessionsByClient(clientId: string, sort: SessionSort = 'recent') {
@@ -314,8 +314,8 @@ export async function listSessionsByClient(clientId: string, sort: SessionSort =
     const direction = sort === 'accuracy-asc' ? 'asc' : 'desc';
 
     return [...sessions].sort((a, b) => {
-        const accuracyA = calculateSessionAccuracy(a);
-        const accuracyB = calculateSessionAccuracy(b);
+        const accuracyA = calculateSessionIndependency(a);
+        const accuracyB = calculateSessionIndependency(b);
 
         if (accuracyA === null && accuracyB === null) {
             return b.data_criacao.getTime() - a.data_criacao.getTime();
