@@ -95,7 +95,9 @@ export default function AppLayout() {
         '/app/programas/lista',
         '/app/programas/',
         '/app/programas/sessoes/consultar',
-        '/app/programas/sessoes/nova'
+        '/app/programas/sessoes/nova',
+        '/app/relatorios/novo',
+        '/app/cadastros/vinculos'
     ], []);
 
     // Verifica se a rota atual deve ter o botão de voltar

@@ -56,7 +56,6 @@ const data: {
             title: 'Dashboard',
             url: '/app',
             icon: LayoutDashboard,
-            isActive: true,
         },
         {
             title: 'Cliente',

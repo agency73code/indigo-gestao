@@ -26,7 +26,7 @@ export default function ForgotPasswordEmailSend() {
                             />
                         </div>
                         <CardHeader className="space-y-1 p-0">
-                            <CardTitle className="text-2xl text-primary">Confira seu e-mail </CardTitle>
+                            <CardTitle className="text-2xl font-regular text-primary">Confira seu e-mail </CardTitle>
                             <p className="text-sm text-muted-foreground">
                                 Se o e-mail informado estiver cadastrado, enviamos um link para
                                 redefinir sua senha. Ele expira em 60 minutos.
