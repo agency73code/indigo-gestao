@@ -329,11 +329,11 @@ function buildOrderBy(filters?: LinkFilters) {
 function translateStatusFilter(status: LinkFilters['status']) {
     switch (status) {
         case 'active':
-            return 'ativo';
+            return 'active';
         case 'ended':
-            return 'encerrado';
+            return 'ended';
         case 'archived':
-            return 'arquivado';
+            return 'archived';
         default:
             return undefined;
     }

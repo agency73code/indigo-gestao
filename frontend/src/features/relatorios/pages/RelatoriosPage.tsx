@@ -104,8 +104,6 @@ export function RelatoriosPage() {
   };
 
   const handleViewReport = (report: SavedReport) => {
-    console.log('🔍 Abrindo relatório:', report.id, report.title);
-    console.log('📍 Navegando para:', `/app/relatorios/${report.id}`);
     navigate(`/app/relatorios/${report.id}`);
   };
 

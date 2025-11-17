@@ -5,7 +5,8 @@ import { drive } from '../../../config/googleDrive.js';
  * Estrutura atual:
  *   {nome_completo}-{dataNascimento}/
  *     ├── fotoPerfil.extensão
- *     └── documentos/
+ *     ├── documentos/
+ *     └── relatórios/
  *        // TODO: separar por mês/ano
  */
 
