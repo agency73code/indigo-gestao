@@ -1,5 +1,5 @@
-import { Outlet } from 'react-router-dom';
-import { Component, createContext, useContext, useState } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
+import { Component, createContext, useContext, useState, useMemo, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { AppSidebar } from '@/components/sidebar/app-sidebar';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
@@ -87,6 +87,30 @@ export default function AppLayout() {
     const [noMainContainer, setNoMainContainer] = useState(false);
     const [showBackButton, setShowBackButton] = useState(false);
     const [onBackClick, setOnBackClick] = useState<(() => void) | undefined>(undefined);
+    const location = useLocation();
+
+    // Lista de rotas que devem ter o botão de voltar
+    const routesWithBackButton = useMemo(() => [
+        '/app/programas/novo',
+        '/app/programas/lista',
+        '/app/programas/',
+        '/app/programas/sessoes/consultar',
+        '/app/programas/sessoes/nova'
+    ], []);
+
+    // Verifica se a rota atual deve ter o botão de voltar
+    useEffect(() => {
+        const shouldShowBackButton = routesWithBackButton.some(route => 
+            location.pathname.startsWith(route)
+        );
+        console.log('[AppLayout] Rota mudou:', location.pathname, 'shouldShow:', shouldShowBackButton);
+        setShowBackButton(shouldShowBackButton);
+    }, [location.pathname, routesWithBackButton]);
+
+    // Log para debug
+    useEffect(() => {
+        console.log('[AppLayout] showBackButton mudou para:', showBackButton);
+    }, [showBackButton]);
 
     return (
         <ErrorBoundary>

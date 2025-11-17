@@ -1,10 +1,9 @@
-import { ArrowLeft, Calendar, Brain, Clock } from 'lucide-react';
+import { Calendar, Clock } from 'lucide-react';
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useNavigate } from 'react-router-dom';
 import type { Patient, ProgramDetail } from '../types';
 
 interface HeaderSessionInfoProps {
@@ -13,7 +12,6 @@ interface HeaderSessionInfoProps {
 }
 
 export default function HeaderSessionInfo({ patient, program }: HeaderSessionInfoProps) {
-    const navigate = useNavigate();
     const [imageLoading, setImageLoading] = useState(true);
 
     const getInitials = (name: string) => {
@@ -45,36 +43,13 @@ export default function HeaderSessionInfo({ patient, program }: HeaderSessionInf
         return { status, period };
     };
 
-    const handleGoBack = () => {
-        // Se tem programa e paciente, volta para o detalhe do programa
-        if (program.id && patient.id) {
-            navigate(`/app/programas/${program.id}?patientId=${patient.id}`);
-        } else {
-            // Caso contrário, volta para a lista de programas
-            navigate('/app/programas');
-        }
-    };
+
 
     const prazo = daysLeftInfo();
 
     return (
         <Card className="rounded-[5px] px-6 py-2 md:px-8 md:py-10 lg:px-8 lg:py-0">
             <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
-                <div className="flex items-center gap-2 mb-2">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleGoBack}
-                        className="h-8 w-8 p-0"
-                        aria-label="Voltar"
-                    >
-                        <ArrowLeft className="h-4 w-4" />
-                    </Button>
-                    <CardTitle className="text-1xl font-medium flex items-center gap-2">
-                        <Brain className="h-4 w-4" />
-                        Registrar nova Sessão
-                    </CardTitle>
-                </div>
             </CardHeader>
             <CardContent className="pb-3 sm:pb-6 space-y-4">
                 {/* Informações do Paciente */}

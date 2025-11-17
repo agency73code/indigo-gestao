@@ -147,7 +147,7 @@ export function NavUser() {
                             }}
                         >
                             <LogOut />
-                            Log out
+                            Sair
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>

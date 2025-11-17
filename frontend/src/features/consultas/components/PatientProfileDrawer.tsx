@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, useRef } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { X, User, MapPin, CreditCard, GraduationCap, Save, Loader2, Edit2, Plus, Trash2, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { CloseButton } from '@/components/layout/CloseButton';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/ui/label';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
@@ -616,14 +617,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                 {/* Header */}
                 <div className="flex items-center gap-4 px-6 py-4 bg-background shrink-0 rounded-2xl">
                     {/* Botão X - Esquerda */}
-                    <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={onClose} 
-                        className="h-10 w-10 p-0 rounded-full hover:bg-accent hover:scale-105 transition-transform bg-header-bg"
-                    >
-                        <X className="h-5 w-5" />
-                    </Button>
+                    <CloseButton onClick={onClose} />
 
                     {/* Nome do Cliente - Alinhado à esquerda */}
                     <SheetTitle 

@@ -45,15 +45,24 @@ export default function AreaHubTOPage() {
           return (
             <Card
               key={shortcut.path}
-              className="cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] border border-border/40 rounded-lg bg-[#F1F5F9]"
+              padding="hub"
+              className="cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] border border-border/40 rounded-lg h-full"
+              style={{ backgroundColor: 'var(--hub-card-background)' }}
               onClick={() => navigate(shortcut.path)}
             >
-              <CardHeader className="space-y-3 p-2">
+              <CardHeader className="space-y-5">
                 <div className={`h-14 w-14 rounded-lg ${shortcut.bgColor} flex items-center justify-center`}>
                   <Icon className={`h-7 w-7 ${shortcut.iconColor}`} />
                 </div>
                 <div className="space-y-1">
-                  <CardTitle className="text-lg font-medium text-foreground">
+                  <CardTitle 
+                    className="text-lg"
+                    style={{ 
+                      fontFamily: 'var(--hub-card-title-font-family)',
+                      fontWeight: 'var(--hub-card-title-font-weight)',
+                      color: 'var(--hub-card-title-color)'
+                    }}
+                  >
                     {shortcut.title}
                   </CardTitle>
                   <CardDescription className="text-sm text-muted-foreground">
