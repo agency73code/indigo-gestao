@@ -249,17 +249,37 @@ export async function create(dto: TherapistTypes.TherapistForm) {
   return therapist
 };
 
-export async function list(q?: string):Promise<TherapistTypes.TherapistDB[]> {
-    const where = q
-    ? {
+export async function list(therapistId: string, q?: string): Promise<TherapistTypes.TherapistDB[]> {
+  if (!therapistId) {
+    throw new AppError('REQUIRED_THERAPIST_ID', 'ID do terapeuta é obrigatório.', 400);
+  }
+
+  const visibility = await getVisibilityScope(therapistId);
+
+  if (visibility.scope === 'none') {
+    return [];
+  }
+
+  const where: Prisma.terapeutaWhereInput = {
+    ...(q
+      ? {
         nome: {
           contains: q,
         },
       }
-    : undefined;
+      : {}),
+  };
+
+  if (visibility.scope === 'partial') {
+    where.id = { in: visibility.therapistIds };
+  }
+
+  if (visibility.maxAccessLevel < MANAGER_LEVEL) {
+    where.atividade = true;
+  }
 
   return prisma.terapeuta.findMany({
-    ...(where && { where }),
+    where,
     orderBy: { nome: 'asc' },
     include: {
       endereco: true,

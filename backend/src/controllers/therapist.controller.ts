@@ -90,10 +90,13 @@ export async function update(req: Request, res: Response, next: NextFunction) {
 
 export async function list(req: Request, res: Response, next: NextFunction) {
     try {
+      const therapistId = req.user?.id;
+      if (!therapistId) {
+        return res.status(400).json({ success: false, message: 'ID do terapeuta é obrigatório!' });
+      }
+
       const q = (req.query.q as string) || undefined;
-      console.log(q);
-      console.log('=====================================')
-      const therapists = await TherapistService.list(q);
+      const therapists = await TherapistService.list(therapistId, q);
       const normalized = therapists.map(TherapistNormalizer.normalizeTherapistSession);
       res.json(normalized);
     } catch (error) {
