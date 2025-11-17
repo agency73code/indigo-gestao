@@ -36,7 +36,7 @@ export function NavMain({
     
     // Função para verificar se a rota está ativa
     const isRouteActive = (itemUrl: string, subItems?: { url: string }[]) => {
-        // Verifica se a rota atual corresponde ao item principal
+        // Verifica se a rota atual corresponde exatamente ao item principal
         if (location.pathname === itemUrl) return true;
         
         // Verifica se alguma subrota está ativa
@@ -45,7 +45,12 @@ export function NavMain({
         }
         
         // Para rotas que têm caminhos filhos (ex: /app/programas)
-        return location.pathname.startsWith(itemUrl) && itemUrl !== '/';
+        // Mas não ativa o Dashboard (/app) quando estiver em outras rotas como /app/programas
+        if (itemUrl === '/app') {
+            return location.pathname === '/app';
+        }
+        
+        return location.pathname.startsWith(itemUrl);
     };
     
     // Estado para controlar quais menus estão abertos - com persistência
