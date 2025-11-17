@@ -24,6 +24,7 @@ import {
     maskCEP,
     maskBRL,
 } from '@/common/utils/mask';
+import { RequireAbility } from '@/features/auth/abilities/RequireAbility';
 
 const STEPS = [
     'Dados Pessoais',
@@ -639,16 +640,18 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                     {/* Botão Editar - Direita com margin-left auto */}
                     <div className="ml-auto">
                         {!isEditMode ? (
-                            <Button 
-                                variant="default" 
-                                size="sm" 
-                                onClick={handleEditClick} 
-                                className="h-10 gap-2 font-normal font-sora hover:scale-105 transition-transform"
-                                style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem' }}
-                            >
-                                <Edit2 className="h-4 w-4" />
-                                Editar
-                            </Button>
+                            <RequireAbility action="update" subject="Consultar">
+                                <Button 
+                                    variant="default" 
+                                    size="sm" 
+                                    onClick={handleEditClick} 
+                                    className="h-10 gap-2 font-normal font-sora hover:scale-105 transition-transform"
+                                    style={{ paddingLeft: '1.5rem', paddingRight: '1.5rem' }}
+                                >
+                                    <Edit2 className="h-4 w-4" />
+                                    Editar
+                                </Button>
+                            </RequireAbility>
                         ) : (
                             <EditingBadge />
                         )}
