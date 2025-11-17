@@ -2,6 +2,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from 'react-router-dom';
 import { motion, type Variants } from 'framer-motion';
+import { ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { useState } from 'react';
 import {
     Card,
     CardHeader,
@@ -75,6 +77,7 @@ const buttonVariants: Variants = {
 };
 
 export default function LoginForm({ onSubmit, isLoading = false, error }: LoginFormProps) {
+    const [showPassword, setShowPassword] = useState(false);
     const {
         register,
         handleSubmit,
@@ -85,13 +88,13 @@ export default function LoginForm({ onSubmit, isLoading = false, error }: LoginF
 
     return (
         <motion.div variants={containerVariants} initial="hidden" animate="visible">
-            <Card className=" max-w-[550px] mx-auto overflow-hidden m-4">
+            <Card className="max-w-[550px] mx-auto overflow-hidden border-0 shadow-none bg-transparent">
                 <motion.div variants={itemVariants}>
                     <CardHeader className="space-y-1">
-                        <CardTitle className="text-2xl tracking-tight">
+                        <CardTitle className="tracking-tight font-regular" style={{ fontSize: '2rem', fontFamily: 'Sora' }}>
                             Bem-vindo de volta!
                         </CardTitle>
-                        <CardDescription className="text-muted-foreground">
+                        <CardDescription className="text-muted-foreground" style={{ fontSize: '0.8rem' }}>
                             Digite suas credenciais para acessar sua conta
                         </CardDescription>
                     </CardHeader>
@@ -141,14 +144,28 @@ export default function LoginForm({ onSubmit, isLoading = false, error }: LoginF
 
                         <motion.div className="space-y-2" variants={itemVariants}>
                             <Label htmlFor="password">Senha</Label>
-                            <Input
-                                id="password"
-                                type="password"
-                                {...register('password')}
-                                placeholder="Digite sua senha"
-                                aria-invalid={errors.password ? 'true' : 'false'}
-                                aria-describedby={errors.password ? 'password-error' : undefined}
-                            />
+                            <div className="relative">
+                                <Input
+                                    id="password"
+                                    type={showPassword ? 'text' : 'password'}
+                                    {...register('password')}
+                                    placeholder="Digite sua senha"
+                                    aria-invalid={errors.password ? 'true' : 'false'}
+                                    aria-describedby={errors.password ? 'password-error' : undefined}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                    aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                                >
+                                    {showPassword ? (
+                                        <EyeOff className="h-4 w-4" />
+                                    ) : (
+                                        <Eye className="h-4 w-4" />
+                                    )}
+                                </button>
+                            </div>
                             {errors.password && (
                                 <motion.p
                                     id="password-error"
@@ -174,7 +191,7 @@ export default function LoginForm({ onSubmit, isLoading = false, error }: LoginF
                         <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
                             <Button
                                 type="submit"
-                                className="w-full"
+                                className="w-full text-sm font-normal group"
                                 disabled={isLoading}
                                 aria-describedby={isLoading ? 'loading-text' : undefined}
                             >
@@ -184,7 +201,10 @@ export default function LoginForm({ onSubmit, isLoading = false, error }: LoginF
                                         <span id="loading-text">Entrando...</span>
                                     </div>
                                 ) : (
-                                    'Entrar na conta'
+                                    <div className="flex items-center justify-center gap-2">
+                                        <span>Entrar na conta</span>
+                                        <ArrowRight className="h-4 w-4 transition-transform duration-300 ease-out group-hover:-rotate-45" />
+                                    </div>
                                 )}
                             </Button>
                         </motion.div>

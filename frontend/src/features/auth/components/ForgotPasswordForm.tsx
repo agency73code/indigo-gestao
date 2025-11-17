@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from 'react-router-dom';
+import { ArrowRight } from 'lucide-react';
 
 import {
     Card,
@@ -33,15 +34,15 @@ export default function ForgotPasswordForm({
     });
 
     return (
-        <Card className=" max-w-[550px] mx-auto m-4">
+        <Card className="border-0 shadow-none bg-transparent max-w-[550px] mx-auto">
             <CardHeader className="space-y-1">
-                <CardTitle className="text-2xl tracking-tight">Esqueci minha senha</CardTitle>
+                <CardTitle style={{ fontSize: '2rem', fontFamily: 'Sora' }} className="tracking-tight">Esqueci minha senha</CardTitle>
                 <CardDescription className=" text-muted-foreground">
                     Digite seu e-mail para receber as instruções de recuperação
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">
                     <div className="space-y-2">
                         <Label htmlFor="email">E-mail</Label>
                         <Input
@@ -59,9 +60,19 @@ export default function ForgotPasswordForm({
                         )}
                     </div>
 
+                    <div className="text-end text-sm text-muted-foreground py-1.5">
+                        Lembrou da senha?{' '}
+                        <Link
+                            to="/sign-in"
+                            className="text-primary hover:text-primary/80 transition-colors underline-offset-4 hover:underline"
+                        >
+                            Faça login
+                        </Link>
+                    </div>
+
                     <Button
                         type="submit"
-                        className="w-full"
+                        className="w-full text-sm font-normal group"
                         disabled={isLoading}
                         aria-describedby={isLoading ? 'loading-text' : undefined}
                     >
@@ -71,19 +82,12 @@ export default function ForgotPasswordForm({
                                 <span id="loading-text">Enviando...</span>
                             </div>
                         ) : (
-                            'Enviar instruções'
+                            <>
+                                Enviar instruções
+                                <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 ease-out group-hover:-rotate-45" />
+                            </>
                         )}
                     </Button>
-
-                    <div className="text-center text-sm text-muted-foreground">
-                        Lembrou da senha?{' '}
-                        <Link
-                            to="/sign-in"
-                            className="text-primary hover:text-primary/80 transition-colors underline-offset-4 hover:underline"
-                        >
-                            Faça login
-                        </Link>
-                    </div>
                 </form>
             </CardContent>
         </Card>

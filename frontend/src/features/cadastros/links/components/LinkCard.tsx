@@ -1,6 +1,6 @@
 import { MoreVertical, Calendar, User, Plus } from 'lucide-react';
 import { useState } from 'react';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitleHub } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { LinkCardProps, PatientTherapistLink } from '../types';
-import { isSupervisorRole } from '../../constants/access-levels';
+import { getSpecialtyColors } from '@/utils/specialtyColors';
 
 // Helper para formatar datas
 function formatDate(dateString?: string | null): string {
@@ -41,13 +41,22 @@ function getInitials(name: string): string {
 
 // Helper para traduzir status
 function getStatusBadge(status: string) {
-    const statusMap = {
-        active: { label: 'Ativo', variant: 'default' as const },
-        ended: { label: 'Encerrado', variant: 'secondary' as const },
-        archived: { label: 'Arquivado', variant: 'outline' as const },
+    const statusConfig = {
+        active: { 
+            label: 'Ativo', 
+            className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+        },
+        ended: { 
+            label: 'Encerrado', 
+            className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+        },
+        archived: { 
+            label: 'Arquivado', 
+            className: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300'
+        },
     };
 
-    return statusMap[status as keyof typeof statusMap] || statusMap.active;
+    return statusConfig[status as keyof typeof statusConfig] || statusConfig.active;
 }
 
 // Helper para pegar o cargo do terapeuta
@@ -209,21 +218,18 @@ function renderPatientCard(
 
                         <div className="flex-1 min-w-0">
                             {/* Nome do paciente e idade */}
-                            <h3
-                                className="font-medium text-base text-foreground truncate"
-                                style={{ fontFamily: 'Sora, sans-serif' }}
-                            >
+                            <CardTitleHub className="text-base truncate">
                                 {patient.nome}
-                            </h3>
+                            </CardTitleHub>
                             <p className="text-sm text-muted-foreground">{age} anos</p>
                         </div>
                     </div>
 
                     {/* Status geral e menu */}
                     <div className="flex items-center gap-2">
-                        <Badge variant={statusBadge.variant} className="text-xs">
+                        <span className={`text-xs px-2 py-1 font-medium rounded-full ${statusBadge.className}`}>
                             {statusBadge.label}
-                        </Badge>
+                        </span>
 
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -295,9 +301,9 @@ function renderPatientCard(
                     {/* Terapeutas Ativos */}
                     {hasActiveLinks && (
                         <div className="space-y-2">
-                            <h4 className="text-sm font-medium text-foreground">
+                            <CardTitleHub className="text-sm" style={{ fontWeight: 400 }}>
                                 Terapeuta(s) Ativo(s):
-                            </h4>
+                            </CardTitleHub>
                             <div className="space-y-2">
                                 {responsibleLink && (
                                     <TherapistChip
@@ -409,7 +415,6 @@ function TherapistChip({
     const therapist = therapists.find((t) => t.id === link.therapistId);
     const therapistName = therapist?.nome || 'Carregando...';
     const therapistCargo = getTherapistRole(therapist);
-    const isResponsible = therapistCargo ? isSupervisorRole(therapistCargo) : link.role === 'responsible';
 
     return (
         <div className={`grid grid-cols-[200px_1fr_auto] items-center gap-4 p-3 rounded-lg ${
@@ -419,13 +424,16 @@ function TherapistChip({
             <div className="flex flex-wrap gap-1">
                 {/* Badge de Área de Atuação - sempre visível para vínculos ativos */}
                 {!isEnded && !isArchived && (
-                    <Badge
-                        variant={isResponsible ? 'default' : 'secondary'}
-                        className="text-xs py-0.5 flex items-center p-1 gap-1 w-fit"
+                    <span
+                        className="text-xs py-1 px-2 flex items-center gap-1 w-fit font-medium rounded-full"
+                        style={{
+                            backgroundColor: getSpecialtyColors(link.actuationArea).bg,
+                            color: getSpecialtyColors(link.actuationArea).text,
+                        }}
                     >
                         <User className="h-3 w-3" />
                         {link.actuationArea || 'Atuação não definida'}
-                    </Badge>
+                    </span>
                 )}
                 
                 {/* Badge de Data de Início - para vínculos ativos */}
@@ -566,12 +574,9 @@ function renderTherapistCard(
                         </Avatar>
 
                         <div className="flex-1 min-w-0">
-                            <h3
-                                className="font-medium text-base text-foreground truncate"
-                                style={{ fontFamily: 'Sora, sans-serif' }}
-                            >
+                            <CardTitleHub className="text-base truncate">
                                 {therapist.nome}
-                            </h3>
+                            </CardTitleHub>
                             <p className="text-sm text-muted-foreground">
                                 {therapist.especialidade || 'Terapeuta'}
                             </p>
@@ -579,9 +584,9 @@ function renderTherapistCard(
                     </div>
 
                     <div className="flex items-center gap-2">
-                        <Badge variant={statusBadge.variant} className="text-xs">
+                        <span className={`text-xs px-2 py-1 font-medium rounded-full ${statusBadge.className}`}>
                             {statusBadge.label}
-                        </Badge>
+                        </span>
 
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -651,9 +656,9 @@ function renderTherapistCard(
                     {/* Clientes Ativos */}
                     {hasActiveLinks && (
                         <div className="space-y-2">
-                            <h4 className="text-sm font-medium text-foreground">
+                            <CardTitleHub className="text-sm" style={{ fontWeight: 400 }}>
                                 Cliente(s) Ativo(s):
-                            </h4>
+                            </CardTitleHub>
                             <div className="space-y-1">
                                 {activeLinks.map((link) => (
                                     <PatientChip
@@ -782,8 +787,20 @@ function PatientChip({
         <div className={`grid grid-cols-[200px_1fr_auto] items-center gap-4 p-3 rounded-lg ${
             isArchived ? 'bg-muted/10' : isEnded ? 'bg-muted/20' : 'bg-muted/30'
         }`}>
-            {/* Badges de Status */}
+            {/* Badges de Status e Especialidade */}
             <div className="flex flex-wrap gap-1">
+                {/* Badge de Área de Atuação/Especialidade */}
+                {!isEnded && !isArchived && link.actuationArea && (
+                    <span
+                        className="text-xs py-1 px-2 flex items-center gap-1 w-fit font-medium rounded-full"
+                        style={{
+                            backgroundColor: getSpecialtyColors(link.actuationArea).bg,
+                            color: getSpecialtyColors(link.actuationArea).text,
+                        }}
+                    >
+                        {link.actuationArea}
+                    </span>
+                )}
                 {isEnded && link.endDate && (
                     <Badge
                         variant="destructive"
@@ -959,12 +976,9 @@ function renderSupervisionCard(
 
                         <div className="flex-1 min-w-0">
                             {/* Nome do supervisor */}
-                            <h3
-                                className="font-medium text-base text-foreground truncate"
-                                style={{ fontFamily: 'Sora, sans-serif' }}
-                            >
+                            <CardTitleHub className="text-base truncate">
                                 {supervisor.nome}
-                            </h3>
+                            </CardTitleHub>
                             <p className="text-sm text-muted-foreground">
                                 {supervisorRole || 'Supervisor'}
                             </p>
@@ -973,9 +987,9 @@ function renderSupervisionCard(
 
                     {/* Status geral e menu */}
                     <div className="flex items-center gap-2">
-                        <Badge variant={statusBadge.variant} className="text-xs">
+                        <span className={`text-xs px-2 py-1 font-medium rounded-full ${statusBadge.className}`}>
                             {statusBadge.label}
-                        </Badge>
+                        </span>
 
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -1299,13 +1313,16 @@ function SupervisedTherapistChip({
         }`}>
             {/* Coluna 1: Badges de Atuação e Escopo */}
             <div className="flex flex-wrap gap-1">
-                <Badge
-                    variant="secondary"
-                    className={`text-xs py-0.5 flex items-center p-1 gap-1 w-fit ${isEnded || isArchived ? 'opacity-60' : ''}`}
+                <span
+                    className={`text-xs py-1 px-2 flex items-center gap-1 w-fit font-medium rounded-full ${isEnded || isArchived ? 'opacity-60' : ''}`}
+                    style={{
+                        backgroundColor: getSpecialtyColors(actuationArea).bg,
+                        color: getSpecialtyColors(actuationArea).text,
+                    }}
                 >
                     <User className="h-3 w-3" />
                     {actuationArea}
-                </Badge>
+                </span>
                 {isIndirect && (
                     <Badge
                         variant="outline"

@@ -2,6 +2,7 @@ import { useState, memo } from 'react';
 import { ChevronUp, ChevronDown, ArrowUpRight, User } from 'lucide-react';
 import { Button } from '@/ui/button';
 import type { Therapist, SortState } from '../types/consultas.types';
+import { getSpecialtyColors } from '@/utils/specialtyColors';
 
 interface AvatarWithSkeletonProps {
     src?: string | null;
@@ -132,24 +133,7 @@ const TherapistTable = memo(function TherapistTable({
     const getEspecialidadeBadge = (especialidade: string | undefined) => {
         if (!especialidade) return <span className="text-sm" style={{ color: 'var(--table-text)' }}>Não informado</span>;
 
-        const especialidadeColors: Record<string, { bg: string; text: string }> = {
-            'Fonoaudiologia': { bg: '#E3F2FD', text: '#4A6A8F' },
-            'Psicomotricidade': { bg: '#F3E5F5', text: '#7A6A8F' },
-            'Fisioterapia': { bg: '#E8F5E9', text: '#5A8F6A' },
-            'Terapia Ocupacional': { bg: '#FFF3E0', text: '#A57A5A' },
-            'Psicopedagogia': { bg: '#FCE4EC', text: '#8F6A7A' },
-            'Educador Físico': { bg: '#E0F2F1', text: '#5A8F85' },
-            'Terapia ABA': { bg: '#F1F8E9', text: '#758F5A' },
-            'Musicoterapia': { bg: '#EDE7F6', text: '#7A6AA5' },
-            'Pedagogia': { bg: '#FFF9C4', text: '#A5955A' },
-            'Neuropsicologia': { bg: '#E1F5FE', text: '#5A7EA5' },
-            'Nutrição': { bg: '#FFEBEE', text: '#A56A6A' },
-        };
-
-        const colors = especialidadeColors[especialidade] || { 
-            bg: 'rgba(25, 22, 29, 0.06)', 
-            text: 'var(--table-text)' 
-        };
+        const colors = getSpecialtyColors(especialidade);
 
         return (
             <span 

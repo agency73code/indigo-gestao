@@ -32,7 +32,7 @@ export function ResetPasswordForm({ onSubmit, isLoading, error }: ResetPasswordF
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
         >
-            <Card className="space-y-6 m-4">
+            <Card className="space-y-6 m-4 border-0 shadow-none bg-transparent">
                 <CardHeader className="space-y-1 p-0">
                     <CardTitle className="text-2xl">Redefina sua senha</CardTitle>
                     <p className="text-sm text-muted-foreground">
