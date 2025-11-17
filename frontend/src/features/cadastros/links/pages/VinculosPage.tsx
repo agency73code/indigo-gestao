@@ -51,7 +51,7 @@ import {
 export default function VinculosPage() {
     const { setPageTitle } = usePageTitle();
     const ability = useAbility();
-    const canManageAll = ability.can('manage', 'all');
+    const canCreateLinks = ability.can('create', 'Vinculos');
     const [links, setLinks] = useState<PatientTherapistLink[]>([]);
     const [supervisionLinks, setSupervisionLinks] = useState<TherapistSupervisionLink[]>([]);
     const [patients, setPatients] = useState<Paciente[]>([]);
@@ -718,7 +718,7 @@ export default function VinculosPage() {
                     </Select>
                     
                     {/* Botões - Direita */}
-                    {canManageAll && (
+                    {canCreateLinks && (
                         <div className="flex gap-2 ml-auto">
                             <Button
                                 onClick={handleCreateLink}

@@ -7,6 +7,7 @@ import TherapistTable from '../components/TherapistTable';
 import type { Therapist, SortState, PaginationState } from '../types/consultas.types';
 import { listTherapists } from '../services/therapist.service';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
+import { useAbility } from '@/features/auth/abilities/useAbility';
 
 // Lazy load do Drawer (só carrega quando necessário)
 const TherapistProfileDrawer = lazy(() => import('../components/TherapistProfileDrawer'));
@@ -14,6 +15,9 @@ const TherapistProfileDrawer = lazy(() => import('../components/TherapistProfile
 export default function TerapeutasListPage() {
     // ✅ Definir título da página
     const { setPageTitle, setNoMainContainer } = usePageTitle();
+    const ability = useAbility();
+    const canReadLinks = ability.can('read', 'Vinculos');
+    const canManageAll = ability.can('manage', 'all');
     
     useEffect(() => {
         setPageTitle('Terapeutas');
@@ -164,18 +168,22 @@ export default function TerapeutasListPage() {
                     
                     {/* Botões à direita */}
                     <div className="flex items-center gap-2">
-                        <Link to="/app/cadastros/vinculos">
-                            <Button variant="outline" className="gap-2">
-                                <LinkIcon className="h-4 w-4" />
-                                Vincular
-                            </Button>
-                        </Link>
-                        <Link to="/app/cadastro/terapeuta">
-                            <Button className="gap-2">
-                                <Plus className="h-4 w-4" />
-                                Adicionar
-                            </Button>
-                        </Link>
+                        {canReadLinks && (
+                            <Link to="/app/cadastros/vinculos">
+                                <Button variant="outline" className="gap-2">
+                                    <LinkIcon className="h-4 w-4" />
+                                    Vincular
+                                </Button>
+                            </Link>
+                        )}
+                        {canManageAll && (
+                            <Link to="/app/cadastro/terapeuta">
+                                <Button className="gap-2">
+                                    <Plus className="h-4 w-4" />
+                                    Adicionar
+                                </Button>
+                            </Link>
+                        )}
                     </div>
                 </div>
             </div>

@@ -37,7 +37,7 @@ export default function ConsultaHubPage() {
             href: '/app/consultar/terapeutas',
             iconColor: 'text-indigo-600',
             bgColor: 'bg-[#E0E7FF]',
-            ability: { action: 'manage', subject: 'Consultar' },
+            ability: { action: 'read', subject: 'Consultar' },
         },
         {
             title: 'Clientes',

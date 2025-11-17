@@ -2,14 +2,15 @@ import { AbilityBuilder, type AbilityClass, PureAbility } from '@casl/ability';
 import { ACCESS_LEVELS } from '@/features/cadastros';
 
 export type Actions = 'manage' | 'create' | 'read' | 'update' | 'delete';
-export type Subjects = 
+export type Subjects =
   | 'all'
   | 'Dashboard'
   | 'Cadastro'
   | 'Consultar'
   | 'Programas'
   | 'Faturamento'
-  | 'Configuração';
+  | 'Configuração'
+  | 'Vinculos';
 
 export type AppAbility = PureAbility<[Actions, Subjects]>;
 const AppAbility = PureAbility as AbilityClass<AppAbility>;
@@ -37,14 +38,19 @@ export function defineAbilityFor(perfil_acesso?: string) {
     can('read', 'Dashboard');
 
     // 👥 Ats veem seus clientes (Consultar)
-    if (level === 1) {
+    if (level >= 1) {
         can('read', 'Consultar');
+        can('read', 'Vinculos');
     }
 
     // 👥 Supervisores e terapeutas clínicos podem criar/editar clientes
     if (level >= 2 && level < 5) {
         can('create', 'Cadastro');
         can(['update', 'read'], 'Consultar');
+    }
+
+    if (level >= 4) {
+        can('create', 'Vinculos');
     }
 
     // 🧑‍💼 Gerentes e coordenadores executivos têm acesso completo

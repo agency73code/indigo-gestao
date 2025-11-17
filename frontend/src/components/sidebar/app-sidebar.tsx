@@ -73,7 +73,7 @@ const data: {
             title: 'Terapeuta',
             url: '/app/consultar/terapeutas',
             icon: UserPlus,
-            ability: { action: 'manage', subject: 'all' },
+            ability: { action: 'read', subject: 'Consultar' },
         },
         {
             title: 'Programas & Objetivos',

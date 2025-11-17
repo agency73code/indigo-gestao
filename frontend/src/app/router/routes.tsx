@@ -108,7 +108,7 @@ export const router = createBrowserRouter([
                             {
                                 path: 'cadastro/terapeuta',
                                 element: (
-                                    <RequireAbility action="manage" subject="all">
+                                    <RequireAbility action="create" subject="Cadastro">
                                         <Suspense fallback={suspenseFallback}>
                                             <CadastroTerapeutaPage />
                                         </Suspense>
@@ -128,7 +128,7 @@ export const router = createBrowserRouter([
                             {
                                 path: 'cadastros/vinculos',
                                 element: (
-                                    <RequireAbility action="create" subject="Cadastro">
+                                    <RequireAbility action="read" subject="Consultar">
                                         <Suspense fallback={suspenseFallback}>
                                             <VinculosPage />
                                         </Suspense>
