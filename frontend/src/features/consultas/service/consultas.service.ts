@@ -57,31 +57,7 @@ export async function listFiles(params: { ownerType: "cliente" | "terapeuta"; ow
 
 // Funções para construir URLs
 export function buildViewUrl(fileId: string, storageId?: string): string {
-  if (MOCK_ENABLED) {
-    // Para mock, usar URLs de placeholder diretas
-    const mockUrls: Record<string, string> = {
-      // Cliente default
-      'doc-cliente-default-1': 'https://via.placeholder.com/400x300/4CAF50/white?text=Foto+Cliente',
-      'doc-cliente-default-2': 'https://via.placeholder.com/600x800/2196F3/white?text=Documento+ID',
-      
-      // Terapeuta default  
-      'doc-terapeuta-default-1': 'https://via.placeholder.com/400x300/FF9800/white?text=Foto+Terapeuta',
-      'doc-terapeuta-default-2': 'https://via.placeholder.com/600x800/9C27B0/white?text=Diploma',
-      'doc-terapeuta-default-3': 'https://via.placeholder.com/600x800/E91E63/white?text=CRP',
-      
-      // IDs específicos mockados
-      'doc-cliente-1': 'https://via.placeholder.com/400x300/4CAF50/white?text=Foto+João',
-      'doc-cliente-2': 'https://via.placeholder.com/600x800/2196F3/white?text=RG+João',
-      'doc-terapeuta-1': 'https://via.placeholder.com/400x300/FF5722/white?text=Foto+Ana',
-      'doc-terapeuta-2': 'https://via.placeholder.com/600x800/795548/white?text=Diploma+Ana',
-    };
-    
-    const mockUrl = mockUrls[fileId] || 'https://via.placeholder.com/600x400/607D8B/white?text=Documento+Mock';
-    console.log('🔍 [MOCK] URL de visualização gerada para:', fileId, '→', mockUrl);
-    return mockUrl;
-  }
-  
-  const idToUse = storageId || fileId;
+  const idToUse = encodeURIComponent(storageId || fileId);
   return `${API_BASE_URL}/arquivos/${idToUse}/view`;
 }
 

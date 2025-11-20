@@ -1,13 +1,13 @@
 import type { Request, Response } from 'express';
 import * as FilesService from './files.service.js';
 import { collectIncomingFiles } from './utils/collectIncomingFiles.js';
-import { getFileStream } from './drive/viewFile.js';
-import { createFolder } from './drive/createFolder.js';
+import { getFileStreamFromR2 } from './r2/getFileStream.js';
+import { createFolder } from './r2/createFolder.js';
 import { normalizedBirthDate } from './types/files.normalizer.js';
 
 /**
  * Controller responsável pelos uploads de arquivos.
- * Totalmente integrado ao novo fluxo de pastas no Drive.
+ * Totalmente integrado ao novo fluxo de pastas no R2.
  */
 export async function uploadFile(req: Request, res: Response) {
     try {
@@ -44,8 +44,7 @@ export async function uploadFile(req: Request, res: Response) {
             return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
         }
 
-        const rootFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID!;
-        const folderStructure = await createFolder(ownerType, fullName, BirthDate, rootFolderId);
+        const folderStructure = await createFolder(ownerType, fullName, BirthDate);
 
         const uploadPromises = availableFiles.map(({ file, documentType }) => {
             const tipoDocumento = documentTypeFromBody || documentType || file.fieldname || 'arquivo';
@@ -96,7 +95,7 @@ export async function listFiles(req: Request, res: Response) {
 }
 
 /**
- * Controller: streama um arquivo diretamente do Drive para o navegador.
+ * Controller: streama um arquivo diretamente do R2 para o navegador.
  */
 export async function viewFile(req: Request, res: Response) {
     const storageId = req.params.id ?? req.params.storageId;
@@ -106,7 +105,11 @@ export async function viewFile(req: Request, res: Response) {
     }
 
     try {
-        const { metadata, stream } = await getFileStream(storageId);
+        const { metadata, stream } = await getFileStreamFromR2(storageId);
+
+        if (!stream) {
+            return res.status(500).json({ error: 'Falha ao obter stream do arquivo.' });
+        }
 
         // Define os cabeçalhos corretos pro navegador renderizar
         res.setHeader('Content-Type', metadata.mimeType);
@@ -115,24 +118,20 @@ export async function viewFile(req: Request, res: Response) {
         res.setHeader('Cache-Control', 'public, must-revalidate, max-age=0');
 
         // Envia o stream diretamente
-        stream.on('error', (err: unknown) => {
-            if (err instanceof Error) {
-                console.error('Erro ao streamar arquivo:', err.message);
-            } else {
-                console.error('Erro ao streamar arquivo:', err);
-            }
+        (stream as NodeJS.ReadableStream).on('error', (err) => {
+            console.error('Erro ao streamar arquivo:', err);
             res.sendStatus(500);
         });
 
-        stream.pipe(res);
+        return (stream as NodeJS.ReadableStream).pipe(res);
     } catch (error) {
         console.error('Erro ao visualizar arquivo:', error);
-        return res.status(404).json({ error: 'Arquivo não encontrado no Drive.' });
+        return res.status(404).json({ error: 'Arquivo não encontrado no R2.' });
     }
 }
 
 /**
- * Controller: força o download de um arquivo do Google Drive.
+ * Controller: força o download de um arquivo do Google R2.
  */
 export async function downloadFile(req: Request, res: Response) {
     const storageId = req.params.id ?? req.params.storageId;
@@ -142,7 +141,11 @@ export async function downloadFile(req: Request, res: Response) {
     }
 
     try {
-        const { metadata, stream } = await getFileStream(storageId);
+        const { metadata, stream } = await getFileStreamFromR2(storageId);
+
+        if (!stream) {
+            return res.status(500).json({ error: 'Falha ao obter stream do arquivo.' });
+        }
 
         res.setHeader('Content-Type', metadata.mimeType);
         res.setHeader(
@@ -150,24 +153,20 @@ export async function downloadFile(req: Request, res: Response) {
             `attachment; filename="${metadata.name}"; filename*=UTF-8''${encodeURIComponent(metadata.name)}`
         );
 
-        stream.on('error', (err: unknown) => {
-            if (err instanceof Error) {
-                console.error('Erro ao baixar arquivo:', err.message);
-            } else {
-                console.error('Erro ao baixar arquivo:', err);
-            }
+        (stream as NodeJS.ReadableStream).on("error", (err) => {
+            console.error("Erro ao baixar arquivo:", err);
             res.sendStatus(500);
         });
 
-        stream.pipe(res);
+        return (stream as NodeJS.ReadableStream).pipe(res);
     } catch (error) {
         console.error('Erro ao baixar arquivo:', error);
-        return res.status(404).json({ error: 'Arquivo não encontrado no Drive.' });
+        return res.status(404).json({ error: 'Arquivo não encontrado no R2.' });
     }
 }
 
 /**
- * Controller: exclui um arquivo do banco e do Google Drive.
+ * Controller: exclui um arquivo do banco e do Google R2.
  */
 export async function deleteFile(req: Request, res: Response) {
     const rawId = req.params.id;
@@ -188,9 +187,9 @@ export async function deleteFile(req: Request, res: Response) {
             return res.status(404).json({ error: 'Arquivo não encontrado.' });
         }
 
-        // Tenta excluir do Drive, se gouver arquivo remoto
+        // Tenta excluir do R2, se gouver arquivo remoto
         if (existing.arquivo_id) {
-            await FilesService.deleteFromDrive(existing.arquivo_id);
+            await FilesService.deleteFromR2(existing.arquivo_id);
         }
 
         // Remove o registro do banco
@@ -225,7 +224,8 @@ export async function getAvatar(req: Request, res: Response) {
             return res.status(200).json({ avatarUrl: null });
         }
         
-        const avatarUrl = `/api/arquivos/${avatar.storageId}/view`;
+        const encoded = encodeURIComponent(avatar.storageId);
+        const avatarUrl = `/api/arquivos/${encoded}/view`;
         return res.json({ avatarUrl });
     } catch (error) {
         console.error('Erro ao obter avatar:', error);

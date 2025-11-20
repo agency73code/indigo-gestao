@@ -85,7 +85,7 @@ export async function loginUserByAccessInformation(accessInfo: string, table: Ta
       email: row.email_indigo ?? null,
       perfil_acesso: row.perfil_acesso,
       avatar_url: row.arquivos[0] 
-        ? `${process.env.API_URL}/api/arquivos/${row.arquivos[0].arquivo_id}/view/` 
+        ? `${process.env.API_URL}/api/arquivos/${encodeURIComponent(row.arquivos[0].arquivo_id!)}/view/` 
         : null,
     };
   } else {
@@ -122,7 +122,7 @@ export async function loginUserByAccessInformation(accessInfo: string, table: Ta
       email: row.emailContato ?? null,
       perfil_acesso: row.perfil_acesso!,
       avatar_url: row.arquivos[0] 
-        ? `${process.env.API_URL}/api/arquivos/${row.arquivos[0].arquivo_id}/view/` 
+        ? `${process.env.API_URL}/api/arquivos/${encodeURIComponent(row.arquivos[0].arquivo_id!)}/view/` 
         : null,
     };
   }
@@ -168,7 +168,7 @@ export async function findUserById(id: string, table: Tables) {
       email: row.email_indigo,
       perfil_acesso: row.perfil_acesso,
       avatar_url: row.arquivos[0] 
-        ? `${process.env.API_URL}/api/arquivos/${row.arquivos[0].arquivo_id}/view` 
+        ? `${process.env.API_URL}/api/arquivos/${encodeURIComponent(row.arquivos[0].arquivo_id!)}/view` 
         : null,
     };
   } else {
@@ -197,7 +197,7 @@ export async function findUserById(id: string, table: Tables) {
       email: row.emailContato,
       perfil_acesso: row.perfil_acesso,
       avatar_url: row.arquivos[0] 
-        ? `${process.env.API_URL}/api/arquivos/${row.arquivos[0].arquivo_id}/view` 
+        ? `${process.env.API_URL}/api/arquivos/${encodeURIComponent(row.arquivos[0].arquivo_id!)}/view` 
         : null,
     }
   }

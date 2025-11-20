@@ -1,14 +1,14 @@
 import dayjs from 'dayjs';
 import type { Prisma } from '@prisma/client';
 import { prisma } from '../../config/database.js';
-import { env } from '../../config/env.js';
 import { AppError } from '../../errors/AppError.js';
-import { uploadFile } from '../file/drive/uploadFile.js';
-import { sanitizeFolderName } from '../file/drive/createFolder.js';
+import { sanitizeFolderName } from '../file/r2/createFolder.js';
 import { ensureMonthlyReportFolder } from './report-drive.service.js';
 import { formatDateOnly } from './report.utils.js';
 import type { ReportListFilters, ReportStatus, ReportType, SavedReport, StructuredReportData } from './report.types.js';
-import { deleteFromDrive } from '../file/files.service.js';
+import { deleteFromR2 } from '../file/files.service.js';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { s3 } from '../../config/r2.js'; 
 
 const reportInclude = {
     cliente: {
@@ -71,11 +71,16 @@ export async function saveReport(input: SaveReportInput): Promise<SavedReport> {
         fullName: patient.nome ?? 'Cliente Indigo',
         birthDate: patient.dataNascimento ? formatDateOnly(patient.dataNascimento) : 'sem-data',
         periodStart: input.periodStart,
-        rootFolderId: env.GOOGLE_DRIVE_FOLDER_ID,
     });
 
     const fileDescriptor = buildReportFileDescriptor(input.title, patient.nome ?? 'cliente', input.periodStart);
-    const driveMeta = await uploadFile(fileDescriptor, input.pdfFile, folderInfo.monthFolderId);
+
+    const ext = '.pdf';
+    const fileName = `${sanitizeFolderName(fileDescriptor)}${ext}`;
+    
+    const storageKey = `${folderInfo.monthPrefix}/${fileName}`;
+
+    const r2Meta = await uploadReportToR2(storageKey, input.pdfFile);
 
     const created = await prisma.relatorio.create({
         data: {
@@ -87,12 +92,12 @@ export async function saveReport(input: SaveReportInput): Promise<SavedReport> {
             observacoes_clinicas: input.clinicalObservations ?? null,
             filtros: input.data.filters as Prisma.InputJsonValue,
             dados_gerados: input.data.generatedData as Prisma.InputJsonValue,
-            pdf_arquivo_id: driveMeta.id,
-            pdf_nome: driveMeta.name,
-            pdf_mime: driveMeta.mimeType,
-            pdf_tamanho: driveMeta.size,
-            pdf_url: driveMeta.webViewLink ?? null,
-            pasta_relatorios_drive: folderInfo.drivePath,
+            pdf_arquivo_id: r2Meta.storageId,
+            pdf_nome: r2Meta.name,
+            pdf_mime: r2Meta.mimeType,
+            pdf_tamanho: r2Meta.size,
+            pdf_url: null,
+            pasta_relatorios_drive: folderInfo.monthPrefix,
             cliente: { connect: { id: patient.id } },
             terapeuta: { connect: { id: therapist.id } },
         },
@@ -160,7 +165,7 @@ export async function getReportRecord(id: string): Promise<ReportRecord | null> 
 
 export async function deleteReport(record: Pick<ReportRecord, 'id' | 'pdf_arquivo_id'>): Promise<void> {
     if (record.pdf_arquivo_id) {
-        await deleteFromDrive(record.pdf_arquivo_id);
+        await deleteFromR2(record.pdf_arquivo_id);
     }
 
     await prisma.relatorio.delete({ where: { id: record.id } });
@@ -185,13 +190,12 @@ function mapToSavedReport(record: ReportRecord): SavedReport {
             clinicalObservations: record.observacoes_clinicas,
         }),
 
-        ...(record.pdf_url && { pdfUrl: record.pdf_url }),
         ...(record.pdf_arquivo_id && {
-            pdfUrl: `https://drive.google.com/file/d/${record.pdf_arquivo_id}/view?usp=drivesdk`,
+            pdfUrl: `/api/arquivos/${encodeURIComponent(record.pdf_arquivo_id)}/view`,
         }),
         ...(record.pdf_nome && { pdfFilename: record.pdf_nome }),
         ...(record.pasta_relatorios_drive && {
-            driveFolderPath: record.pasta_relatorios_drive,
+            r2FolderPath: record.pasta_relatorios_drive,
         }),
 
         ...(record.cliente && {
@@ -227,3 +231,23 @@ function buildReportFileDescriptor(title: string, patientName: string, periodSta
     const normalizedPatient = sanitizeFolderName(patientName);
     return `relatorio_${monthKey}_${normalizedPatient}_${normalizedTitle}`;
 }
+
+async function uploadReportToR2(path: string, file: Express.Multer.File) {
+    const bucket = process.env.R2_BUCKET;
+
+    await s3.send(
+        new PutObjectCommand({
+            Bucket: bucket,
+            Key: path,
+            Body: file.buffer,
+            ContentType: file.mimetype,
+        })
+    );
+
+    return {
+        storageId: path,
+        name: path.split('/').pop()!,
+        mimeType: file.mimetype,
+        size: file.size,
+    };
+} 

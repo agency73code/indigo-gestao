@@ -1,7 +1,9 @@
-import { createFolder } from "./drive/createFolder.js";
-import { uploadFile } from "./drive/uploadFile.js";
+import { createFolder } from "./r2/createFolder.js";
 import { prisma } from "../../config/database.js";
-import { drive } from "../../config/googleDrive.js";
+import { s3 } from '../../config/r2.js';
+import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { DeleteObjectCommand } from "@aws-sdk/client-s3";
+import path from "path";
 
 type OwnerType = 'cliente' | 'terapeuta';
 
@@ -28,44 +30,64 @@ interface UploadResult {
 }
 
 /**
- * Faz o upload de um arquivo para o Drive e registra no banco de dados.
+ * Upload para o Cloudflare R2 + persistência no banco.
  */
-export async function uploadAndPersistFile(input: UploadInput & { folderIds?: { parentId: string; documentosId: string } }): Promise<UploadResult> {
-    const rootFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
-    if (!rootFolderId) {
-        throw new Error('Pasta raiz do Google Drive não configurada (GOOGLE_DRIVE_FOLDER_ID).');
+export async function uploadAndPersistFile(
+    input: UploadInput & { folderIds?: { parentPath: string; documentosPath: string } }
+): Promise<UploadResult> {
+    const bucket = process.env.R2_BUCKET;
+    if (!bucket) {
+        throw new Error('Bucket R2 não configurado (R2_BUCKET).');
     }
 
-    const rawDescription = input.documentDescription?.trim();
-    const normalizedDescription = rawDescription && rawDescription.length > 0 ? rawDescription : null;
+    // Normaliza descrição
+    const rawDesc = input.documentDescription?.trim();
+    const normalizedDescription =
+        rawDesc && rawDesc.length > 0 ? rawDesc : null;
 
-    // Cria (ou encontra) a estrutura de pastas
-    const { parentId, documentosId } = input.folderIds
+    // Gera caminhos do usuário
+    const folderPaths = input.folderIds
         ? input.folderIds
-        : await createFolder(
-            input.ownerType,
-            input.fullName,
-            input.birthDate,
-            rootFolderId
-        );
+        : await createFolder(input.ownerType, input.fullName, input.birthDate);
 
-    // Faz upload do arquivo para a subpasta 'documentos'
-    const targetFolderId =
-        input.documentType === 'fotoPerfil' ? parentId : documentosId;
+    const { parentPath, documentosPath } = folderPaths;
 
-    const driveDocumentLabel = normalizedDescription && input.documentType === 'outros'
+    // Identifica destino da key final
+    const targetPath = 
+        input.documentType === 'fotoPerfil'
+            ? parentPath
+            : documentosPath;
+
+    // Determina o nome do arquivo
+    const ext = path.extname(input.file.originalname || '').toLowerCase() || '';
+
+    const driveLabel = 
+        normalizedDescription && input.documentType === 'outros'
         ? `${input.documentType}-${normalizedDescription}`
         : input.documentType;
 
-    const driveMeta = await uploadFile(driveDocumentLabel, input.file, targetFolderId);
+    const finalName = `${driveLabel}${ext}`;
 
-    // Persiste metadados no banco
+    // Key do R2 = prefixo (pasta virtual) + nome do arquivo
+    const storageKey = `${targetPath}/${finalName}`;
+
+    // Upload para o R2 (SDK v3)
+    await s3.send(
+        new PutObjectCommand({
+            Bucket: bucket,
+            Key: storageKey,
+            Body: input.file.buffer,
+            ContentType: input.file.mimetype,
+        })
+    );
+
+    // Persiste metadados no Banco
     const record = await persistFileRecord({
         ownerType: input.ownerType,
         ownerId: input.ownerId,
         tipo: input.documentType,
         descricaoDocumento: normalizedDescription,
-        storageId: driveMeta.id,
+        storageId: storageKey, // <- chave do R2 agora!
         mimeType: input.file.mimetype,
         size: input.file.size,
     });
@@ -74,11 +96,11 @@ export async function uploadAndPersistFile(input: UploadInput & { folderIds?: { 
         id: record.id.toString(),
         storageId: record.arquivo_id!,
         tipo_documento: record.tipo!,
-        nome: record.descricao_documento ?? record.tipo ?? driveMeta.name,
+        nome: record.descricao_documento ?? record.tipo ?? finalName,
         tamanho: Number(record.tamanho ?? input.file.size),
         tipo_conteudo: record.mime_type ?? input.file.mimetype,
         data_envio: (record.data_upload ?? new Date()).toISOString(),
-        webViewLink: driveMeta.webViewLink,
+        webViewLink: undefined,
         descricao_documento: record.descricao_documento ?? normalizedDescription,
     };
 }
@@ -149,9 +171,7 @@ export async function listFiles(ownerType: 'cliente' | 'terapeuta', ownerId: str
         tamanho: Number(r.tamanho ?? 0),
         tipo_conteudo: r.mime_type ?? 'application/octet-stream',
         data_envio: r.data_upload?.toISOString() ?? new Date().toISOString(),
-        webViewLink: r.arquivo_id
-            ? `https://drive.google.com/file/d/${r.arquivo_id}/view?usp=drivesdk`
-            : undefined,
+        webViewLink: undefined,
         descricao_documento: r.descricao_documento ?? undefined
     }));
 }
@@ -161,15 +181,22 @@ export async function findFileById(id: number) {
     return prisma.arquivos.findUnique({ where: { id } });
 }
 
-/** Exclui um arquivo do Google Drive */
-export async function deleteFromDrive(fileId: string) {
+/** Exclui um arquivo do Google R2 */
+export async function deleteFromR2(storageId: string) {
+    const bucket = process.env.R2_BUCKET;
+    if (!bucket) {
+        throw new Error('R2_BUCKET não configurado.');
+    }
+
     try {
-        await drive.files.delete({
-            fileId,
-            supportsAllDrives: true,
-        });
+        await s3.send(
+            new DeleteObjectCommand({
+                Bucket: bucket,
+                Key: storageId,
+            })
+        );
     } catch (error) {
-        console.warn(`⚠️ Falha ao excluir arquivo no Drive (id: ${fileId})`, error);
+        console.warn(`Falha ao excluir arquivo no R2 (key: ${storageId})`, error);
     }
 }
 

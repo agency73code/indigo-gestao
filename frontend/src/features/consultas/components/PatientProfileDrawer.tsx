@@ -362,10 +362,10 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
         if (open && patient?.id && files.length > 0) {
             const fotoPerfil = files.find(f => f.tipo_documento === 'fotoPerfil');
 
-         console.log(fotoPerfil)   
             if (fotoPerfil) {
                 // Construir URL da foto de perfil existente
-                const fotoUrl = `${import.meta.env.VITE_API_URL}/arquivos/${fotoPerfil.id}/view`;
+                const encoded = encodeURIComponent(fotoPerfil.storageId || fotoPerfil.id);
+                const fotoUrl = `${import.meta.env.VITE_API_URL}/arquivos/${encoded}/view`;
                 setProfilePhoto(fotoUrl as any); // URL como string para preview
             }
         }
@@ -669,7 +669,9 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                 <AvatarWithSkeleton
                                     src={
                                         arquivosMap.has('fotoPerfil')
-                                            ? `${import.meta.env.VITE_API_URL}/arquivos/${arquivosMap.get('fotoPerfil')?.arquivo_id}/view/`
+                                            ? `${import.meta.env.VITE_API_URL}/arquivos/${encodeURIComponent(
+                                                arquivosMap.get('fotoPerfil')!.arquivo_id
+                                            )}/view/`
                                             : undefined
                                     }
                                     alt={patient.nome}

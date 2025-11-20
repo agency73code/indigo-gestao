@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
-import { createFolder, getOrCreateFolder, buildOwnerFolderName, sanitizeFolderName } from "../file/drive/createFolder.js";
+import { buildOwnerFolderName, sanitizeFolderName } from "../file/r2/createFolder.js";
 
 dayjs.locale("pt-br");
 
@@ -8,32 +8,30 @@ interface EnsureReportFolderParams {
     fullName: string;
     birthDate: string;
     periodStart: Date;
-    rootFolderId: string;
 }
 
 export interface ReportFolderInfo {
-    parentId: string;
-    reportsFolderId: string;
-    monthFolderId: string;
+    basePrefix: string;
+    reportsPrefix: string;
+    monthPrefix: string;
     monthFolderName: string;
     clientFolderName: string;
-    drivePath: string;
 }
 
-export async function ensureMonthlyReportFolder({ fullName, birthDate, periodStart, rootFolderId }: EnsureReportFolderParams): Promise<ReportFolderInfo> {
-    const baseFolder = await createFolder('cliente', fullName, birthDate, rootFolderId);
-    const reportsFolderId = await getOrCreateFolder('relatorios', baseFolder.parentId);
+export function ensureMonthlyReportFolder({ fullName, birthDate, periodStart }: EnsureReportFolderParams): ReportFolderInfo {
+    const clientFolderName = buildOwnerFolderName(fullName, birthDate);
     const monthFolderName = buildMonthFolderName(periodStart);
-    const monthFolderId = await getOrCreateFolder(monthFolderName, reportsFolderId);
-    const clientFolderName = baseFolder.ownerFolderName ?? buildOwnerFolderName(fullName, birthDate);
+
+    const basePrefix = `clientes/${clientFolderName}`;
+    const reportsPrefix = `${basePrefix}/relatorios`;
+    const monthPrefix = `${reportsPrefix}/${monthFolderName}`;
 
     return {
-        parentId: baseFolder.parentId,
-        reportsFolderId,
-        monthFolderId,
+        basePrefix,
+        reportsPrefix,
+        monthPrefix,
         monthFolderName,
         clientFolderName,
-        drivePath: `${clientFolderName}/relatorios/${monthFolderName}`,
     };
 }
 
