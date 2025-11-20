@@ -125,15 +125,9 @@ importers:
       framer-motion:
         specifier: ^12.23.12
         version: 12.23.12(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      html2canvas:
-        specifier: ^1.4.1
-        version: 1.4.1
       html2pdf.js:
         specifier: ^0.12.1
         version: 0.12.1
-      jspdf:
-        specifier: ^3.0.3
-        version: 3.0.3
       lucide-react:
         specifier: ^0.542.0
         version: 0.542.0(react@19.2.0)

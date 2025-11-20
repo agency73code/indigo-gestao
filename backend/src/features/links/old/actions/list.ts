@@ -95,7 +95,6 @@ export async function getAllTherapists(userId: string, search?: string, _role?: 
     }
 
     const visibility = await getVisibilityScope(userId);
-    console.log('VISIBILITY:', visibility);
 
     if (visibility.scope === 'none') {
         return [];
@@ -215,7 +214,6 @@ export async function getAllTherapists(userId: string, search?: string, _role?: 
         },
         orderBy: { nome: 'asc' },
     });
-    console.log('THERAPISTS:', therapists);
     return therapists;
 }
 

@@ -17,11 +17,10 @@ export async function createFolder(
 ): Promise<{
     parentId: string;
     documentosId: string;
+    ownerFolderName: string;
 }> {
     // Normaliza dados
-    const sanitizedName = sanitizeFolderName(fullName);
-    const sanitizedDate = sanitizeFolderName(birthDate);
-    const folderName = `${sanitizedName}-${sanitizedDate}`;
+    const folderName = buildOwnerFolderName(fullName, birthDate);
 
     // Localiza pasta principal (clientes ou terapeutas)
     const ownerFolderId = await getOrCreateFolder(ownerType === 'cliente' ? 'clientes' : 'terapeutas', rootFolderId);
@@ -36,11 +35,11 @@ export async function createFolder(
 
     // TODO: criar subpastas por mês/ano em documentos
     
-    return { parentId, documentosId };
+    return { parentId, documentosId, ownerFolderName: folderName };
 }
 
 /** Cria uma pasta no Drive (ou retorna a existente) */
-async function getOrCreateFolder(name: string, parentId: string): Promise<string> {
+export async function getOrCreateFolder(name: string, parentId: string): Promise<string> {
     const query = `name = '${name}' and '${parentId}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`;
     const existing = await drive.files.list({
         q: query,
@@ -67,11 +66,17 @@ async function getOrCreateFolder(name: string, parentId: string): Promise<string
 }
 
 /** Remove caracteres proibidos no Drive */
-function sanitizeFolderName(value: string): string {
+export function sanitizeFolderName(value: string): string {
     return value
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '') // remove acentos
     .replace(/[^\w\s-]/g, '') // remove símbolos
     .replace(/\s+/g, '_') // troca espaço por underline
     .trim();
+}
+
+export function buildOwnerFolderName(fullName: string, birthDate: string): string {
+    const sanitizedName = sanitizeFolderName(fullName);
+    const sanitizedDate = sanitizeFolderName(birthDate);
+    return `${sanitizedName}-${sanitizedDate}`;
 }
