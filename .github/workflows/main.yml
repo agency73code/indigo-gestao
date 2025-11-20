@@ -26,7 +26,6 @@ jobs:
           envs: "PROD_PATH,PM2_APP"
           script: |
             set -euo pipefail
-            export CI=true
             echo "🚀 Deploy iniciado"
             echo "🔍 PROD_PATH='$PROD_PATH'"
             echo "🔍 PM2_APP='$PM2_APP'"
@@ -49,21 +48,23 @@ jobs:
             # 3) Configura pnpm
             command -v pnpm >/dev/null 2>&1 || (corepack enable && corepack prepare pnpm@latest --activate)
 
-            # 4) Backend: deps + migrações
+            # 4) Instala dependências do workspace (raiz)
+            echo "📦 Instalando dependências do workspace..."
+            pnpm install --frozen-lockfile
+
+            # 5) Backend: migrações + build
             cd backend
             echo "🧱 Buildando backend..."
-            pnpm install --frozen-lockfile
-            pnpm dlx prisma migrate deploy
-            pnpm dlx prisma generate
+            pnpm prisma migrate deploy
+            pnpm prisma generate
             pnpm run build
 
-            # 5) Frontend: build
+            # 6) Frontend: build
             cd ../frontend
             echo "🧱 Buildando frontend..."
-            pnpm install --frozen-lockfile
             pnpm run build
 
-            # 6) PM2
+            # 7) PM2
             cd "$PROD_PATH"
             echo "🔁 Reiniciando PM2..."
             if pm2 describe "$PM2_APP" > /dev/null; then

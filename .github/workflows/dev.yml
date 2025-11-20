@@ -56,8 +56,8 @@ jobs:
             # 5) Backend: migrações + build
             cd backend
             echo "🧱 Buildando backend..."
-            pnpm dlx prisma migrate deploy
-            pnpm dlx prisma generate
+            pnpm prisma migrate deploy
+            pnpm prisma generate
             pnpm run build
 
             # 6) Frontend: build
@@ -65,7 +65,7 @@ jobs:
             echo "🧱 Buildando frontend..."
             pnpm run build
 
-            # 6) PM2
+            # 7) PM2
             cd "$DEV_PATH"
             echo "🔁 Reiniciando PM2..."
             if pm2 describe "$PM2_APP" > /dev/null; then
