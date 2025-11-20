@@ -7,7 +7,6 @@ import { auth } from '../middleware/auth.middleware.js';
 const router: ExpressRouter = Router();
 
 router.use(auth);
-
 router.get('/', requireAbility('read', 'Consultar'), TherapistController.list);
 router.get('/relatorio', TherapistController.getTherapistReport);
 router.get('/bancos', TherapistController.listBanks);
