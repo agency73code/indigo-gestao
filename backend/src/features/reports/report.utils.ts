@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import 'dayjs/locale/pt-br';
+import 'dayjs/locale/pt-br.js';
 import { ACCESS_LEVELS } from '../../utils/accessLevels.js';
 
 dayjs.locale('pt-br');
