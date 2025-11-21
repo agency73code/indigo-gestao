@@ -645,7 +645,22 @@ export async function update(id: string, dto: Partial<ClientType.UpdateClient>) 
   await UpdateDataSchool(clientId, dadosEscola);
 }
 
-export async function list(therapistId: string) {
+interface ClientListFilters {
+  q?: string;
+  page?: number;
+  pageSize?: number;
+  sort?: string;
+}
+
+interface ClientListResult {
+  items: ClientType.DBClientQueryPage[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export async function list(therapistId: string, filters: ClientListFilters = {}): Promise<ClientListResult> {
   if (!therapistId) {
     throw new AppError('REQUIRED_THERAPIST_ID', 'ID do terapeuta é obrigatório.', 400);
   }
@@ -653,10 +668,40 @@ export async function list(therapistId: string) {
   const visibility = await getVisibilityScope(therapistId);
 
   if (visibility.scope === 'none') {
-    return [];
+    return { items: [], total: 0, page: 1, pageSize: filters.pageSize ?? 10, totalPages: 0 };
   }
 
-  const where: Prisma.clienteWhereInput = {};
+  const page = Math.max(filters.page ?? 1, 1);
+  const pageSize = Math.max(filters.pageSize ?? 10, 1);
+  const [sortField = 'nome', sortDirection = 'asc'] = (filters.sort ?? 'nome_asc').split('_') as [string, 'asc' | 'desc'];
+  const allowedSortFields = new Set(['nome', 'emailContato', 'status', 'dataNascimento']);
+  const orderBy: Prisma.clienteOrderByWithRelationInput =
+    allowedSortFields.has(sortField)
+      ? { [sortField]: sortDirection === 'desc' ? 'desc' : 'asc' }
+      : { nome: 'asc' };
+
+  const where: Prisma.clienteWhereInput = {
+    ...(filters.q
+      ? {
+        OR: [
+          { nome: { contains: filters.q } },
+          { emailContato: { contains: filters.q } },
+          { cpf: { contains: filters.q } },
+          {
+            cuidadores: {
+              some: {
+                OR: [
+                  { nome: { contains: filters.q } },
+                  { telefone: { contains: filters.q } },
+                  { cpf: { contains: filters.q } },
+                ],
+              },
+            },
+          },
+        ],
+      }
+      : {}),
+  };
 
   if (visibility.scope === 'partial') {
     where.terapeuta = {
@@ -673,48 +718,62 @@ export async function list(therapistId: string) {
     where.status = 'ativo';
   }
 
-  return prisma.cliente.findMany({
-    where,
-    select: {
-      id:true,
-      nome: true,
-      emailContato: true,
-      cuidadores: {
-        select: {
-          telefone: true,
-          nome: true,
-          cpf: true,
+  const [total, items] = await prisma.$transaction([
+    prisma.cliente.count({ where }),
+    prisma.cliente.findMany({
+      where,
+      orderBy,
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      select: {
+        id:true,
+        nome: true,
+        emailContato: true,
+        cuidadores: {
+          select: {
+            telefone: true,
+            nome: true,
+            cpf: true,
+          },
+          take: 1,
         },
-        take: 1,
-      },
-      status: true,
-      dataNascimento: true,
-      enderecos: {
-        select: {
-          endereco: {
-            select: {
-              cep: true,
-              rua: true,
-              numero: true,
-              bairro: true,
-              cidade: true,
-              uf: true,
-              complemento: true,
+        status: true,
+        dataNascimento: true,
+        enderecos: {
+          select: {
+            endereco: {
+              select: {
+                cep: true,
+                rua: true,
+                numero: true,
+                bairro: true,
+                cidade: true,
+                uf: true,
+                complemento: true,
+              },
             },
           },
         },
-      },
-      arquivos: {
-        select: {
-          tipo: true,
-          mime_type: true,
-          arquivo_id: true,
-          tamanho: true,
-          data_upload: true,
+        arquivos: {
+          select: {
+            tipo: true,
+            mime_type: true,
+            arquivo_id: true,
+            tamanho: true,
+            data_upload: true,
+          },
         },
-      },
-    }
-  });
+      }
+    }),
+  ]);
+
+  return {
+    items,
+    total,
+    page,
+    pageSize,
+    totalPages: Math.ceil(total / pageSize),
+  };
 }
 
 export async function getClientReport() {

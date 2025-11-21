@@ -95,12 +95,36 @@ export async function list(req: Request, res: Response, next: NextFunction) {
         return res.status(400).json({ success: false, message: 'ID do terapeuta é obrigatório!' });
       }
 
-      const q = (req.query.q as string) || undefined;
-      const therapists = await TherapistService.list(therapistId, q);
-      const normalized = therapists.map(TherapistNormalizer.normalizeTherapistSession);
-      res.json(normalized);
+      // Cria um objeto de filtros sem undefined
+      const filters: TherapistListFilters = {};
+
+      if (typeof req.query.q === 'string') filters.q = req.query.q;
+      if (typeof req.query.sort === 'string') filters.sort = req.query.sort;
+      if (typeof req.query.page === 'string') filters.page = Number(req.query.page);
+      if (typeof req.query.pageSize === 'string') filters.pageSize = Number(req.query.pageSize);
+
+      const result = await TherapistService.list(therapistId, filters);
+      const items = result.items.map(TherapistNormalizer.normalizeTherapistSession);
+
+      if (!filters.page && !filters.pageSize) {
+        return res.json(items);
+      }
+
+      res.json({
+        items,
+        total: result.total,
+        page: result.page,
+        pageSize: result.pageSize,
+        totalPages: result.totalPages,
+      });
     } catch (error) {
       next(error);
     }
 }
 
+export interface TherapistListFilters {
+  q?: string;
+  page?: number;
+  pageSize?: number;
+  sort?: string;
+}
