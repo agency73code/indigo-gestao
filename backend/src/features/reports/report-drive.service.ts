@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import "dayjs/locale/pt-br";
+import "dayjs/locale/pt-br.js";
 import { buildOwnerFolderName, sanitizeFolderName } from "../file/r2/createFolder.js";
 
 dayjs.locale("pt-br");
