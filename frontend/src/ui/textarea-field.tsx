@@ -22,6 +22,31 @@ const TextAreaField = React.forwardRef<HTMLTextAreaElement, TextAreaFieldProps>(
                         error && 'border-destructive'
                     )}
                 >
+                    {/* Detalhe visual no canto inferior direito */}
+                    <div className="absolute bottom-2 right-2 w-3 h-3 pointer-events-none">
+                        <svg
+                            viewBox="0 0 12 12"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="w-full h-full"
+                        >
+                            <path
+                                d="M6 12L12 6"
+                                stroke="currentColor"
+                                strokeWidth="1"
+                                strokeLinecap="round"
+                                className="text-muted-foreground/20"
+                            />
+                            <path
+                                d="M9 12L12 9"
+                                stroke="currentColor"
+                                strokeWidth="1"
+                                strokeLinecap="round"
+                                className="text-muted-foreground/20"
+                            />
+                        </svg>
+                    </div>
+
                     <label className="text-xs font-medium text-muted-foreground mb-1 pointer-events-none">
                         {required ? label.replace('*', '').trim() : labelParts[0]}
                         {hasAsterisk && <span className="text-destructive">*</span>}

@@ -11,6 +11,15 @@ interface ProgramListProps {
     selectedFilters: string[];
     selectedPatientId: string | null;
     selectedPatientName?: string;
+    onListPrograms?: (params: {
+        patientId: string;
+        q?: string;
+        status?: 'active' | 'archived' | 'all';
+        sort?: 'recent' | 'alphabetic';
+        page?: number;
+    }) => Promise<any[]>;
+    onOpenProgram?: (programId: string) => void;
+    onNewSession?: (programId: string) => void;
 }
 
 export default function ProgramList({
@@ -18,6 +27,9 @@ export default function ProgramList({
     selectedFilters,
     selectedPatientId,
     selectedPatientName,
+    onListPrograms,
+    onOpenProgram,
+    onNewSession,
 }: ProgramListProps) {
     const navigate = useNavigate();
     const [programs, setPrograms] = useState<ProgramListItem[]>([]);
@@ -50,7 +62,10 @@ export default function ProgramList({
                 sortValues.includes(f as typeSort)
             ) ?? 'recent';
             
-            const result = await listPrograms({
+            // Usar serviço customizado se fornecido, senão usar o padrão
+            const listService = onListPrograms || listPrograms;
+            
+            const result = await listService({
                 patientId: selectedPatientId,
                 q: searchQuery || undefined,
                 status,
@@ -71,21 +86,30 @@ export default function ProgramList({
     }, [selectedPatientId, searchQuery, selectedFilters]);
 
     const handleOpenProgram = (programId: string) => {
-        // Preservar patientId quando houver
-        const patientId = selectedPatientId;
-        const path = `/app/programas/${programId}`;
-        const url = patientId ? `${path}?patientId=${patientId}` : path;
-        navigate(url);
+        // Se houver callback customizado, usar ele. Senão, usar navegação padrão
+        if (onOpenProgram) {
+            onOpenProgram(programId);
+        } else {
+            const patientId = selectedPatientId;
+            const path = `/app/programas/${programId}`;
+            const url = patientId ? `${path}?patientId=${patientId}` : path;
+            navigate(url);
+        }
     };
 
     const handleNewSession = (programId: string) => {
-        const patientId = selectedPatientId;
-        const params = new URLSearchParams();
-        params.set('programaId', programId);
-        if (patientId) params.set('patientId', patientId);
+        // Se houver callback customizado, usar ele. Senão, usar navegação padrão
+        if (onNewSession) {
+            onNewSession(programId);
+        } else {
+            const patientId = selectedPatientId;
+            const params = new URLSearchParams();
+            params.set('programaId', programId);
+            if (patientId) params.set('patientId', patientId);
 
-        const url = `/app/programas/sessoes/nova?${params.toString()}`;
-        navigate(url);
+            const url = `/app/programas/sessoes/nova?${params.toString()}`;
+            navigate(url);
+        }
     };
 
     const handleRetry = () => {

@@ -6,21 +6,35 @@ import { NavUser } from '@/components/sidebar/nav-user';
 import { GlobalSearch } from '@/components/Dashboard/global-search';
 import { Bell, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useArea } from '@/contexts/AreaContext';
+import { Badge } from '@/components/ui/badge';
 
 export default function Header() {
     const navigate = useNavigate();
+    const location = useLocation();
+    const { currentArea, getAreaLabel } = useArea();
 
     const handleGoBack = () => {
         navigate(-1);
     };
+
+    // Verifica se está na seção de programas
+    const isInProgramsSection = location.pathname.includes('/app/programas');
 
     return (
         <header className="bg-background sticky top-0 z-50 flex h-16 shrink-0 items-center gap-1 px-4 rounded-xl no-print">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mx-1 data-[orientation=vertical]:h-4" />
             <div className="flex justify-between w-full items-center gap-2">
-                <DynamicBreadcrumb />
+                <div className="flex items-center gap-2">
+                    <DynamicBreadcrumb />
+                    {isInProgramsSection && currentArea && (
+                        <Badge variant="secondary" className="hidden sm:flex">
+                            {getAreaLabel()}
+                        </Badge>
+                    )}
+                </div>
                 {/* Botão de voltar - apenas mobile */}
                 <Button
                     variant="ghost"

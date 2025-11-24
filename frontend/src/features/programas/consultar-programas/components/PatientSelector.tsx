@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Search, User, X, Calendar } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Search, User } from 'lucide-react';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
+import { CloseButton } from '@/components/layout/CloseButton';
 import { searchPatients } from '../services';
 import type { Patient } from '../types';
 
@@ -18,7 +19,6 @@ interface PatientSelectorProps {
 export default function PatientSelector({
     selected,
     onSelect,
-    onClear,
     autoOpenIfEmpty = false,
 }: PatientSelectorProps) {
     const [isOpen, setIsOpen] = useState(false);
@@ -49,12 +49,6 @@ export default function PatientSelector({
         }
         
         return age;
-    };
-
-    // Função para formatar data de nascimento
-    const formatBirthDate = (birthDate: string): string => {
-        const date = new Date(birthDate);
-        return date.toLocaleDateString('pt-BR');
     };
 
     // Buscar pacientes com debounce
@@ -89,20 +83,17 @@ export default function PatientSelector({
         setSearchQuery('');
     };
 
-    const handleClearPatient = () => {
-        onClear?.();
-    };
-
     return (
         <>
-            <Card padding="none" className="rounded-lg p-1 sm:p-0">
-                <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
-                    <CardTitle className="text-base flex items-center gap-2">
+            <Card className="rounded-lg px-6 py-8 md:px-8 md:py-10 lg:px-8 lg:py-0">
+                <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
+                    <h3 className="text-base flex items-center gap-2 font-normal" style={{fontFamily: "Sora"}}>
                         <User className="h-4 w-4" />
                         Cliente
-                    </CardTitle>
+                    </h3>
                 </CardHeader>
-                <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+                <CardContent className="pb-3 sm:pb-6">
+                    {/* Conteúdo */}
                     {selected ? (
                         <div className="flex items-center gap-3 p-2 sm:p-3 bg-muted rounded-lg">
                             {/* Avatar do cliente selecionado */}
@@ -129,42 +120,37 @@ export default function PatientSelector({
 
                             {/* Informações do paciente */}
                             <div className="flex-1 min-w-0">
-                                <p className="font-medium">{selected.name}</p>
+                                <p className="font-regular text-base">{selected.name}</p>
                                 {selected.guardianName && (
-                                    <p className="text-sm text-muted-foreground">
+                                    <p className="text-xs text-muted-foreground">
                                         Responsável: {selected.guardianName}
                                     </p>
                                 )}
                                 {selected.birthDate && (
-                                    <p className="text-sm text-muted-foreground flex items-center gap-1">
-                                        <Calendar className="h-3 w-3" />
-                                        {calculateAge(selected.birthDate)} anos ({formatBirthDate(selected.birthDate)})
+                                    <p className="text-xs text-muted-foreground">
+                                        {calculateAge(selected.birthDate)} anos
                                     </p>
                                 )}
                             </div>
 
                             {/* Botões de ação */}
-                            <div className="flex gap-2 flex-shrink-0 flex-col sm:flex-row">
+                            <div className="flex gap-2 flex-shrink-0">
                                 <Button
                                     variant="outline"
                                     size="sm"
                                     onClick={() => setIsOpen(true)}
-                                    className="text-xs sm:text-sm no-print"
+                                    className="text-xs h-8 rounded-md no-print"
                                 >
                                     Trocar
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={handleClearPatient}
-                                    className="text-xs sm:text-sm no-print"
-                                >
-                                    Limpar
                                 </Button>
                             </div>
                         </div>
                     ) : (
-                        <Button className="w-full h-12" size="lg" onClick={() => setIsOpen(true)}>
+                        <Button 
+                            className="w-full h-12" 
+                            size="lg" 
+                            onClick={() => setIsOpen(true)}
+                        >
                             <User className="h-4 w-4 mr-2" />
                             Selecionar cliente
                         </Button>
@@ -175,24 +161,17 @@ export default function PatientSelector({
             {/* Modal de Seleção de Paciente */}
             {isOpen && (
                 <div
-                    className="absolute inset-0 bg-black/50 z-30 flex items-end justify-center md:items-center no-print"
+                    className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center md:items-center no-print"
                     onClick={(e) => {
                         if (e.target === e.currentTarget) {
                             setIsOpen(false);
                         }
                     }}
                 >
-                    <div className="bg-background w-full max-w-4xl h-[85vh] md:h-[70vh] rounded-t-lg md:rounded-lg shadow-lg animate-in slide-in-from-bottom md:fade-in duration-300 flex flex-col">
+                    <div className="bg-background w-full max-w-2xl h-[85vh] md:h-[80vh] rounded-t-lg md:rounded-lg shadow-lg animate-in slide-in-from-bottom md:fade-in duration-300 flex flex-col">
                         <div className="flex items-center justify-between p-4 sm:p-6 border-b">
-                            <h2 className="text-lg font-semibold">Selecionar Cliente</h2>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setIsOpen(false)}
-                                className="h-8 w-8 p-0"
-                            >
-                                <X className="h-4 w-4" />
-                            </Button>
+                            <h2 className="text-lg font-regular" style={{fontFamily: "sora"}}>Selecionar Cliente</h2>
+                            <CloseButton onClick={() => setIsOpen(false)} />
                         </div>
 
                         <div className="p-4 sm:p-6 flex-1 overflow-auto">
@@ -259,7 +238,7 @@ export default function PatientSelector({
 
                                                         {/* Informações do paciente */}
                                                         <div className="flex-1 min-w-0">
-                                                            <p className="font-medium truncate">
+                                                            <p className="font-regular truncate">
                                                                 {patient.name}
                                                             </p>
                                                             {patient.guardianName && (

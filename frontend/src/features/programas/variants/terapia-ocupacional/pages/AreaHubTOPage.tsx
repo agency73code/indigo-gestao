@@ -1,81 +1,141 @@
-// Hub da variação Terapia Ocupacional
-// Cards de atalho para criar programas e registrar sessões
-
-import { useNavigate } from 'react-router-dom';
-import { ClipboardList, FolderOpen } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { toConfig } from '../config';
-import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 import { useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { Card, CardHeader, CardTitleHub } from '@/components/ui/card';
+import { usePageTitle } from '@/features/shell/layouts/AppLayout';
+import { FileText, ListChecks, Plus, Search, FileStack } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { useArea } from '@/contexts/AreaContext';
 
+/**
+ * Hub de Terapia Ocupacional
+ * Página inicial com acesso rápido às funcionalidades principais de TO
+ */
 export default function AreaHubTOPage() {
-  const navigate = useNavigate();
-  const { setPageTitle } = usePageTitle();
+    const { setPageTitle } = usePageTitle();
+    const { setCurrentArea } = useArea();
 
-  useEffect(() => {
-    setPageTitle(toConfig.label);
-  }, [setPageTitle]);
+    useEffect(() => {
+        setCurrentArea('terapia-ocupacional');
+        setPageTitle('Terapia Ocupacional');
+    }, [setPageTitle, setCurrentArea]);
 
-  const shortcuts = [
-    {
-      icon: ClipboardList,
-      title: 'Registrar Sessão',
-      description: 'Nova sessão de atendimento',
-      path: toConfig.routes.registerSession,
-      iconColor: 'text-purple-600',
-      bgColor: 'bg-[#E9D5FF]',
-    },
-    {
-      icon: FolderOpen,
-      title: 'Consultar Sessões',
-      description: 'Histórico de atendimentos',
-      path: toConfig.routes.listSessions,
-      iconColor: 'text-orange-600',
-      bgColor: 'bg-[#FED7AA]',
-    },
-  ];
+    const options = [
+        {
+            id: 'criar-programa',
+            title: 'Criar Programa',
+            subtitle: 'Cadastrar novo programa de TO',
+            path: '/app/programas/terapia-ocupacional/ocp/novo',
+            icon: Plus,
+            bgColor: 'bg-[#E0E7FF]',
+            iconColor: 'text-indigo-600',
+            available: true,
+        },
+        {
+            id: 'consultar-programas',
+            title: 'Consultar Programas',
+            subtitle: 'Ver e gerenciar programas existentes',
+            path: '/app/programas/terapia-ocupacional/consultar',
+            icon: Search,
+            bgColor: 'bg-[#DBEAFE]',
+            iconColor: 'text-blue-600',
+            available: true,
+        },
+        {
+            id: 'registrar-sessao',
+            title: 'Registrar Sessão',
+            subtitle: 'Registrar nova sessão de TO',
+            path: '/app/programas/terapia-ocupacional/sessoes/registrar',
+            icon: FileText,
+            bgColor: 'bg-[#CCFBF1]',
+            iconColor: 'text-teal-600',
+            available: true,
+        },
+        {
+            id: 'consultar-sessoes',
+            title: 'Consultar Sessões',
+            subtitle: 'Ver histórico de sessões de TO',
+            path: '/app/programas/terapia-ocupacional/sessoes',
+            icon: ListChecks,
+            bgColor: 'bg-[#D1FAE5]',
+            iconColor: 'text-green-600',
+            available: true,
+        },
+        {
+            id: 'outros-registros',
+            title: 'Outros Modelos de Registro',
+            subtitle: 'Exportar formas específicas de registro.',
+            path: '#',
+            icon: FileStack,
+            bgColor: 'bg-[#FEF3C7]',
+            iconColor: 'text-amber-600',
+            available: false,
+            badge: 'Em breve',
+        },
+    ];
 
-  return (
-    <div className="flex flex-col min-h-full w-full p-1 md:p-4 lg:p-4 space-y-4">
-      {/* Shortcuts Grid */}
-      <div className="space-y-5 p-1">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {shortcuts.map((shortcut) => {
-          const Icon = shortcut.icon;
-          return (
-            <Card
-              key={shortcut.path}
-              padding="hub"
-              className="cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] border border-border/40 rounded-lg h-full"
-              style={{ backgroundColor: 'var(--hub-card-background)' }}
-              onClick={() => navigate(shortcut.path)}
-            >
-              <CardHeader className="space-y-5">
-                <div className={`h-14 w-14 rounded-lg ${shortcut.bgColor} flex items-center justify-center`}>
-                  <Icon className={`h-7 w-7 ${shortcut.iconColor}`} />
+    return (
+        <div className="flex flex-col min-h-full w-full p-1 md:p-4 lg:p-4 space-y-4">
+            <div className="space-y-5 p-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {options.map((option) => {
+                        const IconComponent = option.icon;
+                        const isDisabled = !option.available;
+
+                        const cardContent = (
+                            <Card
+                                padding="hub"
+                                className={`${isDisabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:scale-[1.02] transition-all'} rounded-lg h-full border-0 shadow-none`}
+                                style={{ backgroundColor: 'var(--hub-card-background)' }}
+                            >
+                                <CardHeader className="space-y-5">
+                                    <div className="flex items-start justify-between">
+                                        <div
+                                            className={`h-14 w-14 rounded-lg ${option.bgColor} flex items-center justify-center`}
+                                        >
+                                            <IconComponent className={`h-7 w-7 ${option.iconColor}`} />
+                                        </div>
+                                        {option.badge && (
+                                            <Badge 
+                                                variant="outline" 
+                                                className="bg-amber-50 text-amber-700 border-amber-200 text-xs"
+                                            >
+                                                {option.badge}
+                                            </Badge>
+                                        )}
+                                    </div>
+                                    <div className="space-y-1">
+                                        <CardTitleHub className="text-lg">
+                                            {option.title}
+                                        </CardTitleHub>
+                                        <p className="text-sm text-muted-foreground">
+                                            {option.subtitle}
+                                        </p>
+                                    </div>
+                                </CardHeader>
+                            </Card>
+                        );
+
+                        if (isDisabled) {
+                            return (
+                                <div key={option.id} aria-label={`${option.title}: ${option.subtitle} (${option.badge})`}>
+                                    {cardContent}
+                                </div>
+                            );
+                        }
+
+                        return (
+                            <Link
+                                key={option.id}
+                                to={option.path}
+                                className="block"
+                                aria-label={`${option.title}: ${option.subtitle}`}
+                            >
+                                {cardContent}
+                            </Link>
+                        );
+                    })}
                 </div>
-                <div className="space-y-1">
-                  <CardTitle 
-                    className="text-lg"
-                    style={{ 
-                      fontFamily: 'var(--hub-card-title-font-family)',
-                      fontWeight: 'var(--hub-card-title-font-weight)',
-                      color: 'var(--hub-card-title-color)'
-                    }}
-                  >
-                    {shortcut.title}
-                  </CardTitle>
-                  <CardDescription className="text-sm text-muted-foreground">
-                    {shortcut.description}
-                  </CardDescription>
-                </div>
-              </CardHeader>
-            </Card>
-          );
-        })}
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 }
-

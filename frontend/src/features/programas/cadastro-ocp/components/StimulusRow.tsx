@@ -12,8 +12,10 @@ interface StimulusRowProps {
     onRemove: (id: string) => void;
     onMoveUp: (id: string) => void;
     onMoveDown: (id: string) => void;
+    showDescription?: boolean;
     errors?: {
         label?: string;
+        description?: string;
     };
 }
 
@@ -25,17 +27,18 @@ export default function StimulusRow({
     onRemove,
     onMoveUp,
     onMoveDown,
+    showDescription = false,
     errors,
 }: StimulusRowProps) {
     const canMoveUp = index > 0;
     const canMoveDown = index < totalItems - 1;
 
     return (
-        <div className="p-0 sm:p-0 space-y-3 bg-background">
+        <div className="border border-border rounded-lg bg-muted/30 p-4 space-y-4">
             {/* Header com número e ações */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded">
+                    <span className="text-xs font-medium text-muted-foreground bg-background px-2 py-1 rounded border border-border">
                         #{index + 1}
                     </span>
                     <Button
@@ -93,13 +96,13 @@ export default function StimulusRow({
             </div>
 
             {/* Campos */}
-            <div className="space-y-3">
+            <div className="space-y-4">
                 <div className="space-y-2">
                     <Label
                         htmlFor={`stimulus-label-${stimulus.id}`}
                         className="text-sm font-medium"
                     >
-                        Nome do estímulo <span className="text-destructive">*</span>
+                        Componente de Desempenho/Tarefa <span className="text-destructive">*</span>
                     </Label>
                     <Input
                         id={`stimulus-label-${stimulus.id}`}
@@ -125,6 +128,41 @@ export default function StimulusRow({
                         {stimulus.label.length}/60 caracteres
                     </p>
                 </div>
+
+                {showDescription && (
+                    <div className="space-y-2">
+                        <Label
+                            htmlFor={`stimulus-description-${stimulus.id}`}
+                            className="text-sm font-medium"
+                        >
+                            Descrição do objetivo específico
+                        </Label>
+                        <textarea
+                            id={`stimulus-description-${stimulus.id}`}
+                            placeholder="Descreva como esta atividade será realizada, materiais necessários, instruções específicas..."
+                            value={stimulus.description || ''}
+                            onChange={(e) => onChange(stimulus.id!, 'description', e.target.value)}
+                            maxLength={500}
+                            rows={3}
+                            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+                            aria-invalid={!!errors?.description}
+                            aria-describedby={
+                                errors?.description ? `stimulus-description-error-${stimulus.id}` : undefined
+                            }
+                        />
+                        {errors?.description && (
+                            <p
+                                id={`stimulus-description-error-${stimulus.id}`}
+                                className="text-sm text-destructive"
+                            >
+                                {errors.description}
+                            </p>
+                        )}
+                        <p className="text-xs text-muted-foreground">
+                            {(stimulus.description || '').length}/500 caracteres
+                        </p>
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { AppSidebar } from '@/components/sidebar/app-sidebar';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AbilityProvider } from '@/features/auth/abilities/AbilityProvider';
+import { AreaProvider } from '@/contexts/AreaContext';
 import PageTransition from '@/shared/components/layout/PageTransition';
 import ThemeToggle from '../components/ThemeToggle';
 import { Button } from '@/components/ui/button';
@@ -118,18 +119,19 @@ export default function AppLayout() {
         <ErrorBoundary>
             <SidebarProvider>
                 <AbilityProvider>
-                    <PageTitleContext.Provider value={{ 
-                        pageTitle, 
-                        setPageTitle, 
-                        headerActions, 
-                        setHeaderActions, 
-                        noMainContainer, 
-                        setNoMainContainer,
-                        showBackButton,
-                        setShowBackButton,
-                        onBackClick,
-                        setOnBackClick
-                    }}>
+                    <AreaProvider>
+                        <PageTitleContext.Provider value={{ 
+                            pageTitle, 
+                            setPageTitle, 
+                            headerActions, 
+                            setHeaderActions, 
+                            noMainContainer, 
+                            setNoMainContainer,
+                            showBackButton,
+                            setShowBackButton,
+                            onBackClick,
+                            setOnBackClick
+                        }}>
                         <div 
                             className="flex h-screen w-full overflow-hidden"
                             style={{ 
@@ -203,6 +205,7 @@ export default function AppLayout() {
                             </div>
                         </div>
                     </PageTitleContext.Provider>
+                    </AreaProvider>
                 </AbilityProvider>
             </SidebarProvider>
         </ErrorBoundary>

@@ -1,4 +1,5 @@
 import type { ProgramDetail } from './detalhe-ocp/types';
+import { fetchWithArea, addAreaToUrl, getCurrentAreaFromStorage } from '@/utils/apiWithArea';
 
 type Patient = {
     id: string;
@@ -20,7 +21,7 @@ function ageCalc(birthDate: string) {
 }
 
 export async function fetchProgram(programId: string): Promise<ProgramDetail> {
-    const res = await fetch(`/api/ocp/programs/${programId}`, { 
+    const res = await fetchWithArea(`/api/ocp/programs/${programId}`, { 
         credentials: 'include' 
     });
     if (!res.ok) throw new Error(`Erro ao buscar programas: ${res.statusText}`);
@@ -54,7 +55,10 @@ export async function fetchProgram(programId: string): Promise<ProgramDetail> {
 }
 
 export async function fetchClients(q?: string): Promise<Patient[]> {
-    const url = q ? `/api/ocp/clients?q=${encodeURIComponent(q)}` : '/api/ocp/clients'
+    const area = getCurrentAreaFromStorage();
+    let url = q ? `/api/ocp/clients?q=${encodeURIComponent(q)}` : '/api/ocp/clients';
+    url = addAreaToUrl(url, area);
+    
     const res = await fetch(url, {
         method: 'GET',
         credentials: 'include',

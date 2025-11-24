@@ -23,6 +23,15 @@ interface HeaderInfoProps {
     onProgramNameChange: (name: string) => void;
     onPrazoInicioChange: (prazo: string) => void;
     onPrazoFimChange: (prazo: string) => void;
+    readOnlyTherapist?: boolean;
+    programInfoTitle?: string;
+    errors?: {
+        patientId?: string;
+        therapistId?: string;
+        programName?: string;
+        prazoInicio?: string;
+        prazoFim?: string;
+    };
 }
 
 interface SelectorModalProps {
@@ -220,6 +229,9 @@ export default function HeaderInfo({
     onProgramNameChange,
     onPrazoInicioChange,
     onPrazoFimChange,
+    readOnlyTherapist = false,
+    programInfoTitle = 'Informações do Programa',
+    errors,
 }: HeaderInfoProps) {
     const [showPatientSelector, setShowPatientSelector] = useState(false);
     const [showTherapistSelector, setShowTherapistSelector] = useState(false);
@@ -375,36 +387,40 @@ export default function HeaderInfo({
                                     <p className="font-medium">{therapist.name}</p>
                                 </div>
 
-                                <div className="flex gap-2 flex-shrink-0 flex-col sm:flex-row">
-                                    <RequireAbility action="manage" subject="all">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => setShowTherapistSelector(true)}
-                                            className="text-xs sm:text-sm"
-                                        >
-                                            Trocar
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => onTherapistSelect(null)}
-                                            className="text-xs sm:text-sm"
-                                        >
-                                            Limpar
-                                        </Button>
-                                    </RequireAbility>
-                                </div>
+                                {!readOnlyTherapist && (
+                                    <div className="flex gap-2 flex-shrink-0 flex-col sm:flex-row">
+                                        <RequireAbility action="manage" subject="all">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => setShowTherapistSelector(true)}
+                                                className="text-xs sm:text-sm"
+                                            >
+                                                Trocar
+                                            </Button>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => onTherapistSelect(null)}
+                                                className="text-xs sm:text-sm"
+                                            >
+                                                Limpar
+                                            </Button>
+                                        </RequireAbility>
+                                    </div>
+                                )}
                             </div>
                         ) : (
-                            <Button
-                                className="w-full h-12"
-                                size="lg"
-                                onClick={() => setShowTherapistSelector(true)}
-                            >
-                                <UserCheck className="h-4 w-4 mr-2" />
-                                Selecionar terapeuta
-                            </Button>
+                            !readOnlyTherapist && (
+                                <Button
+                                    className="w-full h-12"
+                                    size="lg"
+                                    onClick={() => setShowTherapistSelector(true)}
+                                >
+                                    <UserCheck className="h-4 w-4 mr-2" />
+                                    Selecionar terapeuta
+                                </Button>
+                            )
                         )}
                     </CardContent>
                 </Card>
@@ -414,23 +430,32 @@ export default function HeaderInfo({
                     <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                         <CardTitle className="text-base flex items-center gap-2">
                             <Calendar className="h-4 w-4" />
-                            Informações do Programa / Objetivo
+                            {programInfoTitle}
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="pb-3 sm:pb-6 space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="program-name">Nome do programa (opcional)</Label>
+                            <Label htmlFor="program-name" className="text-sm font-medium">
+                                Nome do objetivo geral <span className="text-destructive">*</span>
+                            </Label>
                             <Input
                                 id="program-name"
                                 placeholder="Ex: Programa de desenvolvimento da linguagem"
                                 value={programName}
                                 onChange={(e) => onProgramNameChange(e.target.value)}
                                 maxLength={120}
+                                className={errors?.programName ? 'border-destructive' : ''}
+                                aria-invalid={!!errors?.programName}
                             />
+                            {errors?.programName && (
+                                <p className="text-sm text-destructive">{errors.programName}</p>
+                            )}
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="created-at">Data de criação</Label>
+                            <Label htmlFor="created-at" className="text-sm font-medium">
+                                Data de criação
+                            </Label>
                             <Input
                                 id="created-at"
                                 value={formatDate(createdAt)}
@@ -442,21 +467,33 @@ export default function HeaderInfo({
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label htmlFor="prazo-inicio">Data de início</Label>
+                                <Label htmlFor="prazo-inicio" className="text-sm font-medium">
+                                    Data de início <span className="text-destructive">*</span>
+                                </Label>
                                 <DateField
                                     value={prazoInicio}
                                     onChange={onPrazoInicioChange}
                                     placeholder="Selecione a data de início"
+                                    className={`h-10 text-sm ${errors?.prazoInicio ? 'border-destructive' : ''}`}
                                 />
+                                {errors?.prazoInicio && (
+                                    <p className="text-sm text-destructive">{errors.prazoInicio}</p>
+                                )}
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="prazo-fim">Data de fim</Label>
+                                <Label htmlFor="prazo-fim" className="text-sm font-medium">
+                                    Data de fim <span className="text-destructive">*</span>
+                                </Label>
                                 <DateField
                                     value={prazoFim}
                                     onChange={onPrazoFimChange}
                                     placeholder="Selecione a data de fim"
                                     minDate={prazoInicio ? new Date(prazoInicio) : undefined}
+                                    className={`h-10 text-sm ${errors?.prazoFim ? 'border-destructive' : ''}`}
                                 />
+                                {errors?.prazoFim && (
+                                    <p className="text-sm text-destructive">{errors.prazoFim}</p>
+                                )}
                             </div>
                         </div>
                     </CardContent>

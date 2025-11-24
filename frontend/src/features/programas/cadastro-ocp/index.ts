@@ -4,6 +4,7 @@ export { default as GoalSection } from './components/GoalSection';
 export { default as StimuliList } from './components/StimuliList';
 export { default as StimulusRow } from './components/StimulusRow';
 export { default as CriteriaSection } from './components/CriteriaSection';
+export { default as CurrentPerformanceSection } from './components/CurrentPerformanceSection';
 export { default as NotesSection } from './components/NotesSection';
 export { default as SaveBar } from './components/SaveBar';
 

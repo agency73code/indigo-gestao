@@ -8,6 +8,7 @@ interface GoalSectionProps {
     goalDescription: string;
     onGoalTitleChange: (title: string) => void;
     onGoalDescriptionChange: (description: string) => void;
+    customTitle?: string;
     errors?: {
         goalTitle?: string;
     };
@@ -18,6 +19,7 @@ export default function GoalSection({
     goalDescription,
     onGoalTitleChange,
     onGoalDescriptionChange,
+    customTitle,
     errors,
 }: GoalSectionProps) {
     return (
@@ -25,7 +27,7 @@ export default function GoalSection({
             <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                 <CardTitle className="text-base flex items-center gap-2">
                     <Target className="h-4 w-4" />
-                    Objetivo do Programa / Objetivo
+                    {customTitle || 'Objetivo do Programa / Objetivo'}
                 </CardTitle>
             </CardHeader>
             <CardContent className="pb-3 sm:pb-6 space-y-4">
