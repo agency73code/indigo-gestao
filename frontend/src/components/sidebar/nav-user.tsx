@@ -66,7 +66,7 @@ export function NavUser() {
                     <DropdownMenuTrigger asChild>
                         <SidebarMenuButton
                             size="lg"
-                            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground rounded-full"
+                            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground rounded-full px-2"
                         >
                             <Avatar className="h-10 w-10 rounded-full" key={avatarUrl}>
                                 {imageLoading && shouldShowImage && (

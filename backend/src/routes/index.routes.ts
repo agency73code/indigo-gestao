@@ -9,6 +9,7 @@ import ocpRoutes from './ocp.routes.js';
 import linksRoutes from './links.routes.js';
 import metadataRoutes from './metadata.routes.js';
 import genericsRoutes from './generics.routes.js';
+import reportsRoutes from './reports.routes.js';
 
 const router: ExpressRouter = Router();
 
@@ -21,5 +22,6 @@ router.use('/cards', cardsRoutes);
 router.use('/ocp', ocpRoutes);
 router.use('/links', linksRoutes);
 router.use('/metadata', metadataRoutes);
+router.use('/relatorios', reportsRoutes);
 
 export default router;

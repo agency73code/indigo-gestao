@@ -249,7 +249,22 @@ export async function create(dto: TherapistTypes.TherapistForm) {
   return therapist
 };
 
-export async function list(therapistId: string, q?: string): Promise<TherapistTypes.TherapistDB[]> {
+interface TherapistListFilters {
+  q?: string;
+  page?: number;
+  pageSize?: number;
+  sort?: string;
+}
+
+interface TherapistListResult {
+  items: TherapistTypes.TherapistDB[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export async function list(therapistId: string, filters: TherapistListFilters = {}): Promise<TherapistListResult> {
   if (!therapistId) {
     throw new AppError('REQUIRED_THERAPIST_ID', 'ID do terapeuta é obrigatório.', 400);
   }
@@ -257,15 +272,40 @@ export async function list(therapistId: string, q?: string): Promise<TherapistTy
   const visibility = await getVisibilityScope(therapistId);
 
   if (visibility.scope === 'none') {
-    return [];
+    return { items: [], total: 0, page: 1, pageSize: filters.pageSize ?? 10, totalPages: 0 };
   }
 
+  const page = Math.max(filters.page ?? 1, 1);
+  const pageSize = Math.max(filters.pageSize ?? 10, 1);
+  const [sortField = 'nome', sortDirection = 'asc'] = (filters.sort ?? 'nome_asc').split('_') as [string, 'asc' | 'desc'];
+  const allowedSortFields = new Set(['nome', 'email', 'email_indigo', 'cpf']);
+  const orderBy: Prisma.terapeutaOrderByWithRelationInput =
+    allowedSortFields.has(sortField)
+      ? { [sortField]: sortDirection === 'desc' ? 'desc' : 'asc' }
+      : { nome: 'asc' };
+
   const where: Prisma.terapeutaWhereInput = {
-    ...(q
+    ...(filters.q
       ? {
-        nome: {
-          contains: q,
-        },
+        OR: [
+          { nome: { contains: filters.q} },
+          { email: { contains: filters.q } },
+          { email_indigo: { contains: filters.q } },
+          { telefone: { contains: filters.q } },
+          { celular: { contains: filters.q } },
+          { cpf: { contains: filters.q } },
+          {
+            registro_profissional: {
+              some: {
+                OR: [
+                  { numero_conselho: { contains: filters.q } },
+                  { cargo: { nome: { contains: filters.q } } },
+                  { area_atuacao: { nome: { contains: filters.q } } },
+                ],
+              },
+            },
+          },
+        ],
       }
       : {}),
   };
@@ -278,18 +318,31 @@ export async function list(therapistId: string, q?: string): Promise<TherapistTy
     where.atividade = true;
   }
 
-  return prisma.terapeuta.findMany({
-    where,
-    orderBy: { nome: 'asc' },
-    include: {
-      endereco: true,
-      formacao: { include: { pos_graduacao: true } },
-      registro_profissional: { include: { area_atuacao: true, cargo: true } },
-      arquivos: true,
-      pessoa_juridica: { include: { endereco: true } },
-      disciplina: true,
-    },
-  });
+  const [total, items] = await prisma.$transaction([
+    prisma.terapeuta.count({ where }),
+    prisma.terapeuta.findMany({
+      where,
+      orderBy,
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      include: {
+        endereco: true,
+        formacao: { include: { pos_graduacao: true } },
+        registro_profissional: { include: { area_atuacao: true, cargo: true } },
+        arquivos: true,
+        pessoa_juridica: { include: { endereco: true } },
+        disciplina: true,
+      },
+    }),
+  ]);
+
+  return {
+    items,
+    total,
+    page,
+    pageSize,
+    totalPages: Math.ceil(total / pageSize),
+  };
 }
 
 export async function getById(therapistId: string) {

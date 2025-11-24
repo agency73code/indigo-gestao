@@ -62,10 +62,10 @@ export function PerfilSection() {
 
     const handlePhotoUploaded = useCallback((dto: ProfilePhotoDTO) => {
         // A URL do avatar deve ser no formato /api/arquivos/{storageId}/view
-        const newAvatarUrl = `/api/arquivos/${dto.fileId}/view`;
+        const encodedId = encodeURIComponent(dto.fileId);
+        const newAvatarUrl = `/api/arquivos/${encodedId}/view`;
         
         setProfilePhoto(newAvatarUrl);
-        
         // Atualizar o avatar no contexto de autenticação para refletir em toda a aplicação
         updateAvatar(newAvatarUrl);
         

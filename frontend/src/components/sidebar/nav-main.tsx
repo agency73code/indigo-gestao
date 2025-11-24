@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/sidebar';
 import type { Actions, Subjects } from '@/features/auth/abilities/ability';
 import { RequireAbility } from '@/features/auth/abilities/RequireAbility';
+import { useArea } from '@/contexts/AreaContext';
 
 export function NavMain({
     items,
@@ -33,11 +34,34 @@ export function NavMain({
     }[];
 }) {
     const location = useLocation();
+    const { currentArea } = useArea();
+    
+    // Mapeamento de URLs das áreas para os tipos de área
+    const areaUrlMap: Record<string, string> = {
+        '/app/programas/fonoaudiologia': 'fonoaudiologia',
+        '/app/programas/psicoterapia': 'psicoterapia',
+        '/app/programas/terapia-aba': 'terapia-aba',
+        '/app/programas/terapia-ocupacional': 'terapia-ocupacional',
+        '/app/programas/fisioterapia': 'fisioterapia',
+        '/app/programas/psicomotricidade': 'psicomotricidade',
+        '/app/programas/educacao-fisica': 'educacao-fisica',
+        '/app/programas/psicopedagogia': 'psicopedagogia',
+        '/app/programas/musicoterapia': 'musicoterapia',
+        '/app/programas/neuropsicologia': 'neuropsicologia',
+    };
     
     // Função para verificar se a rota está ativa
     const isRouteActive = (itemUrl: string, subItems?: { url: string }[]) => {
         // Verifica se a rota atual corresponde exatamente ao item principal
         if (location.pathname === itemUrl) return true;
+        
+        // Para subitens de Programas, verifica se a área atual corresponde
+        if (subItems && itemUrl === '/app/programas') {
+            return subItems.some(subItem => {
+                const areaFromUrl = areaUrlMap[subItem.url];
+                return areaFromUrl === currentArea;
+            });
+        }
         
         // Verifica se alguma subrota está ativa
         if (subItems) {
@@ -162,7 +186,11 @@ export function NavMain({
                                         <CollapsibleContent>
                                             <SidebarMenuSub className="gap-1.5 ml-3.5 border-l pl-3">
                                                 {item.items?.map((subItem) => {
-                                                    const isSubActive = location.pathname.startsWith(subItem.url);
+                                                    // Para programas, verifica a área atual
+                                                    const areaFromUrl = areaUrlMap[subItem.url];
+                                                    const isSubActive = areaFromUrl 
+                                                        ? areaFromUrl === currentArea
+                                                        : location.pathname.startsWith(subItem.url);
                                                     
                                                     return (
                                                         <RequireAbility

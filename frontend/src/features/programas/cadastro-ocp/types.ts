@@ -12,11 +12,13 @@ export type Therapist = {
     id: string; 
     name: string; 
     photoUrl?: string | null;
+    especialidade?: string | null;
 };
 
 export type StimulusInput = { 
     id?: string; 
     label: string; 
+    description?: string;
     active: boolean; 
     order: number;
 };
@@ -31,6 +33,7 @@ export type CreateProgramInput = {
     stimuli: StimulusInput[]; // pelo menos 1, label não vazio
     stimuliApplicationDescription?: string | null; // Descrição geral de aplicação dos estímulos
     criteria?: string | null;
+    currentPerformanceLevel?: string | null;
     notes?: string | null;
     createdAt?: string; // preenchido no backend; aqui só exibição
     prazoInicio?: string; // Data de início do programa

@@ -73,10 +73,16 @@ const data: {
             url: '/app/programas',
             icon: Activity,
             items: [
-                { title: 'Fono e Psicopedagogia', url: '/app/programas/fono-psico' },
+                { title: 'Fonoaudiologia', url: '/app/programas/fonoaudiologia' },
+                { title: 'Psicoterapia', url: '/app/programas/psicoterapia' },
+                { title: 'Terapia ABA', url: '/app/programas/terapia-aba' },
                 { title: 'Terapia Ocupacional', url: '/app/programas/terapia-ocupacional' },
-                { title: 'Sessão de Movimento', url: '/app/programas/movimento' },
+                { title: 'Fisioterapia', url: '/app/programas/fisioterapia' },
+                { title: 'Psicomotricidade', url: '/app/programas/psicomotricidade' },
+                { title: 'Educação Física', url: '/app/programas/educacao-fisica' },
+                { title: 'Psicopedagogia', url: '/app/programas/psicopedagogia' },
                 { title: 'Musicoterapia', url: '/app/programas/musicoterapia' },
+                { title: 'Neuropsicologia', url: '/app/programas/neuropsicologia' },
             ],
         },
         {

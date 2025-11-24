@@ -16,10 +16,14 @@ export type ProgramListItem = {
     objective?: string | null;
     goalDescription?: string | null;
     stimuliApplicationDescription?: string | null;
+    currentPerformanceLevel?: string | null;
+    criteria?: string | null;
     status: ProgramStatus;
     lastSession?: string | null; // ISO
     patientId: string;
     patientName?: string;
+    prazoInicio?: string | null;
+    prazoFim?: string | null;
 };
 
 export type SearchAndFiltersState = {

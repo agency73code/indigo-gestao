@@ -42,6 +42,7 @@ model cliente {
   ocp               ocp[]
   sessao            sessao[]
   terapeuta         terapeuta_cliente[]
+  relatorios        relatorio[]
 
   @@index([nome], map: "nome_idx")
 }
@@ -134,21 +135,50 @@ model escola_contato {
 }
 
 model arquivos {
-  id          Int        @id @default(autoincrement())
-  clienteId   String?
-  terapeutaId String?
-  tipo        String?
+  id                  Int        @id @default(autoincrement())
+  clienteId           String?
+  terapeutaId         String?
+  tipo                String?
   descricao_documento String?
-  arquivo_id  String?
-  mime_type   String?
-  tamanho     Int?
-  data_upload DateTime   @default(now())
-  cliente     cliente?   @relation(fields: [clienteId], references: [id])
-  terapeuta   terapeuta? @relation(fields: [terapeutaId], references: [id])
+  arquivo_id          String?
+  mime_type           String?
+  tamanho             Int?
+  data_upload         DateTime   @default(now())
+  cliente             cliente?   @relation(fields: [clienteId], references: [id])
+  terapeuta           terapeuta? @relation(fields: [terapeutaId], references: [id])
 
   @@index([tipo])
   @@index([clienteId], map: "arquivos_clienteId_fkey")
   @@index([terapeutaId], map: "arquivos_terapeutaId_fkey")
+}
+
+model relatorio {
+  id                     String   @id @default(uuid())
+  titulo                 String
+  tipo                   String
+  status                 String   @default("final")
+  periodo_inicio         DateTime
+  periodo_fim            DateTime
+  observacoes_clinicas   String?  @db.LongText
+  filtros                Json?
+  dados_gerados          Json?
+  pdf_arquivo_id         String?
+  pdf_nome               String?
+  pdf_mime               String?
+  pdf_tamanho            Int?
+  pdf_url                String?
+  pasta_relatorios_drive String?
+  clienteId              String
+  terapeutaId            String
+  criado_em              DateTime @default(now())
+  atualizado_em          DateTime @updatedAt
+
+  cliente   cliente   @relation(fields: [clienteId], references: [id])
+  terapeuta terapeuta @relation(fields: [terapeutaId], references: [id])
+
+  @@index([clienteId], map: "relatorio_clienteId_idx")
+  @@index([terapeutaId], map: "relatorio_terapeutaId_idx")
+  @@index([periodo_inicio, periodo_fim], map: "relatorio_periodo_idx")
 }
 
 model endereco {
@@ -214,6 +244,7 @@ model terapeuta {
   supervisor            vinculo_supervisao[]    @relation("ClinicoVinculo")
   supervisionados       vinculo_supervisao[]    @relation("SupervisorVinculo")
   disciplina            disciplina[]            @relation("disciplinaToterapeuta")
+  relatorios            relatorio[]
 
   @@index([atividade])
   @@index([nome])

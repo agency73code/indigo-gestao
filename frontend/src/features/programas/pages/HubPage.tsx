@@ -1,15 +1,20 @@
 import { Link } from 'react-router-dom';
-import { Plus, ClipboardEdit, FileText, Eye, BarChart3, Search } from 'lucide-react';
+import { Plus, ClipboardEdit, FileText, Eye, BarChart3, Search, FileStack } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitleHub } from '@/components/ui/card';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 import { useEffect } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { useArea } from '@/contexts/AreaContext';
 
 export default function HubPage() {
     const { setPageTitle } = usePageTitle();
+    const { setCurrentArea } = useArea();
 
     useEffect(() => {
-        setPageTitle('Fonoaudiologia & Psicopedagogia');
-    }, [setPageTitle]);
+        // Define área como Fonoaudiologia quando acessa este hub
+        setCurrentArea('fonoaudiologia');
+        setPageTitle('Fonoaudiologia');
+    }, [setPageTitle, setCurrentArea]);
 
     const mainActions = [
         {
@@ -19,6 +24,7 @@ export default function HubPage() {
             href: '/app/programas/novo',
             iconColor: 'text-indigo-600',
             bgColor: 'bg-[#E0E7FF]',
+            available: true,
         },
         {
             title: 'Consultar Programas',
@@ -27,6 +33,7 @@ export default function HubPage() {
             href: '/app/programas/lista',
             iconColor: 'text-blue-600',
             bgColor: 'bg-[#DBEAFE]',
+            available: true,
         },
         {
             title: 'Consultar Sessão',
@@ -35,6 +42,7 @@ export default function HubPage() {
             href: '/app/programas/sessoes/consultar',
             iconColor: 'text-teal-600',
             bgColor: 'bg-[#CCFBF1]',
+            available: true,
         },
         {
             title: 'Registrar Sessão',
@@ -43,6 +51,17 @@ export default function HubPage() {
             href: '/app/programas/sessoes/nova',
             iconColor: 'text-green-600',
             bgColor: 'bg-[#D1FAE5]',
+            available: true,
+        },
+        {
+            title: 'Outros Modelos de Registro',
+            description: 'Exportar formas específicas de registro.',
+            icon: FileStack,
+            href: '#',
+            iconColor: 'text-amber-600',
+            bgColor: 'bg-[#FEF3C7]',
+            available: false,
+            badge: 'Em breve',
         },
     ];
 
@@ -53,6 +72,48 @@ export default function HubPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {mainActions.map((action, index) => {
                         const Icon = action.icon;
+                        const isDisabled = !action.available;
+                        
+                        const cardContent = (
+                            <Card 
+                                padding="hub" 
+                                className={`${isDisabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:shadow-md transition-all hover:scale-[1.02]'} border border-border/40 rounded-lg h-full`}
+                                style={{ backgroundColor: 'var(--hub-card-background)' }}
+                            >
+                                <CardHeader className="space-y-5">
+                                    <div className="flex items-start justify-between">
+                                        <div className={`h-14 w-14 rounded-lg ${action.bgColor} flex items-center justify-center`}>
+                                            <Icon className={`h-7 w-7 ${action.iconColor}`} />
+                                        </div>
+                                        {action.badge && (
+                                            <Badge 
+                                                variant="outline" 
+                                                className="bg-amber-50 text-amber-700 border-amber-200 text-xs"
+                                            >
+                                                {action.badge}
+                                            </Badge>
+                                        )}
+                                    </div>
+                                    <div className="space-y-1">
+                                        <CardTitleHub className="text-lg">
+                                            {action.title}
+                                        </CardTitleHub>
+                                        <p className="text-sm text-muted-foreground">
+                                            {action.description}
+                                        </p>
+                                    </div>
+                                </CardHeader>
+                            </Card>
+                        );
+
+                        if (isDisabled) {
+                            return (
+                                <div key={index} aria-label={`${action.title}: ${action.description} (${action.badge})`}>
+                                    {cardContent}
+                                </div>
+                            );
+                        }
+
                         return (
                             <Link
                                 key={index}
@@ -60,25 +121,7 @@ export default function HubPage() {
                                 className="block"
                                 aria-label={`${action.title}: ${action.description}`}
                             >
-                                <Card 
-                                    padding="hub" 
-                                    className="cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] border border-border/40 rounded-lg h-full"
-                                    style={{ backgroundColor: 'var(--hub-card-background)' }}
-                                >
-                                    <CardHeader className="space-y-5">
-                                        <div className={`h-14 w-14 rounded-lg ${action.bgColor} flex items-center justify-center`}>
-                                            <Icon className={`h-7 w-7 ${action.iconColor}`} />
-                                        </div>
-                                        <div className="space-y-1">
-                                            <CardTitleHub className="text-lg">
-                                                {action.title}
-                                            </CardTitleHub>
-                                            <p className="text-sm text-muted-foreground">
-                                                {action.description}
-                                            </p>
-                                        </div>
-                                    </CardHeader>
-                                </Card>
+                                {cardContent}
                             </Link>
                         );
                     })}

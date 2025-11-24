@@ -23,7 +23,6 @@ export async function createSession(input: OcpType.CreateSessionInput) {
 }
 
 export async function updateProgram(programId: number, input: OcpType.UpdateProgramInput) {
-    console.log(JSON.stringify(input.stimuli));
     const parsed = updateProgramSchema.parse({ ...input, id: programId });
     const result = await programUpdate(programId, parsed);
     return result;

@@ -45,25 +45,24 @@ export interface TherapistListResponse {
 export async function listTherapists(
   params: TherapistListParams = {}
 ): Promise<TherapistListResponse> {
-  const { 
-    q = '', 
-    page = 1, 
-    pageSize = 10, 
-    sort = 'nome_asc' 
+  const {
+    q = '',
+    page = 1,
+    pageSize = 10,
+    sort = 'nome_asc'
   } = params;
 
-  // Construir URL com query params
-  // ⚠️ TEMPORÁRIO: Backend atual não aceita query params, então chamamos sem eles
-  // Quando backend implementar paginação, ele vai ignorar ou processar os params
+  // Construir URL com query params que o backend já aceita
   const url = new URL('/api/terapeutas', window.location.origin);
   
-  // Apenas adiciona query params se tiver busca (backend pode ignorar)
-  // Os outros params (page, pageSize, sort) serão processados localmente até backend implementar
+  url.searchParams.set('page', String(page));
+  url.searchParams.set('pageSize', String(pageSize));
+  url.searchParams.set('sort', sort);
+
   if (q) {
     url.searchParams.set('q', q);
   }
 
-  // Fazer requisição SEM page/pageSize/sort por enquanto
   const res = await authFetch(url.pathname + url.search, { method: 'GET' });
   const text = await res.text();
   const data = text ? JSON.parse(text) : null;
@@ -73,78 +72,17 @@ export async function listTherapists(
     throw new Error(msg);
   }
 
-  // ============================================
-  // 🔄 ADAPTER: Detecta formato da resposta
-  // ============================================
-  
-  // Caso 1: Backend retorna array simples [ {...}, {...} ] ou vazio [] (FORMATO ATUAL)
-  // ⚠️ IMPORTANTE: Verificar Array PRIMEIRO porque array também é typeof 'object'
-  if (Array.isArray(data)) {
-    // ⚠️ TEMPORÁRIO: Faz paginação/filtro/ordenação local até backend implementar
-    let filtered = data as Therapist[];
-
-    // Aplicar filtro de busca (local)
-    if (q.trim()) {
-      const searchLower = q.toLowerCase();
-      filtered = filtered.filter(therapist => {
-        const nome = therapist.nome?.toLowerCase() || '';
-        const email = therapist.email?.toLowerCase() || '';
-        const telefone = therapist.telefone || '';
-        const registroConselho = therapist.registroConselho?.toLowerCase() || '';
-        const especialidade = therapist.especialidade?.toLowerCase() || '';
-        const cpf = therapist.pessoa?.cpf || '';
-        
-        return (
-          nome.includes(searchLower) ||
-          email.includes(searchLower) ||
-          telefone.includes(searchLower) ||
-          registroConselho.includes(searchLower) ||
-          especialidade.includes(searchLower) ||
-          cpf.includes(searchLower)
-        );
-      });
-    }
-
-    // Aplicar ordenação (local)
-    const [field, direction] = sort.split('_') as [keyof Therapist, 'asc' | 'desc'];
-    filtered.sort((a, b) => {
-      const aVal = a[field];
-      const bVal = b[field];
-      
-      // Tratar valores nulos/undefined
-      if (aVal === null || aVal === undefined) return 1;
-      if (bVal === null || bVal === undefined) return -1;
-      
-      // Comparação de strings
-      let comparison = 0;
-      if (typeof aVal === 'string' && typeof bVal === 'string') {
-        comparison = aVal.localeCompare(bVal, 'pt-BR');
-      } else {
-        comparison = aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
-      }
-      
-      return direction === 'desc' ? -comparison : comparison;
-    });
-
-    // Aplicar paginação (local)
-    const total = filtered.length;
-    const totalPages = Math.ceil(total / pageSize);
-    const start = (page - 1) * pageSize;
-    const end = start + pageSize;
-    const items = filtered.slice(start, end);
+  // Caso 1: Backend retorna formato paginado { success, items, total, page, ... }
+  if (data && typeof data === 'object' && 'items' in data && Array.isArray((data as any).items)) {
+    const payload = data as Partial<TherapistListResponse> & { success?: boolean };
 
     return {
-      items,
-      total,
-      page,
-      pageSize,
-      totalPages,
+      items: payload.items ?? [],
+      total: payload.total ?? 0,
+      page: payload.page ?? page,
+      pageSize: payload.pageSize ?? pageSize,
+      totalPages: payload.totalPages ?? Math.ceil((payload.total ?? 0) / (payload.pageSize ?? pageSize)),
     };
-  }
-  
-  // Caso 2: Backend FUTURO retorna formato paginado { items, total, page, ... }
-  if (data && typeof data === 'object' && 'items' in data && Array.isArray(data.items)) {
-    return data as TherapistListResponse;
   }
 
   // Caso 3: Formato inesperado - retorna vazio

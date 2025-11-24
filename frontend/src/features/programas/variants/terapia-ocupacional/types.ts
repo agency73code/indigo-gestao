@@ -81,3 +81,19 @@ export interface ToSessionDetail {
     }>;
 }
 
+// ============ DETALHE DO PROGRAMA - RESUMO DE ATIVIDADES ============
+
+/**
+ * Resumo de desempenho por atividade (objetivo específico) em uma sessão
+ */
+export type ToActivitySummary = {
+    activityId: string;
+    activityName: string;
+    counts: {
+        naoDesempenhou: number;      // erro
+        desempenhouComAjuda: number; // ajuda/prompted
+        desempenhou: number;         // independente
+    };
+    total: number;
+    // Status predominante é calculado no componente, não precisa vir do backend
+};

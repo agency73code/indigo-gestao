@@ -12,9 +12,12 @@ interface StimuliListProps {
     onChange: (stimuli: StimulusInput[]) => void;
     onApplicationDescriptionChange?: (description: string) => void;
     onShortTermGoalDescriptionChange?: (description: string) => void;
+    showDescription?: boolean;
+    showApplicationDescription?: boolean;
+    customTitle?: string;
     errors?: {
         stimuli?: string;
-        stimulusErrors?: { [key: string]: { label?: string } };
+        stimulusErrors?: { [key: string]: { label?: string; description?: string } };
         stimuliApplicationDescription?: string;
         shortTermGoalDescription?: string;
     };
@@ -27,6 +30,9 @@ export default function StimuliList({
     onChange,
     onApplicationDescriptionChange,
     onShortTermGoalDescriptionChange,
+    showDescription = false,
+    showApplicationDescription = true,
+    customTitle,
     errors,
 }: StimuliListProps) {
     const generateId = () => `stimulus_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -103,7 +109,7 @@ export default function StimuliList({
                 <div className="flex items-center justify-between">
                     <CardTitle className="text-base flex items-center gap-2">
                         <Zap className="h-4 w-4" />
-                        Objetivo do Programa a Curto Prazo
+                        {customTitle || 'Objetivo do Programa a Curto Prazo'}
                     </CardTitle>
                     <Button
                         type="button"
@@ -119,56 +125,59 @@ export default function StimuliList({
                     <p className="text-sm text-destructive mt-2">{errors.stimuli}</p>
                 )}
 
-                {/* Descrição detalhada do objetivo a curto prazo */}
-                <div className="space-y-3">
-                    <Label htmlFor="goal-description" className="text-sm font-medium">
-                        Descrição detalhada do objetivo a curto prazo:
-                    </Label>
-                    
-                    <textarea
-                        id="goal-description"
-                        placeholder="Descreva mais detalhadamente o que se espera alcançar com este objetivo..."
-                        value={shortTermGoalDescription}
-                        onChange={(e) => onShortTermGoalDescriptionChange?.(e.target.value)}
-                        maxLength={1000}
-                        rows={3}
-                        className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
-                    />
-                    {errors?.shortTermGoalDescription && (
-                        <p className="text-sm text-destructive">{errors.shortTermGoalDescription}</p>
-                    )}
-                    <p className="text-xs text-muted-foreground">
-                        {shortTermGoalDescription.length}/1000 caracteres
-                    </p>
-                </div>
+                {showApplicationDescription && (
+                    <>
+                        {/* Descrição detalhada do objetivo a curto prazo */}
+                        <div className="space-y-3">
+                            <Label htmlFor="goal-description" className="text-sm font-medium">
+                                Descrição detalhada do objetivo a curto prazo:
+                            </Label>
+                            
+                            <textarea
+                                id="goal-description"
+                                placeholder="Descreva mais detalhadamente o que se espera alcançar com este objetivo..."
+                                value={shortTermGoalDescription}
+                                onChange={(e) => onShortTermGoalDescriptionChange?.(e.target.value)}
+                                maxLength={1000}
+                                rows={3}
+                                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+                            />
+                            {errors?.shortTermGoalDescription && (
+                                <p className="text-sm text-destructive">{errors.shortTermGoalDescription}</p>
+                            )}
+                            <p className="text-xs text-muted-foreground">
+                                {shortTermGoalDescription.length}/1000 caracteres
+                            </p>
+                        </div>
 
-                {/* Descrição de Aplicação */}
-                <div className="space-y-3">
-                    <Label
-                        htmlFor="stimuli-application-description"
-                        className="text-sm font-medium"
-                    >
-                        Descrição da Aplicação
-                    </Label>
-                    <textarea
-                        id="stimuli-application-description"
-                        placeholder="Descreva detalhes gerais sobre como aplicar os estímulos deste programa..."
-                        value={stimuliApplicationDescription}
-                        onChange={(e) => onApplicationDescriptionChange?.(e.target.value)}
-                        maxLength={1000}
-                        rows={3}
-                        className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
-                    />
-                    {errors?.stimuliApplicationDescription && (
-                        <p className="text-sm text-destructive">
-                            {errors.stimuliApplicationDescription}
-                        </p>
-                    )}
-                    <p className="text-xs text-muted-foreground">
-                        {stimuliApplicationDescription.length}/1000 caracteres
-                    </p>
-                    
-                </div>
+                        {/* Descrição de Aplicação */}
+                        <div className="space-y-3">
+                            <Label
+                                htmlFor="stimuli-application-description"
+                                className="text-sm font-medium"
+                            >
+                                Descrição da Aplicação
+                            </Label>
+                            <textarea
+                                id="stimuli-application-description"
+                                placeholder="Descreva detalhes gerais sobre como aplicar os estímulos deste programa..."
+                                value={stimuliApplicationDescription}
+                                onChange={(e) => onApplicationDescriptionChange?.(e.target.value)}
+                                maxLength={1000}
+                                rows={3}
+                                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+                            />
+                            {errors?.stimuliApplicationDescription && (
+                                <p className="text-sm text-destructive">
+                                    {errors.stimuliApplicationDescription}
+                                </p>
+                            )}
+                            <p className="text-xs text-muted-foreground">
+                                {stimuliApplicationDescription.length}/1000 caracteres
+                            </p>
+                        </div>
+                    </>
+                )}
             </CardHeader>
             <CardContent className="pb-3 sm:pb-6">
                 <div className="space-y-4">
@@ -197,6 +206,7 @@ export default function StimuliList({
                                 onRemove={handleRemoveStimulus}
                                 onMoveUp={handleMoveUp}
                                 onMoveDown={handleMoveDown}
+                                showDescription={showDescription}
                                 errors={errors?.stimulusErrors?.[stimulus.id!]}
                             />
                         ))

@@ -1,7 +1,6 @@
 import type {
   SavedReport,
   CreateReportInput,
-  UpdateReportInput,
   ReportListFilters,
   Paciente,
   Terapeuta,
@@ -54,7 +53,7 @@ export async function getAllReports(filters?: ReportListFilters): Promise<Report
       // NÃO envia page/pageSize por enquanto (backend pode não suportar)
     }
     
-    const res = await fetch(`/api/reports/list?${queryParams.toString()}`, {
+    const res = await fetch(`/api/relatorios?${queryParams.toString()}`, {
       method: 'GET',
       credentials: 'include',
       headers: {
@@ -107,7 +106,7 @@ export async function getReportById(id: string): Promise<SavedReport | null> {
   await delay(300);
   
   try {
-    const url = `/api/reports/${id}`;
+    const url = `/api/relatorios/${id}`;
     console.log('📡 Fazendo requisição para:', url);
     
     const res = await fetch(url, {
@@ -148,7 +147,7 @@ export async function createReport(input: CreateReportInput): Promise<SavedRepor
   await delay(800);
   
   try {
-    const res = await fetch('/api/reports/create', {
+    const res = await fetch('/api/relatorios', {
       method: 'POST',
       credentials: 'include',
       headers: {
@@ -204,124 +203,6 @@ export async function createReport(input: CreateReportInput): Promise<SavedRepor
     
     mockReports.push(newReport);
     return newReport;
-  }
-}
-
-/**
- * Atualiza relatório existente
- */
-export async function updateReport(input: UpdateReportInput): Promise<SavedReport> {
-  await delay(600);
-  
-  try {
-    const res = await fetch(`/api/reports/${input.id}`, {
-      method: 'PATCH',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(input)
-    });
-
-    if (!res.ok) {
-      let errorMessage = 'Falha ao atualizar relatório';
-      const errorText = await res.text();
-
-      if (errorText) {
-        try {
-          const parsed = JSON.parse(errorText);
-          if (parsed?.message) {
-            errorMessage = parsed.message;
-          }
-        } catch {
-          errorMessage = errorText;
-        }
-      }
-
-      throw new Error(errorMessage);
-    }
-
-    const updatedReport = (await res.json()) as SavedReport;
-    
-    const reportIndex = mockReports.findIndex((r: SavedReport) => r.id === updatedReport.id);
-    if (reportIndex !== -1) {
-      mockReports[reportIndex] = updatedReport;
-    }
-    
-    return updatedReport;
-  } catch (error) {
-    if (error instanceof Error && error.name !== 'TypeError') {
-      throw error
-    }
-
-    console.log('⚠️ Backend não disponível, atualizando relatório localmente');
-    
-    const reportIndex = mockReports.findIndex((r: SavedReport) => r.id === input.id);
-    if (reportIndex === -1) {
-      throw new Error('Relatório não encontrado');
-    }
-    
-    const updatedReport: SavedReport = {
-      ...mockReports[reportIndex],
-      ...input,
-      updatedAt: new Date().toISOString()
-    };
-    
-    mockReports[reportIndex] = updatedReport;
-    return updatedReport;
-  }
-}
-
-/**
- * Deleta relatório
- */
-export async function deleteReport(id: string): Promise<void> {
-  await delay(400);
-  
-  try {
-    const res = await fetch(`/api/reports/${id}`, {
-      method: 'DELETE',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-    });
-
-    if (!res.ok) {
-      let errorMessage = 'Falha ao deletar relatório';
-      const errorText = await res.text();
-
-      if (errorText) {
-        try {
-          const parsed = JSON.parse(errorText);
-          if (parsed?.message) {
-            errorMessage = parsed.message;
-          }
-        } catch {
-          errorMessage = errorText;
-        }
-      }
-
-      throw new Error(errorMessage);
-    }
-
-    const reportIndex = mockReports.findIndex((r: SavedReport) => r.id === id);
-    if (reportIndex !== -1) {
-      mockReports.splice(reportIndex, 1);
-    }
-  } catch (error) {
-    if (error instanceof Error && error.name !== 'TypeError') {
-      throw error;
-    }
-
-    console.log('⚠️ Backend não disponível, deletando relatório localmente');
-    
-    const reportIndex = mockReports.findIndex((r: SavedReport) => r.id === id);
-    if (reportIndex === -1) {
-      throw new Error('Relatório não encontrado');
-    }
-    
-    mockReports.splice(reportIndex, 1);
   }
 }
 

@@ -73,13 +73,31 @@ export async function list(req: Request, res: Response, next: NextFunction) {
   try {
     if (!req.user) {
       throw new AppError('REQUIRED_THERAPIST_ID', 'ID do terapeuta é obrigatório.', 400);
-    } 
+    }
     const therapistId = req.user.id;
+    const filters: ClientListFilters = {};
 
-    const data = await clientService.list(therapistId as string);
-    const normalized = await clientNormalize.normalizeList(data);
+    if (typeof req.query.q === 'string') filters.q = req.query.q;
+    if (typeof req.query.sort === 'string') filters.sort = req.query.sort;
+    if (typeof req.query.page === 'string') filters.page = Number(req.query.page);
+    if (typeof req.query.pageSize === 'string') filters.pageSize = Number(req.query.pageSize);
 
-    res.json({ success: true, normalized });
+    const data = await clientService.list(therapistId, filters);
+
+    const normalized = await clientNormalize.normalizeList(data.items);
+
+    if (!filters.page && !filters.pageSize) {
+      return res.json({ success: true, normalized });
+    }
+
+    res.json({
+      success: true,
+      items: normalized,
+      total: data.total,
+      page: data.page,
+      pageSize: data.pageSize,
+      totalPages: data.totalPages,
+    });
   } catch (err) {
     next(err);
   }
@@ -93,4 +111,11 @@ export async function countActiveClients(req: Request, res: Response, next: Next
   } catch (error) {
     next(error);
   }
+}
+
+interface ClientListFilters {
+  q?: string;
+  page?: number;
+  pageSize?: number;
+  sort?: string;
 }

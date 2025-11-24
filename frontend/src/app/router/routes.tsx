@@ -1,5 +1,5 @@
 import { Suspense, lazy } from 'react';
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 
 import { LoginPage, ForgotPasswordPage } from '../../features/auth';
 import ForgotPasswordEmailSend from '../../features/auth/components/forgot-password-email-sent';
@@ -52,6 +52,18 @@ const DetalheSessaoPage = lazy(() => import('@/features/programas/sessoes/pages/
 const AreaHubTOPage = lazy(
     () => import('@/features/programas/variants/terapia-ocupacional/pages/AreaHubTOPage'),
 );
+const ToCadastroProgramaPage = lazy(
+    () => import('@/features/programas/variants/terapia-ocupacional/pages/ToCadastroProgramaPage'),
+);
+const ToConsultaProgramasPage = lazy(
+    () => import('@/features/programas/variants/terapia-ocupacional/pages/ToConsultaProgramasPage'),
+);
+const ToDetalheProgramaPage = lazy(
+    () => import('@/features/programas/variants/terapia-ocupacional/pages/ToDetalheProgramaPage'),
+);
+const ToEditarProgramaPage = lazy(
+    () => import('@/features/programas/variants/terapia-ocupacional/pages/ToEditarProgramaPage'),
+);
 const RegistrarSessaoToPage = lazy(
     () => import('@/features/programas/variants/terapia-ocupacional/pages/RegistrarSessaoToPage'),
 );
@@ -66,6 +78,29 @@ const AreaHubMovimentoPage = lazy(
 );
 const AreaHubMusiPage = lazy(
     () => import('@/features/programas/variants/musicoterapia/pages/AreaHubMusiPage'),
+);
+
+// Novas áreas - páginas em construção
+const PsicoterapiaPage = lazy(
+    () => import('@/features/programas/variants/psicoterapia/pages/PsicoterapiaPage'),
+);
+const TerapiaAbaPage = lazy(
+    () => import('@/features/programas/variants/terapia-aba/pages/TerapiaAbaPage'),
+);
+const FisioterapiaPage = lazy(
+    () => import('@/features/programas/variants/fisioterapia/pages/FisioterapiaPage'),
+);
+const PsicomotricidadePage = lazy(
+    () => import('@/features/programas/variants/psicomotricidade/pages/PsicomotricidadePage'),
+);
+const EducacaoFisicaPage = lazy(
+    () => import('@/features/programas/variants/educacao-fisica/pages/EducacaoFisicaPage'),
+);
+const NeuropsicologiaPage = lazy(
+    () => import('@/features/programas/variants/neuropsicologia/pages/NeuropsicologiaPage'),
+);
+const PsicopedagogiaPage = lazy(
+    () => import('@/features/programas/variants/psicopedagogia/pages/PsicopedagogiaPage'),
 );
 
 export const router = createBrowserRouter([
@@ -194,12 +229,25 @@ export const router = createBrowserRouter([
                             },
                             {
                                 path: 'programas/fono-psico',
+                                element: <Navigate to="/app/programas/fonoaudiologia" replace />,
+                            },
+                            {
+                                path: 'programas/fonoaudiologia',
                                 element: (
                                     <Suspense fallback={suspenseFallback}>
                                         <HubPage />
                                     </Suspense>
                                 ),
-                                handle: { breadcrumb: 'Fonoaudiologia & Psicopedagogia', title: 'Fono & Psico' },
+                                handle: { breadcrumb: 'Fonoaudiologia', title: 'Fonoaudiologia' },
+                            },
+                            {
+                                path: 'programas/psicopedagogia',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <PsicopedagogiaPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Psicopedagogia', title: 'Psicopedagogia' },
                             },
                             {
                                 path: 'programas/terapia-ocupacional',
@@ -209,6 +257,42 @@ export const router = createBrowserRouter([
                                     </Suspense>
                                 ),
                                 handle: { breadcrumb: 'Terapia Ocupacional', title: 'Terapia Ocupacional' },
+                            },
+                            {
+                                path: 'programas/terapia-ocupacional/ocp/novo',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <ToCadastroProgramaPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Novo Programa', title: 'Novo Programa - TO' },
+                            },
+                            {
+                                path: 'programas/terapia-ocupacional/ocp/:programaId/editar',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <ToEditarProgramaPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Editar Programa', title: 'Editar Programa - TO' },
+                            },
+                            {
+                                path: 'programas/terapia-ocupacional/consultar',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <ToConsultaProgramasPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Consultar Programas', title: 'Consultar Programas - TO' },
+                            },
+                            {
+                                path: 'programas/terapia-ocupacional/programa/:programaId',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <ToDetalheProgramaPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Detalhe do Programa', title: 'Programa - TO' },
                             },
                             {
                                 path: 'programas/terapia-ocupacional/sessoes/registrar',
@@ -254,6 +338,60 @@ export const router = createBrowserRouter([
                                     </Suspense>
                                 ),
                                 handle: { breadcrumb: 'Musicoterapia', title: 'Musicoterapia' },
+                            },
+                            {
+                                path: 'programas/psicoterapia',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <PsicoterapiaPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Psicoterapia', title: 'Psicoterapia' },
+                            },
+                            {
+                                path: 'programas/terapia-aba',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <TerapiaAbaPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Terapia ABA', title: 'Terapia ABA' },
+                            },
+                            {
+                                path: 'programas/fisioterapia',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <FisioterapiaPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Fisioterapia', title: 'Fisioterapia' },
+                            },
+                            {
+                                path: 'programas/psicomotricidade',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <PsicomotricidadePage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Psicomotricidade', title: 'Psicomotricidade' },
+                            },
+                            {
+                                path: 'programas/educacao-fisica',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <EducacaoFisicaPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Educação Física', title: 'Educação Física' },
+                            },
+                            {
+                                path: 'programas/neuropsicologia',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <NeuropsicologiaPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Neuropsicologia', title: 'Neuropsicologia' },
                             },
                             {
                                 path: 'programas/lista',
