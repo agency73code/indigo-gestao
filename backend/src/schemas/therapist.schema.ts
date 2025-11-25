@@ -45,7 +45,9 @@ export const therapistSchema = z.object({
   }),
 
   dataInicio: z.coerce.date().min(1, 'Data de inicio é obrigatório'),
-  dataFim: z.coerce.date().nullable().default(null),
+  dataFim: z
+    .preprocess((val) => (val === '' ? null : val), z.coerce.date().nullable())
+    .default(null),
 
   formacao: z.object({
     graduacao: z.string(),
