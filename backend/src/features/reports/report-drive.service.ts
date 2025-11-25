@@ -7,7 +7,7 @@ dayjs.locale("pt-br");
 interface EnsureReportFolderParams {
     fullName: string;
     birthDate: string;
-    periodStart: Date;
+    generationDate: Date;
 }
 
 export interface ReportFolderInfo {
@@ -18,9 +18,9 @@ export interface ReportFolderInfo {
     clientFolderName: string;
 }
 
-export function ensureMonthlyReportFolder({ fullName, birthDate, periodStart }: EnsureReportFolderParams): ReportFolderInfo {
+export function ensureMonthlyReportFolder({ fullName, birthDate, generationDate }: EnsureReportFolderParams): ReportFolderInfo {
     const clientFolderName = buildOwnerFolderName(fullName, birthDate);
-    const monthFolderName = buildMonthFolderName(periodStart);
+    const monthFolderName = buildMonthFolderName(generationDate);
 
     const basePrefix = `clientes/${clientFolderName}`;
     const reportsPrefix = `${basePrefix}/relatorios`;

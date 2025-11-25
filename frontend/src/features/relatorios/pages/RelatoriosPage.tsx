@@ -213,16 +213,28 @@ export function RelatoriosPage() {
     };
   };
 
-  // Função para formatar mês/ano
-  const getMonthYearLabel = (date: Date) => {
-    return date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  // Função para obter chave do mês (YYYY-MM) usando UTC para evitar mudar o mês em timezones negativos
+  const getMonthKey = (isoDate: string) => isoDate.slice(0, 7);
+
+  const getMonthYearLabel = (monthKey: string) => {
+    const utcDate = new Date(`${monthKey}-01T00:00:00Z`);
+    return utcDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric', timeZone: 'UTC' });
   };
 
-  // Função para obter chave do mês (YYYY-MM)
-  const getMonthKey = (date: Date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    return `${year}-${month}`;
+  const getReportGroupingIso = (report: SavedReport) => report.updatedAt || report.createdAt;
+
+  const formatReportGroupingDate = (isoDate: string) => {
+    const utcDate = new Date(isoDate);
+    return utcDate.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: 'short',
+      timeZone: 'UTC'
+    });
+  };
+
+  const getReportGroupingDate = (report: SavedReport) => {
+    const lastUpdate = report.updatedAt || report.createdAt;
+    return new Date(lastUpdate);
   };
 
   // Agrupa relatórios por cliente e depois por mês
@@ -240,8 +252,8 @@ export function RelatoriosPage() {
     const reportsByMonth: Record<string, SavedReport[]> = {};
     
     patientReports.forEach(report => {
-      const reportDate = new Date(report.createdAt);
-      const monthKey = getMonthKey(reportDate);
+      const groupingIso = getReportGroupingIso(report);
+      const monthKey = getMonthKey(groupingIso);
       
       if (!reportsByMonth[monthKey]) {
         reportsByMonth[monthKey] = [];
@@ -397,8 +409,7 @@ export function RelatoriosPage() {
                   <CollapsibleContent>
                     <div className="px-4 pb-4 space-y-2">
                       {monthsData.map(([monthKey, monthReports]) => {
-                        const monthDate = new Date(monthKey + '-01');
-                        const monthLabel = getMonthYearLabel(monthDate);
+                        const monthLabel = getMonthYearLabel(monthKey);
                         const isFolderOpen = expansionState[patientId]?.folders?.[monthKey] ?? false;
                         
                         return (
@@ -460,10 +471,7 @@ export function RelatoriosPage() {
                                           <div className="flex items-center gap-2 mt-0.5">
                                             <Calendar className="h-3 w-3 text-muted-foreground shrink-0" />
                                             <p className="text-xs text-muted-foreground">
-                                              {new Date(report.createdAt).toLocaleDateString('pt-BR', {
-                                                day: '2-digit',
-                                                month: 'short',
-                                              })}
+                                              {formatReportGroupingDate(getReportGroupingIso(report))}
                                             </p>
                                             <span className="text-muted-foreground">•</span>
                                             <p className="text-xs text-muted-foreground truncate">
