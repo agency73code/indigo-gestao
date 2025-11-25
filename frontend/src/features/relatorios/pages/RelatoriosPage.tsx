@@ -232,11 +232,6 @@ export function RelatoriosPage() {
     });
   };
 
-  const getReportGroupingDate = (report: SavedReport) => {
-    const lastUpdate = report.updatedAt || report.createdAt;
-    return new Date(lastUpdate);
-  };
-
   // Agrupa relatórios por cliente e depois por mês
   const groupedByPatient = reports.reduce((acc, report) => {
     const patientId = report.patientId;
