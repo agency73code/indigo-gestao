@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Activity, Check } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,7 @@ import { CloseButton } from '@/components/layout/CloseButton';
 import type { AreaType } from '@/contexts/AreaContext';
 import { AREA_LABELS } from '@/contexts/AreaContext';
 import { getAvailableReportAreas, hasReportConfig } from '../configs';
+import { getAreaStyle } from '../constants/areaStyles';
 
 interface AreaSelectorCardProps {
   value: AreaType | null;
@@ -35,21 +36,15 @@ export function AreaSelectorCard({ value, onChange, disabled }: AreaSelectorCard
     setSearchQuery('');
   };
 
-  // Ícone da área selecionada (usa o ícone da config)
-  const getAreaIcon = (area: AreaType | null) => {
-    if (!area) return Activity;
-    // Por enquanto usa Activity para todas, mas pode ser customizado depois
-    return Activity;
-  };
-
-  const AreaIcon = getAreaIcon(value);
+  const areaStyle = getAreaStyle(value);
+  const AreaIcon = areaStyle.icon;
 
   return (
     <>
       <Card className="rounded-lg px-6 py-8 md:px-8 md:py-10 lg:px-8 lg:py-0 h-full">
         <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
           <h3 className="text-base flex items-center gap-2 font-normal" style={{fontFamily: "Sora"}}>
-            <Activity className="h-4 w-4" />
+            <AreaIcon className="h-4 w-4" />
             Área Terapêutica
           </h3>
         </CardHeader>
@@ -58,8 +53,8 @@ export function AreaSelectorCard({ value, onChange, disabled }: AreaSelectorCard
           {value ? (
             <div className="flex items-center gap-3 p-2 sm:p-3 bg-muted rounded-lg">
               {/* Ícone da área selecionada */}
-              <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-                <AreaIcon className="h-6 w-6 text-blue-600" />
+              <div className={`h-12 w-12 rounded-full ${areaStyle.bgColor} flex items-center justify-center shrink-0`}>
+                <AreaIcon className={`h-6 w-6 ${areaStyle.iconColor}`} />
               </div>
 
               {/* Informações da área */}
@@ -90,7 +85,7 @@ export function AreaSelectorCard({ value, onChange, disabled }: AreaSelectorCard
               onClick={() => setIsOpen(true)}
               disabled={disabled}
             >
-              <Activity className="h-4 w-4 mr-2" />
+              <AreaIcon className="h-4 w-4 mr-2" />
               Selecionar área
             </Button>
           )}
@@ -116,7 +111,7 @@ export function AreaSelectorCard({ value, onChange, disabled }: AreaSelectorCard
             <div className="p-4 sm:p-6 flex-1 overflow-auto">
               <div className="space-y-4">
                 <div className="relative">
-                  <Activity className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <AreaIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Buscar área..."
                     value={searchQuery}
@@ -134,6 +129,8 @@ export function AreaSelectorCard({ value, onChange, disabled }: AreaSelectorCard
                     filteredAreas.map((area) => {
                       const isSelected = value === area;
                       const isAvailable = hasReportConfig(area);
+                      const itemAreaStyle = getAreaStyle(area);
+                      const ItemAreaIcon = itemAreaStyle.icon;
                       
                       return (
                         <Card
@@ -147,8 +144,8 @@ export function AreaSelectorCard({ value, onChange, disabled }: AreaSelectorCard
                           <CardContent className="p-4">
                             <div className="flex items-center gap-3">
                               {/* Ícone da área */}
-                              <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-                                <Activity className="h-5 w-5 text-blue-600" />
+                              <div className={`h-10 w-10 rounded-full ${itemAreaStyle.bgColor} flex items-center justify-center shrink-0`}>
+                                <ItemAreaIcon className={`h-5 w-5 ${itemAreaStyle.iconColor}`} />
                               </div>
 
                               {/* Nome da área */}
