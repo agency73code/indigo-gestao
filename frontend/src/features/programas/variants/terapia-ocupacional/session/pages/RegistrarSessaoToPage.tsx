@@ -15,6 +15,7 @@ import {
     ToAttemptsRegister,
     ToSessionSummary,
     ToSessionObservations,
+    ToSessionFiles,
 } from '../components';
 import {
     searchPatientsForToSession,
@@ -28,6 +29,7 @@ import type {
     ToProgramDetail,
     ToSessionAttempt,
     ToSessionState,
+    SessionFile,
 } from '../types';
 
 export default function RegistrarSessaoToPage() {
@@ -55,6 +57,7 @@ export default function RegistrarSessaoToPage() {
             totalAttempts: 0,
         },
         notes: '',
+        files: [],
     });
 
     // Estados de carregamento
@@ -158,6 +161,7 @@ export default function RegistrarSessaoToPage() {
                 naoDesempenhou: 0,
                 totalAttempts: 0,
             },
+            files: [],
         });
     };
 
@@ -200,6 +204,13 @@ export default function RegistrarSessaoToPage() {
         }));
     };
 
+    const handleFilesChange = (files: SessionFile[]) => {
+        setSessionState((prev) => ({
+            ...prev,
+            files,
+        }));
+    };
+
     const handleSave = async () => {
         if (!canSave) return;
 
@@ -212,6 +223,7 @@ export default function RegistrarSessaoToPage() {
                 programId: sessionState.programId!,
                 attempts: sessionState.attempts,
                 notes: sessionState.notes,
+                files: sessionState.files,
             });
 
             // Toast de confirmação com mensagem focada na experiência do usuário
@@ -305,6 +317,28 @@ export default function RegistrarSessaoToPage() {
                             <ToSessionObservations
                                 notes={sessionState.notes || ''}
                                 onNotesChange={handleNotesChange}
+                            />
+
+                            {/* CARD DE TESTE - DEVE APARECER AQUI */}
+                            <div style={{
+                                padding: '20px',
+                                margin: '20px 0',
+                                backgroundColor: '#ff00ff',
+                                color: 'white',
+                                fontSize: '24px',
+                                fontWeight: 'bold',
+                                textAlign: 'center',
+                                border: '5px solid red'
+                            }}>
+                                🚨 TESTE: Você vê este card ROSA/ROXO?
+                            </div>
+
+                            {/* Upload de arquivos da sessão */}
+                            {console.log('🎬 Tentando renderizar ToSessionFiles', { files: sessionState.files, disabled: savingSession })}
+                            <ToSessionFiles
+                                files={sessionState.files || []}
+                                onFilesChange={handleFilesChange}
+                                disabled={savingSession}
                             />
 
                             {/* Registro de tentativas */}

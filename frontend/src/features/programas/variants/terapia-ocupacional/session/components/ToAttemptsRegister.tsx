@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { AlertCircle, CheckCircle, History, MinusCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle, History, MinusCircle, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -31,6 +31,7 @@ type ActivitySummary = {
     activityLabel: string;
     counts: Counts;
     status: StatusResult;
+    totalMinutes: number;
 };
 
 const createEmptyCounts = (): Counts => ({ 'nao-desempenhou': 0, 'desempenhou-com-ajuda': 0, desempenhou: 0 });
@@ -69,19 +70,19 @@ function StatusBadge({ kind, desempenhou, ajuda, naoDesempenhou, total, statusTe
         verde: {
             icon: CheckCircle,
             label: 'Desempenhou',
-            cls: 'border-green-500/40 text-green-700 bg-green-50',
+            cls: 'text-green-700 bg-green-100 hover:bg-green-200 border-0',
             count: desempenhou,
         },
         laranja: {
             icon: MinusCircle,
             label: 'Desempenhou com Ajuda',
-            cls: 'border-amber-500/40 text-amber-700 bg-amber-50',
+            cls: 'text-amber-700 bg-amber-100 hover:bg-amber-200 border-0',
             count: ajuda,
         },
         vermelho: {
             icon: AlertCircle,
             label: 'Não Desempenhou',
-            cls: 'border-red-500/40 text-red-700 bg-red-50',
+            cls: 'text-red-700 bg-red-100 hover:bg-red-200 border-0',
             count: naoDesempenhou,
         },
     }[kind];
@@ -93,12 +94,12 @@ function StatusBadge({ kind, desempenhou, ajuda, naoDesempenhou, total, statusTe
         <Tooltip>
             <TooltipTrigger asChild>
                 <Badge
-                    variant="outline"
-                    className={`gap-2 p-2 rounded-[5px] ${config.cls}`}
+                    variant="secondary"
+                    className={`gap-1.5 px-3 py-1 ${config.cls}`}
                     data-testid={statusTestId}
                 >
-                    <Icon className="h-4 w-4" />
-                    <span className="whitespace-nowrap">{content}</span>
+                    <Icon className="h-3.5 w-3.5" />
+                    <span className="text-xs font-medium">{content}</span>
                 </Badge>
             </TooltipTrigger>
             <TooltipContent data-testid={tooltipTestId} className="max-w-[220px] text-xs">
@@ -125,6 +126,8 @@ export default function ToAttemptsRegister({ attempts }: ToAttemptsRegisterProps
                       ? { 'nao-desempenhou': 0, 'desempenhou-com-ajuda': 1, desempenhou: 0 }
                       : { 'nao-desempenhou': 0, 'desempenhou-com-ajuda': 0, desempenhou: 1 };
 
+            const minutesToAdd = attempt.durationMinutes || 0;
+
             const existing = map.get(attempt.activityId);
 
             if (!existing) {
@@ -134,6 +137,7 @@ export default function ToAttemptsRegister({ attempts }: ToAttemptsRegisterProps
                     activityLabel: attempt.activityLabel,
                     counts,
                     status: calcStatus(counts),
+                    totalMinutes: minutesToAdd,
                 });
                 continue;
             }
@@ -144,6 +148,7 @@ export default function ToAttemptsRegister({ attempts }: ToAttemptsRegisterProps
                 activityLabel: existing.activityLabel,
                 counts: newCounts,
                 status: calcStatus(newCounts),
+                totalMinutes: existing.totalMinutes + minutesToAdd,
             });
         }
 
@@ -199,14 +204,14 @@ export default function ToAttemptsRegister({ attempts }: ToAttemptsRegisterProps
                                         data-testid={`activity-summary-row-${activity.activityId}`}
                                     >
                                         <div className="flex flex-wrap items-center gap-3 ">
-                                            <Badge variant="outline" className="p-2 rounded-[5px]">
-                                                Não desempenhou: {counts['nao-desempenhou']}
+                                            <Badge variant="secondary" className="px-3 py-1 text-gray-700 bg-gray-100 hover:bg-gray-200 border-0">
+                                                <span className="text-xs font-medium">Não desempenhou: {counts['nao-desempenhou']}</span>
                                             </Badge>
-                                            <Badge variant="outline" className="p-2 rounded-[5px]">
-                                                Desempenhou com ajuda: {counts['desempenhou-com-ajuda']}
+                                            <Badge variant="secondary" className="px-3 py-1 text-gray-700 bg-gray-100 hover:bg-gray-200 border-0">
+                                                <span className="text-xs font-medium">Desempenhou com ajuda: {counts['desempenhou-com-ajuda']}</span>
                                             </Badge>
-                                            <Badge variant="outline" className="p-2 rounded-[5px]">
-                                                Desempenhou: {counts.desempenhou}
+                                            <Badge variant="secondary" className="px-3 py-1 text-gray-700 bg-gray-100 hover:bg-gray-200 border-0">
+                                                <span className="text-xs font-medium">Desempenhou: {counts.desempenhou}</span>
                                             </Badge>
 
                                             <div className="ml-auto flex items-center gap-3 ">
@@ -219,11 +224,29 @@ export default function ToAttemptsRegister({ attempts }: ToAttemptsRegisterProps
                                                     statusTestId={`activity-status-${activity.activityId}`}
                                                     tooltipTestId={`activity-status-tip-${activity.activityId}`}
                                                 />
-                                                <Badge
-                                                    variant="outline"
-                                                    className="font-semibold p-2 rounded-[5px]"
-                                                >
-                                                    Total: {totalCounts}
+                                                
+                                                {/* Badge de tempo total */}
+                                                {activity.totalMinutes > 0 && (
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Badge
+                                                                variant="secondary"
+                                                                className="gap-1.5 px-3 py-1 text-blue-700 bg-blue-100 hover:bg-blue-200 border-0"
+                                                            >
+                                                                <Clock className="h-3.5 w-3.5" />
+                                                                <span className="text-xs font-medium">
+                                                                    {activity.totalMinutes} min
+                                                                </span>
+                                                            </Badge>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent className="max-w-[220px] text-xs">
+                                                            Tempo total gasto nas tentativas desta atividade
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                )}
+                                                
+                                                <Badge variant="secondary" className="px-3 py-1 text-gray-700 bg-gray-100 hover:bg-gray-200 border-0">
+                                                    <span className="text-xs font-semibold">Total: {totalCounts}</span>
                                                 </Badge>
                                             </div>
                                         </div>

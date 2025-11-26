@@ -15,6 +15,7 @@ import {
     ToAttemptsRegister,
     ToSessionSummary,
     ToSessionObservations,
+    ToSessionFiles,
 } from '../session/components';
 import {
     searchPatientsForToSession,
@@ -28,6 +29,7 @@ import type {
     ToProgramDetail,
     ToSessionAttempt,
     ToSessionState,
+    SessionFile,
 } from '../session/types';
 
 /**
@@ -59,6 +61,7 @@ export default function RegistrarSessaoToPage() {
             totalAttempts: 0,
         },
         notes: '',
+        files: [],
     });
 
     // Estados de carregamento
@@ -200,6 +203,13 @@ export default function RegistrarSessaoToPage() {
         }));
     };
 
+    const handleFilesChange = (files: SessionFile[]) => {
+        setSessionState((prev) => ({
+            ...prev,
+            files,
+        }));
+    };
+
     const handleSave = async () => {
         if (!canSave) return;
 
@@ -301,6 +311,13 @@ export default function RegistrarSessaoToPage() {
                             <ToSessionObservations
                                 notes={sessionState.notes || ''}
                                 onNotesChange={handleNotesChange}
+                            />
+
+                            {/* Arquivos da sessão */}
+                            <ToSessionFiles
+                                files={sessionState.files || []}
+                                onFilesChange={handleFilesChange}
+                                disabled={savingSession}
                             />
 
                             {/* Registro de tentativas */}

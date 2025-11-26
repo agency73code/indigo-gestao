@@ -1,5 +1,6 @@
 // IMPORTS: tipos centrais do projeto
 import type { Paciente, Terapeuta } from '../cadastros/types/cadastros.types';
+import type { AreaType } from '@/contexts/AreaContext';
 
 // Derivar IDs seguros
 export type PatientId = NonNullable<Paciente['id']>;
@@ -82,6 +83,7 @@ export interface SavedReport {
   // Contexto principal
   patientId: PatientId;
   therapistId: TherapistId;
+  area: AreaType;                       // 🆕 Área terapêutica do relatório
   
   // Datas
   createdAt: IsoDateTime;
@@ -112,6 +114,7 @@ export interface CreateReportInput {
   type: ReportType;
   patientId: PatientId;
   therapistId: TherapistId;
+  area: AreaType;                       // 🆕 Área terapêutica do relatório
   periodStart: IsoDate;
   periodEnd: IsoDate;
   filters: ReportFiltersApplied;
@@ -134,6 +137,7 @@ export interface ReportListFilters {
   q?: string;                           // Busca por título, nome do cliente, terapeuta
   patientId?: PatientId;                // Filtrar por cliente
   therapistId?: TherapistId;            // Filtrar por terapeuta
+  area?: AreaType;                      // 🆕 Filtrar por área terapêutica
   type?: ReportType | 'all';            // Filtrar por tipo
   status?: ReportStatus | 'all';        // Filtrar por status
   dateFrom?: IsoDate;                   // Data de criação de

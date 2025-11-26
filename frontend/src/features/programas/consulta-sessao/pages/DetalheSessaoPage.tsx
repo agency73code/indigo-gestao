@@ -56,7 +56,7 @@ export default function DetalheSessaoPage() {
         }
 
         if (!sessionData) {
-          sessionData = await findSessionById(sessaoId);
+          sessionData = await findSessionById(sessaoId, pacienteIdFromQuery || undefined);
         }
 
         if (!sessionData) {

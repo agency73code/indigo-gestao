@@ -32,6 +32,7 @@ export interface ReportListResponse {
  * Busca todos os relatórios com filtros e paginação (via URL query params)
  * 
  * 🔄 ADAPTER: Funciona com backend atual (array) e futuro (objeto paginado)
+ * 🔧 PREPARADO: Envia filtro 'area' quando backend estiver pronto
  */
 export async function getAllReports(filters?: ReportListFilters): Promise<ReportListResponse> {
   await delay(500);
@@ -49,6 +50,8 @@ export async function getAllReports(filters?: ReportListFilters): Promise<Report
       if (filters.type && filters.type !== 'all') queryParams.append('type', filters.type);
       if (filters.patientId) queryParams.append('patientId', filters.patientId);
       if (filters.therapistId) queryParams.append('therapistId', filters.therapistId);
+      // 🔧 PREPARADO PARA BACKEND: Filtrar por área terapêutica
+      if (filters.area) queryParams.append('area', filters.area);
       if (filters.orderBy) queryParams.append('orderBy', filters.orderBy);
       // NÃO envia page/pageSize por enquanto (backend pode não suportar)
     }
@@ -189,6 +192,7 @@ export async function createReport(input: CreateReportInput): Promise<SavedRepor
       id: `report_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       title: input.title,
       type: input.type,
+      area: input.area,
       patientId: input.patientId,
       therapistId: input.therapistId,
       periodStart: input.periodStart,
@@ -351,13 +355,22 @@ export async function getAllPatients(): Promise<Paciente[]> {
     const clientsWithAvatar = await Promise.all(
       clients.map(async (p) => {
         try {
-          const avatarRes = await fetch(`${import.meta.env.VITE_API_URL}/arquivos/getAvatar?id=${p.id}&type=client`, {
+          const avatarRes = await fetch(`${import.meta.env.VITE_API_URL}/arquivos/getAvatar?ownerId=${p.id}&ownerType=cliente`, {
             credentials: 'include',
           });
           const data = await avatarRes.json();
-          return { ...p, avatarUrl: data.avatarUrl ?? '' };
+          
+          // Mapear responsavel.nome para guardianName (compatibilidade com PatientSelector)
+          const guardianName = (p as any).responsavel?.nome || (p as any).guardianName || null;
+          
+          return { 
+            ...p, 
+            photoUrl: data.avatarUrl ?? null,
+            guardianName // Adicionar guardianName ao objeto
+          };
         } catch {
-          return { ...p, avatarUrl: '' };
+          const guardianName = (p as any).responsavel?.nome || (p as any).guardianName || null;
+          return { ...p, photoUrl: null, guardianName };
         }
       })
     );
@@ -398,13 +411,13 @@ export async function getAllTherapists(): Promise<Terapeuta[]> {
     const therapistsWithAvatar = await Promise.all(
       therapists.map(async (t) => {
         try {
-          const avatarRes = await fetch(`${import.meta.env.VITE_API_URL}/arquivos/getAvatar?id=${t.id}&type=therapist`, {
+          const avatarRes = await fetch(`${import.meta.env.VITE_API_URL}/arquivos/getAvatar?ownerId=${t.id}&ownerType=terapeuta`, {
             credentials: 'include',
           });
           const data = await avatarRes.json();
-          return { ...t, avatarUrl: data.avatarUrl ?? '' };
+          return { ...t, photoUrl: data.avatarUrl ?? null };
         } catch {
-          return { ...t, avatarUrl: '' };
+          return { ...t, photoUrl: null };
         }
       })
     );
@@ -492,6 +505,12 @@ function processReportsLocally(reports: SavedReport[], filters?: ReportListFilte
   // Filtro por tipo
   if (filters.type && filters.type !== 'all') {
     filtered = filtered.filter(r => r.type === filters.type);
+  }
+  
+  // 🔧 PREPARADO PARA BACKEND: Filtro por área terapêutica
+  // Por enquanto usa fallback 'fonoaudiologia' para relatórios sem área
+  if (filters.area) {
+    filtered = filtered.filter(r => (r.area || 'fonoaudiologia') === filters.area);
   }
   
   // Filtro por status

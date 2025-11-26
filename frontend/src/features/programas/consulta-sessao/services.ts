@@ -58,6 +58,12 @@ export async function listSessionsByPatient(
     pageSize = 10
   } = filters;
 
+  // 🎯 FORÇAR MOCK PARA ALESSANDRO (TO)
+  if (USE_LOCAL_MOCKS && patientId === 'b6f174c5-87bc-4946-9bff-2eaf72d977b9') {
+    const mockData = await getMockSessionsData(patientId);
+    return processSessionsLocally(mockData, filters);
+  }
+
   try {
     // Construir URL com query params
     const url = new URL(`/api/ocp/clients/${patientId}/sessions`, window.location.origin);
@@ -122,6 +128,84 @@ export async function listSessionsByPatient(
  * ⚠️ FUNÇÃO AUXILIAR: Converte mocks para formato Sessao[]
  */
 async function getMockSessionsData(patientId: string): Promise<Sessao[]> {
+  // 🎯 Se for o Alessandro, retornar sessões TO mocadas
+  if (patientId === 'b6f174c5-87bc-4946-9bff-2eaf72d977b9') {
+    const { mockToSessions } = await import(
+      '@/features/programas/variants/terapia-ocupacional/mocks/mockSessions'
+    );
+    const { mockToProgram } = await import(
+      '@/features/programas/variants/terapia-ocupacional/mocks/programMock'
+    );
+
+    const result = mockToSessions.map((s) => {
+      // Gerar registros baseados no activitiesSummary ao invés do preview
+      const registros: Array<{
+        tentativa: number;
+        resultado: 'acerto' | 'erro' | 'ajuda';
+        stimulusId?: string;
+        stimulusLabel?: string;
+        durationMinutes?: number | null;
+      }> = [];
+
+      let tentativaCounter = 1;
+
+      if (s.activitiesSummary && s.activitiesSummary.length > 0) {
+        // Para cada atividade, criar tentativas baseadas nas contagens
+        s.activitiesSummary.forEach((activity) => {
+          // Adicionar tentativas de erro (não desempenhou)
+          for (let i = 0; i < activity.counts.naoDesempenhou; i++) {
+            registros.push({
+              tentativa: tentativaCounter++,
+              resultado: 'erro',
+              stimulusId: activity.activityId,
+              stimulusLabel: activity.activityName,
+              durationMinutes: activity.durationMinutes,
+            });
+          }
+
+          // Adicionar tentativas de ajuda (desempenhou com ajuda)
+          for (let i = 0; i < activity.counts.desempenhouComAjuda; i++) {
+            registros.push({
+              tentativa: tentativaCounter++,
+              resultado: 'ajuda',
+              stimulusId: activity.activityId,
+              stimulusLabel: activity.activityName,
+              durationMinutes: activity.durationMinutes,
+            });
+          }
+
+          // Adicionar tentativas de acerto (desempenhou)
+          for (let i = 0; i < activity.counts.desempenhou; i++) {
+            registros.push({
+              tentativa: tentativaCounter++,
+              resultado: 'acerto',
+              stimulusId: activity.activityId,
+              stimulusLabel: activity.activityName,
+              durationMinutes: activity.durationMinutes,
+            });
+          }
+        });
+      }
+
+      return {
+        id: s.id,
+        pacienteId: patientId,
+        terapeutaId: 'therapist-001',
+        terapeutaNome: s.therapistName || 'João Batista',
+        data: s.date,
+        programa: 'Programa de Desenvolvimento de AVDs',
+        objetivo: mockToProgram.goalDescription || 'Desenvolver independência nas atividades de vida diária',
+        prazoInicio: '',
+        prazoFim: '',
+        observacoes: s.observacoes ?? undefined,
+        registros,
+      };
+    });
+
+    return result;
+  }
+
+  // Senão, retornar sessões de Fono (padrão)
   const { mockRecentSessions } = await import(
     '@/features/programas/detalhe-ocp/mocks/sessions.mock'
   );
@@ -259,10 +343,17 @@ export async function getSessionById(patientId: string, sessionId: string): Prom
   return response.items.find((s) => s.id === sessionId) ?? null;
 }
 
-export async function findSessionById(sessionId: string): Promise<Sessao | null> {
+export async function findSessionById(sessionId: string, patientId?: string): Promise<Sessao | null> {
   if (USE_LOCAL_MOCKS) {
-    const { mockProgramDetail } = await import('@/features/programas/detalhe-ocp/mocks/program.mock');
-    const response = await listSessionsByPatient(mockProgramDetail.patientId);
+    let targetPatientId = patientId;
+    
+    // Se não foi fornecido patientId, tenta usar o do mock
+    if (!targetPatientId) {
+      const { mockProgramDetail } = await import('@/features/programas/detalhe-ocp/mocks/program.mock');
+      targetPatientId = mockProgramDetail.patientId;
+    }
+    
+    const response = await listSessionsByPatient(targetPatientId);
     return response.items.find((s) => s.id === sessionId) ?? null;
   }
   return null;

@@ -9,3 +9,6 @@ export { default as ToActivityBlockPanel } from './ToActivityBlockPanel';
 export { default as ToAttemptsRegister } from './ToAttemptsRegister';
 export { default as ToSessionSummary } from './ToSessionSummary';
 export { default as ToSessionObservations } from './ToSessionObservations';
+export { default as ToSessionFilesUpload } from './ToSessionFilesUpload';
+export { default as ToSessionFilesViewer } from './ToSessionFilesViewer';
+export { default as ToSessionFiles } from './ToSessionFiles';

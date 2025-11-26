@@ -29,7 +29,20 @@ const PageTitleContext = createContext<PageTitleContextType | null>(null);
 export function usePageTitle() {
     const context = useContext(PageTitleContext);
     if (!context) {
-        throw new Error('usePageTitle must be used within PageTitleProvider');
+        // Em vez de quebrar, retorna um objeto mock para evitar crashes
+        console.error('usePageTitle must be used within PageTitleProvider');
+        return {
+            pageTitle: '',
+            setPageTitle: () => {},
+            headerActions: null,
+            setHeaderActions: () => {},
+            noMainContainer: false,
+            setNoMainContainer: () => {},
+            showBackButton: false,
+            setShowBackButton: () => {},
+            onBackClick: undefined,
+            setOnBackClick: () => {},
+        } as PageTitleContextType;
     }
     return context;
 }
@@ -145,7 +158,7 @@ export default function AppLayout() {
                                     className="flex-1 rounded-3xl p-2 flex flex-col gap-3 overflow-hidden bg-white dark:bg-[#1a1a1a]"
                                 >
                                     {/* Espaço superior para título e botões */}
-                                    <div className="h-12 flex items-center justify-between pt-0 px-1 flex-shrink-0 no-print">
+                                    <div className="h-12 flex items-center justify-between pt-0 px-1 shrink-0 no-print">
                                         {/* Botão voltar (condicional), sidebar e título */}
                                         <div className="flex items-center gap-3">
                                             {showBackButton && (
@@ -193,7 +206,7 @@ export default function AppLayout() {
                                             </ErrorBoundary>
                                         </div>
                                     ) : (
-                                        <main className="flex-1 overflow-auto bg-[var(--bg-main)] border border-gray-200/10 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] min-h-0">
+                                        <main className="flex-1 overflow-auto bg-(--bg-main) border border-gray-200/10 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] min-h-0">
                                             <ErrorBoundary>
                                                 <PageTransition>
                                                     <Outlet />

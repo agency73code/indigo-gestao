@@ -47,7 +47,7 @@ export default function ToStimulusRowDetail({
                 {/* Cabeçalho: número, nome, status e botão gráfico */}
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-3">
                     <div className="flex items-start gap-3 flex-1">
-                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground flex-shrink-0">
+                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground shrink-0">
                             {stimulus.order}
                         </span>
                         <div className="flex-1 min-w-0">
@@ -64,7 +64,7 @@ export default function ToStimulusRowDetail({
                             )}
                         </div>
                     </div>
-                    <div className="sm:ml-auto flex flex-wrap items-center gap-2 sm:flex-shrink-0">
+                    <div className="sm:ml-auto flex flex-wrap items-center gap-2 sm:shrink-0">
                         {getStimulusStatusBadge(stimulus.active ? 'active' : 'archived')}
                         <Button
                             type="button"

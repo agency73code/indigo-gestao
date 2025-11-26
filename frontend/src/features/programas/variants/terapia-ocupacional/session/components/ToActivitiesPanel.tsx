@@ -57,7 +57,7 @@ export default function ToActivitiesPanel({
 
     const effectiveSessionId = sessionId ?? program.id ?? 'draft-session';
 
-    const registrarTentativa = (resultado: ResultadoTentativa) => {
+    const registrarTentativa = (resultado: ResultadoTentativa, durationMinutes?: number) => {
         if (!ativoId || !activeActivity) {
             return;
         }
@@ -86,6 +86,7 @@ export default function ToActivitiesPanel({
             activityLabel: activeActivity.label,
             type: tipoSessao,
             timestamp: new Date().toISOString(),
+            durationMinutes,
         };
 
         // Armazena temporariamente em vez de enviar imediatamente

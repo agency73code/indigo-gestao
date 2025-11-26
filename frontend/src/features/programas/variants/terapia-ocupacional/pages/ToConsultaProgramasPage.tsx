@@ -95,7 +95,7 @@ export default function ToConsultaProgramasPage() {
                             onClick={handleCreateProgram}
                             disabled={!selectedPatient}
                             size="icon"
-                            className="h-10 w-10 rounded-full flex-shrink-0"
+                            className="h-10 w-10 rounded-full shrink-0"
                             title="Adicionar programa de TO"
                         >
                             <Plus className="h-5 w-5" />

@@ -2,7 +2,9 @@ import { useEffect, useState, useRef, type JSX } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Check, Flag, Hand, Pause, X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Check, Flag, Hand, Pause, X, Clock } from 'lucide-react';
 
 export type ResultadoTentativa = 'nao-desempenhou' | 'desempenhou-com-ajuda' | 'desempenhou';
 
@@ -25,7 +27,7 @@ export type ActivityBlockPanelProps = {
     activity: ActivitySummary;
     paused: boolean;
     counts: BlockCounts;
-    onCreateAttempt: (resultado: ResultadoTentativa) => void;
+    onCreateAttempt: (resultado: ResultadoTentativa, durationMinutes?: number) => void;
     onRemoveAttempt?: (resultado: ResultadoTentativa) => void; // Nova prop para decrementar
     onPause: () => void;
     onFinalizarBloco: () => void;
@@ -140,6 +142,8 @@ export default function ToActivityBlockPanel({
     void descricaoAplicacao;
     void activity;
 
+    const [durationMinutes, setDurationMinutes] = useState<string>('');
+
     useEffect(() => {
         const handleHotkeys = (event: KeyboardEvent) => {
             const target = event.target as HTMLElement | null;
@@ -152,21 +156,23 @@ export default function ToActivityBlockPanel({
                 return;
             }
 
+            const minutes = durationMinutes ? parseInt(durationMinutes, 10) : undefined;
+
             if (event.key === '1' && !paused) {
                 event.preventDefault();
-                onCreateAttempt('nao-desempenhou');
+                onCreateAttempt('nao-desempenhou', minutes);
                 return;
             }
 
             if (event.key === '2' && !paused) {
                 event.preventDefault();
-                onCreateAttempt('desempenhou-com-ajuda');
+                onCreateAttempt('desempenhou-com-ajuda', minutes);
                 return;
             }
 
             if (event.key === '3' && !paused) {
                 event.preventDefault();
-                onCreateAttempt('desempenhou');
+                onCreateAttempt('desempenhou', minutes);
                 return;
             }
 
@@ -186,7 +192,7 @@ export default function ToActivityBlockPanel({
         return () => {
             window.removeEventListener('keydown', handleHotkeys);
         };
-    }, [onCreateAttempt, onFinalizarBloco, onPause, paused]);
+    }, [onCreateAttempt, onFinalizarBloco, onPause, paused, durationMinutes]);
 
     const attemptOptions: Array<{
         key: ResultadoTentativa;
@@ -216,6 +222,30 @@ export default function ToActivityBlockPanel({
 
     return (
         <div className="space-y-4">
+            {/* Campo de tempo em minutos */}
+            <div className="space-y-2">
+                <Label htmlFor="duration-minutes" className="text-sm font-medium flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    Tempo de realização (minutos)
+                </Label>
+                <Input
+                    id="duration-minutes"
+                    type="number"
+                    min="0"
+                    step="1"
+                    placeholder="Ex: 5"
+                    value={durationMinutes}
+                    onChange={(e) => setDurationMinutes(e.target.value)}
+                    disabled={paused}
+                    className="max-w-[200px]"
+                />
+                <p className="text-xs text-muted-foreground">
+                    Informe quantos minutos o cliente levou para realizar esta atividade
+                </p>
+            </div>
+
+            <Separator />
+
             <div className="space-y-1 mb-4">
                 <div className="text-sm font-medium" data-testid="activity-helper-title">
                     Registre esta atividade
@@ -240,7 +270,10 @@ export default function ToActivityBlockPanel({
 
                         // Hook de gestos para este botão específico
                         const gesture = useGestureHandler(
-                            () => onCreateAttempt(option.key),
+                            () => {
+                                const minutes = durationMinutes ? parseInt(durationMinutes, 10) : undefined;
+                                onCreateAttempt(option.key, minutes);
+                            },
                             () => {
                                 if (onRemoveAttempt && counts[option.key] > 0) {
                                     onRemoveAttempt(option.key);

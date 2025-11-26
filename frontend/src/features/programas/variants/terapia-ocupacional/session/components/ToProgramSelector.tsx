@@ -95,7 +95,7 @@ export default function ToProgramSelector({
                 <CardContent className="pb-3 sm:pb-6">
                     {selected ? (
                         <div className="flex items-center gap-3 p-2 sm:p-3 bg-muted rounded-[5px]">
-                            <div className="flex-shrink-0">
+                            <div className="shrink-0">
                                 <CheckCircle className="h-5 w-5 text-green-600" />
                             </div>
 
@@ -111,7 +111,7 @@ export default function ToProgramSelector({
                                 )}
                             </div>
 
-                            <div className="flex gap-2 flex-shrink-0">
+                            <div className="flex gap-2 shrink-0">
                                 <Button
                                     variant="outline"
                                     size="sm"
@@ -217,7 +217,7 @@ export default function ToProgramSelector({
                                                                     {program.objective}
                                                                 </p>
                                                             </div>
-                                                            <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                                                            <CheckCircle className="h-5 w-5 text-green-600 shrink-0" />
                                                         </div>
                                                         {program.lastSession && (
                                                             <p className="text-xs text-muted-foreground">

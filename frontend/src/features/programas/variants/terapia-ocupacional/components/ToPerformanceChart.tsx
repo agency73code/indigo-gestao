@@ -129,7 +129,7 @@ export default function ToPerformanceChart({
                 {descriptionContent}
             </CardHeader>
             <CardContent className="pt-6" data-print-chart>
-                <ChartContainer config={chartConfig} className="aspect-[16/9] h-[300px] w-full">
+                <ChartContainer config={chartConfig} className="aspect-video h-[300px] w-full">
                     <LineChart
                         data={chartData}
                         margin={{ left: 24, right: 8, top: 26, bottom: 0 }}

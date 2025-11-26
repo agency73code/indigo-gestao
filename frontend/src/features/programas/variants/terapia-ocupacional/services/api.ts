@@ -1,10 +1,11 @@
 import type { Patient, Therapist, CreateProgramInput } from '../../../core/types';
+import { TO_AREA_ID } from '../constants';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 /**
  * Serviços de API para Terapia Ocupacional
- * Nota: Ajustar os endpoints conforme a API real do backend de TO
+ * 🔧 Usa TO_AREA_ID centralizado para garantir consistência
  */
 
 export async function fetchToPatientById(id: string): Promise<Patient> {
@@ -64,8 +65,6 @@ export async function fetchToTherapistAvatar(therapistId: string): Promise<strin
 }
 
 export async function createToProgram(input: CreateProgramInput): Promise<{ id: string }> {
-    // TODO: Ajustar endpoint específico de TO se necessário
-    // Por enquanto, usa o mesmo endpoint de OCP mas pode ser diferente no backend
     const response = await fetch(`${API_URL}/ocp/programs`, {
         method: 'POST',
         headers: {
@@ -74,8 +73,7 @@ export async function createToProgram(input: CreateProgramInput): Promise<{ id: 
         credentials: 'include',
         body: JSON.stringify({
             ...input,
-            // Adicionar campos específicos de TO se necessário
-            area: 'terapia-ocupacional',
+            area: TO_AREA_ID, // 🔧 CORRIGIDO: Usa constante 'terapia-ocupacional'
         }),
     });
 
@@ -96,7 +94,8 @@ export async function listToPrograms(params: {
 }): Promise<any[]> {
     const url = new URL(`${API_URL}/ocp/clients/${params.patientId}/programs`);
     
-    // Filtrar apenas programas de TO pela área de atuação do terapeuta
+    // 🔧 CORRIGIDO: Usa filtro consistente com AreaContext
+    // Backend filtra por especialidade do terapeuta usando label
     url.searchParams.set('area', 'Terapia Ocupacional');
     
     if (params.page) url.searchParams.set('page', params.page.toString());

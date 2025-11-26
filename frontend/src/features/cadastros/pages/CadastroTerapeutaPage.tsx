@@ -487,7 +487,7 @@ export default function CadastroTerapeutaPage() {
             });
 
             setTimeout(() => {
-                navigate('/app/terapeuta');
+                navigate('/app/consultar/terapeutas');
             }, 1000);
         } catch (error) {
             console.error('Erro ao cadastrar terapeuta:', error);
@@ -552,7 +552,7 @@ export default function CadastroTerapeutaPage() {
     return (
         <div className="flex h-full gap-1">
             {/* Sidebar Vertical com Steps - Card Separado */}
-            <div className="w-64 flex-shrink-0" style={{ 
+            <div className="w-64 shrink-0" style={{ 
                 backgroundColor: 'var(--header-bg)',
                 borderRadius: '16px'
             }}>

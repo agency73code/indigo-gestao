@@ -310,6 +310,15 @@ export const router = createBrowserRouter([
                                         <ConsultarSessoesToPage />
                                     </Suspense>
                                 ),
+                                handle: { breadcrumb: 'Sessões TO', title: 'Sessões - TO' },
+                            },
+                            {
+                                path: 'programas/terapia-ocupacional/sessoes/consultar',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <ConsultarSessoesToPage />
+                                    </Suspense>
+                                ),
                                 handle: { breadcrumb: 'Consultar Sessões', title: 'Consultar Sessões - TO' },
                             },
                             {

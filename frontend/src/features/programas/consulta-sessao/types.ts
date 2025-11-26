@@ -3,6 +3,16 @@ export type RegistroTentativa = {
   resultado: 'acerto' | 'erro' | 'ajuda';
   stimulusId?: string;
   stimulusLabel?: string;
+  durationMinutes?: number | null; // tempo em minutos (para TO)
+};
+
+export type SessionFile = {
+  id: string;
+  name: string;
+  fileName: string;
+  type: string;
+  size: number;
+  url: string;
 };
 
 export type Sessao = {
@@ -16,6 +26,7 @@ export type Sessao = {
   prazoInicio: string; // ISO
   prazoFim: string; // ISO
   observacoes?: string | null;
+  files?: SessionFile[];
   registros: RegistroTentativa[];
 };
 

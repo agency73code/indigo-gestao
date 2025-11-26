@@ -107,7 +107,7 @@ export function BaseConsultaProgramasPage({
                             onClick={handleCreateProgram}
                             disabled={!selectedPatient}
                             size="icon"
-                            className="h-10 w-10 rounded-full flex-shrink-0"
+                            className="h-10 w-10 rounded-full shrink-0"
                             title={config.createButtonLabel || 'Adicionar programa'}
                         >
                             <Plus className="h-5 w-5" />

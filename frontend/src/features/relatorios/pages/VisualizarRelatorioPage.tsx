@@ -163,11 +163,12 @@ export function VisualizarRelatorioPage() {
         <div className="px-4 pt-4">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 flex-1 min-w-0">
-                          <Button
+              <Button
                 variant="ghost"
                 size="icon"
                 className="shrink-0"
-                onClick={() => navigate('/relatorios')}
+                onClick={() => navigate('/app/relatorios/lista')}
+                aria-label="Voltar para relatórios"
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>

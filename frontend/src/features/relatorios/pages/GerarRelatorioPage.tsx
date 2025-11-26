@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Save, FileDown, FileText } from 'lucide-react';
@@ -10,6 +10,9 @@ import { PatientSelector, type Patient } from '../../programas/consultar-program
 import { OcpDeadlineCard } from '../gerar-relatorio/components/OcpDeadlineCard';
 import { AttentionStimuliCard } from '../../programas/relatorio-geral/components/AttentionStimuliCard';
 import { SaveReportDialog } from '../components';
+import { AreaSelectorCard } from '../components/AreaSelectorCard';
+import { KpiCardsRenderer } from '../components/KpiCardsRenderer';
+import { ChartRenderer } from '../components/ChartRenderer';
 import { Label } from '@/components/ui/label';
 import { RichTextEditor } from '../../../components/ui/rich-text-editor';
 import {
@@ -22,6 +25,9 @@ import type { SavedReport } from '../types';
 import { ReportExporter } from '../gerar-relatorio/print/ReportExporter';
 import { useAuth } from '@/features/auth';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
+import { useArea } from '@/contexts/AreaContext';
+import type { AreaType } from '@/contexts/AreaContext';
+import { getAreaConfig } from '../configs';
 import { 
     saveReportToBackend, 
     exportPdfDirectly,
@@ -30,15 +36,26 @@ import {
 
 export function GerarRelatorioPage() {
     const { user } = useAuth();
-    const { setPageTitle, setHeaderActions } = usePageTitle();
+    const { setPageTitle, setHeaderActions, setOnBackClick } = usePageTitle();
+    const { setCurrentArea } = useArea();
+    const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
     const [observacaoClinica, setObservacaoClinica] = useState<string>('');
     const [saveDialogOpen, setSaveDialogOpen] = useState(false);
 
+    // Área selecionada (pode ser diferente de currentArea do contexto global)
+    const [selectedArea, setSelectedArea] = useState<AreaType | null>(null);
+    
+    // Configuração da área atual
+    const areaConfig = useMemo(() => getAreaConfig(selectedArea), [selectedArea]);
+
     const [kpis, setKpis] = useState<KpisRelatorio | null>(null);
     const [serieLinha, setSerieLinha] = useState<SerieLinha[]>([]);
     const [prazoPrograma, setPrazoPrograma] = useState<PrazoPrograma | null>(null);
+    
+    // Estado genérico para dados adaptados por área
+    const [adaptedData, setAdaptedData] = useState<any>(null);
 
     const [loadingKpis, setLoadingKpis] = useState(true);
     const [loadingCharts, setLoadingCharts] = useState(true);
@@ -53,7 +70,7 @@ export function GerarRelatorioPage() {
     const [estimuloNome, setEstimuloNome] = useState<string>('');
     const [terapeutaNome, setTerapeutaNome] = useState<string>('');
 
-    // 🔄 Lê filtros da URL
+    // 🔄 Lê filtros da URL (incluindo área)
     const [filters, setFilters] = useState<Filters>(() => {
         const periodo = searchParams.get('periodo') || '30d';
         const periodoStart = searchParams.get('periodoStart');
@@ -70,6 +87,15 @@ export function GerarRelatorioPage() {
             comparar: searchParams.get('comparar') === 'true',
         };
     });
+
+    // Inicializar área selecionada da URL ou contexto
+    useEffect(() => {
+        const areaFromUrl = searchParams.get('area') as AreaType | null;
+        if (areaFromUrl) {
+            setSelectedArea(areaFromUrl);
+        }
+        // Não define área padrão - usuário deve selecionar explicitamente
+    }, []);  // Só executa uma vez no mount
 
     // Carregar terapeutas
     useEffect(() => {
@@ -142,8 +168,8 @@ export function GerarRelatorioPage() {
         }
     }, [filters.pacienteId, filters.programaId]);
 
-    // 🔄 Sincroniza filtros com URL
-    const syncFiltersToUrl = useCallback((newFilters: Filters) => {
+    // 🔄 Sincroniza filtros com URL (incluindo área)
+    const syncFiltersToUrl = useCallback((newFilters: Filters, area?: AreaType | null) => {
         const params = new URLSearchParams();
         
         if (newFilters.pacienteId) params.set('pacienteId', newFilters.pacienteId);
@@ -151,6 +177,9 @@ export function GerarRelatorioPage() {
         if (newFilters.estimuloId) params.set('estimuloId', newFilters.estimuloId);
         if (newFilters.terapeutaId) params.set('terapeutaId', newFilters.terapeutaId);
         if (newFilters.comparar) params.set('comparar', 'true');
+        
+        // Adiciona área à URL
+        if (area) params.set('area', area);
         
         // Período
         if (newFilters.periodo.mode === 'custom') {
@@ -207,14 +236,37 @@ export function GerarRelatorioPage() {
     }, [filters.terapeutaId, terapeutas]);
 
 
-    const loadData = useCallback(async (currentFilters: Filters) => {
+    const loadData = useCallback(async (currentFilters: Filters, area: AreaType | null) => {
+        if (!area) {
+            console.warn('Área não selecionada para carregar dados');
+            return;
+        }
+
+        const config = getAreaConfig(area);
+        
         try {
             setLoadingKpis(true);
+            setLoadingCharts(true);
+
+            // Para áreas com config customizada, usar endpoint específico
+            if (config.apiEndpoint !== '/api/ocp/reports') {
+                // TODO: Implementar fetch para outros endpoints quando backend estiver pronto
+                console.log(`Endpoint customizado: ${config.apiEndpoint}`);
+                // Por enquanto, mantém dados vazios
+                setKpis(null);
+                setSerieLinha([]);
+                setPrazoPrograma(null);
+                setAdaptedData(null);
+                setLoadingKpis(false);
+                setLoadingCharts(false);
+                return;
+            }
+
+            // Área Fono usa endpoint atual
             const kpisData = await fetchKpis(currentFilters);
             setKpis(kpisData);
             setLoadingKpis(false);
 
-            setLoadingCharts(true);
             const [serieLinhaData, prazoProgramaData] = await Promise.all([
                 fetchSerieLinha(currentFilters),
                 fetchPrazoPrograma(currentFilters),
@@ -222,10 +274,21 @@ export function GerarRelatorioPage() {
 
             setSerieLinha(Array.isArray(serieLinhaData) ? serieLinhaData : []);
             setPrazoPrograma(prazoProgramaData);
+            
+            // Aplicar adapter se disponível
+            if (config.dataAdapter) {
+                const rawData = {
+                    kpis: kpisData,
+                    graphic: serieLinhaData,
+                    programDeadline: prazoProgramaData,
+                };
+                const adapted = config.dataAdapter(rawData);
+                setAdaptedData(adapted);
+            }
+            
             setLoadingCharts(false);
         } catch (error) {
             console.error('Erro ao carregar dados do relatório:', error);
-            // Garantir que os estados sejam definidos mesmo em caso de erro
             setSerieLinha([]);
             setLoadingKpis(false);
             setLoadingCharts(false);
@@ -233,10 +296,10 @@ export function GerarRelatorioPage() {
     }, []);
 
     useEffect(() => {
-        if (selectedPatient) {
-            loadData(filters);
+        if (selectedPatient && selectedArea) {
+            loadData(filters, selectedArea);
         }
-    }, [filters, selectedPatient, loadData]);
+    }, [filters, selectedPatient, selectedArea, loadData]);
 
     useEffect(() => {
         const isHighLevel = user?.perfil_acesso === 'gerente' || user?.perfil_acesso === 'coordenador executivo';
@@ -271,7 +334,7 @@ export function GerarRelatorioPage() {
             pacienteId: patient.id,
         };
         setFilters(newFilters);
-        syncFiltersToUrl(newFilters);
+        syncFiltersToUrl(newFilters, selectedArea);
     };
 
     const handlePatientClear = () => {
@@ -281,18 +344,37 @@ export function GerarRelatorioPage() {
             pacienteId: undefined,
         };
         setFilters(newFilters);
-        syncFiltersToUrl(newFilters);
+        syncFiltersToUrl(newFilters, selectedArea);
     };
 
     const handleFiltersChange = (newFilters: Filters) => {
         setFilters(newFilters);
-        syncFiltersToUrl(newFilters);
+        syncFiltersToUrl(newFilters, selectedArea);
+    };
+
+    const handleAreaChange = (area: AreaType | null) => {
+        setSelectedArea(area);
+        if (area) {
+            setCurrentArea(area); // Atualiza contexto global também
+        }
+        syncFiltersToUrl(filters, area);
+        
+        // Recarregar dados com nova área
+        if (selectedPatient && area) {
+            loadData(filters, area);
+        }
     };
 
     // Handler para salvar o relatório (COM GERAÇÃO DE PDF)
     const handleSaveReport = async (title: string): Promise<SavedReport> => {
         if (!selectedPatient) {
             throw new Error('Nenhum paciente selecionado');
+        }
+
+        // 🆕 Validar área selecionada
+        if (!selectedArea) {
+            toast.error('Selecione uma área terapêutica para salvar o relatório');
+            throw new Error('Nenhuma área terapêutica selecionada');
         }
 
         if (!user?.id) {
@@ -363,6 +445,7 @@ export function GerarRelatorioPage() {
                 patientId: selectedPatient.id,
                 patientName: selectedPatient.name,
                 therapistId: user.id,
+                area: selectedArea, // 🆕 Incluir área no payload
                 filters: {
                     pacienteId: selectedPatient.id,
                     periodo: {
@@ -442,8 +525,19 @@ export function GerarRelatorioPage() {
         setPageTitle('Relatórios de Progresso');
     }, [setPageTitle]);
 
+    // Configurar botão de voltar para ir direto à lista de relatórios
     useEffect(() => {
-        if (selectedPatient) {
+        setOnBackClick(() => () => {
+            navigate('/app/relatorios/lista');
+        });
+
+        return () => {
+            setOnBackClick(undefined);
+        };
+    }, [setOnBackClick, navigate]);
+
+    useEffect(() => {
+        if (selectedPatient && selectedArea) {
             setHeaderActions(
                 <div className="flex items-center gap-3 no-print">
                     <Button
@@ -469,11 +563,11 @@ export function GerarRelatorioPage() {
         }
 
         return () => setHeaderActions(null);
-    }, [selectedPatient, setHeaderActions, handleExportPdf]);
+    }, [selectedPatient, selectedArea, setHeaderActions, handleExportPdf]);
 
     return (
         <div className="flex flex-col w-full">
-            {selectedPatient ? (
+            {selectedPatient && selectedArea ? (
                 <>
                     <ReportExporter 
                         documentTitle={documentTitle}
@@ -481,13 +575,22 @@ export function GerarRelatorioPage() {
                         hideButton={true}
                     >
                         <div data-print-content className="space-y-4 p-4">
-                        {/* Bloco de Cliente - aparece em tela e PDF */}
-                        <div data-print-program-header>
+                        {/* Bloco de Cliente e Área - aparece em tela e PDF */}
+                        <div data-print-program-header className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <PatientSelector
                                 selected={selectedPatient}
                                 onSelect={handlePatientSelect}
                                 onClear={handlePatientClear}
                             />
+                            
+                            {/* Seletor de Área - só aparece na tela */}
+                            <div className="no-print">
+                                <AreaSelectorCard
+                                    value={selectedArea}
+                                    onChange={handleAreaChange}
+                                    disabled={false}
+                                />
+                            </div>
                         </div>
 
                         {/* Observação Clínica - aparece em tela e PDF */}
@@ -527,6 +630,9 @@ export function GerarRelatorioPage() {
                                 </h3>
                                 <div className="flex flex-wrap gap-2">
                                     <span className="chip">
+                                        <strong>Área:</strong> {areaConfig.label}
+                                    </span>
+                                    <span className="chip">
                                         <strong>Período:</strong> {getPeriodoLabel()}
                                     </span>
                                     <span className="chip">
@@ -542,40 +648,80 @@ export function GerarRelatorioPage() {
                             </div>
                         </div>
 
-                        {/* KPIs */}
-                        {kpis && (
+                        {/* KPIs - Renderização Adaptativa por Área */}
+                        {selectedArea === 'fonoaudiologia' && kpis && (
                             <section data-print-block>
                                 <KpiCards data={kpis} loading={loadingKpis} />
                             </section>
                         )}
+                        
+                        {selectedArea !== 'fonoaudiologia' && adaptedData?.kpis && (
+                            <section data-print-block>
+                                <KpiCardsRenderer 
+                                    configs={areaConfig.kpis}
+                                    data={adaptedData.kpis}
+                                    loading={loadingKpis}
+                                />
+                            </section>
+                        )}
 
-                        {/* Gráfico de Evolução */}
-                        <section data-print-block data-print-wide>
-                            <div data-print-chart>
-                                <DualLineProgress data={serieLinha} loading={loadingCharts} />
-                            </div>
-                        </section>
+                        {/* Gráficos - Renderização Adaptativa por Área */}
+                        {selectedArea === 'fonoaudiologia' && (
+                            <section data-print-block data-print-wide>
+                                <div data-print-chart>
+                                    <DualLineProgress data={serieLinha} loading={loadingCharts} />
+                                </div>
+                            </section>
+                        )}
+                        
+                        {selectedArea !== 'fonoaudiologia' && areaConfig.charts.map((chartConfig) => (
+                            <section key={chartConfig.type} data-print-block data-print-wide>
+                                <div data-print-chart>
+                                    <ChartRenderer
+                                        config={chartConfig}
+                                        data={adaptedData?.[chartConfig.dataKey]}
+                                        loading={loadingCharts}
+                                    />
+                                </div>
+                            </section>
+                        ))}
 
-                        {/* Estímulos que precisam de atenção */}
-                        <section data-print-block data-print-wide>
-                            <AttentionStimuliCard
-                                pacienteId={selectedPatient?.id || ''}
-                                programaId={filters.programaId}
-                                terapeutaId={filters.terapeutaId}
-                                periodo={filters.periodo}
-                            />
-                        </section>
+                        {/* Componentes Específicos da Área */}
+                        {areaConfig.attentionComponent && selectedArea === 'fonoaudiologia' && (
+                            <section data-print-block data-print-wide>
+                                <AttentionStimuliCard
+                                    pacienteId={selectedPatient?.id || ''}
+                                    programaId={filters.programaId}
+                                    terapeutaId={filters.terapeutaId}
+                                    periodo={filters.periodo}
+                                />
+                            </section>
+                        )}
 
-                        {/* Prazo do Programa */}
-                        <section data-print-block data-print-wide>
-                            <OcpDeadlineCard
-                                inicio={prazoPrograma?.inicio}
-                                fim={prazoPrograma?.fim}
-                                percent={prazoPrograma?.percent}
-                                label={prazoPrograma?.label}
-                                loading={loadingCharts}
-                            />
-                        </section>
+                        {areaConfig.deadlineComponent && selectedArea === 'fonoaudiologia' && (
+                            <section data-print-block data-print-wide>
+                                <OcpDeadlineCard
+                                    inicio={prazoPrograma?.inicio}
+                                    fim={prazoPrograma?.fim}
+                                    percent={prazoPrograma?.percent}
+                                    label={prazoPrograma?.label}
+                                    loading={loadingCharts}
+                                />
+                            </section>
+                        )}
+                        
+                        {/* Mensagem para áreas sem dados ainda */}
+                        {selectedArea && selectedArea !== 'fonoaudiologia' && !adaptedData && !loadingKpis && (
+                            <section data-print-block>
+                                <div className="text-center py-12 border-2 border-dashed rounded-lg">
+                                    <p className="text-muted-foreground">
+                                        Relatórios para {areaConfig.label} em desenvolvimento.
+                                        <br />
+                                        Em breve você poderá visualizar métricas específicas desta área.
+                                    </p>
+                                </div>
+                            </section>
+                        )}
                     </div>
                 </ReportExporter>
 
@@ -591,15 +737,25 @@ export function GerarRelatorioPage() {
                 <div className="flex flex-col w-full">
                     
                     <div className="space-y-4 md:space-y-6 px-4 pb-4 pt-4 flex-1">
-                        <PatientSelector
-                            selected={selectedPatient}
-                            onSelect={handlePatientSelect}
-                            onClear={handlePatientClear}
-                        />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <PatientSelector
+                                selected={selectedPatient}
+                                onSelect={handlePatientSelect}
+                                onClear={handlePatientClear}
+                            />
+                            
+                            <AreaSelectorCard
+                                value={selectedArea}
+                                onChange={handleAreaChange}
+                                disabled={false}
+                            />
+                        </div>
 
                         <div className="text-center py-12 border-2 border-dashed rounded-lg">
                             <p className="text-muted-foreground">
-                                Selecione um cliente para visualizar o relatório
+                                {!selectedPatient && !selectedArea && 'Selecione um cliente e uma área terapêutica para gerar o relatório'}
+                                {selectedPatient && !selectedArea && 'Selecione uma área terapêutica para continuar'}
+                                {!selectedPatient && selectedArea && 'Selecione um cliente para continuar'}
                             </p>
                         </div>
                     </div>

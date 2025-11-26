@@ -55,8 +55,20 @@ export function NavMain({
         // Verifica se a rota atual corresponde exatamente ao item principal
         if (location.pathname === itemUrl) return true;
         
+        // Para o Dashboard (/app), apenas ativa se estiver exatamente nessa rota
+        if (itemUrl === '/app') {
+            return location.pathname === '/app';
+        }
+        
         // Para subitens de Programas, verifica se a área atual corresponde
+        // E se estamos realmente em uma página de programas (não em sessões ou outras páginas)
         if (subItems && itemUrl === '/app/programas') {
+            // Verifica se estamos em uma rota de programas válida (hub ou subitem)
+            const isOnProgramsRoute = location.pathname === '/app/programas' || 
+                subItems.some(subItem => location.pathname.startsWith(subItem.url));
+            
+            if (!isOnProgramsRoute) return false;
+            
             return subItems.some(subItem => {
                 const areaFromUrl = areaUrlMap[subItem.url];
                 return areaFromUrl === currentArea;
@@ -66,12 +78,6 @@ export function NavMain({
         // Verifica se alguma subrota está ativa
         if (subItems) {
             return subItems.some(subItem => location.pathname.startsWith(subItem.url));
-        }
-        
-        // Para rotas que têm caminhos filhos (ex: /app/programas)
-        // Mas não ativa o Dashboard (/app) quando estiver em outras rotas como /app/programas
-        if (itemUrl === '/app') {
-            return location.pathname === '/app';
         }
         
         return location.pathname.startsWith(itemUrl);
