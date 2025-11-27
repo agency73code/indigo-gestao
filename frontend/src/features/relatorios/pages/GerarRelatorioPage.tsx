@@ -282,6 +282,10 @@ export function GerarRelatorioPage() {
                     const attentionActivitiesData = prepareToAttentionActivities(sessoes);
                     const autonomyByCategory = prepareToAutonomyByCategory(sessoes);
 
+                    // Carregar prazo do programa
+                    const prazoProgramaData = await fetchPrazoPrograma(currentFilters);
+                    setPrazoPrograma(prazoProgramaData);
+
                     // Armazenar dados adaptados
                     setAdaptedData({
                         kpis: toKpis,
@@ -298,6 +302,15 @@ export function GerarRelatorioPage() {
                     const activityDurationData = prepareToActivityDurationData([]);
                     const attentionActivitiesData = prepareToAttentionActivities([]);
                     const autonomyByCategory = prepareToAutonomyByCategory([]);
+
+                    // Tentar carregar prazo mesmo com erro nas sessões
+                    try {
+                        const prazoProgramaData = await fetchPrazoPrograma(currentFilters);
+                        setPrazoPrograma(prazoProgramaData);
+                    } catch (prazoError) {
+                        console.error('Erro ao carregar prazo do programa:', prazoError);
+                        setPrazoPrograma(null);
+                    }
 
                     setAdaptedData({
                         kpis: toKpis,
