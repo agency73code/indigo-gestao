@@ -92,22 +92,24 @@ export function AreaSelectorCard({ value, onChange, disabled }: AreaSelectorCard
         </CardContent>
       </Card>
 
-      {/* Modal de Seleção de Área */}
+      {/* Drawer de Seleção de Área (abre da direita para esquerda) */}
       {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center md:items-center no-print"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setIsOpen(false);
-            }
-          }}
-        >
-          <div className="bg-background w-full max-w-2xl h-[85vh] md:h-auto md:max-h-[80vh] rounded-t-lg md:rounded-lg shadow-lg animate-in slide-in-from-bottom md:fade-in duration-300 flex flex-col">
-            <div className="flex items-center justify-between p-4 sm:p-6 border-b">
+        <>
+          {/* Overlay */}
+          <div
+            className="fixed inset-0 bg-black/50 z-50 no-print"
+            onClick={() => setIsOpen(false)}
+          />
+          
+          {/* Drawer */}
+          <div className="fixed right-0 top-0 h-full w-full max-w-2xl bg-background shadow-lg z-50 flex flex-col animate-in slide-in-from-right duration-300 no-print">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 sm:p-6 border-b shrink-0">
               <h2 className="text-lg font-regular" style={{fontFamily: "sora"}}>Selecionar Área Terapêutica</h2>
               <CloseButton onClick={() => setIsOpen(false)} />
             </div>
 
+            {/* Content */}
             <div className="p-4 sm:p-6 flex-1 overflow-auto">
               <div className="space-y-4">
                 <div className="relative">
@@ -120,7 +122,7 @@ export function AreaSelectorCard({ value, onChange, disabled }: AreaSelectorCard
                   />
                 </div>
 
-                <div className="space-y-2 max-h-[60vh] overflow-y-auto p-0.5">
+                <div className="space-y-2 p-0.5">
                   {filteredAreas.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       Nenhuma área encontrada
@@ -176,7 +178,7 @@ export function AreaSelectorCard({ value, onChange, disabled }: AreaSelectorCard
               </div>
             </div>
           </div>
-        </div>
+        </>
       )}
     </>
   );

@@ -1,4 +1,4 @@
-import { Activity, CheckCircle, HelpCircle, XCircle, Calendar } from 'lucide-react';
+import { Activity, CheckCircle, HandHelping, XCircle, Calendar, Clock } from 'lucide-react';
 import type { RelatorioAreaConfig } from './types';
 
 /**
@@ -6,7 +6,8 @@ import type { RelatorioAreaConfig } from './types';
  * 
  * Características:
  * - Foco em desempenho (Desempenhou, Com Ajuda, Não Desempenhou)
- * - Gráficos de barras por atividade
+ * - Gráficos de barras empilhadas por sessão
+ * - Gráfico de duração por atividade
  * - Análise de independência funcional
  */
 export const toConfig: RelatorioAreaConfig = {
@@ -16,6 +17,13 @@ export const toConfig: RelatorioAreaConfig = {
   
   kpis: [
     {
+      type: 'sessoes', // Tipo válido reutilizado para "atividades"
+      label: 'Atividades',
+      icon: Activity,
+      colorClass: 'text-blue-600',
+      dataKey: 'atividadesTotal',
+    },
+    {
       type: 'desempenhou',
       label: 'Desempenhou',
       icon: CheckCircle,
@@ -24,8 +32,8 @@ export const toConfig: RelatorioAreaConfig = {
     },
     {
       type: 'desempenhou-ajuda',
-      label: 'Desempenhou com Ajuda',
-      icon: HelpCircle,
+      label: 'Com Ajuda',
+      icon: HandHelping,
       colorClass: 'text-amber-600',
       dataKey: 'desempenhouComAjuda',
     },
@@ -37,48 +45,46 @@ export const toConfig: RelatorioAreaConfig = {
       dataKey: 'naoDesempenhou',
     },
     {
+      type: 'tentativas', // Tipo válido reutilizado para "tempo total"
+      label: 'Tempo Total',
+      icon: Clock,
+      colorClass: 'text-indigo-600',
+      dataKey: 'tempoTotal',
+    },
+    {
       type: 'sessoes',
       label: 'Sessões',
       icon: Calendar,
-      colorClass: 'text-blue-600',
-      dataKey: 'sessoes',
+      colorClass: 'text-purple-600',
+      dataKey: 'sessoesTotal',
     },
   ],
   
-  charts: [
-    {
-      type: 'performance-bars',
-      title: 'Desempenho por Atividade',
-      component: null as any, // Será criado
-      dataKey: 'performanceByActivity',
-      height: 400,
-    },
-  ],
+  charts: [],
   
   filters: {
     programa: true,
-    estimulo: true, // Na TO, "estímulos" são "atividades"
+    estimulo: true,
     terapeuta: true,
     periodo: true,
-    comparar: false, // TO não usa comparação de períodos
+    comparar: false,
   },
   
   apiEndpoint: '/api/to/reports',
   
-  // TO não tem componente de atenção ainda (pode ser adicionado depois)
-  attentionComponent: undefined,
+  // attentionComponent e deadlineComponent removidos - lógica no GerarRelatorioPage
   
-  // TO não usa prazo de programa da mesma forma que Fono
-  deadlineComponent: undefined,
-  
-  // Adapter para formatar dados específicos de TO
   dataAdapter: (rawData: any) => ({
     kpis: {
+      atividadesTotal: rawData.kpis?.atividadesTotal || 0,
       desempenhou: rawData.kpis?.desempenhou || 0,
       desempenhouComAjuda: rawData.kpis?.desempenhouComAjuda || 0,
       naoDesempenhou: rawData.kpis?.naoDesempenhou || 0,
-      sessoes: rawData.kpis?.sessoes || 0,
+      tempoTotal: rawData.kpis?.tempoTotal || 0,
+      sessoesTotal: rawData.kpis?.sessoesTotal || 0,
     },
-    performanceByActivity: rawData.performanceByActivity || [],
+    sessionData: rawData.sessionData || [],
+    activityDuration: rawData.activityDuration || [],
+    attentionActivities: rawData.attentionActivities || [],
   }),
 };

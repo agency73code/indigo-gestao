@@ -9,6 +9,8 @@ import { DualLineProgress } from '../gerar-relatorio/components/DualLineProgress
 import { PatientSelector, type Patient } from '../../programas/consultar-programas/components';
 import { OcpDeadlineCard } from '../gerar-relatorio/components/OcpDeadlineCard';
 import { AttentionStimuliCard } from '../../programas/relatorio-geral/components/AttentionStimuliCard';
+import { ToKpiCards, ToActivityDurationChart, ToAttentionActivitiesCard, ToAutonomyByCategoryChart } from '../../programas/relatorio-geral/components/to';
+import ToPerformanceChart from '../../programas/variants/terapia-ocupacional/components/ToPerformanceChart';
 import { SaveReportDialog } from '../components';
 import { AreaSelectorCard } from '../components/AreaSelectorCard';
 import { KpiCardsRenderer } from '../components/KpiCardsRenderer';
@@ -20,6 +22,14 @@ import {
     fetchSerieLinha,
     fetchPrazoPrograma,
 } from '../gerar-relatorio/services/relatorio.service';
+import {
+    calculateToKpis,
+    prepareToActivityDurationData,
+    prepareToAttentionActivities,
+    prepareToPerformanceLineData,
+    prepareToAutonomyByCategory,
+} from '../../programas/relatorio-geral/services/to-report.service';
+import { listSessionsByPatient } from '../../programas/consulta-sessao/services';
 import type { Filters, KpisRelatorio, SerieLinha, PrazoPrograma } from '../gerar-relatorio/types';
 import type { SavedReport } from '../types';
 import { ReportExporter } from '../gerar-relatorio/print/ReportExporter';
@@ -242,13 +252,68 @@ export function GerarRelatorioPage() {
             return;
         }
 
+        if (!currentFilters.pacienteId) {
+            console.warn('Paciente não selecionado');
+            return;
+        }
+
         const config = getAreaConfig(area);
         
         try {
             setLoadingKpis(true);
             setLoadingCharts(true);
 
-            // Para áreas com config customizada, usar endpoint específico
+            // 🎯 TRATAMENTO ESPECÍFICO PARA TO
+            if (area === 'terapia-ocupacional') {
+                try {
+                    // Carregar sessões de TO do paciente
+                    const sessionsResponse = await listSessionsByPatient(currentFilters.pacienteId, {
+                        dateRange: currentFilters.periodo.mode,
+                    });
+
+                    const sessoes = sessionsResponse.items || [];
+
+                    // Calcular KPIs de TO
+                    const toKpis = calculateToKpis(sessoes);
+                    
+                    // Preparar dados dos gráficos
+                    const performanceLineData = prepareToPerformanceLineData(sessoes);
+                    const activityDurationData = prepareToActivityDurationData(sessoes);
+                    const attentionActivitiesData = prepareToAttentionActivities(sessoes);
+                    const autonomyByCategory = prepareToAutonomyByCategory(sessoes);
+
+                    // Armazenar dados adaptados
+                    setAdaptedData({
+                        kpis: toKpis,
+                        performanceLineData,
+                        activityDuration: activityDurationData,
+                        attentionActivities: attentionActivitiesData,
+                        autonomyByCategory,
+                    });
+                } catch (error) {
+                    console.error('Erro ao carregar dados de TO:', error);
+                    // Usar dados mockados em caso de erro
+                    const toKpis = calculateToKpis([]);
+                    const performanceLineData = prepareToPerformanceLineData([]);
+                    const activityDurationData = prepareToActivityDurationData([]);
+                    const attentionActivitiesData = prepareToAttentionActivities([]);
+                    const autonomyByCategory = prepareToAutonomyByCategory([]);
+
+                    setAdaptedData({
+                        kpis: toKpis,
+                        performanceLineData,
+                        activityDuration: activityDurationData,
+                        attentionActivities: attentionActivitiesData,
+                        autonomyByCategory,
+                    });
+                }
+
+                setLoadingKpis(false);
+                setLoadingCharts(false);
+                return;
+            }
+
+            // Para áreas com config customizada (exceto TO), usar endpoint específico
             if (config.apiEndpoint !== '/api/ocp/reports') {
                 // TODO: Implementar fetch para outros endpoints quando backend estiver pronto
                 console.log(`Endpoint customizado: ${config.apiEndpoint}`);
@@ -648,14 +713,22 @@ export function GerarRelatorioPage() {
                             </div>
                         </div>
 
-                        {/* KPIs - Renderização Adaptativa por Área */}
+                        {/* KPIs - Fonoaudiologia */}
                         {selectedArea === 'fonoaudiologia' && kpis && (
                             <section data-print-block>
                                 <KpiCards data={kpis} loading={loadingKpis} />
                             </section>
                         )}
                         
-                        {selectedArea !== 'fonoaudiologia' && adaptedData?.kpis && (
+                        {/* KPIs - Terapia Ocupacional */}
+                        {selectedArea === 'terapia-ocupacional' && adaptedData?.kpis && (
+                            <section data-print-block>
+                                <ToKpiCards data={adaptedData.kpis} loading={loadingKpis} />
+                            </section>
+                        )}
+                        
+                        {/* KPIs - Outras Áreas (genérico) */}
+                        {selectedArea !== 'fonoaudiologia' && selectedArea !== 'terapia-ocupacional' && adaptedData?.kpis && (
                             <section data-print-block>
                                 <KpiCardsRenderer 
                                     configs={areaConfig.kpis}
@@ -665,7 +738,7 @@ export function GerarRelatorioPage() {
                             </section>
                         )}
 
-                        {/* Gráficos - Renderização Adaptativa por Área */}
+                        {/* Gráficos - Fonoaudiologia */}
                         {selectedArea === 'fonoaudiologia' && (
                             <section data-print-block data-print-wide>
                                 <div data-print-chart>
@@ -674,7 +747,61 @@ export function GerarRelatorioPage() {
                             </section>
                         )}
                         
-                        {selectedArea !== 'fonoaudiologia' && areaConfig.charts.map((chartConfig) => (
+                        {/* Gráficos - Terapia Ocupacional */}
+                        {selectedArea === 'terapia-ocupacional' && adaptedData && (
+                            <>
+                                {adaptedData.performanceLineData && (
+                                    <section data-print-block data-print-wide>
+                                        <ToPerformanceChart 
+                                            data={adaptedData.performanceLineData} 
+                                            loading={loadingCharts}
+                                            title="Evolução do Desempenho"
+                                            description="Acompanhamento do desempenho nas atividades de vida diária"
+                                            metaLabel="Meta: Convergência"
+                                        />
+                                    </section>
+                                )}
+                                
+                                {/* Gráficos lado a lado: Tempo por Atividade + Autonomia por Categoria */}
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                    {adaptedData.activityDuration && (
+                                        <section data-print-block>
+                                            <div data-print-chart>
+                                                <ToActivityDurationChart 
+                                                    data={adaptedData.activityDuration} 
+                                                    loading={loadingCharts} 
+                                                />
+                                            </div>
+                                        </section>
+                                    )}
+
+                                    {/* Autonomia por Categoria - Terapia Ocupacional */}
+                                    {adaptedData.autonomyByCategory && (
+                                        <section data-print-block>
+                                            <div data-print-chart>
+                                                <ToAutonomyByCategoryChart 
+                                                    data={adaptedData.autonomyByCategory} 
+                                                    loading={loadingCharts} 
+                                                />
+                                            </div>
+                                        </section>
+                                    )}
+                                </div>
+
+                                {/* Atividades com Atenção - Terapia Ocupacional */}
+                                {adaptedData.attentionActivities && (
+                                    <section data-print-block className="col-span-6">
+                                        <ToAttentionActivitiesCard 
+                                            data={adaptedData.attentionActivities}
+                                            loading={loadingCharts}
+                                        />
+                                    </section>
+                                )}
+                            </>
+                        )}
+                        
+                        {/* Gráficos - Outras Áreas (genérico) */}
+                        {selectedArea !== 'fonoaudiologia' && selectedArea !== 'terapia-ocupacional' && areaConfig.charts.map((chartConfig) => (
                             <section key={chartConfig.type} data-print-block data-print-wide>
                                 <div data-print-chart>
                                     <ChartRenderer
@@ -686,7 +813,7 @@ export function GerarRelatorioPage() {
                             </section>
                         ))}
 
-                        {/* Componentes Específicos da Área */}
+                        {/* Estímulos com Atenção - Fonoaudiologia */}
                         {areaConfig.attentionComponent && selectedArea === 'fonoaudiologia' && (
                             <section data-print-block data-print-wide>
                                 <AttentionStimuliCard
@@ -698,6 +825,7 @@ export function GerarRelatorioPage() {
                             </section>
                         )}
 
+                        {/* Prazo do Programa - Todas as áreas que usam */}
                         {areaConfig.deadlineComponent && selectedArea === 'fonoaudiologia' && (
                             <section data-print-block data-print-wide>
                                 <OcpDeadlineCard
@@ -705,6 +833,19 @@ export function GerarRelatorioPage() {
                                     fim={prazoPrograma?.fim}
                                     percent={prazoPrograma?.percent}
                                     label={prazoPrograma?.label}
+                                    loading={loadingCharts}
+                                />
+                            </section>
+                        )}
+                        
+                        {/* Prazo do Programa - Terapia Ocupacional */}
+                        {selectedArea === 'terapia-ocupacional' && prazoPrograma && (
+                            <section data-print-block data-print-wide>
+                                <OcpDeadlineCard
+                                    inicio={prazoPrograma.inicio}
+                                    fim={prazoPrograma.fim}
+                                    percent={prazoPrograma.percent}
+                                    label={prazoPrograma.label}
                                     loading={loadingCharts}
                                 />
                             </section>

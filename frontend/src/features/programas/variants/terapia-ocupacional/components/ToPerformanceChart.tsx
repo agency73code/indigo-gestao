@@ -1,38 +1,32 @@
-'use client';
-
 import type { ReactNode } from 'react';
-import { Card, CardContent, CardHeader, CardTitleHub } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     ChartContainer,
     ChartTooltip,
     ChartTooltipContent,
     type ChartConfig,
 } from '@/components/ui/chart';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, ReferenceLine, Legend } from 'recharts';
 import type { SerieLinha } from '../../../relatorio-geral/types';
 import { CardDescription } from '@/ui/card';
 
-// Tipo interno para dados do gráfico de TO
-type ToChartDataPoint = {
-    x: string;
-    desempenhou?: number;
-    desempenhou_com_ajuda?: number;
-    nao_desempenhou?: number;
-};
-
 // Configuração do gráfico para TO com terminologia específica
+// IMPORTANTE: TO não usa "acerto" ou "erro" - usamos terminologia de desempenho funcional
+// acerto (dataKey) = Desempenhou (paciente realizou a atividade de forma independente)
+// independencia (dataKey) = Desempenhou com Ajuda (paciente realizou com suporte do terapeuta)
+// erro (dataKey calculado) = Não Desempenhou (paciente não conseguiu realizar a atividade)
 const chartConfig = {
-    desempenhou: {
+    acerto: {
         label: 'Desempenhou',
-        color: 'var(--chart-primary-foreground)', // Mesma cor de "independencia" do Fono
+        color: 'hsl(var(--chart-1))',
     },
-    desempenhou_com_ajuda: {
+    independencia: {
         label: 'Desempenhou com Ajuda',
-        color: 'var(--chart-secondary-foreground)', // Mesma cor de "acerto" do Fono
+        color: 'hsl(var(--chart-2))',
     },
-    nao_desempenhou: {
+    erro: {
         label: 'Não Desempenhou',
-        color: '#ef4444', // Mesma cor de "erro" do Fono
+        color: '#ef4444',
     },
 } satisfies ChartConfig;
 
@@ -45,20 +39,17 @@ interface ToPerformanceChartProps {
     className?: string;
 }
 
-/**
- * Transforma os dados do formato SerieLinha[] para o formato de TO
- * O backend retorna: { x: 'DD/MM', acerto: number, independencia: number }
- * Para TO, mapeamos:
- * - acerto -> desempenhou
- * - independencia -> desempenhou_com_ajuda  
- * - (100 - acerto) -> nao_desempenhou
- */
-const transformToChartData = (series: SerieLinha[]): ToChartDataPoint[] => {
-    return series.map((ponto) => ({
-        x: ponto.x,
-        desempenhou: ponto.acerto,
-        desempenhou_com_ajuda: ponto.independencia,
-        nao_desempenhou: Math.max(0, 100 - ponto.acerto),
+// Função para adicionar o cálculo de "não desempenhou" aos dados
+// IMPORTANTE: Em TO não usamos "erro" - o paciente "não desempenhou" a atividade
+// Mapeamento dos dataKeys:
+// - acerto (dataKey backend) → Desempenhou (sem ajuda)
+// - independencia (dataKey backend) → Desempenhou com Ajuda
+// - erro (dataKey calculado) → Não Desempenhou = 100% - Desempenhou
+const addErrorData = (data: SerieLinha[]) => {
+    if (!Array.isArray(data)) return [];
+    return data.map((item) => ({
+        ...item,
+        erro: 100 - item.acerto, // "Não desempenhou" = 100% - "Desempenhou"
     }));
 };
 
@@ -68,17 +59,12 @@ export default function ToPerformanceChart({
     title,
     description,
     metaLabel,
-    className,
 }: ToPerformanceChartProps) {
     if (loading) {
         return (
-            <Card 
-                padding="hub" 
-                className="rounded-lg border-0 shadow-none"
-                style={{ backgroundColor: 'var(--hub-card-background)' }}
-            >
+            <Card>
                 <CardHeader>
-                    <CardTitleHub>Evolução do Desempenho</CardTitleHub>
+                    <CardTitle>Evolução do Desempenho</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="h-[300px] w-full bg-muted animate-pulse rounded" />
@@ -87,21 +73,20 @@ export default function ToPerformanceChart({
         );
     }
 
-    if (!data || data.length === 0) {
-        return null;
-    }
+    // Adicionar campo de erro calculado aos dados
+    const dataWithError = addErrorData(data || []);
 
-    const chartData = transformToChartData(data);
-    const chartTitle = title ?? 'Evolução de desempenho da atividade';
-    const chartMetaLabel = metaLabel ?? 'Meta: Independência Total';
+    const chartTitle = title ?? 'Evolução do desempenho';
+    const chartMetaLabel = metaLabel ?? 'Meta: Convergência';
 
     let descriptionContent: ReactNode;
     if (description === undefined) {
         descriptionContent = (
             <CardDescription>
-                <strong>Meta: independência total.</strong> Acompanhe a evolução do desempenho: 
-                quanto mais verde (<em>Desempenhou</em>) e menos vermelho (<em>Não Desempenhou</em>), 
-                melhor o progresso na atividade.
+                <strong>Meta: convergência.</strong> Quando <em>Desempenhou</em> e{' '}
+                <em>Desempenhou com Ajuda</em> se sobrepõem,
+                <strong> 100% das atividades foram realizadas de forma independente</strong>. Acompanhe o{' '}
+                <em>gap de autonomia</em>: quanto menor, melhor.
             </CardDescription>
         );
     } else if (typeof description === 'string') {
@@ -110,39 +95,32 @@ export default function ToPerformanceChart({
         descriptionContent = description;
     }
 
-    // Calcular o máximo valor para o domínio do eixo Y (sempre 0-100 para porcentagens)
-    const yDomain = [0, 100];
-
     return (
-        <Card
-            padding="hub"
-            className={`rounded-lg border-0 shadow-none ${className ?? ''}`}
-            style={{ backgroundColor: 'var(--hub-card-background)' }}
-        >
+        <Card className="px-6 py-6 md:px-8 md:py-10 lg:px-8 lg:py-8 mx-0">
             <CardHeader>
-                <div className="mb-2 flex items-center gap-2">
-                    <CardTitleHub>{chartTitle}</CardTitleHub>
-                    <span className="rounded-full border border-border/40 dark:border-white/15 px-2 py-0.5 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2 mb-2">
+                    <CardTitle>{chartTitle}</CardTitle>
+                    <span className="rounded-full border px-2 py-0.5 text-xs text-muted-foreground">
                         {chartMetaLabel}
                     </span>
                 </div>
                 {descriptionContent}
             </CardHeader>
-            <CardContent className="pt-6" data-print-chart>
-                <ChartContainer config={chartConfig} className="aspect-video h-[300px] w-full">
+            <CardContent className="pt-6">
+                <ChartContainer config={chartConfig} className="aspect-[16/9] h-[300px] w-full">
                     <LineChart
-                        data={chartData}
+                        data={dataWithError}
                         margin={{ left: 24, right: 8, top: 26, bottom: 0 }}
                     >
                         <CartesianGrid vertical={false} strokeDasharray="1 1" opacity={0.1} />
                         <XAxis dataKey="x" tickLine={false} axisLine={false} tickMargin={14} />
                         <YAxis
-                            domain={yDomain}
+                            domain={[0, 100]}
                             ticks={[0, 25, 50, 75, 100]}
                             tickLine={false}
                             axisLine={false}
                             tickMargin={10}
-                            width={32}
+                            width={22}
                             tickFormatter={(value) => `${value}%`}
                         />
                         <ChartTooltip
@@ -151,56 +129,109 @@ export default function ToPerformanceChart({
                                 <ChartTooltipContent
                                     indicator="dot"
                                     labelFormatter={(label) => `Data: ${label}`}
-                                    formatter={(value, name) => [
-                                        `${new Intl.NumberFormat('pt-BR', {
-                                            maximumFractionDigits: 1,
-                                        }).format(
-                                            typeof value === 'number' ? value : Number(value),
-                                        )}%`,
-                                        name,
-                                    ]}
+                                    formatter={(value, name) => {
+                                        // Traduzir os dataKeys para labels corretos
+                                        const labels: Record<string, string> = {
+                                            acerto: 'Desempenhou',
+                                            independencia: 'Desempenhou com Ajuda',
+                                            erro: 'Não Desempenhou',
+                                        };
+                                        const displayName = labels[name as string] || name;
+                                        
+                                        return [
+                                            `${new Intl.NumberFormat('pt-BR', {
+                                                maximumFractionDigits: 1,
+                                            }).format(
+                                                typeof value === 'number' ? value : Number(value),
+                                            )}%`,
+                                            displayName,
+                                        ];
+                                    }}
                                 />
                             }
                         />
 
+                        {/* Linhas guia de porcentagem */}
+                        <ReferenceLine
+                            y={0}
+                            stroke="var(--muted-foreground)"
+                            strokeDasharray="2 2"
+                            strokeOpacity={0.2}
+                        />
+                        <ReferenceLine
+                            y={25}
+                            stroke="var(--muted-foreground)"
+                            strokeDasharray="2 2"
+                            strokeOpacity={0.2}
+                        />
+                        <ReferenceLine
+                            y={50}
+                            stroke="var(--muted-foreground)"
+                            strokeDasharray="2 2"
+                            strokeOpacity={0.3}
+                        />
+                        <ReferenceLine
+                            y={75}
+                            stroke="var(--muted-foreground)"
+                            strokeDasharray="2 2"
+                            strokeOpacity={0.2}
+                        />
+                        <ReferenceLine
+                            y={100}
+                            stroke="var(--muted-foreground)"
+                            strokeDasharray="2 2"
+                            strokeOpacity={0.3}
+                        />
                         <Legend
                             content={({ payload }) => (
-                                <div className="mt-4 flex justify-center gap-6">
-                                    {payload?.map((entry, index) => (
-                                        <div key={index} className="flex items-center gap-2">
-                                            <div
-                                                className="h-3 w-3 rounded-sm"
-                                                style={{ backgroundColor: entry.color }}
-                                            />
-                                            <span className="text-sm text-muted-foreground">
-                                                {entry.value}
-                                            </span>
-                                        </div>
-                                    ))}
+                                <div className="flex justify-center gap-6 mt-4">
+                                    {payload?.map((entry, index) => {
+                                        // Traduzir os dataKeys para labels corretos
+                                        const labels: Record<string, string> = {
+                                            acerto: 'Desempenhou',
+                                            independencia: 'Desempenhou com Ajuda',
+                                            erro: 'Não Desempenhou',
+                                        };
+                                        const displayName = labels[entry.dataKey as string] || entry.value;
+                                        
+                                        return (
+                                            <div key={index} className="flex items-center gap-2">
+                                                <div
+                                                    className="w-3 h-3 rounded-sm"
+                                                    style={{ backgroundColor: entry.color }}
+                                                />
+                                                <span className="text-sm text-muted-foreground">
+                                                    {displayName}
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             )}
                         />
 
                         <Line
                             type="linear"
-                            dataKey="desempenhou"
+                            dataKey="acerto"
+                            stroke="var(--chart-secondary-foreground)"
+                            strokeWidth={2}
+                            dot={{ r: 3 }}
+                            isAnimationActive
+                        />
+
+                        <Line
+                            type="linear"
+                            dataKey="independencia"
                             stroke="var(--chart-primary-foreground)"
                             fill="var(--chart-primary-foreground)"
                             strokeWidth={2}
                             dot={{ r: 3 }}
                             isAnimationActive
                         />
+
                         <Line
                             type="linear"
-                            dataKey="desempenhou_com_ajuda"
-                            stroke="var(--chart-secondary-foreground)"
-                            strokeWidth={2}
-                            dot={{ r: 3 }}
-                            isAnimationActive
-                        />
-                        <Line
-                            type="linear"
-                            dataKey="nao_desempenhou"
+                            dataKey="erro"
                             stroke="#ef4444"
                             strokeWidth={2}
                             dot={{ r: 3 }}
