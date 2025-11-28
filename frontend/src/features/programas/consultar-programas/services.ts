@@ -58,8 +58,7 @@ export async function getPatientById(patientId: string): Promise<Patient | null>
             ...data,
             photoUrl: avatarData.avatarUrl ?? null,
         };
-    } catch (error) {
-        console.error('❌ Erro ao buscar avatar do paciente:', error);
+    } catch {
         return { ...data, photoUrl: null };
     }
 }

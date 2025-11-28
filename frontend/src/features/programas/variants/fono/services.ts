@@ -63,13 +63,16 @@ export async function fetchFonoTherapistAvatar(therapistId: string): Promise<str
 }
 
 export async function createFonoProgram(input: CreateProgramInput): Promise<{ id: string }> {
-    const response = await fetch(`${API_URL}/ocp/programs`, {
+    const response = await fetch(`${API_URL}/ocp/create`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify(input),
+        body: JSON.stringify({
+            ...input,
+            area: 'fonoaudiologia',
+        }),
     });
 
     if (!response.ok) {

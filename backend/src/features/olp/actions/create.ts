@@ -1,10 +1,10 @@
 import { prisma } from "../../../config/database.js";
-import type { createOCP, CreateSessionInput } from "../types/olp.types.js";
+import type { CreateProgramPayload, CreateSessionInput } from "../types/olp.types.js";
 
-export async function program(data: createOCP) {
+export async function program(data: CreateProgramPayload) {
     return prisma.ocp.create({
         data: {
-            cliente: { connect: { id: data.clientId } },
+            cliente: { connect: { id: data.patientId } },
             terapeuta: { connect: { id: data.therapistId } },
             nome_programa: data.name ?? data.goalTitle,
             data_inicio: new Date(data.prazoInicio),
@@ -27,6 +27,10 @@ export async function program(data: createOCP) {
                     },
                 })),
             },
+            area: data.area,
+            desempenho_atual: data.area === 'terapia-ocupacional'
+                ? data.currentPerformanceLevel ?? null
+                : null,
         },
     });
 }

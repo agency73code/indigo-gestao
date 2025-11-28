@@ -332,6 +332,7 @@ model sessao {
   criado_em          DateTime       @default(now())
   atualizado_em      DateTime       @updatedAt
   observacoes_sessao String?        @db.Text
+  area String
   cliente            cliente        @relation(fields: [cliente_id], references: [id])
   ocp                ocp            @relation(fields: [ocp_id], references: [id], onDelete: Cascade)
   terapeuta          terapeuta      @relation(fields: [terapeuta_id], references: [id])
@@ -339,12 +340,15 @@ model sessao {
 
   @@index([terapeuta_id, data_criacao])
   @@index([ocp_id])
+  @@index([area])
+  @@index([ocp_id, area])
   @@index([cliente_id], map: "sessao_cliente_id_fkey")
 }
 
 model estimulo {
   id   Int            @id @default(autoincrement())
   nome String         @unique
+  descricao String? @db.Text
   ocps estimulo_ocp[]
 }
 
@@ -353,6 +357,7 @@ model estimulo_ocp {
   id_estimulo Int
   id_ocp      Int
   nome        String?
+  descricao String? @db.Text
   status      Boolean
   estimulo    estimulo       @relation(fields: [id_estimulo], references: [id], onDelete: Cascade)
   ocp         ocp            @relation(fields: [id_ocp], references: [id], onDelete: Cascade)
@@ -365,25 +370,29 @@ model estimulo_ocp {
 model ocp {
   id                    Int            @id @default(autoincrement())
   cliente_id            String
+  terapeuta_id          String
   nome_programa         String
-  criado_em             DateTime       @default(now())
+  data_inicio           DateTime
+  data_fim              DateTime
   objetivo_programa     String?
   objetivo_descricao    String?        @db.Text
+  criterio_aprendizagem String?        @db.Text
+  objetivo_curto        String?        @db.Text
+  descricao_aplicacao   String?        @db.Text
   observacao_geral      String?        @db.Text
+  criado_em             DateTime       @default(now())
   atualizado_em         DateTime       @updatedAt
   status                String         @default("ativado")
-  data_fim              DateTime
-  data_inicio           DateTime
-  criterio_aprendizagem String?        @db.Text
-  descricao_aplicacao   String?        @db.Text
-  objetivo_curto        String?        @db.Text
-  terapeuta_id          String
+  area String
+  desempenho_atual String? @db.Text
   estimulo_ocp          estimulo_ocp[]
   cliente               cliente        @relation(fields: [cliente_id], references: [id])
   terapeuta             terapeuta      @relation("TerapeutaOcp", fields: [terapeuta_id], references: [id])
   sessoes               sessao[]
 
   @@index([cliente_id])
+  @@index([area])
+  @@index([cliente_id, area])
   @@index([nome_programa])
   @@index([terapeuta_id], map: "ocp_terapeuta_id_fkey")
 }

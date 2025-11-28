@@ -2,11 +2,17 @@ import type { NextFunction, Request, Response } from 'express';
 import * as OcpService from './olp.service.js';
 import * as OcpNormalizer from './olp.normalizer.js';
 import { Prisma } from '@prisma/client';
-import type { AttentionStimuliFilters } from './types/olp.types.js';
+import type { AttentionStimuliFilters, CreateProgramPayload } from './types/olp.types.js';
 
 export async function createProgram(req: Request, res: Response) {
     try {
-        const ocp = await OcpService.createProgram(req.body);
+        const body = req.body as CreateProgramPayload;
+
+        if (!body.area) {
+            return res.status(400).json({ error: 'Campo area é obrigatório' });
+        }
+        console.log(body);
+        const ocp = await OcpService.createProgram(body);
         return res.status(201).json({ data: ocp });
     } catch (error) {
         console.error('Erro ao criar programa:', error);

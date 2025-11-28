@@ -65,7 +65,7 @@ export async function fetchToTherapistAvatar(therapistId: string): Promise<strin
 }
 
 export async function createToProgram(input: CreateProgramInput): Promise<{ id: string }> {
-    const response = await fetch(`${API_URL}/ocp/programs`, {
+    const response = await fetch(`${API_URL}/ocp/create`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -73,7 +73,7 @@ export async function createToProgram(input: CreateProgramInput): Promise<{ id: 
         credentials: 'include',
         body: JSON.stringify({
             ...input,
-            area: TO_AREA_ID, // 🔧 CORRIGIDO: Usa constante 'terapia-ocupacional'
+            area: TO_AREA_ID,
         }),
     });
 

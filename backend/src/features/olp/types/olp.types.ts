@@ -1,5 +1,5 @@
 export type createOCP = {
-    clientId: string;
+    patientId: string;
     therapistId: string;
     name: string | null;
     prazoInicio: string;
@@ -16,6 +16,14 @@ export type createOCP = {
         order: number;
     }[];
 }
+
+export type TOcreateOCP = {
+  currentPerformanceLevel?: string | null;
+}
+
+export type CreateProgramPayload =
+  | (createOCP & { area: 'fonoaudiologia' | 'psicopedagogia' | 'terapia-aba' })
+  | (createOCP & { area: 'terapia-ocupacional' } & TOcreateOCP);
 
 export type getOCP = {
   id: string;
