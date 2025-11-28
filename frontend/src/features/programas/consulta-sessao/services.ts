@@ -1,7 +1,7 @@
 import type { Sessao, ResumoSessao, ProgramDetail } from './types';
 
 // Toggle local mocks (follow existing pattern)
-const USE_LOCAL_MOCKS = true;
+const USE_LOCAL_MOCKS = false;
 
 /**
  * Parâmetros de filtragem para listagem de sessões
@@ -80,7 +80,7 @@ export async function listSessionsByPatient(
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' }
     });
-    
+    console.log('teste');
     if (!res.ok) throw new Error(`Erro ao carregar sessões: ${res.status}`);
     
     const response = await res.json();
