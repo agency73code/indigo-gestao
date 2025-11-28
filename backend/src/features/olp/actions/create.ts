@@ -2,6 +2,8 @@ import { prisma } from "../../../config/database.js";
 import type { CreateProgramPayload, CreateSessionInput } from "../types/olp.types.js";
 
 export async function program(data: CreateProgramPayload) {
+    const isTO = data.area === 'terapia-ocupacional';
+
     return prisma.ocp.create({
         data: {
             cliente: { connect: { id: data.patientId } },
@@ -19,16 +21,20 @@ export async function program(data: CreateProgramPayload) {
                 create: data.stimuli.map((s) => ({
                     nome: s.label,
                     status: s.active,
+                    descricao: s.description ?? null,
                     estimulo: {
                         connectOrCreate: {
                             where: { nome: s.label },
-                            create: { nome: s.label },
+                            create: { 
+                                nome: s.label,
+                                descricao: s.description ?? null
+                            },
                         },
                     },
                 })),
             },
             area: data.area,
-            desempenho_atual: data.area === 'terapia-ocupacional'
+            desempenho_atual: isTO
                 ? data.currentPerformanceLevel ?? null
                 : null,
         },
@@ -73,6 +79,7 @@ export async function session(input: CreateSessionInput) {
             trials: {
                 create: trialsData,
             },
+            area: 'fono',
         },
     });
 }

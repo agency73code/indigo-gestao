@@ -14,6 +14,7 @@ export type createOCP = {
         label: string;
         active: boolean;
         order: number;
+        description?: string | null;
     }[];
 }
 
