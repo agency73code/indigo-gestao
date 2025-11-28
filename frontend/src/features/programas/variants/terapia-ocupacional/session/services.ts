@@ -63,10 +63,31 @@ export async function saveToSession(payload: {
     notes?: string;
     files?: SessionFile[];
 }): Promise<void> {
-    // TODO: Implementar chamada real à API
-    console.log('Salvando sessão TO:', payload);
-    
-    return Promise.resolve();
+    const formData = new FormData();
+
+    formData.append('data', JSON.stringify({
+        patientId: payload.patientId,
+        notes: payload.notes ?? '',
+        attempts: payload.attempts,
+    }));
+
+    if (payload.files && payload.files.length > 0) {
+        payload.files.forEach((f) => {
+            formData.append('files', f.file, f.name);
+        });
+    }
+
+    const response = await fetch(`/api/ocp/to/programs/${payload.programId}/sessions`, {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+    });
+
+    if (!response.ok) {
+        const err = await response.json();
+        console.error('Erro ao enviar sessão TO:', err);
+        throw new Error('Erro ao criar sessão');
+    }
 }
 
 /**

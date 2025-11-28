@@ -51,6 +51,42 @@ export async function createSession(req: Request, res: Response) {
     }
 }
 
+export async function createTOSession(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { programId } = req.params;
+        if (!programId) {
+            return res.status(400).json({ success: false, message: 'ID do programa não informado.' });
+        }
+
+        const therapistId = req.user?.id;
+        if (!therapistId) {
+            return res.status(400).json({ success: false, message: 'Usuário não autenticado.' });
+        }
+
+        const data = JSON.parse(req.body.data);
+
+        const { patientId, notes, attempts } = data;
+        if (!patientId || !Array.isArray(attempts)) {
+            return res.status(400).json({ success: false, message: 'Dados inválidos para criar sessão.' });
+        }
+
+        const uploadedFiles = req.files as Express.Multer.File[] || [];
+
+        const session = await OcpService.createTOSession({
+            programId: Number(programId),
+            patientId,
+            therapistId,
+            notes,
+            attempts,
+            files: uploadedFiles
+        });
+
+        return res.status(201).json(session);
+    } catch (error) {
+        next(error);
+    }
+}
+
 export async function updateProgram(req: Request, res: Response, next: NextFunction) {
     try {
         if (!req.params.programId) return res.status(400).json({ success: false, message: 'ID do programa não informado' });

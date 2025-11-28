@@ -95,6 +95,21 @@ export type CreateSessionInput = {
   }[];
 };
 
+export type CreateToSessionInput = {
+  programId: number;
+  patientId: string;
+  therapistId: string;
+  notes?: string;
+  attempts: Array<{
+    attemptNumber: number;
+    activityId: string;
+    type: string;
+    timestamp: string;
+    durationMinutes?: number;
+  }>;
+  files: Express.Multer.File[];
+}
+
 export type UpdateProgramInput = {
   id: number;
   name: string;
