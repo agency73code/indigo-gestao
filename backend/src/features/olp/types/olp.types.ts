@@ -55,6 +55,7 @@ export type OcpStimuloDTO = {
   id_estimulo: number;
   nome: string | null;
   status: boolean;
+  descricao: string | null;
 };
 
 export type OcpDetailDTO = {
@@ -79,6 +80,7 @@ export type OcpDetailDTO = {
   criterio_aprendizagem: string | null;
   observacao_geral: string | null;
   status: string;
+  desempenho_atual: string | null;
 };
 
 export type CreateSessionInput = {

@@ -24,12 +24,14 @@ export function mapOcpDetail(dto: OcpTypes.OcpDetailDTO) {
         stimuli: dto.estimulo_ocp?.map((s: OcpTypes.OcpStimuloDTO, idx: number) => ({
             id: s.id_estimulo.toString(),
             order: idx + 1,
-            label: s.nome ?? '',
+            label: s.nome ?? "",
             active: s.status,
+            description: s.descricao ?? null,
         })) ?? [],
         criteria: dto.criterio_aprendizagem,
-        notes: dto.observacao_geral ?? '',
+        notes: dto.observacao_geral ?? "",
         status: dto.status === 'ativado' ? "active" : "archived",
+        currentPerformanceLevel: dto.desempenho_atual ?? null,
     }
 }
 

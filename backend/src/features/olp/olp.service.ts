@@ -13,8 +13,6 @@ import { ACCESS_LEVELS } from "../../utils/accessLevels.js";
 const MANAGER_LEVEL = ACCESS_LEVELS['gerente'] ?? 5;
 
 export async function createProgram(data: OcpType.CreateProgramPayload) {
-    console.log('==============================')
-    console.log(data);
     const result = await program(data);
     return result;
 }
@@ -67,11 +65,13 @@ export async function getProgramById(programId: string) {
                     id_estimulo: true,
                     nome: true,
                     status: true,
+                    descricao: true,
                 },
                 orderBy: { id_estimulo: 'desc' }
             },
             criterio_aprendizagem: true,
             observacao_geral: true,
+            desempenho_atual: true,
             status: true,
         }
     });
@@ -219,9 +219,9 @@ export async function listClientsByTherapist(therapistId: string, q?: string) {
 export async function listByClientId(
     clientId: string, 
     page = 1,  pageSize = 10, 
+    area: string,
     status: 'active' | 'archived' | 'all' = 'all', 
     q?: string,
-    area?: string,
     sort: 'recent' | 'alphabetic' = 'recent'
 ) {
     const translateStatus =
@@ -232,7 +232,7 @@ export async function listByClientId(
     // cria o objeto base
     const where: Prisma.ocpWhereInput = {
         cliente_id: clientId,
-        ...(area ? { area } : {}),
+        area,
         ...(translateStatus && { status: translateStatus }), // só inclui se existir
     };
 

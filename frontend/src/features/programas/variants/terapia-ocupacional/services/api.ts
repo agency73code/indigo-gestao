@@ -9,7 +9,7 @@ const API_URL = import.meta.env.VITE_API_URL;
  */
 
 export async function fetchToPatientById(id: string): Promise<Patient> {
-    const response = await fetch(`${API_URL}/client/${id}`, {
+    const response = await fetch(`${API_URL}/clientes/${id}`, {
         credentials: 'include',
     });
 
@@ -29,7 +29,7 @@ export async function fetchToPatientById(id: string): Promise<Patient> {
 }
 
 export async function fetchToTherapistById(id: string): Promise<Therapist> {
-    const response = await fetch(`${API_URL}/therapist/${id}`, {
+    const response = await fetch(`${API_URL}/terapeutas/${id}`, {
         credentials: 'include',
     });
 
@@ -96,7 +96,7 @@ export async function listToPrograms(params: {
     
     // 🔧 CORRIGIDO: Usa filtro consistente com AreaContext
     // Backend filtra por especialidade do terapeuta usando label
-    url.searchParams.set('area', 'Terapia Ocupacional');
+    url.searchParams.set('area', 'terapia-ocupacional');
     
     if (params.page) url.searchParams.set('page', params.page.toString());
     if (params.status && params.status !== 'all') url.searchParams.set('status', params.status);
@@ -116,17 +116,9 @@ export async function listToPrograms(params: {
         const json = await response.json();
         const realPrograms = (json?.data ?? []);
         
-        // MOCK: SEMPRE adicionar programa mockado para desenvolvimento
-        // TODO: Remover quando o backend de TO estiver pronto
-        const { mockToProgramListItem } = await import('../mocks/programListMock');
-        console.log('🎭 Adicionando programa MOCK de TO para desenvolvimento');
-        return [mockToProgramListItem, ...realPrograms];
+        return realPrograms;
     } catch (error) {
         console.error('Erro ao buscar programas de TO:', error);
-        
-        // Em caso de erro, retornar apenas o mock para desenvolvimento
-        const { mockToProgramListItem } = await import('../mocks/programListMock');
-        console.log('🎭 Retornando apenas programa MOCK de TO (erro na API)');
-        return [mockToProgramListItem];
+        return [];
     }
 }

@@ -7,7 +7,7 @@ const API_URL = import.meta.env.VITE_API_URL;
  */
 
 export async function fetchFonoPatientById(id: string): Promise<Patient> {
-    const response = await fetch(`${API_URL}/client/${id}`, {
+    const response = await fetch(`${API_URL}/clientes/${id}`, {
         credentials: 'include',
     });
 
@@ -27,7 +27,7 @@ export async function fetchFonoPatientById(id: string): Promise<Patient> {
 }
 
 export async function fetchFonoTherapistById(id: string): Promise<Therapist> {
-    const response = await fetch(`${API_URL}/therapist/${id}`, {
+    const response = await fetch(`${API_URL}/terapeutas/${id}`, {
         credentials: 'include',
     });
 
@@ -93,7 +93,7 @@ export async function listFonoPrograms(params: {
     const url = new URL(`${API_URL}/ocp/clients/${params.patientId}/programs`);
     
     // Filtrar apenas programas de Fonoaudiologia pela área de atuação do terapeuta
-    url.searchParams.set('area', 'Fonoaudiologia');
+    url.searchParams.set('area', 'fonoaudiologia');
     
     if (params.page) url.searchParams.set('page', params.page.toString());
     if (params.status && params.status !== 'all') url.searchParams.set('status', params.status);

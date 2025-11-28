@@ -134,10 +134,13 @@ export async function listClientPrograms(req: Request, res: Response) {
     const status = (req.query.status as 'active' | 'archived' | 'all') || 'all';
     const q = req.query.q as string | undefined;
     const sort = (req.query.sort as 'recent' | 'alphabetic') ?? 'recent';
+    const rawArea = req.query.area;
+    const area = Array.isArray(rawArea) ? rawArea[0] : rawArea;
 
     if (!clientId) return res.status(400).json({ success: false, message: 'ClientId é obrigatório' });
+    if (typeof area !== 'string') return res.status(400).json({ success: false, message: 'Area é obrigatório' });
 
-    const rows = await OcpService.listByClientId(clientId, page, 10, status, q, sort);
+    const rows = await OcpService.listByClientId(clientId, page, 10, area, status, q, sort);
 
     return res.json({ success: true, data: rows.map(OcpNormalizer.mapOcpReturn) });
 }
