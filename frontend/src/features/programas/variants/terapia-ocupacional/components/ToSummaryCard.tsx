@@ -46,7 +46,7 @@ export default function ToSummaryCard({
             : 0;
 
     // Calcular % de "Não Desempenhou" (100 - Desempenhou - Desempenhou com Ajuda)
-    const naoDesempenhouAverage = Math.max(0, 100 - desempenhouAverage - comAjudaAverage);
+    const naoDesempenhouAverage = Math.max(0, 100 - desempenhouAverage);
 
     const formatPercentage = (value: number) => {
         return `${Math.round(value)}%`;

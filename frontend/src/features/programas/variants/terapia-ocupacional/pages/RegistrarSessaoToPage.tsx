@@ -230,7 +230,8 @@ export default function RegistrarSessaoToPage() {
                 duration: 4000,
             });
 
-            const redirectUrl = `/app/programas/terapia-ocupacional/ocp/${sessionState.programId}?patientId=${sessionState.patientId}`;
+            //const redirectUrl = `/app/programas/terapia-ocupacional/ocp/${sessionState.programId}?patientId=${sessionState.patientId}`;
+            const redirectUrl = `/app/programas/terapia-ocupacional/programa/${sessionState.programId}`;
             navigate(redirectUrl);
         } catch (err) {
             console.error('Erro ao salvar sessão:', err);

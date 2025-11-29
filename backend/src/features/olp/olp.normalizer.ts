@@ -17,7 +17,7 @@ export function mapOcpDetail(dto: OcpTypes.OcpDetailDTO) {
         therapistPhotoUrl: null,
         createdAt: dto.criado_em.toISOString(),
         goalTitle: dto.objetivo_programa ?? "",
-        goalDescription: dto.objetivo_descricao ?? "",
+        goalDescription: dto.objetivo_descricao,
         longTermGoalDescription: dto.objetivo_descricao,
         shortTermGoalDescription: dto.objetivo_curto,
         stimuliApplicationDescription: dto.descricao_aplicacao,

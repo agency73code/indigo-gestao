@@ -43,7 +43,7 @@ export default function ToActivitiesPanel({
     const [tempAttempts, setTempAttempts] = useState<Record<string, ToSessionAttempt[]>>({});
 
     const shortTermGoalDescription =
-        program.shortTermGoalDescription ?? program.goalDescription ?? null;
+        program.shortTermGoalDescription ?? program.shortTermGoalDescription ?? null;
 
     const activeActivities = useMemo(
         () => program.activities.filter((activity) => activity.active),

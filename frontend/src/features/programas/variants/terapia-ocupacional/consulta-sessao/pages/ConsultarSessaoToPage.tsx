@@ -11,6 +11,7 @@ import { ToListaSessoes } from '../components';
 import * as services from '@/features/programas/consulta-sessao/services';
 import { getPatientById } from '@/features/programas/consultar-programas/services';
 import type { Sessao, SessaoFiltersState } from '@/features/programas/consulta-sessao/types';
+import { useCurrentArea } from '@/contexts/AreaContext';
 
 const DEFAULT_FILTERS: SessaoFiltersState = {
     q: '',
@@ -24,6 +25,7 @@ export default function ConsultarSessaoToPage() {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const { setPageTitle, setOnBackClick } = usePageTitle();
+    const area = useCurrentArea('terapia-ocupacional');
 
     const [filters, setFilters] = useState<SessaoFiltersState>(DEFAULT_FILTERS);
     const [patient, setPatient] = useState<Patient | null>(null);
@@ -153,6 +155,7 @@ export default function ConsultarSessaoToPage() {
                 const response = await services.listSessionsByPatient(patient.id, {
                     q: filters.q,
                     dateRange: filters.dateRange,
+                    area,
                     programId: filters.program === 'all' ? undefined : filters.program,
                     therapistId: filters.therapist === 'all' ? undefined : filters.therapist,
                     sort: filters.sort,
@@ -179,7 +182,7 @@ export default function ConsultarSessaoToPage() {
         return () => {
             cancelled = true;
         };
-    }, [patient, filters]);
+    }, [patient, filters, area]);
 
     const programOptions = useMemo(() => {
         if (!patient) return [] as string[];

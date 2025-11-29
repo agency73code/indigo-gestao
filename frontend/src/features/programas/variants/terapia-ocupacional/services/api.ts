@@ -38,10 +38,10 @@ export async function fetchToTherapistById(id: string): Promise<Therapist> {
     }
 
     const data = await response.json();
-    
+
     return {
-        id: data.id,
-        name: data.name,
+        id,
+        name: data.nome,
         photoUrl: data.photoUrl,
         especialidade: data.especialidade,
     };

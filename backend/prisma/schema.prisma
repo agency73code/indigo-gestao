@@ -43,7 +43,6 @@ model cliente {
   sessao            sessao[]
   terapeuta         terapeuta_cliente[]
   relatorios        relatorio[]
-  sessao_to sessao_to[]
 
   @@index([nome], map: "nome_idx")
 }
@@ -246,7 +245,6 @@ model terapeuta {
   supervisionados       vinculo_supervisao[]    @relation("SupervisorVinculo")
   disciplina            disciplina[]            @relation("disciplinaToterapeuta")
   relatorios            relatorio[]
-  sessao_to sessao_to[]
 
   @@index([atividade])
   @@index([nome])
@@ -318,6 +316,7 @@ model sessao_trial {
   estimulos_ocp_id Int
   ordem            Int
   resultado        String
+  duracao_minutos  Int?
   estimulosOcp     estimulo_ocp @relation(fields: [estimulos_ocp_id], references: [id], onDelete: Cascade)
   sessao           sessao       @relation(fields: [sessao_id], references: [id], onDelete: Cascade)
 
@@ -326,19 +325,20 @@ model sessao_trial {
 }
 
 model sessao {
-  id                 Int            @id @default(autoincrement())
+  id                 Int              @id @default(autoincrement())
   ocp_id             Int
   cliente_id         String
   terapeuta_id       String
-  data_criacao       DateTime       @default(now())
-  criado_em          DateTime       @default(now())
-  atualizado_em      DateTime       @updatedAt
-  observacoes_sessao String?        @db.Text
-  area String
-  cliente            cliente        @relation(fields: [cliente_id], references: [id])
-  ocp                ocp            @relation(fields: [ocp_id], references: [id], onDelete: Cascade)
-  terapeuta          terapeuta      @relation(fields: [terapeuta_id], references: [id])
+  data_criacao       DateTime         @default(now())
+  criado_em          DateTime         @default(now())
+  atualizado_em      DateTime         @updatedAt
+  observacoes_sessao String?          @db.Text
+  area               String
+  cliente            cliente          @relation(fields: [cliente_id], references: [id])
+  ocp                ocp              @relation(fields: [ocp_id], references: [id], onDelete: Cascade)
+  terapeuta          terapeuta        @relation(fields: [terapeuta_id], references: [id])
   trials             sessao_trial[]
+  arquivos           sessao_arquivo[]
 
   @@index([terapeuta_id, data_criacao])
   @@index([ocp_id])
@@ -348,10 +348,10 @@ model sessao {
 }
 
 model estimulo {
-  id   Int            @id @default(autoincrement())
-  nome String         @unique
-  descricao String? @db.Text
-  ocps estimulo_ocp[]
+  id        Int            @id @default(autoincrement())
+  nome      String         @unique
+  descricao String?        @db.Text
+  ocps      estimulo_ocp[]
 }
 
 model estimulo_ocp {
@@ -359,12 +359,11 @@ model estimulo_ocp {
   id_estimulo Int
   id_ocp      Int
   nome        String?
-  descricao String? @db.Text
+  descricao   String?        @db.Text
   status      Boolean
   estimulo    estimulo       @relation(fields: [id_estimulo], references: [id], onDelete: Cascade)
   ocp         ocp            @relation(fields: [id_ocp], references: [id], onDelete: Cascade)
   trials      sessao_trial[]
-  sessao_to_trial sessao_to_trial[]
 
   @@unique([id_estimulo, id_ocp])
   @@index([id_ocp], map: "estimulo_ocp_id_ocp_fkey")
@@ -386,13 +385,12 @@ model ocp {
   criado_em             DateTime       @default(now())
   atualizado_em         DateTime       @updatedAt
   status                String         @default("ativado")
-  area String
-  desempenho_atual String? @db.Text
+  area                  String
+  desempenho_atual      String?        @db.Text
   estimulo_ocp          estimulo_ocp[]
   cliente               cliente        @relation(fields: [cliente_id], references: [id])
   terapeuta             terapeuta      @relation("TerapeutaOcp", fields: [terapeuta_id], references: [id])
   sessoes               sessao[]
-  sessao_to sessao_to[]
 
   @@index([cliente_id])
   @@index([area])
@@ -440,52 +438,15 @@ model vinculo_supervisao {
   @@index([clinico_id])
 }
 
-model sessao_to {
-  id                Int                @id @default(autoincrement())
-  ocp_id            Int
-  cliente_id        String
-  terapeuta_id      String
-  observacoes       String?            @db.Text
-  data_criacao      DateTime           @default(now())
-  criado_em         DateTime           @default(now())
-  atualizado_em     DateTime           @updatedAt
+model sessao_arquivo {
+  id            Int      @id @default(autoincrement())
+  sessao_id     Int
+  nome          String
+  caminho       String
+  criado_em     DateTime @default(now())
+  atualizado_em DateTime @updatedAt
 
-  trials            sessao_to_trial[]
-  arquivos          sessao_to_arquivo[]
+  sessao sessao @relation(fields: [sessao_id], references: [id], onDelete: Cascade)
 
-  ocp               ocp                @relation(fields: [ocp_id], references: [id], onDelete: Cascade)
-  cliente           cliente            @relation(fields: [cliente_id], references: [id])
-  terapeuta         terapeuta          @relation(fields: [terapeuta_id], references: [id])
-
-  @@index([ocp_id])
-  @@index([cliente_id])
-  @@index([terapeuta_id])
-}
-
-model sessao_to_trial {
-  id                 Int             @id @default(autoincrement())
-  sessao_to_id       Int
-  estimulos_ocp_id   Int
-  ordem              Int
-  resultado          String
-  timestamp          DateTime
-  duracao_minutos    Int?
-
-  sessao_to          sessao_to       @relation(fields: [sessao_to_id], references: [id], onDelete: Cascade)
-  estimulo_ocp       estimulo_ocp    @relation(fields: [estimulos_ocp_id], references: [id])
-
-  @@index([sessao_to_id])
-  @@index([estimulos_ocp_id])
-}
-
-model sessao_to_arquivo {
-  id             Int          @id @default(autoincrement())
-  sessao_to_id   Int
-  nome           String
-  caminho        String       // path do armazenamento
-  criado_em      DateTime     @default(now())
-
-  sessao_to      sessao_to    @relation(fields: [sessao_to_id], references: [id], onDelete: Cascade)
-
-  @@index([sessao_to_id])
+  @@index([sessao_id])
 }

@@ -13,7 +13,6 @@ import type { SessionListItem } from '../../../detalhe-ocp/types';
 import type { SerieLinha } from '../../../relatorio-geral/types';
 import { usePrint } from '../../../relatorio-geral/print/usePrint';
 import indigoLogo from '@/assets/logos/indigo.svg';
-import { fetchToProgramById, fetchToRecentSessions, fetchToProgramChart } from '../mocks/mockService';
 import ToGoalSection from '../components/ToGoalSection';
 import ToCurrentPerformanceSection from '../components/ToCurrentPerformanceSection';
 import ToStimuliSection from '../components/ToStimuliSection';
@@ -280,51 +279,26 @@ export default function ToDetalheProgramaPage() {
             setLoading(true);
             setError(null);
 
-            // Se for o mock, usar serviço mock. Senão, usar API real
-            if (programaId === 'mock-to-001') {
-                const mockData = await fetchToProgramById(programaId);
-                
-                // mockData já vem no formato correto ProgramDetail do mockService
-                setProgram(mockData as ToProgramDetail);
-                
-                // Buscar sessões mock
-                const mockSessions = await fetchToRecentSessions(programaId, 5);
-                setSessions(mockSessions);
-                
-                // Buscar dados do gráfico geral
-                const mockChart = await fetchToProgramChart(programaId);
-                setChartData(mockChart);
-                
-                setRefreshKey(Date.now());
-                setChartLoading(false);
-                
-                console.log('✅ Dados mock carregados:', {
-                    program: mockData.name,
-                    sessions: mockSessions.length,
-                    chartPoints: mockChart.length
+            // API real (quando estiver pronto)
+            const [programData, sessionsData] = await Promise.all([
+                fetchProgramById(programaId),
+                fetchRecentSessions(programaId, 5),
+            ]);
+
+            setProgram(programData as ToProgramDetail);
+            setSessions(sessionsData);
+            setRefreshKey(Date.now());
+
+            setChartLoading(true);
+            fetchProgramChart(programaId)
+                .then((data) => {
+                    setChartData(data);
+                    setChartLoading(false);
+                })
+                .catch((err) => {
+                    console.error('Erro ao carregar gráfico:', err);
+                    setChartLoading(false);
                 });
-            } else {
-                // API real (quando estiver pronto)
-                const [programData, sessionsData] = await Promise.all([
-                    fetchProgramById(programaId),
-                    fetchRecentSessions(programaId, 5),
-                ]);
-
-                setProgram(programData as ToProgramDetail);
-                setSessions(sessionsData);
-                setRefreshKey(Date.now());
-
-                setChartLoading(true);
-                fetchProgramChart(programaId)
-                    .then((data) => {
-                        setChartData(data);
-                        setChartLoading(false);
-                    })
-                    .catch((err) => {
-                        console.error('Erro ao carregar gráfico:', err);
-                        setChartLoading(false);
-                    });
-            }
         } catch (err) {
             console.error('Erro ao carregar dados do programa de TO:', err);
             setError(err instanceof Error ? err.message : 'Erro desconhecido');

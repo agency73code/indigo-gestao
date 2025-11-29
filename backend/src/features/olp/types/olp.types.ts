@@ -108,6 +108,7 @@ export type CreateToSessionInput = {
     durationMinutes?: number;
   }>;
   files: Express.Multer.File[];
+  area: string;
 }
 
 export type UpdateProgramInput = {

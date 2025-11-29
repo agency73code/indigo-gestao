@@ -6,6 +6,7 @@ import type {
     ToSessionSummary,
     SessionFile,
 } from './types';
+import type { AreaType } from '@/contexts/AreaContext';
 
 /**
  * Busca pacientes para seleção na sessão TO
@@ -64,11 +65,13 @@ export async function saveToSession(payload: {
     files?: SessionFile[];
 }): Promise<void> {
     const formData = new FormData();
+    const area: AreaType = 'terapia-ocupacional';
 
     formData.append('data', JSON.stringify({
         patientId: payload.patientId,
         notes: payload.notes ?? '',
         attempts: payload.attempts,
+        area
     }));
 
     if (payload.files && payload.files.length > 0) {

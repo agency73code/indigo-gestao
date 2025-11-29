@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import PatientSelector from '@/features/programas/consultar-programas/components/PatientSelector';
 import type { Patient } from '@/features/programas/consultar-programas/types';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
-import { useArea } from '@/contexts/AreaContext';
+import { useArea, useCurrentArea } from '@/contexts/AreaContext';
 import { ListaSessoes, SearchAndFilters } from '../consulta-sessao/components';
 import * as services from '../consulta-sessao/services';
 import { getPatientById } from '../consultar-programas/services';
@@ -25,6 +25,7 @@ export default function ConsultaSessao() {
     const [searchParams, setSearchParams] = useSearchParams();
     const { setPageTitle, setOnBackClick } = usePageTitle();
     const { currentArea } = useArea();
+    const area = useCurrentArea();
 
     const [filters, setFilters] = useState<SessaoFiltersState>(DEFAULT_FILTERS);
     const [patient, setPatient] = useState<Patient | null>(null);
@@ -164,6 +165,7 @@ export default function ConsultaSessao() {
                 const response = await services.listSessionsByPatient(patient.id, {
                     q: filters.q,
                     dateRange: filters.dateRange,
+                    area,
                     programId: filters.program === 'all' ? undefined : filters.program,
                     therapistId: filters.therapist === 'all' ? undefined : filters.therapist,
                     sort: filters.sort,
@@ -190,7 +192,7 @@ export default function ConsultaSessao() {
         return () => {
             cancelled = true;
         };
-    }, [patient, filters]);
+    }, [patient, filters, area]);
 
     const programOptions = useMemo(() => {
         if (!patient) return [] as string[];

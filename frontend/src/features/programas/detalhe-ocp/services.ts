@@ -20,6 +20,7 @@ export async function fetchRecentSessions(programId: string, _limit = 5): Promis
     if (!res.ok) throw new Error(`Erro ao buscar as sessoes: ${res.statusText}`);
 
     const data = await res.json();
+    console.log(data.data)
     return data.data;
 }
 
@@ -38,6 +39,7 @@ export async function fetchProgramChart(programId: string): Promise<SerieLinha[]
     if (!res.ok) throw new Error(`Erro ao buscar dados do gráfico: ${res.statusText}`);
 
     const data = await res.json();
+
     return data.graphic || [];
 }
 
@@ -50,7 +52,7 @@ export async function fetchStimulusChart(
         estimuloId: stimulusId,
         periodo: { mode: '30d' as const },
     };
-
+    console.log('fetchStimulusChart')
     const filtersParam = encodeURIComponent(JSON.stringify(filters));
     const res = await fetch(`/api/ocp/reports/kpis/${filtersParam}`, {
         method: 'GET',

@@ -13,13 +13,11 @@ import { ACCESS_LEVELS } from "../../utils/accessLevels.js";
 const MANAGER_LEVEL = ACCESS_LEVELS['gerente'] ?? 5;
 
 export async function createProgram(data: OcpType.CreateProgramPayload) {
-    const result = await program(data);
-    return result;
+    return await program(data);
 }
 
 export async function createSession(input: OcpType.CreateSessionInput) {
-    const result = await session(input);
-    return result;
+    return await session(input);
 }
 
 export async function createTOSession(input: OcpType.CreateToSessionInput) {
@@ -281,9 +279,12 @@ function calculateSessionIndependency(session: OcpType.SessionDTO) {
     return independentTrials / totalTrials;
 }
 
-export async function listSessionsByClient(clientId: string, sort: SessionSort = 'recent') {
+export async function listSessionsByClient(clientId: string, sort: SessionSort = 'recent', area: string) {
     const sessions = await prisma.sessao.findMany({
-        where: { cliente_id: clientId },
+        where: {
+            area,
+            cliente_id: clientId,
+        },
         select: {
             id: true,
             cliente_id: true,
@@ -343,6 +344,7 @@ export async function listSessionsByClient(clientId: string, sort: SessionSort =
 
 export async function getKpis(filtros: OcpType.KpisFilters) {
     const where: Prisma.sessaoWhereInput = {};
+
     if (filtros.pacienteId) where.cliente_id = filtros.pacienteId;
     if (filtros.programaId) where.ocp_id = Number(filtros.programaId);
 
@@ -376,18 +378,17 @@ export async function getKpis(filtros: OcpType.KpisFilters) {
             };
         }
     }
-
     const sessions = await prisma.sessao.findMany({
         where,
         include: {
             trials: stimulusId
-                ? {
-                    where: { estimulos_ocp_id: stimulusId },
-                }
-                : true,
+            ? {
+                where: { estimulos_ocp_id: stimulusId },
+            }
+            : true,
         },
     });
-
+    
     const totalSessions = sessions.length;
     const allTrials = sessions.flatMap(s => s.trials);
 
@@ -410,6 +411,7 @@ export async function getKpis(filtros: OcpType.KpisFilters) {
         const totalAttempts = s.trials.length;
         const correctAnswers = s.trials.filter(t => t.resultado === "prompted").length;
         const independentAnswers = s.trials.filter(t => t.resultado === "independent").length;
+        const errorAnswers = s.trials.filter(t => t.resultado === 'error').length;
 
         const accuracyPct = totalAttempts
             ? Math.round(((correctAnswers + independentAnswers) / totalAttempts) * 100)
@@ -419,10 +421,15 @@ export async function getKpis(filtros: OcpType.KpisFilters) {
             ? Math.round((independentAnswers / totalAttempts) * 100)
             : 0;
 
+        const errorPct = totalAttempts
+            ? Math.round((errorAnswers / totalAttempts) * 100)
+            : 0;
+
         return {
             x: format(new Date(s.data_criacao), "dd/MM", { locale: ptBR }),
             acerto: accuracyPct,
             independencia: independencyPct,
+            erros: errorPct,
         };
     });
 

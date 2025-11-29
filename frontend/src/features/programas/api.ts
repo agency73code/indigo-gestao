@@ -50,7 +50,7 @@ export async function fetchProgram(programId: string): Promise<ProgramDetail> {
     } catch {
         program.therapistPhotoUrl = null;
     }
-    
+
     return program;
 }
 

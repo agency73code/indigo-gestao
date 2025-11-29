@@ -269,6 +269,7 @@ export function GerarRelatorioPage() {
                     // Carregar sessões de TO do paciente
                     const sessionsResponse = await listSessionsByPatient(currentFilters.pacienteId, {
                         dateRange: currentFilters.periodo.mode,
+                        area,
                     });
 
                     const sessoes = sessionsResponse.items || [];
@@ -517,35 +518,30 @@ export function GerarRelatorioPage() {
         };
 
         // Usar o serviço otimizado para salvar
-        try {
-            const savedReport = await saveReportToBackend({
-                title,
-                patientId: selectedPatient.id,
-                patientName: selectedPatient.name,
-                therapistId: user.id,
-                area: selectedArea, // 🆕 Incluir área no payload
-                filters: {
-                    pacienteId: selectedPatient.id,
-                    periodo: {
-                        mode: filters.periodo.mode,
-                        start,
-                        end,
-                    },
-                    programaId: filters.programaId,
-                    estimuloId: filters.estimuloId,
-                    terapeutaId: filters.terapeutaId,
-                    comparar: filters.comparar,
+        const savedReport = await saveReportToBackend({
+            title,
+            patientId: selectedPatient.id,
+            patientName: selectedPatient.name,
+            therapistId: user.id,
+            area: selectedArea, // 🆕 Incluir área no payload
+            filters: {
+                pacienteId: selectedPatient.id,
+                periodo: {
+                    mode: filters.periodo.mode,
+                    start,
+                    end,
                 },
-                generatedData,
-                clinicalObservations: observacaoClinica || '',
-                reportElement,
-            });
+                programaId: filters.programaId,
+                estimuloId: filters.estimuloId,
+                terapeutaId: filters.terapeutaId,
+                comparar: filters.comparar,
+            },
+            generatedData,
+            clinicalObservations: observacaoClinica || '',
+            reportElement,
+        });
 
-            return savedReport;
-        } catch (error) {
-            // Erro já tratado pelo serviço
-            throw error;
-        }
+        return savedReport;
     };
 
     // Handler para exportar PDF diretamente (sem salvar)

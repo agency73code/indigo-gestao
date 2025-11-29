@@ -1,4 +1,6 @@
 import type { Sessao, ResumoSessao, ProgramDetail } from './types';
+import type { AreaType } from '@/contexts/AreaContext';
+import { extractAreaFromPath } from '@/utils/areaRoutes';
 
 // Toggle local mocks (follow existing pattern)
 const USE_LOCAL_MOCKS = false;
@@ -11,6 +13,8 @@ export interface SessionListFilters {
   q?: string;
   /** Período: 'all' | 'last7' | 'last30' | 'year' */
   dateRange?: string;
+  /** Área do programa (fonoaudiologia, terapia-ocupacional, etc.) */
+  area?: AreaType;
   /** ID do programa */
   programId?: string;
   /** ID do terapeuta */
@@ -51,6 +55,7 @@ export async function listSessionsByPatient(
   const {
     q = '',
     dateRange = 'all',
+    area = undefined,
     programId = '',
     therapistId = '',
     sort = 'date-desc',
@@ -58,15 +63,13 @@ export async function listSessionsByPatient(
     pageSize = 10
   } = filters;
 
-  // 🎯 FORÇAR MOCK PARA ALESSANDRO (TO)
-  if (USE_LOCAL_MOCKS && patientId === 'b6f174c5-87bc-4946-9bff-2eaf72d977b9') {
-    const mockData = await getMockSessionsData(patientId);
-    return processSessionsLocally(mockData, filters);
-  }
+  const resolvedArea: AreaType | null =
+    area ?? extractAreaFromPath(window.location.pathname) ?? (localStorage.getItem('currentArea') as AreaType | null);
 
   try {
     // Construir URL com query params
     const url = new URL(`/api/ocp/clients/${patientId}/sessions`, window.location.origin);
+    if (resolvedArea) url.searchParams.set('area', resolvedArea);
     // Adiciona filtros se houver
     if (q) url.searchParams.set('q', q);
     if (dateRange && dateRange !== 'all') url.searchParams.set('dateRange', dateRange);
@@ -80,7 +83,7 @@ export async function listSessionsByPatient(
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' }
     });
-    console.log('teste');
+
     if (!res.ok) throw new Error(`Erro ao carregar sessões: ${res.status}`);
     
     const response = await res.json();

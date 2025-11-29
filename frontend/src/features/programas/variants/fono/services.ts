@@ -7,7 +7,7 @@ const API_URL = import.meta.env.VITE_API_URL;
  */
 
 export async function fetchFonoPatientById(id: string): Promise<Patient> {
-    const response = await fetch(`${API_URL}/clientes/${id}`, {
+    const response = await fetch(`${API_URL}/clients/${id}`, {
         credentials: 'include',
     });
 
@@ -36,10 +36,10 @@ export async function fetchFonoTherapistById(id: string): Promise<Therapist> {
     }
 
     const data = await response.json();
-    
+
     return {
-        id: data.id,
-        name: data.name,
+        id,
+        name: data.nome,
         photoUrl: data.photoUrl,
         especialidade: data.especialidade,
     };
