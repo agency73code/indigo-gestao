@@ -13,6 +13,9 @@ export async function listPrograms(params: {
     page?: number;
 }): Promise<ProgramListItem[]> {
     const url = new URL(`/api/ocp/clients/${params.patientId}/programs`, window.location.origin);
+
+    url.searchParams.set('area', 'fonoaudiologia');
+    
     if (params.page) url.searchParams.set('page', params.page.toString());
     if (params.status) url.searchParams.set('status', params.status);
     if (params.q) url.searchParams.set('q', params.q);
@@ -58,8 +61,7 @@ export async function getPatientById(patientId: string): Promise<Patient | null>
             ...data,
             photoUrl: avatarData.avatarUrl ?? null,
         };
-    } catch (error) {
-        console.error('❌ Erro ao buscar avatar do paciente:', error);
+    } catch {
         return { ...data, photoUrl: null };
     }
 }

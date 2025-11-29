@@ -2,6 +2,7 @@ import { Router } from 'express';
 import type { Router as ExpressRouter } from 'express';
 import * as OlpController from '../features/olp/olp.controller.js';
 import { auth } from '../middleware/auth.middleware.js';
+import { upload } from '../config/multer.js';
 
 const router: ExpressRouter = Router();
 
@@ -22,4 +23,6 @@ router.post('/create', OlpController.createProgram);
 router.post('/programs/:programId/sessions', OlpController.createSession);
 router.patch('/programs/:programId', OlpController.updateProgram);
 
+// TO
+router.post('/to/programs/:programId/sessions', upload.any(), OlpController.createTOSession);
 export default router;

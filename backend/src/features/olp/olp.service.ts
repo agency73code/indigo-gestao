@@ -4,7 +4,7 @@ import * as OcpType from "./types/olp.types.js";
 import * as OcpNormalizer from './olp.normalizer.js';
 import { endOfDay, format, parseISO, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { program, session } from "./actions/create.js";
+import { program, session, TOSession } from "./actions/create.js";
 import { programUpdate } from "./actions/update.js";
 import { updateProgramSchema } from "./types/olp.schema.js";
 import { getVisibilityScope } from "../../utils/visibilityFilter.js";
@@ -12,7 +12,7 @@ import { ACCESS_LEVELS } from "../../utils/accessLevels.js";
 
 const MANAGER_LEVEL = ACCESS_LEVELS['gerente'] ?? 5;
 
-export async function createProgram(data: OcpType.createOCP) {
+export async function createProgram(data: OcpType.CreateProgramPayload) {
     const result = await program(data);
     return result;
 }
@@ -20,6 +20,10 @@ export async function createProgram(data: OcpType.createOCP) {
 export async function createSession(input: OcpType.CreateSessionInput) {
     const result = await session(input);
     return result;
+}
+
+export async function createTOSession(input: OcpType.CreateToSessionInput) {
+    return await TOSession(input);
 }
 
 export async function updateProgram(programId: number, input: OcpType.UpdateProgramInput) {
@@ -65,11 +69,13 @@ export async function getProgramById(programId: string) {
                     id_estimulo: true,
                     nome: true,
                     status: true,
+                    descricao: true,
                 },
                 orderBy: { id_estimulo: 'desc' }
             },
             criterio_aprendizagem: true,
             observacao_geral: true,
+            desempenho_atual: true,
             status: true,
         }
     });
@@ -217,8 +223,9 @@ export async function listClientsByTherapist(therapistId: string, q?: string) {
 export async function listByClientId(
     clientId: string, 
     page = 1,  pageSize = 10, 
+    area: string,
     status: 'active' | 'archived' | 'all' = 'all', 
-    q?: string, 
+    q?: string,
     sort: 'recent' | 'alphabetic' = 'recent'
 ) {
     const translateStatus =
@@ -229,6 +236,7 @@ export async function listByClientId(
     // cria o objeto base
     const where: Prisma.ocpWhereInput = {
         cliente_id: clientId,
+        area,
         ...(translateStatus && { status: translateStatus }), // só inclui se existir
     };
 

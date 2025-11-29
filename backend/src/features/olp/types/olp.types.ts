@@ -1,5 +1,5 @@
 export type createOCP = {
-    clientId: string;
+    patientId: string;
     therapistId: string;
     name: string | null;
     prazoInicio: string;
@@ -14,8 +14,17 @@ export type createOCP = {
         label: string;
         active: boolean;
         order: number;
+        description?: string | null;
     }[];
 }
+
+export type TOcreateOCP = {
+  currentPerformanceLevel?: string | null;
+}
+
+export type CreateProgramPayload =
+  | (createOCP & { area: 'fonoaudiologia' | 'psicopedagogia' | 'terapia-aba' })
+  | (createOCP & { area: 'terapia-ocupacional' } & TOcreateOCP);
 
 export type getOCP = {
   id: string;
@@ -46,6 +55,7 @@ export type OcpStimuloDTO = {
   id_estimulo: number;
   nome: string | null;
   status: boolean;
+  descricao: string | null;
 };
 
 export type OcpDetailDTO = {
@@ -70,6 +80,7 @@ export type OcpDetailDTO = {
   criterio_aprendizagem: string | null;
   observacao_geral: string | null;
   status: string;
+  desempenho_atual: string | null;
 };
 
 export type CreateSessionInput = {
@@ -83,6 +94,21 @@ export type CreateSessionInput = {
     type: 'error' | 'prompted' | 'independent';
   }[];
 };
+
+export type CreateToSessionInput = {
+  programId: number;
+  patientId: string;
+  therapistId: string;
+  notes?: string;
+  attempts: Array<{
+    attemptNumber: number;
+    activityId: string;
+    type: string;
+    timestamp: string;
+    durationMinutes?: number;
+  }>;
+  files: Express.Multer.File[];
+}
 
 export type UpdateProgramInput = {
   id: number;
