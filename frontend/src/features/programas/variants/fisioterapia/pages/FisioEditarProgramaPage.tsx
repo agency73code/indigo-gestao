@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Save, X, Target, TrendingUp } from 'lucide-react';
+import { Save, X, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ActionBar from '@/components/ui/action-bar';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';

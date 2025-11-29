@@ -23,7 +23,7 @@ export interface FisioActivityDurationData {
 }
 
 interface FisioActivityDurationChartProps {
-  data: ToActivityDurationData[];
+  data: FisioActivityDurationData[];
   loading?: boolean;
 }
 

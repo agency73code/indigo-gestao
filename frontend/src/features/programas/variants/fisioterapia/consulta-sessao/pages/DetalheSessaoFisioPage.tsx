@@ -5,7 +5,7 @@ import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 import type { Patient } from '@/features/programas/consultar-programas/types';
 import { getPatientById } from '@/features/programas/consultar-programas/services';
 import type { ProgramDetail } from '@/features/programas/detalhe-ocp/types';
-import DetalheSessaoTo from '../components/DetalheSessaoTo';
+import DetalheSessaoFisio from '../components/DetalheSessaoFisio';
 import type { Sessao } from '@/features/programas/consulta-sessao/types';
 import { findSessionById, getSessionById, findProgramSessionById } from '@/features/programas/consulta-sessao/services';
 import { initializeMockSessionFiles } from '@/features/programas/variants/fisioterapia/session/services';
@@ -58,11 +58,11 @@ export default function DetalheSessaoToPage() {
         let sessionData: Sessao | null = null;
 
         if (pacienteIdFromQuery) {
-          sessionData = await getSessionById(pacienteIdFromQuery, sessaoId);
+          sessionData = await getSessionById(pacienteIdFromQuery, sessaoId, 'fisioterapia');
         }
 
         if (!sessionData) {
-          sessionData = await findSessionById(sessaoId);
+          sessionData = await findSessionById(sessaoId, undefined, 'fisioterapia');
         }
 
         if (!sessionData) {
@@ -164,7 +164,7 @@ export default function DetalheSessaoToPage() {
 
   return (
     <div className="space-y-4 p-2 sm:p-4">
-      <DetalheSessaoTo sessao={session} paciente={patient} programa={program} onBack={handleBack} />
+      <DetalheSessaoFisio sessao={session} paciente={patient} programa={program} onBack={handleBack} />
     </div>
   );
 }

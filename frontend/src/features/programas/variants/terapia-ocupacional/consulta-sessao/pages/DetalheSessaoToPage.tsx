@@ -58,11 +58,11 @@ export default function DetalheSessaoToPage() {
         let sessionData: Sessao | null = null;
 
         if (pacienteIdFromQuery) {
-          sessionData = await getSessionById(pacienteIdFromQuery, sessaoId);
+          sessionData = await getSessionById(pacienteIdFromQuery, sessaoId, 'terapia-ocupacional');
         }
 
         if (!sessionData) {
-          sessionData = await findSessionById(sessaoId);
+          sessionData = await findSessionById(sessaoId, undefined, 'terapia-ocupacional');
         }
 
         if (!sessionData) {

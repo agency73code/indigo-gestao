@@ -23,7 +23,7 @@ export interface FisioAutonomyData {
 }
 
 interface FisioAutonomyByCategoryChartProps {
-  data: ToAutonomyData[];
+  data: FisioAutonomyData[];
   loading?: boolean;
 }
 

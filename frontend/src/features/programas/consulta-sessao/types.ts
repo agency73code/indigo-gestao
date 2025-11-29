@@ -28,6 +28,7 @@ export type Sessao = {
   observacoes?: string | null;
   files?: SessionFile[];
   registros: RegistroTentativa[];
+  area: string; // 'fisioterapia' | 'terapia-ocupacional' | 'fonoaudiologia'
 };
 
 export type ResumoSessao = {

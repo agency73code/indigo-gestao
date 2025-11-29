@@ -19,7 +19,7 @@ export interface FisioAttentionActivityItem {
 }
 
 interface FisioAttentionActivitiesCardProps {
-  data: ToAttentionActivityItem[];
+  data: FisioAttentionActivityItem[];
   loading?: boolean;
 }
 

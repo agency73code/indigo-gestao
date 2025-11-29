@@ -276,9 +276,13 @@ export function GerarRelatorioPage() {
             if (area === 'terapia-ocupacional') {
                 try {
                     // Carregar sessões de TO do paciente
-                    const sessionsResponse = await listSessionsByPatient(currentFilters.pacienteId, {
-                        dateRange: currentFilters.periodo.mode,
-                    });
+                    const sessionsResponse = await listSessionsByPatient(
+                        currentFilters.pacienteId,
+                        'terapia-ocupacional',
+                        {
+                            dateRange: currentFilters.periodo.mode,
+                        }
+                    );
 
                     const sessoes = sessionsResponse.items || [];
 
@@ -339,9 +343,13 @@ export function GerarRelatorioPage() {
             if (area === 'fisioterapia') {
                 try {
                     // Carregar sessões de Fisio do paciente
-                    const sessionsResponse = await listSessionsByPatient(currentFilters.pacienteId, {
-                        dateRange: currentFilters.periodo.mode,
-                    });
+                    const sessionsResponse = await listSessionsByPatient(
+                        currentFilters.pacienteId,
+                        'fisioterapia',
+                        {
+                            dateRange: currentFilters.periodo.mode,
+                        }
+                    );
 
                     const sessoes = sessionsResponse.items || [];
 

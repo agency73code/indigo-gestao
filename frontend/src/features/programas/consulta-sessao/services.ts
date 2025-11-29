@@ -43,9 +43,11 @@ export interface SessionListResponse {
  * Lista sessões de um paciente com filtros, ordenação e paginação
  * 
  * 🔄 ADAPTER: Funciona com backend atual (array) e futuro (objeto paginado)
+ * @param area - Área da terapia para filtrar sessões (obrigatório)
  */
 export async function listSessionsByPatient(
   patientId: string,
+  area: string,
   filters: SessionListFilters = {}
 ): Promise<SessionListResponse> {
   const {
@@ -67,6 +69,8 @@ export async function listSessionsByPatient(
   try {
     // Construir URL com query params
     const url = new URL(`/api/ocp/clients/${patientId}/sessions`, window.location.origin);
+    // Adiciona área (obrigatório)
+    url.searchParams.set('area', area);
     // Adiciona filtros se houver
     if (q) url.searchParams.set('q', q);
     if (dateRange && dateRange !== 'all') url.searchParams.set('dateRange', dateRange);
@@ -199,6 +203,7 @@ async function getMockSessionsData(patientId: string): Promise<Sessao[]> {
         prazoFim: '',
         observacoes: s.observacoes ?? undefined,
         registros,
+        area: 'terapia-ocupacional',
       };
     });
 
@@ -242,6 +247,7 @@ async function getMockSessionsData(patientId: string): Promise<Sessao[]> {
       prazoInicio,
       prazoFim,
       registros,
+      area: 'fonoaudiologia',
     };
   });
 }
@@ -338,12 +344,20 @@ function processSessionsLocally(
   };
 }
 
-export async function getSessionById(patientId: string, sessionId: string): Promise<Sessao | null> {
-  const response = await listSessionsByPatient(patientId);
+export async function getSessionById(
+  patientId: string,
+  sessionId: string,
+  area: string
+): Promise<Sessao | null> {
+  const response = await listSessionsByPatient(patientId, area);
   return response.items.find((s) => s.id === sessionId) ?? null;
 }
 
-export async function findSessionById(sessionId: string, patientId?: string): Promise<Sessao | null> {
+export async function findSessionById(
+  sessionId: string,
+  patientId?: string,
+  area: string = 'fonoaudiologia'
+): Promise<Sessao | null> {
   if (USE_LOCAL_MOCKS) {
     let targetPatientId = patientId;
     
@@ -353,7 +367,7 @@ export async function findSessionById(sessionId: string, patientId?: string): Pr
       targetPatientId = mockProgramDetail.patientId;
     }
     
-    const response = await listSessionsByPatient(targetPatientId);
+    const response = await listSessionsByPatient(targetPatientId, area);
     return response.items.find((s) => s.id === sessionId) ?? null;
   }
   return null;

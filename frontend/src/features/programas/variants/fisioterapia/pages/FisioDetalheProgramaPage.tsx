@@ -15,7 +15,7 @@ import { usePrint } from '../../../relatorio-geral/print/usePrint';
 import indigoLogo from '@/assets/logos/indigo.svg';
 import { fetchToProgramById, fetchToRecentSessions, fetchToProgramChart } from '../mocks/mockService';
 import ToGoalSection from '../components/FisioGoalSection';
-import ToCurrentPerformanceSection from '../components/FisioCurrentPerformanceSection';
+// import ToCurrentPerformanceSection from '../components/FisioCurrentPerformanceSection';
 import ToStimuliSection from '../components/FisioStimuliSection';
 import ToNotesSection from '../components/FisioNotesSection';
 import ToProgramActionBar from '../components/FisioProgramActionBar';

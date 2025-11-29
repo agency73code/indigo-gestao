@@ -1,8 +1,8 @@
 import type { Sessao } from '@/features/programas/consulta-sessao/types';
 import type { SerieLinha } from '@/features/relatorios/gerar-relatorio/types';
-import type { FisioActivityDurationData } from '../components/fisio/ToActivityDurationChart';
-import type { FisioAttentionActivityItem } from '../components/fisio/ToAttentionActivitiesCard';
-import type { FisioAutonomyData } from '../components/fisio/ToAutonomyByCategoryChart';
+import type { FisioActivityDurationData } from '../components/fisio/FisioActivityDurationChart';
+import type { FisioAttentionActivityItem } from '../components/fisio/FisioAttentionActivitiesCard';
+import type { FisioAutonomyData } from '../components/fisio/FisioAutonomyByCategoryChart';
 
 export interface FisioKpisData {
   desempenhou: number;

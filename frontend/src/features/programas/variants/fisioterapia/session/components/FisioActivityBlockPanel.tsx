@@ -2,13 +2,10 @@ import { useEffect, useState, useRef, type JSX } from 'react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { SelectFieldRadix, SelectItem } from '@/ui/select-field-radix';
 import { InputField } from '@/ui/input-field';
 import { TextAreaField } from '@/ui/textarea-field';
-import { Check, Flag, Hand, Pause, X, Clock, Weight, AlertCircle, Info } from 'lucide-react';
+import { Check, Flag, Hand, Pause, X } from 'lucide-react';
 
 export type ResultadoTentativa = 'nao-desempenhou' | 'desempenhou-com-ajuda' | 'desempenhou';
 

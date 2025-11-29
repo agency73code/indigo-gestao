@@ -52,11 +52,11 @@ export default function DetalheSessaoPage() {
         let sessionData: Sessao | null = null;
 
         if (pacienteIdFromQuery) {
-          sessionData = await getSessionById(pacienteIdFromQuery, sessaoId);
+          sessionData = await getSessionById(pacienteIdFromQuery, sessaoId, 'fonoaudiologia');
         }
 
         if (!sessionData) {
-          sessionData = await findSessionById(sessaoId, pacienteIdFromQuery || undefined);
+          sessionData = await findSessionById(sessaoId, pacienteIdFromQuery || undefined, 'fonoaudiologia');
         }
 
         if (!sessionData) {

@@ -150,15 +150,19 @@ export default function ConsultarSessaoToPage() {
             setError(null);
 
             try {
-                const response = await services.listSessionsByPatient(patient.id, {
-                    q: filters.q,
-                    dateRange: filters.dateRange,
-                    programId: filters.program === 'all' ? undefined : filters.program,
-                    therapistId: filters.therapist === 'all' ? undefined : filters.therapist,
-                    sort: filters.sort,
-                    page: 1,
-                    pageSize: 10,
-                });
+                const response = await services.listSessionsByPatient(
+                    patient.id,
+                    'fisioterapia',
+                    {
+                        q: filters.q,
+                        dateRange: filters.dateRange,
+                        programId: filters.program === 'all' ? undefined : filters.program,
+                        therapistId: filters.therapist === 'all' ? undefined : filters.therapist,
+                        sort: filters.sort,
+                        page: 1,
+                        pageSize: 10,
+                    }
+                );
                 if (!cancelled) {
                     setSessions(response.items);
                     setTotal(response.total);
