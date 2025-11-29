@@ -1,6 +1,7 @@
 import type { AreaType } from '@/contexts/AreaContext';
 import { fonoConfig } from './fonoConfig';
 import { toConfig } from './toConfig';
+import { fisioConfig } from './fisioConfig';
 import { movimentoConfig } from './movimentoConfig';
 import type { AreaConfigMap, RelatorioAreaConfig } from './types';
 
@@ -15,7 +16,7 @@ import type { AreaConfigMap, RelatorioAreaConfig } from './types';
 export const AREA_CONFIGS: AreaConfigMap = {
   'fonoaudiologia': fonoConfig,
   'terapia-ocupacional': toConfig,
-  'fisioterapia': movimentoConfig,
+  'fisioterapia': fisioConfig,
   'psicomotricidade': movimentoConfig,
   'educacao-fisica': movimentoConfig,
 };

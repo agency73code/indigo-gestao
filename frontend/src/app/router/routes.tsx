@@ -73,6 +73,33 @@ const ConsultarSessoesToPage = lazy(
 const DetalheSessaoToPage = lazy(
     () => import('@/features/programas/variants/terapia-ocupacional/pages/DetalheSessaoToPage'),
 );
+
+// Lazy imports para Fisioterapia
+const AreaHubFisioPage = lazy(
+    () => import('@/features/programas/variants/fisioterapia/pages/AreaHubFisioPage'),
+);
+const FisioCadastroProgramaPage = lazy(
+    () => import('@/features/programas/variants/fisioterapia/pages/FisioCadastroProgramaPage'),
+);
+const FisioConsultaProgramasPage = lazy(
+    () => import('@/features/programas/variants/fisioterapia/pages/FisioConsultaProgramasPage'),
+);
+const FisioDetalheProgramaPage = lazy(
+    () => import('@/features/programas/variants/fisioterapia/pages/FisioDetalheProgramaPage'),
+);
+const FisioEditarProgramaPage = lazy(
+    () => import('@/features/programas/variants/fisioterapia/pages/FisioEditarProgramaPage'),
+);
+const RegistrarSessaoFisioPage = lazy(
+    () => import('@/features/programas/variants/fisioterapia/pages/RegistrarSessaoFisioPage'),
+);
+const ConsultarSessoesFisioPage = lazy(
+    () => import('@/features/programas/variants/fisioterapia/pages/ConsultarSessoesFisioPage'),
+);
+const DetalheSessaoFisioPage = lazy(
+    () => import('@/features/programas/variants/fisioterapia/pages/DetalheSessaoFisioPage'),
+);
+
 const AreaHubMovimentoPage = lazy(
     () => import('@/features/programas/variants/movimento/pages/AreaHubMovimentoPage'),
 );
@@ -86,9 +113,6 @@ const PsicoterapiaPage = lazy(
 );
 const TerapiaAbaPage = lazy(
     () => import('@/features/programas/variants/terapia-aba/pages/TerapiaAbaPage'),
-);
-const FisioterapiaPage = lazy(
-    () => import('@/features/programas/variants/fisioterapia/pages/FisioterapiaPage'),
 );
 const PsicomotricidadePage = lazy(
     () => import('@/features/programas/variants/psicomotricidade/pages/PsicomotricidadePage'),
@@ -330,6 +354,88 @@ export const router = createBrowserRouter([
                                 ),
                                 handle: { breadcrumb: 'Detalhe da Sessão', title: 'Detalhe da Sessão - TO' },
                             },
+                            // Fisioterapia
+                            {
+                                path: 'programas/fisioterapia',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <AreaHubFisioPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Fisioterapia', title: 'Fisioterapia' },
+                            },
+                            {
+                                path: 'programas/fisioterapia/ocp/novo',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <FisioCadastroProgramaPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Novo Programa', title: 'Novo Programa - Fisio' },
+                            },
+                            {
+                                path: 'programas/fisioterapia/ocp/:programaId/editar',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <FisioEditarProgramaPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Editar Programa', title: 'Editar Programa - Fisio' },
+                            },
+                            {
+                                path: 'programas/fisioterapia/consultar',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <FisioConsultaProgramasPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Consultar Programas', title: 'Consultar Programas - Fisio' },
+                            },
+                            {
+                                path: 'programas/fisioterapia/programa/:programaId',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <FisioDetalheProgramaPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Detalhe do Programa', title: 'Programa - Fisio' },
+                            },
+                            {
+                                path: 'programas/fisioterapia/sessoes/registrar',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <RegistrarSessaoFisioPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Registrar Sessão', title: 'Registrar Sessão - Fisio' },
+                            },
+                            {
+                                path: 'programas/fisioterapia/sessoes',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <ConsultarSessoesFisioPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Sessões Fisio', title: 'Sessões - Fisio' },
+                            },
+                            {
+                                path: 'programas/fisioterapia/sessoes/consultar',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <ConsultarSessoesFisioPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Consultar Sessões', title: 'Consultar Sessões - Fisio' },
+                            },
+                            {
+                                path: 'programas/fisioterapia/sessoes/:sessaoId',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <DetalheSessaoFisioPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Detalhe da Sessão', title: 'Detalhe da Sessão - Fisio' },
+                            },
                             {
                                 path: 'programas/movimento',
                                 element: (
@@ -365,15 +471,6 @@ export const router = createBrowserRouter([
                                     </Suspense>
                                 ),
                                 handle: { breadcrumb: 'Terapia ABA', title: 'Terapia ABA' },
-                            },
-                            {
-                                path: 'programas/fisioterapia',
-                                element: (
-                                    <Suspense fallback={suspenseFallback}>
-                                        <FisioterapiaPage />
-                                    </Suspense>
-                                ),
-                                handle: { breadcrumb: 'Fisioterapia', title: 'Fisioterapia' },
                             },
                             {
                                 path: 'programas/psicomotricidade',

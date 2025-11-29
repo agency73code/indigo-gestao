@@ -53,7 +53,7 @@ export function useProgramAreas(): AreaMeta[] {
             title: 'Fisioterapia', 
             path: '/app/programas/fisioterapia',
             icon: Activity,
-            implemented: false
+            implemented: 'in-progress'
         },
         { 
             id: 'psicomotricidade', 

@@ -11,6 +11,8 @@ import { OcpDeadlineCard } from '../gerar-relatorio/components/OcpDeadlineCard';
 import { AttentionStimuliCard } from '../../programas/relatorio-geral/components/AttentionStimuliCard';
 import { ToKpiCards, ToActivityDurationChart, ToAttentionActivitiesCard, ToAutonomyByCategoryChart } from '../../programas/relatorio-geral/components/to';
 import ToPerformanceChart from '../../programas/variants/terapia-ocupacional/components/ToPerformanceChart';
+import { FisioKpiCards, FisioActivityDurationChart, FisioAttentionActivitiesCard, FisioAutonomyByCategoryChart } from '../../programas/relatorio-geral/components/fisio';
+import FisioPerformanceChart from '../../programas/variants/fisioterapia/components/FisioPerformanceChart';
 import { SaveReportDialog } from '../components';
 import { AreaSelectorCard } from '../components/AreaSelectorCard';
 import { KpiCardsRenderer } from '../components/KpiCardsRenderer';
@@ -29,6 +31,13 @@ import {
     prepareToPerformanceLineData,
     prepareToAutonomyByCategory,
 } from '../../programas/relatorio-geral/services/to-report.service';
+import {
+    calculateFisioKpis,
+    prepareFisioActivityDurationData,
+    prepareFisioAttentionActivities,
+    prepareFisioPerformanceLineData,
+    prepareFisioAutonomyByCategory,
+} from '../../programas/relatorio-geral/services/fisio-report.service';
 import { listSessionsByPatient } from '../../programas/consulta-sessao/services';
 import type { Filters, KpisRelatorio, SerieLinha, PrazoPrograma } from '../gerar-relatorio/types';
 import type { SavedReport } from '../types';
@@ -326,7 +335,70 @@ export function GerarRelatorioPage() {
                 return;
             }
 
-            // Para áreas com config customizada (exceto TO), usar endpoint específico
+            // 🎯 TRATAMENTO ESPECÍFICO PARA FISIOTERAPIA
+            if (area === 'fisioterapia') {
+                try {
+                    // Carregar sessões de Fisio do paciente
+                    const sessionsResponse = await listSessionsByPatient(currentFilters.pacienteId, {
+                        dateRange: currentFilters.periodo.mode,
+                    });
+
+                    const sessoes = sessionsResponse.items || [];
+
+                    // Calcular KPIs de Fisio
+                    const fisioKpis = calculateFisioKpis(sessoes);
+                    
+                    // Preparar dados dos gráficos
+                    const performanceLineData = prepareFisioPerformanceLineData(sessoes);
+                    const activityDurationData = prepareFisioActivityDurationData(sessoes);
+                    const attentionActivitiesData = prepareFisioAttentionActivities(sessoes);
+                    const autonomyByCategory = prepareFisioAutonomyByCategory(sessoes);
+
+                    // Carregar prazo do programa
+                    const prazoProgramaData = await fetchPrazoPrograma(currentFilters);
+                    setPrazoPrograma(prazoProgramaData);
+
+                    // Armazenar dados adaptados
+                    setAdaptedData({
+                        kpis: fisioKpis,
+                        performance: performanceLineData,
+                        activityDuration: activityDurationData,
+                        attentionActivities: attentionActivitiesData,
+                        autonomyByCategory,
+                    });
+                } catch (error) {
+                    console.error('Erro ao carregar dados de Fisio:', error);
+                    // Usar dados mockados em caso de erro
+                    const fisioKpis = calculateFisioKpis([]);
+                    const performanceLineData = prepareFisioPerformanceLineData([]);
+                    const activityDurationData = prepareFisioActivityDurationData([]);
+                    const attentionActivitiesData = prepareFisioAttentionActivities([]);
+                    const autonomyByCategory = prepareFisioAutonomyByCategory([]);
+
+                    // Tentar carregar prazo mesmo com erro nas sessões
+                    try {
+                        const prazoProgramaData = await fetchPrazoPrograma(currentFilters);
+                        setPrazoPrograma(prazoProgramaData);
+                    } catch (prazoError) {
+                        console.error('Erro ao carregar prazo do programa:', prazoError);
+                        setPrazoPrograma(null);
+                    }
+
+                    setAdaptedData({
+                        kpis: fisioKpis,
+                        performanceLineData,
+                        activityDuration: activityDurationData,
+                        attentionActivities: attentionActivitiesData,
+                        autonomyByCategory,
+                    });
+                }
+
+                setLoadingKpis(false);
+                setLoadingCharts(false);
+                return;
+            }
+
+            // Para áreas com config customizada (exceto TO e Fisio), usar endpoint específico
             if (config.apiEndpoint !== '/api/ocp/reports') {
                 // TODO: Implementar fetch para outros endpoints quando backend estiver pronto
                 console.log(`Endpoint customizado: ${config.apiEndpoint}`);
@@ -740,8 +812,15 @@ export function GerarRelatorioPage() {
                             </section>
                         )}
                         
+                        {/* KPIs - Fisioterapia */}
+                        {selectedArea === 'fisioterapia' && adaptedData?.kpis && (
+                            <section data-print-block>
+                                <FisioKpiCards data={adaptedData.kpis} loading={loadingKpis} />
+                            </section>
+                        )}
+                        
                         {/* KPIs - Outras Áreas (genérico) */}
-                        {selectedArea !== 'fonoaudiologia' && selectedArea !== 'terapia-ocupacional' && adaptedData?.kpis && (
+                        {selectedArea !== 'fonoaudiologia' && selectedArea !== 'terapia-ocupacional' && selectedArea !== 'fisioterapia' && adaptedData?.kpis && (
                             <section data-print-block>
                                 <KpiCardsRenderer 
                                     configs={areaConfig.kpis}
@@ -813,8 +892,61 @@ export function GerarRelatorioPage() {
                             </>
                         )}
                         
+                        {/* Gráficos - Fisioterapia */}
+                        {selectedArea === 'fisioterapia' && (
+                            <>
+                                {/* Performance - Fisioterapia */}
+                                {adaptedData?.performance && (
+                                    <section data-print-block className="col-span-6">
+                                        <div data-print-chart>
+                                            <FisioPerformanceChart 
+                                                data={adaptedData.performance} 
+                                                loading={loadingCharts} 
+                                            />
+                                        </div>
+                                    </section>
+                                )}
+
+                                <div className="grid grid-cols-2 gap-6 col-span-6">
+                                    {/* Duração de Atividade - Fisioterapia */}
+                                    {adaptedData?.activityDuration && (
+                                        <section data-print-block>
+                                            <div data-print-chart>
+                                                <FisioActivityDurationChart 
+                                                    data={adaptedData.activityDuration} 
+                                                    loading={loadingCharts} 
+                                                />
+                                            </div>
+                                        </section>
+                                    )}
+
+                                    {/* Autonomia por Categoria - Fisioterapia */}
+                                    {adaptedData?.autonomyByCategory && (
+                                        <section data-print-block>
+                                            <div data-print-chart>
+                                                <FisioAutonomyByCategoryChart 
+                                                    data={adaptedData.autonomyByCategory} 
+                                                    loading={loadingCharts} 
+                                                />
+                                            </div>
+                                        </section>
+                                    )}
+                                </div>
+
+                                {/* Atividades com Atenção - Fisioterapia */}
+                                {adaptedData?.attentionActivities && (
+                                    <section data-print-block className="col-span-6">
+                                        <FisioAttentionActivitiesCard 
+                                            data={adaptedData.attentionActivities}
+                                            loading={loadingCharts}
+                                        />
+                                    </section>
+                                )}
+                            </>
+                        )}
+                        
                         {/* Gráficos - Outras Áreas (genérico) */}
-                        {selectedArea !== 'fonoaudiologia' && selectedArea !== 'terapia-ocupacional' && areaConfig.charts.map((chartConfig) => (
+                        {selectedArea !== 'fonoaudiologia' && selectedArea !== 'terapia-ocupacional' && selectedArea !== 'fisioterapia' && areaConfig.charts.map((chartConfig) => (
                             <section key={chartConfig.type} data-print-block data-print-wide>
                                 <div data-print-chart>
                                     <ChartRenderer
@@ -853,6 +985,19 @@ export function GerarRelatorioPage() {
                         
                         {/* Prazo do Programa - Terapia Ocupacional */}
                         {selectedArea === 'terapia-ocupacional' && prazoPrograma && (
+                            <section data-print-block data-print-wide>
+                                <OcpDeadlineCard
+                                    inicio={prazoPrograma.inicio}
+                                    fim={prazoPrograma.fim}
+                                    percent={prazoPrograma.percent}
+                                    label={prazoPrograma.label}
+                                    loading={loadingCharts}
+                                />
+                            </section>
+                        )}
+                        
+                        {/* Prazo do Programa - Fisioterapia */}
+                        {selectedArea === 'fisioterapia' && prazoPrograma && (
                             <section data-print-block data-print-wide>
                                 <OcpDeadlineCard
                                     inicio={prazoPrograma.inicio}
