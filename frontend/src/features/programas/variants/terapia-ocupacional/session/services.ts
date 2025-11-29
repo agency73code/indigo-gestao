@@ -74,11 +74,24 @@ export async function saveToSession(payload: {
         area
     }));
 
-    if (payload.files && payload.files.length > 0) {
-        payload.files.forEach((f) => {
-            formData.append('files', f.file, f.name);
-        });
-    }
+    const files = payload.files ?? [];
+    files.forEach((file) => {
+        const originalName = file.file.name;
+        const customName = file.name?.trim();
+        const originalExtension = originalName.includes('.')
+            ? originalName.slice(originalName.lastIndexOf('.'))
+            : '';
+
+        const filename = customName
+            ? `${customName}${
+                  originalExtension && !customName.toLowerCase().endsWith(originalExtension.toLowerCase())
+                      ? originalExtension
+                      : ''
+              }`
+            : originalName;
+
+        formData.append('files', file.file, filename);
+    });
 
     const response = await fetch(`/api/ocp/to/programs/${payload.programId}/sessions`, {
         method: 'POST',

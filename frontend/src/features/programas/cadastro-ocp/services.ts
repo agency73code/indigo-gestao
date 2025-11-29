@@ -15,11 +15,6 @@ export async function fetchPatientById(id: string): Promise<Patient> {
     return json.data as Patient;
 }
 
-export async function fetchTherapistById(id: string): Promise<Therapist> {
-    console.log(id);
-    return { id: '1', name: 'kaio', photoUrl: null }
-}
-
 export async function createProgram(payload: CreateProgramInput): Promise<{ id: string }> {
     const res = await fetch('/api/ocp/create', {
         method: 'POST',

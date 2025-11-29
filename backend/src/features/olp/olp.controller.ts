@@ -69,7 +69,7 @@ export async function createTOSession(req: Request, res: Response, next: NextFun
         if (!patientId || !Array.isArray(attempts) || !area) {
             return res.status(400).json({ success: false, message: 'Dados inválidos para criar sessão.' });
         }
-
+        console.log(req.files);
         const uploadedFiles = req.files as Express.Multer.File[] || [];
 
         const session = await OcpService.createTOSession({

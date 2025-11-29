@@ -222,6 +222,7 @@ export default function RegistrarSessaoToPage() {
                 programId: sessionState.programId!,
                 attempts: sessionState.attempts,
                 notes: sessionState.notes,
+                files: sessionState.files,
             });
 
             toast.success('Sessão registrada com sucesso! 🎉', {

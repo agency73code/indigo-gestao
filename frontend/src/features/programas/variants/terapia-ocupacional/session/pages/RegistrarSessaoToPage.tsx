@@ -334,7 +334,6 @@ export default function RegistrarSessaoToPage() {
                             </div>
 
                             {/* Upload de arquivos da sessão */}
-                            {console.log('🎬 Tentando renderizar ToSessionFiles', { files: sessionState.files, disabled: savingSession })}
                             <ToSessionFiles
                                 files={sessionState.files || []}
                                 onFilesChange={handleFilesChange}

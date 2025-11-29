@@ -52,7 +52,6 @@ export default function ToStimulusEvolutionInline({
         }
     }, [isOpen, hasFetched, loading, loadChart]);
 
-    console.log('kaio');
     const showEmptyState = hasFetched && !loading && !error && (!chartData || chartData.length === 0);
     const showChart = !loading && !error && chartData && chartData.length > 0;
 
