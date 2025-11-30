@@ -18,24 +18,44 @@ interface SessionFilesProps {
 }
 
 // Helper para determinar o ícone e cor baseado no tipo de arquivo
-function getFileIcon(type: string): { Icon: typeof File; color: string } {
+function getFileIcon(type: string): { Icon: typeof File; bgColor: string; textColor: string } {
     if (type.startsWith('image/')) {
-        return { Icon: Image, color: 'text-blue-600' };
+        return { 
+            Icon: Image, 
+            bgColor: 'bg-blue-100 dark:bg-blue-950',
+            textColor: 'text-blue-700 dark:text-blue-400'
+        };
     }
     if (type.startsWith('video/')) {
-        return { Icon: Video, color: 'text-purple-600' };
+        return { 
+            Icon: Video, 
+            bgColor: 'bg-purple-100 dark:bg-purple-950',
+            textColor: 'text-purple-700 dark:text-purple-400'
+        };
     }
     if (type === 'application/pdf') {
-        return { Icon: FileText, color: 'text-red-600' };
+        return { 
+            Icon: FileText, 
+            bgColor: 'bg-red-100 dark:bg-red-950',
+            textColor: 'text-red-700 dark:text-red-400'
+        };
     }
     if (
         type === 'application/msword' ||
         type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     ) {
-        return { Icon: FileIcon, color: 'text-blue-700' };
+        return { 
+            Icon: FileIcon, 
+            bgColor: 'bg-blue-100 dark:bg-blue-950',
+            textColor: 'text-blue-700 dark:text-blue-400'
+        };
     }
     // Outros arquivos
-    return { Icon: File, color: 'text-gray-600' };
+    return { 
+        Icon: File, 
+        bgColor: 'bg-gray-100 dark:bg-gray-800',
+        textColor: 'text-gray-700 dark:text-gray-400'
+    };
 }
 
 // Helper para formatar tamanho de arquivo
@@ -85,14 +105,19 @@ export default function SessionFiles({ files }: SessionFilesProps) {
                 {hasFiles ? (
                     <div className="grid gap-3">
                         {files.map((file) => {
-                            const { Icon, color } = getFileIcon(file.type);
+                            const { Icon, bgColor, textColor } = getFileIcon(file.type);
                             return (
                                 <div
                                     key={file.id}
-                                    className="flex items-center justify-between p-3 bg-muted/50 rounded-md border border-border hover:bg-muted/70 transition-colors"
+                                    className="flex items-center justify-between p-3 bg-muted/30 rounded-md border border-border hover:bg-muted/50 transition-colors"
                                 >
                                     <div className="flex items-center gap-3 flex-1 min-w-0">
-                                        <Icon className={`h-8 w-8 shrink-0 ${color}`} />
+                                        {/* Ícone com borda colorida - mesmo padrão dos indicadores */}
+                                        <div 
+                                            className={`flex items-center justify-center w-10 h-10 rounded-md shrink-0 ${bgColor} ${textColor}`}
+                                        >
+                                            <Icon className="h-5 w-5" />
+                                        </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-medium text-foreground truncate">
                                                 {file.name}

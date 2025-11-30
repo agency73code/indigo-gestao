@@ -198,7 +198,7 @@ export default function AppLayout() {
                                     
                                     {/* Card interno com o conteúdo da página - ou renderização direta */}
                                     {noMainContainer ? (
-                                        <div className="flex-1 overflow-auto min-h-0">
+                                        <div className="flex-1 overflow-y-auto min-h-0">
                                             <ErrorBoundary>
                                                 <PageTransition>
                                                     <Outlet />
@@ -206,7 +206,7 @@ export default function AppLayout() {
                                             </ErrorBoundary>
                                         </div>
                                     ) : (
-                                        <main className="flex-1 overflow-auto bg-(--bg-main) border border-gray-200/10 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] min-h-0">
+                                        <main className="flex-1 overflow-y-auto bg-(--bg-main) border border-gray-200/10 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] min-h-0">
                                             <ErrorBoundary>
                                                 <PageTransition>
                                                     <Outlet />

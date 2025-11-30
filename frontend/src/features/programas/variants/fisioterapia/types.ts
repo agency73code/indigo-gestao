@@ -86,7 +86,7 @@ export interface FisioSessionDetail {
 
 /**
  * Resumo de desempenho por atividade (objetivo específico) em uma sessão
- * 
+/**
  * 🔧 NOTA: Usa camelCase para contadores (convenção JavaScript)
  * A conversão de/para API (kebab-case) é feita nos services
  */
@@ -100,5 +100,12 @@ export type FisioActivitySummary = {
     };
     total: number;
     durationMinutes?: number | null; // tempo total em minutos
+    // Metadados de fisioterapia
+    usedLoad?: boolean;
+    loadValue?: string;
+    hadDiscomfort?: boolean;
+    discomfortDescription?: string;
+    hadCompensation?: boolean;
+    compensationDescription?: string;
     // Status predominante é calculado no componente, não precisa vir do backend
 };

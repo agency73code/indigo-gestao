@@ -8,32 +8,32 @@ import {
 } from '@/components/ui/chart';
 
 const chartConfig = {
-  duracao: {
-    label: 'Duração',
-    color: '#2C7FFF',
+  carga: {
+    label: 'Carga',
+    color: '#9333EA', // Roxo para diferenciação
   },
   label: {
     color: 'hsl(var(--background))',
   },
 } satisfies ChartConfig;
 
-export interface FisioActivityDurationData {
+export interface FisioActivityLoadData {
   atividade: string;
-  duracao: number;
+  carga: number; // Carga média em kg
 }
 
-interface FisioActivityDurationChartProps {
-  data: FisioActivityDurationData[];
+interface FisioActivityLoadChartProps {
+  data: FisioActivityLoadData[];
   loading?: boolean;
 }
 
-export function FisioActivityDurationChart({ data, loading = false }: FisioActivityDurationChartProps) {
+export function FisioActivityDurationChart({ data, loading = false }: FisioActivityLoadChartProps) {
   if (loading) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Tempo por Atividade</CardTitle>
-          <CardDescription>Carregando dados de duração...</CardDescription>
+          <CardTitle>Carga por Atividade</CardTitle>
+          <CardDescription>Carregando dados de carga...</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center h-[400px]">
@@ -48,7 +48,7 @@ export function FisioActivityDurationChart({ data, loading = false }: FisioActiv
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Tempo por Atividade</CardTitle>
+          <CardTitle>Carga por Atividade</CardTitle>
           <CardDescription>Nenhum dado disponível para exibição</CardDescription>
         </CardHeader>
         <CardContent>
@@ -63,9 +63,9 @@ export function FisioActivityDurationChart({ data, loading = false }: FisioActiv
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Tempo por Atividade</CardTitle>
+        <CardTitle>Carga por Atividade</CardTitle>
         <CardDescription>
-          Duração média de cada atividade trabalhada (em minutos)
+          Carga média utilizada em cada exercício (em kg)
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -94,15 +94,15 @@ export function FisioActivityDurationChart({ data, loading = false }: FisioActiv
               tickFormatter={(value) => value.slice(0, 3)}
               hide
             />
-            <XAxis dataKey="duracao" type="number" hide />
+            <XAxis dataKey="carga" type="number" hide />
             <ChartTooltip
               cursor={false}
               content={<ChartTooltipContent indicator="line" />}
             />
             <Bar
-              dataKey="duracao"
+              dataKey="carga"
               layout="vertical"
-              fill="var(--color-duracao)"
+              fill="var(--color-carga)"
               radius={4}
             >
               <LabelList
@@ -113,12 +113,12 @@ export function FisioActivityDurationChart({ data, loading = false }: FisioActiv
                 fontSize={12}
               />
               <LabelList
-                dataKey="duracao"
+                dataKey="carga"
                 position="right"
                 offset={8}
                 className="fill-foreground"
                 fontSize={12}
-                formatter={(value: number) => `${value} min`}
+                formatter={(value: number) => `${value} kg`}
               />
             </Bar>
           </BarChart>

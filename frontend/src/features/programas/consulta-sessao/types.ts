@@ -4,6 +4,13 @@ export type RegistroTentativa = {
   stimulusId?: string;
   stimulusLabel?: string;
   durationMinutes?: number | null; // tempo em minutos (para TO)
+  // Metadata para Fisioterapia
+  usedLoad?: boolean;
+  loadValue?: string;
+  hadDiscomfort?: boolean;
+  discomfortDescription?: string;
+  hadCompensation?: boolean;
+  compensationDescription?: string;
 };
 
 export type SessionFile = {

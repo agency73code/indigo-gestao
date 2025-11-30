@@ -5,6 +5,9 @@ import {
     CheckCircle,
     MinusCircle,
     AlertCircle,
+    Dumbbell,
+    AlertTriangle,
+    Activity,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitleHub } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -101,6 +104,11 @@ export default function ToListaSessoes({ sessoes, onVerDetalhes }: ToListaSessoe
                     const statusKind = calcFisioStatus(desempenhou, ajuda, naoDesempenhou);
                     const statusConfig = getStatusConfig(statusKind);
                     const StatusIcon = statusConfig.icon;
+                    
+                    // Agregar metadados da sessão
+                    const hasLoad = sessao.registros.some(r => r.usedLoad);
+                    const hasDiscomfort = sessao.registros.some(r => r.hadDiscomfort);
+                    const hasCompensation = sessao.registros.some(r => r.hadCompensation);
 
                     return (
                         <Card
@@ -157,28 +165,95 @@ export default function ToListaSessoes({ sessoes, onVerDetalhes }: ToListaSessoe
                                 <Separator className="my-3" />
 
                                 {/* Footer com terapeuta e status */}
-                                <div className="flex items-center justify-between text-xs">
+                                <div className="flex items-center justify-between text-xs gap-2">
                                     <div className="flex items-center gap-1.5 text-muted-foreground">
                                         <User className="h-3.5 w-3.5" />
                                         <span className="line-clamp-1">{sessao.terapeutaNome}</span>
                                     </div>
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Badge
-                                                variant="secondary"
-                                                className={`gap-1.5 px-3 py-1 ${statusConfig.cls}`}
-                                            >
-                                                <StatusIcon className="h-3.5 w-3.5" />
-                                                <span className="text-xs font-medium whitespace-nowrap">
-                                                    {statusConfig.label}
-                                                </span>
-                                            </Badge>
-                                        </TooltipTrigger>
-                                        <TooltipContent className="max-w-[220px] text-xs">
-                                            Status predominante baseado no tipo de desempenho mais frequente nesta sessão.
-                                            Verde: desempenhou, Laranja: desempenhou com ajuda, Vermelho: não desempenhou.
-                                        </TooltipContent>
-                                    </Tooltip>
+                                    <div className="flex items-center gap-2">
+                                        {/* Indicadores compactos de metadata */}
+                                        {(hasLoad || hasDiscomfort || hasCompensation) && (
+                                            <div className="flex items-center gap-1.5">
+                                                {hasLoad && (
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <div 
+                                                                className="flex items-center justify-center w-6 h-6 rounded-md cursor-help transition-colors"
+                                                                style={{
+                                                                    color: 'var(--badge-load-text)',
+                                                                    backgroundColor: 'var(--badge-load-bg)'
+                                                                }}
+                                                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--badge-load-hover)'}
+                                                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--badge-load-bg)'}
+                                                            >
+                                                                <Dumbbell className="h-3.5 w-3.5" />
+                                                            </div>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent className="max-w-[180px] text-xs">
+                                                            Exercício com carga utilizado
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                )}
+                                                {hasDiscomfort && (
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <div 
+                                                                className="flex items-center justify-center w-6 h-6 rounded-md cursor-help transition-colors"
+                                                                style={{
+                                                                    color: 'var(--badge-discomfort-text)',
+                                                                    backgroundColor: 'var(--badge-discomfort-bg)'
+                                                                }}
+                                                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--badge-discomfort-hover)'}
+                                                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--badge-discomfort-bg)'}
+                                                            >
+                                                                <AlertTriangle className="h-3.5 w-3.5" />
+                                                            </div>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent className="max-w-[180px] text-xs">
+                                                            Desconforto apresentado
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                )}
+                                                {hasCompensation && (
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <div 
+                                                                className="flex items-center justify-center w-6 h-6 rounded-md cursor-help transition-colors"
+                                                                style={{
+                                                                    color: 'var(--badge-compensation-text)',
+                                                                    backgroundColor: 'var(--badge-compensation-bg)'
+                                                                }}
+                                                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--badge-compensation-hover)'}
+                                                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--badge-compensation-bg)'}
+                                                            >
+                                                                <Activity className="h-3.5 w-3.5" />
+                                                            </div>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent className="max-w-[180px] text-xs">
+                                                            Compensação apresentada
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                )}
+                                            </div>
+                                        )}
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Badge
+                                                    variant="secondary"
+                                                    className={`gap-1.5 px-3 py-1 ${statusConfig.cls}`}
+                                                >
+                                                    <StatusIcon className="h-3.5 w-3.5" />
+                                                    <span className="text-xs font-medium whitespace-nowrap">
+                                                        {statusConfig.label}
+                                                    </span>
+                                                </Badge>
+                                            </TooltipTrigger>
+                                            <TooltipContent className="max-w-[220px] text-xs">
+                                                Status predominante baseado no tipo de desempenho mais frequente nesta sessão.
+                                                Verde: desempenhou, Laranja: desempenhou com ajuda, Vermelho: não desempenhou.
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>

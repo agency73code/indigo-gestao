@@ -2,12 +2,12 @@ import { useMemo } from 'react';
 import type { Sessao, Patient, ProgramDetail, RegistroTentativa } from '@/features/programas/consulta-sessao/types';
 import { aggregateByStimulus, sumCounts } from '@/features/programas/consulta-sessao/pages/helpers';
 import HeaderSessao from '@/features/programas/consulta-sessao/components/HeaderSessao';
-import SessionSummary from '@/features/programas/consulta-sessao/pages/components/SessionSummary';
 import SessionNotes from '@/features/programas/consulta-sessao/pages/components/SessionNotes';
 import SessionFiles from '@/features/programas/consulta-sessao/pages/components/SessionFiles';
 import { getSessionFiles } from '@/features/programas/variants/fisioterapia/session/services';
 import { getFisioStatus, getFisioStatusConfig } from '../helpers';
 import { ToActivitiesPerformanceList } from '.';
+import FisioSessionSummary from './FisioSessionSummary';
 
 interface DetalheSessaoToProps {
     sessao: Sessao;
@@ -32,6 +32,34 @@ function aggregateDurationsByActivity(registros: RegistroTentativa[]): Record<st
     return durations;
 }
 
+// Helper para agregar metadata por atividade (última tentativa)
+function aggregateMetadataByActivity(registros: RegistroTentativa[]): Record<string, {
+    usedLoad?: boolean;
+    loadValue?: string;
+    hadDiscomfort?: boolean;
+    discomfortDescription?: string;
+    hadCompensation?: boolean;
+    compensationDescription?: string;
+}> {
+    const metadata: Record<string, any> = {};
+    
+    registros.forEach(r => {
+        if (r.stimulusId) {
+            // Sempre atualizar com a última tentativa (sobrescreve)
+            metadata[r.stimulusId] = {
+                usedLoad: r.usedLoad,
+                loadValue: r.loadValue,
+                hadDiscomfort: r.hadDiscomfort,
+                discomfortDescription: r.discomfortDescription,
+                hadCompensation: r.hadCompensation,
+                compensationDescription: r.compensationDescription,
+            };
+        }
+    });
+    
+    return metadata;
+}
+
 export default function DetalheSessaoTo({ sessao, paciente, programa, onBack }: DetalheSessaoToProps) {
     // Agregar contagens por atividade (usando stimulusId como activityId)
     const countsByActivity = useMemo(
@@ -42,6 +70,12 @@ export default function DetalheSessaoTo({ sessao, paciente, programa, onBack }: 
     // Agregar tempos por atividade
     const durationsByActivity = useMemo(
         () => aggregateDurationsByActivity(sessao.registros),
+        [sessao.registros],
+    );
+
+    // Agregar metadata por atividade
+    const metadataByActivity = useMemo(
+        () => aggregateMetadataByActivity(sessao.registros),
         [sessao.registros],
     );
 
@@ -58,6 +92,22 @@ export default function DetalheSessaoTo({ sessao, paciente, programa, onBack }: 
 
     // Calcular status geral da sessão (TO usa status predominante)
     const statusSessao = useMemo(() => getFisioStatus(countsSessao), [countsSessao]);
+    const statusConfig = useMemo(() => getFisioStatusConfig(statusSessao), [statusSessao]);
+
+    // Calcular contadores de metadata
+    const { loadCount, discomfortCount, compensationCount } = useMemo(() => {
+        let load = 0;
+        let discomfort = 0;
+        let compensation = 0;
+
+        Object.values(metadataByActivity).forEach(meta => {
+            if (meta.usedLoad) load++;
+            if (meta.hadDiscomfort) discomfort++;
+            if (meta.hadCompensation) compensation++;
+        });
+
+        return { loadCount: load, discomfortCount: discomfort, compensationCount: compensation };
+    }, [metadataByActivity]);
 
     // Mapear atividades com informações necessárias
     const activitiesInfo = useMemo(
@@ -82,20 +132,25 @@ export default function DetalheSessaoTo({ sessao, paciente, programa, onBack }: 
         <div className="space-y-4">
             <HeaderSessao sessao={sessao} paciente={paciente} programa={programa} onBack={onBack} />
 
-            <SessionSummary
+            <FisioSessionSummary
                 counts={countsSessao}
-                duration={null}
-                planned={plannedCount}
-                worked={workedCount}
-                date={sessao.data}
-                status={'positivo' as any} // Ignorado pois passamos statusConfig customizado
-                statusConfig={getFisioStatusConfig(statusSessao)}
+                activitiesWorked={workedCount}
+                activitiesPlanned={plannedCount}
+                hasLoad={loadCount > 0}
+                loadCount={loadCount}
+                hasDiscomfort={discomfortCount > 0}
+                discomfortCount={discomfortCount}
+                hasCompensation={compensationCount > 0}
+                compensationCount={compensationCount}
+                statusLabel={statusConfig.label}
+                statusCls={statusConfig.cls}
             />
 
             <ToActivitiesPerformanceList
                 activities={activitiesInfo}
                 countsByActivity={countsByActivity}
                 durationsByActivity={durationsByActivity}
+                metadataByActivity={metadataByActivity}
                 defaultSort="severity"
             />
 

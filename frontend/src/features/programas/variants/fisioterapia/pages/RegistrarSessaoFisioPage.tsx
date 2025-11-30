@@ -40,7 +40,7 @@ export default function RegistrarSessaoToPage() {
     const { setPageTitle } = usePageTitle();
 
     useEffect(() => {
-        setPageTitle('Nova Sessão - TO');
+        setPageTitle('Nova Sessão - Fisioterapia');
     }, [setPageTitle]);
 
     const [searchParams] = useSearchParams();

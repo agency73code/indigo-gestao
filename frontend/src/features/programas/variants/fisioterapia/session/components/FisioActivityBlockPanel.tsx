@@ -27,8 +27,15 @@ export type ActivityBlockPanelProps = {
     activity: ActivitySummary;
     paused: boolean;
     counts: BlockCounts;
-    onCreateAttempt: (resultado: ResultadoTentativa, durationMinutes?: number) => void;
-    onRemoveAttempt?: (resultado: ResultadoTentativa) => void; // Nova prop para decrementar
+    onCreateAttempt: (resultado: ResultadoTentativa, durationMinutes?: number, metadata?: {
+        usedLoad?: boolean;
+        loadValue?: string;
+        hadDiscomfort?: boolean;
+        discomfortDescription?: string;
+        hadCompensation?: boolean;
+        compensationDescription?: string;
+    }) => void;
+    onRemoveAttempt?: (resultado: ResultadoTentativa) => void;
     onPause: () => void;
     onFinalizarBloco: () => void;
 };
@@ -163,22 +170,30 @@ export default function ToActivityBlockPanel({
             }
 
             const minutes = durationMinutes ? parseInt(durationMinutes, 10) : undefined;
+            const metadata = {
+                usedLoad: usedLoad === 'sim',
+                loadValue: usedLoad === 'sim' ? loadValue : undefined,
+                hadDiscomfort: hadDiscomfort === 'sim',
+                discomfortDescription: hadDiscomfort === 'sim' ? discomfortDescription : undefined,
+                hadCompensation: hadCompensation === 'sim',
+                compensationDescription: hadCompensation === 'sim' ? compensationDescription : undefined,
+            };
 
             if (event.key === '1' && !paused) {
                 event.preventDefault();
-                onCreateAttempt('nao-desempenhou', minutes);
+                onCreateAttempt('nao-desempenhou', minutes, metadata);
                 return;
             }
 
             if (event.key === '2' && !paused) {
                 event.preventDefault();
-                onCreateAttempt('desempenhou-com-ajuda', minutes);
+                onCreateAttempt('desempenhou-com-ajuda', minutes, metadata);
                 return;
             }
 
             if (event.key === '3' && !paused) {
                 event.preventDefault();
-                onCreateAttempt('desempenhou', minutes);
+                onCreateAttempt('desempenhou', minutes, metadata);
                 return;
             }
 
@@ -198,7 +213,7 @@ export default function ToActivityBlockPanel({
         return () => {
             window.removeEventListener('keydown', handleHotkeys);
         };
-    }, [onCreateAttempt, onFinalizarBloco, onPause, paused, durationMinutes]);
+    }, [onCreateAttempt, onFinalizarBloco, onPause, paused, durationMinutes, usedLoad, loadValue, hadDiscomfort, discomfortDescription, hadCompensation, compensationDescription]);
 
     const attemptOptions: Array<{
         key: ResultadoTentativa;
@@ -258,7 +273,7 @@ export default function ToActivityBlockPanel({
                         label="Qual a carga utilizada?"
                         id="load-value"
                         type="text"
-                        placeholder="Ex: 5 kg, 10 kg, 2 kg"
+                        placeholder="Ex: 2 kg, 5 kg, 10 kg"
                         value={loadValue}
                         onChange={(e) => setLoadValue(e.target.value)}
                         disabled={paused}
@@ -267,61 +282,72 @@ export default function ToActivityBlockPanel({
             </div>
 
 
-            {/* Campo de desconforto */}
-            <div>
-                <SelectFieldRadix
-                    label="O cliente apresentou desconforto durante a execução?"
-                    value={hadDiscomfort}
-                    onValueChange={setHadDiscomfort}
-                    disabled={paused}
-                    placeholder="Selecione"
-                >
-                    <SelectItem value="nao">Não</SelectItem>
-                    <SelectItem value="sim">Sim</SelectItem>
-                </SelectFieldRadix>
-                
-                {hadDiscomfort === 'sim' && (
-                    <div className="mt-3">
-                        <TextAreaField
-                            label="Descreva o desconforto apresentado"
-                            id="discomfort-desc"
-                            placeholder="Ex: Dor na região lombar, fadiga muscular..."
-                            value={discomfortDescription}
-                            onChange={(e) => setDiscomfortDescription(e.target.value)}
+            {/* Campos de desconforto e compensação */}
+            <div className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Campo de desconforto */}
+                    <div>
+                        <SelectFieldRadix
+                            label="O cliente apresentou desconforto durante a execução?"
+                            value={hadDiscomfort}
+                            onValueChange={setHadDiscomfort}
                             disabled={paused}
-                            maxLength={500}
-                            className="min-h-[100px]"
-                        />
+                            placeholder="Selecione"
+                        >
+                            <SelectItem value="nao">Não</SelectItem>
+                            <SelectItem value="sim">Sim</SelectItem>
+                        </SelectFieldRadix>
                     </div>
-                )}
-            </div>
 
-
-            {/* Campo de compensação */}
-            <div>
-                <SelectFieldRadix
-                    label="O cliente apresentou compensação durante a execução?"
-                    value={hadCompensation}
-                    onValueChange={setHadCompensation}
-                    disabled={paused}
-                    placeholder="Selecione"
-                >
-                    <SelectItem value="nao">Não</SelectItem>
-                    <SelectItem value="sim">Sim</SelectItem>
-                </SelectFieldRadix>
-                
-                {hadCompensation === 'sim' && (
-                    <div className="mt-3">
-                        <TextAreaField
-                            label="Descreva a compensação apresentada"
-                            id="compensation-desc"
-                            placeholder="Ex: Inclinação lateral do tronco, rotação excessiva..."
-                            value={compensationDescription}
-                            onChange={(e) => setCompensationDescription(e.target.value)}
+                    {/* Campo de compensação */}
+                    <div>
+                        <SelectFieldRadix
+                            label="O cliente apresentou compensação durante a execução?"
+                            value={hadCompensation}
+                            onValueChange={setHadCompensation}
                             disabled={paused}
-                            maxLength={500}
-                            className="min-h-[100px]"
-                        />
+                            placeholder="Selecione"
+                        >
+                            <SelectItem value="nao">Não</SelectItem>
+                            <SelectItem value="sim">Sim</SelectItem>
+                        </SelectFieldRadix>
+                    </div>
+                </div>
+
+                {/* Descrições lado a lado quando ambos são "Sim" */}
+                {(hadDiscomfort === 'sim' || hadCompensation === 'sim') && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {/* Descrição do desconforto */}
+                        {hadDiscomfort === 'sim' && (
+                            <div>
+                                <TextAreaField
+                                    label="Descreva o desconforto apresentado"
+                                    id="discomfort-desc"
+                                    placeholder="Ex: Dor na região lombar, fadiga muscular..."
+                                    value={discomfortDescription}
+                                    onChange={(e) => setDiscomfortDescription(e.target.value)}
+                                    disabled={paused}
+                                    maxLength={500}
+                                    className="min-h-[100px]"
+                                />
+                            </div>
+                        )}
+
+                        {/* Descrição da compensação */}
+                        {hadCompensation === 'sim' && (
+                            <div>
+                                <TextAreaField
+                                    label="Descreva a compensação apresentada"
+                                    id="compensation-desc"
+                                    placeholder="Ex: Inclinação lateral do tronco, rotação excessiva..."
+                                    value={compensationDescription}
+                                    onChange={(e) => setCompensationDescription(e.target.value)}
+                                    disabled={paused}
+                                    maxLength={500}
+                                    className="min-h-[100px]"
+                                />
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
@@ -353,7 +379,15 @@ export default function ToActivityBlockPanel({
                         const gesture = useGestureHandler(
                             () => {
                                 const minutes = durationMinutes ? parseInt(durationMinutes, 10) : undefined;
-                                onCreateAttempt(option.key, minutes);
+                                const metadata = {
+                                    usedLoad: usedLoad === 'sim',
+                                    loadValue: usedLoad === 'sim' ? loadValue : undefined,
+                                    hadDiscomfort: hadDiscomfort === 'sim',
+                                    discomfortDescription: hadDiscomfort === 'sim' ? discomfortDescription : undefined,
+                                    hadCompensation: hadCompensation === 'sim',
+                                    compensationDescription: hadCompensation === 'sim' ? compensationDescription : undefined,
+                                };
+                                onCreateAttempt(option.key, minutes, metadata);
                             },
                             () => {
                                 if (onRemoveAttempt && counts[option.key] > 0) {

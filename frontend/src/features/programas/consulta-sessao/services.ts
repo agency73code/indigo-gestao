@@ -1,7 +1,7 @@
 import type { Sessao, ResumoSessao, ProgramDetail } from './types';
 
 // Toggle local mocks (follow existing pattern)
-const USE_LOCAL_MOCKS = false;
+const USE_LOCAL_MOCKS = true;
 
 /**
  * Parâmetros de filtragem para listagem de sessões
@@ -60,9 +60,9 @@ export async function listSessionsByPatient(
     pageSize = 10
   } = filters;
 
-  // 🎯 FORÇAR MOCK PARA ALESSANDRO (TO)
-  if (USE_LOCAL_MOCKS && patientId === 'b6f174c5-87bc-4946-9bff-2eaf72d977b9') {
-    const mockData = await getMockSessionsData(patientId);
+  // 🎯 FORÇAR MOCK PARA ALESSANDRO (TO) ou qualquer fisioterapia
+  if (USE_LOCAL_MOCKS) {
+    const mockData = await getMockSessionsData(patientId, area);
     return processSessionsLocally(mockData, filters);
   }
 
@@ -121,7 +121,7 @@ export async function listSessionsByPatient(
     if (USE_LOCAL_MOCKS) {
       console.warn('🔄 Usando mock local (erro na API)');
       // Mock usa estrutura diferente - convertemos para Sessao[]
-      const mockData = await getMockSessionsData(patientId);
+      const mockData = await getMockSessionsData(patientId, area);
       return processSessionsLocally(mockData, filters);
     }
     throw error;
@@ -131,8 +131,110 @@ export async function listSessionsByPatient(
 /**
  * ⚠️ FUNÇÃO AUXILIAR: Converte mocks para formato Sessao[]
  */
-async function getMockSessionsData(patientId: string): Promise<Sessao[]> {
-  // 🎯 Se for o Alessandro, retornar sessões TO mocadas
+async function getMockSessionsData(patientId: string, area?: string): Promise<Sessao[]> {
+  // 🎯 Se for Fisioterapia, retornar sessões FISIO mocadas
+  if (area === 'fisioterapia') {
+    const { mockToSessions } = await import(
+      '@/features/programas/variants/fisioterapia/mocks/mockSessions'
+    );
+    const { mockToProgram } = await import(
+      '@/features/programas/variants/fisioterapia/mocks/programMock'
+    );
+
+    const result = mockToSessions.map((s) => {
+      // Gerar registros baseados no activitiesSummary ao invés do preview
+      const registros: Array<{
+        tentativa: number;
+        resultado: 'acerto' | 'erro' | 'ajuda';
+        stimulusId?: string;
+        stimulusLabel?: string;
+        durationMinutes?: number | null;
+        usedLoad?: boolean;
+        loadValue?: string;
+        hadDiscomfort?: boolean;
+        discomfortDescription?: string;
+        hadCompensation?: boolean;
+        compensationDescription?: string;
+      }> = [];
+
+      let tentativaCounter = 1;
+
+      if (s.activitiesSummary && s.activitiesSummary.length > 0) {
+        // Para cada atividade, criar tentativas baseadas nas contagens
+        s.activitiesSummary.forEach((activity) => {
+          // Adicionar tentativas de erro (não desempenhou)
+          for (let i = 0; i < activity.counts.naoDesempenhou; i++) {
+            registros.push({
+              tentativa: tentativaCounter++,
+              resultado: 'erro',
+              stimulusId: activity.activityId,
+              stimulusLabel: activity.activityName,
+              durationMinutes: activity.durationMinutes,
+              usedLoad: activity.usedLoad,
+              loadValue: activity.loadValue,
+              hadDiscomfort: activity.hadDiscomfort,
+              discomfortDescription: activity.discomfortDescription,
+              hadCompensation: activity.hadCompensation,
+              compensationDescription: activity.compensationDescription,
+            });
+          }
+
+          // Adicionar tentativas de ajuda (desempenhou com ajuda)
+          for (let i = 0; i < activity.counts.desempenhouComAjuda; i++) {
+            registros.push({
+              tentativa: tentativaCounter++,
+              resultado: 'ajuda',
+              stimulusId: activity.activityId,
+              stimulusLabel: activity.activityName,
+              durationMinutes: activity.durationMinutes,
+              usedLoad: activity.usedLoad,
+              loadValue: activity.loadValue,
+              hadDiscomfort: activity.hadDiscomfort,
+              discomfortDescription: activity.discomfortDescription,
+              hadCompensation: activity.hadCompensation,
+              compensationDescription: activity.compensationDescription,
+            });
+          }
+
+          // Adicionar tentativas de acerto (desempenhou)
+          for (let i = 0; i < activity.counts.desempenhou; i++) {
+            registros.push({
+              tentativa: tentativaCounter++,
+              resultado: 'acerto',
+              stimulusId: activity.activityId,
+              stimulusLabel: activity.activityName,
+              durationMinutes: activity.durationMinutes,
+              usedLoad: activity.usedLoad,
+              loadValue: activity.loadValue,
+              hadDiscomfort: activity.hadDiscomfort,
+              discomfortDescription: activity.discomfortDescription,
+              hadCompensation: activity.hadCompensation,
+              compensationDescription: activity.compensationDescription,
+            });
+          }
+        });
+      }
+
+      return {
+        id: s.id,
+        pacienteId: patientId,
+        terapeutaId: 'therapist-001',
+        terapeutaNome: s.therapistName || 'João Batista',
+        data: s.date,
+        programa: mockToProgram?.name || 'Programa de Fisioterapia',
+        objetivo: mockToProgram?.goalDescription || 'Desenvolver força e amplitude de movimento',
+        prazoInicio: '',
+        prazoFim: '',
+        observacoes: s.observacoes ?? undefined,
+        registros,
+        area: 'fisioterapia',
+      };
+    });
+
+    return result;
+  }
+
+  // 🎯 Se for o Alessandro (TO), retornar sessões TO mocadas
   if (patientId === 'b6f174c5-87bc-4946-9bff-2eaf72d977b9') {
     const { mockToSessions } = await import(
       '@/features/programas/variants/terapia-ocupacional/mocks/mockSessions'

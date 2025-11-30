@@ -1,39 +1,40 @@
 import type { Sessao } from '@/features/programas/consulta-sessao/types';
 import type { SerieLinha } from '@/features/relatorios/gerar-relatorio/types';
-import type { FisioActivityDurationData } from '../components/fisio/FisioActivityDurationChart';
+import type { FisioActivityLoadData } from '../components/fisio/FisioActivityDurationChart';
 import type { FisioAttentionActivityItem } from '../components/fisio/FisioAttentionActivitiesCard';
-import type { FisioAutonomyData } from '../components/fisio/FisioAutonomyByCategoryChart';
+import type { FisioPerformanceRateData } from '../components/fisio/FisioAutonomyByCategoryChart';
 
 export interface FisioKpisData {
   desempenhou: number;
   desempenhouComAjuda: number;
   naoDesempenhou: number;
-  tempoTotal: number;
   atividadesTotal: number;
-  sessoesTotal: number;
+  compensacaoTotal: number;
+  desconfortoTotal: number;
 }
 
 /**
- * Calcula KPIs para relatório de TO a partir das sessões
+ * Calcula KPIs para relatório de Fisioterapia a partir das sessões
  */
 export function calculateFisioKpis(sessoes: Sessao[]): FisioKpisData {
   // Dados mockados para demonstração
   if (!sessoes || sessoes.length === 0) {
     return {
-      desempenhou: 45,
-      desempenhouComAjuda: 28,
-      naoDesempenhou: 12,
-      tempoTotal: 180,
-      atividadesTotal: 8,
-      sessoesTotal: 6,
+      desempenhou: 11,
+      desempenhouComAjuda: 10,
+      naoDesempenhou: 8,
+      atividadesTotal: 3,
+      compensacaoTotal: 2,
+      desconfortoTotal: 1,
     };
   }
 
   let desempenhou = 0;
   let desempenhouComAjuda = 0;
   let naoDesempenhou = 0;
-  let tempoTotal = 0;
   const atividadesUnicas = new Set<string>();
+  const atividadesComCompensacao = new Set<string>();
+  const atividadesComDesconforto = new Set<string>();
 
   sessoes.forEach((sessao) => {
     sessao.registros.forEach((registro) => {
@@ -45,14 +46,24 @@ export function calculateFisioKpis(sessoes: Sessao[]): FisioKpisData {
         naoDesempenhou++;
       }
 
-      // Acumular tempo
-      if (registro.durationMinutes) {
-        tempoTotal += registro.durationMinutes;
-      }
-
       // Contar atividades únicas
       if (registro.stimulusId) {
         atividadesUnicas.add(registro.stimulusId);
+      }
+
+      // Verificar metadata de compensação e desconforto
+      if (registro.metadata) {
+        const metadata = typeof registro.metadata === 'string' 
+          ? JSON.parse(registro.metadata) 
+          : registro.metadata;
+
+        if (metadata.hadCompensation && registro.stimulusId) {
+          atividadesComCompensacao.add(registro.stimulusId);
+        }
+
+        if (metadata.hadDiscomfort && registro.stimulusId) {
+          atividadesComDesconforto.add(registro.stimulusId);
+        }
       }
     });
   });
@@ -61,9 +72,9 @@ export function calculateFisioKpis(sessoes: Sessao[]): FisioKpisData {
     desempenhou,
     desempenhouComAjuda,
     naoDesempenhou,
-    tempoTotal: Math.round(tempoTotal),
     atividadesTotal: atividadesUnicas.size,
-    sessoesTotal: sessoes.length,
+    compensacaoTotal: atividadesComCompensacao.size,
+    desconfortoTotal: atividadesComDesconforto.size,
   };
 }
 
@@ -154,106 +165,128 @@ export function prepareFisioPerformanceLineData(sessoes: Sessao[]): SerieLinha[]
 }
 
 /**
- * Prepara dados para gráfico de duração por atividade
+ * Prepara dados para gráfico de carga por atividade
  */
-export function prepareFisioActivityDurationData(sessoes: Sessao[]): FisioActivityDurationData[] {
+export function prepareFisioActivityDurationData(sessoes: Sessao[]): FisioActivityLoadData[] {
   // Dados mockados para demonstração
   if (!sessoes || sessoes.length === 0) {
     return [
-      { atividade: 'Coordenação Motora Fina', duracao: 35 },
-      { atividade: 'Atividades de Vida Diária', duracao: 30 },
-      { atividade: 'Integração Sensorial', duracao: 28 },
-      { atividade: 'Força e Resistência', duracao: 25 },
-      { atividade: 'Equilíbrio e Postura', duracao: 22 },
-      { atividade: 'Coordenação Bilateral', duracao: 20 },
-      { atividade: 'Planejamento Motor', duracao: 18 },
-      { atividade: 'Destreza Manual', duracao: 15 },
+      { atividade: 'Agachamento', carga: 15 },
+      { atividade: 'Leg Press', carga: 12 },
+      { atividade: 'Extensão de Joelho', carga: 10 },
+      { atividade: 'Flexão de Cotovelo', carga: 8 },
+      { atividade: 'Abdução de Ombro', carga: 6 },
+      { atividade: 'Rosca Direta', carga: 5 },
+      { atividade: 'Tríceps Testa', carga: 4 },
+      { atividade: 'Elevação Lateral', carga: 3 },
     ];
   }
 
-  // Mapear atividades e suas durações
-  const atividadeDuracoes = new Map<string, { nome: string; duracoes: number[] }>();
+  // Mapear atividades e suas cargas
+  const atividadeCargas = new Map<string, { nome: string; cargas: number[] }>();
 
   sessoes.forEach((sessao) => {
     sessao.registros.forEach((registro) => {
-      if (!registro.stimulusId || !registro.durationMinutes) return;
+      if (!registro.stimulusId || !registro.metadata) return;
+
+      const metadata = typeof registro.metadata === 'string' 
+        ? JSON.parse(registro.metadata) 
+        : registro.metadata;
+
+      if (!metadata.usedLoad || !metadata.loadValue) return;
+
+      // Extrair número do loadValue (ex: "2kg" -> 2, "5 kg" -> 5, "3.5kg" -> 3.5)
+      const cargaStr = metadata.loadValue.replace(/[^0-9.]/g, '');
+      const carga = parseFloat(cargaStr);
+
+      if (isNaN(carga)) return;
 
       const key = registro.stimulusId;
-      if (!atividadeDuracoes.has(key)) {
-        atividadeDuracoes.set(key, {
+      if (!atividadeCargas.has(key)) {
+        atividadeCargas.set(key, {
           nome: registro.stimulusLabel || 'Atividade sem nome',
-          duracoes: [],
+          cargas: [],
         });
       }
-      atividadeDuracoes.get(key)!.duracoes.push(registro.durationMinutes);
+      atividadeCargas.get(key)!.cargas.push(carga);
     });
   });
 
-  // Calcular média de duração para cada atividade
-  const result: FisioActivityDurationData[] = [];
-  atividadeDuracoes.forEach(({ nome, duracoes }) => {
-    const media = duracoes.reduce((acc, val) => acc + val, 0) / duracoes.length;
+  // Calcular média de carga para cada atividade
+  const result: FisioActivityLoadData[] = [];
+  atividadeCargas.forEach(({ nome, cargas }) => {
+    const media = cargas.reduce((acc, val) => acc + val, 0) / cargas.length;
     result.push({
       atividade: nome,
-      duracao: Math.round(media),
+      carga: Math.round(media * 10) / 10, // Arredondar para 1 casa decimal
     });
   });
 
-  // Ordenar por duração (maior primeiro)
-  return result.sort((a, b) => b.duracao - a.duracao);
+  // Ordenar por carga (maior primeiro)
+  return result.sort((a, b) => b.carga - a.carga);
 }
 
 /**
  * Identifica atividades que precisam de atenção
  * Critério: atividades com "não desempenhou" > 0
+ * Inclui metadata (carga, desconforto, compensação)
  */
 export function prepareFisioAttentionActivities(sessoes: Sessao[]): FisioAttentionActivityItem[] {
   // Dados mockados para demonstração
+  // IMPORTANTE: Atividades de atenção sempre têm "não desempenhou" como predominante
   if (!sessoes || sessoes.length === 0) {
     return [
       {
         id: '1',
-        nome: 'Integração Sensorial',
+        nome: 'Extensão de Joelho',
         counts: {
-          desempenhou: 4,
-          comAjuda: 5,
-          naoDesempenhou: 6,
+          desempenhou: 2,
+          comAjuda: 3,
+          naoDesempenhou: 10,
         },
         total: 15,
         durationMinutes: 28,
+        status: 'nao-desempenhou',
+        metadata: {
+          usedLoad: true,
+          loadValue: '5kg',
+          hadDiscomfort: true,
+          discomfortDescription: 'Dor leve no joelho direito',
+        },
       },
       {
         id: '2',
-        nome: 'Planejamento Motor',
+        nome: 'Agachamento',
         counts: {
-          desempenhou: 5,
-          comAjuda: 6,
-          naoDesempenhou: 4,
+          desempenhou: 3,
+          comAjuda: 4,
+          naoDesempenhou: 8,
         },
         total: 15,
         durationMinutes: 18,
+        status: 'nao-desempenhou',
+        metadata: {
+          usedLoad: true,
+          loadValue: '10kg',
+          hadCompensation: true,
+          compensationDescription: 'Rotação excessiva do ombro direito',
+        },
       },
       {
         id: '3',
-        nome: 'Coordenação Bilateral',
+        nome: 'Leg Press',
         counts: {
-          desempenhou: 8,
-          comAjuda: 4,
-          naoDesempenhou: 3,
+          desempenhou: 2,
+          comAjuda: 5,
+          naoDesempenhou: 8,
         },
         total: 15,
         durationMinutes: 20,
-      },
-      {
-        id: '4',
-        nome: 'Equilíbrio e Postura',
-        counts: {
-          desempenhou: 10,
-          comAjuda: 3,
-          naoDesempenhou: 2,
+        status: 'nao-desempenhou',
+        metadata: {
+          usedLoad: true,
+          loadValue: '15kg',
         },
-        total: 15,
-        durationMinutes: 22,
       },
     ];
   }
@@ -267,6 +300,14 @@ export function prepareFisioAttentionActivities(sessoes: Sessao[]): FisioAttenti
       comAjuda: number;
       naoDesempenhou: number;
       duracoes: number[];
+      metadata: {
+        usedLoad?: boolean;
+        loadValue?: string;
+        hadDiscomfort?: boolean;
+        discomfortDescription?: string;
+        hadCompensation?: boolean;
+        compensationDescription?: string;
+      };
     }
   >();
 
@@ -282,6 +323,7 @@ export function prepareFisioAttentionActivities(sessoes: Sessao[]): FisioAttenti
           comAjuda: 0,
           naoDesempenhou: 0,
           duracoes: [],
+          metadata: {},
         });
       }
 
@@ -297,17 +339,49 @@ export function prepareFisioAttentionActivities(sessoes: Sessao[]): FisioAttenti
       if (registro.durationMinutes) {
         stats.duracoes.push(registro.durationMinutes);
       }
+
+      // Agregar metadata
+      if (registro.metadata) {
+        const metadata = typeof registro.metadata === 'string' 
+          ? JSON.parse(registro.metadata) 
+          : registro.metadata;
+
+        if (metadata.usedLoad) {
+          stats.metadata.usedLoad = true;
+          stats.metadata.loadValue = metadata.loadValue;
+        }
+        if (metadata.hadDiscomfort) {
+          stats.metadata.hadDiscomfort = true;
+          stats.metadata.discomfortDescription = metadata.discomfortDescription;
+        }
+        if (metadata.hadCompensation) {
+          stats.metadata.hadCompensation = true;
+          stats.metadata.compensationDescription = metadata.compensationDescription;
+        }
+      }
     });
   });
 
   // Converter para array e calcular totais
+  // IMPORTANTE: Só incluir atividades onde naoDesempenhou > 0 (que precisam de atenção)
   const result: FisioAttentionActivityItem[] = [];
   atividadeStats.forEach((stats, id) => {
+    // Filtrar: só incluir se tiver pelo menos um "não desempenhou"
+    if (stats.naoDesempenhou === 0) return;
+
     const total = stats.desempenhou + stats.comAjuda + stats.naoDesempenhou;
     const mediaDuracao =
       stats.duracoes.length > 0
         ? Math.round(stats.duracoes.reduce((acc, val) => acc + val, 0) / stats.duracoes.length)
         : null;
+
+    // Determinar status predominante
+    let status: 'desempenhou' | 'desempenhou-com-ajuda' | 'nao-desempenhou' = 'desempenhou';
+    if (stats.naoDesempenhou > stats.desempenhou && stats.naoDesempenhou > stats.comAjuda) {
+      status = 'nao-desempenhou';
+    } else if (stats.comAjuda > stats.desempenhou) {
+      status = 'desempenhou-com-ajuda';
+    }
 
     result.push({
       id,
@@ -319,6 +393,8 @@ export function prepareFisioAttentionActivities(sessoes: Sessao[]): FisioAttenti
       },
       total,
       durationMinutes: mediaDuracao,
+      status,
+      metadata: Object.keys(stats.metadata).length > 0 ? stats.metadata : undefined,
     });
   });
 
@@ -326,26 +402,27 @@ export function prepareFisioAttentionActivities(sessoes: Sessao[]): FisioAttenti
 }
 
 /**
- * Prepara dados para gráfico de autonomia por categoria
- * Calcula o percentual de desempenho independente (sem ajuda) por categoria
+ * Prepara dados para gráfico de taxa de desempenho por atividade
+ * Calcula o percentual de execução independente (sem ajuda) por atividade
  */
-export function prepareFisioAutonomyByCategory(sessoes: Sessao[]): FisioAutonomyData[] {
+export function prepareFisioAutonomyByCategory(sessoes: Sessao[]): FisioPerformanceRateData[] {
   // Dados mockados para demonstração
   if (!sessoes || sessoes.length === 0) {
     return [
-      { categoria: 'Atividades de Vida Diária', autonomia: 85 },
-      { categoria: 'Coordenação Motora Fina', autonomia: 78 },
-      { categoria: 'Equilíbrio e Postura', autonomia: 72 },
-      { categoria: 'Integração Sensorial', autonomia: 65 },
-      { categoria: 'Força e Resistência', autonomia: 60 },
-      { categoria: 'Planejamento Motor', autonomia: 55 },
+      { atividade: 'Extensão de Joelho', desempenho: 85 },
+      { atividade: 'Flexão de Cotovelo', desempenho: 78 },
+      { atividade: 'Agachamento', desempenho: 72 },
+      { atividade: 'Abdução de Ombro', desempenho: 65 },
+      { atividade: 'Leg Press', desempenho: 60 },
+      { atividade: 'Rosca Direta', desempenho: 55 },
     ];
   }
 
-  // Mapear categorias e suas contagens
-  const categoriaStats = new Map<
+  // Mapear atividades e suas contagens
+  const atividadeStats = new Map<
     string,
     {
+      nome: string;
       total: number;
       independente: number; // Desempenhou sem ajuda
     }
@@ -353,14 +430,18 @@ export function prepareFisioAutonomyByCategory(sessoes: Sessao[]): FisioAutonomy
 
   sessoes.forEach((sessao) => {
     sessao.registros.forEach((registro) => {
-      // Usar o stimulusLabel como categoria (pode ser ajustado conforme estrutura real)
-      const categoria = registro.stimulusLabel || 'Sem categoria';
+      if (!registro.stimulusId) return;
 
-      if (!categoriaStats.has(categoria)) {
-        categoriaStats.set(categoria, { total: 0, independente: 0 });
+      const key = registro.stimulusId;
+      if (!atividadeStats.has(key)) {
+        atividadeStats.set(key, {
+          nome: registro.stimulusLabel || 'Atividade sem nome',
+          total: 0,
+          independente: 0,
+        });
       }
 
-      const stats = categoriaStats.get(categoria)!;
+      const stats = atividadeStats.get(key)!;
       stats.total++;
 
       // Contar apenas desempenho independente (sem ajuda)
@@ -371,12 +452,12 @@ export function prepareFisioAutonomyByCategory(sessoes: Sessao[]): FisioAutonomy
   });
 
   // Converter para array e calcular percentuais
-  const result: FisioAutonomyData[] = [];
-  categoriaStats.forEach((stats, categoria) => {
-    const autonomia = stats.total > 0 ? Math.round((stats.independente / stats.total) * 100) : 0;
-    result.push({ categoria, autonomia });
+  const result: FisioPerformanceRateData[] = [];
+  atividadeStats.forEach((stats) => {
+    const desempenho = stats.total > 0 ? Math.round((stats.independente / stats.total) * 100) : 0;
+    result.push({ atividade: stats.nome, desempenho });
   });
 
-  // Ordenar por autonomia (maior primeiro)
-  return result.sort((a, b) => b.autonomia - a.autonomia).slice(0, 8); // Top 8 categorias
+  // Ordenar por desempenho (maior primeiro)
+  return result.sort((a, b) => b.desempenho - a.desempenho).slice(0, 8); // Top 8 atividades
 }

@@ -5,6 +5,6 @@ export { FisioAttentionActivitiesCard } from './FisioAttentionActivitiesCard';
 export { FisioAutonomyByCategoryChart } from './FisioAutonomyByCategoryChart';
 
 export type { FisioPerformanceData } from './FisioPerformanceChart';
-export type { FisioActivityDurationData } from './FisioActivityDurationChart';
+export type { FisioActivityLoadData } from './FisioActivityDurationChart';
 export type { FisioAttentionActivityItem } from './FisioAttentionActivitiesCard';
-export type { FisioAutonomyData } from './FisioAutonomyByCategoryChart';
+export type { FisioPerformanceRateData } from './FisioAutonomyByCategoryChart';

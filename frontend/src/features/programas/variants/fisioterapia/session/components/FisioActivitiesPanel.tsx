@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react';
-import { Brain, ChevronRight, Pause as PauseIcon, Play } from 'lucide-react';
+import { Brain, ChevronRight, Pause as PauseIcon, Play, Dumbbell, AlertTriangle, Activity } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import ToActivityBlockPanel, {
     type BlockCounts,
     type ResultadoTentativa,
@@ -17,6 +18,12 @@ type BlockResumo = {
     desempenhou: number;
     total: number;
     ts: number;
+    usedLoad?: boolean;
+    loadValue?: string;
+    hadDiscomfort?: boolean;
+    discomfortDescription?: string;
+    hadCompensation?: boolean;
+    compensationDescription?: string;
 };
 
 const createEmptyCounts = (): BlockCounts => ({ 'nao-desempenhou': 0, 'desempenhou-com-ajuda': 0, desempenhou: 0 });
@@ -53,7 +60,14 @@ export default function ToActivitiesPanel({
 
     const effectiveSessionId = sessionId ?? program.id ?? 'draft-session';
 
-    const registrarTentativa = (resultado: ResultadoTentativa, durationMinutes?: number) => {
+    const registrarTentativa = (resultado: ResultadoTentativa, durationMinutes?: number, metadata?: {
+        usedLoad?: boolean;
+        loadValue?: string;
+        hadDiscomfort?: boolean;
+        discomfortDescription?: string;
+        hadCompensation?: boolean;
+        compensationDescription?: string;
+    }) => {
         if (!ativoId || !activeActivity) {
             return;
         }
@@ -83,6 +97,13 @@ export default function ToActivitiesPanel({
             type: tipoSessao,
             timestamp: new Date().toISOString(),
             durationMinutes,
+            // Adicionar metadados
+            usedLoad: metadata?.usedLoad,
+            loadValue: metadata?.loadValue,
+            hadDiscomfort: metadata?.hadDiscomfort,
+            discomfortDescription: metadata?.discomfortDescription,
+            hadCompensation: metadata?.hadCompensation,
+            compensationDescription: metadata?.compensationDescription,
         };
 
         // Armazena temporariamente em vez de enviar imediatamente
@@ -178,10 +199,21 @@ export default function ToActivitiesPanel({
         }
 
         const counts = countsMap[ativoId] ?? createEmptyCounts();
+        const tempActivityAttempts = tempAttempts[ativoId] ?? [];
+        
+        // Pegar metadados da última tentativa
+        const lastAttempt = tempActivityAttempts[tempActivityAttempts.length - 1];
+        
         const resumo: BlockResumo = {
             ...counts,
             total: counts['nao-desempenhou'] + counts['desempenhou-com-ajuda'] + counts.desempenhou,
             ts: Date.now(),
+            usedLoad: lastAttempt?.usedLoad,
+            loadValue: lastAttempt?.loadValue,
+            hadDiscomfort: lastAttempt?.hadDiscomfort,
+            discomfortDescription: lastAttempt?.discomfortDescription,
+            hadCompensation: lastAttempt?.hadCompensation,
+            compensationDescription: lastAttempt?.compensationDescription,
         };
 
         setHistorico((prev) => {
@@ -191,7 +223,6 @@ export default function ToActivitiesPanel({
         });
 
         // Envia todas as tentativas temporárias para o registro geral
-        const tempActivityAttempts = tempAttempts[ativoId] ?? [];
         tempActivityAttempts.forEach((attempt) => {
             onAddAttempt(attempt);
         });
@@ -220,35 +251,123 @@ export default function ToActivitiesPanel({
         }
 
         return (
-            <div className="space-y-0">
-                {resumoDaAtividade.map((item, index) => (
-                    <div key={item.ts}>
-                        {index > 0 && <Separator />}
-                        <div className="px-4 py-3 text-xs">
-                            <div className="font-semibold text-sm mb-2 text-foreground">
-                                Tentativa {index + 1}
-                            </div>
-                            <div className="flex flex-wrap gap-3">
-                                <Badge variant="outline" className="p-2 rounded-[5px]">
-                                    Não desempenhou: {item['nao-desempenhou']}
-                                </Badge>
-                                <Badge variant="outline" className="p-2 rounded-[5px]">
-                                    Desempenhou com ajuda: {item['desempenhou-com-ajuda']}
-                                </Badge>
-                                <Badge variant="outline" className="p-2 rounded-[5px]">
-                                    Desempenhou: {item.desempenhou}
-                                </Badge>
-                                <Badge
-                                    variant="outline"
-                                    className="font-semibold p-2 rounded-[5px] ml-auto"
-                                >
-                                    Total: {item.total}
-                                </Badge>
+            <TooltipProvider>
+                <div className="space-y-0">
+                    {resumoDaAtividade.map((item, index) => (
+                        <div key={item.ts}>
+                            {index > 0 && <Separator />}
+                            <div className="px-4 py-3 text-xs">
+                                <div className="font-semibold text-sm mb-2 text-foreground">
+                                    Tentativa {index + 1}
+                                </div>
+                                
+                                {/* Contadores em texto + Indicadores na mesma linha */}
+                                <div className="flex flex-wrap items-center gap-2 text-muted-foreground">
+                                    <span className="text-xs">
+                                        Não desempenhou: <span className="font-medium text-foreground">{item['nao-desempenhou']}</span>
+                                    </span>
+                                    <span className="text-muted-foreground">•</span>
+                                    <span className="text-xs">
+                                        Desempenhou com ajuda: <span className="font-medium text-foreground">{item['desempenhou-com-ajuda']}</span>
+                                    </span>
+                                    <span className="text-muted-foreground">•</span>
+                                    <span className="text-xs">
+                                        Desempenhou: <span className="font-medium text-foreground">{item.desempenhou}</span>
+                                    </span>
+                                    <span className="text-muted-foreground ml-auto">•</span>
+                                    <span className="text-xs font-semibold text-foreground">
+                                        Total: {item.total}
+                                    </span>
+
+                                    {/* Indicadores de metadados na mesma linha */}
+                                    {(item.usedLoad || item.hadDiscomfort || item.hadCompensation) && (
+                                        <div className="flex items-center gap-1.5 ml-2">
+                                            {/* Carga */}
+                                            {item.usedLoad && item.loadValue && (
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <div 
+                                                            className="flex items-center justify-center w-7 h-7 rounded-md cursor-help transition-colors"
+                                                            style={{
+                                                                color: 'var(--badge-load-text)',
+                                                                backgroundColor: 'var(--badge-load-bg)'
+                                                            }}
+                                                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--badge-load-hover)'}
+                                                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--badge-load-bg)'}
+                                                        >
+                                                            <Dumbbell className="h-4 w-4" />
+                                                        </div>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent className="max-w-[220px] text-xs">
+                                                        <div className="space-y-1">
+                                                            <div className="font-semibold">Exercício com carga</div>
+                                                            <div className="text-muted-foreground">{item.loadValue}</div>
+                                                        </div>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            )}
+
+                                            {/* Desconforto */}
+                                            {item.hadDiscomfort && (
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <div 
+                                                            className="flex items-center justify-center w-7 h-7 rounded-md cursor-help transition-colors"
+                                                            style={{
+                                                                color: 'var(--badge-discomfort-text)',
+                                                                backgroundColor: 'var(--badge-discomfort-bg)'
+                                                            }}
+                                                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--badge-discomfort-hover)'}
+                                                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--badge-discomfort-bg)'}
+                                                        >
+                                                            <AlertTriangle className="h-4 w-4" />
+                                                        </div>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent className="max-w-[280px] text-xs">
+                                                        <div className="space-y-1">
+                                                            <div className="font-semibold">Desconforto apresentado</div>
+                                                            <div className="text-muted-foreground">
+                                                                {item.discomfortDescription || 'Sem descrição'}
+                                                            </div>
+                                                        </div>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            )}
+
+                                            {/* Compensação */}
+                                            {item.hadCompensation && (
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <div 
+                                                            className="flex items-center justify-center w-7 h-7 rounded-md cursor-help transition-colors"
+                                                            style={{
+                                                                color: 'var(--badge-compensation-text)',
+                                                                backgroundColor: 'var(--badge-compensation-bg)'
+                                                            }}
+                                                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--badge-compensation-hover)'}
+                                                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--badge-compensation-bg)'}
+                                                        >
+                                                            <Activity className="h-4 w-4" />
+                                                        </div>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent className="max-w-[280px] text-xs">
+                                                        <div className="space-y-1">
+                                                            <div className="font-semibold">Compensação apresentada</div>
+                                                            <div className="text-muted-foreground">
+                                                                {item.compensationDescription || 'Sem descrição'}
+                                                            </div>
+                                                        </div>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                ))}
-            </div>
+                    ))}
+                </div>
+            </TooltipProvider>
         );
     };
 

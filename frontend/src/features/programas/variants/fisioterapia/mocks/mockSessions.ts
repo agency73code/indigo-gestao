@@ -39,6 +39,11 @@ export const mockToSessions: Array<SessionListItem & { activitiesSummary?: Fisio
                 },
                 total: 10,
                 durationMinutes: 25,
+                // Metadados de fisioterapia
+                usedLoad: true,
+                loadValue: '3kg - Halteres',
+                hadDiscomfort: false,
+                hadCompensation: false,
             },
             {
                 activityId: 'stim-2',
@@ -50,6 +55,12 @@ export const mockToSessions: Array<SessionListItem & { activitiesSummary?: Fisio
                 },
                 total: 9,
                 durationMinutes: 35,
+                // Metadados de fisioterapia
+                usedLoad: false,
+                hadDiscomfort: true,
+                discomfortDescription: 'Leve desconforto na região lombar ao final da atividade',
+                hadCompensation: true,
+                compensationDescription: 'Compensação com inclinação lateral do tronco',
             },
             {
                 activityId: 'stim-4',
@@ -61,6 +72,11 @@ export const mockToSessions: Array<SessionListItem & { activitiesSummary?: Fisio
                 },
                 total: 10,
                 durationMinutes: 20,
+                // Metadados de fisioterapia
+                usedLoad: false,
+                hadDiscomfort: false,
+                hadCompensation: true,
+                compensationDescription: 'Rotação excessiva do ombro direito',
             },
         ],
     },
@@ -90,6 +106,11 @@ export const mockToSessions: Array<SessionListItem & { activitiesSummary?: Fisio
                 },
                 total: 11,
                 durationMinutes: 30,
+                // Metadados de fisioterapia
+                usedLoad: true,
+                loadValue: '2kg - Caneleiras',
+                hadDiscomfort: false,
+                hadCompensation: false,
             },
             {
                 activityId: 'stim-3',
@@ -101,6 +122,10 @@ export const mockToSessions: Array<SessionListItem & { activitiesSummary?: Fisio
                 },
                 total: 12,
                 durationMinutes: 45,
+                // Metadados de fisioterapia
+                usedLoad: false,
+                hadDiscomfort: false,
+                hadCompensation: false,
             },
         ],
     },
@@ -131,6 +156,12 @@ export const mockToSessions: Array<SessionListItem & { activitiesSummary?: Fisio
                 },
                 total: 23,
                 durationMinutes: 50,
+                // Metadados de fisioterapia
+                usedLoad: true,
+                loadValue: '1.5kg - Bola medicinal',
+                hadDiscomfort: true,
+                discomfortDescription: 'Dor leve nos dedos após repetições',
+                hadCompensation: false,
             },
         ],
     },
@@ -160,6 +191,12 @@ export const mockToSessions: Array<SessionListItem & { activitiesSummary?: Fisio
                 },
                 total: 18,
                 durationMinutes: 40,
+                // Metadados de fisioterapia
+                usedLoad: false,
+                hadDiscomfort: true,
+                discomfortDescription: 'Fadiga muscular no antebraço',
+                hadCompensation: true,
+                compensationDescription: 'Elevação excessiva do cotovelo para compensar fraqueza',
             },
             {
                 activityId: 'stim-4',
@@ -171,6 +208,10 @@ export const mockToSessions: Array<SessionListItem & { activitiesSummary?: Fisio
                 },
                 total: 9,
                 durationMinutes: 15,
+                // Metadados de fisioterapia
+                usedLoad: false,
+                hadDiscomfort: false,
+                hadCompensation: false,
             },
         ],
     },
@@ -201,6 +242,13 @@ export const mockToSessions: Array<SessionListItem & { activitiesSummary?: Fisio
                 },
                 total: 26,
                 durationMinutes: 55,
+                // Metadados de fisioterapia
+                usedLoad: true,
+                loadValue: '5kg - Barra',
+                hadDiscomfort: true,
+                discomfortDescription: 'Desconforto significativo na região cervical e ombros',
+                hadCompensation: true,
+                compensationDescription: 'Múltiplas compensações: elevação de ombro, inclinação de cabeça e rotação de tronco',
             },
         ],
     },

@@ -19,6 +19,13 @@ export type FisioSessionAttempt = {
     type: FisioPerformanceType; // kebab-case para compatibilidade com HTML/CSS
     timestamp: string;
     durationMinutes?: number;
+    // Campos adicionais de Fisioterapia
+    usedLoad?: boolean;
+    loadValue?: string;
+    hadDiscomfort?: boolean;
+    discomfortDescription?: string;
+    hadCompensation?: boolean;
+    compensationDescription?: string;
 };
 
 /**

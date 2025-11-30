@@ -8,32 +8,32 @@ import {
 } from '@/components/ui/chart';
 
 const chartConfig = {
-  autonomia: {
-    label: 'Autonomia',
-    color: '#10B981',
+  desempenho: {
+    label: 'Desempenho',
+    color: '#10B981', // Verde para sucesso
   },
   label: {
     color: 'hsl(var(--background))',
   },
 } satisfies ChartConfig;
 
-export interface FisioAutonomyData {
-  categoria: string;
-  autonomia: number; // Porcentagem de autonomia (0-100)
+export interface FisioPerformanceRateData {
+  atividade: string;
+  desempenho: number; // Porcentagem de sucesso (0-100)
 }
 
-interface FisioAutonomyByCategoryChartProps {
-  data: FisioAutonomyData[];
+interface FisioPerformanceRateChartProps {
+  data: FisioPerformanceRateData[];
   loading?: boolean;
 }
 
-export function FisioAutonomyByCategoryChart({ data, loading = false }: FisioAutonomyByCategoryChartProps) {
+export function FisioAutonomyByCategoryChart({ data, loading = false }: FisioPerformanceRateChartProps) {
   if (loading) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Autonomia por Categoria</CardTitle>
-          <CardDescription>Carregando dados de autonomia...</CardDescription>
+          <CardTitle>Taxa de Desempenho</CardTitle>
+          <CardDescription>Carregando dados de desempenho...</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center h-[300px]">
@@ -48,7 +48,7 @@ export function FisioAutonomyByCategoryChart({ data, loading = false }: FisioAut
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Autonomia por Categoria</CardTitle>
+          <CardTitle>Taxa de Desempenho</CardTitle>
           <CardDescription>Nenhum dado disponível para exibição</CardDescription>
         </CardHeader>
         <CardContent>
@@ -63,9 +63,9 @@ export function FisioAutonomyByCategoryChart({ data, loading = false }: FisioAut
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Autonomia por Categoria</CardTitle>
+        <CardTitle>Taxa de Desempenho por Atividade</CardTitle>
         <CardDescription>
-          Nível de independência nas diferentes áreas trabalhadas
+          Percentual de execução independente em cada exercício
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -86,7 +86,7 @@ export function FisioAutonomyByCategoryChart({ data, loading = false }: FisioAut
           >
             <CartesianGrid horizontal={false} />
             <YAxis
-              dataKey="categoria"
+              dataKey="atividade"
               type="category"
               tickLine={false}
               tickMargin={10}
@@ -94,26 +94,26 @@ export function FisioAutonomyByCategoryChart({ data, loading = false }: FisioAut
               tickFormatter={(value) => value.slice(0, 3)}
               hide
             />
-            <XAxis dataKey="autonomia" type="number" hide />
+            <XAxis dataKey="desempenho" type="number" hide />
             <ChartTooltip
               cursor={false}
               content={<ChartTooltipContent indicator="line" />}
             />
             <Bar
-              dataKey="autonomia"
+              dataKey="desempenho"
               layout="vertical"
-              fill="var(--color-autonomia)"
+              fill="var(--color-desempenho)"
               radius={4}
             >
               <LabelList
-                dataKey="categoria"
+                dataKey="atividade"
                 position="insideLeft"
                 offset={8}
                 className="fill-white"
                 fontSize={12}
               />
               <LabelList
-                dataKey="autonomia"
+                dataKey="desempenho"
                 position="right"
                 offset={8}
                 className="fill-foreground"

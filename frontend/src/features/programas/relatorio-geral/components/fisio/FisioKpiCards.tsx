@@ -1,13 +1,13 @@
 import { Card, CardHeader, CardTitleHub } from '@/components/ui/card';
-import { CheckCircle, HandHelping, XCircle, Clock, Activity, Calendar } from 'lucide-react';
+import { CheckCircle, HandHelping, XCircle, Activity, AlertTriangle } from 'lucide-react';
 
 interface FisioKpisData {
   desempenhou: number;
   desempenhouComAjuda: number;
   naoDesempenhou: number;
-  tempoTotal: number;
   atividadesTotal: number;
-  sessoesTotal: number;
+  compensacaoTotal: number;
+  desconfortoTotal: number;
 }
 
 interface KpiCardProps {
@@ -79,8 +79,8 @@ export function FisioKpiCards({ data, loading = false }: FisioKpiCardsProps) {
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3" data-print-kpi-grid>
       <KpiCard
         title="Atividades"
-        value={data.atividadesTotal}
-        hint="Total trabalhadas"
+        value={`${data.atividadesTotal}`}
+        hint="Trabalhadas"
         icon={Activity}
         bgColor="bg-[#E0F2FE]"
         iconColor="text-sky-600"
@@ -110,7 +110,7 @@ export function FisioKpiCards({ data, loading = false }: FisioKpiCardsProps) {
       <KpiCard
         title="Não Desempenhou"
         value={data.naoDesempenhou}
-        hint="Não conseguiu realizar"
+        hint="Não conseguiu"
         icon={XCircle}
         bgColor="bg-[#FEE2E2]"
         iconColor="text-red-600"
@@ -118,23 +118,23 @@ export function FisioKpiCards({ data, loading = false }: FisioKpiCardsProps) {
       />
 
       <KpiCard
-        title="Tempo Total"
-        value={`${data.tempoTotal}min`}
-        hint="Duração das atividades"
-        icon={Clock}
-        bgColor="bg-[#E0E7FF]"
-        iconColor="text-indigo-600"
-        textColor="text-indigo-700 dark:text-indigo-400"
+        title="Compensação"
+        value={data.compensacaoTotal}
+        hint="Atividades com comp."
+        icon={Activity}
+        bgColor="bg-[#DBEAFE]"
+        iconColor="text-blue-600"
+        textColor="text-blue-700 dark:text-blue-400"
       />
 
       <KpiCard
-        title="Sessões"
-        value={data.sessoesTotal}
-        hint="Realizadas no período"
-        icon={Calendar}
-        bgColor="bg-[#FCE7F3]"
-        iconColor="text-pink-600"
-        textColor="text-pink-700 dark:text-pink-400"
+        title="Desconforto"
+        value={data.desconfortoTotal}
+        hint="Atividades com dor"
+        icon={AlertTriangle}
+        bgColor="bg-[#FED7AA]"
+        iconColor="text-orange-600"
+        textColor="text-orange-700 dark:text-orange-400"
       />
     </div>
   );

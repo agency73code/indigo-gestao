@@ -1,9 +1,8 @@
 import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { ArrowUpDown, CircleHelp, Clock } from 'lucide-react';
+import { ArrowUpDown, CircleHelp, Clock, Dumbbell, AlertTriangle, Activity, CheckCircle, XCircle, HandHelping } from 'lucide-react';
 import type { Counts } from '@/features/programas/consulta-sessao/pages/helpers';
 import { total } from '@/features/programas/consulta-sessao/pages/helpers';
 import { getFisioStatus, getFisioStatusConfig, type FisioStatus } from '../helpers';
@@ -18,6 +17,14 @@ interface ToActivitiesPerformanceListProps {
     activities: ActivityInfo[];
     countsByActivity: Record<string, Counts>;
     durationsByActivity?: Record<string, number | null>;
+    metadataByActivity?: Record<string, {
+        usedLoad?: boolean;
+        loadValue?: string;
+        hadDiscomfort?: boolean;
+        discomfortDescription?: string;
+        hadCompensation?: boolean;
+        compensationDescription?: string;
+    }>;
     defaultSort?: 'severity' | 'alphabetical';
 }
 
@@ -25,6 +32,7 @@ export default function ToActivitiesPerformanceList({
     activities,
     countsByActivity,
     durationsByActivity = {},
+    metadataByActivity = {},
     defaultSort = 'severity',
 }: ToActivitiesPerformanceListProps) {
     const [sortMode, setSortMode] = useState<'severity' | 'alphabetical'>(defaultSort);
@@ -54,8 +62,12 @@ export default function ToActivitiesPerformanceList({
     };
 
     return (
-        <Card className="rounded-[5px]">
-            <CardHeader className="pb-3">
+        <Card 
+            padding="hub" 
+            className="rounded-lg border-0 shadow-none"
+            style={{ backgroundColor: 'var(--hub-card-background)' }}
+        >
+            <CardHeader className="pb-3 border-b border-border/40 dark:border-white/15">
                 <div className="flex items-center justify-between gap-3">
                     <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
@@ -102,11 +114,11 @@ export default function ToActivitiesPerformanceList({
                     </Button>
                 </div>
             </CardHeader>
-            <CardContent className="pb-3 sm:pb-6">
+            <CardContent>
                 <TooltipProvider>
-                    <div className="space-y-3">
+                    <div className="grid grid-cols-1 gap-3">
                         {sortedActivities.length === 0 ? (
-                            <div className="text-center py-8 text-sm text-muted-foreground">
+                            <div className="col-span-full text-center py-8 text-sm text-muted-foreground">
                                 Nenhuma atividade trabalhada nesta sessão
                             </div>
                         ) : (
@@ -120,75 +132,222 @@ export default function ToActivitiesPerformanceList({
                                 return (
                                     <div
                                         key={activity.id}
-                                        className="border border-border rounded-md p-3 sm:p-4"
+                                        className="border border-border/40 dark:border-white/15 rounded-lg hover:bg-muted/30 dark:hover:bg-white/5 transition-colors overflow-hidden"
+                                        style={{ backgroundColor: 'var(--hub-nested-card-background)' }}
                                         data-testid={`activity-row-${activity.id}`}
                                     >
-                                        <div className="space-y-3">
+                                        {/* Cabeçalho: Título + Stats */}
+                                        <div className="p-4 space-y-3 border-b border-border/40 dark:border-white/15">
                                             {/* Nome da atividade */}
-                                            <div className="font-medium text-sm truncate">
+                                            <div className="font- text-base" style={{fontFamily: "Sora"}}>
                                                 {activity.label}
                                             </div>
 
-                                            {/* Chips neutros de contagens */}
-                                            <div className="flex flex-wrap gap-2">
-                                                <Badge variant="outline" className="gap-1.5">
-                                                    <span className="text-xs">Não desempenhou:</span>
-                                                    <span className="font-semibold">
-                                                        {counts.erro}
-                                                    </span>
-                                                </Badge>
-                                                <Badge variant="outline" className="gap-1.5">
-                                                    <span className="text-xs">Desempenhou com ajuda:</span>
-                                                    <span className="font-semibold">
-                                                        {counts.ajuda}
-                                                    </span>
-                                                </Badge>
-                                                <Badge variant="outline" className="gap-1.5">
-                                                    <span className="text-xs">Desempenhou:</span>
-                                                    <span className="font-semibold">
+                                            {/* Stats com ícones coloridos */}
+                                            <div className="flex flex-wrap gap-2 items-center">
+                                                {/* Desempenhou */}
+                                                <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-gray-100 dark:bg-gray-800">
+                                                    <div className="flex items-center justify-center w-5 h-5 rounded">
+                                                        <CheckCircle className="w-3 h-3 text-gray-500 dark:text-gray-400" />
+                                                    </div>
+                                                    <span className="text-xs text-muted-foreground">Desempenhou:</span>
+                                                    <span className="text-xs text-foreground font-medium">
                                                         {counts.indep}
                                                     </span>
-                                                </Badge>
-                                                <Badge
-                                                    variant="outline"
-                                                    className="gap-1.5 ml-auto"
-                                                >
-                                                    <span className="text-xs">Total:</span>
-                                                    <span className="font-semibold">
+                                                </div>
+
+                                                {/* Com Ajuda */}
+                                                <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-gray-100 dark:bg-gray-800">
+                                                    <div className="flex items-center justify-center w-5 h-5 rounded">
+                                                        <HandHelping className="w-3 h-3 text-gray-500 dark:text-gray-400" />
+                                                    </div>
+                                                    <span className="text-xs text-muted-foreground">Com Ajuda:</span>
+                                                    <span className="text-xs text-foreground font-medium">
+                                                        {counts.ajuda}
+                                                    </span>
+                                                </div>
+
+                                                {/* Não Desempenhou */}
+                                                <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-gray-100 dark:bg-gray-800">
+                                                    <div className="flex items-center justify-center w-5 h-5 rounded">
+                                                        <XCircle className="w-3 h-3 text-gray-500 dark:text-gray-400" />
+                                                    </div>
+                                                    <span className="text-xs text-muted-foreground">Não Desempenhou:</span>
+                                                    <span className="text-xs text-foreground font-medium">
+                                                        {counts.erro}
+                                                    </span>
+                                                </div>
+
+                                                {/* Total */}
+                                                <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-gray-100 dark:bg-gray-800 ml-auto">
+                                                    <span className="text-xs text-muted-foreground">Total:</span>
+                                                    <span className="text-xs font-semibold text-foreground">
                                                         {totalCount}
                                                     </span>
-                                                </Badge>
+                                                </div>
                                             </div>
+                                        </div>
 
-                                            {/* Status colorido + tempo */}
-                                            <div className="flex flex-wrap gap-2 items-center">
-                                                <Badge
-                                                    variant="outline"
-                                                    className={statusConfig.cls}
+                                        {/* Rodapé: Status + Tempo + Indicadores */}
+                                        <div className="p-4 flex flex-wrap items-center gap-2">
+                                                {/* Status */}
+                                                <div
+                                                    className={`px-3 flex center py-1.5 rounded-md ${statusConfig.cls.replace('border-', '').replace(/\/\d+/, '')}`}
                                                     data-testid={`activity-status-${activity.id}`}
                                                 >
-                                                    <span className="text-xs whitespace-nowrap">
-                                                        {statusConfig.label} — {counts.erro + counts.ajuda + counts.indep}/{totalCount}
+                                                    <span className="text-xs font-medium whitespace-nowrap">
+                                                        {statusConfig.label}
                                                     </span>
-                                                </Badge>
+                                                </div>
 
                                                 {/* Badge de tempo */}
                                                 {duration && duration > 0 && (
-                                                    <Badge
-                                                        variant="secondary"
-                                                        className="gap-1.5 px-3 py-1 text-blue-700 bg-blue-100 hover:bg-blue-200 border-0"
-                                                    >
-                                                        <Clock className="h-3.5 w-3.5" />
-                                                        <span className="text-xs font-medium">
+                                                    <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-gray-100 dark:bg-gray-800">
+                                                        <Clock className="h-3.5 w-3.5 text-gray-600 dark:text-gray-400" />
+                                                        <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
                                                             {duration} min
                                                         </span>
-                                                    </Badge>
+                                                    </div>
+                                                )}
+
+                                                {/* Indicadores compactos de metadata */}
+                                                {metadataByActivity[activity.id] && (
+                                                    <div className="flex items-center gap-1.5 ml-auto">
+                                                        {metadataByActivity[activity.id].usedLoad && metadataByActivity[activity.id].loadValue && (
+                                                            <Tooltip>
+                                                                <TooltipTrigger asChild>
+                                                                    <div 
+                                                                        className="flex items-center justify-center w-7 h-7 rounded-md cursor-help transition-colors"
+                                                                        style={{
+                                                                            color: 'var(--badge-load-text)',
+                                                                            backgroundColor: 'var(--badge-load-bg)'
+                                                                        }}
+                                                                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--badge-load-hover)'}
+                                                                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--badge-load-bg)'}
+                                                                    >
+                                                                        <Dumbbell className="h-4 w-4" />
+                                                                    </div>
+                                                                </TooltipTrigger>
+                                                                <TooltipContent className="max-w-[220px] text-xs">
+                                                                    <div className="space-y-1">
+                                                                        <div className="font-semibold">Exercício com carga</div>
+                                                                        <div className="text-muted-foreground">{metadataByActivity[activity.id].loadValue}</div>
+                                                                    </div>
+                                                                </TooltipContent>
+                                                            </Tooltip>
+                                                        )}
+                                                        {metadataByActivity[activity.id].hadDiscomfort && (
+                                                            <Tooltip>
+                                                                <TooltipTrigger asChild>
+                                                                    <div 
+                                                                        className="flex items-center justify-center w-7 h-7 rounded-md cursor-help transition-colors"
+                                                                        style={{
+                                                                            color: 'var(--badge-discomfort-text)',
+                                                                            backgroundColor: 'var(--badge-discomfort-bg)'
+                                                                        }}
+                                                                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--badge-discomfort-hover)'}
+                                                                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--badge-discomfort-bg)'}
+                                                                    >
+                                                                        <AlertTriangle className="h-4 w-4" />
+                                                                    </div>
+                                                                </TooltipTrigger>
+                                                                <TooltipContent className="max-w-[280px] text-xs">
+                                                                    <div className="space-y-1">
+                                                                        <div className="font-semibold">Desconforto apresentado</div>
+                                                                        <div className="text-muted-foreground">
+                                                                            {metadataByActivity[activity.id].discomfortDescription || 'Sem descrição'}
+                                                                        </div>
+                                                                    </div>
+                                                                </TooltipContent>
+                                                            </Tooltip>
+                                                        )}
+                                                        {metadataByActivity[activity.id].hadCompensation && (
+                                                            <Tooltip>
+                                                                <TooltipTrigger asChild>
+                                                                    <div 
+                                                                        className="flex items-center justify-center w-7 h-7 rounded-md cursor-help transition-colors"
+                                                                        style={{
+                                                                            color: 'var(--badge-compensation-text)',
+                                                                            backgroundColor: 'var(--badge-compensation-bg)'
+                                                                        }}
+                                                                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--badge-compensation-hover)'}
+                                                                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--badge-compensation-bg)'}
+                                                                    >
+                                                                        <Activity className="h-4 w-4" />
+                                                                    </div>
+                                                                </TooltipTrigger>
+                                                                <TooltipContent className="max-w-[280px] text-xs">
+                                                                    <div className="space-y-1">
+                                                                        <div className="font-semibold">Compensação apresentada</div>
+                                                                        <div className="text-muted-foreground">
+                                                                            {metadataByActivity[activity.id].compensationDescription || 'Sem descrição'}
+                                                                        </div>
+                                                                    </div>
+                                                                </TooltipContent>
+                                                            </Tooltip>
+                                                        )}
+                                                    </div>
                                                 )}
                                             </div>
+
+                                            {/* Campos descritivos de metadata - visível quando preenchido */}
+                                            {metadataByActivity[activity.id] && (
+                                                <div className="p-4 space-y-3 border-t border-border/40 dark:border-white/15">
+                                                    {metadataByActivity[activity.id].usedLoad && metadataByActivity[activity.id].loadValue && (
+                                                        <div className="space-y-1.5">
+                                                            <div className="flex items-center gap-1.5">
+                                                                <Dumbbell 
+                                                                    className="h-3.5 w-3.5"
+                                                                    style={{ color: 'var(--badge-load-text)' }}
+                                                                />
+                                                                <span className="text-xs font-semibold text-foreground">
+                                                                    Exercício com carga
+                                                                </span>
+                                                            </div>
+                                                            <p className="text-xs text-muted-foreground pl-5 leading-relaxed">
+                                                                {metadataByActivity[activity.id].loadValue}
+                                                            </p>
+                                                        </div>
+                                                    )}
+
+                                                    {metadataByActivity[activity.id].hadDiscomfort && metadataByActivity[activity.id].discomfortDescription && (
+                                                        <div className="space-y-1.5">
+                                                            <div className="flex items-center gap-1.5">
+                                                                <AlertTriangle 
+                                                                    className="h-3.5 w-3.5"
+                                                                    style={{ color: 'var(--badge-discomfort-text)' }}
+                                                                />
+                                                                <span className="text-xs font-semibold text-foreground">
+                                                                    Desconforto apresentado
+                                                                </span>
+                                                            </div>
+                                                            <p className="text-xs text-muted-foreground pl-5 leading-relaxed">
+                                                                {metadataByActivity[activity.id].discomfortDescription}
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                    
+                                                    {metadataByActivity[activity.id].hadCompensation && metadataByActivity[activity.id].compensationDescription && (
+                                                        <div className="space-y-1.5">
+                                                            <div className="flex items-center gap-1.5">
+                                                                <Activity 
+                                                                    className="h-3.5 w-3.5"
+                                                                    style={{ color: 'var(--badge-compensation-text)' }}
+                                                                />
+                                                                <span className="text-xs font-semibold text-foreground">
+                                                                    Compensação apresentada
+                                                                </span>
+                                                            </div>
+                                                            <p className="text-xs text-muted-foreground pl-5 leading-relaxed">
+                                                                {metadataByActivity[activity.id].compensationDescription}
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
                                         </div>
-                                    </div>
-                                );
-                            })
+                                    );
+                                })
                         )}
                     </div>
                 </TooltipProvider>

@@ -87,6 +87,19 @@
     
     /* Dashboard card numbers */
     --dashboard-number-font-weight: 400;
+    
+    /* Badge colors - Fisioterapia session metadata */
+    --badge-load-text: #6b21a8;
+    --badge-load-bg: #f3e8ff;
+    --badge-load-hover: #e9d5ff;
+    
+    --badge-discomfort-text: #c2410c;
+    --badge-discomfort-bg: #fed7aa;
+    --badge-discomfort-hover: #fdba74;
+    
+    --badge-compensation-text: #4338ca;
+    --badge-compensation-bg: #e0e7ff;
+    --badge-compensation-hover: #c7d2fe;
 }
 
 body {
@@ -135,6 +148,19 @@ body {
     --hub-card-title-font-family: 'Sora', sans-serif;
     --hub-card-title-font-weight: 400;
     --hub-card-title-color: hsl(220, 9%, 70%);
+    
+    /* Badge colors - Dark mode */
+    --badge-load-text: #c084fc;
+    --badge-load-bg: #581c87;
+    --badge-load-hover: #6b21a8;
+    
+    --badge-discomfort-text: #fdba74;
+    --badge-discomfort-bg: #7c2d12;
+    --badge-discomfort-hover: #9a3412;
+    
+    --badge-compensation-text: #a5b4fc;
+    --badge-compensation-bg: #3730a3;
+    --badge-compensation-hover: #4338ca;
     --hub-card-background: #212125;
     --hub-nested-card-background: #2a2a2e;
     
