@@ -10,15 +10,19 @@ import {
 } from 'lucide-react';
 import type { Counts } from '@/features/programas/consulta-sessao/pages/helpers';
 
-interface FisioSessionSummaryProps {
+export interface FisioSessionSummaryProps {
     counts: Counts;
     activitiesWorked: number;
     activitiesPlanned: number;
     // Metadados de fisioterapia
-    hasDiscomfort: boolean;
+    hasLoad?: boolean;
+    loadCount: number;
+    hasDiscomfort?: boolean;
     discomfortCount: number;
-    hasCompensation: boolean;
+    hasCompensation?: boolean;
     compensationCount: number;
+    statusLabel: string;
+    statusCls: string;
 }
 
 interface KpiCardProps {
