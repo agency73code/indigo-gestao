@@ -30,7 +30,7 @@ export type ActivityBlockPanelProps = {
     onCreateAttempt: (resultado: ResultadoTentativa, durationMinutes?: number) => void;
     onRemoveAttempt?: (resultado: ResultadoTentativa) => void; // Nova prop para decrementar
     onPause: () => void;
-    onFinalizarBloco: () => void;
+    onFinalizarBloco: (durationMinutes?: number) => void;
 };
 
 // Hook para gerenciar gestos (long press + swipe)
@@ -351,7 +351,10 @@ export default function ToActivityBlockPanel({
                 <Button
                     size="sm"
                     variant="default"
-                    onClick={onFinalizarBloco}
+                    onClick={() => {
+                        const tempo = durationMinutes ? Number(durationMinutes) : undefined;
+                        onFinalizarBloco(tempo);
+                    }}
                     data-testid="btn-finalizar"
                     className="h-9 rounded-[5px]"
                 >

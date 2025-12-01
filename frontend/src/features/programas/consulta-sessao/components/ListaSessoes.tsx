@@ -151,7 +151,7 @@ export default function ListaSessoes({ sessoes, onVerDetalhes }: ListaSessoesPro
                                     <p className="text-xs font-medium text-muted-foreground">
                                         Programa:
                                     </p>
-                                    <p className="text-sm font-semibold text-foreground line-clamp-1">
+                                    <p className="text-sm font-regular text-foreground line-clamp-1">
                                         {sessao.programa}
                                     </p>
                                 </div>

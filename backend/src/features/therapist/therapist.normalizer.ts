@@ -23,6 +23,7 @@ export function normalizeTherapistDate(
 
 export function normalizeTherapistForm(db: TherapistTypes.TherapistDB) {
     return {
+        id: db.id,
         nome: db.nome,
         email: db.email,
         emailIndigo: db.email_indigo,
