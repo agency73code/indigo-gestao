@@ -7,7 +7,7 @@ const API_URL = import.meta.env.VITE_API_URL;
  */
 
 export async function fetchFonoPatientById(id: string): Promise<Patient> {
-    const response = await fetch(`${API_URL}/clientes/${id}`, {
+    const response = await fetch(`${API_URL}/clients/${id}`, {
         credentials: 'include',
     });
 
@@ -36,12 +36,9 @@ export async function fetchFonoTherapistById(id: string): Promise<Therapist> {
     }
 
     const data = await response.json();
-    console.log('🔍 [Fono] Response do backend:', data);
-    console.log('🔍 [Fono] data.id:', data.id);
-    console.log('🔍 [Fono] data.nome:', data.nome);
     
     return {
-        id: data.id,
+        id,
         name: data.nome, // Backend retorna 'nome' em português
         photoUrl: data.photoUrl,
         especialidade: data.especialidade,

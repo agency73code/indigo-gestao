@@ -139,7 +139,7 @@ export default function ToActivitiesPerformanceList({
                                         {/* Cabeçalho: Título + Stats */}
                                         <div className="p-4 space-y-3 border-b border-border/40 dark:border-white/15">
                                             {/* Nome da atividade */}
-                                            <div className="font-normal text-sm" style={{fontFamily: "Sora"}}>
+                                            <div className="font- text-sm" style={{fontFamily: "Sora"}}>
                                                 {activity.label}
                                             </div>
 

@@ -57,8 +57,8 @@ function SelectorModal({
     const [imageLoadingStates, setImageLoadingStates] = useState<Record<string, boolean>>({});
 
     // Função para gerar iniciais
-    const getInitials = (name: string | undefined | null) => {
-        if (!name) return '??';
+    const getInitials = (name: string) => {
+        if (!name) return '';
         return name
             .split(' ')
             .map((word) => word.charAt(0))
@@ -240,8 +240,8 @@ export default function HeaderInfo({
     const [therapistImageLoading, setTherapistImageLoading] = useState(true);
 
     // Função para gerar iniciais
-    const getInitials = (name: string | undefined | null) => {
-        if (!name) return '??';
+    const getInitials = (name: string) => {
+        if (!name) return '';
         return name
             .split(' ')
             .map((word) => word.charAt(0))

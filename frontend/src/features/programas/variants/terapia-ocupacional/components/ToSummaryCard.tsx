@@ -20,37 +20,42 @@ export default function ToSummaryCard({
         return null;
     }
 
-    // Calcular métricas baseadas nas sessões disponíveis
-    const validSessions = sessions.filter(
-        (session) => session.overallScore !== null && session.overallScore !== undefined,
+    // Sessões que têm tanto overallScore quanto independenceRate
+    const scoreValidSessions = sessions.filter(
+        (session) => 
+            session.overallScore !== null &&
+            session.overallScore !== undefined &&
+            session.independenceRate !== null &&
+            session.independenceRate !== undefined,
     );
 
-    // Para TO: overallScore representa % de "Desempenhou"
+    const sessionCount = scoreValidSessions.length;
+
+    // Média de % que desempenhou (independente + com ajuda)
     const desempenhouAverage =
-        validSessions.length > 0
-            ? validSessions.reduce((sum, session) => sum + (session.overallScore || 0), 0) /
-              validSessions.length
+        scoreValidSessions.length > 0
+            ? scoreValidSessions.reduce(
+                (sum, session) => sum + (session.overallScore || 0),
+                0,
+            ) / scoreValidSessions.length
             : 0;
 
-    // Para TO: independenceRate representa % de "Desempenhou com Ajuda"
-    const independenceValidSessions = sessions.filter(
-        (session) => session.independenceRate !== null && session.independenceRate !== undefined,
-    );
+    // Média de % que desempenhou de forma independente
+    const independenciaAverage =
+            scoreValidSessions.length > 0
+                ? scoreValidSessions.reduce(
+                    (sum, session) => sum + (session.independenceRate || 0),
+                    0,
+                ) / scoreValidSessions.length
+                : 0;
 
-    const comAjudaAverage =
-        independenceValidSessions.length > 0
-            ? independenceValidSessions.reduce(
-                  (sum, session) => sum + (session.independenceRate || 0),
-                  0,
-              ) / independenceValidSessions.length
-            : 0;
+    // Média de % que desempenhou com ajuda = acerto geral - independente
+    const comAjudaAverage = Math.max(0, desempenhouAverage - independenciaAverage);
 
-    // Calcular % de "Não Desempenhou" (100 - Desempenhou - Desempenhou com Ajuda)
-    const naoDesempenhouAverage = Math.max(0, 100 - desempenhouAverage - comAjudaAverage);
+    // Média de % que não desempenhou = 100 - acerto geral
+    const naoDesempenhouAverage = Math.max(0, 100 - desempenhouAverage);
 
-    const formatPercentage = (value: number) => {
-        return `${Math.round(value)}%`;
-    };
+    const formatPercentage = (value: number) => `${Math.round(value)}%`;
 
     return (
         <div className="space-y-4 mx-0 px-0" data-print-block>
@@ -69,7 +74,7 @@ export default function ToSummaryCard({
                         <div className="space-y-1">
                             <CardTitleHub className="text-lg">Desempenhou</CardTitleHub>
                             <p className="text-sm text-muted-foreground">
-                                Média das últimas {validSessions.length} sessões
+                                Média das últimas {sessionCount} sessões
                             </p>
                         </div>
                     </CardHeader>
@@ -107,7 +112,7 @@ export default function ToSummaryCard({
                         </div>
                         <div className="space-y-1">
                             <CardTitleHub className="text-lg">Desempenhou com Ajuda</CardTitleHub>
-                            <p className="text-sm text-muted-foreground">Média das últimas {independenceValidSessions.length} sessões</p>
+                            <p className="text-sm text-muted-foreground">Média das últimas {sessionCount} sessões</p>
                         </div>
                     </CardHeader>
                     <CardContent>
@@ -145,7 +150,7 @@ export default function ToSummaryCard({
                         <div className="space-y-1">
                             <CardTitleHub className="text-lg">Não Desempenhou</CardTitleHub>
                             <p className="text-sm text-muted-foreground">
-                                Média das últimas {validSessions.length} sessões
+                                Média das últimas {sessionCount} sessões
                             </p>
                         </div>
                     </CardHeader>
@@ -172,7 +177,7 @@ export default function ToSummaryCard({
                 </Card>
             </div>
 
-            {validSessions.length === 0 && (
+            {sessionCount === 0 && (
                 <div className="text-center py-8 border-2 border-dashed rounded-[5px]">
                     <BarChart3 className="h-8 w-8 mx-auto mb-2 opacity-30 text-muted-foreground" />
                     <p className="text-sm text-muted-foreground">

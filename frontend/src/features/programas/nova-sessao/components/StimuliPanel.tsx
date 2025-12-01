@@ -43,7 +43,7 @@ export default function StimuliPanel({
     const [tempAttempts, setTempAttempts] = useState<Record<string, SessionAttempt[]>>({});
 
     const shortTermGoalDescription =
-        program.shortTermGoalDescription ?? program.goalDescription ?? null;
+        program.shortTermGoalDescription ?? program.shortTermGoalDescription ?? null;
 
     const applicationDescription = program.stimuliApplicationDescription ?? null;
 

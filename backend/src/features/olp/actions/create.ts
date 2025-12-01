@@ -86,7 +86,7 @@ export async function session(input: CreateSessionInput) {
 }
 
 export async function TOSession(input: CreateToSessionInput) {
-    const { programId, patientId, therapistId, notes, attempts, files = [] } = input;
+    const { programId, patientId, therapistId, notes, attempts, files = [], area } = input;
 
     const ocp = await prisma.ocp.findUnique({
         where: { id: programId },
@@ -106,11 +106,21 @@ export async function TOSession(input: CreateToSessionInput) {
             throw new Error(`A atividade ${a.activityId} não pertence a este programa.`);
         }
 
+        switch (a.type) {
+            case 'desempenhou':
+                a.type = 'independent';
+                break;
+            case 'desempenhou-com-ajuda':
+                a.type = 'prompted';
+                break;
+            default:
+                a.type = 'error'
+        }
+
         return {
             estimulos_ocp_id: vinculo.id,
             ordem: a.attemptNumber,
             resultado: a.type,
-            timestamp: new Date(a.timestamp),
             duracao_minutos: a.durationMinutes ?? null
         };
     });
@@ -132,13 +142,13 @@ export async function TOSession(input: CreateToSessionInput) {
         });
     }
 
-    const session = await prisma.sessao_to.create({
+    const session = await prisma.sessao.create({
         data: {
             ocp_id: programId,
             cliente_id: patientId,
             terapeuta_id: therapistId,
-            observacoes: notes?.trim() || null,
-
+            observacoes_sessao: notes?.trim() || null,
+            area,
             trials: {
                 create: trialsData
             },

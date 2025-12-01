@@ -222,6 +222,7 @@ export default function RegistrarSessaoToPage() {
                 programId: sessionState.programId!,
                 attempts: sessionState.attempts,
                 notes: sessionState.notes,
+                files: sessionState.files,
             });
 
             toast.success('Sessão registrada com sucesso! 🎉', {
@@ -230,7 +231,8 @@ export default function RegistrarSessaoToPage() {
                 duration: 4000,
             });
 
-            const redirectUrl = `/app/programas/terapia-ocupacional/ocp/${sessionState.programId}?patientId=${sessionState.patientId}`;
+            //const redirectUrl = `/app/programas/terapia-ocupacional/ocp/${sessionState.programId}?patientId=${sessionState.patientId}`;
+            const redirectUrl = `/app/programas/terapia-ocupacional/programa/${sessionState.programId}`;
             navigate(redirectUrl);
         } catch (err) {
             console.error('Erro ao salvar sessão:', err);

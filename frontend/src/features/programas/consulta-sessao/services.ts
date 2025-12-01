@@ -1,7 +1,8 @@
 import type { Sessao, ResumoSessao, ProgramDetail } from './types';
+import type { AreaType } from '@/contexts/AreaContext';
 
 // Toggle local mocks (follow existing pattern)
-const USE_LOCAL_MOCKS = true;
+const USE_LOCAL_MOCKS = false;
 
 /**
  * Parâmetros de filtragem para listagem de sessões
@@ -11,6 +12,8 @@ export interface SessionListFilters {
   q?: string;
   /** Período: 'all' | 'last7' | 'last30' | 'year' */
   dateRange?: string;
+  /** Área do programa (fonoaudiologia, terapia-ocupacional, etc.) */
+  area?: AreaType;
   /** ID do programa */
   programId?: string;
   /** ID do terapeuta */
@@ -59,13 +62,6 @@ export async function listSessionsByPatient(
     page = 1,
     pageSize = 10
   } = filters;
-
-  // 🎯 FORÇAR MOCK PARA ALESSANDRO (TO) ou qualquer fisioterapia
-  if (USE_LOCAL_MOCKS) {
-    const mockData = await getMockSessionsData(patientId, area);
-    return processSessionsLocally(mockData, filters);
-  }
-
   try {
     // Construir URL com query params
     const url = new URL(`/api/ocp/clients/${patientId}/sessions`, window.location.origin);
@@ -84,7 +80,7 @@ export async function listSessionsByPatient(
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' }
     });
-    console.log('teste');
+
     if (!res.ok) throw new Error(`Erro ao carregar sessões: ${res.status}`);
     
     const response = await res.json();
