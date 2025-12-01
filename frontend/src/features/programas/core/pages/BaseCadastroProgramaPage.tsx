@@ -294,7 +294,7 @@ export function BaseCadastroProgramaPage({
                 stimuli: formState.stimuli.filter((s) => s.label.trim()),
                 notes: formState.notes.trim() || null,
             };
-
+            console.log('teste')
             const result = await onCreateProgram(payload);
             console.log(result)
             toast.success(config.messages.saveSuccess);

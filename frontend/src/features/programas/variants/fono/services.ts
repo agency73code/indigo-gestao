@@ -81,7 +81,8 @@ export async function createFonoProgram(input: CreateProgramInput): Promise<{ id
     }
 
     const result = await response.json();
-    return { id: String(result.data.id) };
+
+    return { id: String(result.id) };
 }
 
 export async function listFonoPrograms(params: {
