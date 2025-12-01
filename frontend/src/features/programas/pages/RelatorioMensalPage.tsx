@@ -15,7 +15,7 @@ import {
     fetchPrazoPrograma,
 } from '../relatorio-geral/services/relatorio.service';
 import type { Filters, KpisRelatorio, SerieLinha, PrazoPrograma } from '../relatorio-geral/types';
-import { ReportExporter } from '../relatorio-geral/print/ReportExporter';
+import { ReportExporter } from '../../relatorios/gerar-relatorio/print/ReportExporter';
 
 export default function RelatorioMensalPage() {
     const [searchParams] = useSearchParams();
@@ -212,7 +212,14 @@ export default function RelatorioMensalPage() {
     return (
         <div className="flex flex-col w-full h-full">
             {selectedPatient ? (
-                <ReportExporter documentTitle={documentTitle}>
+                <ReportExporter 
+                    documentTitle={documentTitle}
+                    reportTitle="Relatório de Evolução Terapêutica — Programas & Objetivos"
+                    clientInfo={{
+                        nome: selectedPatient.name,
+                        idade: selectedPatient.age,
+                    }}
+                >
                     <div className="space-y-4 md:space-y-6 px-6 pb-6">
                         {/* Bloco de Cliente - aparece em tela e PDF */}
                         <div data-print-program-header>
