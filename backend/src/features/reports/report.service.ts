@@ -67,13 +67,15 @@ export async function saveReport(input: SaveReportInput): Promise<SavedReport> {
         throw new AppError('THERAPIST_NOT_FOUND', 'Terapeuta não encontrado para salvar o relatório.', 404);
     }
 
+    const generationDate = new Date();
+
     const folderInfo = await ensureMonthlyReportFolder({
         fullName: patient.nome ?? 'Cliente Indigo',
         birthDate: patient.dataNascimento ? formatDateOnly(patient.dataNascimento) : 'sem-data',
-        periodStart: input.periodStart,
+        generationDate,
     });
 
-    const fileDescriptor = buildReportFileDescriptor(input.title, patient.nome ?? 'cliente', input.periodStart);
+    const fileDescriptor = buildReportFileDescriptor(input.title, patient.nome ?? 'cliente', generationDate);
 
     const ext = '.pdf';
     const fileName = `${sanitizeFolderName(fileDescriptor)}${ext}`;
@@ -225,8 +227,8 @@ function normalizeJsonValue(value: Prisma.JsonValue | null | undefined): Record<
     return {};
 }
 
-function buildReportFileDescriptor(title: string, patientName: string, periodStart: Date) {
-    const monthKey = dayjs(periodStart).format('YYYY-MM');
+function buildReportFileDescriptor(title: string, patientName: string, generationDate: Date) {
+    const monthKey = dayjs(generationDate).format('YYYY-MM');
     const normalizedTitle = sanitizeFolderName(title);
     const normalizedPatient = sanitizeFolderName(patientName);
     return `relatorio_${monthKey}_${normalizedPatient}_${normalizedTitle}`;

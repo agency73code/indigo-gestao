@@ -8,6 +8,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { toast } from 'sonner';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 import ToolbarConsulta from '@/features/consultas/components/ToolbarConsulta';
+import { AREA_LABELS, type AreaType } from '@/contexts/AreaContext';
+import { getAreaStyle } from '../constants/areaStyles';
 import type {
   SavedReport,
   Paciente,
@@ -20,12 +22,17 @@ import {
   getAllTherapists,
 } from '../services/relatorios.service';
 
-// Tipo para controlar estados de expansão
+// Tipo para controlar estados de expansão (agora com 3 níveis: paciente -> área -> mês)
 type ExpansionState = {
   [patientId: string]: {
     isOpen: boolean;
-    folders: {
-      [monthKey: string]: boolean;
+    areas: {
+      [area: string]: {
+        isOpen: boolean;
+        folders: {
+          [monthKey: string]: boolean;
+        };
+      };
     };
   };
 };
@@ -114,21 +121,47 @@ export function RelatoriosPage() {
       [patientId]: {
         ...prev[patientId],
         isOpen: !prev[patientId]?.isOpen,
-        folders: prev[patientId]?.folders || {},
+        areas: prev[patientId]?.areas || {},
       }
     }));
   };
 
-  // Função para toggle de pasta de mês
-  const toggleFolder = (patientId: string, monthKey: string) => {
+  // Função para toggle de área
+  const toggleArea = (patientId: string, area: string) => {
     setExpansionState(prev => ({
       ...prev,
       [patientId]: {
         ...prev[patientId],
         isOpen: prev[patientId]?.isOpen ?? true,
-        folders: {
-          ...(prev[patientId]?.folders || {}),
-          [monthKey]: !prev[patientId]?.folders?.[monthKey],
+        areas: {
+          ...(prev[patientId]?.areas || {}),
+          [area]: {
+            ...prev[patientId]?.areas?.[area],
+            isOpen: !prev[patientId]?.areas?.[area]?.isOpen,
+            folders: prev[patientId]?.areas?.[area]?.folders || {},
+          }
+        }
+      }
+    }));
+  };
+
+  // Função para toggle de pasta de mês
+  const toggleFolder = (patientId: string, area: string, monthKey: string) => {
+    setExpansionState(prev => ({
+      ...prev,
+      [patientId]: {
+        ...prev[patientId],
+        isOpen: prev[patientId]?.isOpen ?? true,
+        areas: {
+          ...(prev[patientId]?.areas || {}),
+          [area]: {
+            ...prev[patientId]?.areas?.[area],
+            isOpen: prev[patientId]?.areas?.[area]?.isOpen ?? true,
+            folders: {
+              ...(prev[patientId]?.areas?.[area]?.folders || {}),
+              [monthKey]: !prev[patientId]?.areas?.[area]?.folders?.[monthKey],
+            }
+          }
         }
       }
     }));
@@ -213,19 +246,26 @@ export function RelatoriosPage() {
     };
   };
 
-  // Função para formatar mês/ano
-  const getMonthYearLabel = (date: Date) => {
-    return date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  // Função para obter chave do mês (YYYY-MM) usando UTC para evitar mudar o mês em timezones negativos
+  const getMonthKey = (isoDate: string) => isoDate.slice(0, 7);
+
+  const getMonthYearLabel = (monthKey: string) => {
+    const utcDate = new Date(`${monthKey}-01T00:00:00Z`);
+    return utcDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric', timeZone: 'UTC' });
   };
 
-  // Função para obter chave do mês (YYYY-MM)
-  const getMonthKey = (date: Date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    return `${year}-${month}`;
+  const getReportGroupingIso = (report: SavedReport) => report.updatedAt || report.createdAt;
+
+  const formatReportGroupingDate = (isoDate: string) => {
+    const utcDate = new Date(isoDate);
+    return utcDate.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: 'short',
+      timeZone: 'UTC'
+    });
   };
 
-  // Agrupa relatórios por cliente e depois por mês
+  // Agrupa relatórios por cliente, depois por área, depois por mês
   const groupedByPatient = reports.reduce((acc, report) => {
     const patientId = report.patientId;
     if (!acc[patientId]) {
@@ -235,28 +275,46 @@ export function RelatoriosPage() {
     return acc;
   }, {} as Record<string, SavedReport[]>);
 
-  // Para cada cliente, agrupa relatórios por mês
-  const groupedByPatientAndMonth = Object.entries(groupedByPatient).reduce((acc, [patientId, patientReports]) => {
-    const reportsByMonth: Record<string, SavedReport[]> = {};
+  // Para cada cliente, agrupa por área e depois por mês
+  const groupedByPatientAreaAndMonth = Object.entries(groupedByPatient).reduce((acc, [patientId, patientReports]) => {
+    // Primeiro, agrupa por área
+    const reportsByArea: Record<string, SavedReport[]> = {};
     
     patientReports.forEach(report => {
-      const reportDate = new Date(report.createdAt);
-      const monthKey = getMonthKey(reportDate);
-      
-      if (!reportsByMonth[monthKey]) {
-        reportsByMonth[monthKey] = [];
+      const area = report.area || 'fonoaudiologia'; // Fallback para fonoaudiologia
+      if (!reportsByArea[area]) {
+        reportsByArea[area] = [];
       }
-      reportsByMonth[monthKey].push(report);
+      reportsByArea[area].push(report);
     });
 
-    // Ordena meses do mais recente para o mais antigo
-    const sortedMonths = Object.entries(reportsByMonth).sort((a, b) => {
-      return b[0].localeCompare(a[0]); // Ordem decrescente (mais recente primeiro)
+    // Depois, para cada área, agrupa por mês
+    const areaMonthGroups: Record<string, [string, SavedReport[]][]> = {};
+    
+    Object.entries(reportsByArea).forEach(([area, areaReports]) => {
+      const reportsByMonth: Record<string, SavedReport[]> = {};
+      
+      areaReports.forEach(report => {
+        const groupingIso = getReportGroupingIso(report);
+        const monthKey = getMonthKey(groupingIso);
+        
+        if (!reportsByMonth[monthKey]) {
+          reportsByMonth[monthKey] = [];
+        }
+        reportsByMonth[monthKey].push(report);
+      });
+
+      // Ordena meses do mais recente para o mais antigo
+      const sortedMonths = Object.entries(reportsByMonth).sort((a, b) => {
+        return b[0].localeCompare(a[0]); // Ordem decrescente (mais recente primeiro)
+      });
+
+      areaMonthGroups[area] = sortedMonths;
     });
 
-    acc[patientId] = sortedMonths;
+    acc[patientId] = areaMonthGroups;
     return acc;
-  }, {} as Record<string, [string, SavedReport[]][]>);
+  }, {} as Record<string, Record<string, [string, SavedReport[]][]>>);
 
   return (
     <div className="min-h-screen bg-background">
@@ -323,22 +381,18 @@ export function RelatoriosPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {Object.entries(groupedByPatientAndMonth).map(([patientId, monthsData]) => {
-              // Pega o primeiro relatório de qualquer mês para extrair dados do paciente
-              const firstReport = monthsData[0]?.[1]?.[0]; // monthsData é array de [monthKey, reports[]]
+            {Object.entries(groupedByPatientAreaAndMonth).map(([patientId, areasData]) => {
+              // Pega o primeiro relatório de qualquer área/mês para extrair dados do paciente
+              const firstAreaData = Object.values(areasData)[0];
+              const firstReport = firstAreaData?.[0]?.[1]?.[0];
               const patientInfo = getPatientInfo(patientId, firstReport);
-              const totalReports = monthsData.reduce((sum, [, reports]) => sum + reports.length, 0);
-              const isPatientOpen = expansionState[patientId]?.isOpen ?? false;
               
-              // Debug - remover depois
-              if (firstReport) {
-                console.log('👤 Patient info para', patientId, ':', {
-                  nome: patientInfo.nome,
-                  dataNascimento: patientInfo.dataNascimento,
-                  idade: patientInfo.dataNascimento ? calculateAge(patientInfo.dataNascimento) : null,
-                  temPatientNoReport: !!firstReport.patient,
-                });
-              }
+              // Conta total de relatórios em todas as áreas
+              const totalReports = Object.values(areasData).reduce((sum, areaMonths) => {
+                return sum + areaMonths.reduce((areaSum, [, reports]) => areaSum + reports.length, 0);
+              }, 0);
+              
+              const isPatientOpen = expansionState[patientId]?.isOpen ?? false;
               
               return (
                 <Collapsible
@@ -393,96 +447,144 @@ export function RelatoriosPage() {
                     </div>
                   </CollapsibleTrigger>
 
-                  {/* Conteúdo do Cliente (pastas por mês) */}
+                  {/* Conteúdo do Cliente (áreas) */}
                   <CollapsibleContent>
                     <div className="px-4 pb-4 space-y-2">
-                      {monthsData.map(([monthKey, monthReports]) => {
-                        const monthDate = new Date(monthKey + '-01');
-                        const monthLabel = getMonthYearLabel(monthDate);
-                        const isFolderOpen = expansionState[patientId]?.folders?.[monthKey] ?? false;
+                      {Object.entries(areasData).map(([area, monthsData]) => {
+                        const isAreaOpen = expansionState[patientId]?.areas?.[area]?.isOpen ?? false;
+                        const areaLabel = AREA_LABELS[area as AreaType] || area;
+                        const areaReportsCount = monthsData.reduce((sum, [, reports]) => sum + reports.length, 0);
+                        
+                        const areaStyle = getAreaStyle(area as AreaType);
+                        const AreaIcon = areaStyle.icon;
                         
                         return (
                           <Collapsible
-                            key={monthKey}
-                            open={isFolderOpen}
-                            onOpenChange={() => toggleFolder(patientId, monthKey)}
+                            key={area}
+                            open={isAreaOpen}
+                            onOpenChange={() => toggleArea(patientId, area)}
                             className="overflow-hidden"
                             style={{ 
                               backgroundColor: 'var(--hub-nested-card-background)',
                               borderRadius: 'var(--radius)'
                             }}
                           >
-                            {/* Cabeçalho da Pasta (Mês/Ano) */}
+                            {/* Cabeçalho da Área */}
                             <CollapsibleTrigger className="w-full">
                               <div className="flex items-center gap-2 p-3 hover:bg-muted/30 transition-colors">
                                 <div className="shrink-0">
-                                  {isFolderOpen ? (
+                                  {isAreaOpen ? (
                                     <ChevronDown className="h-4 w-4 text-muted-foreground" />
                                   ) : (
                                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
                                   )}
                                 </div>
                                 
-                                <Folder className="h-4 w-4 text-primary shrink-0" />
+                                <div className={`h-8 w-8 rounded-full ${areaStyle.bgColor} flex items-center justify-center shrink-0`}>
+                                  <AreaIcon className={`h-4 w-4 ${areaStyle.iconColor}`} />
+                                </div>
                                 
                                 <div className="flex-1 text-left">
-                                  <p className="text-sm font-medium capitalize">{monthLabel}</p>
+                                  <p className="text-sm font-medium">{areaLabel}</p>
                                 </div>
                                 
                                 <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                                  {monthReports.length}
+                                  {areaReportsCount}
                                 </span>
                               </div>
                             </CollapsibleTrigger>
 
-                            {/* Conteúdo da Pasta (Relatórios do mês) */}
+                            {/* Conteúdo da Área (pastas por mês) */}
                             <CollapsibleContent>
-                              <div className="space-y-1 p-2" style={{ backgroundColor: 'var(--hub-nested-card-background)' }}>
-                                {monthReports.map((report) => {
-                                  const therapist = therapists.find(t => t.id === report.therapistId);
+                              <div className="px-3 pb-3 space-y-2">
+                                {monthsData.map(([monthKey, monthReports]) => {
+                                  const monthLabel = getMonthYearLabel(monthKey);
+                                  const isFolderOpen = expansionState[patientId]?.areas?.[area]?.folders?.[monthKey] ?? false;
                                   
                                   return (
-                                    <div
-                                      key={report.id}
-                                      className="flex items-center justify-between p-2.5 bg-background hover:bg-muted/50 transition-colors cursor-pointer group"
-                                      style={{ borderRadius: 'var(--radius)' }}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleViewReport(report);
+                                    <Collapsible
+                                      key={monthKey}
+                                      open={isFolderOpen}
+                                      onOpenChange={() => toggleFolder(patientId, area, monthKey)}
+                                      className="overflow-hidden"
+                                      style={{ 
+                                        backgroundColor: 'var(--hub-card-background)',
+                                        borderRadius: 'var(--radius)'
                                       }}
                                     >
-                                      <div className="flex-1 min-w-0 flex items-center gap-2">
-                                        <FileText className="h-4 w-4 text-primary shrink-0" />
-                                        <div className="flex-1 min-w-0">
-                                          <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">
-                                            {report.title}
-                                          </p>
-                                          <div className="flex items-center gap-2 mt-0.5">
-                                            <Calendar className="h-3 w-3 text-muted-foreground shrink-0" />
-                                            <p className="text-xs text-muted-foreground">
-                                              {new Date(report.createdAt).toLocaleDateString('pt-BR', {
-                                                day: '2-digit',
-                                                month: 'short',
-                                              })}
-                                            </p>
-                                            <span className="text-muted-foreground">•</span>
-                                            <p className="text-xs text-muted-foreground truncate">
-                                              {therapist?.nome || 'Terapeuta não encontrado'}
-                                            </p>
+                                      {/* Cabeçalho da Pasta (Mês/Ano) */}
+                                      <CollapsibleTrigger className="w-full">
+                                        <div className="flex items-center gap-2 p-3 hover:bg-muted/30 transition-colors">
+                                          <div className="shrink-0">
+                                            {isFolderOpen ? (
+                                              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                            ) : (
+                                              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                                            )}
                                           </div>
+                                          
+                                          <Folder className="h-4 w-4 text-primary shrink-0" />
+                                          
+                                          <div className="flex-1 text-left">
+                                            <p className="text-sm font-medium capitalize">{monthLabel}</p>
+                                          </div>
+                                          
+                                          <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                                            {monthReports.length}
+                                          </span>
                                         </div>
-                                      </div>
-                                      
-                                      <div className="shrink-0 ml-2">
-                                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                                          report.status === 'final' 
-                                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
-                                            : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
-                                        }`}>
-                                          {report.status === 'final' ? 'Finalizado' : 'Arquivado'}
-                                        </span>
-                                      </div>
-                                    </div>
+                                      </CollapsibleTrigger>
+
+                                      {/* Conteúdo da Pasta (Relatórios do mês) */}
+                                      <CollapsibleContent>
+                                        <div className="space-y-1 p-2" style={{ backgroundColor: 'var(--hub-nested-card-background)' }}>
+                                          {monthReports.map((report) => {
+                                            const therapist = therapists.find(t => t.id === report.therapistId);
+                                            
+                                            return (
+                                              <div
+                                                key={report.id}
+                                                className="flex items-center justify-between p-2.5 bg-background hover:bg-muted/50 transition-colors cursor-pointer group"
+                                                style={{ borderRadius: 'var(--radius)' }}
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  handleViewReport(report);
+                                                }}
+                                              >
+                                                <div className="flex-1 min-w-0 flex items-center gap-2">
+                                                  <FileText className="h-4 w-4 text-primary shrink-0" />
+                                                  <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">
+                                                      {report.title}
+                                                    </p>
+                                                    <div className="flex items-center gap-2 mt-0.5">
+                                                      <Calendar className="h-3 w-3 text-muted-foreground shrink-0" />
+                                                      <p className="text-xs text-muted-foreground">
+                                                        {formatReportGroupingDate(getReportGroupingIso(report))}
+                                                      </p>
+                                                      <span className="text-muted-foreground">•</span>
+                                                      <p className="text-xs text-muted-foreground truncate">
+                                                        {therapist?.nome || 'Terapeuta não encontrado'}
+                                                      </p>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                                
+                                                <div className="shrink-0 ml-2">
+                                                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                                                    report.status === 'final' 
+                                                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
+                                                      : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
+                                                  }`}>
+                                                    {report.status === 'final' ? 'Finalizado' : 'Arquivado'}
+                                                  </span>
+                                                </div>
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
+                                      </CollapsibleContent>
+                                    </Collapsible>
                                   );
                                 })}
                               </div>

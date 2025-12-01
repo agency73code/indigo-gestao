@@ -4,7 +4,9 @@ import type {
     ToProgramDetail,
     ToSessionAttempt,
     ToSessionSummary,
+    SessionFile,
 } from './types';
+import type { AreaType } from '@/contexts/AreaContext';
 
 /**
  * Busca pacientes para seleção na sessão TO
@@ -20,37 +22,6 @@ export async function searchPatientsForToSession(_query: string): Promise<Patien
  * Busca detalhes do programa TO para registro de sessão
  */
 export async function getToProgramDetail(_programId: string): Promise<ToProgramDetail> {
-    // Se for o programa mock, retorna o mock com currentPerformanceLevel
-    if (_programId === 'mock-to-001') {
-        const { fetchToProgramById } = await import('../mocks/mockService');
-        const detail = await fetchToProgramById(_programId);
-        
-        // Adapta para o formato TO
-        return {
-            id: detail.id,
-            name: detail.name,
-            patientId: detail.patientId,
-            patientName: detail.patientName,
-            therapistId: detail.therapistId,
-            therapistName: detail.therapistName,
-            goalTitle: detail.goalTitle,
-            goalDescription: detail.goalDescription,
-            shortTermGoalDescription: detail.shortTermGoalDescription,
-            activitiesApplicationDescription: detail.stimuliApplicationDescription,
-            status: detail.status,
-            criteria: detail.criteria,
-            currentPerformanceLevel: (detail as any).currentPerformanceLevel,
-            prazoInicio: detail.prazoInicio,
-            prazoFim: detail.prazoFim,
-            activities: detail.stimuli.map((stimulus: any) => ({
-                id: stimulus.id,
-                label: stimulus.label,
-                description: stimulus.description || '',
-                active: stimulus.active,
-                order: stimulus.order,
-            })),
-        };
-    }
     
     // Para programas reais, usa o serviço padrão
     const { fetchProgramById } = await import('@/features/programas/detalhe-ocp/services');
@@ -91,15 +62,48 @@ export async function saveToSession(payload: {
     programId: string;
     attempts: ToSessionAttempt[];
     notes?: string;
+    files?: SessionFile[];
 }): Promise<void> {
-    // TODO: Implementar chamada real à API
-    console.log('Salvando sessão TO:', payload);
-    
-    // Simulação de delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    // Mock: sempre sucesso
-    return Promise.resolve();
+    const formData = new FormData();
+    const area: AreaType = 'terapia-ocupacional';
+
+    formData.append('data', JSON.stringify({
+        patientId: payload.patientId,
+        notes: payload.notes ?? '',
+        attempts: payload.attempts,
+        area
+    }));
+
+    const files = payload.files ?? [];
+    files.forEach((file) => {
+        const originalName = file.file.name;
+        const customName = file.name?.trim();
+        const originalExtension = originalName.includes('.')
+            ? originalName.slice(originalName.lastIndexOf('.'))
+            : '';
+
+        const filename = customName
+            ? `${customName}${
+                  originalExtension && !customName.toLowerCase().endsWith(originalExtension.toLowerCase())
+                      ? originalExtension
+                      : ''
+              }`
+            : originalName;
+
+        formData.append('files', file.file, filename);
+    });
+
+    const response = await fetch(`/api/ocp/to/programs/${payload.programId}/sessions`, {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+    });
+
+    if (!response.ok) {
+        const err = await response.json();
+        console.error('Erro ao enviar sessão TO:', err);
+        throw new Error('Erro ao criar sessão');
+    }
 }
 
 /**
@@ -148,3 +152,147 @@ export function calculateToPredominantResult(
     if (ajuda === max) return 'laranja';
     return 'vermelho';
 }
+
+/**
+ * Recupera os arquivos salvos de uma sessão do localStorage (mock)
+ */
+export function getSessionFiles(sessionId: string): Array<{
+    id: string;
+    name: string;
+    fileName: string;
+    type: string;
+    size: number;
+    url: string;
+}> {
+    try {
+        const sessionData = localStorage.getItem(sessionId);
+        if (!sessionData) {
+            return [];
+        }
+        
+        const session = JSON.parse(sessionData);
+        if (!session.files || session.files.length === 0) {
+            return [];
+        }
+        
+        return session.files.map((file: any) => ({
+            id: file.id,
+            name: file.name,
+            fileName: file.fileName,
+            type: file.type,
+            size: file.size,
+            url: file.data, // URL em base64
+        }));
+    } catch (error) {
+        console.error('Erro ao recuperar arquivos do localStorage:', error);
+        return [];
+    }
+}
+
+/**
+ * Lista todas as sessões salvas de um programa (mock)
+ */
+export function listProgramSessions(programId: string): Array<{
+    id: string;
+    createdAt: string;
+    filesCount: number;
+}> {
+    try {
+        const sessionsListKey = `to-sessions-list-${programId}`;
+        const existingList = localStorage.getItem(sessionsListKey);
+        
+        if (!existingList) {
+            return [];
+        }
+        
+        const sessionsList = JSON.parse(existingList);
+        
+        return sessionsList.map((sessionKey: string) => {
+            const sessionData = localStorage.getItem(sessionKey);
+            if (!sessionData) {
+                return null;
+            }
+            
+            const session = JSON.parse(sessionData);
+            return {
+                id: session.id,
+                createdAt: session.createdAt,
+                filesCount: session.files?.length || 0,
+            };
+        }).filter(Boolean);
+    } catch (error) {
+        console.error('Erro ao listar sessões do localStorage:', error);
+        return [];
+    }
+}
+
+/**
+ * Inicializa arquivos mock para as sessões TO (apenas para desenvolvimento)
+ */
+export function initializeMockSessionFiles() {
+    const mockFiles = {
+        'session-to-001': [
+            {
+                id: 'file-001-1',
+                name: 'Foto - Progresso vestir camiseta',
+                fileName: 'vestir_camiseta_17nov.jpg',
+                type: 'image/jpeg',
+                size: 245000,
+                data: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCwAA==',
+            },
+            {
+                id: 'file-001-2',
+                name: 'Vídeo - Execução completa da atividade',
+                fileName: 'atividade_completa.mp4',
+                type: 'video/mp4',
+                size: 1200000,
+                data: 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc28yYXZjMW1wNDEAAAAIZnJlZQAAAAhtZGF0AAAA',
+            },
+        ],
+        'session-to-002': [
+            {
+                id: 'file-002-1',
+                name: 'Relatório de desempenho',
+                fileName: 'relatorio_14nov.pdf',
+                type: 'application/pdf',
+                size: 89000,
+                data: 'data:application/pdf;base64,JVBERi0xLjQKJeLjz9MKNCAwIG9iago8PC9GaWx0ZXIvRmxhdGVEZWNvZGUvTGVuZ3RoIDQ+PnN0cmVhbQp4nGMK5WJgAAIAAgQAKw==',
+            },
+        ],
+        'session-to-003': [
+            {
+                id: 'file-003-1',
+                name: 'Foto - Botões grandes utilizados',
+                fileName: 'botoes_grandes.jpg',
+                type: 'image/jpeg',
+                size: 312000,
+                data: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCwAA==',
+            },
+            {
+                id: 'file-003-2',
+                name: 'Foto - Apoio visual utilizado',
+                fileName: 'apoio_visual_camisa.jpg',
+                type: 'image/jpeg',
+                size: 278000,
+                data: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCwAA==',
+            },
+        ],
+    };
+
+    // Salvar os arquivos no localStorage apenas se não existirem
+    Object.entries(mockFiles).forEach(([sessionId, files]) => {
+        const existingData = localStorage.getItem(sessionId);
+        if (!existingData) {
+            localStorage.setItem(
+                sessionId,
+                JSON.stringify({
+                    id: sessionId,
+                    files,
+                    createdAt: new Date().toISOString(),
+                })
+            );
+            console.log(`✅ Arquivos mock salvos para sessão ${sessionId}`);
+        }
+    });
+}
+

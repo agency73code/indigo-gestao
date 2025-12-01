@@ -2,6 +2,7 @@
 // Estende tipos base sem duplicar
 
 import type { SessionState } from '../../nova-sessao/types';
+import { TO_AREA_ID } from './constants';
 
 // Re-exportar tipos base para facilitar imports
 export type { 
@@ -15,7 +16,7 @@ export type ToAchieved = 'sim' | 'nao' | 'parcial' | 'nao_aplica';
 
 // Payload da sessão TO (estende SessionState)
 export interface ToSessionPayload extends Omit<SessionState, 'attempts' | 'summary'> {
-    area: 'TO';
+    area: typeof TO_AREA_ID; // 🔧 CORRIGIDO: Usa constante centralizada 'terapia-ocupacional'
     goalTitle: string;               // título do objetivo trabalhado
     achieved: ToAchieved;            // Sim/Não/Parcial/N.A.
     frequency?: number | null;       // ≥ 0 (vezes)
@@ -85,15 +86,19 @@ export interface ToSessionDetail {
 
 /**
  * Resumo de desempenho por atividade (objetivo específico) em uma sessão
+ * 
+ * 🔧 NOTA: Usa camelCase para contadores (convenção JavaScript)
+ * A conversão de/para API (kebab-case) é feita nos services
  */
 export type ToActivitySummary = {
     activityId: string;
     activityName: string;
     counts: {
-        naoDesempenhou: number;      // erro
-        desempenhouComAjuda: number; // ajuda/prompted
-        desempenhou: number;         // independente
+        naoDesempenhou: number;      // Mapeado de 'nao-desempenhou' da API
+        desempenhouComAjuda: number; // Mapeado de 'desempenhou-com-ajuda' da API
+        desempenhou: number;         // Mapeado de 'desempenhou' da API
     };
     total: number;
+    durationMinutes?: number | null; // tempo total em minutos
     // Status predominante é calculado no componente, não precisa vir do backend
 };

@@ -85,7 +85,7 @@ export default function PatientSelector({
 
     return (
         <>
-            <Card className="rounded-lg px-6 py-8 md:px-8 md:py-10 lg:px-8 lg:py-0">
+            <Card className="rounded-lg px-6 py-8 md:px-8 md:py-10 lg:px-8 lg:py-0 h-full">
                 <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                     <h3 className="text-base flex items-center gap-2 font-normal" style={{fontFamily: "Sora"}}>
                         <User className="h-4 w-4" />
@@ -97,7 +97,7 @@ export default function PatientSelector({
                     {selected ? (
                         <div className="flex items-center gap-3 p-2 sm:p-3 bg-muted rounded-lg">
                             {/* Avatar do cliente selecionado */}
-                            <Avatar className="h-12 w-12 !rounded-full" style={{ borderRadius: '50%' }}>
+                            <Avatar className="h-12 w-12 rounded-full!" style={{ borderRadius: '50%' }}>
                                 {imageLoading[`selected-${selected.id}`] !== false && selected.photoUrl && (
                                     <Skeleton className="h-12 w-12 rounded-full absolute inset-0" />
                                 )}
@@ -113,7 +113,7 @@ export default function PatientSelector({
                                     onLoad={() => setImageLoading(prev => ({ ...prev, [`selected-${selected.id}`]: false }))}
                                     className={imageLoading[`selected-${selected.id}`] !== false ? 'opacity-0' : 'opacity-100 transition-opacity'}
                                 />
-                                <AvatarFallback className="!rounded-full bg-purple-100 text-purple-600" style={{ borderRadius: '50%' }}>
+                                <AvatarFallback className="rounded-full! bg-purple-100 text-purple-600" style={{ borderRadius: '50%' }}>
                                     {getInitials(selected.name)}
                                 </AvatarFallback>
                             </Avatar>
@@ -134,7 +134,7 @@ export default function PatientSelector({
                             </div>
 
                             {/* Botões de ação */}
-                            <div className="flex gap-2 flex-shrink-0">
+                            <div className="flex gap-2 shrink-0">
                                 <Button
                                     variant="outline"
                                     size="sm"
@@ -215,7 +215,7 @@ export default function PatientSelector({
                                                 <CardContent className="p-4">
                                                     <div className="flex items-center gap-3">
                                                         {/* Avatar do paciente */}
-                                                        <Avatar className="h-8 w-8 !rounded-full" style={{ borderRadius: '50%' }}>
+                                                        <Avatar className="h-8 w-8 rounded-full!" style={{ borderRadius: '50%' }}>
                                                             {imageLoading[`patient-${patient.id}`] !== false && patient.photoUrl && (
                                                                 <Skeleton className="h-8 w-8 rounded-full absolute inset-0" />
                                                             )}
@@ -231,7 +231,7 @@ export default function PatientSelector({
                                                                 onLoad={() => setImageLoading(prev => ({ ...prev, [`patient-${patient.id}`]: false }))}
                                                                 className={imageLoading[`patient-${patient.id}`] !== false ? 'opacity-0' : 'opacity-100 transition-opacity'}
                                                             />
-                                                            <AvatarFallback className="!rounded-full bg-purple-100 text-purple-600 text-xs" style={{ borderRadius: '50%' }}>
+                                                            <AvatarFallback className="rounded-full! bg-purple-100 text-purple-600 text-xs" style={{ borderRadius: '50%' }}>
                                                                 {getInitials(patient.name)}
                                                             </AvatarFallback>
                                                         </Avatar>
@@ -251,7 +251,7 @@ export default function PatientSelector({
 
                                                         {/* Idade */}
                                                         {patient.age && (
-                                                            <div className="flex-shrink-0 text-sm text-muted-foreground">
+                                                            <div className="shrink-0 text-sm text-muted-foreground">
                                                                 {patient.age} anos
                                                             </div>
                                                         )}

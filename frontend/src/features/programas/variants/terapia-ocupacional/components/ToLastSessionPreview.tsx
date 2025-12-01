@@ -91,7 +91,7 @@ function StatusBadge({ activity }: StatusBadgeProps) {
                     <span className="whitespace-nowrap">{content}</span>
                 </Badge>
             </TooltipTrigger>
-            <TooltipContent className="max-w-[240px] text-xs">
+            <TooltipContent className="max-w-60 text-xs">
                 Resultado predominante para esta atividade nesta sessão: o que mais ocorreu entre Desempenhou, Desempenhou com Ajuda e Não Desempenhou.
             </TooltipContent>
         </Tooltip>

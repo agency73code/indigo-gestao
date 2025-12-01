@@ -61,7 +61,7 @@ export default function StimuliPerformanceList({
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
-                                        <CircleHelp className="h-4 w-4 text-muted-foreground cursor-help flex-shrink-0" />
+                                        <CircleHelp className="h-4 w-4 text-muted-foreground cursor-help shrink-0" />
                                     </TooltipTrigger>
                                     <TooltipContent className="max-w-[280px]">
                                         <p className="text-xs font-medium mb-1">
@@ -88,7 +88,7 @@ export default function StimuliPerformanceList({
                         variant="outline"
                         size="sm"
                         onClick={toggleSort}
-                        className="h-9 gap-2 flex-shrink-0"
+                        className="h-9 gap-2 shrink-0"
                         aria-label={`Ordenar ${sortMode === 'severity' ? 'alfabeticamente' : 'por gravidade'}`}
                     >
                         <ArrowUpDown className="h-4 w-4" />

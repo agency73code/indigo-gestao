@@ -15,8 +15,7 @@ export async function fetchPatientById(id: string): Promise<Patient> {
     return json.data as Patient;
 }
 
-export async function fetchTherapistById(id: string): Promise<Therapist> {
-    console.log(id);
+export async function fetchTherapistById(_id: string): Promise<Therapist> {
     return { id: '1', name: 'kaio', photoUrl: null }
 }
 

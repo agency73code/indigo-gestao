@@ -1,5 +1,6 @@
 import { toast } from 'sonner';
 import type { SavedReport, ReportFiltersApplied, ReportGeneratedData } from '../types';
+import type { AreaType } from '@/contexts/AreaContext';
 
 /**
  * Interface para os parâmetros de salvamento do relatório
@@ -9,6 +10,7 @@ export interface SaveReportParams {
   patientId: string;
   patientName: string;
   therapistId: string;
+  area: AreaType; // 🆕 Área terapêutica do relatório
   filters: ReportFiltersApplied;
   generatedData: ReportGeneratedData;
   clinicalObservations?: string;
@@ -114,6 +116,7 @@ export async function saveReportToBackend(
     patientId,
     patientName,
     therapistId,
+    area, // 🆕 Área terapêutica
     filters,
     generatedData,
     clinicalObservations,
@@ -160,6 +163,7 @@ export async function saveReportToBackend(
   formData.append('type', 'mensal'); // Pode ser dinâmico futuramente
   formData.append('patientId', patientId);
   formData.append('therapistId', therapistId);
+  formData.append('area', area); // 🆕 PREPARADO PARA BACKEND: Incluir área no payload
   formData.append('periodStart', periodStart);
   formData.append('periodEnd', periodEnd);
   formData.append('clinicalObservations', clinicalObservations || '');

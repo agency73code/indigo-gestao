@@ -15,6 +15,7 @@ import {
     ToAttemptsRegister,
     ToSessionSummary,
     ToSessionObservations,
+    ToSessionFiles,
 } from '../session/components';
 import {
     searchPatientsForToSession,
@@ -28,6 +29,7 @@ import type {
     ToProgramDetail,
     ToSessionAttempt,
     ToSessionState,
+    SessionFile,
 } from '../session/types';
 
 /**
@@ -59,6 +61,7 @@ export default function RegistrarSessaoToPage() {
             totalAttempts: 0,
         },
         notes: '',
+        files: [],
     });
 
     // Estados de carregamento
@@ -200,6 +203,13 @@ export default function RegistrarSessaoToPage() {
         }));
     };
 
+    const handleFilesChange = (files: SessionFile[]) => {
+        setSessionState((prev) => ({
+            ...prev,
+            files,
+        }));
+    };
+
     const handleSave = async () => {
         if (!canSave) return;
 
@@ -212,6 +222,7 @@ export default function RegistrarSessaoToPage() {
                 programId: sessionState.programId!,
                 attempts: sessionState.attempts,
                 notes: sessionState.notes,
+                files: sessionState.files,
             });
 
             toast.success('Sessão registrada com sucesso! 🎉', {
@@ -220,7 +231,8 @@ export default function RegistrarSessaoToPage() {
                 duration: 4000,
             });
 
-            const redirectUrl = `/app/programas/terapia-ocupacional/ocp/${sessionState.programId}?patientId=${sessionState.patientId}`;
+            //const redirectUrl = `/app/programas/terapia-ocupacional/ocp/${sessionState.programId}?patientId=${sessionState.patientId}`;
+            const redirectUrl = `/app/programas/terapia-ocupacional/programa/${sessionState.programId}`;
             navigate(redirectUrl);
         } catch (err) {
             console.error('Erro ao salvar sessão:', err);
@@ -301,6 +313,13 @@ export default function RegistrarSessaoToPage() {
                             <ToSessionObservations
                                 notes={sessionState.notes || ''}
                                 onNotesChange={handleNotesChange}
+                            />
+
+                            {/* Arquivos da sessão */}
+                            <ToSessionFiles
+                                files={sessionState.files || []}
+                                onFilesChange={handleFilesChange}
+                                disabled={savingSession}
                             />
 
                             {/* Registro de tentativas */}

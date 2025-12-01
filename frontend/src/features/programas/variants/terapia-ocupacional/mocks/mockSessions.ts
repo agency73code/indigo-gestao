@@ -13,13 +13,14 @@ import type { ToActivitySummary } from '../types';
 /**
  * Sessões mock com dados de atividades
  */
-export const mockToSessions: Array<SessionListItem & { activitiesSummary?: ToActivitySummary[] }> = [
+export const mockToSessions: Array<SessionListItem & { activitiesSummary?: ToActivitySummary[], observacoes?: string }> = [
     {
         id: 'session-to-001',
         date: '2025-11-17',
         therapistName: 'João Batista',
         overallScore: 100,
         independenceRate: 74,
+        observacoes: 'Alessandro demonstrou boa evolução na atividade de vestir camiseta, realizando 8 das 10 tentativas de forma independente. Na escovação dental ainda apresenta dificuldades significativas, necessitando de mais treino e possível adaptação da escova.',
         // Preview: 14 independentes, 5 com ajuda, 0 erros = Predominante VERDE
         preview: [
             'independent', 'independent', 'independent', 'independent', 'independent',
@@ -29,7 +30,7 @@ export const mockToSessions: Array<SessionListItem & { activitiesSummary?: ToAct
         ],
         activitiesSummary: [
             {
-                activityId: 'stimulus-1',
+                activityId: 'stim-1',
                 activityName: 'Vestir camiseta',
                 counts: {
                     naoDesempenhou: 0,
@@ -37,9 +38,10 @@ export const mockToSessions: Array<SessionListItem & { activitiesSummary?: ToAct
                     desempenhou: 8, // Predominante: VERDE
                 },
                 total: 10,
+                durationMinutes: 25,
             },
             {
-                activityId: 'stimulus-2',
+                activityId: 'stim-2',
                 activityName: 'Abotoar camisa',
                 counts: {
                     naoDesempenhou: 1,
@@ -47,9 +49,10 @@ export const mockToSessions: Array<SessionListItem & { activitiesSummary?: ToAct
                     desempenhou: 2,
                 },
                 total: 9,
+                durationMinutes: 35,
             },
             {
-                activityId: 'stimulus-4',
+                activityId: 'stim-4',
                 activityName: 'Escovação dental',
                 counts: {
                     naoDesempenhou: 7, // Predominante: VERMELHO
@@ -57,6 +60,7 @@ export const mockToSessions: Array<SessionListItem & { activitiesSummary?: ToAct
                     desempenhou: 1,
                 },
                 total: 10,
+                durationMinutes: 20,
             },
         ],
     },
@@ -66,6 +70,7 @@ export const mockToSessions: Array<SessionListItem & { activitiesSummary?: ToAct
         therapistName: 'João Batista',
         overallScore: 100,
         independenceRate: 87,
+        observacoes: 'Sessão muito produtiva. Alessandro manteve foco durante todas as atividades. Destaque para o uso do talher adaptado, onde já demonstra coordenação motora fina adequada com mínimo suporte.',
         // Preview: 20 independentes, 3 com ajuda, 0 erros = Predominante VERDE
         preview: [
             'independent', 'independent', 'independent', 'independent', 'independent',
@@ -76,7 +81,7 @@ export const mockToSessions: Array<SessionListItem & { activitiesSummary?: ToAct
         ],
         activitiesSummary: [
             {
-                activityId: 'stimulus-1',
+                activityId: 'stim-1',
                 activityName: 'Vestir camiseta',
                 counts: {
                     naoDesempenhou: 0,
@@ -84,9 +89,10 @@ export const mockToSessions: Array<SessionListItem & { activitiesSummary?: ToAct
                     desempenhou: 11, // Predominante: VERDE
                 },
                 total: 11,
+                durationMinutes: 30,
             },
             {
-                activityId: 'stimulus-3',
+                activityId: 'stim-3',
                 activityName: 'Uso de talher adaptado',
                 counts: {
                     naoDesempenhou: 0,
@@ -94,6 +100,7 @@ export const mockToSessions: Array<SessionListItem & { activitiesSummary?: ToAct
                     desempenhou: 9, // Predominante: VERDE
                 },
                 total: 12,
+                durationMinutes: 45,
             },
         ],
     },
@@ -103,6 +110,7 @@ export const mockToSessions: Array<SessionListItem & { activitiesSummary?: ToAct
         therapistName: 'João Batista',
         overallScore: 100,
         independenceRate: 65,
+        observacoes: 'Trabalhamos intensivamente a atividade de abotoar camisa. Alessandro precisou de apoio verbal e físico parcial na maioria das tentativas. Recomendo continuar treinando com botões maiores antes de progredir para botões menores.',
         // Preview: 7 independentes, 15 com ajuda, 1 erro = Predominante LARANJA
         preview: [
             'independent', 'independent', 'independent', 'independent', 'independent',
@@ -114,7 +122,7 @@ export const mockToSessions: Array<SessionListItem & { activitiesSummary?: ToAct
         ],
         activitiesSummary: [
             {
-                activityId: 'stimulus-2',
+                activityId: 'stim-2',
                 activityName: 'Abotoar camisa',
                 counts: {
                     naoDesempenhou: 1,
@@ -122,6 +130,7 @@ export const mockToSessions: Array<SessionListItem & { activitiesSummary?: ToAct
                     desempenhou: 7,
                 },
                 total: 23,
+                durationMinutes: 50,
             },
         ],
     },
@@ -131,6 +140,7 @@ export const mockToSessions: Array<SessionListItem & { activitiesSummary?: ToAct
         therapistName: 'João Batista',
         overallScore: 100,
         independenceRate: 44,
+        observacoes: undefined,
         // Preview: 4 independentes, 12 com ajuda, 2 erros = Predominante LARANJA
         preview: [
             'independent', 'independent', 'independent', 'independent',
@@ -141,7 +151,7 @@ export const mockToSessions: Array<SessionListItem & { activitiesSummary?: ToAct
         ],
         activitiesSummary: [
             {
-                activityId: 'stimulus-3',
+                activityId: 'stim-3',
                 activityName: 'Uso de talher adaptado',
                 counts: {
                     naoDesempenhou: 2,
@@ -149,9 +159,10 @@ export const mockToSessions: Array<SessionListItem & { activitiesSummary?: ToAct
                     desempenhou: 4,
                 },
                 total: 18,
+                durationMinutes: 40,
             },
             {
-                activityId: 'stimulus-4',
+                activityId: 'stim-4',
                 activityName: 'Escovação dental',
                 counts: {
                     naoDesempenhou: 0,
@@ -159,6 +170,7 @@ export const mockToSessions: Array<SessionListItem & { activitiesSummary?: ToAct
                     desempenhou: 7, // Predominante: VERDE
                 },
                 total: 9,
+                durationMinutes: 15,
             },
         ],
     },
@@ -168,6 +180,7 @@ export const mockToSessions: Array<SessionListItem & { activitiesSummary?: ToAct
         therapistName: 'João Batista',
         overallScore: 58,
         independenceRate: 15,
+        observacoes: 'Sessão desafiadora. Alessandro apresentou dificuldades em todas as etapas da atividade de vestir camiseta. Possível influência de cansaço ou desconforto. Importante investigar se há questões sensoriais que possam estar interferindo no desempenho.',
         // Preview: 4 independentes, 7 com ajuda, 15 erros = Predominante VERMELHO
         preview: [
             'independent', 'independent', 'independent', 'independent',
@@ -179,7 +192,7 @@ export const mockToSessions: Array<SessionListItem & { activitiesSummary?: ToAct
         ],
         activitiesSummary: [
             {
-                activityId: 'stimulus-1',
+                activityId: 'stim-1',
                 activityName: 'Vestir camiseta',
                 counts: {
                     naoDesempenhou: 15, // Predominante: VERMELHO
@@ -187,6 +200,7 @@ export const mockToSessions: Array<SessionListItem & { activitiesSummary?: ToAct
                     desempenhou: 4,
                 },
                 total: 26,
+                durationMinutes: 55,
             },
         ],
     },

@@ -58,6 +58,7 @@ function SelectorModal({
 
     // Função para gerar iniciais
     const getInitials = (name: string) => {
+        if (!name) return '';
         return name
             .split(' ')
             .map((word) => word.charAt(0))
@@ -158,7 +159,7 @@ function SelectorModal({
                                     >
                                         <CardContent className="p-0 sm:p-0">
                                             <div className="flex items-center gap-3">
-                                                <div className="flex-shrink-0">
+                                                <div className="shrink-0">
                                                     <Avatar className="w-8 h-8 rounded-full">
                                                         {imageLoadingStates[item.id] && item.photoUrl && (
                                                             <Skeleton className="h-8 w-8 rounded-full absolute inset-0" />
@@ -200,7 +201,7 @@ function SelectorModal({
                                                 </div>
 
                                                 {type === 'patient' && (item as Patient).age && (
-                                                    <div className="flex-shrink-0 text-sm text-muted-foreground">
+                                                    <div className="shrink-0 text-sm text-muted-foreground">
                                                         {(item as Patient).age} anos
                                                     </div>
                                                 )}
@@ -240,6 +241,7 @@ export default function HeaderInfo({
 
     // Função para gerar iniciais
     const getInitials = (name: string) => {
+        if (!name) return '';
         return name
             .split(' ')
             .map((word) => word.charAt(0))
@@ -270,7 +272,7 @@ export default function HeaderInfo({
                     <CardContent className=" pb-3 sm:pb-6">
                         {patient ? (
                             <div className="flex items-center gap-3 p-2 sm:p-3 bg-muted rounded-lg">
-                                <div className="flex-shrink-0">
+                                <div className="shrink-0">
                                     <Avatar className="w-12 h-12 rounded-full">
                                         {imageLoading && patient.photoUrl && (
                                             <Skeleton className="h-12 w-12 rounded-full absolute inset-0" />
@@ -312,7 +314,7 @@ export default function HeaderInfo({
                                     )}
                                 </div>
 
-                                <div className="flex gap-2 flex-shrink-0 flex-col sm:flex-row">
+                                <div className="flex gap-2 shrink-0 flex-col sm:flex-row">
                                     <Button
                                         variant="outline"
                                         size="sm"
@@ -355,7 +357,7 @@ export default function HeaderInfo({
                     <CardContent className="pb-3 sm:pb-6">
                         {therapist ? (
                             <div className="flex items-center gap-3 p-2 sm:p-3 bg-muted rounded-lg">
-                                <div className="flex-shrink-0">
+                                <div className="shrink-0">
                                     <Avatar className="w-12 h-12 rounded-full">
                                         {therapistImageLoading && therapist.photoUrl && (
                                             <Skeleton className="h-12 w-12 rounded-full absolute inset-0" />
@@ -388,7 +390,7 @@ export default function HeaderInfo({
                                 </div>
 
                                 {!readOnlyTherapist && (
-                                    <div className="flex gap-2 flex-shrink-0 flex-col sm:flex-row">
+                                    <div className="flex gap-2 shrink-0 flex-col sm:flex-row">
                                         <RequireAbility action="manage" subject="all">
                                             <Button
                                                 variant="outline"

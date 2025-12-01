@@ -1,14 +1,15 @@
 import type { Patient, Therapist, CreateProgramInput } from '../../../core/types';
+import { TO_AREA_ID } from '../constants';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 /**
  * Serviços de API para Terapia Ocupacional
- * Nota: Ajustar os endpoints conforme a API real do backend de TO
+ * 🔧 Usa TO_AREA_ID centralizado para garantir consistência
  */
 
 export async function fetchToPatientById(id: string): Promise<Patient> {
-    const response = await fetch(`${API_URL}/client/${id}`, {
+    const response = await fetch(`${API_URL}/clientes/${id}`, {
         credentials: 'include',
     });
 
@@ -28,7 +29,7 @@ export async function fetchToPatientById(id: string): Promise<Patient> {
 }
 
 export async function fetchToTherapistById(id: string): Promise<Therapist> {
-    const response = await fetch(`${API_URL}/therapist/${id}`, {
+    const response = await fetch(`${API_URL}/terapeutas/${id}`, {
         credentials: 'include',
     });
 
@@ -37,10 +38,10 @@ export async function fetchToTherapistById(id: string): Promise<Therapist> {
     }
 
     const data = await response.json();
-    
+
     return {
-        id: data.id,
-        name: data.name,
+        id,
+        name: data.nome,
         photoUrl: data.photoUrl,
         especialidade: data.especialidade,
     };
@@ -64,9 +65,7 @@ export async function fetchToTherapistAvatar(therapistId: string): Promise<strin
 }
 
 export async function createToProgram(input: CreateProgramInput): Promise<{ id: string }> {
-    // TODO: Ajustar endpoint específico de TO se necessário
-    // Por enquanto, usa o mesmo endpoint de OCP mas pode ser diferente no backend
-    const response = await fetch(`${API_URL}/ocp/programs`, {
+    const response = await fetch(`${API_URL}/ocp/create`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -74,8 +73,7 @@ export async function createToProgram(input: CreateProgramInput): Promise<{ id: 
         credentials: 'include',
         body: JSON.stringify({
             ...input,
-            // Adicionar campos específicos de TO se necessário
-            area: 'terapia-ocupacional',
+            area: TO_AREA_ID,
         }),
     });
 
@@ -96,8 +94,9 @@ export async function listToPrograms(params: {
 }): Promise<any[]> {
     const url = new URL(`${API_URL}/ocp/clients/${params.patientId}/programs`);
     
-    // Filtrar apenas programas de TO pela área de atuação do terapeuta
-    url.searchParams.set('area', 'Terapia Ocupacional');
+    // 🔧 CORRIGIDO: Usa filtro consistente com AreaContext
+    // Backend filtra por especialidade do terapeuta usando label
+    url.searchParams.set('area', 'terapia-ocupacional');
     
     if (params.page) url.searchParams.set('page', params.page.toString());
     if (params.status && params.status !== 'all') url.searchParams.set('status', params.status);
@@ -117,17 +116,9 @@ export async function listToPrograms(params: {
         const json = await response.json();
         const realPrograms = (json?.data ?? []);
         
-        // MOCK: SEMPRE adicionar programa mockado para desenvolvimento
-        // TODO: Remover quando o backend de TO estiver pronto
-        const { mockToProgramListItem } = await import('../mocks/programListMock');
-        console.log('🎭 Adicionando programa MOCK de TO para desenvolvimento');
-        return [mockToProgramListItem, ...realPrograms];
+        return realPrograms;
     } catch (error) {
         console.error('Erro ao buscar programas de TO:', error);
-        
-        // Em caso de erro, retornar apenas o mock para desenvolvimento
-        const { mockToProgramListItem } = await import('../mocks/programListMock');
-        console.log('🎭 Retornando apenas programa MOCK de TO (erro na API)');
-        return [mockToProgramListItem];
+        return [];
     }
 }

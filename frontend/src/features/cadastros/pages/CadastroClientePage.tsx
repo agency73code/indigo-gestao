@@ -631,7 +631,7 @@ export default function CadastroClientePage() {
 
             // Redireciona para a página de consulta de clientes após um breve delay
             setTimeout(() => {
-                navigate('/app/consultas/clientes');
+                navigate('/app/consultar/pacientes');
             }, 1000);
         } catch (error) {
             console.error('Erro ao cadastrar cliente:', error);
@@ -680,7 +680,7 @@ export default function CadastroClientePage() {
     return (
         <div className="flex h-full gap-1">
             {/* Sidebar Vertical com Steps - Card Separado */}
-            <div className="w-64 flex-shrink-0" style={{ 
+            <div className="w-64 shrink-0" style={{ 
                 backgroundColor: 'var(--header-bg)',
                 borderRadius: '16px'
             }}>

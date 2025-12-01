@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import PatientSelector from '@/features/programas/consultar-programas/components/PatientSelector';
 import type { Patient } from '@/features/programas/consultar-programas/types';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
+import { useArea, useCurrentArea } from '@/contexts/AreaContext';
 import { ListaSessoes, SearchAndFilters } from '../consulta-sessao/components';
 import * as services from '../consulta-sessao/services';
 import { getPatientById } from '../consultar-programas/services';
@@ -22,7 +23,9 @@ const DEFAULT_FILTERS: SessaoFiltersState = {
 export default function ConsultaSessao() {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
-    const { setPageTitle } = usePageTitle();
+    const { setPageTitle, setOnBackClick } = usePageTitle();
+    const { currentArea } = useArea();
+    const area = useCurrentArea();
 
     const [filters, setFilters] = useState<SessaoFiltersState>(DEFAULT_FILTERS);
     const [patient, setPatient] = useState<Patient | null>(null);
@@ -40,6 +43,24 @@ export default function ConsultaSessao() {
         console.log('[ConsultaSessao] Setando título');
         setPageTitle('Consultar Sessão');
     }, [setPageTitle]);
+
+    // Configurar botão de voltar para ir para o hub da área correta
+    useEffect(() => {
+        setOnBackClick(() => () => {
+            if (currentArea) {
+                // Volta para o hub da área específica
+                navigate(`/app/programas/${currentArea}`);
+            } else {
+                // Fallback: volta para o hub geral de programas
+                navigate('/app/programas');
+            }
+        });
+
+        // Limpa o callback quando o componente desmonta
+        return () => {
+            setOnBackClick(undefined);
+        };
+    }, [setOnBackClick, currentArea, navigate]);
 
     const syncFiltersToParams = useCallback(
         (nextFilters: SessaoFiltersState, patientId: string | null) => {
@@ -141,15 +162,19 @@ export default function ConsultaSessao() {
 
             try {
                 // 🔄 Passa filtros da URL para o service
-                const response = await services.listSessionsByPatient(patient.id, {
-                    q: filters.q,
-                    dateRange: filters.dateRange,
-                    programId: filters.program === 'all' ? undefined : filters.program,
-                    therapistId: filters.therapist === 'all' ? undefined : filters.therapist,
-                    sort: filters.sort,
-                    page: 1, // TODO: pegar da URL quando adicionar paginação
-                    pageSize: 10,
-                });
+                const response = await services.listSessionsByPatient(
+                    patient.id,
+                    'fonoaudiologia',
+                    {
+                        q: filters.q,
+                        dateRange: filters.dateRange,
+                        programId: filters.program === 'all' ? undefined : filters.program,
+                        therapistId: filters.therapist === 'all' ? undefined : filters.therapist,
+                        sort: filters.sort,
+                        page: 1, // TODO: pegar da URL quando adicionar paginação
+                        pageSize: 10,
+                    }
+                );
                 if (!cancelled) {
                     setSessions(response.items);
                     setTotal(response.total);
@@ -170,7 +195,7 @@ export default function ConsultaSessao() {
         return () => {
             cancelled = true;
         };
-    }, [patient, filters]);
+    }, [patient, filters, area]);
 
     const programOptions = useMemo(() => {
         if (!patient) return [] as string[];
@@ -280,7 +305,7 @@ export default function ConsultaSessao() {
                                 onClick={handleCreateSession}
                                 disabled={!patient}
                                 size="icon"
-                                className="h-10 w-10 rounded-full flex-shrink-0"
+                                className="h-10 w-10 rounded-full shrink-0"
                                 title="Adicionar sessão"
                             >
                                 <Plus className="h-5 w-5" />

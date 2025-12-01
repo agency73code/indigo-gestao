@@ -205,10 +205,10 @@ export default function LastSessionPreview({ lastSession, patientId }: LastSessi
             try {
                 let session: Sessao | null = null;
                 if (patientId) {
-                    session = await getSessionById(patientId, lastSession.id);
+                    session = await getSessionById(patientId, lastSession.id, 'fonoaudiologia');
                 }
                 if (!session) {
-                    session = await findSessionById(lastSession.id);
+                    session = await findSessionById(lastSession.id, undefined, 'fonoaudiologia');
                 }
                 if (!session || cancelled) {
                     setAttempts([]);

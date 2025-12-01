@@ -1,5 +1,6 @@
 import type * as OcpTypes from "./types/olp.types.js";
 import { differenceInYears } from 'date-fns';
+import { lookup as mimeLookup } from 'mime-types';
 
 export function mapOcpDetail(dto: OcpTypes.OcpDetailDTO) {
     return {
@@ -17,19 +18,21 @@ export function mapOcpDetail(dto: OcpTypes.OcpDetailDTO) {
         therapistPhotoUrl: null,
         createdAt: dto.criado_em.toISOString(),
         goalTitle: dto.objetivo_programa ?? "",
-        goalDescription: dto.objetivo_descricao ?? "",
+        goalDescription: dto.objetivo_descricao,
         longTermGoalDescription: dto.objetivo_descricao,
         shortTermGoalDescription: dto.objetivo_curto,
         stimuliApplicationDescription: dto.descricao_aplicacao,
         stimuli: dto.estimulo_ocp?.map((s: OcpTypes.OcpStimuloDTO, idx: number) => ({
             id: s.id_estimulo.toString(),
             order: idx + 1,
-            label: s.nome ?? '',
+            label: s.nome ?? "",
             active: s.status,
+            description: s.descricao ?? null,
         })) ?? [],
         criteria: dto.criterio_aprendizagem,
-        notes: dto.observacao_geral ?? '',
+        notes: dto.observacao_geral ?? "",
         status: dto.status === 'ativado' ? "active" : "archived",
+        currentPerformanceLevel: dto.desempenho_atual ?? null,
     }
 }
 
@@ -44,6 +47,20 @@ export function mapSessionList(dto: OcpTypes.SessionDTO[]): OcpTypes.Session[] {
         prazoInicio: s.ocp?.criado_em.toISOString(),
         prazoFim: null,
         observacoes: s.observacoes_sessao ?? null,
+        area: s.area,
+        files: s.arquivos.map((file) => {
+            const fileName = file.nome;
+            const mimeType = mimeLookup(fileName) || 'application/octet-stream';
+
+            return {
+                id: file.id.toString(),
+                name: file.nome,
+                fileName,
+                type: typeof mimeType === 'string' ? mimeType : 'application/octet-stream',
+                size: Math.round(Math.random() * 1000000000) / 100, // TODO: kaio
+                url: file.caminho,
+            };
+        }),
         registros: s.trials.map((t) => ({
             tentativa: t.ordem,
             resultado: translateResult(t.resultado),

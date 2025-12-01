@@ -31,7 +31,7 @@ export function toStatus(c: Counts): StatusKind {
 
 export function aggregateByStimulus(registros: RegistroTentativa[]): Record<string, Counts> {
   const result: Record<string, Counts> = {};
-  
+
   for (const reg of registros) {
     const key = reg.stimulusId || 'unknown';
     if (!result[key]) {

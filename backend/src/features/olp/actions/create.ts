@@ -1,10 +1,13 @@
 import { prisma } from "../../../config/database.js";
-import type { createOCP, CreateSessionInput } from "../types/olp.types.js";
+import { R2UploadService } from "../../file/r2/r2-upload.js";
+import type { CreateProgramPayload, CreateSessionInput, CreateToSessionInput } from "../types/olp.types.js";
 
-export async function program(data: createOCP) {
+export async function program(data: CreateProgramPayload) {
+    const isTO = data.area === 'terapia-ocupacional';
+
     return prisma.ocp.create({
         data: {
-            cliente: { connect: { id: data.clientId } },
+            cliente: { connect: { id: data.patientId } },
             terapeuta: { connect: { id: data.therapistId } },
             nome_programa: data.name ?? data.goalTitle,
             data_inicio: new Date(data.prazoInicio),
@@ -19,14 +22,22 @@ export async function program(data: createOCP) {
                 create: data.stimuli.map((s) => ({
                     nome: s.label,
                     status: s.active,
+                    descricao: s.description ?? null,
                     estimulo: {
                         connectOrCreate: {
                             where: { nome: s.label },
-                            create: { nome: s.label },
+                            create: { 
+                                nome: s.label,
+                                descricao: s.description ?? null
+                            },
                         },
                     },
                 })),
             },
+            area: data.area,
+            desempenho_atual: isTO
+                ? data.currentPerformanceLevel ?? null
+                : null,
         },
     });
 }
@@ -69,6 +80,89 @@ export async function session(input: CreateSessionInput) {
             trials: {
                 create: trialsData,
             },
+            area: 'fonoaudiologia',
         },
     });
+}
+
+export async function TOSession(input: CreateToSessionInput) {
+    const { programId, patientId, therapistId, notes, attempts, files = [], area } = input;
+
+    const ocp = await prisma.ocp.findUnique({
+        where: { id: programId },
+        include: { estimulo_ocp: true }
+    });
+
+    if (!ocp) {
+        throw new Error('Programa não encontrado.');
+    }
+
+    const trialsData = attempts.map((a) => {
+        const vinculo = ocp.estimulo_ocp.find(
+            (v) => v.id_estimulo === Number(a.activityId)
+        );
+
+        if (!vinculo) {
+            throw new Error(`A atividade ${a.activityId} não pertence a este programa.`);
+        }
+
+        switch (a.type) {
+            case 'desempenhou':
+                a.type = 'independent';
+                break;
+            case 'desempenhou-com-ajuda':
+                a.type = 'prompted';
+                break;
+            default:
+                a.type = 'error'
+        }
+
+        return {
+            estimulos_ocp_id: vinculo.id,
+            ordem: a.attemptNumber,
+            resultado: a.type,
+            duracao_minutos: a.durationMinutes ?? null
+        };
+    });
+
+    const uploadedFiles = [];
+
+    for (const file of files) {
+        const uploaded = await R2UploadService.uploadFile({
+            buffer: file.buffer,
+            contentType: file.mimetype,
+            filename: file.originalname,
+            programId,
+            patientId
+        });
+
+        uploadedFiles.push({
+            nome: file.originalname,
+            caminho: uploaded.key
+        });
+    }
+
+    const session = await prisma.sessao.create({
+        data: {
+            ocp_id: programId,
+            cliente_id: patientId,
+            terapeuta_id: therapistId,
+            observacoes_sessao: notes?.trim() || null,
+            area,
+            trials: {
+                create: trialsData
+            },
+
+            arquivos: {
+                create: uploadedFiles
+            }
+        },
+
+        include: {
+            trials: true,
+            arquivos: true
+        }
+    });
+
+    return session;
 }

@@ -43,7 +43,7 @@ export default function ToActivitiesPanel({
     const [tempAttempts, setTempAttempts] = useState<Record<string, ToSessionAttempt[]>>({});
 
     const shortTermGoalDescription =
-        program.shortTermGoalDescription ?? program.goalDescription ?? null;
+        program.shortTermGoalDescription ?? program.shortTermGoalDescription ?? null;
 
     const activeActivities = useMemo(
         () => program.activities.filter((activity) => activity.active),
@@ -57,7 +57,7 @@ export default function ToActivitiesPanel({
 
     const effectiveSessionId = sessionId ?? program.id ?? 'draft-session';
 
-    const registrarTentativa = (resultado: ResultadoTentativa) => {
+    const registrarTentativa = (resultado: ResultadoTentativa, durationMinutes?: number) => {
         if (!ativoId || !activeActivity) {
             return;
         }
@@ -86,6 +86,7 @@ export default function ToActivitiesPanel({
             activityLabel: activeActivity.label,
             type: tipoSessao,
             timestamp: new Date().toISOString(),
+            durationMinutes,
         };
 
         // Armazena temporariamente em vez de enviar imediatamente

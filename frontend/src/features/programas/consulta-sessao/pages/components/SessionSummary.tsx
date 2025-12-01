@@ -12,12 +12,13 @@ interface SessionSummaryProps {
     worked: number;
     date: string;
     status: StatusKind;
+    statusConfig?: ReturnType<typeof getStatusConfig>;
 }
 
-export default function SessionSummary({ counts, planned, worked, status }: SessionSummaryProps) {
+export default function SessionSummary({ counts, planned, worked, status, statusConfig: customStatusConfig }: SessionSummaryProps) {
     const totalTentativas = total(counts);
     const tiPercent = ti(counts);
-    const statusConfig = getStatusConfig(status);
+    const statusConfig = customStatusConfig || getStatusConfig(status);
 
     return (
         <div className="space-y-4">

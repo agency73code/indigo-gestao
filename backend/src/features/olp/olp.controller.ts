@@ -2,12 +2,18 @@ import type { NextFunction, Request, Response } from 'express';
 import * as OcpService from './olp.service.js';
 import * as OcpNormalizer from './olp.normalizer.js';
 import { Prisma } from '@prisma/client';
-import type { AttentionStimuliFilters } from './types/olp.types.js';
+import type { AttentionStimuliFilters, CreateProgramPayload } from './types/olp.types.js';
 
 export async function createProgram(req: Request, res: Response) {
     try {
-        const ocp = await OcpService.createProgram(req.body);
-        return res.status(201).json({ data: ocp });
+        const body = req.body as CreateProgramPayload;
+
+        if (!body.area) {
+            return res.status(400).json({ error: 'Campo area é obrigatório' });
+        }
+
+        const ocp = await OcpService.createProgram(body);
+        return res.status(201).json(ocp);
     } catch (error) {
         console.error('Erro ao criar programa:', error);
 
@@ -42,6 +48,43 @@ export async function createSession(req: Request, res: Response) {
     } catch (err) {
         console.error(err);
         res.status(500).json({ success: false, message: 'Erro ao registrar sessão' })
+    }
+}
+
+export async function createTOSession(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { programId } = req.params;
+        if (!programId) {
+            return res.status(400).json({ success: false, message: 'ID do programa não informado.' });
+        }
+
+        const therapistId = req.user?.id;
+        if (!therapistId) {
+            return res.status(400).json({ success: false, message: 'Usuário não autenticado.' });
+        }
+
+        const data = JSON.parse(req.body.data);
+
+        const { patientId, notes, attempts, area } = data;
+        if (!patientId || !Array.isArray(attempts) || !area) {
+            return res.status(400).json({ success: false, message: 'Dados inválidos para criar sessão.' });
+        }
+        console.log(req.files);
+        const uploadedFiles = req.files as Express.Multer.File[] || [];
+
+        const session = await OcpService.createTOSession({
+            programId: Number(programId),
+            patientId,
+            therapistId,
+            notes,
+            attempts,
+            files: uploadedFiles,
+            area
+        });
+
+        return res.status(201).json(session);
+    } catch (error) {
+        next(error);
     }
 }
 
@@ -128,10 +171,13 @@ export async function listClientPrograms(req: Request, res: Response) {
     const status = (req.query.status as 'active' | 'archived' | 'all') || 'all';
     const q = req.query.q as string | undefined;
     const sort = (req.query.sort as 'recent' | 'alphabetic') ?? 'recent';
+    const rawArea = req.query.area;
+    const area = Array.isArray(rawArea) ? rawArea[0] : rawArea;
 
     if (!clientId) return res.status(400).json({ success: false, message: 'ClientId é obrigatório' });
+    if (typeof area !== 'string') return res.status(400).json({ success: false, message: 'Area é obrigatório' });
 
-    const rows = await OcpService.listByClientId(clientId, page, 10, status, q, sort);
+    const rows = await OcpService.listByClientId(clientId, page, 10, area, status, q, sort);
 
     return res.json({ success: true, data: rows.map(OcpNormalizer.mapOcpReturn) });
 }
@@ -140,14 +186,17 @@ export async function listSessionsByClient(req: Request, res: Response) {
     try {
         const { clientId } = req.params;
         if (!clientId) return res.status(400).json({ sucess: false, message: 'ID do paciente é obrigatório' });
+        const rawArea = req.query.area;
+        const area = Array.isArray(rawArea) ? rawArea[0] : rawArea;
+        if (typeof area !== 'string') return res.status(400).json({ success: false, message: 'Area é obrigatório' });
 
         const sortParam = req.query.sort;
         const sort =
             sortParam === 'accuracy-asc' || sortParam === 'accuracy-desc'
                 ? sortParam
                 : 'recent';
-        
-        const sessions = await OcpService.listSessionsByClient(clientId, sort);
+
+        const sessions = await OcpService.listSessionsByClient(clientId, sort, area);
         return res.json ({ data: OcpNormalizer.mapSessionList(sessions) });
     } catch (error) {
         console.error(error);

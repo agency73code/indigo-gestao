@@ -49,7 +49,7 @@ export default function ProgramCard({ program, onOpen, onNewSession }: ProgramCa
                     <Button
                         variant="ghost"
                         size="sm"
-                        className="h-8 w-8 p-0 flex-shrink-0"
+                        className="h-8 w-8 p-0 shrink-0"
                         onClick={handleNewSession}
                         aria-label="Nova sessão"
                     >
