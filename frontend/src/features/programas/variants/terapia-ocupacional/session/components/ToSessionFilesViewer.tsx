@@ -53,7 +53,7 @@ export default function ToSessionFilesViewer({ files }: ToSessionFilesViewerProp
 
     const handleDownload = (file: SessionFileView) => {
         const link = document.createElement('a');
-        link.href = file.url;
+        link.href = `/api/arquivos/${encodeURIComponent(file.url)}/download`;
         link.download = file.fileName;
         document.body.appendChild(link);
         link.click();
