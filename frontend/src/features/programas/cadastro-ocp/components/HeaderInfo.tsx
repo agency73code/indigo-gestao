@@ -57,8 +57,8 @@ function SelectorModal({
     const [imageLoadingStates, setImageLoadingStates] = useState<Record<string, boolean>>({});
 
     // Função para gerar iniciais
-    const getInitials = (name: string) => {
-        if (!name) return '';
+    const getInitials = (name: string | undefined | null) => {
+        if (!name) return '??';
         return name
             .split(' ')
             .map((word) => word.charAt(0))
@@ -240,8 +240,8 @@ export default function HeaderInfo({
     const [therapistImageLoading, setTherapistImageLoading] = useState(true);
 
     // Função para gerar iniciais
-    const getInitials = (name: string) => {
-        if (!name) return '';
+    const getInitials = (name: string | undefined | null) => {
+        if (!name) return '??';
         return name
             .split(' ')
             .map((word) => word.charAt(0))
@@ -380,13 +380,13 @@ export default function HeaderInfo({
                                             />
                                         ) : null}
                                         <AvatarFallback className="bg-blue-100 text-blue-600 rounded-full">
-                                            {getInitials(therapist.name)}
+                                            {getInitials(therapist?.name)}
                                         </AvatarFallback>
                                     </Avatar>
                                 </div>
 
                                 <div className="flex-1 min-w-0">
-                                    <p className="font-medium">{therapist.name}</p>
+                                    <p className="font-medium">{therapist?.name || 'Terapeuta não identificado'}</p>
                                 </div>
 
                                 {!readOnlyTherapist && (

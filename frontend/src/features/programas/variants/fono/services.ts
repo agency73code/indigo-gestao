@@ -7,7 +7,7 @@ const API_URL = import.meta.env.VITE_API_URL;
  */
 
 export async function fetchFonoPatientById(id: string): Promise<Patient> {
-    const response = await fetch(`${API_URL}/clients/${id}`, {
+    const response = await fetch(`${API_URL}/clientes/${id}`, {
         credentials: 'include',
     });
 
@@ -19,7 +19,7 @@ export async function fetchFonoPatientById(id: string): Promise<Patient> {
     
     return {
         id: data.id,
-        name: data.name,
+        name: data.nome, // Backend retorna 'nome' em português
         guardianName: data.guardianName,
         age: data.age,
         photoUrl: data.photoUrl,
@@ -36,10 +36,10 @@ export async function fetchFonoTherapistById(id: string): Promise<Therapist> {
     }
 
     const data = await response.json();
-
+    
     return {
         id,
-        name: data.nome,
+        name: data.nome, // Backend retorna 'nome' em português
         photoUrl: data.photoUrl,
         especialidade: data.especialidade,
     };
@@ -80,7 +80,8 @@ export async function createFonoProgram(input: CreateProgramInput): Promise<{ id
         throw new Error(error.message || 'Erro ao criar programa');
     }
 
-    return await response.json();
+    const result = await response.json();
+    return { id: String(result.data.id) };
 }
 
 export async function listFonoPrograms(params: {

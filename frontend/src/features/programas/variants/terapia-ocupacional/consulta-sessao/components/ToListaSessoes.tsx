@@ -139,7 +139,7 @@ export default function ToListaSessoes({ sessoes, onVerDetalhes }: ToListaSessoe
                                     <p className="text-xs font-medium text-muted-foreground">
                                         Programa:
                                     </p>
-                                    <p className="text-sm font-semibold text-foreground line-clamp-1">
+                                    <p className="text-sm font-normal text-foreground line-clamp-1">
                                         {sessao.programa}
                                     </p>
                                 </div>
