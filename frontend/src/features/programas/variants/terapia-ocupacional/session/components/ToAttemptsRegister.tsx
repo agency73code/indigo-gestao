@@ -148,7 +148,8 @@ export default function ToAttemptsRegister({ attempts }: ToAttemptsRegisterProps
                 activityLabel: existing.activityLabel,
                 counts: newCounts,
                 status: calcStatus(newCounts),
-                totalMinutes: existing.totalMinutes + minutesToAdd,
+                // Usar o último tempo informado ao invés de somar
+                totalMinutes: attempt.durationMinutes ?? existing.totalMinutes,
             });
         }
 

@@ -19,7 +19,7 @@ export async function fetchFonoPatientById(id: string): Promise<Patient> {
     
     return {
         id: data.id,
-        name: data.name,
+        name: data.nome, // Backend retorna 'nome' em português
         guardianName: data.guardianName,
         age: data.age,
         photoUrl: data.photoUrl,
@@ -36,10 +36,13 @@ export async function fetchFonoTherapistById(id: string): Promise<Therapist> {
     }
 
     const data = await response.json();
+    console.log('🔍 [Fono] Response do backend:', data);
+    console.log('🔍 [Fono] data.id:', data.id);
+    console.log('🔍 [Fono] data.nome:', data.nome);
     
     return {
         id: data.id,
-        name: data.name,
+        name: data.nome, // Backend retorna 'nome' em português
         photoUrl: data.photoUrl,
         especialidade: data.especialidade,
     };
@@ -80,7 +83,8 @@ export async function createFonoProgram(input: CreateProgramInput): Promise<{ id
         throw new Error(error.message || 'Erro ao criar programa');
     }
 
-    return await response.json();
+    const result = await response.json();
+    return { id: String(result.data.id) };
 }
 
 export async function listFonoPrograms(params: {

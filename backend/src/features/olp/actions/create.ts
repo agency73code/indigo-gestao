@@ -27,8 +27,7 @@ export async function program(data: CreateProgramPayload) {
                         connectOrCreate: {
                             where: { nome: s.label },
                             create: { 
-                                nome: s.label,
-                                descricao: s.description ?? null
+                                nome: s.label
                             },
                         },
                     },
