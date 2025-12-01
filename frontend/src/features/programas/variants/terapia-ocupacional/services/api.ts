@@ -40,7 +40,7 @@ export async function fetchToTherapistById(id: string): Promise<Therapist> {
     const data = await response.json();
     
     return {
-        id: data.id,
+        id,
         name: data.nome, // Backend retorna 'nome' em português
         photoUrl: data.photoUrl,
         especialidade: data.especialidade,
