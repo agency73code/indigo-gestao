@@ -1,6 +1,5 @@
 import type { Sessao, ResumoSessao, ProgramDetail } from './types';
 import type { AreaType } from '@/contexts/AreaContext';
-import { extractAreaFromPath } from '@/utils/areaRoutes';
 
 // Toggle local mocks (follow existing pattern)
 const USE_LOCAL_MOCKS = false;
@@ -47,29 +46,27 @@ export interface SessionListResponse {
  * Lista sessões de um paciente com filtros, ordenação e paginação
  * 
  * 🔄 ADAPTER: Funciona com backend atual (array) e futuro (objeto paginado)
+ * @param area - Área da terapia para filtrar sessões (obrigatório)
  */
 export async function listSessionsByPatient(
   patientId: string,
+  area: string,
   filters: SessionListFilters = {}
 ): Promise<SessionListResponse> {
   const {
     q = '',
     dateRange = 'all',
-    area = undefined,
     programId = '',
     therapistId = '',
     sort = 'date-desc',
     page = 1,
     pageSize = 10
   } = filters;
-
-  const resolvedArea: AreaType | null =
-    area ?? extractAreaFromPath(window.location.pathname) ?? (localStorage.getItem('currentArea') as AreaType | null);
-
   try {
     // Construir URL com query params
     const url = new URL(`/api/ocp/clients/${patientId}/sessions`, window.location.origin);
-    if (resolvedArea) url.searchParams.set('area', resolvedArea);
+    // Adiciona área (obrigatório)
+    url.searchParams.set('area', area);
     // Adiciona filtros se houver
     if (q) url.searchParams.set('q', q);
     if (dateRange && dateRange !== 'all') url.searchParams.set('dateRange', dateRange);
@@ -120,7 +117,7 @@ export async function listSessionsByPatient(
     if (USE_LOCAL_MOCKS) {
       console.warn('🔄 Usando mock local (erro na API)');
       // Mock usa estrutura diferente - convertemos para Sessao[]
-      const mockData = await getMockSessionsData(patientId);
+      const mockData = await getMockSessionsData(patientId, area);
       return processSessionsLocally(mockData, filters);
     }
     throw error;
@@ -130,8 +127,110 @@ export async function listSessionsByPatient(
 /**
  * ⚠️ FUNÇÃO AUXILIAR: Converte mocks para formato Sessao[]
  */
-async function getMockSessionsData(patientId: string): Promise<Sessao[]> {
-  // 🎯 Se for o Alessandro, retornar sessões TO mocadas
+async function getMockSessionsData(patientId: string, area?: string): Promise<Sessao[]> {
+  // 🎯 Se for Fisioterapia, retornar sessões FISIO mocadas
+  if (area === 'fisioterapia') {
+    const { mockToSessions } = await import(
+      '@/features/programas/variants/fisioterapia/mocks/mockSessions'
+    );
+    const { mockToProgram } = await import(
+      '@/features/programas/variants/fisioterapia/mocks/programMock'
+    );
+
+    const result = mockToSessions.map((s) => {
+      // Gerar registros baseados no activitiesSummary ao invés do preview
+      const registros: Array<{
+        tentativa: number;
+        resultado: 'acerto' | 'erro' | 'ajuda';
+        stimulusId?: string;
+        stimulusLabel?: string;
+        durationMinutes?: number | null;
+        usedLoad?: boolean;
+        loadValue?: string;
+        hadDiscomfort?: boolean;
+        discomfortDescription?: string;
+        hadCompensation?: boolean;
+        compensationDescription?: string;
+      }> = [];
+
+      let tentativaCounter = 1;
+
+      if (s.activitiesSummary && s.activitiesSummary.length > 0) {
+        // Para cada atividade, criar tentativas baseadas nas contagens
+        s.activitiesSummary.forEach((activity) => {
+          // Adicionar tentativas de erro (não desempenhou)
+          for (let i = 0; i < activity.counts.naoDesempenhou; i++) {
+            registros.push({
+              tentativa: tentativaCounter++,
+              resultado: 'erro',
+              stimulusId: activity.activityId,
+              stimulusLabel: activity.activityName,
+              durationMinutes: activity.durationMinutes,
+              usedLoad: activity.usedLoad,
+              loadValue: activity.loadValue,
+              hadDiscomfort: activity.hadDiscomfort,
+              discomfortDescription: activity.discomfortDescription,
+              hadCompensation: activity.hadCompensation,
+              compensationDescription: activity.compensationDescription,
+            });
+          }
+
+          // Adicionar tentativas de ajuda (desempenhou com ajuda)
+          for (let i = 0; i < activity.counts.desempenhouComAjuda; i++) {
+            registros.push({
+              tentativa: tentativaCounter++,
+              resultado: 'ajuda',
+              stimulusId: activity.activityId,
+              stimulusLabel: activity.activityName,
+              durationMinutes: activity.durationMinutes,
+              usedLoad: activity.usedLoad,
+              loadValue: activity.loadValue,
+              hadDiscomfort: activity.hadDiscomfort,
+              discomfortDescription: activity.discomfortDescription,
+              hadCompensation: activity.hadCompensation,
+              compensationDescription: activity.compensationDescription,
+            });
+          }
+
+          // Adicionar tentativas de acerto (desempenhou)
+          for (let i = 0; i < activity.counts.desempenhou; i++) {
+            registros.push({
+              tentativa: tentativaCounter++,
+              resultado: 'acerto',
+              stimulusId: activity.activityId,
+              stimulusLabel: activity.activityName,
+              durationMinutes: activity.durationMinutes,
+              usedLoad: activity.usedLoad,
+              loadValue: activity.loadValue,
+              hadDiscomfort: activity.hadDiscomfort,
+              discomfortDescription: activity.discomfortDescription,
+              hadCompensation: activity.hadCompensation,
+              compensationDescription: activity.compensationDescription,
+            });
+          }
+        });
+      }
+
+      return {
+        id: s.id,
+        pacienteId: patientId,
+        terapeutaId: 'therapist-001',
+        terapeutaNome: s.therapistName || 'João Batista',
+        data: s.date,
+        programa: mockToProgram?.name || 'Programa de Fisioterapia',
+        objetivo: mockToProgram?.goalDescription || 'Desenvolver força e amplitude de movimento',
+        prazoInicio: '',
+        prazoFim: '',
+        observacoes: s.observacoes ?? undefined,
+        registros,
+        area: 'fisioterapia',
+      };
+    });
+
+    return result;
+  }
+
+  // 🎯 Se for o Alessandro (TO), retornar sessões TO mocadas
   if (patientId === 'b6f174c5-87bc-4946-9bff-2eaf72d977b9') {
     const { mockToSessions } = await import(
       '@/features/programas/variants/terapia-ocupacional/mocks/mockSessions'
@@ -202,6 +301,7 @@ async function getMockSessionsData(patientId: string): Promise<Sessao[]> {
         prazoFim: '',
         observacoes: s.observacoes ?? undefined,
         registros,
+        area: 'terapia-ocupacional',
       };
     });
 
@@ -245,6 +345,7 @@ async function getMockSessionsData(patientId: string): Promise<Sessao[]> {
       prazoInicio,
       prazoFim,
       registros,
+      area: 'fonoaudiologia',
     };
   });
 }
@@ -341,12 +442,20 @@ function processSessionsLocally(
   };
 }
 
-export async function getSessionById(patientId: string, sessionId: string): Promise<Sessao | null> {
-  const response = await listSessionsByPatient(patientId);
+export async function getSessionById(
+  patientId: string,
+  sessionId: string,
+  area: string
+): Promise<Sessao | null> {
+  const response = await listSessionsByPatient(patientId, area);
   return response.items.find((s) => s.id === sessionId) ?? null;
 }
 
-export async function findSessionById(sessionId: string, patientId?: string): Promise<Sessao | null> {
+export async function findSessionById(
+  sessionId: string,
+  patientId?: string,
+  area: string = 'fonoaudiologia'
+): Promise<Sessao | null> {
   if (USE_LOCAL_MOCKS) {
     let targetPatientId = patientId;
     
@@ -356,7 +465,7 @@ export async function findSessionById(sessionId: string, patientId?: string): Pr
       targetPatientId = mockProgramDetail.patientId;
     }
     
-    const response = await listSessionsByPatient(targetPatientId);
+    const response = await listSessionsByPatient(targetPatientId, area);
     return response.items.find((s) => s.id === sessionId) ?? null;
   }
   return null;

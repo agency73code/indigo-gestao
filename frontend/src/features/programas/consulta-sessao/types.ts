@@ -4,6 +4,22 @@ export type RegistroTentativa = {
   stimulusId?: string;
   stimulusLabel?: string;
   durationMinutes?: number | null; // tempo em minutos (para TO)
+  // Metadata para Fisioterapia (pode vir como string JSON ou objeto)
+  metadata?: string | {
+    usedLoad?: boolean;
+    loadValue?: string;
+    hadDiscomfort?: boolean;
+    discomfortDescription?: string;
+    hadCompensation?: boolean;
+    compensationDescription?: string;
+  };
+  // Campos diretos (para compatibilidade)
+  usedLoad?: boolean;
+  loadValue?: string;
+  hadDiscomfort?: boolean;
+  discomfortDescription?: string;
+  hadCompensation?: boolean;
+  compensationDescription?: string;
 };
 
 export type SessionFile = {
@@ -28,6 +44,7 @@ export type Sessao = {
   observacoes?: string | null;
   files?: SessionFile[];
   registros: RegistroTentativa[];
+  area: string; // 'fisioterapia' | 'terapia-ocupacional' | 'fonoaudiologia'
 };
 
 export type ResumoSessao = {
