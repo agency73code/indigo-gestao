@@ -195,7 +195,7 @@ export default function ToAttemptsRegister({ attempts }: ToAttemptsRegisterProps
             </Card>
         );
     }
-
+// Quando eu fiz o codigo só eu e deus entendia, hoje somente deus ta entendo, entao nao nessa bosta aqui
     return (
         <Card 
             padding="hub" 
@@ -226,7 +226,7 @@ export default function ToAttemptsRegister({ attempts }: ToAttemptsRegisterProps
                                     {/* Cabeçalho: Título + Stats */}
                                     <div className="p-4 space-y-3 border-b border-border/40 dark:border-white/15">
                                         {/* Título da atividade */}
-                                        <div className="font-medium text-sm">
+                                        <div className="font-normal text-sm">
                                             {activity.activityLabel}
                                         </div>
 

@@ -164,7 +164,7 @@ export function FisioAttentionActivitiesCard({ data, loading = false }: FisioAtt
                       {/* Cabeçalho: Título + Stats */}
                       <div className="p-4 space-y-3 border-b border-border/40 dark:border-white/15">
                         {/* Nome da atividade */}
-                        <div className="font-medium text-sm" style={{fontFamily: "Sora"}}>
+                        <div className="font-normal text-sm" style={{fontFamily: "Sora"}}>
                           {item.nome}
                         </div>
 

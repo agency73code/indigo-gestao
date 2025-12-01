@@ -29,7 +29,7 @@ export async function fetchFisioPatientById(id: string): Promise<Patient> {
 }
 
 export async function fetchFisioTherapistById(id: string): Promise<Therapist> {
-    const response = await fetch(`${API_URL}/therapist/${id}`, {
+    const response = await fetch(`${API_URL}/terapeutas/${id}`, {
         credentials: 'include',
     });
 
@@ -41,7 +41,7 @@ export async function fetchFisioTherapistById(id: string): Promise<Therapist> {
     
     return {
         id: data.id,
-        name: data.name,
+        name: data.nome, // Backend retorna 'nome' em português
         photoUrl: data.photoUrl,
         especialidade: data.especialidade,
     };
@@ -82,7 +82,8 @@ export async function createFisioProgram(input: CreateProgramInput): Promise<{ i
         throw new Error(error.message || 'Erro ao criar programa de Fisio');
     }
 
-    return await response.json();
+    const result = await response.json();
+    return { id: String(result.data?.id || result.id) };
 }
 
 export async function listFisioPrograms(params: {

@@ -176,7 +176,7 @@ export default function ToActivitiesPanel({
         setAtivoId(null);
     };
 
-    const finalizarBloco = () => {
+    const finalizarBloco = (durationMinutes?: number) => {
         if (!ativoId) {
             return;
         }
@@ -195,9 +195,13 @@ export default function ToActivitiesPanel({
         });
 
         // Envia todas as tentativas temporárias para o registro geral
+        // Aplica o tempo informado a todas as tentativas deste bloco
         const tempActivityAttempts = tempAttempts[ativoId] ?? [];
         tempActivityAttempts.forEach((attempt) => {
-            onAddAttempt(attempt);
+            onAddAttempt({
+                ...attempt,
+                durationMinutes: durationMinutes || attempt.durationMinutes,
+            });
         });
 
         // Limpa as tentativas temporárias desta atividade

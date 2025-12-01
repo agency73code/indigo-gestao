@@ -41,7 +41,7 @@ export async function fetchToTherapistById(id: string): Promise<Therapist> {
     
     return {
         id: data.id,
-        name: data.name,
+        name: data.nome, // Backend retorna 'nome' em português
         photoUrl: data.photoUrl,
         especialidade: data.especialidade,
     };
@@ -82,7 +82,8 @@ export async function createToProgram(input: CreateProgramInput): Promise<{ id: 
         throw new Error(error.message || 'Erro ao criar programa de TO');
     }
 
-    return await response.json();
+    const result = await response.json();
+    return { id: String(result.data.id) };
 }
 
 export async function listToPrograms(params: {
