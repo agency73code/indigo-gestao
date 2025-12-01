@@ -54,7 +54,7 @@ export default function ToSummaryCard({
 
     // Média de % que não desempenhou = 100 - acerto geral
     const naoDesempenhouAverage = Math.max(0, 100 - desempenhouAverage);
-    console.log(sessions)
+
     const formatPercentage = (value: number) => `${Math.round(value)}%`;
 
     return (
