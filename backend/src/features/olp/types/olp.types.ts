@@ -164,6 +164,7 @@ export interface SessionDTO {
   terapeuta_id: string;
   data_criacao: Date;
   observacoes_sessao: string | null;
+  area: string;
   ocp: {
     id: number;
     nome_programa: string;
@@ -171,6 +172,11 @@ export interface SessionDTO {
     criado_em: Date;
   };
   trials: SessionTrialDTO[];
+  arquivos: {
+    id: number;
+    nome: string;
+    caminho: string;
+  }[];
 }
 
 export interface Session {
@@ -183,6 +189,15 @@ export interface Session {
   prazoInicio: string;
   prazoFim: string | null;
   observacoes: string | null;
+  area: string;
+  files: {
+    id: string;
+    name: string;
+    fileName: string;
+    type: string;
+    size: number;
+    url: string;
+  }[];
   registros: {
     tentativa: number;
     resultado: 'acerto' | 'erro' | 'ajuda';

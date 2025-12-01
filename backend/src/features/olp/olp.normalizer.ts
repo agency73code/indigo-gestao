@@ -1,5 +1,6 @@
 import type * as OcpTypes from "./types/olp.types.js";
 import { differenceInYears } from 'date-fns';
+import { lookup as mimeLookup } from 'mime-types';
 
 export function mapOcpDetail(dto: OcpTypes.OcpDetailDTO) {
     return {
@@ -46,6 +47,20 @@ export function mapSessionList(dto: OcpTypes.SessionDTO[]): OcpTypes.Session[] {
         prazoInicio: s.ocp?.criado_em.toISOString(),
         prazoFim: null,
         observacoes: s.observacoes_sessao ?? null,
+        area: s.area,
+        files: s.arquivos.map((file) => {
+            const fileName = file.nome;
+            const mimeType = mimeLookup(fileName) || 'application/octet-stream';
+
+            return {
+                id: file.id.toString(),
+                name: file.nome,
+                fileName,
+                type: typeof mimeType === 'string' ? mimeType : 'application/octet-stream',
+                size: Math.round(Math.random() * 1000) / 100,
+                url: file.caminho,
+            };
+        }),
         registros: s.trials.map((t) => ({
             tentativa: t.ordem,
             resultado: translateResult(t.resultado),

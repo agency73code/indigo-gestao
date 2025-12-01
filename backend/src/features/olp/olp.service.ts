@@ -291,6 +291,7 @@ export async function listSessionsByClient(clientId: string, sort: SessionSort =
             terapeuta_id: true,
             data_criacao: true,
             observacoes_sessao: true,
+            area: true,
             ocp: {
                 select: {
                     id: true,
@@ -312,6 +313,13 @@ export async function listSessionsByClient(clientId: string, sort: SessionSort =
                     },
                 },
                 orderBy: { ordem: 'asc' },
+            },
+            arquivos: {
+                select: {
+                    id: true,
+                    nome: true,
+                    caminho: true,
+                },
             },
         },
         orderBy: { data_criacao: 'desc' },
