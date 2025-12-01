@@ -199,24 +199,24 @@ export function RelatoriosPage() {
 
   // Função para obter informações do paciente (com fallbacks)
   const getPatientInfo = (patientId: string, firstReport?: SavedReport) => {
-    // 1º: Tenta usar patient do relatório (se populado pelo backend)
-    if (firstReport?.patient) {
-      return {
-        nome: firstReport.patient.nome || 'Paciente',
-        cpf: firstReport.patient.cpf,
-        avatarUrl: (firstReport.patient as any)?.avatarUrl,
-        dataNascimento: firstReport.patient.dataNascimento,
-      };
-    }
-
-    // 2º: Busca no array de patients carregados
+    // 1º: Busca no array de patients carregados (tem photoUrl da API de avatar)
     const patient = patients.find(p => p.id === patientId);
     if (patient) {
       return {
         nome: patient.nome || 'Paciente',
         cpf: patient.cpf,
-        avatarUrl: (patient as any)?.avatarUrl,
+        photoUrl: (patient as any)?.photoUrl,
         dataNascimento: patient.dataNascimento,
+      };
+    }
+
+    // 2º: Tenta usar patient do relatório (se populado pelo backend, mas sem foto)
+    if (firstReport?.patient) {
+      return {
+        nome: firstReport.patient.nome || 'Paciente',
+        cpf: firstReport.patient.cpf,
+        photoUrl: undefined, // Backend não retorna foto no relatório
+        dataNascimento: firstReport.patient.dataNascimento,
       };
     }
 
@@ -230,7 +230,7 @@ export function RelatoriosPage() {
           return {
             nome: possibleName,
             cpf: undefined,
-            avatarUrl: undefined,
+            photoUrl: undefined,
             dataNascimento: undefined,
           };
         }
@@ -241,7 +241,7 @@ export function RelatoriosPage() {
     return {
       nome: 'Paciente',
       cpf: undefined,
-      avatarUrl: undefined,
+      photoUrl: undefined,
       dataNascimento: undefined,
     };
   };
@@ -417,7 +417,7 @@ export function RelatoriosPage() {
                       </div>
                       
                       <Avatar className="h-12 w-12 shrink-0">
-                        <AvatarImage src={patientInfo.avatarUrl || ''} alt={patientInfo.nome} />
+                        <AvatarImage src={patientInfo.photoUrl || ''} alt={patientInfo.nome} />
                         <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                           {getInitials(patientInfo.nome)}
                         </AvatarFallback>

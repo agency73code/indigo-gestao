@@ -73,6 +73,15 @@
   [data-print-only] { 
     display: block !important; 
   }
+
+  /* Rodapé do relatório */
+  [data-print-footer] {
+    display: block !important;
+    width: 100% !important;
+    margin-top: auto !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
   
   .no-print, 
   [data-screen-only] {

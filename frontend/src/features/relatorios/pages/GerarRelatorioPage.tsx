@@ -724,8 +724,16 @@ export function GerarRelatorioPage() {
                 <>
                     <ReportExporter 
                         documentTitle={documentTitle}
+                        reportTitle={`Relatório de Evolução Terapêutica — ${areaConfig?.label || selectedArea}`}
                         onSave={() => setSaveDialogOpen(true)}
                         hideButton={true}
+                        clientInfo={{
+                            nome: selectedPatient.name,
+                            idade: selectedPatient.age,
+                        }}
+                        therapistInfo={user ? {
+                            nome: user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+                        } : undefined}
                     >
                         <div data-print-content className="space-y-4 p-4">
                         {/* Bloco de Cliente e Área - aparece em tela e PDF */}
