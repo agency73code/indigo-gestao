@@ -79,7 +79,6 @@ export function BaseCadastroProgramaPage({
         const loadLoggedTherapist = async () => {
             if (user?.id) {
                 try {
-                    console.log(user.id)
                     const therapist = await onFetchTherapist(user.id);
                     let photoUrl = therapist.photoUrl;
 

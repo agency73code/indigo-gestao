@@ -6,24 +6,60 @@ const API_URL = import.meta.env.VITE_API_URL;
  * Serviços de API para Fonoaudiologia
  */
 
+function ageCalculation(isoDateString: string): number {
+  const hoje = new Date();
+  const nascimento = new Date(isoDateString);
+
+  let idade = hoje.getFullYear() - nascimento.getFullYear();
+
+  const mes = hoje.getMonth() - nascimento.getMonth();
+  const dia = hoje.getDate() - nascimento.getDate();
+
+  // Se ainda não fez aniversário este ano, tira 1
+  if (mes < 0 || (mes === 0 && dia < 0)) {
+    idade--;
+  }
+
+  return idade;
+}
+
 export async function fetchFonoPatientById(id: string): Promise<Patient> {
     const response = await fetch(`${API_URL}/clientes/${id}`, {
         credentials: 'include',
     });
-
+    
     if (!response.ok) {
         throw new Error('Erro ao buscar cliente');
     }
-
-    const data = await response.json();
     
+    const data = await response.json();
+    const client = data.data;
+    const photoUrl = await fetchToClientAvatar(client.id)
+
     return {
-        id: data.id,
-        name: data.nome, // Backend retorna 'nome' em português
-        guardianName: data.guardianName,
-        age: data.age,
-        photoUrl: data.photoUrl,
+        id: client.id,
+        name: client.nome,
+        guardianName: client.cuidadores[0].nome,
+        age: ageCalculation(client.dataNascimento),
+        photoUrl,
     };
+}
+
+export async function fetchToClientAvatar(clientId: string): Promise<string | null> {
+    try {
+        const response = await fetch(
+            `${API_URL}/arquivos/getAvatar?ownerId=${clientId}&ownerType=cliente`,
+            { credentials: 'include' }
+        );
+        
+        if (!response.ok) return null;
+        
+        const data = await response.json();
+        return data.avatarUrl ?? null;
+    } catch (error) {
+        console.error('Erro ao buscar avatar:', error);
+        return null;
+    }
 }
 
 export async function fetchFonoTherapistById(id: string): Promise<Therapist> {
