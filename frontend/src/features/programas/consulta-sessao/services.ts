@@ -84,30 +84,13 @@ export async function listSessionsByPatient(
     if (!res.ok) throw new Error(`Erro ao carregar sessões: ${res.status}`);
     
     const response = await res.json();
-    
+
     // Extrair array do campo 'data' se existir
     const data = response?.data ?? response;
 
-    // ============================================
-    // 🔄 ADAPTER: Detecta formato da resposta
-    // ============================================
-
-    // Caso 1: Backend retorna array simples (FORMATO ATUAL)
-    if (Array.isArray(data)) {
-      // ⚠️ TEMPORÁRIO: Faz paginação/filtro/ordenação local
-      return processSessionsLocally(data, filters);
-    }
-
-    // Caso 2: Backend FUTURO retorna formato paginado
-    if (data && typeof data === 'object' && 'items' in data) {
-      return data as SessionListResponse;
-    }
-
-    // Caso 3: Formato inesperado - retorna vazio
-    console.warn('⚠️ Formato de resposta inesperado:', data);
     return {
-      items: [],
-      total: 0,
+      items: data,
+      total: data.length,
       page,
       pageSize,
       totalPages: 0,

@@ -166,12 +166,12 @@ model relatorio {
   pdf_nome               String?
   pdf_mime               String?
   pdf_tamanho            Int?
-  pdf_url                String?
   pasta_relatorios_drive String?
   clienteId              String
   terapeutaId            String
   criado_em              DateTime @default(now())
   atualizado_em          DateTime @updatedAt
+  area String?
 
   cliente   cliente   @relation(fields: [clienteId], references: [id])
   terapeuta terapeuta @relation(fields: [terapeutaId], references: [id])

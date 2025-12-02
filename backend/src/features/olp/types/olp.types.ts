@@ -152,6 +152,7 @@ export interface SessionTrialDTO {
   id: number;
   ordem: number;
   resultado: string;
+  duracao_minutos: number | null;
   estimulosOcp: {
     id: number;
     nome: string | null;

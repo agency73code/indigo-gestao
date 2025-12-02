@@ -3,6 +3,7 @@ import type { SerieLinha } from '@/features/relatorios/gerar-relatorio/types';
 import type { ToActivityDurationData } from '../components/to/ToActivityDurationChart';
 import type { ToAttentionActivityItem } from '../components/to/ToAttentionActivitiesCard';
 import type { ToAutonomyData } from '../components/to/ToAutonomyByCategoryChart';
+import { boolean } from 'zod';
 
 export interface ToKpisData {
   desempenhou: number;
@@ -17,18 +18,6 @@ export interface ToKpisData {
  * Calcula KPIs para relatório de TO a partir das sessões
  */
 export function calculateToKpis(sessoes: Sessao[]): ToKpisData {
-  // Dados mockados para demonstração
-  if (!sessoes || sessoes.length === 0) {
-    return {
-      desempenhou: 45,
-      desempenhouComAjuda: 28,
-      naoDesempenhou: 12,
-      tempoTotal: 180,
-      atividadesTotal: 8,
-      sessoesTotal: 6,
-    };
-  }
-
   let desempenhou = 0;
   let desempenhouComAjuda = 0;
   let naoDesempenhou = 0;
@@ -36,7 +25,9 @@ export function calculateToKpis(sessoes: Sessao[]): ToKpisData {
   const atividadesUnicas = new Set<string>();
 
   sessoes.forEach((sessao) => {
+    let countedSessionTime = false;
     sessao.registros.forEach((registro) => {
+      // 1) Contar resultados e atividades
       if (registro.resultado === 'acerto') {
         desempenhou++;
       } else if (registro.resultado === 'ajuda') {
@@ -45,9 +36,10 @@ export function calculateToKpis(sessoes: Sessao[]): ToKpisData {
         naoDesempenhou++;
       }
 
-      // Acumular tempo
-      if (registro.durationMinutes) {
+      // 2) Somar o tempo do primeiro registro com durationMinutes não nulo
+      if (!countedSessionTime && registro.durationMinutes) {
         tempoTotal += registro.durationMinutes;
+        countedSessionTime = true;
       }
 
       // Contar atividades únicas
@@ -84,18 +76,6 @@ export function calculateToKpis(sessoes: Sessao[]): ToKpisData {
  * - resultado === 'erro' → Interpretado como NÃO DESEMPENHOU
  */
 export function prepareToPerformanceLineData(sessoes: Sessao[]): SerieLinha[] {
-  // Dados mockados para demonstração
-  if (!sessoes || sessoes.length === 0) {
-    return [
-      { x: '07/11', acerto: 75, independencia: 60 },
-      { x: '11/11', acerto: 80, independencia: 65 },
-      { x: '14/11', acerto: 85, independencia: 70 },
-      { x: '18/11', acerto: 78, independencia: 68 },
-      { x: '21/11', acerto: 90, independencia: 75 },
-      { x: '25/11', acerto: 88, independencia: 73 },
-    ];
-  }
-
   // Agrupar registros por sessão (data)
   const sessoesPorData = new Map<string, { total: number; desempenhou: number; comAjuda: number }>();
 
@@ -157,20 +137,6 @@ export function prepareToPerformanceLineData(sessoes: Sessao[]): SerieLinha[] {
  * Prepara dados para gráfico de duração por atividade
  */
 export function prepareToActivityDurationData(sessoes: Sessao[]): ToActivityDurationData[] {
-  // Dados mockados para demonstração
-  if (!sessoes || sessoes.length === 0) {
-    return [
-      { atividade: 'Coordenação Motora Fina', duracao: 35 },
-      { atividade: 'Atividades de Vida Diária', duracao: 30 },
-      { atividade: 'Integração Sensorial', duracao: 28 },
-      { atividade: 'Força e Resistência', duracao: 25 },
-      { atividade: 'Equilíbrio e Postura', duracao: 22 },
-      { atividade: 'Coordenação Bilateral', duracao: 20 },
-      { atividade: 'Planejamento Motor', duracao: 18 },
-      { atividade: 'Destreza Manual', duracao: 15 },
-    ];
-  }
-
   // Mapear atividades e suas durações
   const atividadeDuracoes = new Map<string, { nome: string; duracoes: number[] }>();
 

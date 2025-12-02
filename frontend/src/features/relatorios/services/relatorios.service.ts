@@ -35,27 +35,23 @@ export interface ReportListResponse {
  * 🔧 PREPARADO: Envia filtro 'area' quando backend estiver pronto
  */
 export async function getAllReports(filters?: ReportListFilters): Promise<ReportListResponse> {
-  await delay(500);
-  
   const page = filters?.page || 1;
   const pageSize = filters?.pageSize || 10;
-  
+
   try {
     const queryParams = new URLSearchParams();
     
     if (filters) {
-      // Envia filtros individuais
       if (filters.q) queryParams.append('q', filters.q);
       if (filters.status && filters.status !== 'all') queryParams.append('status', filters.status);
       if (filters.type && filters.type !== 'all') queryParams.append('type', filters.type);
       if (filters.patientId) queryParams.append('patientId', filters.patientId);
       if (filters.therapistId) queryParams.append('therapistId', filters.therapistId);
-      // 🔧 PREPARADO PARA BACKEND: Filtrar por área terapêutica
       if (filters.area) queryParams.append('area', filters.area);
       if (filters.orderBy) queryParams.append('orderBy', filters.orderBy);
       // NÃO envia page/pageSize por enquanto (backend pode não suportar)
     }
-    
+
     const res = await fetch(`/api/relatorios?${queryParams.toString()}`, {
       method: 'GET',
       credentials: 'include',
@@ -147,8 +143,6 @@ export async function getReportById(id: string): Promise<SavedReport | null> {
  * Cria novo relatório
  */
 export async function createReport(input: CreateReportInput): Promise<SavedReport> {
-  await delay(800);
-  
   try {
     const res = await fetch('/api/relatorios', {
       method: 'POST',

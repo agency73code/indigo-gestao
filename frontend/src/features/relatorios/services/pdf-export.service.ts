@@ -103,14 +103,6 @@ export function calculatePeriod(filters: ReportFiltersApplied): {
 export async function saveReportToBackend(
   params: SaveReportParams
 ): Promise<SavedReport> {
-  console.log('🟢 [SAVE] Iniciando salvamento do relatório...');
-  console.log('🟢 [SAVE] Params:', {
-    title: params.title,
-    patientId: params.patientId,
-    patientName: params.patientName,
-    therapistId: params.therapistId,
-  });
-  
   const {
     title,
     patientId,
@@ -122,37 +114,18 @@ export async function saveReportToBackend(
     clinicalObservations,
     reportElement
   } = params;
-
-  // PASSO 1: Gerar PDF
-  console.log('🟢 [SAVE] Passo 1: Gerando PDF...');
-  
   const pdfFileName = `relatorio_${sanitizeForFileName(patientName)}_${new Date().toISOString().split('T')[0]}.pdf`;
-  
   let pdfBlob: Blob;
+
   try {
     pdfBlob = await generatePdfBlob(reportElement, pdfFileName);
     
-    // Log do tamanho do PDF gerado
-    const sizeInMB = (pdfBlob.size / 1024 / 1024).toFixed(2);
-    console.log(`🟢 [SAVE] PDF gerado: ${sizeInMB} MB`);
-    
-    // Alerta se PDF muito grande (> 5MB)
-    if (pdfBlob.size > 5 * 1024 * 1024) {
-      console.warn('⚠️ [SAVE] PDF gerado é grande (> 5MB). Considere otimizar imagens/gráficos.');
-    }
   } catch (error) {
-    console.error('❌ [SAVE] Erro ao gerar PDF:', error);
+    console.error('Erro ao gerar PDF:', error);
     throw new Error('Erro ao gerar PDF do relatório');
   }
 
-  // PASSO 2: Calcular período
-  console.log('🟢 [SAVE] Passo 2: Calculando período...');
   const { periodStart, periodEnd } = calculatePeriod(filters);
-  console.log('🟢 [SAVE] Período:', { periodStart, periodEnd });
-
-  // PASSO 3: Construir FormData
-  console.log('🟢 [SAVE] Passo 3: Construindo FormData...');
-
   const formData = new FormData();
   
   // Arquivo PDF
@@ -163,13 +136,12 @@ export async function saveReportToBackend(
   formData.append('type', 'mensal'); // Pode ser dinâmico futuramente
   formData.append('patientId', patientId);
   formData.append('therapistId', therapistId);
-  formData.append('area', area); // 🆕 PREPARADO PARA BACKEND: Incluir área no payload
+  formData.append('area', area);
   formData.append('periodStart', periodStart);
   formData.append('periodEnd', periodEnd);
   formData.append('clinicalObservations', clinicalObservations || '');
   formData.append('status', 'final');
 
-  // Dados estruturados (filtros + dados gerados)
   const structuredData = {
     filters: {
       pacienteId: patientId,
@@ -187,29 +159,20 @@ export async function saveReportToBackend(
   };
 
   formData.append('data', JSON.stringify(structuredData));
-  
-  console.log('🟢 [SAVE] FormData construído com sucesso');
 
-  // PASSO 4: Enviar para o backend
-  console.log('🟢 [SAVE] Passo 4: Enviando para o backend...');
   try {
     const apiBase = import.meta.env.VITE_API_BASE || '';
-    const url = `${apiBase}/api/relatorios`;
-    console.log('🟢 [SAVE] URL:', url);
-    
+    const url = `${apiBase}/api/relatorios`;  
     const response = await fetch(url, {
       method: 'POST',
       body: formData,
       credentials: 'include',
     });
 
-    console.log('🟢 [SAVE] Resposta recebida:', response.status, response.statusText);
-
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       console.error('❌ [SAVE] Erro do servidor:', errorData);
       
-      // Se backend não existe (404), oferece download do PDF
       if (response.status === 404) {
         console.warn('⚠️ [SAVE] Backend não implementado, fazendo download do PDF...');
         toast.warning('Backend ainda não implementado. Baixando PDF...', { duration: 4000 });
@@ -241,10 +204,7 @@ export async function saveReportToBackend(
     }
 
     const savedReport: SavedReport = await response.json();
-    
-    console.log('✅ [SAVE] Relatório salvo com sucesso!');
-    console.log('✅ [SAVE] ID do relatório:', savedReport.id);
-    
+
     toast.success('Relatório salvo com sucesso!', { duration: 3000 });
     
     return savedReport;

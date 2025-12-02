@@ -18,7 +18,7 @@ export function FiltersBar({ value, onChange }: FiltersBarProps) {
     const [terapeutas, setTerapeutas] = useState<{ id: string; nome: string }[]>([]);
     const [programas, setProgramas] = useState<{ id: string; nome: string }[]>([]);
     const [estimulos, setEstimulos] = useState<{ id: string; nome: string }[]>([]);
-
+    console.log(value)
     useEffect(() => {
         fetchAndSet('/api/terapeutas/relatorio', setTerapeutas, 'terapeutas');
     }, []);

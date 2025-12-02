@@ -225,7 +225,9 @@ export async function getProgramsReport(req: Request, res: Response) {
         const clientId = typeof req.query.clientId === 'string'
             ? req.query.clientId
             : undefined;
-
+        const area = req.query;
+        console.log('====================getProgramsReport==========================')
+        console.log(area)
         const data = await OcpService.getProgramsReport(clientId);
         res.json({ data })
     } catch (error) {
@@ -241,7 +243,9 @@ export async function getStimulusReport(req: Request, res: Response) {
     try {
         const clientId = req.query.clientId as string | undefined;
         const programId = req.query.programaId as string | undefined;
-
+        const area = req.query;
+        console.log('======================getStimulusReport========================')
+        console.log(area)
         const data = await OcpService.getStimulusReport(clientId, programId);
 
         res.json({ data });

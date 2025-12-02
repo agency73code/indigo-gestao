@@ -305,6 +305,7 @@ export async function listSessionsByClient(clientId: string, sort: SessionSort =
                     id: true,
                     ordem: true,
                     resultado: true,
+                    duracao_minutos: true,
                     estimulosOcp: {
                         select: {
                             id: true,

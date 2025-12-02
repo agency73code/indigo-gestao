@@ -94,7 +94,7 @@ export function GerarRelatorioPage() {
         const periodo = searchParams.get('periodo') || '30d';
         const periodoStart = searchParams.get('periodoStart');
         const periodoEnd = searchParams.get('periodoEnd');
-        
+
         return {
             pacienteId: searchParams.get('pacienteId') || undefined,
             periodo: periodo === 'custom' && periodoStart && periodoEnd
@@ -104,6 +104,7 @@ export function GerarRelatorioPage() {
             estimuloId: searchParams.get('estimuloId') || undefined,
             terapeutaId: searchParams.get('terapeutaId') || undefined,
             comparar: searchParams.get('comparar') === 'true',
+            area: searchParams.get('area'),
         };
     });
 
@@ -118,19 +119,14 @@ export function GerarRelatorioPage() {
 
     // Carregar terapeutas
     useEffect(() => {
-        console.log('🔄 Carregando terapeutas...');
         fetch('/api/terapeutas/relatorio')
             .then(res => {
-                console.log('📡 Resposta terapeutas:', res.status);
                 return res.json();
             })
             .then(response => {
-                console.log('📦 Response completo terapeutas:', response);
                 const data = response.data || response; // Tentar response.data primeiro
-                console.log('📦 Dados terapeutas recebidos:', data);
                 if (Array.isArray(data)) {
                     setTerapeutas(data);
-                    console.log('✅ Terapeutas salvos:', data.length);
                 } else {
                     console.warn('⚠️ Dados terapeutas não é array:', data);
                 }
@@ -141,19 +137,14 @@ export function GerarRelatorioPage() {
     // Carregar programas quando houver paciente
     useEffect(() => {
         if (filters.pacienteId) {
-            console.log('🔄 Carregando programas para paciente:', filters.pacienteId);
             fetch(`/api/ocp/reports/filters/programs?clientId=${filters.pacienteId}`)
                 .then(res => {
-                    console.log('📡 Resposta programas:', res.status);
                     return res.json();
                 })
                 .then(response => {
-                    console.log('📦 Response completo programas:', response);
                     const data = response.data || response; // Tentar response.data primeiro
-                    console.log('📦 Dados programas recebidos:', data);
                     if (Array.isArray(data)) {
                         setProgramas(data);
-                        console.log('✅ Programas salvos:', data.length);
                     } else {
                         console.warn('⚠️ Dados programas não é array:', data);
                     }
@@ -166,19 +157,14 @@ export function GerarRelatorioPage() {
     useEffect(() => {
         if (filters.pacienteId) {
             const url = `/api/ocp/reports/filters/stimulus?clientId=${filters.pacienteId}${filters.programaId ? `&programaId=${filters.programaId}` : ''}`;
-            console.log('🔄 Carregando estímulos:', url);
             fetch(url)
                 .then(res => {
-                    console.log('📡 Resposta estímulos:', res.status);
                     return res.json();
                 })
                 .then(response => {
-                    console.log('📦 Response completo estímulos:', response);
                     const data = response.data || response; // Tentar response.data primeiro
-                    console.log('📦 Dados estímulos recebidos:', data);
                     if (Array.isArray(data)) {
                         setEstimulos(data);
-                        console.log('✅ Estímulos salvos:', data.length);
                     } else {
                         console.warn('⚠️ Dados estímulos não é array:', data);
                     }
@@ -196,10 +182,10 @@ export function GerarRelatorioPage() {
         if (newFilters.estimuloId) params.set('estimuloId', newFilters.estimuloId);
         if (newFilters.terapeutaId) params.set('terapeutaId', newFilters.terapeutaId);
         if (newFilters.comparar) params.set('comparar', 'true');
-        
+
         // Adiciona área à URL
         if (area) params.set('area', area);
-        
+
         // Período
         if (newFilters.periodo.mode === 'custom') {
             params.set('periodo', 'custom');
@@ -208,7 +194,7 @@ export function GerarRelatorioPage() {
         } else {
             params.set('periodo', newFilters.periodo.mode);
         }
-        
+
         setSearchParams(params);
     }, [setSearchParams]);
 
@@ -217,7 +203,7 @@ export function GerarRelatorioPage() {
         const periodo = searchParams.get('periodo') || '30d';
         const periodoStart = searchParams.get('periodoStart');
         const periodoEnd = searchParams.get('periodoEnd');
-        
+
         setFilters(prev => ({
             ...prev,
             pacienteId: searchParams.get('pacienteId') || undefined,
@@ -228,6 +214,7 @@ export function GerarRelatorioPage() {
             estimuloId: searchParams.get('estimuloId') || undefined,
             terapeutaId: searchParams.get('terapeutaId') || undefined,
             comparar: searchParams.get('comparar') === 'true',
+            area: searchParams.get('area'),
         }));
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -283,9 +270,8 @@ export function GerarRelatorioPage() {
                             dateRange: currentFilters.periodo.mode,
                         }
                     );
-
                     const sessoes = sessionsResponse.items || [];
-
+                    
                     // Calcular KPIs de TO
                     const toKpis = calculateToKpis(sessoes);
                     
@@ -409,7 +395,6 @@ export function GerarRelatorioPage() {
             // Para áreas com config customizada (exceto TO e Fisio), usar endpoint específico
             if (config.apiEndpoint !== '/api/ocp/reports') {
                 // TODO: Implementar fetch para outros endpoints quando backend estiver pronto
-                console.log(`Endpoint customizado: ${config.apiEndpoint}`);
                 // Por enquanto, mantém dados vazios
                 setKpis(null);
                 setSerieLinha([]);
@@ -465,8 +450,7 @@ export function GerarRelatorioPage() {
         setFilters(prev => {
             // caso gerente/coordenador -> limpa terapeutaId
             if (isHighLevel && prev.terapeutaId) {
-            console.log('Removendo terapeutaId por perfil de alto nível');
-            return { ...prev, terapeutaId: undefined };
+                return { ...prev, terapeutaId: undefined };
             }
 
             if (user?.id && !isHighLevel && !prev.terapeutaId) {
@@ -506,12 +490,14 @@ export function GerarRelatorioPage() {
     };
 
     const handleFiltersChange = (newFilters: Filters) => {
+        console.log(newFilters)
         setFilters(newFilters);
         syncFiltersToUrl(newFilters, selectedArea);
     };
 
     const handleAreaChange = (area: AreaType | null) => {
         setSelectedArea(area);
+
         if (area) {
             setCurrentArea(area); // Atualiza contexto global também
         }
@@ -522,7 +508,7 @@ export function GerarRelatorioPage() {
             loadData(filters, area);
         }
     };
-
+    
     // Handler para salvar o relatório (COM GERAÇÃO DE PDF)
     const handleSaveReport = async (title: string): Promise<SavedReport> => {
         if (!selectedPatient) {

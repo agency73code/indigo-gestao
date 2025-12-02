@@ -66,6 +66,7 @@ export function mapSessionList(dto: OcpTypes.SessionDTO[]): OcpTypes.Session[] {
             resultado: translateResult(t.resultado),
             stimulusId: t.estimulosOcp?.id.toString(),
             stimulusLabel: t.estimulosOcp?.nome ?? undefined,
+            durationMinutes: t.duracao_minutos ?? null,
         })),
     }));
 }
