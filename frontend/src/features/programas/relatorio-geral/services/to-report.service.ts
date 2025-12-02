@@ -24,7 +24,7 @@ export function calculateToKpis(sessoes: Sessao[]): ToKpisData {
   const atividadesUnicas = new Set<string>();
 
   sessoes.forEach((sessao) => {
-    let countedSessionTime = false;
+    const countedStimuli = new Set<string>();
     sessao.registros.forEach((registro) => {
       // 1) Contar resultados e atividades
       if (registro.resultado === 'acerto') {
@@ -35,10 +35,14 @@ export function calculateToKpis(sessoes: Sessao[]): ToKpisData {
         naoDesempenhou++;
       }
 
-      // 2) Somar o tempo do primeiro registro com durationMinutes não nulo
-      if (!countedSessionTime && registro.durationMinutes) {
-        tempoTotal += registro.durationMinutes;
-        countedSessionTime = true;
+      // 2) Somar o tempo apenas uma vez por estímulo (ou sessão quando sem stimulusId)
+      if (registro.durationMinutes) {
+        const key = registro.stimulusId ?? `sessao-${sessao.id}`;
+
+        if (!countedStimuli.has(key)) {
+          tempoTotal += registro.durationMinutes;
+          countedStimuli.add(key);
+        }
       }
 
       // Contar atividades únicas
