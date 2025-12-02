@@ -301,8 +301,6 @@ export async function generateReportPdf(id: string): Promise<string> {
  * Reutiliza a lógica existente de programas/relatorio-geral
  */
 export async function fetchReportData(filters: ReportFiltersApplied): Promise<ReportGeneratedData> {
-  await delay(800);
-  
   try {
     const filtersParam = encodeURIComponent(JSON.stringify(filters));
     const res = await fetch(`/api/ocp/reports/kpis/${filtersParam}`, {
@@ -315,7 +313,7 @@ export async function fetchReportData(filters: ReportFiltersApplied): Promise<Re
     }
 
     const data = await res.json();
-    
+
     return {
       kpis: data.cards,
       graphic: data.graphic,

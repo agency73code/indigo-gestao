@@ -268,9 +268,24 @@ export function GerarRelatorioPage() {
                         'terapia-ocupacional',
                         {
                             dateRange: currentFilters.periodo.mode,
+                            programId: currentFilters.programaId,
+                            therapistId: currentFilters.terapeutaId,
                         }
                     );
-                    const sessoes = sessionsResponse.items || [];
+                    
+                    let sessoes = sessionsResponse.items || [];
+
+                    // Aplicar filtro de estímulo localmente
+                    if (currentFilters.estimuloId) {
+                        sessoes = sessoes
+                            .map(sessao => ({
+                                ...sessao,
+                                registros: sessao.registros.filter(registro =>
+                                    String(registro.stimulusId) === String(currentFilters.estimuloId)
+                                ),
+                            }))
+                            .filter(sessao => sessao.registros.length > 0);
+                    }
                     
                     // Calcular KPIs de TO
                     const toKpis = calculateToKpis(sessoes);
@@ -334,10 +349,24 @@ export function GerarRelatorioPage() {
                         'fisioterapia',
                         {
                             dateRange: currentFilters.periodo.mode,
+                            programId: currentFilters.programaId,
+                            therapistId: currentFilters.terapeutaId,
                         }
                     );
 
-                    const sessoes = sessionsResponse.items || [];
+                    let sessoes = sessionsResponse.items || [];
+
+                    // Aplicar filtro de estímulo localmente
+                    if (currentFilters.estimuloId) {
+                        sessoes = sessoes
+                            .map(sessao => ({
+                                ...sessao,
+                                registros: sessao.registros.filter(registro =>
+                                    String(registro.stimulusId) === String(currentFilters.estimuloId)
+                                ),
+                            }))
+                            .filter(sessao => sessao.registros.length > 0);
+                    }
 
                     // Calcular KPIs de Fisio
                     const fisioKpis = calculateFisioKpis(sessoes);
