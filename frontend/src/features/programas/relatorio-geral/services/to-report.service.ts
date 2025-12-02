@@ -3,7 +3,6 @@ import type { SerieLinha } from '@/features/relatorios/gerar-relatorio/types';
 import type { ToActivityDurationData } from '../components/to/ToActivityDurationChart';
 import type { ToAttentionActivityItem } from '../components/to/ToAttentionActivitiesCard';
 import type { ToAutonomyData } from '../components/to/ToAutonomyByCategoryChart';
-import { boolean } from 'zod';
 
 export interface ToKpisData {
   desempenhou: number;
@@ -68,7 +67,7 @@ export function calculateToKpis(sessoes: Sessao[]): ToKpisData {
  * Mapeamento de dados TO (dataKeys do backend são reutilizados de Fono):
  * - acerto (dataKey) → Desempenhou: Paciente realizou a atividade de forma independente, sem ajuda
  * - independencia (dataKey) → Desempenhou com Ajuda: Paciente realizou a atividade com suporte do terapeuta
- * - erro (calculado) → Não Desempenhou: Paciente não conseguiu realizar a atividade = 100% - acerto
+ * - erro (calculado) → Não Desempenhou: Paciente não conseguiu realizar a atividade = 100% - (acerto + independencia)
  * 
  * Tipos de resultado nas sessões TO (backend):
  * - resultado === 'acerto' → Interpretado como DESEMPENHOU (independente)
@@ -77,7 +76,10 @@ export function calculateToKpis(sessoes: Sessao[]): ToKpisData {
  */
 export function prepareToPerformanceLineData(sessoes: Sessao[]): SerieLinha[] {
   // Agrupar registros por sessão (data)
-  const sessoesPorData = new Map<string, { total: number; desempenhou: number; comAjuda: number }>();
+  const sessoesPorData = new Map<
+    string,
+    { total: number; desempenhou: number; comAjuda: number }
+  >();
 
   sessoes.forEach((sessao) => {
     const data = new Date(sessao.data).toLocaleDateString('pt-BR', {
@@ -98,7 +100,6 @@ export function prepareToPerformanceLineData(sessoes: Sessao[]): SerieLinha[] {
       // Backend retorna resultado === 'acerto', mas para TO interpretamos como "Desempenhou"
       if (registro.resultado === 'acerto') {
         stats.desempenhou++;
-        stats.comAjuda++; // Quem desempenhou sem ajuda também está no grupo "com ou sem ajuda"
       } 
       // DESEMPENHOU COM AJUDA: Paciente realizou a atividade, mas precisou de suporte do terapeuta
       // Backend retorna resultado === 'ajuda'
@@ -118,16 +119,17 @@ export function prepareToPerformanceLineData(sessoes: Sessao[]): SerieLinha[] {
   sessoesPorData.forEach((stats, data) => {
     // acerto (dataKey) = % de atividades DESEMPENHADAS (sem ajuda, independente)
     const acerto = stats.total > 0 ? Math.round((stats.desempenhou / stats.total) * 100) : 0;
-    
-    // independencia (dataKey) = % de atividades DESEMPENHADAS COM AJUDA (com suporte do terapeuta)
-    const independencia = stats.total > 0 ? Math.round((stats.comAjuda / stats.total) * 100) : 0;
 
-    result.push({
-      x: data,
-      acerto, // → Será exibido como "Desempenhou" (linha verde no gráfico)
-      independencia, // → Será exibido como "Desempenhou com Ajuda" (linha azul no gráfico)
-      // erro (calculado no componente) = 100 - acerto → Será exibido como "Não Desempenhou" (linha vermelha)
-    });
+    // independencia (dataKey) = % de atividades DESEMPENHADAS COM AJUDA (com suporte do terapeuta)
+    const independencia =
+      stats.total > 0 ? Math.round((stats.comAjuda / stats.total) * 100) : 0;
+
+      result.push({
+        x: data,
+        acerto, // → Será exibido como "Desempenhou" (linha verde no gráfico)
+        independencia, // → Será exibido como "Desempenhou com Ajuda" (linha azul no gráfico)
+        // erro (calculado no componente) = 100 - (acerto + independencia) → Será exibido como "Não Desempenhou" (linha vermelha)
+      });
   });
 
   return result;

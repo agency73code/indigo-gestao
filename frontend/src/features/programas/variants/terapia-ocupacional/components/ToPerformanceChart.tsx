@@ -44,13 +44,18 @@ interface ToPerformanceChartProps {
 // Mapeamento dos dataKeys:
 // - acerto (dataKey backend) → Desempenhou (sem ajuda)
 // - independencia (dataKey backend) → Desempenhou com Ajuda
-// - erro (dataKey calculado) → Não Desempenhou = 100% - Desempenhou
+// - erro (dataKey calculado) → Não Desempenhou = 100% - (Desempenhou + Desempenhou com Ajuda)
 const addErrorData = (data: SerieLinha[]) => {
     if (!Array.isArray(data)) return [];
-    return data.map((item) => ({
-        ...item,
-        erro: 100 - item.acerto, // "Não desempenhou" = 100% - "Desempenhou"
-    }));
+    return data.map((item) => {
+        const totalDesempenho = (item.acerto ?? 0) + (item.independencia ?? 0);
+        const erro = Math.max(0, 100 - totalDesempenho); // "Não desempenhou" = 100% - (desempenhou + com ajuda)
+
+        return {
+            ...item,
+            erro,
+        };
+    });
 };
 
 export default function ToPerformanceChart({
