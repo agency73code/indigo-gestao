@@ -17,17 +17,20 @@ async function callKpiReportsApi(_filtros: Filters) {
 export async function fetchKpis(_filtros: Filters): Promise<KpisRelatorio> {
   const res = await callKpiReportsApi(_filtros);
   const data = await res.json();
+
   return data.cards;
 }
 
 export async function fetchSerieLinha(_filtros: Filters): Promise<SerieLinha[]> {
   const res = await callKpiReportsApi(_filtros);
   const data = await res.json();
+
   return data.graphic;
 }
 
 export async function fetchPrazoPrograma(_filtros: Filters): Promise<PrazoPrograma> {
   const res = await callKpiReportsApi(_filtros);
   const data = await res.json();
+
   return data.programDeadline;
 }

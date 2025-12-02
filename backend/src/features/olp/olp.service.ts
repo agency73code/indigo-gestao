@@ -355,6 +355,7 @@ export async function getKpis(filtros: OcpType.KpisFilters) {
     const where: Prisma.sessaoWhereInput = {};
 
     if (filtros.pacienteId) where.cliente_id = filtros.pacienteId;
+    if (filtros.terapeutaId) where.terapeuta_id = filtros.terapeutaId;
     if (filtros.programaId) where.ocp_id = Number(filtros.programaId);
     if (filtros.area) where.area = filtros.area;
 
@@ -369,14 +370,15 @@ export async function getKpis(filtros: OcpType.KpisFilters) {
             },
         };
     }
-    if (filtros.terapeutaId) where.terapeuta_id = filtros.terapeutaId;
 
     if (filtros.periodo.mode === "30d") {
         where.data_criacao = { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) };
     }
+
     if (filtros.periodo.mode === "90d") {
         where.data_criacao = { gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) };
     }
+
     if (filtros.periodo.mode === "custom" && filtros.periodo.start && filtros.periodo.end) {
         const startDate = parseISO(filtros.periodo.start);
         const endDate = parseISO(filtros.periodo.end);
@@ -388,6 +390,7 @@ export async function getKpis(filtros: OcpType.KpisFilters) {
             };
         }
     }
+
     const sessions = await prisma.sessao.findMany({
         where,
         include: {
@@ -398,7 +401,7 @@ export async function getKpis(filtros: OcpType.KpisFilters) {
             : true,
         },
     });
-    
+
     const totalSessions = sessions.length;
     const allTrials = sessions.flatMap(s => s.trials);
 
