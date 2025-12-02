@@ -160,18 +160,17 @@ export default function AppLayout() {
                                     {/* Espaço superior para título e botões */}
                                     <div className="h-12 flex items-center justify-between pt-0 px-1 shrink-0 no-print">
                                         {/* Botão voltar (condicional), sidebar e título */}
-                                        <div className="flex items-center gap-3">
+                                        <div className="flex items-center gap-3 flex-1 min-w-0">
                                             {showBackButton && (
                                                 <BackButton onClick={onBackClick} />
                                             )}
-                                            <div className="h-10 w-10 rounded-full bg-header-bg hover:bg-header-bg/80 flex items-center justify-center transition-colors cursor-pointer">
+                                            <div className="h-10 w-10 rounded-full bg-header-bg hover:bg-header-bg/80 flex items-center justify-center transition-colors cursor-pointer shrink-0">
                                                 <SidebarTrigger className="text-black dark:text-white hover:bg-transparent hover:text-black dark:hover:text-white" />
                                             </div>
                                             {pageTitle && (
                                                 <h1 
-                                                    className="text-primary" 
+                                                    className="text-primary text-sm sm:text-base md:text-xl truncate" 
                                                     style={{ 
-                                                        fontSize: 'var(--page-title-font-size)',
                                                         fontWeight: 'var(--page-title-font-weight)',
                                                         fontFamily: 'var(--page-title-font-family)'
                                                     }}
@@ -181,8 +180,8 @@ export default function AppLayout() {
                                             )}
                                         </div>
                                         
-                                        {/* Botões de notificação e theme */}
-                                        <div className="flex items-center gap-3 ml-auto">
+                                        {/* Botões de notificação e theme - ocultos no mobile */}
+                                        <div className="hidden md:flex items-center gap-3 ml-auto">
                                             {headerActions}
                                             <Button variant="ghost" size="sm" className="h-10 w-10 p-0 relative rounded-full bg-header-bg hover:bg-header-bg/80 transition-colors">
                                                 <Bell className="h-4 w-4 text-black dark:text-white" />
@@ -193,6 +192,11 @@ export default function AppLayout() {
                                             <div className="h-10 w-10 rounded-full bg-black dark:bg-white flex items-center justify-center">
                                                 <ThemeToggle />
                                             </div>
+                                        </div>
+                                        
+                                        {/* Header actions visíveis no mobile (ex: botão Exportar PDF) */}
+                                        <div className="flex md:hidden items-center ml-auto">
+                                            {headerActions}
                                         </div>
                                     </div>
                                     

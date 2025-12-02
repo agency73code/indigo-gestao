@@ -28,49 +28,52 @@ function SaveButtons({
 }) {
     return (
         <div className="">
-            <div className="max-w-62 mx-auto flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <div className="max-w-62 mx-auto flex flex-row gap-2 sm:gap-4">
                 {/* Botões principais */}
-                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 flex-1">
-                                        <Button
+                <div className="flex flex-row gap-2 sm:gap-3 flex-1">
+                    {/* Botão Salvar */}
+                    <Button
                         onClick={onSave}
                         disabled={isSaving}
-                        className="flex-1 p-3 rounded-full sm:flex-none h-12 sm:h-11 gap-2 font-medium"
+                        className="flex-1 sm:flex-none h-10 sm:h-11 px-4 sm:px-6 rounded-full gap-2 font-medium text-sm"
                     >
                         {isSaving ? (
                             <>
                                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                                Salvando...
+                                <span className="hidden sm:inline">Salvando...</span>
                             </>
                         ) : (
                             <>
-                                <Save className="h-4 w-4" />
-                                Salvar Programa
+                                <Save className="h-4 w-4 hidden sm:block" />
+                                <span className="hidden sm:inline">Salvar Programa</span>
+                                <span className="sm:hidden">Salvar</span>
                             </>
                         )}
                     </Button>
 
+                    {/* Botão Salvar e Iniciar - Circular no mobile */}
                     <Button
                         onClick={onSaveAndStart}
                         disabled={!canSave || isSaving}
                         variant="secondary"
-                        className="flex-1 p-3 rounded-full sm:flex-none h-12 sm:h-11 gap-2 font-medium"
+                        className="h-10 w-10 sm:w-auto sm:h-11 sm:px-6 rounded-full gap-2 font-medium p-0 sm:p-3"
                         size="lg"
                     >
                         <Play className="h-4 w-4" />
-                        Salvar e Iniciar Sessão
+                        <span className="hidden sm:inline">Salvar e Iniciar Sessão</span>
                     </Button>
                 </div>
 
-                {/* Botão cancelar */}
+                {/* Botão cancelar - Só ícone no mobile */}
                 <Button
                     onClick={onCancel}
                     variant="ghost"
                     disabled={isSaving}
-                    className="h-12 sm:h-11 gap-2 sm:w-auto"
+                    className="h-10 w-10 sm:h-11 sm:w-auto sm:px-4 p-0 sm:p-3 gap-2"
                     size="lg"
                 >
                     <X className="h-4 w-4" />
-                    Cancelar
+                    <span className="hidden sm:inline">Cancelar</span>
                 </Button>
             </div>
 

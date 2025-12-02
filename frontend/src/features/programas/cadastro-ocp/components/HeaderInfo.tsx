@@ -117,7 +117,7 @@ function SelectorModal({
         >
             <div className="bg-background w-full max-w-4xl h-[85vh] md:h-[70vh] rounded-t-lg md:rounded-lg shadow-lg animate-in slide-in-from-bottom md:fade-in duration-300 flex flex-col">
                 <div className="flex items-center justify-between p-4 sm:p-6 border-b">
-                    <h2 className="text-lg font-semibold">{title}</h2>
+                    <h2 className="text-lg font-regular" style={{fontFamily: "Sora"}}>{title}</h2>
                     <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0">
                         <X className="h-4 w-4" />
                     </Button>
@@ -262,8 +262,8 @@ export default function HeaderInfo({
         <>
             <div className="space-y-4">
                 {/* Paciente */}
-                <Card  className="rounded-lg px-6 py-8 md:px-8 md:py-10 lg:px-8 lg:py-0">
-                    <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
+                <Card  className="rounded-lg px-4 py-2 md:px-8 md:py-10 lg:px-8 lg:py-0">
+                    <CardHeader className="pb-2 sm:pb-3 pt-0 sm:pt-6">
                         <CardTitle className="text-base flex items-center gap-2">
                             <User className="h-4 w-4" />
                             Cliente
@@ -347,8 +347,8 @@ export default function HeaderInfo({
                 </Card>
 
                 {/* Terapeuta */}
-                <Card className="rounded-lg p-1 sm:p-4 px-6 py-8 md:px-8 md:py-10 lg:px-8 lg:py-0">
-                    <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
+                <Card className="rounded-lg px-4 py-2 md:px-8 md:py-10 lg:px-8 lg:py-0">
+                    <CardHeader className="pb-2 sm:pb-3 pt-0 sm:pt-6">
                         <CardTitle className="text-base flex items-center gap-2">
                             <UserCheck className="h-4 w-4" />
                             Terapeuta
@@ -428,8 +428,8 @@ export default function HeaderInfo({
                 </Card>
 
                 {/* Informações do programa */}
-                <Card className="rounded-lg px-6 py-8 md:px-8 md:py-10 lg:px-8 lg:py-0">
-                    <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
+                <Card className="rounded-lg px-4 py-2 md:px-8 md:py-10 lg:px-8 lg:py-0">
+                    <CardHeader className="pb-2 sm:pb-3 pt-0 sm:pt-6">
                         <CardTitle className="text-base flex items-center gap-2">
                             <Calendar className="h-4 w-4" />
                             {programInfoTitle}

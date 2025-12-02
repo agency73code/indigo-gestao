@@ -34,7 +34,7 @@ export default function HeaderInfo({ program }: HeaderInfoProps) {
         <div className="space-y-4 ">
             {/* Informações do Cliente */}
             <Card padding="small" className="rounded-[5px]">
-                <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
+                <CardHeader className="pb-2 sm:pb-3 pt-0 sm:pt-6">
                     <CardTitle className="text-base flex items-center gap-2">
                         <User className="h-4 w-4" />
                         Cliente
@@ -82,7 +82,7 @@ export default function HeaderInfo({ program }: HeaderInfoProps) {
 
             {/* Informações do Terapeuta */}
             <Card padding="small" className="rounded-[5px]">
-                <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
+                <CardHeader className="pb-2 sm:pb-3 pt-0 sm:pt-6">
                     <CardTitle className="text-base flex items-center gap-2">
                         <UserCheck className="h-4 w-4" />
                         Terapeuta
@@ -119,7 +119,7 @@ export default function HeaderInfo({ program }: HeaderInfoProps) {
 
             {/* Data de criação */}
             <Card padding="small" className="rounded-[5px]">
-                <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
+                <CardHeader className="pb-2 sm:pb-3 pt-0 sm:pt-6">
                     <CardTitle className="text-base flex items-center gap-2">
                         <Calendar className="h-4 w-4" />
                         Informações do Programa

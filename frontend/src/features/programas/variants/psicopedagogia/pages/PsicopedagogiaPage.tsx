@@ -65,10 +65,11 @@ export default function PsicopedagogiaPage() {
     ];
 
     return (
-        <div className="flex flex-col min-h-full w-full p-1 md:p-4 lg:p-4 space-y-4">
+        <div className="flex flex-col min-h-full w-full p-2 md:p-4 lg:p-4 space-y-4">
             {/* Main Action Cards */}
             <div className="space-y-5 p-1">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {/* Mobile: 2 colunas, Desktop: 4 colunas */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                     {mainActions.map((action, index) => {
                         const Icon = action.icon;
                         const isDisabled = !action.available;
@@ -79,25 +80,27 @@ export default function PsicopedagogiaPage() {
                                 className={`${isDisabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:shadow-md transition-all hover:scale-[1.02]'} border border-border/40 rounded-lg h-full`}
                                 style={{ backgroundColor: 'var(--hub-card-background)' }}
                             >
-                                <CardHeader className="space-y-5">
+                                {/* Mobile: padding e espaçamento menores */}
+                                <CardHeader className="space-y-2 md:space-y-5 p-0">
                                     <div className="flex items-start justify-between">
-                                        <div className={`h-14 w-14 rounded-lg ${action.bgColor} flex items-center justify-center`}>
-                                            <Icon className={`h-7 w-7 ${action.iconColor}`} />
+                                        <div className={`h-10 w-10 md:h-14 md:w-14 rounded-lg ${action.bgColor} flex items-center justify-center`}>
+                                            <Icon className={`h-5 w-5 md:h-7 md:w-7 ${action.iconColor}`} />
                                         </div>
                                         {action.badge && (
                                             <Badge 
                                                 variant="outline" 
-                                                className="bg-amber-50 text-amber-700 border-amber-200 text-xs"
+                                                className="bg-amber-50 text-amber-700 border-amber-200 text-[10px] md:text-xs px-1.5 md:px-2"
                                             >
                                                 {action.badge}
                                             </Badge>
                                         )}
                                     </div>
-                                    <div className="space-y-1">
-                                        <CardTitleHub className="text-lg">
+                                    <div className="space-y-0.5 md:space-y-1">
+                                        <CardTitleHub className="text-sm md:text-lg leading-tight">
                                             {action.title}
                                         </CardTitleHub>
-                                        <p className="text-sm text-muted-foreground">
+                                        {/* Descrição só aparece no desktop */}
+                                        <p className="hidden md:block text-sm text-muted-foreground">
                                             {action.description}
                                         </p>
                                     </div>

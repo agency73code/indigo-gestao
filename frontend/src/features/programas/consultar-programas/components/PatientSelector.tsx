@@ -85,8 +85,8 @@ export default function PatientSelector({
 
     return (
         <>
-            <Card className="rounded-lg px-6 py-8 md:px-8 md:py-10 lg:px-8 lg:py-0 h-full">
-                <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
+            <Card className="rounded-lg px-4 py-2 md:px-8 md:py-10 lg:px-8 lg:py-0 h-full">
+                <CardHeader className="pb-2 sm:pb-3 pt-0 sm:pt-6">
                     <h3 className="text-base flex items-center gap-2 font-normal" style={{fontFamily: "Sora"}}>
                         <User className="h-4 w-4" />
                         Cliente
