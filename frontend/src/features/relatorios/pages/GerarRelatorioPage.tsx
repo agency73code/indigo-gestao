@@ -761,8 +761,9 @@ export function GerarRelatorioPage() {
                         {/* Filtros interativos - só aparece na tela */}
                         <div className="no-print">
                             <FiltersBar 
-                                value={filters} 
-                                onChange={handleFiltersChange} 
+                                value={filters}
+                                onChange={handleFiltersChange}
+                                area={selectedArea}
                             />
                         </div>
 
