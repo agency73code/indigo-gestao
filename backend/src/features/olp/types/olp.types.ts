@@ -269,15 +269,16 @@ export type ProgramSelectResult = {
 
 export type KpisFilters = {
   pacienteId?: string;
-  periodo: { 
-    mode: '30d'|'90d'|'custom'; 
-    start?: string; 
-    end?: string; 
+  periodo: {
+    mode: '30d'|'90d'|'custom';
+    start?: string;
+    end?: string;
   };
   programaId?: string;
   estimuloId?: string;
   terapeutaId?: string;
   comparar?: boolean;
+  area?: string;
 };
 
 export type KpisReport = {

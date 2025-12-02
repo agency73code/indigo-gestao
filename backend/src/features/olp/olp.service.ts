@@ -356,6 +356,7 @@ export async function getKpis(filtros: OcpType.KpisFilters) {
 
     if (filtros.pacienteId) where.cliente_id = filtros.pacienteId;
     if (filtros.programaId) where.ocp_id = Number(filtros.programaId);
+    if (filtros.area) where.area = filtros.area;
 
     const stimulusId = filtros.estimuloId ? Number(filtros.estimuloId) : undefined;
 
@@ -482,11 +483,12 @@ export async function getKpis(filtros: OcpType.KpisFilters) {
     };
 }
 
-export async function getStimulusReport(clientId?: string, programId?: string) {
+export async function getStimulusReport(clientId?: string, programId?: string, area?: string) {
     const where: {
         ocp: {
             cliente_id?: string;
             id?: number;
+            area?: string;
         };
     } = {
         ocp: {},
@@ -498,6 +500,10 @@ export async function getStimulusReport(clientId?: string, programId?: string) {
 
     if (programId) {
         where.ocp.id = Number(programId);
+    }
+
+    if (area) {
+        where.ocp.area = area;
     }
 
     return prisma.estimulo_ocp.findMany({
@@ -512,9 +518,17 @@ export async function getStimulusReport(clientId?: string, programId?: string) {
     });
 }
 
-export async function getProgramsReport(clientId?: string) {
-    const where = clientId ? { cliente_id: clientId } : {};
+export async function getProgramsReport(clientId?: string, area?: string) {
+    const where: Prisma.ocpWhereInput = {};
     
+    if (clientId) {
+        where.cliente_id = clientId;
+    }
+
+    if (area) {
+        where.area = area;
+    }
+
     const ocps = await prisma.ocp.findMany({
         where,
         select: {

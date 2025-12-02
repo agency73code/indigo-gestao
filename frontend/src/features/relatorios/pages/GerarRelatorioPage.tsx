@@ -104,7 +104,6 @@ export function GerarRelatorioPage() {
             estimuloId: searchParams.get('estimuloId') || undefined,
             terapeutaId: searchParams.get('terapeutaId') || undefined,
             comparar: searchParams.get('comparar') === 'true',
-            area: searchParams.get('area'),
         };
     });
 
@@ -136,8 +135,9 @@ export function GerarRelatorioPage() {
 
     // Carregar programas quando houver paciente
     useEffect(() => {
-        if (filters.pacienteId) {
-            fetch(`/api/ocp/reports/filters/programs?clientId=${filters.pacienteId}`)
+        if (filters.pacienteId && selectedArea) {
+            const areaParam = encodeURIComponent(selectedArea);
+            fetch(`/api/ocp/reports/filters/programs?clientId=${filters.pacienteId}&area=${areaParam}`)
                 .then(res => {
                     return res.json();
                 })
@@ -151,12 +151,12 @@ export function GerarRelatorioPage() {
                 })
                 .catch(err => console.error('❌ Erro ao carregar programas:', err));
         }
-    }, [filters.pacienteId]);
+    }, [filters.pacienteId, selectedArea]);
 
     // Carregar estímulos quando houver paciente/programa
     useEffect(() => {
-        if (filters.pacienteId) {
-            const url = `/api/ocp/reports/filters/stimulus?clientId=${filters.pacienteId}${filters.programaId ? `&programaId=${filters.programaId}` : ''}`;
+        if (filters.pacienteId && selectedArea) {
+            const url = `/api/ocp/reports/filters/stimulus?clientId=${filters.pacienteId}${filters.programaId ? `&programaId=${filters.programaId}` : ''}&area=${selectedArea}`;
             fetch(url)
                 .then(res => {
                     return res.json();
@@ -171,7 +171,7 @@ export function GerarRelatorioPage() {
                 })
                 .catch(err => console.error('❌ Erro ao carregar estímulos:', err));
         }
-    }, [filters.pacienteId, filters.programaId]);
+    }, [filters.pacienteId, filters.programaId, selectedArea]);
 
     // 🔄 Sincroniza filtros com URL (incluindo área)
     const syncFiltersToUrl = useCallback((newFilters: Filters, area?: AreaType | null) => {
@@ -214,7 +214,6 @@ export function GerarRelatorioPage() {
             estimuloId: searchParams.get('estimuloId') || undefined,
             terapeutaId: searchParams.get('terapeutaId') || undefined,
             comparar: searchParams.get('comparar') === 'true',
-            area: searchParams.get('area'),
         }));
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -255,6 +254,7 @@ export function GerarRelatorioPage() {
 
         const config = getAreaConfig(area);
         
+        const filtersWithArea = { ...currentFilters, area };
         try {
             setLoadingKpis(true);
             setLoadingCharts(true);
@@ -282,7 +282,7 @@ export function GerarRelatorioPage() {
                     const autonomyByCategory = prepareToAutonomyByCategory(sessoes);
 
                     // Carregar prazo do programa
-                    const prazoProgramaData = await fetchPrazoPrograma(currentFilters);
+                    const prazoProgramaData = await fetchPrazoPrograma(filtersWithArea);
                     setPrazoPrograma(prazoProgramaData);
 
                     // Armazenar dados adaptados
@@ -304,7 +304,7 @@ export function GerarRelatorioPage() {
 
                     // Tentar carregar prazo mesmo com erro nas sessões
                     try {
-                        const prazoProgramaData = await fetchPrazoPrograma(currentFilters);
+                        const prazoProgramaData = await fetchPrazoPrograma(filtersWithArea);
                         setPrazoPrograma(prazoProgramaData);
                     } catch (prazoError) {
                         console.error('Erro ao carregar prazo do programa:', prazoError);
@@ -349,7 +349,7 @@ export function GerarRelatorioPage() {
                     const autonomyByCategory = prepareFisioAutonomyByCategory(sessoes);
 
                     // Carregar prazo do programa
-                    const prazoProgramaData = await fetchPrazoPrograma(currentFilters);
+                    const prazoProgramaData = await fetchPrazoPrograma(filtersWithArea);
                     setPrazoPrograma(prazoProgramaData);
 
                     // Armazenar dados adaptados
@@ -371,7 +371,7 @@ export function GerarRelatorioPage() {
 
                     // Tentar carregar prazo mesmo com erro nas sessões
                     try {
-                        const prazoProgramaData = await fetchPrazoPrograma(currentFilters);
+                        const prazoProgramaData = await fetchPrazoPrograma(filtersWithArea);
                         setPrazoPrograma(prazoProgramaData);
                     } catch (prazoError) {
                         console.error('Erro ao carregar prazo do programa:', prazoError);
@@ -406,13 +406,13 @@ export function GerarRelatorioPage() {
             }
 
             // Área Fono usa endpoint atual
-            const kpisData = await fetchKpis(currentFilters);
+            const kpisData = await fetchKpis(filtersWithArea);
             setKpis(kpisData);
             setLoadingKpis(false);
 
             const [serieLinhaData, prazoProgramaData] = await Promise.all([
-                fetchSerieLinha(currentFilters),
-                fetchPrazoPrograma(currentFilters),
+                fetchSerieLinha(filtersWithArea),
+                fetchPrazoPrograma(filtersWithArea),
             ]);
 
             setSerieLinha(Array.isArray(serieLinhaData) ? serieLinhaData : []);
@@ -490,22 +490,24 @@ export function GerarRelatorioPage() {
     };
 
     const handleFiltersChange = (newFilters: Filters) => {
-        console.log(newFilters)
-        setFilters(newFilters);
-        syncFiltersToUrl(newFilters, selectedArea);
+        const filtersWithArea = { ...newFilters, area: selectedArea ?? newFilters.area };
+        setFilters(filtersWithArea);
+        syncFiltersToUrl(filtersWithArea, selectedArea);
     };
 
     const handleAreaChange = (area: AreaType | null) => {
         setSelectedArea(area);
+        const nextFilters = { ...filters, area };
+        setFilters(nextFilters);
 
         if (area) {
             setCurrentArea(area); // Atualiza contexto global também
         }
-        syncFiltersToUrl(filters, area);
+        syncFiltersToUrl(nextFilters, area);
         
         // Recarregar dados com nova área
         if (selectedPatient && area) {
-            loadData(filters, area);
+            loadData(nextFilters, area);
         }
     };
     

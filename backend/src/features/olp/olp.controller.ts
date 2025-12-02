@@ -225,16 +225,15 @@ export async function getProgramsReport(req: Request, res: Response) {
         const clientId = typeof req.query.clientId === 'string'
             ? req.query.clientId
             : undefined;
-        const area = req.query;
-        console.log('====================getProgramsReport==========================')
-        console.log(area)
-        const data = await OcpService.getProgramsReport(clientId);
+        const area = typeof req.query.area === 'string' ? req.query.area : undefined;
+        const data = await OcpService.getProgramsReport(clientId, area);
+
         res.json({ data })
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ 
-            success: false, 
-            message: 'Erro ao buscar informações do relatório' 
+        return res.status(500).json({
+            success: false,
+            message: 'Erro ao buscar informações do relatório'
         });
     }
 }
@@ -243,15 +242,13 @@ export async function getStimulusReport(req: Request, res: Response) {
     try {
         const clientId = req.query.clientId as string | undefined;
         const programId = req.query.programaId as string | undefined;
-        const area = req.query;
-        console.log('======================getStimulusReport========================')
-        console.log(area)
-        const data = await OcpService.getStimulusReport(clientId, programId);
+        const area = typeof req.query.area === 'string' ? req.query.area : undefined;
+        const data = await OcpService.getStimulusReport(clientId, programId, area);
 
         res.json({ data });
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ 
+        return res.status(500).json({
             success: false, 
             message: 'Erro ao buscar informações do relatório' 
         });
