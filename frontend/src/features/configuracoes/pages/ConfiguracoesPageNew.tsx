@@ -4,11 +4,8 @@ import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { SettingsSidebar, type SettingsSection } from '../components/SettingsSidebar';
 import { AccountSettings } from '../components/AccountSettings';
-import { NotificationsSettings } from '../components/NotificationsSettings';
 import { SecuritySettings } from '../components/SecuritySettings';
 import { AppearanceSettings } from '../components/AppearanceSettings';
-import { IntegrationsSettings } from '../components/IntegrationsSettings';
-import { BillingSettings } from '../components/BillingSettings';
 
 export default function ConfiguracoesPageNew() {
     const location = useLocation();
@@ -23,11 +20,8 @@ export default function ConfiguracoesPageNew() {
     // Determinar seção ativa baseada na URL
     const getSectionFromPath = (): SettingsSection => {
         const path = location.pathname;
-        if (path.includes('/notificacoes')) return 'notificacoes';
         if (path.includes('/seguranca')) return 'seguranca';
         if (path.includes('/aparencia')) return 'aparencia';
-        if (path.includes('/integracoes')) return 'integracoes';
-        if (path.includes('/faturamento')) return 'faturamento';
         return 'conta'; // default
     };
 
@@ -62,16 +56,10 @@ export default function ConfiguracoesPageNew() {
         switch (activeSection) {
             case 'conta':
                 return <AccountSettings />;
-            case 'notificacoes':
-                return <NotificationsSettings />;
             case 'seguranca':
                 return <SecuritySettings />;
             case 'aparencia':
                 return <AppearanceSettings />;
-            case 'integracoes':
-                return <IntegrationsSettings />;
-            case 'faturamento':
-                return <BillingSettings />;
             default:
                 return <AccountSettings />;
         }
