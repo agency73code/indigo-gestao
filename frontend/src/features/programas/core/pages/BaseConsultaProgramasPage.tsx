@@ -85,7 +85,7 @@ export function BaseConsultaProgramasPage({
 
     return (
         <div className="flex flex-col min-h-full w-full">
-            <main className="flex-1 pb-20 sm:pb-24 px-4 pt-4">
+            <main className="flex-1 px-1 sm:px-4 py-1 md:py-4">
                 <div className="space-y-4 max-w-full">
                     <PatientSelector
                         selected={selectedPatient}

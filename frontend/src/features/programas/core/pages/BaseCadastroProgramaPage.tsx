@@ -359,7 +359,7 @@ export function BaseCadastroProgramaPage({
 
     return (
         <div className="flex flex-col min-h-full w-full p-0 sm:p-0 pt-">
-            <main className="flex-1 px-1 sm:px-4 py-4 w-full">
+            <main className="flex-1 px-1 sm:px-4 py-1 sm:py-4 w-full">
                 <div className="space-y-4 md:max-w-none mx-auto">   
                     <HeaderInfo
                         patient={formState.patient}
@@ -444,21 +444,22 @@ export function BaseCadastroProgramaPage({
 
             <div className="bg-background border-t">
                 <div className="px-4 py-4 sm:px-6">
-                    <div className="max-w-lg mx-auto flex items-center justify-end gap-3">
+                    <div className="max-w-lg mx-auto flex items-center justify-end gap-2 sm:gap-3">
                         <Button
                             onClick={() => handleSave(false)}
                             disabled={isSaving}
-                            className="h-11 rounded-full gap-2"
+                            className="h-10 sm:h-11 px-4 sm:px-6 rounded-full gap-2"
                         >
                             {isSaving ? (
                                 <>
                                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                                    Salvando...
+                                    <span className="hidden sm:inline">Salvando...</span>
                                 </>
                             ) : (
                                 <>
-                                    <Save className="h-4 w-4" />
-                                    {config.buttons.save}
+                                    <Save className="h-4 w-4 hidden sm:block" />
+                                    <span className="hidden sm:inline">{config.buttons.save}</span>
+                                    <span className="sm:hidden">Salvar</span>
                                 </>
                             )}
                         </Button>
@@ -468,10 +469,10 @@ export function BaseCadastroProgramaPage({
                                 onClick={() => handleSave(true)}
                                 disabled={isSaving}
                                 variant="secondary"
-                                className="h-11 rounded-full gap-2"
+                                className="h-10 w-10 sm:w-auto sm:h-11 sm:px-6 rounded-full gap-2 p-0 sm:p-3"
                             >
                                 <Play className="h-4 w-4" />
-                                {config.buttons.saveAndStart}
+                                <span className="hidden sm:inline">{config.buttons.saveAndStart}</span>
                             </Button>
                         )}
 
@@ -479,10 +480,10 @@ export function BaseCadastroProgramaPage({
                             onClick={handleCancel}
                             variant="ghost"
                             disabled={isSaving}
-                            className="h-11 rounded-full gap-2"
+                            className="h-10 w-10 sm:h-11 sm:w-auto sm:px-4 rounded-full gap-2 p-0 sm:p-3"
                         >
                             <X className="h-4 w-4" />
-                            {config.buttons.cancel}
+                            <span className="hidden sm:inline">{config.buttons.cancel}</span>
                         </Button>
                     </div>
                 </div>
