@@ -175,7 +175,9 @@ export function NavMain({
                                                 }
                                             }}
                                         >
-                                            <item.icon />
+                                            <div className="flex items-center justify-center h-8 w-8 rounded-full bg-primary shrink-0">
+                                                <item.icon className="h-4 w-4 text-background" />
+                                            </div>
                                             <span style={{ fontFamily: 'Sora, sans-serif', fontWeight: 300 }}>
                                                 {item.title}
                                             </span>

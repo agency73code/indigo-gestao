@@ -1,162 +1,99 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { SectionHeader } from '@/components/configuracoes/SectionHeader';
-import { Settings, User, Bell, Shield, Zap } from 'lucide-react';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
-import {
-    PerfilSection,
-    PreferenciasSection,
-    NotificacoesSection,
-    SegurancaSection,
-    IntegracoesSection,
-} from '../components';
+import { useAuth } from '@/features/auth/hooks/useAuth';
+import { SettingsSidebar, type SettingsSection } from '../components/SettingsSidebar';
+import { AccountSettings } from '../components/AccountSettings';
+import { NotificationsSettings } from '../components/NotificationsSettings';
+import { SecuritySettings } from '../components/SecuritySettings';
+import { AppearanceSettings } from '../components/AppearanceSettings';
+import { IntegrationsSettings } from '../components/IntegrationsSettings';
+import { BillingSettings } from '../components/BillingSettings';
 
-export default function ConfiguracoesPage() {
+export default function ConfiguracoesPageNew() {
     const location = useLocation();
     const navigate = useNavigate();
     const { setPageTitle } = usePageTitle();
+    const { logout } = useAuth();
 
     useEffect(() => {
         setPageTitle('Configurações');
     }, [setPageTitle]);
 
-    // Determinar tab ativa baseada na URL
-    const getActiveTabFromPath = () => {
+    // Determinar seção ativa baseada na URL
+    const getSectionFromPath = (): SettingsSection => {
         const path = location.pathname;
-        if (path.includes('/perfil')) return 'perfil';
-        if (path.includes('/preferencias')) return 'preferencias';
         if (path.includes('/notificacoes')) return 'notificacoes';
         if (path.includes('/seguranca')) return 'seguranca';
+        if (path.includes('/aparencia')) return 'aparencia';
         if (path.includes('/integracoes')) return 'integracoes';
-        return 'perfil'; // default
+        if (path.includes('/faturamento')) return 'faturamento';
+        return 'conta'; // default
     };
 
-    const [activeTab, setActiveTab] = useState(getActiveTabFromPath());
+    const [activeSection, setActiveSection] = useState<SettingsSection>(getSectionFromPath());
 
-    // Estados para demonstração (sem lógica de salvamento)
-    const [notificacoes, setNotificacoes] = useState({
-        email: true,
-        push: false,
-        resumoSemanal: true,
-        lembretes: true,
-    });
-
-    // Atualizar tab quando a URL mudar
+    // Atualizar seção quando a URL mudar
     useEffect(() => {
-        setActiveTab(getActiveTabFromPath());
+        setActiveSection(getSectionFromPath());
     }, [location.pathname]);
 
-    // Navegar quando a tab mudar
-    const handleTabChange = (value: string) => {
-        setActiveTab(value);
-        if (value === 'perfil') {
+    // Navegar quando a seção mudar
+    const handleSectionChange = (section: SettingsSection) => {
+        setActiveSection(section);
+        if (section === 'conta') {
             navigate('/app/configuracoes');
         } else {
-            navigate(`/app/configuracoes/${value}`);
+            navigate(`/app/configuracoes/${section}`);
         }
     };
 
-    const handleNotificacaoChange = (key: string, value: boolean) => {
-        setNotificacoes((prev) => ({ ...prev, [key]: value }));
+    const handleLogout = async () => {
+        try {
+            await logout();
+            navigate('/login');
+        } catch (error) {
+            console.error('Erro ao fazer logout:', error);
+        }
     };
 
-    const handleSave = () => {
-        // Placeholder - não implementar lógica real
-        alert('Funcionalidade de salvamento será implementada');
-    };
-
-    const handleCancel = () => {
-        // Placeholder - não implementar lógica real
-        alert('Alterações canceladas');
+    // Renderizar o conteúdo correto baseado na seção ativa
+    const renderContent = () => {
+        switch (activeSection) {
+            case 'conta':
+                return <AccountSettings />;
+            case 'notificacoes':
+                return <NotificationsSettings />;
+            case 'seguranca':
+                return <SecuritySettings />;
+            case 'aparencia':
+                return <AppearanceSettings />;
+            case 'integracoes':
+                return <IntegrationsSettings />;
+            case 'faturamento':
+                return <BillingSettings />;
+            default:
+                return <AccountSettings />;
+        }
     };
 
     return (
-        <div className="container mx-auto py-6 px-4 max-w-6xl">
-
-            {/* Tabs */}
-            <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 lg:grid-cols-5 mb-8">
-                    <TabsTrigger value="perfil" className="flex items-center gap-2">
-                        <User className="w-4 h-4" />
-                        <span className="hidden sm:inline">Perfil</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="preferencias" className="flex items-center gap-2">
-                        <Settings className="w-4 h-4" />
-                        <span className="hidden sm:inline">Preferências</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="notificacoes" className="flex items-center gap-2">
-                        <Bell className="w-4 h-4" />
-                        <span className="hidden sm:inline">Notificações</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="seguranca" className="flex items-center gap-2">
-                        <Shield className="w-4 h-4" />
-                        <span className="hidden sm:inline">Segurança</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="integracoes" className="flex items-center gap-2">
-                        <Zap className="w-4 h-4" />
-                        <span className="hidden sm:inline">Integrações</span>
-                    </TabsTrigger>
-                </TabsList>
-
-                {/* Conteúdo das Tabs */}
-
-                {/* Perfil & Organização */}
-                <TabsContent value="perfil" className="space-y-6">
-                    <SectionHeader
-                        title="Perfil & Organização"
-                        description="Gerencie suas informações pessoais e da organização"
+        <div className="flex flex-col h-full w-full p-4">
+            {/* Card principal com layout bipartido */}
+            <div className="flex flex-1 min-h-0 bg-card rounded-lg border shadow-sm overflow-hidden">
+                {/* Sidebar interna de configurações */}
+                <div className="w-72 shrink-0 border-r bg-muted/10">
+                    <SettingsSidebar
+                        activeSection={activeSection}
+                        onSectionChange={handleSectionChange}
+                        onLogout={handleLogout}
                     />
-                    <PerfilSection />
-                </TabsContent>
+                </div>
 
-                {/* Preferências */}
-                <TabsContent value="preferencias" className="space-y-6">
-                    <SectionHeader
-                        title="Preferências"
-                        description="Configure suas preferências de visualização e formato"
-                    />
-                    <PreferenciasSection />
-                </TabsContent>
-
-                {/* Notificações */}
-                <TabsContent value="notificacoes" className="space-y-6">
-                    <SectionHeader
-                        title="Notificações"
-                        description="Configure como e quando você quer ser notificado"
-                    />
-                    <NotificacoesSection
-                        notificacoes={notificacoes}
-                        onNotificacaoChange={handleNotificacaoChange}
-                    />
-                </TabsContent>
-
-                {/* Segurança */}
-                <TabsContent value="seguranca" className="space-y-6">
-                    <SectionHeader
-                        title="Segurança"
-                        description="Gerencie sua senha e configurações de segurança"
-                    />
-                    <SegurancaSection />
-                </TabsContent>
-
-                {/* Integrações */}
-                <TabsContent value="integracoes" className="space-y-6">
-                    <SectionHeader
-                        title="Integrações"
-                        description="Conecte sua conta com outros serviços"
-                    />
-                    <IntegracoesSection />
-                </TabsContent>
-            </Tabs>
-
-            {/* Botões de Ação */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-end pt-6 border-t">
-                <Button variant="outline" onClick={handleCancel}>
-                    Cancelar
-                </Button>
-                <Button onClick={handleSave}>Salvar Alterações</Button>
+                {/* Conteúdo da seção selecionada */}
+                <div className="flex-1 min-w-0 overflow-hidden">
+                    {renderContent()}
+                </div>
             </div>
         </div>
     );
