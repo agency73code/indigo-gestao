@@ -11,6 +11,7 @@ export interface SavedReport {
     title: string;
     type: ReportType;
     status: ReportStatus;
+    area: string;
     patientId: string;
     therapistId: string;
     periodStart: string;
@@ -40,6 +41,7 @@ export interface SavedReport {
 export interface ReportListFilters {
     patientId?: string;
     therapistId?: string;
+    area?: string;
     startDate?: Date;
     endDate?: Date;
     status?: ReportStatus;

@@ -171,7 +171,7 @@ model relatorio {
   terapeutaId            String
   criado_em              DateTime @default(now())
   atualizado_em          DateTime @updatedAt
-  area String?
+  area String   @default("fonoaudiologia")
 
   cliente   cliente   @relation(fields: [clienteId], references: [id])
   terapeuta terapeuta @relation(fields: [terapeutaId], references: [id])
@@ -179,6 +179,8 @@ model relatorio {
   @@index([clienteId], map: "relatorio_clienteId_idx")
   @@index([terapeutaId], map: "relatorio_terapeutaId_idx")
   @@index([periodo_inicio, periodo_fim], map: "relatorio_periodo_idx")
+  @@index([clienteId, area], map: "relatorio_clienteId_area_idx")
+  @@index([area], map: "relatorio_area_idx")
 }
 
 model endereco {

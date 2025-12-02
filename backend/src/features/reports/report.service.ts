@@ -35,6 +35,7 @@ interface SaveReportInput {
     title: string;
     type: ReportType;
     status: ReportStatus;
+    area: string;
     patientId: string;
     therapistId: string;
     periodStart: Date;
@@ -73,6 +74,7 @@ export async function saveReport(input: SaveReportInput): Promise<SavedReport> {
         fullName: patient.nome ?? 'Cliente Indigo',
         birthDate: patient.dataNascimento ? formatDateOnly(patient.dataNascimento) : 'sem-data',
         generationDate,
+        area: input.area,
     });
 
     const fileDescriptor = buildReportFileDescriptor(input.title, patient.nome ?? 'cliente', generationDate);
@@ -89,6 +91,7 @@ export async function saveReport(input: SaveReportInput): Promise<SavedReport> {
             titulo: input.title,
             tipo: input.type,
             status: input.status,
+            area: input.area,
             periodo_inicio: input.periodStart,
             periodo_fim: input.periodEnd,
             observacoes_clinicas: input.clinicalObservations ?? null,
@@ -98,7 +101,6 @@ export async function saveReport(input: SaveReportInput): Promise<SavedReport> {
             pdf_nome: r2Meta.name,
             pdf_mime: r2Meta.mimeType,
             pdf_tamanho: r2Meta.size,
-            pdf_url: null,
             pasta_relatorios_drive: folderInfo.monthPrefix,
             cliente: { connect: { id: patient.id } },
             terapeuta: { connect: { id: therapist.id } },
@@ -119,6 +121,10 @@ export async function listReports(filters: ReportListFilters = {}): Promise<Save
     const therapistFilter = filters.restrictToTherapistId ?? filters.therapistId;
     if (therapistFilter) {
         where.terapeutaId = therapistFilter;
+    }
+
+    if (filters.area) {
+        where.area = filters.area;
     }
 
     if (filters.status) {
@@ -179,6 +185,7 @@ function mapToSavedReport(record: ReportRecord): SavedReport {
         title: record.titulo,
         type: record.tipo as ReportType,
         status: (record.status as ReportStatus) ?? 'final',
+        area: record.area ?? 'fonoaudiologia',
         patientId: record.clienteId,
         therapistId: record.terapeutaId,
         periodStart: formatDateOnly(record.periodo_inicio),
@@ -197,7 +204,7 @@ function mapToSavedReport(record: ReportRecord): SavedReport {
         }),
         ...(record.pdf_nome && { pdfFilename: record.pdf_nome }),
         ...(record.pasta_relatorios_drive && {
-            r2FolderPath: record.pasta_relatorios_drive,
+            driveFolderPath: record.pasta_relatorios_drive,
         }),
 
         ...(record.cliente && {

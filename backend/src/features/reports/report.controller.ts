@@ -29,6 +29,7 @@ export async function saveReport(req: Request, res: Response, next: NextFunction
             title: metadata.title,
             type: metadata.type,
             status: metadata.status,
+            area: metadata.area,
             patientId: metadata.patientId,
             therapistId: metadata.therapistId,
             periodStart: metadata.periodStart,
@@ -57,6 +58,7 @@ export async function listReports(req: Request, res: Response, next: NextFunctio
         const normalizedFilters: ReportListFilters = {
             ...(filters.patientId && { patientId: filters.patientId }),
             ...(canSeeAll && filters.therapistId && { therapistId: filters.therapistId }),
+            ...(filters.area && { area: filters.area }),
             ...(filters.startDate && { startDate: new Date(filters.startDate) }),
             ...(filters.endDate && { endDate: new Date(filters.endDate) }),
             ...(filters.status && filters.status !== 'all' && { status: filters.status }),

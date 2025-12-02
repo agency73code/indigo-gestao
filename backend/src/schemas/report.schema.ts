@@ -13,6 +13,7 @@ const dateStringSchema = z.string().refine((value) => {
 export const reportPayloadSchema = z.object({
     title: z.string().min(3),
     type: z.enum(['mensal', 'trimestral', 'semestral', 'anual', 'custom']),
+    area: z.string().min(3),
     patientId: z.string().min(1),
     therapistId: z.string().min(1),
     periodStart: z.coerce.date(),
@@ -39,6 +40,7 @@ export type reportPayloadSchema = z.infer<typeof reportPayloadSchema> & { status
 export const reportListQuerySchema = z.object({
     patientId: z.string().optional(),
     therapistId: z.string().optional(),
+    area: z.string().optional(),
     startDate: dateStringSchema.optional(),
     endDate: dateStringSchema.optional(),
     status: z.union([z.enum(['draft', 'final', 'archived']), z.literal('all')]).optional(),
