@@ -105,13 +105,6 @@ const data: {
             title: 'Configuração',
             url: '/app/configuracoes',
             icon: Settings2,
-            items: [
-                { title: 'Perfil & Organização', url: '/app/configuracoes/perfil' },
-                { title: 'Preferências', url: '/app/configuracoes/preferencias' },
-                { title: 'Notificações', url: '/app/configuracoes/notificacoes' },
-                { title: 'Segurança', url: '/app/configuracoes/seguranca' },
-                { title: 'Integrações', url: '/app/configuracoes/integracoes' },
-            ],
         },
     ],
     navSecondary: [

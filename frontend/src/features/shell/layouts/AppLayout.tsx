@@ -7,8 +7,6 @@ import { AbilityProvider } from '@/features/auth/abilities/AbilityProvider';
 import { AreaProvider } from '@/contexts/AreaContext';
 import PageTransition from '@/shared/components/layout/PageTransition';
 import ThemeToggle from '../components/ThemeToggle';
-import { Button } from '@/components/ui/button';
-import { Bell } from 'lucide-react';
 import { BackButton } from '@/components/layout/BackButton';
 
 type PageTitleContextType = {
@@ -183,12 +181,14 @@ export default function AppLayout() {
                                         {/* Botões de notificação e theme - ocultos no mobile */}
                                         <div className="hidden md:flex items-center gap-3 ml-auto">
                                             {headerActions}
+                                            {/* TODO: Implementar sistema de notificações
                                             <Button variant="ghost" size="sm" className="h-10 w-10 p-0 relative rounded-full bg-header-bg hover:bg-header-bg/80 transition-colors">
                                                 <Bell className="h-4 w-4 text-black dark:text-white" />
                                                 <span className="absolute top-0 right-0 h-3 w-3 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center">
                                                     2
                                                 </span>
                                             </Button>
+                                            */}
                                             <div className="h-10 w-10 rounded-full bg-black dark:bg-white flex items-center justify-center">
                                                 <ThemeToggle />
                                             </div>
