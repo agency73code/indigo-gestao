@@ -12,7 +12,7 @@ import {
     StatusToggle,
     ValidationErrors,
 } from '../../../editar-ocp';
-import { fetchProgramById } from '../../../editar-ocp/services';
+import { fetchProgramById, updateProgram } from '../../../editar-ocp/services';
 import type {
     ProgramDetail,
     UpdateProgramInput,
@@ -43,7 +43,6 @@ export default function ToEditarProgramaPage() {
     // Estados do formulário
     const [goalTitle, setGoalTitle] = useState('');
     const [goalDescription, setGoalDescription] = useState('');
-    const [shortTermGoalDescription, setShortTermGoalDescription] = useState('');
     const [currentPerformanceLevel, setCurrentPerformanceLevel] = useState('');
     const [stimuli, setStimuli] = useState<UpdateProgramInput['stimuli']>([]);
     const [notes, setNotes] = useState('');
@@ -80,7 +79,6 @@ export default function ToEditarProgramaPage() {
             // Pré-preencher formulário
             setGoalTitle(programData.goalTitle);
             setGoalDescription(programData.goalDescription || '');
-            setShortTermGoalDescription(programData.shortTermGoalDescription || '');
             setCurrentPerformanceLevel((programData as any).currentPerformanceLevel || '');
             setStimuli(
                 programData.stimuli.map((s) => ({
@@ -114,11 +112,6 @@ export default function ToEditarProgramaPage() {
         // Validar descrição do objetivo
         if (!goalDescription.trim()) {
             errors.goalDescription = 'A descrição do objetivo é obrigatória.';
-        }
-
-        // Validar objetivo de curto prazo
-        if (!shortTermGoalDescription.trim()) {
-            errors.shortTermGoalDescription = 'O objetivo de curto prazo é obrigatório.';
         }
 
         // Validar nível de desempenho atual (específico de TO)
@@ -165,9 +158,9 @@ export default function ToEditarProgramaPage() {
             setIsSaving(true);
 
             const input: any = {
+                id: programaId,
                 goalTitle,
                 goalDescription,
-                shortTermGoalDescription,
                 currentPerformanceLevel,
                 stimuli,
                 notes,
@@ -176,16 +169,8 @@ export default function ToEditarProgramaPage() {
                 prazoFim,
             };
 
-            // Mock: apenas simular salvamento
-            if (programaId === 'mock-to-001') {
-                console.log('[ToEditarProgramaPage] Mock: Salvando programa', input);
-                await new Promise((resolve) => setTimeout(resolve, 500));
-                toast.success('Programa atualizado com sucesso! (Mock)');
-            } else {
-                // Para programas reais, usar a API (não implementado ainda)
-                console.warn('[ToEditarProgramaPage] Atualização de programas reais não implementada ainda');
-                toast.success('Programa atualizado com sucesso!');
-            }
+            await updateProgram(input);
+            toast.success('Programa atualizado com sucesso!');
 
             setHasChanges(false);
             
@@ -225,7 +210,6 @@ export default function ToEditarProgramaPage() {
         const hasFormChanges =
             goalTitle !== program.goalTitle ||
             goalDescription !== (program.goalDescription || '') ||
-            shortTermGoalDescription !== (program.shortTermGoalDescription || '') ||
             currentPerformanceLevel !== ((program as any).currentPerformanceLevel || '') ||
             notes !== (program.notes || '') ||
             status !== program.status ||
@@ -243,7 +227,6 @@ export default function ToEditarProgramaPage() {
     }, [
         goalTitle,
         goalDescription,
-        shortTermGoalDescription,
         currentPerformanceLevel,
         stimuli,
         notes,
