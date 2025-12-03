@@ -180,56 +180,6 @@ export function prepareToActivityDurationData(sessoes: Sessao[]): ToActivityDura
  * Critério: atividades com "não desempenhou" > 0
  */
 export function prepareToAttentionActivities(sessoes: Sessao[]): ToAttentionActivityItem[] {
-  // Dados mockados para demonstração
-  if (!sessoes || sessoes.length === 0) {
-    return [
-      {
-        id: '1',
-        nome: 'Integração Sensorial',
-        counts: {
-          desempenhou: 4,
-          comAjuda: 5,
-          naoDesempenhou: 6,
-        },
-        total: 15,
-        durationMinutes: 28,
-      },
-      {
-        id: '2',
-        nome: 'Planejamento Motor',
-        counts: {
-          desempenhou: 5,
-          comAjuda: 6,
-          naoDesempenhou: 4,
-        },
-        total: 15,
-        durationMinutes: 18,
-      },
-      {
-        id: '3',
-        nome: 'Coordenação Bilateral',
-        counts: {
-          desempenhou: 8,
-          comAjuda: 4,
-          naoDesempenhou: 3,
-        },
-        total: 15,
-        durationMinutes: 20,
-      },
-      {
-        id: '4',
-        nome: 'Equilíbrio e Postura',
-        counts: {
-          desempenhou: 10,
-          comAjuda: 3,
-          naoDesempenhou: 2,
-        },
-        total: 15,
-        durationMinutes: 22,
-      },
-    ];
-  }
-
   // Mapear atividades e suas contagens
   const atividadeStats = new Map<
     string,
@@ -302,18 +252,6 @@ export function prepareToAttentionActivities(sessoes: Sessao[]): ToAttentionActi
  * Calcula o percentual de desempenho independente (sem ajuda) por categoria
  */
 export function prepareToAutonomyByCategory(sessoes: Sessao[]): ToAutonomyData[] {
-  // Dados mockados para demonstração
-  if (!sessoes || sessoes.length === 0) {
-    return [
-      { categoria: 'Atividades de Vida Diária', autonomia: 85 },
-      { categoria: 'Coordenação Motora Fina', autonomia: 78 },
-      { categoria: 'Equilíbrio e Postura', autonomia: 72 },
-      { categoria: 'Integração Sensorial', autonomia: 65 },
-      { categoria: 'Força e Resistência', autonomia: 60 },
-      { categoria: 'Planejamento Motor', autonomia: 55 },
-    ];
-  }
-
   // Mapear categorias e suas contagens
   const categoriaStats = new Map<
     string,

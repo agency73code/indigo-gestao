@@ -1,3 +1,4 @@
+import { buildApiUrl } from '@/lib/api';
 import type { Sessao, ResumoSessao, ProgramDetail } from './types';
 import type { AreaType } from '@/contexts/AreaContext';
 
@@ -63,19 +64,27 @@ export async function listSessionsByPatient(
     pageSize = 10
   } = filters;
   try {
-    // Construir URL com query params
-    const url = new URL(`/api/ocp/clients/${patientId}/sessions`, window.location.origin);
-    // Adiciona área (obrigatório)
-    url.searchParams.set('area', area);
-    // Adiciona filtros se houver
-    if (q) url.searchParams.set('q', q);
-    if (dateRange && dateRange !== 'all') url.searchParams.set('dateRange', dateRange);
-    if (programId) url.searchParams.set('programId', programId);
-    if (therapistId) url.searchParams.set('therapistId', therapistId);
-    if (sort) url.searchParams.set('sort', sort);
-    // NÃO envia page/pageSize por enquanto (backend atual não suporta)
+    // // Construir URL com query params
+    // // const url = new URL(`/api/ocp/clients/${patientId}/sessions`, window.location.origin);
+    // // Adiciona área (obrigatório)
+    // url.searchParams.set('area', area);
+    // // Adiciona filtros se houver
+    // if (q) url.searchParams.set('q', q);
+    // if (dateRange && dateRange !== 'all') url.searchParams.set('dateRange', dateRange);
+    // if (programId) url.searchParams.set('programId', programId);
+    // if (therapistId) url.searchParams.set('therapistId', therapistId);
+    // if (sort) url.searchParams.set('sort', sort);
 
-    const res = await fetch(url.pathname + url.search, {
+    const url = buildApiUrl(`/api/ocp/clients/${patientId}/sessions`, {
+      area,
+      q,
+      dateRange,
+      programId,
+      therapistId,
+      sort,
+    });
+
+    const res = await fetch(url, {
       method: 'GET',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' }

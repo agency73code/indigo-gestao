@@ -186,9 +186,16 @@ export async function listSessionsByClient(req: Request, res: Response) {
     try {
         const { clientId } = req.params;
         if (!clientId) return res.status(400).json({ sucess: false, message: 'ID do paciente é obrigatório' });
+
         const rawArea = req.query.area;
         const area = Array.isArray(rawArea) ? rawArea[0] : rawArea;
         if (typeof area !== 'string') return res.status(400).json({ success: false, message: 'Area é obrigatório' });
+
+        const rawTherapistId = req.query.therapistId;
+        const therapistId: string | undefined =
+            typeof rawTherapistId === 'string'
+                ? rawTherapistId
+                : req.user?.id;
 
         const sortParam = req.query.sort;
         const sort =
@@ -196,7 +203,7 @@ export async function listSessionsByClient(req: Request, res: Response) {
                 ? sortParam
                 : 'recent';
 
-        const sessions = await OcpService.listSessionsByClient(clientId, sort, area);
+        const sessions = await OcpService.listSessionsByClient(clientId, area, therapistId, sort);
         return res.json ({ data: OcpNormalizer.mapSessionList(sessions) });
     } catch (error) {
         console.error(error);
@@ -226,8 +233,10 @@ export async function getProgramsReport(req: Request, res: Response) {
             ? req.query.clientId
             : undefined;
         const area = typeof req.query.area === 'string' ? req.query.area : undefined;
-        const data = await OcpService.getProgramsReport(clientId, area);
+        const stimulusId = typeof req.query.stimulusId === 'string' ? req.query.stimulusId : undefined;
+        const therapistId = typeof req.query.therapistId === 'string' ? req.query.therapistId : undefined;
 
+        const data = await OcpService.getProgramsReport(clientId, area, stimulusId, therapistId);
         res.json({ data })
     } catch (error) {
         console.error(error);
@@ -240,10 +249,11 @@ export async function getProgramsReport(req: Request, res: Response) {
 
 export async function getStimulusReport(req: Request, res: Response) {
     try {
+        const area = typeof req.query.area === 'string' ? req.query.area : undefined;
         const clientId = req.query.clientId as string | undefined;
         const programId = req.query.programaId as string | undefined;
-        const area = typeof req.query.area === 'string' ? req.query.area : undefined;
-        const data = await OcpService.getStimulusReport(clientId, programId, area);
+        const therapistId = req.query.therapistId as string | undefined;
+        const data = await OcpService.getStimulusReport(clientId, programId, area, therapistId);
 
         res.json({ data });
     } catch (error) {

@@ -279,12 +279,15 @@ function calculateSessionIndependency(session: OcpType.SessionDTO) {
     return independentTrials / totalTrials;
 }
 
-export async function listSessionsByClient(clientId: string, sort: SessionSort = 'recent', area: string) {
+export async function listSessionsByClient(clientId: string, area: string, therapistId?: string, sort: SessionSort = 'recent') {
+    const where: Prisma.sessaoWhereInput = {};
+
+    if (clientId) where.cliente_id = clientId;
+    if (area) where.area = area;
+    if (therapistId) where.terapeuta_id = therapistId;
+
     const sessions = await prisma.sessao.findMany({
-        where: {
-            area,
-            cliente_id: clientId,
-        },
+        where,
         select: {
             id: true,
             cliente_id: true,
@@ -486,29 +489,23 @@ export async function getKpis(filtros: OcpType.KpisFilters) {
     };
 }
 
-export async function getStimulusReport(clientId?: string, programId?: string, area?: string) {
+export async function getStimulusReport(clientId?: string, programId?: string, area?: string, therapistId?: string) {
     const where: {
         ocp: {
             cliente_id?: string;
             id?: number;
             area?: string;
+            terapeuta_id?: string;
         };
     } = {
         ocp: {},
     };
 
-    if (clientId) {
-        where.ocp.cliente_id = clientId;
-    }
-
-    if (programId) {
-        where.ocp.id = Number(programId);
-    }
-
-    if (area) {
-        where.ocp.area = area;
-    }
-
+    if (clientId) where.ocp.cliente_id = clientId;
+    if (programId) where.ocp.id = Number(programId);
+    if (area) where.ocp.area = area;
+    if (therapistId) where.ocp.terapeuta_id = therapistId;
+    
     return prisma.estimulo_ocp.findMany({
         where,
         select: {
@@ -521,16 +518,19 @@ export async function getStimulusReport(clientId?: string, programId?: string, a
     });
 }
 
-export async function getProgramsReport(clientId?: string, area?: string) {
+export async function getProgramsReport(clientId?: string, area?: string, stimulusId?: string, therapistId?: string) {
     const where: Prisma.ocpWhereInput = {};
     
-    if (clientId) {
-        where.cliente_id = clientId;
+    if (clientId) where.cliente_id = clientId;
+    if (area) where.area = area;
+    if (stimulusId) {
+        where.estimulo_ocp = {
+            some: {
+                id: Number(stimulusId),
+            },
+        };
     }
-
-    if (area) {
-        where.area = area;
-    }
+    if (therapistId) where.terapeuta_id = therapistId;
 
     const ocps = await prisma.ocp.findMany({
         where,

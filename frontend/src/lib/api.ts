@@ -3,6 +3,7 @@ import { authFetch } from "./http";
 import type { Terapeuta, Cliente } from "@/features/cadastros/types/cadastros.types";
 import type { Bank } from '@/common/constants/banks';
 import type { Therapist as TerapeutaConsulta, Patient } from '@/features/consultas/types/consultas.types'
+import type { QueryParams } from "./types/api.types";
 
 const AUTH_BYPASS =
   import.meta.env.DEV && import.meta.env.VITE_AUTH_BYPASS === 'true';
@@ -263,4 +264,18 @@ export async function getClientesAtivos(): Promise<number> {
   }
 
   return data?.data ?? 0;
+}
+
+export function buildApiUrl(path: string, params?: QueryParams): string {
+  const url = new URL(path, window.location.origin);
+
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value === undefined || value === null || value === '') return;
+
+      url.searchParams.set(key, String(value));
+    });
+  }
+
+  return url.pathname + url.search;
 }

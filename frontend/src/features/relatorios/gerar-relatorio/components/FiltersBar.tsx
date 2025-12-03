@@ -8,6 +8,7 @@ import type { Filters } from '../types';
 import SearchableSelect from './SearchableSelect';
 import { fetchAndSet } from '../utils/fetchAndSet';
 import type { AreaType } from '@/contexts/AreaContext';
+import { buildApiUrl } from '@/lib/api';
 
 interface FiltersBarProps {
     value: Filters;
@@ -20,28 +21,38 @@ export function FiltersBar({ value, onChange, area }: FiltersBarProps) {
     const [terapeutas, setTerapeutas] = useState<{ id: string; nome: string }[]>([]);
     const [programas, setProgramas] = useState<{ id: string; nome: string }[]>([]);
     const [estimulos, setEstimulos] = useState<{ id: string; nome: string }[]>([]);
+
     useEffect(() => {
         fetchAndSet('/api/terapeutas/relatorio', setTerapeutas, 'terapeutas');
     }, []);
 
     useEffect(() => {
         if (value.pacienteId && area) {
-            fetchAndSet(
-                `/api/ocp/reports/filters/programs?clientId=${value.pacienteId}&area=${encodeURIComponent(area)}`,
-                setProgramas,
-                'programas'
-            );
+            const url = buildApiUrl('/api/ocp/reports/filters/programs', {
+                area,
+                clientId: value.pacienteId,
+                stimulusId: value.estimuloId,
+                therapistId: value.terapeutaId,
+            });
+
+            fetchAndSet(url, setProgramas, 'programas');
         } else {
             setProgramas([]);
         }
-    }, [value.pacienteId, area]);
+    }, [value, area]);
 
     useEffect(() => {
         if (value.pacienteId && area) {
-            const url = `/api/ocp/reports/filters/stimulus?clientId=${value.pacienteId}${value.programaId ? `&programaId=${value.programaId}` : ''}&area=${area}`;
+            const url = buildApiUrl('/api/ocp/reports/filters/stimulus', {
+                area,
+                clientId: value.pacienteId,
+                programId: value.programaId,
+                therapistId: value.terapeutaId,
+            });
+            
             fetchAndSet(url, setEstimulos, 'estimulos');
         }
-    }, [value.pacienteId, value.programaId, area]);
+    }, [value, area]);
 
     const updateFilter = (key: keyof Filters, newValue: any) => {
         onChange({ ...value, [key]: newValue });
