@@ -1,0 +1,54 @@
+import { Plus, Edit } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import ActionBar from '@/components/ui/action-bar';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { musiRoutes } from '../config';
+
+interface MusiProgramActionBarProps {
+    program: {
+        id: string;
+        patientId: string;
+    };
+}
+
+export default function MusiProgramActionBar({ program }: MusiProgramActionBarProps) {
+    const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+
+    const handleRegisterSession = () => {
+        navigate(musiRoutes.newSession(program.id, program.patientId));
+    };
+
+    const handleEditProgram = () => {
+        const patientId = searchParams.get('patientId');
+        const path = musiRoutes.edit(program.id);
+        const url = patientId ? `${path}?patientId=${patientId}` : path;
+
+        console.log('[MusiProgramActionBar] Navegando para:', url);
+        console.log('[MusiProgramActionBar] Program ID:', program.id);
+        console.log('[MusiProgramActionBar] Path from musiRoutes.edit:', path);
+
+        navigate(url);
+    };
+
+    return (
+        <ActionBar>
+            <Button
+                onClick={handleRegisterSession}
+                className="h-11 rounded-full gap-2"
+            >
+                <Plus className="h-4 w-4" />
+                Registrar Sessão
+            </Button>
+
+            <Button
+                onClick={handleEditProgram}
+                variant="outline"
+                className="h-11 rounded-full gap-2"
+            >
+                <Edit className="h-4 w-4" />
+                Editar Programa
+            </Button>
+        </ActionBar>
+    );
+}

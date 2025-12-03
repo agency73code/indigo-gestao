@@ -45,7 +45,7 @@ export function useProgramAreas(): AreaMeta[] {
             title: 'Musicoterapia', 
             path: '/app/programas/musicoterapia',
             icon: Music,
-            implemented: false
+            implemented: true
         },
         { 
             id: 'fisioterapia', 

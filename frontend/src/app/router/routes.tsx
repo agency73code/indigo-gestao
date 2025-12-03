@@ -106,6 +106,27 @@ const AreaHubMovimentoPage = lazy(
 const AreaHubMusiPage = lazy(
     () => import('@/features/programas/variants/musicoterapia/pages/AreaHubMusiPage'),
 );
+const MusiCadastroProgramaPage = lazy(
+    () => import('@/features/programas/variants/musicoterapia/pages/MusiCadastroProgramaPage'),
+);
+const MusiConsultaProgramasPage = lazy(
+    () => import('@/features/programas/variants/musicoterapia/pages/MusiConsultaProgramasPage'),
+);
+const MusiDetalheProgramaPage = lazy(
+    () => import('@/features/programas/variants/musicoterapia/pages/MusiDetalheProgramaPage'),
+);
+const MusiEditarProgramaPage = lazy(
+    () => import('@/features/programas/variants/musicoterapia/pages/MusiEditarProgramaPage'),
+);
+const RegistrarSessaoMusiPage = lazy(
+    () => import('@/features/programas/variants/musicoterapia/pages/RegistrarSessaoMusiPage'),
+);
+const ConsultarSessoesMusiPage = lazy(
+    () => import('@/features/programas/variants/musicoterapia/pages/ConsultarSessoesMusiPage'),
+);
+const DetalheSessaoMusiPage = lazy(
+    () => import('@/features/programas/variants/musicoterapia/pages/DetalheSessaoMusiPage'),
+);
 
 // Novas áreas - páginas em construção
 const PsicoterapiaPage = lazy(
@@ -453,6 +474,78 @@ export const router = createBrowserRouter([
                                     </Suspense>
                                 ),
                                 handle: { breadcrumb: 'Musicoterapia', title: 'Musicoterapia' },
+                            },
+                            {
+                                path: 'programas/musicoterapia/ocp/novo',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <MusiCadastroProgramaPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Novo Programa', title: 'Novo Programa - Musicoterapia' },
+                            },
+                            {
+                                path: 'programas/musicoterapia/ocp/:programaId/editar',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <MusiEditarProgramaPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Editar Programa', title: 'Editar Programa - Musicoterapia' },
+                            },
+                            {
+                                path: 'programas/musicoterapia/consultar',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <MusiConsultaProgramasPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Consultar Programas', title: 'Consultar Programas - Musicoterapia' },
+                            },
+                            {
+                                path: 'programas/musicoterapia/programa/:programaId',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <MusiDetalheProgramaPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Detalhe do Programa', title: 'Programa - Musicoterapia' },
+                            },
+                            {
+                                path: 'programas/musicoterapia/sessoes/registrar',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <RegistrarSessaoMusiPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Registrar Sessão', title: 'Registrar Sessão - Musicoterapia' },
+                            },
+                            {
+                                path: 'programas/musicoterapia/sessoes',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <ConsultarSessoesMusiPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Sessões', title: 'Sessões - Musicoterapia' },
+                            },
+                            {
+                                path: 'programas/musicoterapia/sessoes/consultar',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <ConsultarSessoesMusiPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Consultar Sessões', title: 'Consultar Sessões - Musicoterapia' },
+                            },
+                            {
+                                path: 'programas/musicoterapia/sessoes/:sessaoId',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <DetalheSessaoMusiPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Detalhe da Sessão', title: 'Detalhe da Sessão - Musicoterapia' },
                             },
                             {
                                 path: 'programas/psicoterapia',

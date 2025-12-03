@@ -1,0 +1,70 @@
+/**
+ * Serviço mock para desenvolvimento de Musicoterapia
+ * Simula chamadas de API para programas de Musicoterapia
+ */
+
+import { mockMusiProgram } from './programMock';
+import { mockMusiSessions } from './mockSessions';
+import type { ProgramDetail } from '../../../detalhe-ocp/types';
+import type { SessionListItem } from '../../../detalhe-ocp/types';
+import type { SerieLinha } from '../../../relatorio-geral/types';
+
+export async function fetchMusiProgramById(id: string): Promise<ProgramDetail> {
+    // Simular delay de rede
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    console.log('🎵 Retornando programa MOCK de Musicoterapia:', id);
+    
+    // Transformar o mock para o formato ProgramDetail flat esperado
+    return {
+        id: mockMusiProgram.id,
+        name: mockMusiProgram.name,
+        patientId: mockMusiProgram.patientId,
+        patientName: mockMusiProgram.patient.name,
+        patientGuardian: mockMusiProgram.patient.guardianName,
+        patientAge: mockMusiProgram.patient.age,
+        patientPhotoUrl: mockMusiProgram.patient.photoUrl,
+        therapistId: mockMusiProgram.therapistId,
+        therapistName: mockMusiProgram.therapist.name,
+        therapistPhotoUrl: mockMusiProgram.therapist.photoUrl,
+        createdAt: mockMusiProgram.createdAt,
+        goalTitle: mockMusiProgram.goalTitle,
+        goalDescription: mockMusiProgram.goalDescription,
+        longTermGoalDescription: mockMusiProgram.goalDescription,
+        shortTermGoalDescription: mockMusiProgram.shortTermGoalDescription,
+        stimuliApplicationDescription: mockMusiProgram.stimuliApplicationDescription,
+        stimuli: mockMusiProgram.stimuli,
+        criteria: mockMusiProgram.criteria,
+        notes: mockMusiProgram.notes,
+        status: mockMusiProgram.status,
+        prazoInicio: mockMusiProgram.prazoInicio,
+        prazoFim: mockMusiProgram.prazoFim,
+    };
+}
+
+export async function fetchMusiRecentSessions(programId: string, limit: number = 5): Promise<SessionListItem[]> {
+    // Simular delay de rede
+    await new Promise(resolve => setTimeout(resolve, 400));
+    
+    console.log('📅 Retornando sessões MOCK de Musicoterapia:', programId, 'limit:', limit);
+    
+    return mockMusiSessions.slice(0, limit);
+}
+
+export async function fetchMusiProgramChart(programId: string): Promise<SerieLinha[]> {
+    // Simular delay de rede
+    await new Promise(resolve => setTimeout(resolve, 600));
+    
+    console.log('📊 Retornando gráfico geral MOCK de Musicoterapia:', programId);
+    
+    // Retornar evolução geral do programa (não de um estímulo específico)
+    const mockChartData: SerieLinha[] = [
+        { x: '15/11', acerto: 60, independencia: 35 },
+        { x: '18/11', acerto: 65, independencia: 40 },
+        { x: '22/11', acerto: 70, independencia: 45 },
+        { x: '25/11', acerto: 75, independencia: 50 },
+        { x: '28/11', acerto: 85, independencia: 60 },
+    ];
+    
+    return mockChartData;
+}
