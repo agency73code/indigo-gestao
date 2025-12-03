@@ -556,8 +556,9 @@ export function GerarRelatorioPage() {
             throw new Error('Usuário não autenticado');
         }
 
-        // Validar se há dados para salvar
-        if (!kpis) {
+        // Validar se há dados para salvar 
+        const reportKpis = kpis || adaptedData?.kpis;
+        if (!reportKpis) {
             toast.error('Aguarde o carregamento dos dados do relatório');
             throw new Error('Dados do relatório ainda não foram carregados');
         }
@@ -593,12 +594,12 @@ export function GerarRelatorioPage() {
         // Preparar dados gerados do relatório
         const generatedData = {
             kpis: {
-                acerto: kpis.acerto || 0,
-                independencia: kpis.independencia || 0,
-                tentativas: kpis.tentativas || 0,
-                sessoes: kpis.sessoes || 0,
-                assiduidade: kpis.assiduidade,
-                gapIndependencia: kpis.gapIndependencia,
+                acerto: reportKpis.acerto || 0,
+                independencia: reportKpis.independencia || 0,
+                tentativas: reportKpis.tentativas || 0,
+                sessoes: reportKpis.sessoes || 0,
+                assiduidade: reportKpis.assiduidade,
+                gapIndependencia: reportKpis.gapIndependencia,
             },
             graphic: serieLinha.map(item => ({
                 x: item.x || '',

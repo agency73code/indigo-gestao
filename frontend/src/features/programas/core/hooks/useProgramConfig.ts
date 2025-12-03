@@ -25,13 +25,12 @@ export function useProgramAreas(): AreaMeta[] {
             icon: Puzzle,
             implemented: true
         },
-        // Área quase pronta
         { 
             id: 'terapia-ocupacional', 
             title: 'Terapia Ocupacional', 
             path: '/app/programas/terapia-ocupacional',
             icon: Hand,
-            implemented: 'in-progress'
+            implemented: true
         },
         // Áreas em planejamento
         { 

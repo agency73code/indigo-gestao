@@ -7,10 +7,6 @@ import type {
   ReportGeneratedData,
   ReportFiltersApplied,
 } from '../types';
-import { mockReports, mockPatients, mockTherapists } from '../mocks';
-
-// Simula delay de rede
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 /**
  * Resposta paginada da API de relatórios
@@ -92,8 +88,8 @@ export async function getAllReports(filters?: ReportListFilters): Promise<Report
       totalPages: 0,
     };
   } catch (error) {
-    console.error('Erro ao buscar relatórios, retornando mock:', error);
-    return processReportsLocally(mockReports, filters);
+    console.error('Erro ao buscar relatórios:', error);
+    throw error;
   }
 }
 
@@ -101,164 +97,90 @@ export async function getAllReports(filters?: ReportListFilters): Promise<Report
  * Busca relatório por ID
  */
 export async function getReportById(id: string): Promise<SavedReport | null> {
-  console.log('🔍 getReportById chamado com ID:', id);
-  await delay(300);
+  const url = `/api/relatorios/${id}`;
   
-  try {
-    const url = `/api/relatorios/${id}`;
-    console.log('📡 Fazendo requisição para:', url);
-    
-    const res = await fetch(url, {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+  const res = await fetch(url, {
+    method: 'GET',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
 
-    console.log('📥 Resposta recebida - Status:', res.status, res.ok);
-
-    if (!res.ok) {
-      if (res.status === 404) {
-        console.log('⚠️ Relatório não encontrado no backend, buscando no mock');
-        const mockReport = mockReports.find((r: SavedReport) => r.id === id) || null;
-        console.log('📦 Mock encontrado:', mockReport ? 'SIM' : 'NÃO');
-        return mockReport;
-      }
-      throw new Error('Falha ao carregar relatório');
+  if (!res.ok) {
+    if (res.status === 404) {
+      return null;
     }
-
-    const report = (await res.json()) as SavedReport;
-    console.log('✅ Relatório carregado do backend:', report.id);
-    return report;
-  } catch (error) {
-    console.error('❌ Erro ao buscar relatório, usando mock:', error);
-    const mockReport = mockReports.find((r: SavedReport) => r.id === id) || null;
-    console.log('📦 Mock encontrado:', mockReport ? `SIM (${mockReport.id})` : 'NÃO');
-    return mockReport;
+    throw new Error('Falha ao carregar relatório');
   }
+
+  const report = (await res.json()) as SavedReport;
+  return report;
 }
 
 /**
  * Cria novo relatório
  */
 export async function createReport(input: CreateReportInput): Promise<SavedReport> {
-  try {
-    const res = await fetch('/api/relatorios', {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(input)
-    });
+  const res = await fetch('/api/relatorios', {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(input)
+  });
 
-    if (!res.ok) {
-      let errorMessage = 'Falha ao criar relatório';
-      const errorText = await res.text();
+  if (!res.ok) {
+    let errorMessage = 'Falha ao criar relatório';
+    const errorText = await res.text();
 
-      if (errorText) {
-        try {
-          const parsed = JSON.parse(errorText);
-          if (parsed?.message) {
-            errorMessage = parsed.message;
-          }
-        } catch {
-          errorMessage = errorText;
+    if (errorText) {
+      try {
+        const parsed = JSON.parse(errorText);
+        if (parsed?.message) {
+          errorMessage = parsed.message;
         }
+      } catch {
+        errorMessage = errorText;
       }
-
-      throw new Error(errorMessage);
     }
 
-    const createdReport = (await res.json()) as SavedReport;
-    mockReports.push(createdReport);
-    return createdReport;
-  } catch (error) {
-    if (error instanceof Error && error.name !== 'TypeError') {
-      throw error;
-    }
-
-    console.log('⚠️ Backend não disponível, criando relatório localmente');
-    
-    // Fallback: criar mock local
-    const newReport: SavedReport = {
-      id: `report_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      title: input.title,
-      type: input.type,
-      area: input.area,
-      patientId: input.patientId,
-      therapistId: input.therapistId,
-      periodStart: input.periodStart,
-      periodEnd: input.periodEnd,
-      filters: input.filters,
-      clinicalObservations: input.clinicalObservations,
-      generatedData: input.generatedData,
-      status: input.status || 'final',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    
-    mockReports.push(newReport);
-    return newReport;
+    throw new Error(errorMessage);
   }
+
+  const createdReport = (await res.json()) as SavedReport;
+  return createdReport;
 }
 
 /**
  * Arquiva relatório (status='archived')
  */
 export async function archiveReport(id: string): Promise<void> {
-  await delay(400);
-  
-  try {
-    const res = await fetch(`/api/reports/${id}/archive`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-    });
+  const res = await fetch(`/api/reports/${id}/archive`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+  });
 
-    if (!res.ok) {
-      let errorMessage = 'Falha ao arquivar relatório';
-      const errorText = await res.text();
+  if (!res.ok) {
+    let errorMessage = 'Falha ao arquivar relatório';
+    const errorText = await res.text();
 
-      if (errorText) {
-        try {
-          const parsed = JSON.parse(errorText);
-          if (parsed?.message) {
-            errorMessage = parsed.message;
-          }
-        } catch {
-          errorMessage = errorText;
+    if (errorText) {
+      try {
+        const parsed = JSON.parse(errorText);
+        if (parsed?.message) {
+          errorMessage = parsed.message;
         }
+      } catch {
+        errorMessage = errorText;
       }
-
-      throw new Error(errorMessage);
     }
 
-    const archivedReport = (await res.json()) as SavedReport;
-    const reportIndex = mockReports.findIndex((r: SavedReport) => r.id === archivedReport.id);
-    if (reportIndex !== -1) {
-      mockReports[reportIndex] = archivedReport;
-    }
-  } catch (error) {
-    if (error instanceof Error && error.name !== 'TypeError') {
-      throw error;
-    }
-
-    console.log('⚠️ Backend não disponível, arquivando relatório localmente');
-    
-    const reportIndex = mockReports.findIndex((r: SavedReport) => r.id === id);
-    if (reportIndex === -1) {
-      throw new Error('Relatório não encontrado');
-    }
-    
-    mockReports[reportIndex] = {
-      ...mockReports[reportIndex],
-      status: 'archived',
-      updatedAt: new Date().toISOString()
-    };
+    throw new Error(errorMessage);
   }
 }
 
@@ -266,34 +188,20 @@ export async function archiveReport(id: string): Promise<void> {
  * Gera PDF do relatório
  */
 export async function generateReportPdf(id: string): Promise<string> {
-  await delay(1500);
-  
-  try {
-    const res = await fetch(`/api/reports/${id}/pdf`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-    });
+  const res = await fetch(`/api/reports/${id}/pdf`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+  });
 
-    if (!res.ok) {
-      throw new Error('Falha ao gerar PDF');
-    }
-
-    const result = (await res.json()) as { pdfUrl: string };
-    
-    // Atualiza o relatório com a URL do PDF
-    const reportIndex = mockReports.findIndex((r: SavedReport) => r.id === id);
-    if (reportIndex !== -1) {
-      mockReports[reportIndex].pdfUrl = result.pdfUrl;
-    }
-    
-    return result.pdfUrl;
-  } catch (error) {
-    console.error('Erro ao gerar PDF:', error);
-    throw new Error('Erro ao gerar PDF do relatório');
+  if (!res.ok) {
+    throw new Error('Falha ao gerar PDF');
   }
+
+  const result = (await res.json()) as { pdfUrl: string };
+  return result.pdfUrl;
 }
 
 /**
@@ -367,17 +275,10 @@ export async function getAllPatients(): Promise<Paciente[]> {
       })
     );
     
-    if (clientsWithAvatar.length === 0) {
-      console.log('⚠️ Backend retornou 0 clientes, usando mocks');
-      await delay(200);
-      return [...mockPatients];
-    }
-    
     return clientsWithAvatar;
   } catch (error) {
-    console.error('Erro ao buscar clientes, retornando mock:', error);
-    await delay(200);
-    return [...mockPatients];
+    console.error('Erro ao buscar clientes:', error);
+    throw error;
   }
 }
 
@@ -385,47 +286,35 @@ export async function getAllPatients(): Promise<Paciente[]> {
  * Busca todos os terapeutas (para formulários/filtros)
  */
 export async function getAllTherapists(): Promise<Terapeuta[]> {
-  try {
-    const res = await fetch('/api/links/getAllTherapists', {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+  const res = await fetch('/api/links/getAllTherapists', {
+    method: 'GET',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
 
-    if (!res.ok) {
-      throw new Error('Falha ao carregar terapeutas');
-    }
-    
-    const therapists = (await res.json()) as Terapeuta[];
-
-    const therapistsWithAvatar = await Promise.all(
-      therapists.map(async (t) => {
-        try {
-          const avatarRes = await fetch(`${import.meta.env.VITE_API_URL}/arquivos/getAvatar?ownerId=${t.id}&ownerType=terapeuta`, {
-            credentials: 'include',
-          });
-          const data = await avatarRes.json();
-          return { ...t, photoUrl: data.avatarUrl ?? null };
-        } catch {
-          return { ...t, photoUrl: null };
-        }
-      })
-    );
-    
-    if (therapistsWithAvatar.length === 0) {
-      console.log('⚠️ Backend retornou 0 terapeutas, usando mocks');
-      await delay(200);
-      return [...mockTherapists];
-    }
-    
-    return therapistsWithAvatar;
-  } catch (error) {
-    console.error('Erro ao buscar terapeutas, retornando mock:', error);
-    await delay(200);
-    return [...mockTherapists];
+  if (!res.ok) {
+    throw new Error('Falha ao carregar terapeutas');
   }
+  
+  const therapists = (await res.json()) as Terapeuta[];
+
+  const therapistsWithAvatar = await Promise.all(
+    therapists.map(async (t) => {
+      try {
+        const avatarRes = await fetch(`${import.meta.env.VITE_API_URL}/arquivos/getAvatar?ownerId=${t.id}&ownerType=terapeuta`, {
+          credentials: 'include',
+        });
+        const data = await avatarRes.json();
+        return { ...t, photoUrl: data.avatarUrl ?? null };
+      } catch {
+        return { ...t, photoUrl: null };
+      }
+    })
+  );
+  
+  return therapistsWithAvatar;
 }
 
 // ==================== FUNÇÕES AUXILIARES (FILTROS LOCAIS) ====================
@@ -441,23 +330,6 @@ function processReportsLocally(reports: SavedReport[], filters?: ReportListFilte
   const pageSize = filters?.pageSize || 10;
   
   let filtered = [...reports];
-  
-  // 🔥 POPULA patient e therapist nos relatórios (se ainda não estiverem)
-  filtered = filtered.map(report => {
-    if (!report.patient) {
-      const patient = mockPatients.find(p => p.id === report.patientId);
-      if (patient) {
-        return { ...report, patient };
-      }
-    }
-    if (!report.therapist) {
-      const therapist = mockTherapists.find(t => t.id === report.therapistId);
-      if (therapist) {
-        return { ...report, therapist };
-      }
-    }
-    return report;
-  });
   
   if (!filters) {
     // Sem filtros, apenas pagina

@@ -1,21 +1,5 @@
-import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from '@/components/ui/chart';
-
-const chartConfig = {
-  duracao: {
-    label: 'Duração',
-    color: '#2C7FFF',
-  },
-  label: {
-    color: 'hsl(var(--background))',
-  },
-} satisfies ChartConfig;
+import { BarChart3 } from 'lucide-react';
 
 export interface ToActivityDurationData {
   atividade: string;
@@ -30,13 +14,13 @@ interface ToActivityDurationChartProps {
 export function ToActivityDurationChart({ data, loading = false }: ToActivityDurationChartProps) {
   if (loading) {
     return (
-      <Card>
+      <Card className="h-full">
         <CardHeader>
           <CardTitle>Tempo por Atividade</CardTitle>
           <CardDescription>Carregando dados de duração...</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center h-[400px]">
+          <div className="flex items-center justify-center h-[280px]">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         </CardContent>
@@ -46,22 +30,28 @@ export function ToActivityDurationChart({ data, loading = false }: ToActivityDur
 
   if (!data || data.length === 0) {
     return (
-      <Card>
+      <Card className="h-full">
         <CardHeader>
           <CardTitle>Tempo por Atividade</CardTitle>
           <CardDescription>Nenhum dado disponível para exibição</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center h-[400px] text-muted-foreground">
-            Sem dados para mostrar
+          <div className="flex flex-col items-center justify-center h-[280px] text-center gap-2">
+            <BarChart3 className="h-10 w-10 opacity-30 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">
+              Sem dados para mostrar
+            </p>
           </div>
         </CardContent>
       </Card>
     );
   }
 
+  // Encontrar o valor máximo para calcular proporções
+  const maxDuracao = Math.max(...data.map(d => d.duracao));
+
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <CardTitle>Tempo por Atividade</CardTitle>
         <CardDescription>
@@ -69,60 +59,32 @@ export function ToActivityDurationChart({ data, loading = false }: ToActivityDur
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="h-[280px] w-full">
-          <BarChart
-            accessibilityLayer
-            data={data}
-            layout="vertical"
-            margin={{
-              top: 5,
-              right: 40,
-              bottom: 5,
-              left: 5,
-            }}
-            barSize={20}
-            barGap={1}
-            barCategoryGap={3}
-          >
-            <CartesianGrid horizontal={false} />
-            <YAxis
-              dataKey="atividade"
-              type="category"
-              tickLine={false}
-              tickMargin={10}
-              axisLine={false}
-              tickFormatter={(value) => value.slice(0, 3)}
-              hide
-            />
-            <XAxis dataKey="duracao" type="number" hide />
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent indicator="line" />}
-            />
-            <Bar
-              dataKey="duracao"
-              layout="vertical"
-              fill="var(--color-duracao)"
-              radius={4}
-            >
-              <LabelList
-                dataKey="atividade"
-                position="insideLeft"
-                offset={8}
-                className="fill-white"
-                fontSize={12}
-              />
-              <LabelList
-                dataKey="duracao"
-                position="right"
-                offset={8}
-                className="fill-foreground"
-                fontSize={12}
-                formatter={(value: number) => `${value} min`}
-              />
-            </Bar>
-          </BarChart>
-        </ChartContainer>
+        <div className="space-y-4">
+          {data.map((item, index) => {
+            const percentage = maxDuracao > 0 ? (item.duracao / maxDuracao) * 100 : 0;
+            
+            return (
+              <div key={index} className="space-y-1.5">
+                {/* Barra com valor */}
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-6 bg-muted rounded overflow-hidden">
+                    <div
+                      className="h-full bg-[#2C7FFF] rounded transition-all duration-300"
+                      style={{ width: `${Math.max(percentage, 2)}%` }}
+                    />
+                  </div>
+                  <span className="text-sm font-medium text-foreground whitespace-nowrap min-w-[50px] text-right">
+                    {item.duracao} min
+                  </span>
+                </div>
+                {/* Nome da atividade abaixo */}
+                <p className="text-xs text-muted-foreground leading-tight">
+                  {item.atividade}
+                </p>
+              </div>
+            );
+          })}
+        </div>
       </CardContent>
     </Card>
   );

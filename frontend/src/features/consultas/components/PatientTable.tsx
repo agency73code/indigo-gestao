@@ -105,12 +105,12 @@ const PatientTable = memo(function PatientTable({
     onViewProfile,
 }: PatientTableProps) {
     const getStatusBadge = (status: string) => {
-        const baseClasses = 'px-3 py-1 text-xs font-medium rounded-full';
+        const baseClasses = 'px-2 py-1 text-xs font-medium rounded-full';
         const normalizedStatus = status?.toUpperCase() || '';
         const isActive = normalizedStatus === 'ATIVO';
         const statusClasses = isActive
-            ? 'bg-[#D8F2E3] text-[#065F46]'
-            : 'bg-[#FBDDDF] text-[#991B1B]';
+            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+            : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
         
         const displayText = isActive ? 'Ativo' : 'Inativo';
 
@@ -154,22 +154,22 @@ const PatientTable = memo(function PatientTable({
                 <table className="w-full">
                     <thead className="sticky top-0 z-10 shadow-sm" style={{ backgroundColor: 'var(--table-header-bg)' }}>
                         <tr>
-                            <th className="text-left p-4 font-medium text-xs first:rounded-tl-lg" style={{ fontFamily: 'Inter, sans-serif', color: 'var(--table-text-secondary)' }}>
+                            <th className="text-left p-3 font-medium text-sm first:rounded-tl-lg" style={{ color: 'var(--table-text-secondary)' }}>
                                 Nome
                             </th>
-                            <th className="text-left p-4 font-medium text-xs" style={{ fontFamily: 'Inter, sans-serif', color: 'var(--table-text-secondary)' }}>
+                            <th className="text-left p-3 font-medium text-sm" style={{ color: 'var(--table-text-secondary)' }}>
                                 Idade
                             </th>
-                            <th className="text-left p-4 font-medium text-xs" style={{ fontFamily: 'Inter, sans-serif', color: 'var(--table-text-secondary)' }}>
+                            <th className="text-left p-3 font-medium text-sm" style={{ color: 'var(--table-text-secondary)' }}>
                                 Telefone
                             </th>
-                            <th className="text-left p-4 font-medium text-xs" style={{ fontFamily: 'Inter, sans-serif', color: 'var(--table-text-secondary)' }}>
+                            <th className="text-left p-3 font-medium text-sm" style={{ color: 'var(--table-text-secondary)' }}>
                                 Responsável
                             </th>
-                            <th className="text-left p-4 font-medium text-xs" style={{ fontFamily: 'Inter, sans-serif', color: 'var(--table-text-secondary)' }}>
+                            <th className="text-left p-3 font-medium text-sm" style={{ color: 'var(--table-text-secondary)' }}>
                                 Status
                             </th>
-                            <th className="text-center p-4 font-medium text-xs last:rounded-tr-lg" style={{ fontFamily: 'Inter, sans-serif', color: 'var(--table-text-secondary)' }}>
+                            <th className="text-center p-3 font-medium text-sm last:rounded-tr-lg" style={{ color: 'var(--table-text-secondary)' }}>
                                 Ações
                             </th>
                         </tr>
