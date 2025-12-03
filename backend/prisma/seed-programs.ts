@@ -3,11 +3,14 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
+  const CLIENTE_ID = 'e82862f2-946e-420b-97d0-65e899da2ffc';
+  const TERAPEUTA_ID = '0514a446-791e-457f-9c02-21adae44f4e8';
+
   // 🔊 Programa de Fonoaudiologia
   const fonoOcp = await prisma.ocp.create({
     data: {
-      cliente_id: 'CLIENTE_FONO_ID',         // <-- troca aqui
-      terapeuta_id: 'TERAPEUTA_FONO_ID',     // <-- troca aqui
+      cliente_id: CLIENTE_ID,         // <-- troca aqui
+      terapeuta_id: TERAPEUTA_ID,     // <-- troca aqui
       nome_programa: 'Aprimoramento da linguagem oral',
       data_inicio: new Date('2025-12-05T00:00:00.000Z'),
       data_fim: new Date('2026-06-05T00:00:00.000Z'),
@@ -25,7 +28,7 @@ async function main() {
       observacao_geral:
         'Família orientada a usar linguagem clara, dar tempo de resposta e estimular que a criança complete as frases, evitando falar por ela.',
       desempenho_atual:
-        'Necessita apoio frequente para compreender instruções e organizar frases; tende a responder com palavras isoladas em situações mais desafiadoras.',
+        null,
 
       estimulo_ocp: {
         create: [
@@ -87,23 +90,23 @@ async function main() {
   // 🧩 Programa de Terapia Ocupacional
   const toOcp = await prisma.ocp.create({
     data: {
-      cliente_id: 'CLIENTE_TO_ID',           // <-- troca aqui
-      terapeuta_id: 'TERAPEUTA_TO_ID',       // <-- troca aqui
+      cliente_id: CLIENTE_ID,           // <-- troca aqui
+      terapeuta_id: TERAPEUTA_ID,       // <-- troca aqui
       nome_programa: 'Autonomia nas rotinas de autocuidado em casa',
       data_inicio: new Date('2025-12-05T00:00:00.000Z'),
       data_fim: new Date('2026-06-05T00:00:00.000Z'),
-      area: 'terapia_ocupacional',
+      area: 'terapia-ocupacional',
 
       objetivo_programa:
         'Aumentar a independência da criança nas rotinas de higiene, vestuário e organização de pertences.',
       objetivo_descricao:
         'Favorecer a autonomia funcional em atividades de vida diária, reduzindo a necessidade de ajuda física e verbal intensa dos adultos.',
       criterio_aprendizagem:
-        'Realizar a maior parte das etapas de higiene, vestuário e organização com supervisão leve e no máximo duas pistas verbais em pelo menos 60–70% das oportunidades.',
+        null,
       objetivo_curto:
-        'Seguir uma sequência visual de higiene pessoal, preparar roupas para o dia seguinte e organizar materiais com lembrete inicial do adulto.',
+        null,
       descricao_aplicacao:
-        'Uso de quadros de rotina visual, checklists simples, reforço positivo e atividades práticas em contexto simulado de casa.',
+        null,
       observacao_geral:
         'Responsáveis orientados a oferecer pistas graduadas e evitar assumir a tarefa no lugar da criança diante de pequenas resistências.',
       desempenho_atual:
