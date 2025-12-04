@@ -25,6 +25,9 @@ export interface SessionListFilters {
   page?: number;
   /** Itens por página */
   pageSize?: number;
+  stimulusId?: string;
+  periodStart?: string;
+  periodEnd?: string;
 }
 
 /**
@@ -61,27 +64,23 @@ export async function listSessionsByPatient(
     therapistId = '',
     sort = 'date-desc',
     page = 1,
-    pageSize = 10
+    pageSize = 10,
+    stimulusId,
+    periodStart,
+    periodEnd,
   } = filters;
-  try {
-    // // Construir URL com query params
-    // // const url = new URL(`/api/ocp/clients/${patientId}/sessions`, window.location.origin);
-    // // Adiciona área (obrigatório)
-    // url.searchParams.set('area', area);
-    // // Adiciona filtros se houver
-    // if (q) url.searchParams.set('q', q);
-    // if (dateRange && dateRange !== 'all') url.searchParams.set('dateRange', dateRange);
-    // if (programId) url.searchParams.set('programId', programId);
-    // if (therapistId) url.searchParams.set('therapistId', therapistId);
-    // if (sort) url.searchParams.set('sort', sort);
 
+  try {
     const url = buildApiUrl(`/api/ocp/clients/${patientId}/sessions`, {
       area,
       q,
-      dateRange,
+      periodMode: dateRange,
       programId,
       therapistId,
       sort,
+      stimulusId,
+      periodStart,
+      periodEnd,
     });
 
     const res = await fetch(url, {
@@ -91,9 +90,8 @@ export async function listSessionsByPatient(
     });
 
     if (!res.ok) throw new Error(`Erro ao carregar sessões: ${res.status}`);
-    
     const response = await res.json();
-
+    
     // Extrair array do campo 'data' se existir
     const data = response?.data ?? response;
 

@@ -220,6 +220,20 @@ export interface AttentionStimulusItem {
   status: 'atencao' | 'mediano' | 'positivo' | 'insuficiente';
 }
 
+type SessionSort = 'recent' | 'accuracy-asc' | 'accuracy-desc';
+
+export type ListSessionsFilters = {
+  clientId: string,
+  area: string,
+  periodMode?: string | undefined,
+  therapistId?: string | undefined,
+  programId?: string | undefined,
+  sort?: SessionSort | undefined,
+  stimulusId?: string | undefined,
+  periodStart?: string | undefined,
+  periodEnd?: string | undefined,
+}
+
 export interface UnmappedSession {
   id: number;
   data_criacao: Date;

@@ -269,22 +269,53 @@ export async function listByClientId(
     });
 }
 
-type SessionSort = 'recent' | 'accuracy-asc' | 'accuracy-desc';
+export async function listSessionsByClient(filters: OcpType.ListSessionsFilters) {
+    const { 
+        clientId,
+        area,
+        programId,
+        therapistId,
+        sort,
+        stimulusId,
+        periodMode,
+        periodStart,
+        periodEnd,
+    } = filters;
 
-function calculateSessionIndependency(session: OcpType.SessionDTO) {
-    const totalTrials = session.trials.length;
-    if (!totalTrials) return null;
-
-    const independentTrials = session.trials.filter(trial => trial.resultado === 'independent').length;
-    return independentTrials / totalTrials;
-}
-
-export async function listSessionsByClient(clientId: string, area: string, therapistId?: string, sort: SessionSort = 'recent') {
     const where: Prisma.sessaoWhereInput = {};
 
     if (clientId) where.cliente_id = clientId;
     if (area) where.area = area;
     if (therapistId) where.terapeuta_id = therapistId;
+    if (programId) where.ocp_id = Number(programId);
+
+    if (stimulusId) {
+        where.trials = {
+            some: {
+                estimulosOcp: {
+                    id_estimulo: Number(stimulusId),
+                },
+            },
+        };
+    }
+
+    if (periodMode) {
+        if (periodMode === '30d') {
+            where.data_criacao = { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) };
+        } else if (periodMode === '90d') {
+            where.data_criacao = { gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) };
+        } else if (periodMode === 'custom' && periodStart && periodEnd) {
+            const startDate = parseISO(periodStart);
+            const endDate = parseISO(periodEnd);
+
+            if (!Number.isNaN(startDate.getTime()) && !Number.isNaN(endDate.getTime())) {
+                where.data_criacao = {
+                    gte: startOfDay(startDate),
+                    lte: endOfDay(endDate),
+                };
+            }
+        }
+    }
 
     const sessions = await prisma.sessao.findMany({
         where,
@@ -312,6 +343,7 @@ export async function listSessionsByClient(clientId: string, area: string, thera
                     estimulosOcp: {
                         select: {
                             id: true,
+                            id_estimulo: true,
                             nome: true,
                         },
                     },
@@ -326,8 +358,16 @@ export async function listSessionsByClient(clientId: string, area: string, thera
                 },
             },
         },
-        orderBy: { data_criacao: 'desc' },
+        orderBy: { data_criacao: 'asc' },
     });
+
+    if (stimulusId) {
+        sessions.forEach(session => {
+            session.trials = session.trials.filter(
+                t => t.estimulosOcp.id_estimulo === Number(stimulusId)
+            );
+        });
+    }
 
     if (sort === 'recent') return sessions;
 
@@ -705,4 +745,12 @@ export async function getAttentionStimuli({
         total: attentionItems.length,
         hasSufficientData,
     };
+}
+
+function calculateSessionIndependency(session: OcpType.SessionDTO) {
+    const totalTrials = session.trials.length;
+    if (!totalTrials) return null;
+
+    const independentTrials = session.trials.filter(trial => trial.resultado === 'independent').length;
+    return independentTrials / totalTrials;
 }

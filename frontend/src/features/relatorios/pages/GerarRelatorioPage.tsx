@@ -114,7 +114,7 @@ export function GerarRelatorioPage() {
             setSelectedArea(areaFromUrl);
         }
         // Não define área padrão - usuário deve selecionar explicitamente
-    }, []);  // Só executa uma vez no mount
+    }, [searchParams]);  // Só executa uma vez no mount
 
     // Carregar terapeutas
     useEffect(() => {
@@ -268,25 +268,16 @@ export function GerarRelatorioPage() {
                         'terapia-ocupacional',
                         {
                             dateRange: currentFilters.periodo.mode,
+                            periodStart: currentFilters.periodo.start,
+                            periodEnd: currentFilters.periodo.end,
                             programId: currentFilters.programaId,
                             therapistId: currentFilters.terapeutaId,
+                            stimulusId: currentFilters.estimuloId,
                         }
                     );
                     
-                    let sessoes = sessionsResponse.items || [];
-
-                    // Aplicar filtro de estímulo localmente
-                    if (currentFilters.estimuloId) {
-                        sessoes = sessoes
-                            .map(sessao => ({
-                                ...sessao,
-                                registros: sessao.registros.filter(registro =>
-                                    String(registro.stimulusId) === String(currentFilters.estimuloId)
-                                ),
-                            }))
-                            .filter(sessao => sessao.registros.length > 0);
-                    }
-                    
+                    const sessoes = sessionsResponse.items || [];
+                    console.log(sessoes)
                     // Calcular KPIs de TO
                     const toKpis = calculateToKpis(sessoes);
                     
@@ -349,24 +340,15 @@ export function GerarRelatorioPage() {
                         'fisioterapia',
                         {
                             dateRange: currentFilters.periodo.mode,
+                            periodStart: currentFilters.periodo.start,
+                            periodEnd: currentFilters.periodo.end,
                             programId: currentFilters.programaId,
                             therapistId: currentFilters.terapeutaId,
+                            stimulusId: currentFilters.estimuloId,
                         }
                     );
 
-                    let sessoes = sessionsResponse.items || [];
-
-                    // Aplicar filtro de estímulo localmente
-                    if (currentFilters.estimuloId) {
-                        sessoes = sessoes
-                            .map(sessao => ({
-                                ...sessao,
-                                registros: sessao.registros.filter(registro =>
-                                    String(registro.stimulusId) === String(currentFilters.estimuloId)
-                                ),
-                            }))
-                            .filter(sessao => sessao.registros.length > 0);
-                    }
+                    const sessoes = sessionsResponse.items || [];
 
                     // Calcular KPIs de Fisio
                     const fisioKpis = calculateFisioKpis(sessoes);

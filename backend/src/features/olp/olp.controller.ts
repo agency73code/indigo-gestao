@@ -187,15 +187,15 @@ export async function listSessionsByClient(req: Request, res: Response) {
         const { clientId } = req.params;
         if (!clientId) return res.status(400).json({ sucess: false, message: 'ID do paciente é obrigatório' });
 
-        const rawArea = req.query.area;
-        const area = Array.isArray(rawArea) ? rawArea[0] : rawArea;
-        if (typeof area !== 'string') return res.status(400).json({ success: false, message: 'Area é obrigatório' });
+        const area = getQueryString(req.query.area);
+        if (!area) return res.status(400).json({ success: false, message: 'Area é obrigatório' });
 
-        const rawTherapistId = req.query.therapistId;
-        const therapistId: string | undefined =
-            typeof rawTherapistId === 'string'
-                ? rawTherapistId
-                : req.user?.id;
+        const therapistId = getQueryString(req.query.therapistId);
+        const programId = getQueryString(req.query.programId);
+        const periodMode = getQueryString(req.query.periodMode);
+        const stimulusId = getQueryString(req.query.stimulusId);
+        const periodStart = getQueryString(req.query.periodStart);
+        const periodEnd = getQueryString(req.query.periodEnd);
 
         const sortParam = req.query.sort;
         const sort =
@@ -203,7 +203,18 @@ export async function listSessionsByClient(req: Request, res: Response) {
                 ? sortParam
                 : 'recent';
 
-        const sessions = await OcpService.listSessionsByClient(clientId, area, therapistId, sort);
+        const sessions = await OcpService.listSessionsByClient({
+            clientId,
+            area,
+            periodMode,
+            programId,
+            therapistId,
+            sort,
+            stimulusId,
+            periodStart,
+            periodEnd,
+        });
+
         return res.json ({ data: OcpNormalizer.mapSessionList(sessions) });
     } catch (error) {
         console.error(error);
@@ -251,7 +262,7 @@ export async function getStimulusReport(req: Request, res: Response) {
     try {
         const area = typeof req.query.area === 'string' ? req.query.area : undefined;
         const clientId = req.query.clientId as string | undefined;
-        const programId = req.query.programaId as string | undefined;
+        const programId = req.query.programId as string | undefined;
         const therapistId = req.query.therapistId as string | undefined;
         const data = await OcpService.getStimulusReport(clientId, programId, area, therapistId);
 
