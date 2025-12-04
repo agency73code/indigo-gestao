@@ -996,6 +996,7 @@ export function GerarRelatorioPage() {
                                     programaId={filters.programaId}
                                     terapeutaId={filters.terapeutaId}
                                     periodo={filters.periodo}
+                                    area={selectedArea}
                                 />
                             </section>
                         )}

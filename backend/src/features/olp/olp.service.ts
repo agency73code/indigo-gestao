@@ -546,27 +546,41 @@ export async function getProgramsReport(clientId?: string, area?: string, stimul
     }))
 }
 
-export async function getAttentionStimuli(filters: OcpType.AttentionStimuliFilters) {
+export async function getAttentionStimuli({
+    clientId,
+    lastSessions = 5,
+    area,
+    programId,
+    therapistId,
+    periodMode = '30d',
+    periodStart,
+    periodEnd,
+} : {
+    clientId: string,
+    lastSessions: 1 | 3 | 5,
+    area: string
+    programId?: number | undefined,
+    therapistId?: string | undefined,
+    periodMode?: '30d' | '90d' | 'custom' | undefined,
+    periodStart?: string | undefined,
+    periodEnd?: string | undefined,
+}) {
     const where: Prisma.sessaoWhereInput = {
-        cliente_id: filters.pacienteId,
+        cliente_id: clientId,
     };
 
-    if (filters.programaId) {
-        where.ocp_id = Number(filters.programaId);
-    }
+    if (area) where.area = area;
+    if (programId) where.ocp_id = programId;
+    if (therapistId) where.terapeuta_id = therapistId;
 
-    if (filters.terapeutaId) {
-        where.terapeuta_id = filters.terapeutaId;
-    }
-
-    if (filters.periodo) {
-        if (filters.periodo.mode === '30d') {
+    if (periodMode) {
+        if (periodMode === '30d') {
             where.data_criacao = { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) };
-        } else if (filters.periodo.mode === '90d') {
+        } else if (periodMode === '90d') {
             where.data_criacao = { gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) };
-        } else if (filters.periodo.mode === 'custom' && filters.periodo.start && filters.periodo.end) {
-            const startDate = parseISO(filters.periodo.start);
-            const endDate = parseISO(filters.periodo.end);
+        } else if (periodMode === 'custom' && periodStart && periodEnd) {
+            const startDate = parseISO(periodStart);
+            const endDate = parseISO(periodEnd);
 
             if (!Number.isNaN(startDate.getTime()) && !Number.isNaN(endDate.getTime())) {
                 where.data_criacao = {
@@ -580,7 +594,7 @@ export async function getAttentionStimuli(filters: OcpType.AttentionStimuliFilte
     const sessions = await prisma.sessao.findMany({
         where,
         orderBy: { data_criacao: 'desc' },
-        take: filters.lastSessions,
+        take: lastSessions,
         select: {
             id: true,
             trials: {

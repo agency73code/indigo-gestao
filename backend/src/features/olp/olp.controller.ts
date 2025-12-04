@@ -2,7 +2,7 @@ import type { NextFunction, Request, Response } from 'express';
 import * as OcpService from './olp.service.js';
 import * as OcpNormalizer from './olp.normalizer.js';
 import { Prisma } from '@prisma/client';
-import type { AttentionStimuliFilters, CreateProgramPayload } from './types/olp.types.js';
+import type { CreateProgramPayload } from './types/olp.types.js';
 
 export async function createProgram(req: Request, res: Response) {
     try {
@@ -267,39 +267,55 @@ export async function getStimulusReport(req: Request, res: Response) {
 
 export async function getAttentionStimuli(req: Request, res: Response) {
     try {
-        const pacienteId = req.query.pacienteId as string | undefined;
-        if (!pacienteId) {
-            return res.status(400).json({
-                success: false,
-                message: 'pacienteId é obrigatório'
-            });
-        }
-
-        const lastSessionsParam = parseInt(req.query.lastSessions as string, 10);
-        const lastSessions: AttentionStimuliFilters['lastSessions'] = [1, 3, 5].includes(lastSessionsParam)
-            ? (lastSessionsParam as AttentionStimuliFilters['lastSessions'])
-            : 5;
-
-        const filters: AttentionStimuliFilters = {
-            pacienteId,
+        const {
+            programId,
+            clientId,
+            therapistId,
+            periodMode,
+            periodStart,
+            periodEnd,
             lastSessions,
-            programaId: typeof req.query.programaId === 'string' ? req.query.programaId : undefined,
-            terapeutaId: typeof req.query.terapeutaId === 'string' ? req.query.terapeutaId : undefined,
-        };
+            area
+        } = req.query;
 
-        const periodoMode = req.query.periodoMode as '30d' | '90d' | 'custom' | undefined;
-        const periodoStart = req.query.periodoStart as string | undefined;
-        const periodoEnd = req.query.periodoEnd as string | undefined;
+        const clientIdStr = getQueryString(clientId);
+        const lastSessionsStr = getQueryString(lastSessions);
+        const areaStr = getQueryString(area);
+        const therapistIdStr = getQueryString(therapistId);
+        const periodModeStr = getQueryString(periodMode)
+        const periodStartStr = getQueryString(periodStart);
+        const periodEndStr = getQueryString(periodEnd);
+        const programIdStr = getQueryString(programId);
+        
+        if (!clientIdStr) return res.status(400).json({ success: false, message: 'Id do cliente é obrigatório' });
+        if (!areaStr) return res.status(400).json({ success: false, message: 'Area é um campo obrigatório' });
 
-        if (periodoMode) {
-            filters.periodo = {
-                mode: periodoMode,
-                start: periodoStart,
-                end: periodoEnd,
-            };
-        }
+        const parsedProgramId = programIdStr ? Number(programIdStr) : undefined;
 
-        const data = await OcpService.getAttentionStimuli(filters);
+        const parsedLastSessions: 1 | 3 | 5 =
+            lastSessionsStr === '1'
+                ? 1
+                : lastSessionsStr === '3'
+                ? 3
+                : lastSessionsStr === '5'
+                    ? 5
+                    : 5
+
+        const parsedPeriodMode: '30d' | '90d' | 'custom' | undefined =
+            periodModeStr === '30d' || periodModeStr === '90d' || periodModeStr === 'custom'
+                ? periodModeStr
+                : undefined
+
+        const data = await OcpService.getAttentionStimuli({
+            clientId: clientIdStr,
+            lastSessions: parsedLastSessions,
+            area: areaStr,
+            programId: parsedProgramId,
+            therapistId: therapistIdStr,
+            periodMode: parsedPeriodMode,
+            periodStart: periodStartStr,
+            periodEnd: periodEndStr,
+        });
 
         return res.json(data);
     } catch (error) {
@@ -309,4 +325,15 @@ export async function getAttentionStimuli(req: Request, res: Response) {
             message: 'Erro ao buscar estímulos que precisam de atenção'
         });
     }
+}
+
+function getQueryString(value: unknown ): string | undefined {
+    if (typeof value === 'string') return value
+
+    if (Array.isArray(value)) {
+        const first = value[0];
+        return typeof first === 'string' ? first : undefined
+    }
+
+    return undefined
 }

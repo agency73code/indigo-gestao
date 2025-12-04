@@ -1,3 +1,4 @@
+import { buildApiUrl } from '@/lib/api';
 import type { 
   Filters,
   KpisRelatorio, 
@@ -6,10 +7,6 @@ import type {
   AttentionStimuliParams,
   AttentionStimuliResponse
 } from '../types';
-import { mockAttentionStimuliByWindow } from '../mocks/relatorio.mock';
-
-const USE_MOCK = false; // Trocar para false quando backend estiver pronto
-
 
 async function callKpiReportsApi(_filtros: Filters) {
   const filtersParam = encodeURIComponent(JSON.stringify(_filtros));
@@ -53,41 +50,21 @@ export async function fetchPrazoPrograma(_filtros: Filters): Promise<PrazoProgra
 export async function fetchAttentionStimuli(
   params: AttentionStimuliParams
 ): Promise<AttentionStimuliResponse> {
-  // Mock temporário - remover quando backend estiver pronto
-  if (USE_MOCK) {
-    await new Promise((resolve) => setTimeout(resolve, 600)); // Simula latência
-    
-    // Retorna dados específicos baseados no lastSessions
-    const mockData = mockAttentionStimuliByWindow[params.lastSessions] || mockAttentionStimuliByWindow[5];
-    
-    return {
-      items: mockData,
-      total: mockData.length,
-      hasSufficientData: true
-    };
-  }
-
-  const queryParams = new URLSearchParams({
-    pacienteId: params.pacienteId,
-    lastSessions: String(params.lastSessions),
+  const url = buildApiUrl('/api/ocp/reports/attention-stimuli', {
+      programId: params.programaId,
+      clientId: params.pacienteId,
+      therapistId: params.terapeutaId,
+      periodMode: params.periodo?.mode,
+      periodStart: params.periodo?.start,
+      periodEnd: params.periodo?.end,
+      lastSessions: String(params.lastSessions),
+      area: params.area
   });
 
-  if (params.programaId) queryParams.append('programaId', params.programaId);
-  if (params.terapeutaId) queryParams.append('terapeutaId', params.terapeutaId);
-  
-  if (params.periodo) {
-    queryParams.append('periodoMode', params.periodo.mode);
-    if (params.periodo.start) queryParams.append('periodoStart', params.periodo.start);
-    if (params.periodo.end) queryParams.append('periodoEnd', params.periodo.end);
-  }
-
-  const res = await fetch(
-    `${import.meta.env.VITE_API_URL}/ocp/reports/attention-stimuli?${queryParams.toString()}`,
-    {
-      method: 'GET',
-      credentials: 'include',
-    }
-  );
+  const res = await fetch(url, {
+    method: 'GET',
+    credentials: 'include',
+  });
 
   if (!res.ok) {
     throw new Error('Erro ao buscar estímulos de atenção');
