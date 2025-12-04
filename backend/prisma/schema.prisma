@@ -34,6 +34,7 @@ model cliente {
   dataNascimento    DateTime?
   dataSaida         DateTime?
   emailContato      String?             @unique
+  senha_atualizada_em DateTime?
   arquivos          arquivos[]
   enderecos         cliente_endereco[]
   cuidadores        cuidador[]
@@ -235,6 +236,7 @@ model terapeuta {
   criado_em             DateTime                @default(now())
   atualizado_em         DateTime                @updatedAt
   pix_tipo              String?
+  senha_atualizada_em DateTime?
   arquivos              arquivos[]
   formacao              formacao?
   ocp                   ocp[]                   @relation("TerapeutaOcp")

@@ -11,7 +11,8 @@ import {
     findUserByResetToken, 
     loginUserByAccessInformation, 
     newPassword, 
-    passwordResetToken
+    passwordResetToken,
+    lastPasswordChange
 } from '../features/auth/auth.repository.js';
 
 const RESET_TOKEN_EXPIRATION_MS = 60 * 60 * 1000;
@@ -91,9 +92,11 @@ export async function definePassword(req: Request, res: Response, next: NextFunc
         const { token } = req.params;
         const { password } = req.body;
 
-        let result =  await newPassword(token!, password, 'terapeuta');
+        if (!token) return res.status(400).json({ success: false, message: 'Token é obrigatório' });
+
+        let result =  await newPassword(token, password, 'terapeuta');
         if (result.count === 0) {
-            result = await newPassword(token!, password, 'cliente');
+            result = await newPassword(token, password, 'cliente');
         }
             
 
@@ -183,3 +186,18 @@ export async function requestPasswordReset(req: Request, res: Response, next: Ne
         next(error);
     }
 }
+
+export async function requestLastPasswordChange(req: Request, res: Response, next: NextFunction) {
+    try {
+        const userId = req.user?.id;
+        if (!userId) return res.status(400).json({ success: false, message: 'É necessário estar autenticado.' }); 
+
+        const lastChange = 
+            await lastPasswordChange(userId, 'terapeuta') ?? 
+            await lastPasswordChange(userId, 'cliente');
+
+        return res.status(200).json({ success: true, data: lastChange });
+    } catch (error) {
+        next(error);
+    }
+} 

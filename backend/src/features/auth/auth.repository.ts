@@ -2,6 +2,29 @@ import { prisma } from "../../config/database.js";
 import { hashPassword } from "../../utils/hash.util.js";
 import type { Tables, UserRow } from "./auth.types.js";
 
+type LastPasswordChangeResult = {
+  lastChangedAt: Date | null
+  daysAgo: number | null
+}
+
+export async function lastPasswordChange(id: string, table: Tables) : Promise<LastPasswordChangeResult | null>{
+  const row = table === 'terapeuta'
+    ? await prisma.terapeuta.findUnique({ where: { id }, select: { senha_atualizada_em: true } })
+    : await prisma.cliente.findUnique({ where: { id }, select: { senha_atualizada_em: true } })
+
+  if (!row) return null;
+  const lastChangedAt = row.senha_atualizada_em;
+
+  if (!lastChangedAt) {
+    return {
+      lastChangedAt: null,
+      daysAgo: null,
+    }
+  }
+
+  return { lastChangedAt, daysAgo: diffInDaysFromNow(lastChangedAt) };
+}
+
 export async function findUserByEmail(email: string, table: Tables) {
   if (table === 'terapeuta') {
     const row = await prisma.terapeuta.findFirst({ where: { email_indigo: email } });
@@ -134,6 +157,7 @@ export async function newPassword(token: string, password: string, table: Tables
     senha: await hashPassword(password),
     token_redefinicao: null,
     validade_token: null,
+    senha_atualizada_em: new Date(),
   };
 
   if (table === 'terapeuta') {
@@ -201,4 +225,17 @@ export async function findUserById(id: string, table: Tables) {
         : null,
     }
   }
+}
+
+function diffInDaysFromNow(dateInput: string | Date): number {
+  const date =
+    typeof dateInput === 'string'
+      ? new Date(dateInput.replace(' ', 'T'))
+      : dateInput;
+  
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  return diffDays;
 }
