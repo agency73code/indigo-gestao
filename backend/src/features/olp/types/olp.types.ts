@@ -114,10 +114,11 @@ export type CreateToSessionInput = {
 export type UpdateProgramInput = {
   id: number;
   name: string;
-  goalTitle: string | null;
-  goalDescription: string | null;
-  shortTermGoalDescription: string | null;
-  stimuliApplicationDescription: string | null;
+  goalTitle?: string | null | undefined;
+  goalDescription?: string | null | undefined;
+  shortTermGoalDescription?: string | null | undefined;
+  stimuliApplicationDescription?: string | null | undefined;
+  currentPerformanceLevel?: string | null | undefined;
   stimuli: {
     id?: string | undefined;
     label: string;
@@ -125,8 +126,8 @@ export type UpdateProgramInput = {
     active: boolean;
     order: number;
   }[];
-  criteria: string | null;
-  notes: string | null;
+  criteria?: string | null | undefined;
+  notes?: string | null | undefined;
   status: 'active' | 'archived';
   prazoInicio: string;
   prazoFim: string;

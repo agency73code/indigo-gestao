@@ -407,9 +407,7 @@ export async function getKpis(filtros: OcpType.KpisFilters) {
     if (stimulusId) {
         where.trials = {
             some: {
-                estimulosOcp: {
-                    id: stimulusId,
-                },
+                estimulos_ocp_id: stimulusId,
             },
         };
     }

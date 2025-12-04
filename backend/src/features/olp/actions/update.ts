@@ -1,7 +1,36 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "../../../config/database.js";
 import type { UpdateProgramInput } from "../types/olp.types.js";
 
 export async function programUpdate(programId: number, input: UpdateProgramInput) {
+    const {
+        name,
+        prazoInicio,
+        prazoFim,
+        goalTitle,
+        goalDescription,
+        shortTermGoalDescription,
+        stimuliApplicationDescription,
+        currentPerformanceLevel,
+        status,
+        criteria,
+        notes,
+    } = input
+
+    const data: Prisma.ocpUpdateInput = {};
+
+    if (name) data.nome_programa = name;
+    if (prazoInicio) data.data_inicio = new Date(prazoInicio);
+    if (prazoFim) data.data_fim = new Date(prazoFim);
+    if (goalTitle) data.objetivo_programa = goalTitle;
+    if (goalDescription) data.objetivo_descricao = goalDescription;
+    if (shortTermGoalDescription) data.objetivo_curto = shortTermGoalDescription;
+    if (stimuliApplicationDescription) data.descricao_aplicacao = stimuliApplicationDescription;
+    if (currentPerformanceLevel) data.desempenho_atual = currentPerformanceLevel;
+    if (status) data.status = status === "active" ? "ativado" : "arquivado";
+    if (criteria) data.criterio_aprendizagem = criteria;
+    if (notes) data.observacao_geral = notes;
+
     return await prisma.$transaction(async (tx) => {
         const newStimuliIds = input.stimuli
             .filter((s) => s.id) // só pega os que têm id
@@ -20,55 +49,44 @@ export async function programUpdate(programId: number, input: UpdateProgramInput
         for (const s of input.stimuli) {
             let stimulusId: number;
 
-        if (!s.id) {
-            // Criar novo estímulo base
-            const newStimulus = await tx.estimulo.create({
-                data: {
-                    nome: s.label,
+            if (!s.id) {
+                // Criar novo estímulo base
+                const newStimulus = await tx.estimulo.create({
+                    data: {
+                        nome: s.label,
+                    },
+                });
+
+                stimulusId = newStimulus.id;
+            } else {
+                stimulusId = Number(s.id);
+            }
+
+            // Criar ou atualizar vínculo com OCP
+            await tx.estimulo_ocp.upsert({
+                where: {
+                    id_estimulo_id_ocp: {
+                        id_estimulo: stimulusId,
+                        id_ocp: programId,
+                    },
                 },
-            });
-
-            stimulusId = newStimulus.id;
-        } else {
-            stimulusId = Number(s.id);
-        }
-
-        // Criar ou atualizar vínculo com OCP
-        await tx.estimulo_ocp.upsert({
-            where: {
-                id_estimulo_id_ocp: {
+                update: {
+                    nome: s.label,
+                    status: s.active,
+                },
+                create: {
                     id_estimulo: stimulusId,
                     id_ocp: programId,
+                    nome: s.label,
+                    status: s.active,
                 },
-            },
-            update: {
-                nome: s.label,
-                status: s.active,
-            },
-            create: {
-                id_estimulo: stimulusId,
-                id_ocp: programId,
-                nome: s.label,
-                status: s.active,
-            },
-        });
+            });
         }
 
         // Atualizar dados do OCP
         const ocp = await tx.ocp.update({
             where: { id: programId },
-            data: {
-                nome_programa: input.name,
-                data_inicio: new Date(input.prazoInicio),
-                data_fim: new Date(input.prazoFim),
-                objetivo_programa: input.goalTitle,
-                objetivo_descricao: input.goalDescription,
-                objetivo_curto: input.shortTermGoalDescription,
-                descricao_aplicacao: input.stimuliApplicationDescription,
-                status: input.status === "active" ? "ativado" : "arquivado",
-                criterio_aprendizagem: input.criteria,
-                observacao_geral: input.notes,
-            },
+            data,
         });
 
         return ocp;

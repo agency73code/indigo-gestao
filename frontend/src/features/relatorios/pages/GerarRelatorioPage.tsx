@@ -602,7 +602,7 @@ export function GerarRelatorioPage() {
             patientId: selectedPatient.id,
             patientName: selectedPatient.name,
             therapistId: user.id,
-            area: selectedArea, // 🆕 Incluir área no payload
+            area: selectedArea,
             filters: {
                 pacienteId: selectedPatient.id,
                 periodo: {

@@ -11,12 +11,13 @@ export const updateProgramSchema = z.object({
         .string()
         .min(1, 'A data de fim é obrigatória.')
         .refine((v) => !isNaN(Date.parse(v)), 'A data de fim é inválida.'),
-    goalTitle: z.string().nullable(),
-    goalDescription: z.string().nullable(),
-    shortTermGoalDescription: z.string().nullable(),
-    stimuliApplicationDescription: z.string().nullable(),
-    criteria: z.string().nullable(),
-    notes: z.string().nullable(),
+    goalTitle: z.string().nullable().optional(),
+    goalDescription: z.string().nullable().optional(),
+    shortTermGoalDescription: z.string().nullable().optional(),
+    stimuliApplicationDescription: z.string().nullable().optional(),
+    currentPerformanceLevel: z.string().nullable().optional(),
+    criteria: z.string().nullable().optional(),
+    notes: z.string().nullable().optional(),
     status: z.enum(['active', 'archived']),
     stimuli: z
         .array(
