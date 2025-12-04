@@ -300,6 +300,7 @@ export default function RelatorioMensalPage() {
                                 programaId={filters.programaId}
                                 terapeutaId={filters.terapeutaId}
                                 periodo={filters.periodo}
+                                area={'fonoaudiologia'}
                             />
                         </section>
 
