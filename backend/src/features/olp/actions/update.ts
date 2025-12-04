@@ -3,9 +3,9 @@ import type { UpdateProgramInput } from "../types/olp.types.js";
 
 export async function programUpdate(programId: number, input: UpdateProgramInput) {
     return await prisma.$transaction(async (tx) => {
-    const newStimuliIds = input.stimuli
-        .filter((s) => s.id) // só pega os que têm id
-        .map((s) => Number(s.id));
+        const newStimuliIds = input.stimuli
+            .filter((s) => s.id) // só pega os que têm id
+            .map((s) => Number(s.id));
 
         // Desativar os vínculos que não estão mais no input
         await tx.estimulo_ocp.updateMany({

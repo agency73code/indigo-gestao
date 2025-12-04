@@ -177,8 +177,8 @@ export async function listFiles(ownerType: 'cliente' | 'terapeuta', ownerId: str
 }
 
 /** Busca um arquivo pelo ID (banco) */
-export async function findFileById(id: number) {
-    return prisma.arquivos.findUnique({ where: { id } });
+export async function findFileById(id: string) {
+    return prisma.arquivos.findFirst({ where: { arquivo_id: id } });
 }
 
 /** Exclui um arquivo do Google R2 */

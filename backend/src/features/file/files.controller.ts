@@ -169,19 +169,14 @@ export async function downloadFile(req: Request, res: Response) {
  * Controller: exclui um arquivo do banco e do Google R2.
  */
 export async function deleteFile(req: Request, res: Response) {
-    const rawId = req.params.id;
-
-    if (!rawId) {
+    const fileId = req.params.id;
+    console.log(fileId, '===============================')
+    if (!fileId) {
         return res.status(400).json({ error: 'ID é obrigatório.' });
     }
 
-    const id = Number.parseInt(rawId, 10);
-    if (Number.isNaN(id)) {
-        return res.status(400).json({ error: 'ID inválido.' });
-    }
-
     try {
-        const existing = await FilesService.findFileById(id);
+        const existing = await FilesService.findFileById(fileId);
 
         if (!existing) {
             return res.status(404).json({ error: 'Arquivo não encontrado.' });
@@ -193,7 +188,7 @@ export async function deleteFile(req: Request, res: Response) {
         }
 
         // Remove o registro do banco
-        await FilesService.deleteFromDatabase(id);
+        await FilesService.deleteFromDatabase(existing.id);
 
         return res.status(204).send();
     } catch (error) {
