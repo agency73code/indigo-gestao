@@ -19,7 +19,7 @@ export default function ToConsultaProgramasPage() {
     const { setPageTitle } = usePageTitle();
 
     useEffect(() => {
-        setPageTitle('Consultar Programas & Objetivos - TO');
+        setPageTitle('Consultar Programas & Objetivos - Fisioterapia');
     }, [setPageTitle]);
 
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);

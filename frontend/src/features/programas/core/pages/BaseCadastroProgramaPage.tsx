@@ -150,7 +150,7 @@ export function BaseCadastroProgramaPage({
         };
 
         loadInitialData();
-    }, [searchParams, onFetchPatient]);
+    }, [searchParams, onFetchPatient, formState]);
 
     // Inicializar com primeiro estímulo vazio
     useEffect(() => {
@@ -293,9 +293,9 @@ export function BaseCadastroProgramaPage({
                 stimuli: formState.stimuli.filter((s) => s.label.trim()),
                 notes: formState.notes.trim() || null,
             };
-            console.log('teste')
+
             const result = await onCreateProgram(payload);
-            console.log(result)
+
             toast.success(config.messages.saveSuccess);
 
             if (startSession && newSessionRoute) {

@@ -64,7 +64,7 @@ export async function listSessionsByPatient(
     therapistId = '',
     sort = 'date-desc',
     page = 1,
-    pageSize = 10,
+    pageSize = 10, // TODO: passar isso aqui pro backend pra colocar em take
     stimulusId,
     periodStart,
     periodEnd,
@@ -82,7 +82,7 @@ export async function listSessionsByPatient(
       periodStart,
       periodEnd,
     });
-
+    console.table(filters)
     const res = await fetch(url, {
       method: 'GET',
       credentials: 'include',
