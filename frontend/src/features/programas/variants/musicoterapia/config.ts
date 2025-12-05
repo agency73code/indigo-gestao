@@ -47,7 +47,7 @@ export const musiProgramConfig: BaseProgramPageConfig = {
         showCriteria: false,
         showStimulusDescription: true,
         showStimuliApplication: false,
-        showCurrentPerformance: true,
+        showCurrentPerformance: false,
     },
 
     sectionTitles: {

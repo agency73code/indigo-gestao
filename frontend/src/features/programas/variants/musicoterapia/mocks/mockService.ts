@@ -1,10 +1,16 @@
 /**
  * Serviço mock para desenvolvimento de Musicoterapia
  * Simula chamadas de API para programas de Musicoterapia
+ * 
+ * IMPORTANTE: Este mock reflete a estrutura de dados real que o backend deve implementar
+ * - Programas com 4 campos nos objetivos específicos (objetivo, objetivoEspecifico, metodos, tecnicasProcedimentos)
+ * - Sessões com atividades detalhadas e observações
+ * - Gráficos de evolução por atividade e geral
  */
 
 import { mockMusiProgram } from './programMock';
 import { mockMusiSessions } from './mockSessions';
+import { getMockMusiChartData } from './mockChartService';
 import type { ProgramDetail } from '../../../detalhe-ocp/types';
 import type { SessionListItem } from '../../../detalhe-ocp/types';
 import type { SerieLinha } from '../../../relatorio-geral/types';
@@ -57,14 +63,6 @@ export async function fetchMusiProgramChart(programId: string): Promise<SerieLin
     
     console.log('📊 Retornando gráfico geral MOCK de Musicoterapia:', programId);
     
-    // Retornar evolução geral do programa (não de um estímulo específico)
-    const mockChartData: SerieLinha[] = [
-        { x: '15/11', acerto: 60, independencia: 35 },
-        { x: '18/11', acerto: 65, independencia: 40 },
-        { x: '22/11', acerto: 70, independencia: 45 },
-        { x: '25/11', acerto: 75, independencia: 50 },
-        { x: '28/11', acerto: 85, independencia: 60 },
-    ];
-    
-    return mockChartData;
+    // Retornar evolução geral do programa com dados das sessões reais
+    return getMockMusiChartData();
 }

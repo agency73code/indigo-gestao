@@ -13,10 +13,7 @@ import {
     ValidationErrors,
 } from '../../../editar-ocp';
 import { fetchProgramById, updateProgram } from '../../../editar-ocp/services';
-import type {
-    ProgramDetail,
-    UpdateProgramInput,
-} from '../../../editar-ocp/types';
+import type { ProgramDetail } from '../../../editar-ocp/types';
 import { musiProgramConfig, musiRoutes } from '../config';
 import { fetchMusiProgramById } from '../mocks/mockService';
 import MusiStimuliEditor from '../components/MusiStimuliEditor';
@@ -24,6 +21,8 @@ import MusiNotesSection from '../components/MusiNotesSection';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import type { MusiStimulus } from '../types';
+import { apiToMusiStimulus } from '../types';
 
 export default function MusiEditarProgramaPage() {
     const { programaId } = useParams<{ programaId: string }>();
@@ -44,7 +43,7 @@ export default function MusiEditarProgramaPage() {
     const [goalTitle, setGoalTitle] = useState('');
     const [goalDescription, setGoalDescription] = useState('');
     const [currentPerformanceLevel, setCurrentPerformanceLevel] = useState('');
-    const [stimuli, setStimuli] = useState<UpdateProgramInput['stimuli']>([]);
+    const [stimuli, setStimuli] = useState<MusiStimulus[]>([]);
     const [notes, setNotes] = useState('');
     const [status, setStatus] = useState<'active' | 'archived'>('active');
     const [prazoInicio, setPrazoInicio] = useState('');
@@ -80,13 +79,16 @@ export default function MusiEditarProgramaPage() {
             setGoalTitle(programData.goalTitle);
             setGoalDescription(programData.goalDescription || '');
             setCurrentPerformanceLevel((programData as any).currentPerformanceLevel || '');
+            // Converter stimuli da API para formato MusiStimulus
             setStimuli(
-                programData.stimuli.map((s) => ({
+                programData.stimuli.map((s) => apiToMusiStimulus({
                     id: s.id,
+                    order: s.order,
                     label: s.label,
                     description: s.description,
                     active: s.active,
-                    order: s.order,
+                    metodos: (s as any).metodos,
+                    tecnicasProcedimentos: (s as any).tecnicasProcedimentos,
                 })),
             );
             setNotes(programData.notes ?? '');
@@ -117,11 +119,11 @@ export default function MusiEditarProgramaPage() {
         }
 
         if (!stimuli || stimuli.length === 0) {
-            errors.general = 'Adicione pelo menos uma atividade.';
+            errors.general = 'Adicione pelo menos um objetivo específico.';
         } else if (stimuli) {
-            const hasEmptyStimulus = stimuli.some((s) => !s.label.trim());
+            const hasEmptyStimulus = stimuli.some((s) => !s.objetivo.trim());
             if (hasEmptyStimulus) {
-                errors.general = 'Todas as atividades devem ter um nome.';
+                errors.general = 'Todos os objetivos específicos devem ter um objetivo preenchido.';
             }
         }
 
@@ -152,12 +154,21 @@ export default function MusiEditarProgramaPage() {
         try {
             setIsSaving(true);
 
+            // Converter MusiStimulus de volta para formato da API
+            const stimuliForApi = stimuli.map((s) => ({
+                id: s.id,
+                order: s.order,
+                label: s.objetivo,
+                description: s.objetivoEspecifico || undefined,
+                active: s.active,
+            }));
+
             const input: any = {
                 id: programaId,
                 goalTitle,
                 goalDescription,
                 currentPerformanceLevel,
-                stimuli,
+                stimuli: stimuliForApi,
                 notes,
                 status,
                 prazoInicio,
@@ -201,6 +212,17 @@ export default function MusiEditarProgramaPage() {
     useEffect(() => {
         if (!program) return;
 
+        // Converter stimuli do programa para formato MusiStimulus para comparação
+        const originalStimuli = program.stimuli.map((s) => apiToMusiStimulus({
+            id: s.id,
+            order: s.order,
+            label: s.label,
+            description: s.description,
+            active: s.active,
+            metodos: (s as any).metodos,
+            tecnicasProcedimentos: (s as any).tecnicasProcedimentos,
+        }));
+
         const hasFormChanges =
             goalTitle !== program.goalTitle ||
             goalDescription !== (program.goalDescription || '') ||
@@ -209,13 +231,7 @@ export default function MusiEditarProgramaPage() {
             status !== program.status ||
             prazoInicio !== (program.prazoInicio || '') ||
             prazoFim !== (program.prazoFim || '') ||
-            JSON.stringify(stimuli) !== JSON.stringify(program.stimuli.map(s => ({
-                id: s.id,
-                label: s.label,
-                description: s.description,
-                active: s.active,
-                order: s.order,
-            })));
+            JSON.stringify(stimuli) !== JSON.stringify(originalStimuli);
 
         setHasChanges(hasFormChanges);
     }, [

@@ -14,7 +14,6 @@ import type { SerieLinha } from '../../../relatorio-geral/types';
 import { usePrint } from '../../../relatorio-geral/print/usePrint';
 import indigoLogo from '@/assets/logos/indigo.svg';
 import MusiGoalSection from '../components/MusiGoalSection';
-import MusiCurrentPerformanceSection from '../components/MusiCurrentPerformanceSection';
 import MusiStimuliSection from '../components/MusiStimuliSection';
 import MusiNotesSection from '../components/MusiNotesSection';
 import MusiProgramActionBar from '../components/MusiProgramActionBar';
@@ -396,9 +395,6 @@ export default function MusiDetalheProgramaPage() {
 
                             {/* Objetivo Geral */}
                             <MusiGoalSection program={program} />
-
-                            {/* Nível Atual de Desempenho */}
-                            <MusiCurrentPerformanceSection currentPerformanceLevel={program.currentPerformanceLevel} />
 
                             {/* Objetivo Específico (Atividades) */}
                             <MusiStimuliSection program={program} />

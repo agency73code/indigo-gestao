@@ -103,6 +103,15 @@ export async function fetchMusiTherapistAvatar(therapistId: string): Promise<str
 }
 
 export async function createMusiProgram(input: CreateProgramInput): Promise<{ id: string }> {
+    // Transforma stimuli para o formato esperado pela API
+    const stimuliForApi = input.stimuli?.map((s, index) => ({
+        id: s.id || crypto.randomUUID(),
+        order: index,
+        label: s.label,
+        description: s.description || null,
+        active: true,
+    })) || [];
+
     const response = await fetch(`${API_URL}/ocp/create`, {
         method: 'POST',
         headers: {
@@ -111,6 +120,7 @@ export async function createMusiProgram(input: CreateProgramInput): Promise<{ id
         credentials: 'include',
         body: JSON.stringify({
             ...input,
+            stimuli: stimuliForApi,
             area: MUSI_AREA_ID,
         }),
     });
@@ -131,6 +141,8 @@ export async function listMusiPrograms(params: {
     sort?: 'recent' | 'alphabetic';
     page?: number;
 }): Promise<any[]> {
+    console.log('🎵 [listMusiPrograms] Chamado com params:', params);
+    
     const url = new URL(`${API_URL}/ocp/clients/${params.patientId}/programs`);
     
     url.searchParams.set('area', MUSI_AREA_ID);
@@ -140,6 +152,8 @@ export async function listMusiPrograms(params: {
     if (params.q) url.searchParams.set('q', params.q);
     if (params.sort) url.searchParams.set('sort', params.sort);
 
+    console.log('🎵 [listMusiPrograms] URL da API:', url.toString());
+
     try {
         const response = await fetch(url.toString(), {
             credentials: 'include',
@@ -147,16 +161,78 @@ export async function listMusiPrograms(params: {
         });
 
         if (!response.ok) {
-            throw new Error('Erro ao buscar programas de Musicoterapia');
+            throw new Error(`Erro ${response.status}: ${response.statusText}`);
         }
 
         const json = await response.json();
         const realPrograms = (json?.data ?? []);
         
+        console.log('✅ [API] Retornando', realPrograms.length, 'programas de Musicoterapia da API');
+        
+        // Se a API não retornar programas, usar mocks para desenvolvimento
+        if (realPrograms.length === 0) {
+            console.log('📦 [API] Nenhum programa encontrado na API, carregando mocks...');
+            
+            const { mockMusiProgramList } = await import('../mocks/programListMock');
+            let result = [...mockMusiProgramList];
+            
+            console.log('📦 [MOCK] Total de programas no mock:', result.length);
+            
+            // Aplicar apenas filtros de status e query (ignorar patientId em desenvolvimento)
+            if (params.status && params.status !== 'all') {
+                result = result.filter(p => p.status === params.status);
+                console.log('🔍 [MOCK] Após filtro de status:', result.length, 'programas');
+            }
+            
+            if (params.q) {
+                const query = params.q.toLowerCase();
+                result = result.filter(p => 
+                    (p.title?.toLowerCase() || '').includes(query) ||
+                    (p.objective?.toLowerCase() || '').includes(query) ||
+                    (p.patientName?.toLowerCase() || '').includes(query)
+                );
+                console.log('🔍 [MOCK] Após filtro de busca:', result.length, 'programas');
+            }
+            
+            console.log('✅ [MOCK] Retornando', result.length, 'programas de Musicoterapia');
+            console.log('📋 [MOCK] Programas:', result.map(p => ({ id: p.id, title: p.title })));
+            return result;
+        }
+        
         return realPrograms;
     } catch (error) {
-        console.error('Erro ao buscar programas de Musicoterapia:', error);
-        return [];
+        console.error('❌ [API] Erro ao buscar programas de Musicoterapia:', error);
+        console.log('🔄 [MOCK] Carregando dados mock...');
+        
+        // Retornar mocks em caso de erro
+        const { mockMusiProgramList } = await import('../mocks/programListMock');
+        let result = [...mockMusiProgramList];
+        
+        console.log('📦 [MOCK] Total de programas no mock:', result.length);
+        
+        // TEMPORÁRIO: Aceitar qualquer patientId para desenvolvimento
+        // O mock sempre retorna programas, independente do patientId
+        console.log('🎵 [MOCK] Retornando todos os programas mock (ignorando patientId para desenvolvimento)');
+        
+        // Aplicar apenas filtros de status e query
+        if (params.status && params.status !== 'all') {
+            result = result.filter(p => p.status === params.status);
+            console.log('🔍 [MOCK] Após filtro de status:', result.length, 'programas');
+        }
+        
+        if (params.q) {
+            const query = params.q.toLowerCase();
+            result = result.filter(p => 
+                (p.title?.toLowerCase() || '').includes(query) ||
+                (p.objective?.toLowerCase() || '').includes(query) ||
+                (p.patientName?.toLowerCase() || '').includes(query)
+            );
+            console.log('🔍 [MOCK] Após filtro de busca:', result.length, 'programas');
+        }
+        
+        console.log('✅ [MOCK] Retornando', result.length, 'programas de Musicoterapia');
+        console.log('📋 [MOCK] Programas:', result.map(p => ({ id: p.id, title: p.title })));
+        return result;
     }
 }
 

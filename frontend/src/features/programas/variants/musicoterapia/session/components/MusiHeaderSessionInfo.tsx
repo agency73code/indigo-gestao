@@ -1,4 +1,4 @@
-import { Calendar } from 'lucide-react';
+import { Calendar, Clock } from 'lucide-react';
 import { useState } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -94,18 +94,41 @@ export default function MusiHeaderSessionInfo({ patient, program }: MusiHeaderSe
                         <span className="text-muted-foreground flex items-center gap-1 mr-2">
                             <Calendar className="h-3 w-3" /> Data da sessão:
                         </span>
-                        <span className="font-medium">
-                            {new Date().toLocaleDateString('pt-BR')}
-                        </span>
+                        <span className="font-medium">{formatDate(new Date().toISOString())}</span>
                     </div>
                 </div>
 
-                {/* Prazo */}
-                {prazo && (
-                    <div className="text-xs text-muted-foreground text-center">
-                        Prazo: {prazo.period} ({prazo.status})
+                {/* Nome do Programa */}
+                {program.name && (
+                    <div className="space-y-1">
+                        <p className="text-sm text-muted-foreground">Nome do programa:</p>
+                        <p className="font-medium text-sm">{program.name}</p>
                     </div>
                 )}
+
+                {/* Prazo do Programa */}
+                <div className="pt-2 border-t flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground flex items-center gap-1">
+                        <Clock className="h-3 w-3" /> Prazo do programa
+                    </span>
+                    <span className="font-medium text-right">
+                        {program.prazoInicio && program.prazoFim && prazo ? (
+                            <>
+                                {prazo.period}
+                                <span className="block text-xs text-muted-foreground">
+                                    {prazo.status}
+                                </span>
+                            </>
+                        ) : (
+                            <>
+                                <span className="text-muted-foreground">Não definido</span>
+                                <span className="block text-xs text-muted-foreground">
+                                    Configure nas edições do programa
+                                </span>
+                            </>
+                        )}
+                    </span>
+                </div>
             </CardContent>
         </Card>
     );

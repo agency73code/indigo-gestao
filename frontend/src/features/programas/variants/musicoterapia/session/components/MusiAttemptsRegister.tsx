@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
-import { AlertCircle, CheckCircle, History, MinusCircle, Clock } from 'lucide-react';
+import { AlertCircle, CheckCircle, History, MinusCircle, TrendingUp, HandHeart } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { MusiSessionAttempt } from '../types';
-import { calculateMusiPredominantResult } from '../services';
+import { calculateToPredominantResult } from '../services';
 
 interface MusiAttemptsRegisterProps {
     attempts: MusiSessionAttempt[];
@@ -32,6 +32,8 @@ type ActivitySummary = {
     counts: Counts;
     status: StatusResult;
     totalMinutes: number;
+    avgParticipacao: number | null;
+    avgSuport: number | null;
 };
 
 const createEmptyCounts = (): Counts => ({ 'nao-desempenhou': 0, 'desempenhou-com-ajuda': 0, desempenhou: 0 });
@@ -50,7 +52,7 @@ function calcStatus(counts: Counts): StatusResult {
     const naoDesempenhou = counts['nao-desempenhou'];
     const total = desempenhou + ajuda + naoDesempenhou;
 
-    const kind = calculateMusiPredominantResult(desempenhou, ajuda, naoDesempenhou);
+    const kind = calculateToPredominantResult(desempenhou, ajuda, naoDesempenhou);
 
     return { kind, desempenhou, ajuda, naoDesempenhou, total };
 }
@@ -61,9 +63,11 @@ type StatusBadgeProps = {
     ajuda: number;
     naoDesempenhou: number;
     total: number;
+    statusTestId: string;
+    tooltipTestId: string;
 };
 
-function StatusBadge({ kind, desempenhou, ajuda, naoDesempenhou, total }: StatusBadgeProps) {
+function StatusBadge({ kind, desempenhou, ajuda, naoDesempenhou, total, statusTestId, tooltipTestId }: StatusBadgeProps) {
     const config = {
         verde: {
             icon: CheckCircle,
@@ -94,71 +98,102 @@ function StatusBadge({ kind, desempenhou, ajuda, naoDesempenhou, total }: Status
                 <Badge
                     variant="secondary"
                     className={`gap-1.5 px-3 py-1 ${config.cls}`}
+                    data-testid={statusTestId}
                 >
-                    <Icon className="h-4 w-4" />
-                    {config.count}/{total}
+                    <Icon className="h-3.5 w-3.5" />
+                    <span className="text-xs font-medium">{content}</span>
                 </Badge>
             </TooltipTrigger>
-            <TooltipContent>
-                <p className="text-xs">{content}</p>
+            <TooltipContent data-testid={tooltipTestId} className="max-w-[220px] text-xs">
+                Status predominante baseado no tipo de desempenho mais frequente nesta atividade.
+                Verde: desempenhou, Laranja: desempenhou com ajuda, Vermelho: não desempenhou.
             </TooltipContent>
         </Tooltip>
     );
 }
 
 export default function MusiAttemptsRegister({ attempts }: MusiAttemptsRegisterProps) {
-    const summaries = useMemo(() => {
-        const map = new Map<string, ActivitySummary>();
+    const activitySummaries = useMemo<ActivitySummary[]>(() => {
+        if (attempts.length === 0) {
+            return [];
+        }
 
-        attempts.forEach((attempt) => {
+        const map = new Map<string, {
+            counts: Counts;
+            totalMinutes: number;
+            participacaoSum: number;
+            suporteSum: number;
+            countWithMetrics: number;
+            activityLabel: string;
+        }>();
+
+        for (const attempt of attempts) {
+            const increment: Counts =
+                attempt.type === 'nao-desempenhou'
+                    ? { 'nao-desempenhou': 1, 'desempenhou-com-ajuda': 0, desempenhou: 0 }
+                    : attempt.type === 'desempenhou-com-ajuda'
+                      ? { 'nao-desempenhou': 0, 'desempenhou-com-ajuda': 1, desempenhou: 0 }
+                      : { 'nao-desempenhou': 0, 'desempenhou-com-ajuda': 0, desempenhou: 1 };
+
+            const minutesToAdd = attempt.durationMinutes || 0;
+            const participacao = attempt.participacao ?? 0;
+            const suporte = attempt.suporte ?? 0;
+
             const existing = map.get(attempt.activityId);
-            if (!existing) {
-                const counts = createEmptyCounts();
-                counts[attempt.type] = 1;
-                map.set(attempt.activityId, {
-                    activityId: attempt.activityId,
-                    activityLabel: attempt.activityLabel,
-                    counts,
-                    status: calcStatus(counts),
-                    totalMinutes: attempt.durationMinutes ?? 0,
-                });
-            } else {
-                const newCounts = { ...existing.counts };
-                newCounts[attempt.type] += 1;
-                map.set(attempt.activityId, {
-                    ...existing,
-                    counts: newCounts,
-                    status: calcStatus(newCounts),
-                    totalMinutes: existing.totalMinutes + (attempt.durationMinutes ?? 0),
-                });
-            }
-        });
 
-        return Array.from(map.values());
+            if (!existing) {
+                map.set(attempt.activityId, {
+                    counts: increment,
+                    totalMinutes: minutesToAdd,
+                    participacaoSum: participacao,
+                    suporteSum: suporte,
+                    countWithMetrics: (participacao > 0 || suporte > 0) ? 1 : 0,
+                    activityLabel: attempt.activityLabel,
+                });
+                continue;
+            }
+
+            const newCounts = sumCounts(existing.counts, increment);
+            map.set(attempt.activityId, {
+                counts: newCounts,
+                totalMinutes: attempt.durationMinutes ?? existing.totalMinutes,
+                participacaoSum: existing.participacaoSum + participacao,
+                suporteSum: existing.suporteSum + suporte,
+                countWithMetrics: existing.countWithMetrics + ((participacao > 0 || suporte > 0) ? 1 : 0),
+                activityLabel: existing.activityLabel,
+            });
+        }
+
+        return Array.from(map.entries()).map(([activityId, data]) => {
+            const avgParticipacao = data.countWithMetrics > 0 ? data.participacaoSum / data.countWithMetrics : null;
+            const avgSuport = data.countWithMetrics > 0 ? data.suporteSum / data.countWithMetrics : null;
+
+            return {
+                activityId,
+                activityLabel: data.activityLabel,
+                counts: data.counts,
+                status: calcStatus(data.counts),
+                totalMinutes: data.totalMinutes,
+                avgParticipacao,
+                avgSuport,
+            };
+        });
     }, [attempts]);
 
-    const globalCounts = useMemo(() => {
-        return summaries.reduce(
-            (acc, summary) => sumCounts(acc, summary.counts),
-            createEmptyCounts()
-        );
-    }, [summaries]);
-
-    const globalStatus = useMemo(() => calcStatus(globalCounts), [globalCounts]);
-
-    if (attempts.length === 0) {
+    if (activitySummaries.length === 0) {
         return (
-            <Card className="rounded-[5px]">
+            <Card className="rounded-[5px] px-6 py-2 md:px-8 md:py-10 lg:px-8 lg:py-0">
                 <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
                     <CardTitle className="text-base flex items-center gap-2">
                         <History className="h-4 w-4" />
-                        Histórico de Tentativas
+                        Registro da Atividade
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="pb-3 sm:pb-6">
-                    <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-[5px]">
-                        <History className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                        <p className="text-sm">Nenhuma tentativa registrada ainda</p>
+                    <div className="text-center py-8 text-muted-foreground">
+                        <History className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <p>Nenhuma tentativa registrada ainda</p>
+                        <p className="text-sm mt-1">Selecione uma atividade acima para comecar</p>
                     </div>
                 </CardContent>
             </Card>
@@ -166,56 +201,106 @@ export default function MusiAttemptsRegister({ attempts }: MusiAttemptsRegisterP
     }
 
     return (
-        <TooltipProvider>
-            <Card className="rounded-[5px]">
-                <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
-                    <div className="flex items-center justify-between">
-                        <CardTitle className="text-base flex items-center gap-2">
-                            <History className="h-4 w-4" />
-                            Histórico de Tentativas
-                            <Badge variant="secondary" className="ml-2">
-                                {attempts.length}
-                            </Badge>
-                        </CardTitle>
-                        <StatusBadge
-                            kind={globalStatus.kind}
-                            desempenhou={globalStatus.desempenhou}
-                            ajuda={globalStatus.ajuda}
-                            naoDesempenhou={globalStatus.naoDesempenhou}
-                            total={globalStatus.total}
-                        />
-                    </div>
-                </CardHeader>
-                <CardContent className="pb-3 sm:pb-6">
+        <Card className="rounded-[5px] px-6 py-2 md:px-8 md:py-10 lg:px-8 lg:py-0">
+            <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
+                <CardTitle className="text-base flex items-center gap-2">
+                    <History className="h-4 w-4" />
+                    Registro Geral por Atividade
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="pb-3 sm:pb-6">
+                <TooltipProvider>
                     <div className="space-y-3">
-                        {summaries.map((summary) => (
-                            <div
-                                key={summary.activityId}
-                                className="p-3 rounded-[5px] border bg-muted/30"
-                            >
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="font-medium text-sm">
-                                        {summary.activityLabel}
-                                    </span>
-                                    <StatusBadge
-                                        kind={summary.status.kind}
-                                        desempenhou={summary.status.desempenhou}
-                                        ajuda={summary.status.ajuda}
-                                        naoDesempenhou={summary.status.naoDesempenhou}
-                                        total={summary.status.total}
-                                    />
-                                </div>
-                                {summary.totalMinutes > 0 && (
-                                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                        <Clock className="h-3 w-3" />
-                                        {summary.totalMinutes} minutos
+                        {activitySummaries.map((activity) => {
+                            const counts = activity.counts;
+                            const status = activity.status;
+                            const totalCounts = status.total;
+
+                            return (
+                                <div key={activity.activityId} className="border rounded-[5px]">
+                                    <div className="px-4 py-3 bg-muted/30">
+                                        <div className="font-medium text-sm truncate ">
+                                            {activity.activityLabel}
+                                        </div>
                                     </div>
-                                )}
-                            </div>
-                        ))}
+
+                                    <div
+                                        className="px-4 py-3"
+                                        data-testid={`activity-summary-row-${activity.activityId}`}
+                                    >
+                                        <div className="flex flex-wrap items-center gap-3 ">
+                                            <Badge variant="secondary" className="px-3 py-1 text-gray-700 bg-gray-100 hover:bg-gray-200 border-0">
+                                                <span className="text-xs font-medium">Não desempenhou: {counts['nao-desempenhou']}</span>
+                                            </Badge>
+                                            <Badge variant="secondary" className="px-3 py-1 text-gray-700 bg-gray-100 hover:bg-gray-200 border-0">
+                                                <span className="text-xs font-medium">Desempenhou com ajuda: {counts['desempenhou-com-ajuda']}</span>
+                                            </Badge>
+                                            <Badge variant="secondary" className="px-3 py-1 text-gray-700 bg-gray-100 hover:bg-gray-200 border-0">
+                                                <span className="text-xs font-medium">Desempenhou: {counts.desempenhou}</span>
+                                            </Badge>
+
+                                            {/* Badges de Participação e Suporte específicos de Musicoterapia */}
+                                            {activity.avgParticipacao !== null && (
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Badge
+                                                            variant="secondary"
+                                                            className="gap-1.5 px-3 py-1 text-purple-700 bg-purple-100 hover:bg-purple-200 border-0"
+                                                        >
+                                                            <TrendingUp className="h-3.5 w-3.5" />
+                                                            <span className="text-xs font-medium">
+                                                                Participação: {activity.avgParticipacao.toFixed(1)}
+                                                            </span>
+                                                        </Badge>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent className="max-w-[220px] text-xs">
+                                                        Média de participação do paciente nas atividades (0-5). Valores mais altos indicam maior engajamento.
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            )}
+
+                                            {activity.avgSuport !== null && (
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Badge
+                                                            variant="secondary"
+                                                            className="gap-1.5 px-3 py-1 text-indigo-700 bg-indigo-100 hover:bg-indigo-200 border-0"
+                                                        >
+                                                            <HandHeart className="h-3.5 w-3.5" />
+                                                            <span className="text-xs font-medium">
+                                                                Suporte: {activity.avgSuport.toFixed(1)}
+                                                            </span>
+                                                        </Badge>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent className="max-w-[220px] text-xs">
+                                                        Nível médio de suporte necessário (1-5). Valores menores indicam maior independência do paciente.
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                            )}
+
+                                            <div className="ml-auto flex items-center gap-3 ">
+                                                <StatusBadge
+                                                    kind={status.kind}
+                                                    desempenhou={status.desempenhou}
+                                                    ajuda={status.ajuda}
+                                                    naoDesempenhou={status.naoDesempenhou}
+                                                    total={status.total}
+                                                    statusTestId={`activity-status-${activity.activityId}`}
+                                                    tooltipTestId={`activity-status-tip-${activity.activityId}`}
+                                                />
+                                                
+                                                <Badge variant="secondary" className="px-3 py-1 text-gray-700 bg-gray-100 hover:bg-gray-200 border-0">
+                                                    <span className="text-xs font-semibold">Total: {totalCounts}</span>
+                                                </Badge>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
-                </CardContent>
-            </Card>
-        </TooltipProvider>
+                </TooltipProvider>
+            </CardContent>
+        </Card>
     );
 }

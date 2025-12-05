@@ -13,6 +13,8 @@ export type MusiSessionAttempt = {
     type: MusiPerformanceType;
     timestamp: string;
     durationMinutes?: number;
+    participacao?: number; // 0-5: 0=Não participa, 5=Supera expectativas
+    suporte?: number; // 1-5: 1=Sem suporte, 5=Máximo físico
 };
 
 export type MusiSessionSummary = {
@@ -56,7 +58,6 @@ export type MusiProgramDetail = {
     activitiesApplicationDescription?: string | null;
     status: string;
     criteria?: string | null;
-    currentPerformanceLevel?: string | null;
     prazoInicio?: string;
     prazoFim?: string;
     activities: MusiActivity[];
@@ -66,6 +67,8 @@ export type MusiActivity = {
     id: string;
     label: string;
     description: string;
+    metodos?: string;
+    tecnicasProcedimentos?: string;
     active: boolean;
     order: number;
 };

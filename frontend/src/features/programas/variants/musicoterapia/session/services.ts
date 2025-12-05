@@ -20,6 +20,37 @@ export async function searchPatientsForMusiSession(_query: string): Promise<Pati
  * Busca detalhes do programa de Musicoterapia para registro de sessão
  */
 export async function getMusiProgramDetail(_programId: string): Promise<MusiProgramDetail> {
+    // Se for um ID mock, retorna o programa mock
+    if (_programId.startsWith('mock-musi-')) {
+        const { mockMusiProgram } = await import('../mocks/programMock');
+        
+        return {
+            id: mockMusiProgram.id,
+            name: mockMusiProgram.name,
+            patientId: mockMusiProgram.patientId,
+            patientName: mockMusiProgram.patientName,
+            therapistId: mockMusiProgram.therapistId,
+            therapistName: mockMusiProgram.therapistName,
+            goalTitle: mockMusiProgram.goalTitle,
+            goalDescription: mockMusiProgram.goalDescription,
+            shortTermGoalDescription: mockMusiProgram.shortTermGoalDescription,
+            activitiesApplicationDescription: mockMusiProgram.stimuliApplicationDescription,
+            status: mockMusiProgram.status,
+            criteria: mockMusiProgram.criteria,
+            prazoInicio: mockMusiProgram.prazoInicio,
+            prazoFim: mockMusiProgram.prazoFim,
+            activities: mockMusiProgram.stimuli.map((stimulus: any) => ({
+                id: stimulus.id,
+                label: stimulus.label,
+                description: stimulus.description || '',
+                metodos: stimulus.metodos || '',
+                tecnicasProcedimentos: stimulus.tecnicasProcedimentos || '',
+                active: stimulus.active,
+                order: stimulus.order,
+            })),
+        };
+    }
+    
     const { fetchProgramById } = await import('@/features/programas/detalhe-ocp/services');
     const detail = await fetchProgramById(_programId);
     
@@ -36,13 +67,14 @@ export async function getMusiProgramDetail(_programId: string): Promise<MusiProg
         activitiesApplicationDescription: detail.stimuliApplicationDescription,
         status: detail.status,
         criteria: detail.criteria,
-        currentPerformanceLevel: (detail as any).currentPerformanceLevel,
         prazoInicio: detail.prazoInicio,
         prazoFim: detail.prazoFim,
         activities: detail.stimuli.map((stimulus: any) => ({
             id: stimulus.id,
             label: stimulus.label,
             description: stimulus.description || '',
+            metodos: stimulus.metodos || '',
+            tecnicasProcedimentos: stimulus.tecnicasProcedimentos || '',
             active: stimulus.active,
             order: stimulus.order,
         })),
@@ -145,6 +177,9 @@ export function calculateMusiPredominantResult(
     if (max === ajuda) return 'laranja';
     return 'vermelho';
 }
+
+// Alias para compatibilidade com componentes compartilhados
+export const calculateToPredominantResult = calculateMusiPredominantResult;
 
 /**
  * Inicializa arquivos mock de sessão (apenas para desenvolvimento)

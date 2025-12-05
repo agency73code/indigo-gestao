@@ -102,3 +102,86 @@ export type MusiActivitySummary = {
     durationMinutes?: number | null; // tempo total em minutos
     // Status predominante é calculado no componente, não precisa vir do backend
 };
+
+// ============ ESTÍMULO/OBJETIVO ESPECÍFICO - MUSICOTERAPIA ============
+
+/**
+ * Estrutura do Objetivo Específico de Musicoterapia
+ * Baseado no modelo do programa real de Musicoterapia
+ * 
+ * Campos:
+ * - objetivo: O objetivo geral (ex: "Compreender conceitos")
+ * - objetivoEspecifico: O objetivo específico (ex: "Identificar direita e esquerda")
+ * - metodos: Método utilizado (ex: "Recriação – Jogos e atividades musicais")
+ * - tecnicasProcedimentos: Técnicas e procedimentos detalhados
+ */
+export interface MusiStimulus {
+    id?: string;
+    order: number;
+    active: boolean;
+    objetivo: string;                    // Campo "Objetivo" - substitui label
+    objetivoEspecifico: string;          // Campo "Objetivo Específico" - substitui description
+    metodos: string;                     // Campo "Métodos" - novo
+    tecnicasProcedimentos: string;       // Campo "Técnicas/Procedimentos" - novo
+}
+
+/**
+ * Input para criação/edição de estímulo Musicoterapia
+ */
+export interface MusiStimulusInput {
+    id?: string;
+    order: number;
+    active: boolean;
+    objetivo: string;
+    objetivoEspecifico: string;
+    metodos: string;
+    tecnicasProcedimentos: string;
+}
+
+/**
+ * Mapper: Converte MusiStimulus para formato de API (stimuli padrão)
+ * Usado ao enviar dados para o backend
+ */
+export function musiStimulusToApi(stimulus: MusiStimulus): {
+    id?: string;
+    order: number;
+    label: string;
+    description: string | null;
+    active: boolean;
+    metodos?: string;
+    tecnicasProcedimentos?: string;
+} {
+    return {
+        id: stimulus.id,
+        order: stimulus.order,
+        label: stimulus.objetivo,
+        description: stimulus.objetivoEspecifico || null,
+        active: stimulus.active,
+        metodos: stimulus.metodos,
+        tecnicasProcedimentos: stimulus.tecnicasProcedimentos,
+    };
+}
+
+/**
+ * Mapper: Converte formato de API para MusiStimulus
+ * Usado ao receber dados do backend
+ */
+export function apiToMusiStimulus(apiStimulus: {
+    id?: string;
+    order: number;
+    label: string;
+    description?: string | null;
+    active: boolean;
+    metodos?: string;
+    tecnicasProcedimentos?: string;
+}): MusiStimulus {
+    return {
+        id: apiStimulus.id,
+        order: apiStimulus.order,
+        active: apiStimulus.active,
+        objetivo: apiStimulus.label,
+        objetivoEspecifico: apiStimulus.description || '',
+        metodos: apiStimulus.metodos || '',
+        tecnicasProcedimentos: apiStimulus.tecnicasProcedimentos || '',
+    };
+}

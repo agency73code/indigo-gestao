@@ -12,6 +12,8 @@ interface MusiStimulusRowDetailProps {
         label: string;
         description?: string | null;
         active: boolean;
+        metodos?: string | null;
+        tecnicasProcedimentos?: string | null;
     };
     muted?: boolean;
 }
@@ -50,15 +52,54 @@ export default function MusiStimulusRowDetail({
                         <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground shrink-0">
                             {stimulus.order}
                         </span>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium">{stimulus.label}</p>
-                            {stimulus.description && stimulus.description.trim().length > 0 && (
-                                <div className="mt-2">
-                                    <p className="text-xs font-medium text-muted-foreground mb-1">
-                                        Descrição:
-                                    </p>
-                                    <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                                        {stimulus.description}
+                        <div className="flex-1 min-w-0 space-y-4">
+                            {/* Objetivo Principal */}
+                            <div>
+                                <p className="text-sm font-semibold text-foreground">{stimulus.label}</p>
+                            </div>
+                            
+                            {/* Grid com Descrição e Métodos lado a lado */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {stimulus.description && stimulus.description.trim().length > 0 && (
+                                    <div className="space-y-1.5">
+                                        <div className="flex items-center gap-1.5">
+                                            <div className="h-1 w-1 rounded-full bg-primary/60"></div>
+                                            <p className="text-xs font-semibold text-foreground uppercase tracking-wide">
+                                                Objetivo Específico
+                                            </p>
+                                        </div>
+                                        <p className="text-sm text-muted-foreground leading-relaxed pl-2.5">
+                                            {stimulus.description}
+                                        </p>
+                                    </div>
+                                )}
+                                
+                                {stimulus.metodos && stimulus.metodos.trim().length > 0 && (
+                                    <div className="space-y-1.5">
+                                        <div className="flex items-center gap-1.5">
+                                            <div className="h-1 w-1 rounded-full bg-primary/60"></div>
+                                            <p className="text-xs font-semibold text-foreground uppercase tracking-wide">
+                                                Métodos
+                                            </p>
+                                        </div>
+                                        <p className="text-sm text-muted-foreground leading-relaxed pl-2.5">
+                                            {stimulus.metodos}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                            
+                            {/* Técnicas/Procedimentos em largura total */}
+                            {stimulus.tecnicasProcedimentos && stimulus.tecnicasProcedimentos.trim().length > 0 && (
+                                <div className="space-y-1.5 pt-2 border-t border-border/40 dark:border-white/10">
+                                    <div className="flex items-center gap-1.5">
+                                        <div className="h-1 w-1 rounded-full bg-primary/60"></div>
+                                        <p className="text-xs font-semibold text-foreground uppercase tracking-wide">
+                                            Técnicas/Procedimentos
+                                        </p>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground leading-relaxed pl-2.5">
+                                        {stimulus.tecnicasProcedimentos}
                                     </p>
                                 </div>
                             )}

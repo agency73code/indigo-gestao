@@ -12,6 +12,8 @@ interface MusiStimuliSectionProps {
             label: string;
             description?: string | null;
             active: boolean;
+            metodos?: string | null;
+            tecnicasProcedimentos?: string | null;
         }[];
     };
 }

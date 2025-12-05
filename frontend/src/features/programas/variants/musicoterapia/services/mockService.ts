@@ -7,10 +7,12 @@ import { mockMusiProgram } from '../mocks/programMock';
 import { mockMusiProgramList } from '../mocks/programListMock';
 import { mockMusiSessions, mockMusiSessionsDetailed } from '../mocks/mockSessions';
 import { getMockMusiChartData } from '../mocks/mockChartService';
-import type { ProgramDetail, ProgramListItem } from '../../../nova-sessao/types';
+import type { ProgramDetail } from '../../../nova-sessao/types';
+import type { ProgramListItem } from '../../../consultar-programas/types';
 import type { SessionListItem } from '../../../detalhe-ocp/types';
 import type { SerieLinha } from '../../../relatorio-geral/types';
 import type { MusiSessionPayload, MusiSessionResponse, MusiSessionListItem, MusiSessionDetail } from '../types';
+import type { CreateProgramInput } from '../../../core/types';
 
 const STORAGE_KEY = 'musi_mock_data';
 
@@ -114,22 +116,45 @@ export async function fetchMusiPrograms(filters?: {
 /**
  * Cria programa (mock)
  */
-export async function createMusiProgram(data: Partial<ProgramDetail>): Promise<ProgramDetail> {
+export async function createMusiProgram(data: CreateProgramInput): Promise<{ id: string }> {
     await delay(800);
     
     const storage = getStorage();
+    const newId = `musi-${Date.now()}`;
+    
+    // Transforma stimuli para o formato do ProgramDetail
+    const stimuliForStorage = data.stimuli?.map((s, index) => ({
+        id: s.id || crypto.randomUUID(),
+        order: index,
+        label: s.label,
+        description: s.description || null,
+        active: true,
+    })) || [];
+
     const newProgram: ProgramDetail = {
-        id: `musi-${Date.now()}`,
+        id: newId,
         createdAt: new Date().toISOString(),
         status: 'active',
-        ...data,
+        name: data.name || data.goalTitle || '',
+        patientId: data.patientId,
+        therapistId: data.therapistId,
+        goalTitle: data.goalTitle || '',
+        goalDescription: data.goalDescription || '',
+        longTermGoalDescription: data.goalDescription || '',
+        shortTermGoalDescription: data.shortTermGoalDescription || '',
+        stimuliApplicationDescription: data.stimuliApplicationDescription || '',
+        stimuli: stimuliForStorage,
+        criteria: data.criteria || '',
+        notes: data.notes || '',
+        prazoInicio: data.prazoInicio || null,
+        prazoFim: data.prazoFim || null,
     } as ProgramDetail;
     
     storage.programs.push(newProgram);
     saveStorage(storage);
     
     console.log('🎵 [MOCK] Programa criado:', newProgram.name);
-    return newProgram;
+    return { id: newId };
 }
 
 /**

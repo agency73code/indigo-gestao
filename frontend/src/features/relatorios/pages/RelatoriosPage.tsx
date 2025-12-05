@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Plus, FileText, ChevronDown, ChevronRight, Folder, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { toast } from 'sonner';
@@ -207,6 +206,7 @@ export function RelatoriosPage() {
         cpf: patient.cpf,
         photoUrl: (patient as any)?.photoUrl,
         dataNascimento: patient.dataNascimento,
+        responsavel: (patient as any)?.guardianName || patient.responsavel?.nome,
       };
     }
 
@@ -217,6 +217,7 @@ export function RelatoriosPage() {
         cpf: firstReport.patient.cpf,
         photoUrl: undefined, // Backend não retorna foto no relatório
         dataNascimento: firstReport.patient.dataNascimento,
+        responsavel: (firstReport.patient as any)?.guardianName || firstReport.patient.responsavel?.nome,
       };
     }
 
@@ -232,6 +233,7 @@ export function RelatoriosPage() {
             cpf: undefined,
             photoUrl: undefined,
             dataNascimento: undefined,
+            responsavel: undefined,
           };
         }
       }
@@ -243,6 +245,7 @@ export function RelatoriosPage() {
       cpf: undefined,
       photoUrl: undefined,
       dataNascimento: undefined,
+      responsavel: undefined,
     };
   };
 
@@ -320,9 +323,9 @@ export function RelatoriosPage() {
     <div className="min-h-screen bg-background">
       {/* Conteúdo principal */}
       <div className="px-1 lg:px-4 py-4 space-y-4">
-        {/* Linha com Filtros e Botão */}
-        <div className="flex gap-4">
-          <div className="flex-1">
+        {/* Linha com Busca e Botão */}
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1 max-w-[480px]">
             <ToolbarConsulta
               searchValue={filters.q || ''}
               onSearchChange={(value) => updateFilters({ q: value })}
@@ -331,39 +334,15 @@ export function RelatoriosPage() {
             />
           </div>
           
-          <div className="flex gap-2 items-start">
-            {/* Filtro de Status */}
-            <Select
-              value={filters.status || 'all'}
-              onValueChange={(value) => updateFilters({ status: value as any })}
-            >
-              <SelectTrigger
-                className="w-[170px]"
-                style={{ borderRadius: 'var(--radius) !important' }}
-                aria-label="Filtrar por status"
-              >
-                <span className="text-sm">
-                  {filters.status === 'all' || !filters.status ? 'Todos' : 
-                   filters.status === 'final' ? 'Finalizados' : 'Arquivados'}
-                </span>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="final">Finalizados</SelectItem>
-                <SelectItem value="archived">Arquivados</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* Botão Novo Relatório */}
-            <Button
-              onClick={() => navigate('/app/relatorios/novo')}
-              className="gap-2"
-              variant="default"
-            >
-              <Plus className="h-4 w-4" />
-              Novo Relatório
-            </Button>
-          </div>
+          {/* Botão Novo Relatório */}
+          <Button
+            onClick={() => navigate('/app/relatorios/novo')}
+            className="gap-2"
+            variant="default"
+          >
+            <Plus className="h-4 w-4" />
+            Novo Relatório
+          </Button>
         </div>
 
         {/* Lista de relatórios agrupados por cliente e mês */}
@@ -427,14 +406,14 @@ export function RelatoriosPage() {
                         <h3 className="text-base font-regular truncate" style={{ fontFamily: 'Sora, sans-serif' }}>
                           {patientInfo.nome}
                         </h3>
+                        {patientInfo.responsavel && (
+                          <p className="text-sm text-muted-foreground">
+                            Responsável: {patientInfo.responsavel}
+                          </p>
+                        )}
                         {patientInfo.dataNascimento && (
                           <p className="text-sm text-muted-foreground">
                             {calculateAge(patientInfo.dataNascimento)} anos
-                          </p>
-                        )}
-                        {patientInfo.cpf && !patientInfo.dataNascimento && (
-                          <p className="text-sm text-muted-foreground">
-                            CPF: {patientInfo.cpf}
                           </p>
                         )}
                       </div>
@@ -568,16 +547,6 @@ export function RelatoriosPage() {
                                                       </p>
                                                     </div>
                                                   </div>
-                                                </div>
-                                                
-                                                <div className="shrink-0 ml-2">
-                                                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                                                    report.status === 'final' 
-                                                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
-                                                      : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
-                                                  }`}>
-                                                    {report.status === 'final' ? 'Finalizado' : 'Arquivado'}
-                                                  </span>
                                                 </div>
                                               </div>
                                             );

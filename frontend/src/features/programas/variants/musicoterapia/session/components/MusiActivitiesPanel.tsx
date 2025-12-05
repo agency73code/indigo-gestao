@@ -18,6 +18,8 @@ type BlockResumo = {
     desempenhou: number;
     total: number;
     ts: number;
+    avgParticipacao: number | null;
+    avgSuporte: number | null;
 };
 
 const createEmptyCounts = (): BlockCounts => ({ 'nao-desempenhou': 0, 'desempenhou-com-ajuda': 0, desempenhou: 0 });
@@ -40,6 +42,10 @@ export default function MusiActivitiesPanel({
     const [pausedMap, setPausedMap] = useState<Record<string, boolean>>({});
     const [historico, setHistorico] = useState<Record<string, BlockResumo[]>>({});
     const [tempAttempts, setTempAttempts] = useState<Record<string, MusiSessionAttempt[]>>({});
+    
+    // Estados para participação e suporte - compartilhados e aplicados ao finalizar
+    const [participacao, setParticipacao] = useState<string>('');
+    const [suporte, setSuporte] = useState<string>('');
 
     const shortTermGoalDescription = program.shortTermGoalDescription ?? null;
 
@@ -76,6 +82,7 @@ export default function MusiActivitiesPanel({
         const tipoSessao: MusiPerformanceType =
             resultado === 'nao-desempenhou' ? 'nao-desempenhou' : resultado === 'desempenhou-com-ajuda' ? 'desempenhou-com-ajuda' : 'desempenhou';
 
+        // NÃO salva participação/suporte aqui - será aplicado ao finalizar o bloco
         const novoAttempto: MusiSessionAttempt = {
             id: `attempt-${Date.now()}-${Math.random()}`,
             attemptNumber,
@@ -166,10 +173,21 @@ export default function MusiActivitiesPanel({
         }
 
         const counts = countsMap[ativoId] ?? createEmptyCounts();
+        
+        // Pegar valores atuais de participação e suporte
+        const participacaoValue = participacao ? parseInt(participacao, 10) : undefined;
+        const suporteValue = suporte ? parseInt(suporte, 10) : undefined;
+        
+        // Usar os valores atuais dos selects para o resumo
+        const avgParticipacao = participacaoValue !== undefined && !isNaN(participacaoValue) ? participacaoValue : null;
+        const avgSuporte = suporteValue !== undefined && !isNaN(suporteValue) ? suporteValue : null;
+        
         const resumo: BlockResumo = {
             ...counts,
             total: counts['nao-desempenhou'] + counts['desempenhou-com-ajuda'] + counts.desempenhou,
             ts: Date.now(),
+            avgParticipacao,
+            avgSuporte,
         };
 
         setHistorico((prev) => {
@@ -178,11 +196,14 @@ export default function MusiActivitiesPanel({
             return { ...prev, [ativoId]: atual };
         });
 
+        // Aplicar participação e suporte a TODAS as tentativas ao finalizar
         const tempActivityAttempts = tempAttempts[ativoId] ?? [];
         tempActivityAttempts.forEach((attempt) => {
             onAddAttempt({
                 ...attempt,
                 durationMinutes: durationMinutes || attempt.durationMinutes,
+                participacao: participacaoValue,
+                suporte: suporteValue,
             });
         });
 
@@ -199,6 +220,11 @@ export default function MusiActivitiesPanel({
         });
 
         setPausedMap((prev) => ({ ...prev, [ativoId]: false }));
+        
+        // Limpar os selects para o próximo bloco/atividade
+        setParticipacao('');
+        setSuporte('');
+        
         setAtivoId(null);
     };
 
@@ -215,7 +241,7 @@ export default function MusiActivitiesPanel({
                         {index > 0 && <Separator />}
                         <div className="px-4 py-3 text-xs">
                             <div className="font-semibold text-sm mb-2 text-foreground">
-                                Tentativa {index + 1}
+                                Bloco {index + 1}
                             </div>
                             <div className="flex flex-wrap gap-3">
                                 <Badge variant="outline" className="p-2 rounded-[5px]">
@@ -227,6 +253,19 @@ export default function MusiActivitiesPanel({
                                 <Badge variant="outline" className="p-2 rounded-[5px]">
                                     Desempenhou: {item.desempenhou}
                                 </Badge>
+                                
+                                {/* Badges de Participação e Suporte de Musicoterapia */}
+                                {item.avgParticipacao !== null && (
+                                    <Badge variant="outline" className="p-2 rounded-[5px] text-purple-700 bg-purple-50">
+                                        Participação: {item.avgParticipacao.toFixed(1)}
+                                    </Badge>
+                                )}
+                                {item.avgSuporte !== null && (
+                                    <Badge variant="outline" className="p-2 rounded-[5px] text-indigo-700 bg-indigo-50">
+                                        Suporte: {item.avgSuporte.toFixed(1)}
+                                    </Badge>
+                                )}
+                                
                                 <Badge
                                     variant="outline"
                                     className="font-semibold p-2 rounded-[5px] ml-auto"
@@ -270,19 +309,6 @@ export default function MusiActivitiesPanel({
                         {activeActivities.length}
                     </Badge>
                 </CardTitle>
-
-                {shortTermGoalDescription && (
-                    <div className="space-y-3 mt-4">
-                        <Label className="text-sm font-medium mb-1">
-                            Descrição Detalhada do Objetivo a Curto Prazo:
-                        </Label>
-                        <div className="p-3 bg-muted rounded-md">
-                            <p className="text-sm text-muted-foreground leading-relaxed">
-                                {shortTermGoalDescription}
-                            </p>
-                        </div>
-                    </div>
-                )}
             </CardHeader>
             <CardContent className="pb-3 sm:pb-6 space-y-4">
                 <div className="space-y-3">
@@ -303,12 +329,12 @@ export default function MusiActivitiesPanel({
                                 className="rounded-[5px] border bg-card shadow-sm"
                             >
                                 <div className="px-4 py-3">
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex items-start gap-3">
-                                            <div className="h-8 w-8 rounded-full bg-amber-500 flex items-center justify-center text-xs font-semibold text-white shrink-0 mt-0.5">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                                            <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-xs font-semibold text-white shrink-0">
                                                 {activity.order}
                                             </div>
-                                            <div className="font-medium text-sm text-foreground">
+                                            <div className="font-medium text-sm text-foreground truncate flex items-center gap-2">
                                                 {activity.label}
                                             </div>
                                         </div>
@@ -316,22 +342,61 @@ export default function MusiActivitiesPanel({
                                         <Button
                                             size="sm"
                                             onClick={() => handleSelectActivity(activity.id)}
+                                            className="shrink-0"
                                         >
                                             <Play className="h-4 w-4 mr-2" /> Iniciar
                                         </Button>
                                     </div>
 
-                                    {activity.description && activity.description.trim().length > 0 && (
-                                        <details className="mt-3 ml-11">
-                                            <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground list-none flex items-center gap-1">
-                                                <ChevronRight className="h-3 w-3 transition-transform [details[open]_&]:rotate-90" />
-                                                Ver descrição
-                                            </summary>
-                                            <div className="mt-2 p-3 bg-muted/50 rounded-md text-xs text-muted-foreground leading-relaxed">
-                                                {activity.description}
-                                            </div>
-                                        </details>
-                                    )}
+                                    {/* Informações da atividade em formato expansível */}
+                                    <details className="mt-3">
+                                        <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground list-none flex items-center gap-1">
+                                            <ChevronRight className="h-3 w-3 transition-transform [details[open]_&]:rotate-90" />
+                                            Ver descrição
+                                        </summary>
+                                        <div className="mt-3 space-y-3">
+                                            {/* Grid com Objetivo Específico e Métodos lado a lado */}
+                                            {(activity.description || activity.metodos) && (
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                    {activity.description && (
+                                                        <div className="space-y-1">
+                                                            <p className="text-xs font-medium text-foreground flex items-center gap-1">
+                                                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                                                OBJETIVO ESPECÍFICO
+                                                            </p>
+                                                            <p className="text-xs text-muted-foreground leading-relaxed pl-2.5">
+                                                                {activity.description}
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                    {activity.metodos && (
+                                                        <div className="space-y-1">
+                                                            <p className="text-xs font-medium text-foreground flex items-center gap-1">
+                                                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                                                MÉTODOS
+                                                            </p>
+                                                            <p className="text-xs text-muted-foreground leading-relaxed pl-2.5">
+                                                                {activity.metodos}
+                                                            </p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                            
+                                            {/* Técnicas/Procedimentos em largura completa */}
+                                            {activity.tecnicasProcedimentos && (
+                                                <div className="pt-3 border-t space-y-1">
+                                                    <p className="text-xs font-medium text-foreground flex items-center gap-1">
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                                        TÉCNICAS/PROCEDIMENTOS
+                                                    </p>
+                                                    <p className="text-xs text-muted-foreground leading-relaxed pl-2.5">
+                                                        {activity.tecnicasProcedimentos}
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </details>
                                 </div>
 
                                 <Separator />
@@ -354,6 +419,10 @@ export default function MusiActivitiesPanel({
                                                 onRemoveAttempt={removerTentativa}
                                                 onPause={pausarBloco}
                                                 onFinalizarBloco={finalizarBloco}
+                                                participacao={participacao}
+                                                setParticipacao={setParticipacao}
+                                                suporte={suporte}
+                                                setSuporte={setSuporte}
                                             />
                                         </div>
                                     </div>
