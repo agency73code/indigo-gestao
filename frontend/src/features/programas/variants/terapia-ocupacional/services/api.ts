@@ -31,8 +31,6 @@ export async function fetchToPatientById(id: string): Promise<Patient> {
     };
 }
 
-
-
 export async function fetchToTherapistById(id: string): Promise<Therapist> {
     const response = await fetch(`${API_URL}/terapeutas/${id}`, {
         credentials: 'include',

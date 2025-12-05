@@ -3,7 +3,7 @@ import { authFetch } from "./http";
 import type { Terapeuta, Cliente } from "@/features/cadastros/types/cadastros.types";
 import type { Bank } from '@/common/constants/banks';
 import type { Therapist as TerapeutaConsulta, Patient } from '@/features/consultas/types/consultas.types'
-import type { QueryParams } from "./types/api.types";
+import type { QueryParams, SaveSessionPayload } from "./types/api.types";
 
 const AUTH_BYPASS =
   import.meta.env.DEV && import.meta.env.VITE_AUTH_BYPASS === 'true';
@@ -280,6 +280,40 @@ export function buildApiUrl(path: string, params?: QueryParams): string {
   }
 
   return url.pathname + url.search;
+}
+
+export function buildSessionFormData<TAttempt>(payload: SaveSessionPayload<TAttempt>): FormData {
+  const formData = new FormData();
+
+  // Dados estruturais
+  formData.append('data', JSON.stringify({
+    patientId: payload.patientId,
+    notes: payload.notes ?? null,
+    attempts: payload.attempts,
+    area: payload.area,
+  }));
+
+  // Arquivos
+  const files = payload.files ?? [];
+  const meta = [];
+  for (const file of files) {
+    const originalName = file.file.name;
+    const customName = file.name?.trim();
+    const ext = originalName.includes('.') ? originalName.slice(originalName.lastIndexOf('.')) : '';
+
+    const finalName = customName
+      ? `${customName}${
+        ext && !customName.toLowerCase().endsWith(ext.toLowerCase()) ? ext : ''
+      }`
+      : originalName;
+
+    formData.append('files', file.file, finalName);
+    meta.push({ size: file.file.size })
+  }
+  
+  formData.append('filesMeta', JSON.stringify(meta));
+
+  return formData;
 }
 
 export function ageCalculation(isoDateString: string): number {

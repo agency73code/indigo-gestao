@@ -74,17 +74,50 @@ export function mapSessionList(dto: OcpTypes.SessionDTO[]): OcpTypes.Session[] {
 
 export function mapSessionReturn(session: OcpTypes.UnmappedSession) {
     const totalTrials = session.trials.length;
-    const correctTrials = session.trials.filter((t) => t.resultado !== 'error').length;
+
     const independentTrials = session.trials.filter((t) => t.resultado === 'independent').length;
+    const promptedTrials = session.trials.filter((t) => t.resultado === 'prompted').length;
+    const errorTrials = session.trials.filter((t) => t.resultado === 'error').length;
+
+    const performedPct = totalTrials > 0
+        ? Math.round(((independentTrials + promptedTrials) / totalTrials) * 100)
+        : 0;
+    
+    const assistedPct = totalTrials > 0
+        ? Math.round((promptedTrials / totalTrials) * 100)
+        : 0;
+    
+    const notPerformedPct = totalTrials > 0
+        ? Math.round((errorTrials / totalTrials) * 100)
+        : 0;
 
     return {
         id: session.id.toString(),
         date: session.data_criacao.toISOString(),
         therapistName: session.terapeuta?.nome,
-        overallScore: totalTrials > 0 ? Math.round((correctTrials / totalTrials) * 100) : null,
+
+        // legado
+        overallScore:
+            totalTrials > 0
+                ? Math.round(((independentTrials + promptedTrials) / totalTrials) * 100)
+                : null,
+
         independenceRate:
-            totalTrials > 0 ? Math.round((independentTrials / totalTrials) * 100) : null,
+            totalTrials > 0
+                ? Math.round((independentTrials / totalTrials) * 100)
+                : null,
+
         preview: session.trials.map((t) => t.resultado as 'error' | 'prompted' | 'independent'),
+
+        kpis: {
+            performedPct,
+            assistedPct,
+            notPerformedPct,
+            totalTrials,
+            independentTrials,
+            promptedTrials,
+            errorTrials,
+        }
     };
 }
 

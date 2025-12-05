@@ -29,6 +29,16 @@
     status: 'active' | 'archived';
 };
 
+export type SessionKPIs = {
+    performedPct: number;      // independent + prompted
+    assistedPct: number;       // prompted
+    notPerformedPct: number;   // error
+    totalTrials: number;
+    independentTrials: number;
+    promptedTrials: number;
+    errorTrials: number;
+};
+
 export type SessionListItem = {
     id: string;
     date: string; // ISO
@@ -36,4 +46,6 @@ export type SessionListItem = {
     overallScore?: number | null; // acerto geral
     independenceRate?: number | null; // taxa de independência
     preview?: Array<'error' | 'prompted' | 'independent'>; // para LastSessionPreview
+
+    kpis?: SessionKPIs;  // Novo formato que o backend faz os calculos e manda os valores prontos para uso
 };

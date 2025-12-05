@@ -1,4 +1,5 @@
 // Services para Sessão de Terapia Ocupacional
+import { buildSessionFormData } from '@/lib/api';
 import type {
     Patient,
     ToProgramDetail,
@@ -63,35 +64,9 @@ export async function saveToSession(payload: {
     attempts: ToSessionAttempt[];
     notes?: string;
     files?: SessionFile[];
+    area: AreaType;
 }): Promise<void> {
-    const formData = new FormData();
-    const area: AreaType = 'terapia-ocupacional';
-
-    formData.append('data', JSON.stringify({
-        patientId: payload.patientId,
-        notes: payload.notes ?? '',
-        attempts: payload.attempts,
-        area
-    }));
-
-    const files = payload.files ?? [];
-    files.forEach((file) => {
-        const originalName = file.file.name;
-        const customName = file.name?.trim();
-        const originalExtension = originalName.includes('.')
-            ? originalName.slice(originalName.lastIndexOf('.'))
-            : '';
-
-        const filename = customName
-            ? `${customName}${
-                  originalExtension && !customName.toLowerCase().endsWith(originalExtension.toLowerCase())
-                      ? originalExtension
-                      : ''
-              }`
-            : originalName;
-
-        formData.append('files', file.file, filename);
-    });
+    const formData = buildSessionFormData(payload);
 
     const response = await fetch(`/api/ocp/to/programs/${payload.programId}/sessions`, {
         method: 'POST',

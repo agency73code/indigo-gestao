@@ -4,13 +4,14 @@ import * as OcpType from './types/olp.types.js';
 import * as OcpNormalizer from './olp.normalizer.js';
 import { endOfDay, format, parseISO, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { program, session, TOSession } from './actions/create.js';
+import { physiotherapySession, program, session, TOSession } from './actions/create.js';
 import { programUpdate } from './actions/update.js';
 import { updateProgramSchema } from './types/olp.schema.js';
 import { getVisibilityScope } from '../../utils/visibilityFilter.js';
 import { ACCESS_LEVELS } from '../../utils/accessLevels.js';
 
 const MANAGER_LEVEL = ACCESS_LEVELS['gerente'] ?? 5;
+const DAY = 1000 * 60 * 60 * 24;
 
 export async function createProgram(data: OcpType.CreateProgramPayload) {
     return await program(data);
@@ -22,6 +23,10 @@ export async function createSession(input: OcpType.CreateSessionInput) {
 
 export async function createTOSession(input: OcpType.CreateToSessionInput) {
     return await TOSession(input);
+}
+
+export async function createPhysiotherapySession(input: OcpType.CreatePhysiotherapySessionInput) {
+    return await physiotherapySession(input);
 }
 
 export async function updateProgram(programId: number, input: OcpType.UpdateProgramInput) {
@@ -391,136 +396,136 @@ export async function listSessionsByClient(filters: OcpType.ListSessionsFilters)
 }
 
 export async function getKpis(filtros: OcpType.KpisFilters) {
-    const where: Prisma.sessaoWhereInput = {};
-
-    if (filtros.pacienteId) where.cliente_id = filtros.pacienteId;
-    if (filtros.terapeutaId) where.terapeuta_id = filtros.terapeutaId;
-    if (filtros.programaId) where.ocp_id = Number(filtros.programaId);
-    if (filtros.area) where.area = filtros.area;
+    // ---------------------------------------
+    // 1. Construção dos filtros (where)
+    // ---------------------------------------
+    const where: Prisma.sessaoWhereInput = {
+        ...(filtros.pacienteId && { cliente_id: filtros.pacienteId }),
+        ...(filtros.terapeutaId && { terapeuta_id: filtros.terapeutaId }),
+        ...(filtros.programaId && { ocp_id: Number(filtros.programaId) }),
+        ...(filtros.area && { area: filtros.area }),
+    };
 
     const stimulusId = filtros.estimuloId ? Number(filtros.estimuloId) : undefined;
 
     if (stimulusId) {
-        where.trials = {
-            some: {
-                estimulos_ocp_id: stimulusId,
-            },
-        };
+        where.trials = { some: { estimulos_ocp_id: stimulusId } };
     }
 
-    if (filtros.periodo.mode === '30d') {
+    // Períodos
+    const { mode, start, end } = filtros.periodo;
+    if (mode === '30d') {
         where.data_criacao = { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) };
-    }
-
-    if (filtros.periodo.mode === '90d') {
+    } else if (mode === '90d') {
         where.data_criacao = { gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) };
-    }
+    } else if (mode === 'custom' && start && end) {
+        const s = parseISO(start);
+        const e = parseISO(end);
 
-    if (filtros.periodo.mode === 'custom' && filtros.periodo.start && filtros.periodo.end) {
-        const startDate = parseISO(filtros.periodo.start);
-        const endDate = parseISO(filtros.periodo.end);
-
-        if (!Number.isNaN(startDate.getTime()) && !Number.isNaN(endDate.getTime())) {
+        if (!isNaN(s.getTime()) && !isNaN(e.getTime())) {
             where.data_criacao = {
-                gte: startOfDay(startDate),
-                lte: endOfDay(endDate),
+                gte: startOfDay(s),
+                lte: endOfDay(e),
             };
         }
     }
 
+    // ---------------------------------------
+    // 2. Consulta ao banco
+    // ---------------------------------------
     const sessions = await prisma.sessao.findMany({
         where,
         include: {
-            trials: stimulusId
-                ? {
-                      where: { estimulos_ocp_id: stimulusId },
-                  }
-                : true,
+            trials: stimulusId ? { where: { estimulos_ocp_id: stimulusId } } : true,
         },
     });
 
     const totalSessions = sessions.length;
     const allTrials = sessions.flatMap((s) => s.trials);
 
-    const totalAttempts = allTrials.length;
-    const correctAnswers = allTrials.filter((t) => t.resultado === 'prompted').length;
-    const independentAnswers = allTrials.filter((t) => t.resultado === 'independent').length;
+    // ---------------------------------------
+    // 3. Funções auxiliares internas
+    // ---------------------------------------
+    const calcPct = (value: number, total: number) => 
+        total ? Math.round((value / total) * 100) : 0;
 
-    const accuracyPct = totalAttempts
-        ? ((correctAnswers + independentAnswers) / totalAttempts) * 100
-        : 0;
-    const independencyPct = totalAttempts ? (independentAnswers / totalAttempts) * 100 : 0;
+    const count = (arr: typeof allTrials, type: 'prompted' | 'independent' | 'error') =>
+        arr.filter((t) => t.resultado === type).length;
+
+    // ---------------------------------------
+    // 4. KPI GLOBAL
+    // ---------------------------------------
+    const totalAttempts = allTrials.length;
+
+    const prompted = count(allTrials, 'prompted');
+    const independent = count(allTrials, 'independent');
+
+    const accuracyPct = calcPct(prompted + independent, totalAttempts);
+    const independencePct = calcPct(independent, totalAttempts);
 
     const cards = {
-        acerto: Math.round(accuracyPct),
-        independencia: Math.round(independencyPct),
+        acerto: accuracyPct,
+        independencia: independencePct,
         tentativas: totalAttempts,
         sessoes: totalSessions,
-        gapIndependencia: Math.round(accuracyPct - independencyPct),
+        gapIndependencia: accuracyPct - independencePct,
     };
 
+    // ---------------------------------------
+    // 5. Dados para gráfico
+    // ---------------------------------------
     const graphic = sessions.map((s) => {
-        const totalAttempts = s.trials.length;
-        const correctAnswers = s.trials.filter((t) => t.resultado === 'prompted').length;
-        const independentAnswers = s.trials.filter((t) => t.resultado === 'independent').length;
-        const errorAnswers = s.trials.filter((t) => t.resultado === 'error').length;
+        const total = s.trials.length;
 
-        const accuracyPct = totalAttempts
-            ? Math.round(((correctAnswers + independentAnswers) / totalAttempts) * 100)
-            : 0;
-
-        const independencyPct = totalAttempts
-            ? Math.round((independentAnswers / totalAttempts) * 100)
-            : 0;
-
-        const errorPct = totalAttempts ? Math.round((errorAnswers / totalAttempts) * 100) : 0;
+        const prompted = count(s.trials, 'prompted');
+        const independent = count(s.trials, 'independent');
+        const error = count(s.trials, 'error');
 
         return {
             x: format(new Date(s.data_criacao), 'dd/MM', { locale: ptBR }),
-            acerto: accuracyPct,
-            independencia: independencyPct,
-            erros: errorPct,
+            acerto: calcPct(prompted + independent, total),
+            ajuda: calcPct(prompted, total),
+            independencia: calcPct(independent, total),
+            erro: calcPct(error, total),
         };
     });
 
-    const ocpId = where.ocp_id;
-    const register = await prisma.ocp.findMany({
-        where: {
-            ...(ocpId ? { id: Number(ocpId) } : {}),
-        },
-        select: {
-            data_inicio: true,
-            data_fim: true,
-        },
+    // ---------------------------------------
+    // 6. Deadline do programa
+    // ---------------------------------------
+    const programId = where.ocp_id;
+    const program = await prisma.ocp.findMany({
+        where: programId ? { id: Number(programId) } : {},
+        select: { data_inicio: true, data_fim: true },
     });
 
-    let init: Date;
-    let end: Date;
+    const periodStart = programId
+        ? program[0]!.data_inicio
+        : new Date(Math.min(...program.map((p) => p.data_inicio.getTime())));
 
-    if (ocpId) {
-        init = register[0]!.data_inicio;
-        end = register[0]!.data_fim;
-    } else {
-        init = new Date(Math.min(...register.map((r) => r.data_inicio.getTime())));
-        end = new Date(Math.max(...register.map((r) => r.data_fim.getTime())));
-    }
+    const periodEnd = programId
+        ? program[0]!.data_fim
+        : new Date(Math.max(...program.map((p) => p.data_fim.getTime())));
 
-    const total = end.getTime() - init.getTime();
-    const actual = Date.now() - init.getTime();
-    const percent = total > 0 ? Math.min(100, Math.max(0, (actual / total) * 100)) : 0;
+    const total = periodEnd.getTime() - periodStart.getTime();
+    const elapsed = Date.now() - periodStart.getTime();
+
+    const percent = Math.min(100, Math.max(0, (elapsed / total) * 100));
     const remainingDays = Math.max(
         0,
-        Math.ceil((end.getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
+        Math.ceil((periodEnd.getTime() - Date.now()) / DAY),
     );
-    const label = `${remainingDays} dias restantes • ${Math.round(percent)}% do período decorrido`;
 
     const programDeadline = {
         percent: Math.round(percent),
-        label,
-        inicio: init.toISOString().split('T')[0],
-        fim: end.toISOString().split('T')[0],
+        label: `${remainingDays} dias restantes • ${Math.round(percent)}% do período decorrido`,
+        inicio: periodStart.toISOString().split('T')[0],
+        fim: periodEnd.toISOString().split('T')[0],
     };
 
+    // ---------------------------------------
+    // 7. Retorno final
+    // ---------------------------------------
     return {
         cards,
         graphic,

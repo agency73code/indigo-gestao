@@ -1,3 +1,5 @@
+import type { Prisma } from "@prisma/client";
+
 export type createOCP = {
     patientId: string;
     therapistId: string;
@@ -109,6 +111,48 @@ export type CreateToSessionInput = {
     }>;
     files: Express.Multer.File[];
     area: string;
+};
+
+export type PhysiotherapySessionAttempt = {
+    attemptNumber: number;
+    activityId: string;
+    type: string;
+    timestamp: string;
+    durationMinutes?: number;
+
+    // Campos específicos de Fisioterapia
+    usedLoad?: boolean;
+    loadValue?: string;
+    hadDiscomfort?: boolean;
+    discomfortDescription?: string;
+    hadCompensation?: boolean;
+    compensationDescription?: string;
+};
+
+export type CreatePhysiotherapySessionInput = {
+    programId: number;
+    patientId: string;
+    therapistId: string;
+    notes?: string;
+
+    attempts: PhysiotherapySessionAttempt[];
+
+    files: Express.Multer.File[];
+    area: string;
+};
+
+export type CreateSessionInDatabaseInput = {
+  programId: number;
+  patientId: string;
+  therapistId: string;
+  notes?: string | null | undefined;
+  area: string;
+  trialsData: Prisma.sessao_trialUncheckedCreateWithoutSessaoInput[];
+  uploadedFiles: {
+    nome: string;
+    caminho: string;
+    tamanho: number;
+  }[];
 };
 
 export type UpdateProgramInput = {

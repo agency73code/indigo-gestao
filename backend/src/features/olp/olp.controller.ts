@@ -62,7 +62,7 @@ export async function createSession(req: Request, res: Response) {
     }
 }
 
-export async function createTOSession(req: Request, res: Response, next: NextFunction) {
+export async function createAreaSession(req: Request, res: Response, next: NextFunction) {
     try {
         const { programId } = req.params;
         if (!programId) {
@@ -77,6 +77,7 @@ export async function createTOSession(req: Request, res: Response, next: NextFun
         }
 
         const data = JSON.parse(req.body.data);
+        const meta = req.body.filesMeta ? JSON.parse(req.body.filesMeta) : [];
 
         const { patientId, notes, attempts, area } = data;
         if (!patientId || !Array.isArray(attempts) || !area) {
@@ -84,18 +85,41 @@ export async function createTOSession(req: Request, res: Response, next: NextFun
                 .status(400)
                 .json({ success: false, message: 'Dados inválidos para criar sessão.' });
         }
-        console.log(req.files);
-        const uploadedFiles = (req.files as Express.Multer.File[]) || [];
 
-        const session = await OcpService.createTOSession({
-            programId: Number(programId),
-            patientId,
-            therapistId,
-            notes,
-            attempts,
-            files: uploadedFiles,
-            area,
-        });
+        const uploadedFiles = ((req.files as Express.Multer.File[]) || []).map((file, i) => ({
+            ...file,
+            size: meta[i]?.size ?? file.size
+        }));
+
+        let session;
+
+        switch(area) {
+            case 'terapia-ocupacional':
+                session = await OcpService.createTOSession({
+                    programId: Number(programId),
+                    patientId,
+                    therapistId,
+                    notes,
+                    attempts,
+                    files: uploadedFiles,
+                    area,
+                });
+                break;
+            case 'fisioterapia':
+                session = await OcpService.createPhysiotherapySession({
+                    programId: Number(programId),
+                    patientId,
+                    therapistId,
+                    notes,
+                    attempts,
+                    files: uploadedFiles,
+                    area,
+                });
+                break;
+            default:
+                session = [];
+                break;
+        }
 
         return res.status(201).json(session);
     } catch (error) {
