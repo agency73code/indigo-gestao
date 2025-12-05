@@ -32,6 +32,7 @@ export async function program(data: CreateProgramPayload) {
                             where: { nome: s.label },
                             create: {
                                 nome: s.label,
+                                descricao: s.description ?? null,
                             },
                         },
                     },

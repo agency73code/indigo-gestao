@@ -150,7 +150,7 @@ export function BaseCadastroProgramaPage({
         };
 
         loadInitialData();
-    }, [searchParams, onFetchPatient, formState]);
+    }, [searchParams, onFetchPatient]);
 
     // Inicializar com primeiro estímulo vazio
     useEffect(() => {

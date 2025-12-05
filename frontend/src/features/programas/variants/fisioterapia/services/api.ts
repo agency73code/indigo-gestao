@@ -1,4 +1,4 @@
-import { buildApiUrl } from '@/lib/api';
+import { ageCalculation, buildApiUrl, fetchOwnerAvatar } from '@/lib/api';
 import type { Patient, Therapist, CreateProgramInput } from '../../../core/types';
 import { FISIO_AREA_ID } from '../constants';
 
@@ -10,7 +10,7 @@ const API_URL = import.meta.env.VITE_API_URL;
  */
 
 export async function fetchFisioPatientById(id: string): Promise<Patient> {
-    const response = await fetch(`${API_URL}/client/${id}`, {
+    const response = await fetch(`${API_URL}/clientes/${id}`, {
         credentials: 'include',
     });
 
@@ -19,13 +19,15 @@ export async function fetchFisioPatientById(id: string): Promise<Patient> {
     }
 
     const data = await response.json();
-    
+    const client = data.data;
+    const photoUrl = await fetchOwnerAvatar(client.id, 'cliente');
+
     return {
-        id: data.id,
-        name: data.name,
-        guardianName: data.guardianName,
-        age: data.age,
-        photoUrl: data.photoUrl,
+        id: client.id,
+        name: client.nome,
+        guardianName: client.cuidadores[0].nome,
+        age: ageCalculation(client.dataNascimento),
+        photoUrl,
     };
 }
 
@@ -42,7 +44,7 @@ export async function fetchFisioTherapistById(id: string): Promise<Therapist> {
     
     return {
         id: data.id,
-        name: data.nome, // Backend retorna 'nome' em português
+        name: data.nome,
         photoUrl: data.photoUrl,
         especialidade: data.especialidade,
     };

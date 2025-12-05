@@ -266,6 +266,8 @@ export async function getClientesAtivos(): Promise<number> {
   return data?.data ?? 0;
 }
 
+// UTILITY KAIO
+
 export function buildApiUrl(path: string, params?: QueryParams): string {
   const url = new URL(path, window.location.origin);
 
@@ -278,4 +280,37 @@ export function buildApiUrl(path: string, params?: QueryParams): string {
   }
 
   return url.pathname + url.search;
+}
+
+export function ageCalculation(isoDateString: string): number {
+  const hoje = new Date();
+  const nascimento = new Date(isoDateString);
+
+  let idade = hoje.getFullYear() - nascimento.getFullYear();
+
+  const mes = hoje.getMonth() - nascimento.getMonth();
+  const dia = hoje.getDate() - nascimento.getDate();
+
+  // Se ainda não fez aniversário este ano, tira 1
+  if (mes < 0 || (mes === 0 && dia < 0)) {
+    idade--;
+  }
+
+  return idade;
+}
+
+export async function fetchOwnerAvatar(ownerId: string, ownerType: 'cliente' | 'terapeuta'): Promise<string | null> {
+    try {
+        const response = await fetch(`/api/arquivos/getAvatar?ownerId=${ownerId}&ownerType=${ownerType}`, { 
+          credentials: 'include' 
+        });
+        
+        if (!response.ok) return null;
+        
+        const data = await response.json();
+        return data.avatarUrl ?? null;
+    } catch (error) {
+        console.error('Erro ao buscar avatar:', error);
+        return null;
+    }
 }
