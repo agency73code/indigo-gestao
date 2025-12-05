@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -15,10 +15,10 @@ async function main() {
             { nome: 'Musicoterapia' },
             { nome: 'Pedagogia' },
             { nome: 'Neuropsicologia' },
-            { nome: 'Nutrição' }
+            { nome: 'Nutrição' },
         ],
         skipDuplicates: true,
-    })
+    });
 
     await prisma.cargo.createMany({
         data: [
@@ -33,15 +33,15 @@ async function main() {
             { nome: 'Gerente' },
         ],
         skipDuplicates: true,
-    })
+    });
 }
 
 main()
     .then(async () => {
-        await prisma.$disconnect()
+        await prisma.$disconnect();
     })
     .catch(async (e) => {
-        console.error(e)
-        await prisma.$disconnect()
-        process.exit(1)
-    })
+        console.error(e);
+        await prisma.$disconnect();
+        process.exit(1);
+    });

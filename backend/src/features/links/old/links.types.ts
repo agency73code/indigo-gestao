@@ -128,16 +128,16 @@ export type CreateLink = {
     endDate?: string | null | undefined;
     notes?: string | null | undefined;
     actuationArea: string;
-}
+};
 
 export type ArchiveLink = {
     id: string;
-}
+};
 
 export type EndLink = {
     id: string;
     endDate: string;
-}
+};
 
 export type UpdateLink = {
     id: string;
@@ -147,7 +147,7 @@ export type UpdateLink = {
     notes?: string | null | undefined;
     status?: 'active' | 'ended' | 'archived' | undefined;
     actuationArea?: string | undefined;
-}
+};
 
 export type TransferResponsible = {
     patientId: string;
@@ -156,31 +156,31 @@ export type TransferResponsible = {
     effectiveDate: string;
     oldResponsibleActuation: string;
     newResponsibleActuation: string;
-}
+};
 
 export type TransferResponsibleResult = {
     previousResponsible: DBLink;
     newResponsible: DBLink;
-}
+};
 
 export const SUPERVISOR_ROLES = [
-  'Terapeuta Supervisor',
-  'Supervisor ABA',
-  'Coordenador ABA',
-  'Gerente',
-  'Coordenador Executivo',
+    'Terapeuta Supervisor',
+    'Supervisor ABA',
+    'Coordenador ABA',
+    'Gerente',
+    'Coordenador Executivo',
 ];
 
 export const CLINICAL_ROLES = [
-  'Terapeuta Clínico',
-  'Acompanhante Terapeutico',
-  'Mediador de Conflitos',
-  'Professor UniIndigo',
+    'Terapeuta Clínico',
+    'Acompanhante Terapeutico',
+    'Mediador de Conflitos',
+    'Professor UniIndigo',
 ];
 
 export type LinkFilters = {
-  viewBy?: 'patient' | 'therapist' | 'supervision';
-  status?: 'all' | 'active' | 'ended' | 'archived';
-  orderBy?: 'recent' | 'oldest';
-  q?: string;
+    viewBy?: 'patient' | 'therapist' | 'supervision';
+    status?: 'all' | 'active' | 'ended' | 'archived';
+    orderBy?: 'recent' | 'oldest';
+    q?: string;
 };

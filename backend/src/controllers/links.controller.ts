@@ -3,7 +3,11 @@ import * as LinkService from '../features/links/old/links.service.js';
 import * as LinkNormalizer from '../features/links/old/links.normalizer.js';
 import * as LinkTypes from '../features/links/old/links.types.js';
 
-export async function createLink(req: Request<unknown, unknown, LinkTypes.CreateLink>, res: Response, next: NextFunction) {
+export async function createLink(
+    req: Request<unknown, unknown, LinkTypes.CreateLink>,
+    res: Response,
+    next: NextFunction,
+) {
     try {
         const body = req.body;
         const created = await LinkService.createLink({
@@ -28,7 +32,11 @@ export async function createLink(req: Request<unknown, unknown, LinkTypes.Create
  * Em caso de sucesso, retorna o vínculo atualizado já normalizado.
  * Em caso de erro, propaga um AppError adequado para tratamento pelo middleware global.
  */
-export async function updateLink(req: Request<unknown, unknown, LinkTypes.UpdateLink>, res: Response, next: NextFunction) {
+export async function updateLink(
+    req: Request<unknown, unknown, LinkTypes.UpdateLink>,
+    res: Response,
+    next: NextFunction,
+) {
     try {
         const body = req.body;
         const updated = await LinkService.updateLink({
@@ -48,7 +56,11 @@ export async function updateLink(req: Request<unknown, unknown, LinkTypes.Update
     }
 }
 
-export async function endLink(req: Request<unknown, unknown, LinkTypes.EndLink>, res: Response, next: NextFunction) {
+export async function endLink(
+    req: Request<unknown, unknown, LinkTypes.EndLink>,
+    res: Response,
+    next: NextFunction,
+) {
     try {
         const { id, endDate } = req.body;
         const ended = await LinkService.endLink({ id, endDate });
@@ -59,7 +71,11 @@ export async function endLink(req: Request<unknown, unknown, LinkTypes.EndLink>,
     }
 }
 
-export async function archiveLink(req: Request<unknown, unknown, LinkTypes.ArchiveLink>, res: Response, next: NextFunction ) {
+export async function archiveLink(
+    req: Request<unknown, unknown, LinkTypes.ArchiveLink>,
+    res: Response,
+    next: NextFunction,
+) {
     try {
         const { id } = req.body;
         const archived = await LinkService.archiveLink({ id });
@@ -70,7 +86,11 @@ export async function archiveLink(req: Request<unknown, unknown, LinkTypes.Archi
     }
 }
 
-export async function transferResponsible(req: Request<unknown, unknown, LinkTypes.TransferResponsible>, res: Response, next: NextFunction) {
+export async function transferResponsible(
+    req: Request<unknown, unknown, LinkTypes.TransferResponsible>,
+    res: Response,
+    next: NextFunction,
+) {
     try {
         const result = await LinkService.transferResponsible(req.body);
         const normalized = {
@@ -92,14 +112,18 @@ export async function getAllClients(req: Request, res: Response, next: NextFunct
         const normalized = LinkNormalizer.getAllClients(data);
         res.json(normalized);
     } catch (err) {
-        next(err)
+        next(err);
     }
 }
 
 export async function getAllTherapists(req: Request, res: Response, next: NextFunction) {
     try {
         const { search = '', role } = req.query;
-        const data = await LinkService.getAllTherapists(req.user!.id, search.toString(), role?.toString());
+        const data = await LinkService.getAllTherapists(
+            req.user!.id,
+            search.toString(),
+            role?.toString(),
+        );
         const normalized = LinkNormalizer.getAllTherapists(data);
         res.json(normalized);
     } catch (err) {

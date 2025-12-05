@@ -5,10 +5,16 @@ import { AppError } from '../../errors/AppError.js';
 import { sanitizeFolderName } from '../file/r2/createFolder.js';
 import { ensureMonthlyReportFolder } from './report-drive.service.js';
 import { formatDateOnly } from './report.utils.js';
-import type { ReportListFilters, ReportStatus, ReportType, SavedReport, StructuredReportData } from './report.types.js';
+import type {
+    ReportListFilters,
+    ReportStatus,
+    ReportType,
+    SavedReport,
+    StructuredReportData,
+} from './report.types.js';
 import { deleteFromR2 } from '../file/files.service.js';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
-import { s3 } from '../../config/r2.js'; 
+import { s3 } from '../../config/r2.js';
 
 const reportInclude = {
     cliente: {
@@ -29,7 +35,7 @@ const reportInclude = {
     },
 };
 
-type ReportRecord = Prisma.relatorioGetPayload<{ include: typeof reportInclude; }>;
+type ReportRecord = Prisma.relatorioGetPayload<{ include: typeof reportInclude }>;
 
 interface SaveReportInput {
     title: string;
@@ -56,7 +62,11 @@ export async function saveReport(input: SaveReportInput): Promise<SavedReport> {
     });
 
     if (!patient) {
-        throw new AppError('PATIENT_NOT_FOUND', 'Cliente não encontrado para salvar o relatório.', 404);
+        throw new AppError(
+            'PATIENT_NOT_FOUND',
+            'Cliente não encontrado para salvar o relatório.',
+            404,
+        );
     }
 
     const therapist = await prisma.terapeuta.findUnique({
@@ -65,7 +75,11 @@ export async function saveReport(input: SaveReportInput): Promise<SavedReport> {
     });
 
     if (!therapist) {
-        throw new AppError('THERAPIST_NOT_FOUND', 'Terapeuta não encontrado para salvar o relatório.', 404);
+        throw new AppError(
+            'THERAPIST_NOT_FOUND',
+            'Terapeuta não encontrado para salvar o relatório.',
+            404,
+        );
     }
 
     const generationDate = new Date();
@@ -77,11 +91,15 @@ export async function saveReport(input: SaveReportInput): Promise<SavedReport> {
         area: input.area,
     });
 
-    const fileDescriptor = buildReportFileDescriptor(input.title, patient.nome ?? 'cliente', generationDate);
+    const fileDescriptor = buildReportFileDescriptor(
+        input.title,
+        patient.nome ?? 'cliente',
+        generationDate,
+    );
 
     const ext = '.pdf';
     const fileName = `${sanitizeFolderName(fileDescriptor)}${ext}`;
-    
+
     const storageKey = `${folderInfo.monthPrefix}/${fileName}`;
 
     const r2Meta = await uploadReportToR2(storageKey, input.pdfFile);
@@ -171,7 +189,9 @@ export async function getReportRecord(id: string): Promise<ReportRecord | null> 
     return prisma.relatorio.findUnique({ where: { id }, include: reportInclude });
 }
 
-export async function deleteReport(record: Pick<ReportRecord, 'id' | 'pdf_arquivo_id'>): Promise<void> {
+export async function deleteReport(
+    record: Pick<ReportRecord, 'id' | 'pdf_arquivo_id'>,
+): Promise<void> {
     if (record.pdf_arquivo_id) {
         await deleteFromR2(record.pdf_arquivo_id);
     }
@@ -250,7 +270,7 @@ async function uploadReportToR2(path: string, file: Express.Multer.File) {
             Key: path,
             Body: file.buffer,
             ContentType: file.mimetype,
-        })
+        }),
     );
 
     return {
@@ -259,4 +279,4 @@ async function uploadReportToR2(path: string, file: Express.Multer.File) {
         mimeType: file.mimetype,
         size: file.size,
     };
-} 
+}

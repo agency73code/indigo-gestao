@@ -19,10 +19,11 @@ export async function createProgram(req: Request, res: Response) {
 
         // Detecta erro de restrição única
         if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-        return res.status(400).json({
-            success: false,
-            message: 'Há estímulos duplicados na lista. Verifique e remova os repetidos antes de salvar.',
-        });
+            return res.status(400).json({
+                success: false,
+                message:
+                    'Há estímulos duplicados na lista. Verifique e remova os repetidos antes de salvar.',
+            });
         }
 
         return res.status(400).json({
@@ -34,20 +35,30 @@ export async function createProgram(req: Request, res: Response) {
 
 export async function createSession(req: Request, res: Response) {
     try {
-        if (!req.params.programId) return res.status(400).json({ success: false, message: 'ID do programa não informado' });
+        if (!req.params.programId)
+            return res
+                .status(400)
+                .json({ success: false, message: 'ID do programa não informado' });
         const programId = parseInt(req.params.programId, 10);
 
         const { patientId, notes, attempts } = req.body;
-        if (!patientId || !Array.isArray(attempts)) return res.status(400).json({ error: "Dados inválidos para criar sessão" });
+        if (!patientId || !Array.isArray(attempts))
+            return res.status(400).json({ error: 'Dados inválidos para criar sessão' });
 
         const therapistId = req.user?.id;
-        if (!therapistId) return res.status(401).json({ error: "Usuário não autenticado" });
+        if (!therapistId) return res.status(401).json({ error: 'Usuário não autenticado' });
 
-        const session = await OcpService.createSession({ programId, patientId, therapistId, notes, attempts });
+        const session = await OcpService.createSession({
+            programId,
+            patientId,
+            therapistId,
+            notes,
+            attempts,
+        });
         res.status(201).json(session);
     } catch (err) {
         console.error(err);
-        res.status(500).json({ success: false, message: 'Erro ao registrar sessão' })
+        res.status(500).json({ success: false, message: 'Erro ao registrar sessão' });
     }
 }
 
@@ -55,7 +66,9 @@ export async function createTOSession(req: Request, res: Response, next: NextFun
     try {
         const { programId } = req.params;
         if (!programId) {
-            return res.status(400).json({ success: false, message: 'ID do programa não informado.' });
+            return res
+                .status(400)
+                .json({ success: false, message: 'ID do programa não informado.' });
         }
 
         const therapistId = req.user?.id;
@@ -67,10 +80,12 @@ export async function createTOSession(req: Request, res: Response, next: NextFun
 
         const { patientId, notes, attempts, area } = data;
         if (!patientId || !Array.isArray(attempts) || !area) {
-            return res.status(400).json({ success: false, message: 'Dados inválidos para criar sessão.' });
+            return res
+                .status(400)
+                .json({ success: false, message: 'Dados inválidos para criar sessão.' });
         }
         console.log(req.files);
-        const uploadedFiles = req.files as Express.Multer.File[] || [];
+        const uploadedFiles = (req.files as Express.Multer.File[]) || [];
 
         const session = await OcpService.createTOSession({
             programId: Number(programId),
@@ -79,7 +94,7 @@ export async function createTOSession(req: Request, res: Response, next: NextFun
             notes,
             attempts,
             files: uploadedFiles,
-            area
+            area,
         });
 
         return res.status(201).json(session);
@@ -90,7 +105,10 @@ export async function createTOSession(req: Request, res: Response, next: NextFun
 
 export async function updateProgram(req: Request, res: Response, next: NextFunction) {
     try {
-        if (!req.params.programId) return res.status(400).json({ success: false, message: 'ID do programa não informado' });
+        if (!req.params.programId)
+            return res
+                .status(400)
+                .json({ success: false, message: 'ID do programa não informado' });
         const programId = parseInt(req.params.programId, 10);
 
         const ocp = await OcpService.updateProgram(programId, req.body);
@@ -105,7 +123,10 @@ export async function updateProgram(req: Request, res: Response, next: NextFunct
 export async function getProgramById(req: Request, res: Response) {
     try {
         const { programId } = req.params;
-        if (!programId) return res.status(400).json({ success: false, message: 'ID do programa não informado' });
+        if (!programId)
+            return res
+                .status(400)
+                .json({ success: false, message: 'ID do programa não informado' });
 
         const ocp = await OcpService.getProgramById(programId);
         if (!ocp) return res.status(404).json({ success: false, message: 'OCP não encontrado' });
@@ -119,7 +140,8 @@ export async function getProgramById(req: Request, res: Response) {
 
 export async function getSessionByProgram(req: Request, res: Response) {
     try {
-        if (!req.params.programId) return res.status(400).json({ success: false, message: 'programId é obrigatório' });
+        if (!req.params.programId)
+            return res.status(400).json({ success: false, message: 'programId é obrigatório' });
         const programId = parseInt(req.params.programId, 10);
         const limit = parseInt(req.query.limit as string, 10) || 5;
         const sessions = await OcpService.getSessionsByProgram(programId, limit);
@@ -132,10 +154,12 @@ export async function getSessionByProgram(req: Request, res: Response) {
 
 export async function getClientById(req: Request, res: Response) {
     const { clientId } = req.params;
-    if (!clientId) return res.status(400).json({ success: false, message: 'clientId é obrigatório' });
+    if (!clientId)
+        return res.status(400).json({ success: false, message: 'clientId é obrigatório' });
 
     const patient = await OcpService.getClientById(clientId);
-    if (!patient) return res.status(404).json({ success: false, message: 'Paciente não encontrado' });
+    if (!patient)
+        return res.status(404).json({ success: false, message: 'Paciente não encontrado' });
 
     res.json({ data: patient });
 }
@@ -143,10 +167,12 @@ export async function getClientById(req: Request, res: Response) {
 export async function getProgramId(req: Request, res: Response) {
     try {
         const { programId } = req.params;
-        if (!programId) return res.status(400).json({ success: false, message: 'programId é obrigatório' });
-        
+        if (!programId)
+            return res.status(400).json({ success: false, message: 'programId é obrigatório' });
+
         const session = await OcpService.getProgramId(programId);
-        if (!session) return res.status(404).json({ success: false, message: 'Programa não encontrada' });
+        if (!session)
+            return res.status(404).json({ success: false, message: 'Programa não encontrada' });
 
         res.json({ data: session });
     } catch (err) {
@@ -162,7 +188,7 @@ export async function listTherapistClients(req: Request, res: Response) {
     const q = req.query.q as string | undefined;
 
     const rows = await OcpService.listClientsByTherapist(user.id, q);
-    return res.json({ success: true, data: rows.map(OcpNormalizer.mapClientReturn) })
+    return res.json({ success: true, data: rows.map(OcpNormalizer.mapClientReturn) });
 }
 
 export async function listClientPrograms(req: Request, res: Response) {
@@ -174,8 +200,10 @@ export async function listClientPrograms(req: Request, res: Response) {
     const rawArea = req.query.area;
     const area = Array.isArray(rawArea) ? rawArea[0] : rawArea;
 
-    if (!clientId) return res.status(400).json({ success: false, message: 'ClientId é obrigatório' });
-    if (typeof area !== 'string') return res.status(400).json({ success: false, message: 'Area é obrigatório' });
+    if (!clientId)
+        return res.status(400).json({ success: false, message: 'ClientId é obrigatório' });
+    if (typeof area !== 'string')
+        return res.status(400).json({ success: false, message: 'Area é obrigatório' });
 
     const rows = await OcpService.listByClientId(clientId, page, 10, area, status, q, sort);
 
@@ -185,7 +213,8 @@ export async function listClientPrograms(req: Request, res: Response) {
 export async function listSessionsByClient(req: Request, res: Response) {
     try {
         const { clientId } = req.params;
-        if (!clientId) return res.status(400).json({ sucess: false, message: 'ID do paciente é obrigatório' });
+        if (!clientId)
+            return res.status(400).json({ sucess: false, message: 'ID do paciente é obrigatório' });
 
         const area = getQueryString(req.query.area);
         if (!area) return res.status(400).json({ success: false, message: 'Area é obrigatório' });
@@ -196,12 +225,7 @@ export async function listSessionsByClient(req: Request, res: Response) {
         const stimulusId = getQueryString(req.query.stimulusId);
         const periodStart = getQueryString(req.query.periodStart);
         const periodEnd = getQueryString(req.query.periodEnd);
-
-        const sortParam = req.query.sort;
-        const sort =
-            sortParam === 'accuracy-asc' || sortParam === 'accuracy-desc'
-                ? sortParam
-                : 'recent';
+        const sort = getQueryString(req.query.sort);
 
         const sessions = await OcpService.listSessionsByClient({
             clientId,
@@ -215,45 +239,47 @@ export async function listSessionsByClient(req: Request, res: Response) {
             periodEnd,
         });
 
-        return res.json ({ data: OcpNormalizer.mapSessionList(sessions) });
+        return res.json({ data: OcpNormalizer.mapSessionList(sessions) });
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ success: false, message: 'Erro ao  buscar sessões do cliente' });
+        return res
+            .status(500)
+            .json({ success: false, message: 'Erro ao  buscar sessões do cliente' });
     }
 }
 
 export async function getKpis(req: Request, res: Response) {
     try {
-        const raw = decodeURIComponent(req.params.filters ?? "");
+        const raw = decodeURIComponent(req.params.filters ?? '');
         const filtros = JSON.parse(raw);
         const data = await OcpService.getKpis(filtros);
 
         return res.json(data);
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ 
-            success: false, 
-            message: 'Erro ao buscar informações do relatório' 
+        return res.status(500).json({
+            success: false,
+            message: 'Erro ao buscar informações do relatório',
         });
     }
 }
 
 export async function getProgramsReport(req: Request, res: Response) {
     try {
-        const clientId = typeof req.query.clientId === 'string'
-            ? req.query.clientId
-            : undefined;
+        const clientId = typeof req.query.clientId === 'string' ? req.query.clientId : undefined;
         const area = typeof req.query.area === 'string' ? req.query.area : undefined;
-        const stimulusId = typeof req.query.stimulusId === 'string' ? req.query.stimulusId : undefined;
-        const therapistId = typeof req.query.therapistId === 'string' ? req.query.therapistId : undefined;
+        const stimulusId =
+            typeof req.query.stimulusId === 'string' ? req.query.stimulusId : undefined;
+        const therapistId =
+            typeof req.query.therapistId === 'string' ? req.query.therapistId : undefined;
 
         const data = await OcpService.getProgramsReport(clientId, area, stimulusId, therapistId);
-        res.json({ data })
+        res.json({ data });
     } catch (error) {
         console.error(error);
         return res.status(500).json({
             success: false,
-            message: 'Erro ao buscar informações do relatório'
+            message: 'Erro ao buscar informações do relatório',
         });
     }
 }
@@ -270,8 +296,8 @@ export async function getStimulusReport(req: Request, res: Response) {
     } catch (error) {
         console.error(error);
         return res.status(500).json({
-            success: false, 
-            message: 'Erro ao buscar informações do relatório' 
+            success: false,
+            message: 'Erro ao buscar informações do relatório',
         });
     }
 }
@@ -286,20 +312,22 @@ export async function getAttentionStimuli(req: Request, res: Response) {
             periodStart,
             periodEnd,
             lastSessions,
-            area
+            area,
         } = req.query;
 
         const clientIdStr = getQueryString(clientId);
         const lastSessionsStr = getQueryString(lastSessions);
         const areaStr = getQueryString(area);
         const therapistIdStr = getQueryString(therapistId);
-        const periodModeStr = getQueryString(periodMode)
+        const periodModeStr = getQueryString(periodMode);
         const periodStartStr = getQueryString(periodStart);
         const periodEndStr = getQueryString(periodEnd);
         const programIdStr = getQueryString(programId);
-        
-        if (!clientIdStr) return res.status(400).json({ success: false, message: 'Id do cliente é obrigatório' });
-        if (!areaStr) return res.status(400).json({ success: false, message: 'Area é um campo obrigatório' });
+
+        if (!clientIdStr)
+            return res.status(400).json({ success: false, message: 'Id do cliente é obrigatório' });
+        if (!areaStr)
+            return res.status(400).json({ success: false, message: 'Area é um campo obrigatório' });
 
         const parsedProgramId = programIdStr ? Number(programIdStr) : undefined;
 
@@ -307,15 +335,15 @@ export async function getAttentionStimuli(req: Request, res: Response) {
             lastSessionsStr === '1'
                 ? 1
                 : lastSessionsStr === '3'
-                ? 3
-                : lastSessionsStr === '5'
+                  ? 3
+                  : lastSessionsStr === '5'
                     ? 5
-                    : 5
+                    : 5;
 
         const parsedPeriodMode: '30d' | '90d' | 'custom' | undefined =
             periodModeStr === '30d' || periodModeStr === '90d' || periodModeStr === 'custom'
                 ? periodModeStr
-                : undefined
+                : undefined;
 
         const data = await OcpService.getAttentionStimuli({
             clientId: clientIdStr,
@@ -333,18 +361,18 @@ export async function getAttentionStimuli(req: Request, res: Response) {
         console.error(error);
         return res.status(500).json({
             success: false,
-            message: 'Erro ao buscar estímulos que precisam de atenção'
+            message: 'Erro ao buscar estímulos que precisam de atenção',
         });
     }
 }
 
-function getQueryString(value: unknown ): string | undefined {
-    if (typeof value === 'string') return value
+function getQueryString(value: unknown): string | undefined {
+    if (typeof value === 'string') return value;
 
     if (Array.isArray(value)) {
         const first = value[0];
-        return typeof first === 'string' ? first : undefined
+        return typeof first === 'string' ? first : undefined;
     }
 
-    return undefined
+    return undefined;
 }

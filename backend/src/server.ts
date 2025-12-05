@@ -1,4 +1,4 @@
-import "dotenv/config";
+import 'dotenv/config';
 import express from 'express';
 import type { Express } from 'express';
 import helmet from 'helmet';
@@ -12,12 +12,12 @@ import cookieParser from 'cookie-parser';
 
 const app: Express = express();
 
-if (env.NODE_ENV === "production") {
-    app.set("trust proxy", 1);
+if (env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1);
 }
 
 app.use(helmet()); // Remove headers que expõem tecnologias
-app.use(cors({ origin: env.FRONTEND_URL, credentials: true, }));
+app.use(cors({ origin: env.FRONTEND_URL, credentials: true }));
 
 app.use(compression()); // Comprime resposta para economizar banda
 
@@ -35,14 +35,17 @@ if (env.NODE_ENV === 'production') {
     app.use(limiter);
 }
 
-app.use('/api/auth/login', rateLimit({
-    windowMs: 5 * 60 * 1000,
-    max: 10,
-    message: {
-        error: 'Too many requests',
-        message: 'Please try again later.',
-    },
-}));
+app.use(
+    '/api/auth/login',
+    rateLimit({
+        windowMs: 5 * 60 * 1000,
+        max: 10,
+        message: {
+            error: 'Too many requests',
+            message: 'Please try again later.',
+        },
+    }),
+);
 
 app.use(express.json());
 app.use(cookieParser());

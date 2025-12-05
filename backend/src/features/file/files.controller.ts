@@ -29,8 +29,12 @@ export async function uploadFile(req: Request, res: Response) {
             return undefined;
         };
 
-        const documentTypeFromBody = normalizeBodyString((req.body as Record<string, unknown>).documentType);
-        const descricaoFromBody = normalizeBodyString((req.body as Record<string, unknown>).descricao_documento);
+        const documentTypeFromBody = normalizeBodyString(
+            (req.body as Record<string, unknown>).documentType,
+        );
+        const descricaoFromBody = normalizeBodyString(
+            (req.body as Record<string, unknown>).descricao_documento,
+        );
         const descricaoNormalizada = descricaoFromBody?.trim() ?? '';
 
         if (!ownerType || !ownerId || !fullName || !birthDate) {
@@ -47,7 +51,8 @@ export async function uploadFile(req: Request, res: Response) {
         const folderStructure = await createFolder(ownerType, fullName, BirthDate);
 
         const uploadPromises = availableFiles.map(({ file, documentType }) => {
-            const tipoDocumento = documentTypeFromBody || documentType || file.fieldname || 'arquivo';
+            const tipoDocumento =
+                documentTypeFromBody || documentType || file.fieldname || 'arquivo';
             const descricaoDocumento =
                 tipoDocumento === 'outros' && descricaoNormalizada.length > 0
                     ? descricaoNormalizada
@@ -149,12 +154,12 @@ export async function downloadFile(req: Request, res: Response) {
 
         res.setHeader('Content-Type', metadata.mimeType);
         res.setHeader(
-            'Content-Disposition', 
-            `attachment; filename="${metadata.name}"; filename*=UTF-8''${encodeURIComponent(metadata.name)}`
+            'Content-Disposition',
+            `attachment; filename="${metadata.name}"; filename*=UTF-8''${encodeURIComponent(metadata.name)}`,
         );
 
-        (stream as NodeJS.ReadableStream).on("error", (err) => {
-            console.error("Erro ao baixar arquivo:", err);
+        (stream as NodeJS.ReadableStream).on('error', (err) => {
+            console.error('Erro ao baixar arquivo:', err);
             res.sendStatus(500);
         });
 
@@ -170,7 +175,7 @@ export async function downloadFile(req: Request, res: Response) {
  */
 export async function deleteFile(req: Request, res: Response) {
     const fileId = req.params.id;
-    console.log(fileId, '===============================')
+    console.log(fileId, '===============================');
     if (!fileId) {
         return res.status(400).json({ error: 'ID é obrigatório.' });
     }
@@ -218,7 +223,7 @@ export async function getAvatar(req: Request, res: Response) {
         if (!avatar) {
             return res.status(200).json({ avatarUrl: null });
         }
-        
+
         const encoded = encodeURIComponent(avatar.storageId);
         const avatarUrl = `/api/arquivos/${encoded}/view`;
         return res.json({ avatarUrl });

@@ -1,5 +1,5 @@
-import { AbilityBuilder, PureAbility, type AbilityClass } from "@casl/ability";
-import { ACCESS_LEVELS } from "../utils/accessLevels.js";
+import { AbilityBuilder, PureAbility, type AbilityClass } from '@casl/ability';
+import { ACCESS_LEVELS } from '../utils/accessLevels.js';
 
 export type Actions = 'read' | 'create' | 'update' | 'manage';
 export type Subjects =

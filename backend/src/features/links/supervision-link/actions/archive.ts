@@ -1,5 +1,5 @@
-import { prisma } from "../../../../config/database.js";
-import { normalizeSupervisionLink } from "../normalizers/supervisionLinkNormalizer.js";
+import { prisma } from '../../../../config/database.js';
+import { normalizeSupervisionLink } from '../normalizers/supervisionLinkNormalizer.js';
 
 /**
  * Arquiva um vínculo de supervisão existente (status='arquivado').

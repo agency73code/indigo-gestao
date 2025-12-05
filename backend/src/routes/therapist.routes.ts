@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import type { Router as ExpressRouter } from 'express';
-import * as TherapistController  from '../controllers/therapist.controller.js';
+import * as TherapistController from '../controllers/therapist.controller.js';
 import { requireAbility } from '../middleware/requireAbility.js';
 import { auth } from '../middleware/auth.middleware.js';
 

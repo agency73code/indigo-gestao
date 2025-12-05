@@ -1,14 +1,14 @@
-import { prisma } from "../../config/database.js";
-import { Prisma } from '@prisma/client'
-import * as OcpType from "./types/olp.types.js";
+import { prisma } from '../../config/database.js';
+import { Prisma } from '@prisma/client';
+import * as OcpType from './types/olp.types.js';
 import * as OcpNormalizer from './olp.normalizer.js';
-import { endOfDay, format, parseISO, startOfDay } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { program, session, TOSession } from "./actions/create.js";
-import { programUpdate } from "./actions/update.js";
-import { updateProgramSchema } from "./types/olp.schema.js";
-import { getVisibilityScope } from "../../utils/visibilityFilter.js";
-import { ACCESS_LEVELS } from "../../utils/accessLevels.js";
+import { endOfDay, format, parseISO, startOfDay } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { program, session, TOSession } from './actions/create.js';
+import { programUpdate } from './actions/update.js';
+import { updateProgramSchema } from './types/olp.schema.js';
+import { getVisibilityScope } from '../../utils/visibilityFilter.js';
+import { ACCESS_LEVELS } from '../../utils/accessLevels.js';
 
 const MANAGER_LEVEL = ACCESS_LEVELS['gerente'] ?? 5;
 
@@ -47,7 +47,7 @@ export async function getProgramById(programId: string) {
                         take: 1,
                     },
                     dataNascimento: true,
-                }
+                },
             },
             data_inicio: true,
             data_fim: true,
@@ -55,7 +55,7 @@ export async function getProgramById(programId: string) {
             terapeuta: {
                 select: {
                     nome: true,
-                }
+                },
             },
             criado_em: true,
             objetivo_programa: true,
@@ -69,13 +69,13 @@ export async function getProgramById(programId: string) {
                     status: true,
                     descricao: true,
                 },
-                orderBy: { id_estimulo: 'desc' }
+                orderBy: { id_estimulo: 'desc' },
             },
             criterio_aprendizagem: true,
             observacao_geral: true,
             desempenho_atual: true,
             status: true,
-        }
+        },
     });
 }
 
@@ -89,7 +89,7 @@ export async function getSessionsByProgram(programId: number, limit: number) {
             trials: { select: { resultado: true, ordem: true } },
         },
     });
-    
+
     return sessions.map(OcpNormalizer.mapSessionReturn);
 }
 
@@ -117,7 +117,7 @@ export async function getClientById(clientId: string) {
         guardianName: client.cuidadores[0]?.nome ?? null,
         age: currentYear - birthYear,
         photoUrl: `/api/arquivos/getAvatar?ownerType=cliente&ownerId=${client.id}`,
-    }
+    };
 }
 
 export async function getProgramId(programId: string) {
@@ -135,7 +135,7 @@ export async function getProgramId(programId: string) {
                             cuidadores: {
                                 select: {
                                     nome: true,
-                                }
+                                },
                             },
                             dataNascimento: true,
                         },
@@ -143,7 +143,7 @@ export async function getProgramId(programId: string) {
                     terapeuta: {
                         select: {
                             id: true,
-                            nome: true
+                            nome: true,
                         },
                     },
                     criado_em: true,
@@ -159,9 +159,9 @@ export async function getProgramId(programId: string) {
                         },
                     },
                     status: true,
-                }
-            }
-        }
+                },
+            },
+        },
     });
     if (!session?.ocp) return null;
     return OcpNormalizer.mapOcpProgramSession(session?.ocp);
@@ -178,26 +178,26 @@ export async function listClientsByTherapist(therapistId: string, q?: string) {
     const where: Prisma.clienteWhereInput = {
         ...(visibility.scope === 'partial'
             ? {
-                terapeuta: {
-                    some: {
-                        terapeuta_id: { in: visibility.therapistIds },
-                        ...(restrictStatus ? { status: 'active' } : {}),
-                    },
-                },
-            }
+                  terapeuta: {
+                      some: {
+                          terapeuta_id: { in: visibility.therapistIds },
+                          ...(restrictStatus ? { status: 'active' } : {}),
+                      },
+                  },
+              }
             : {}),
         ...(restrictStatus ? { status: 'ativo' } : {}),
         ...(q
             ? {
-                OR: [
-                    { nome: { contains: q } },
-                    {
-                        cuidadores: {
-                            some: { nome: { contains: q } },
-                        },
-                    },
-                ],
-            }
+                  OR: [
+                      { nome: { contains: q } },
+                      {
+                          cuidadores: {
+                              some: { nome: { contains: q } },
+                          },
+                      },
+                  ],
+              }
             : {}),
     };
 
@@ -214,22 +214,21 @@ export async function listClientsByTherapist(therapistId: string, q?: string) {
                 take: 1,
             },
         },
-        orderBy: { nome: "asc" },
+        orderBy: { nome: 'asc' },
     });
 }
 
 export async function listByClientId(
-    clientId: string, 
-    page = 1,  pageSize = 10, 
+    clientId: string,
+    page = 1,
+    pageSize = 10,
     area: string,
-    status: 'active' | 'archived' | 'all' = 'all', 
+    status: 'active' | 'archived' | 'all' = 'all',
     q?: string,
-    sort: 'recent' | 'alphabetic' = 'recent'
+    sort: 'recent' | 'alphabetic' = 'recent',
 ) {
     const translateStatus =
-        status === 'active' ? 'ativado' :
-        status === 'archived' ? 'arquivado' :
-        undefined;
+        status === 'active' ? 'ativado' : status === 'archived' ? 'arquivado' : undefined;
 
     // cria o objeto base
     const where: Prisma.ocpWhereInput = {
@@ -261,16 +260,14 @@ export async function listByClientId(
             criado_em: true,
             atualizado_em: true,
         },
-        orderBy: sort === 'alphabetic'
-            ? { nome_programa: 'asc' }
-            : { atualizado_em: 'desc' },
+        orderBy: sort === 'alphabetic' ? { nome_programa: 'asc' } : { atualizado_em: 'desc' },
         skip: (page - 1) * pageSize,
         take: pageSize,
     });
 }
 
 export async function listSessionsByClient(filters: OcpType.ListSessionsFilters) {
-    const { 
+    const {
         clientId,
         area,
         programId,
@@ -283,6 +280,7 @@ export async function listSessionsByClient(filters: OcpType.ListSessionsFilters)
     } = filters;
 
     const where: Prisma.sessaoWhereInput = {};
+    const order = sort === 'date-asc' ? 'asc' : 'desc';
 
     if (clientId) where.cliente_id = clientId;
     if (area) where.area = area;
@@ -358,18 +356,18 @@ export async function listSessionsByClient(filters: OcpType.ListSessionsFilters)
                 },
             },
         },
-        orderBy: { data_criacao: 'asc' },
+        orderBy: { data_criacao: order },
     });
 
     if (stimulusId) {
-        sessions.forEach(session => {
+        sessions.forEach((session) => {
             session.trials = session.trials.filter(
-                t => t.estimulosOcp.id_estimulo === Number(stimulusId)
+                (t) => t.estimulosOcp.id_estimulo === Number(stimulusId),
             );
         });
     }
 
-    if (sort === 'recent') return sessions;
+    if (sort === 'date-asc' || sort === 'date-desc') return sessions;
 
     const direction = sort === 'accuracy-asc' ? 'asc' : 'desc';
 
@@ -388,10 +386,8 @@ export async function listSessionsByClient(filters: OcpType.ListSessionsFilters)
             return b.data_criacao.getTime() - a.data_criacao.getTime();
         }
 
-        return direction === 'asc'
-            ? accuracyA - accuracyB
-            : accuracyB - accuracyA;
-    })
+        return direction === 'asc' ? accuracyA - accuracyB : accuracyB - accuracyA;
+    });
 }
 
 export async function getKpis(filtros: OcpType.KpisFilters) {
@@ -412,15 +408,15 @@ export async function getKpis(filtros: OcpType.KpisFilters) {
         };
     }
 
-    if (filtros.periodo.mode === "30d") {
+    if (filtros.periodo.mode === '30d') {
         where.data_criacao = { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) };
     }
 
-    if (filtros.periodo.mode === "90d") {
+    if (filtros.periodo.mode === '90d') {
         where.data_criacao = { gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) };
     }
 
-    if (filtros.periodo.mode === "custom" && filtros.periodo.start && filtros.periodo.end) {
+    if (filtros.periodo.mode === 'custom' && filtros.periodo.start && filtros.periodo.end) {
         const startDate = parseISO(filtros.periodo.start);
         const endDate = parseISO(filtros.periodo.end);
 
@@ -436,21 +432,23 @@ export async function getKpis(filtros: OcpType.KpisFilters) {
         where,
         include: {
             trials: stimulusId
-            ? {
-                where: { estimulos_ocp_id: stimulusId },
-            }
-            : true,
+                ? {
+                      where: { estimulos_ocp_id: stimulusId },
+                  }
+                : true,
         },
     });
 
     const totalSessions = sessions.length;
-    const allTrials = sessions.flatMap(s => s.trials);
+    const allTrials = sessions.flatMap((s) => s.trials);
 
     const totalAttempts = allTrials.length;
-    const correctAnswers = allTrials.filter(t => t.resultado === "prompted").length;
-    const independentAnswers = allTrials.filter(t => t.resultado === "independent").length;
+    const correctAnswers = allTrials.filter((t) => t.resultado === 'prompted').length;
+    const independentAnswers = allTrials.filter((t) => t.resultado === 'independent').length;
 
-    const accuracyPct = totalAttempts ? ((correctAnswers + independentAnswers) / totalAttempts) * 100 : 0;
+    const accuracyPct = totalAttempts
+        ? ((correctAnswers + independentAnswers) / totalAttempts) * 100
+        : 0;
     const independencyPct = totalAttempts ? (independentAnswers / totalAttempts) * 100 : 0;
 
     const cards = {
@@ -461,11 +459,11 @@ export async function getKpis(filtros: OcpType.KpisFilters) {
         gapIndependencia: Math.round(accuracyPct - independencyPct),
     };
 
-    const graphic = sessions.map(s => {
+    const graphic = sessions.map((s) => {
         const totalAttempts = s.trials.length;
-        const correctAnswers = s.trials.filter(t => t.resultado === "prompted").length;
-        const independentAnswers = s.trials.filter(t => t.resultado === "independent").length;
-        const errorAnswers = s.trials.filter(t => t.resultado === 'error').length;
+        const correctAnswers = s.trials.filter((t) => t.resultado === 'prompted').length;
+        const independentAnswers = s.trials.filter((t) => t.resultado === 'independent').length;
+        const errorAnswers = s.trials.filter((t) => t.resultado === 'error').length;
 
         const accuracyPct = totalAttempts
             ? Math.round(((correctAnswers + independentAnswers) / totalAttempts) * 100)
@@ -475,12 +473,10 @@ export async function getKpis(filtros: OcpType.KpisFilters) {
             ? Math.round((independentAnswers / totalAttempts) * 100)
             : 0;
 
-        const errorPct = totalAttempts
-            ? Math.round((errorAnswers / totalAttempts) * 100)
-            : 0;
+        const errorPct = totalAttempts ? Math.round((errorAnswers / totalAttempts) * 100) : 0;
 
         return {
-            x: format(new Date(s.data_criacao), "dd/MM", { locale: ptBR }),
+            x: format(new Date(s.data_criacao), 'dd/MM', { locale: ptBR }),
             acerto: accuracyPct,
             independencia: independencyPct,
             erros: errorPct,
@@ -495,9 +491,9 @@ export async function getKpis(filtros: OcpType.KpisFilters) {
         select: {
             data_inicio: true,
             data_fim: true,
-        }
-    })
-    
+        },
+    });
+
     let init: Date;
     let end: Date;
 
@@ -505,14 +501,17 @@ export async function getKpis(filtros: OcpType.KpisFilters) {
         init = register[0]!.data_inicio;
         end = register[0]!.data_fim;
     } else {
-        init = new Date(Math.min(...register.map(r => r.data_inicio.getTime())));
-        end = new Date(Math.max(...register.map(r => r.data_fim.getTime())));
+        init = new Date(Math.min(...register.map((r) => r.data_inicio.getTime())));
+        end = new Date(Math.max(...register.map((r) => r.data_fim.getTime())));
     }
 
     const total = end.getTime() - init.getTime();
     const actual = Date.now() - init.getTime();
     const percent = total > 0 ? Math.min(100, Math.max(0, (actual / total) * 100)) : 0;
-    const remainingDays = Math.max(0, Math.ceil((end.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+    const remainingDays = Math.max(
+        0,
+        Math.ceil((end.getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
+    );
     const label = `${remainingDays} dias restantes • ${Math.round(percent)}% do período decorrido`;
 
     const programDeadline = {
@@ -523,11 +522,18 @@ export async function getKpis(filtros: OcpType.KpisFilters) {
     };
 
     return {
-        cards, graphic, programDeadline
+        cards,
+        graphic,
+        programDeadline,
     };
 }
 
-export async function getStimulusReport(clientId?: string, programId?: string, area?: string, therapistId?: string) {
+export async function getStimulusReport(
+    clientId?: string,
+    programId?: string,
+    area?: string,
+    therapistId?: string,
+) {
     const where: {
         ocp: {
             cliente_id?: string;
@@ -543,7 +549,7 @@ export async function getStimulusReport(clientId?: string, programId?: string, a
     if (programId) where.ocp.id = Number(programId);
     if (area) where.ocp.area = area;
     if (therapistId) where.ocp.terapeuta_id = therapistId;
-    
+
     return prisma.estimulo_ocp.findMany({
         where,
         select: {
@@ -556,9 +562,14 @@ export async function getStimulusReport(clientId?: string, programId?: string, a
     });
 }
 
-export async function getProgramsReport(clientId?: string, area?: string, stimulusId?: string, therapistId?: string) {
+export async function getProgramsReport(
+    clientId?: string,
+    area?: string,
+    stimulusId?: string,
+    therapistId?: string,
+) {
     const where: Prisma.ocpWhereInput = {};
-    
+
     if (clientId) where.cliente_id = clientId;
     if (area) where.area = area;
     if (stimulusId) {
@@ -575,13 +586,13 @@ export async function getProgramsReport(clientId?: string, area?: string, stimul
         select: {
             id: true,
             nome_programa: true,
-        }
-    })
+        },
+    });
 
     return ocps.map((o) => ({
         id: o.id,
         nome: o.nome_programa,
-    }))
+    }));
 }
 
 export async function getAttentionStimuli({
@@ -593,15 +604,15 @@ export async function getAttentionStimuli({
     periodMode = '30d',
     periodStart,
     periodEnd,
-} : {
-    clientId: string,
-    lastSessions: 1 | 3 | 5,
-    area: string
-    programId?: number | undefined,
-    therapistId?: string | undefined,
-    periodMode?: '30d' | '90d' | 'custom' | undefined,
-    periodStart?: string | undefined,
-    periodEnd?: string | undefined,
+}: {
+    clientId: string;
+    lastSessions: 1 | 3 | 5;
+    area: string;
+    programId?: number | undefined;
+    therapistId?: string | undefined;
+    periodMode?: '30d' | '90d' | 'custom' | undefined;
+    periodStart?: string | undefined;
+    periodEnd?: string | undefined;
 }) {
     const where: Prisma.sessaoWhereInput = {
         cliente_id: clientId,
@@ -636,7 +647,7 @@ export async function getAttentionStimuli({
         select: {
             id: true,
             trials: {
-                select : {
+                select: {
                     resultado: true,
                     estimulos_ocp_id: true,
                     estimulosOcp: {
@@ -673,10 +684,11 @@ export async function getAttentionStimuli({
             const stimulusId = trial.estimulos_ocp_id;
             const current = aggregates.get(stimulusId);
 
-            const label = trial.estimulosOcp.nome
-                ?? trial.estimulosOcp.estimulo?.nome
-                ?? `Estímulo ${stimulusId}`;
-            
+            const label =
+                trial.estimulosOcp.nome ??
+                trial.estimulosOcp.estimulo?.nome ??
+                `Estímulo ${stimulusId}`;
+
             const entry = current ?? {
                 id: String(trial.estimulosOcp.id),
                 label,
@@ -705,10 +717,9 @@ export async function getAttentionStimuli({
     let hasSufficientData = false;
 
     const items = Array.from(aggregates.values()).map<OcpType.AttentionStimulusItem>((entry) => {
-        const independence = entry.total > 0
-            ? Math.round((entry.counts.indep / entry.total) * 100)
-            : 0;
-        
+        const independence =
+            entry.total > 0 ? Math.round((entry.counts.indep / entry.total) * 100) : 0;
+
         let status: OcpType.AttentionStimulusItem['status'];
         if (entry.total < 5) {
             status = 'insuficiente';
@@ -737,7 +748,7 @@ export async function getAttentionStimuli({
     const attentionItems = items
         .filter((item) => item.status === 'atencao')
         .sort((a, b) => a.independence - b.independence);
-    
+
     return {
         items: attentionItems,
         total: attentionItems.length,
@@ -749,6 +760,8 @@ function calculateSessionIndependency(session: OcpType.SessionDTO) {
     const totalTrials = session.trials.length;
     if (!totalTrials) return null;
 
-    const independentTrials = session.trials.filter(trial => trial.resultado === 'independent').length;
+    const independentTrials = session.trials.filter(
+        (trial) => trial.resultado === 'independent',
+    ).length;
     return independentTrials / totalTrials;
 }

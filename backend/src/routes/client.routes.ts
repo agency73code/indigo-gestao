@@ -1,8 +1,8 @@
-import { Router } from "express";
+import { Router } from 'express';
 import type { Router as ExpressRouter } from 'express';
-import * as ClientController from "../controllers/client.controller.js";
-import { requireAbility } from "../middleware/requireAbility.js";
-import { auth } from "../middleware/auth.middleware.js";
+import * as ClientController from '../controllers/client.controller.js';
+import { requireAbility } from '../middleware/requireAbility.js';
+import { auth } from '../middleware/auth.middleware.js';
 
 const router: ExpressRouter = Router();
 

@@ -34,26 +34,26 @@ export interface EndSupervisionLinkInput {
 }
 
 export const VIEW_BY = {
-  PATIENT: 'patient',
-  THERAPIST: 'therapist',
-  SUPERVISION: 'supervision',
+    PATIENT: 'patient',
+    THERAPIST: 'therapist',
+    SUPERVISION: 'supervision',
 } as const;
 
 export const STATUS = {
-  ALL: 'all',
-  ACTIVE: 'active',
-  ENDED: 'ended',
-  ARCHIVED: 'archived',
+    ALL: 'all',
+    ACTIVE: 'active',
+    ENDED: 'ended',
+    ARCHIVED: 'archived',
 } as const;
 
 export const ORDER_BY = {
-  RECENT: 'recent',
-  OLDEST: 'oldest',
+    RECENT: 'recent',
+    OLDEST: 'oldest',
 } as const;
 
 export type LinkFilters = {
-  viewBy?: typeof VIEW_BY[keyof typeof VIEW_BY] | undefined;
-  status?: typeof STATUS[keyof typeof STATUS] | undefined;
-  orderBy?: typeof ORDER_BY[keyof typeof ORDER_BY] | undefined;
-  q?: string | undefined;
+    viewBy?: (typeof VIEW_BY)[keyof typeof VIEW_BY] | undefined;
+    status?: (typeof STATUS)[keyof typeof STATUS] | undefined;
+    orderBy?: (typeof ORDER_BY)[keyof typeof ORDER_BY] | undefined;
+    q?: string | undefined;
 };

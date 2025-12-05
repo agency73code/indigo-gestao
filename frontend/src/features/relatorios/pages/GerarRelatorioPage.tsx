@@ -273,11 +273,12 @@ export function GerarRelatorioPage() {
                             programId: currentFilters.programaId,
                             therapistId: currentFilters.terapeutaId,
                             stimulusId: currentFilters.estimuloId,
+                            sort: 'date-asc',
                         }
                     );
                     
                     const sessoes = sessionsResponse.items || [];
-                    console.log(sessoes)
+
                     // Calcular KPIs de TO
                     const toKpis = calculateToKpis(sessoes);
                     
@@ -345,6 +346,7 @@ export function GerarRelatorioPage() {
                             programId: currentFilters.programaId,
                             therapistId: currentFilters.terapeutaId,
                             stimulusId: currentFilters.estimuloId,
+                            sort: 'date-asc',
                         }
                     );
 

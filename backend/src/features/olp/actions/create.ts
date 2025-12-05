@@ -1,6 +1,10 @@
-import { prisma } from "../../../config/database.js";
-import { R2UploadService } from "../../file/r2/r2-upload.js";
-import type { CreateProgramPayload, CreateSessionInput, CreateToSessionInput } from "../types/olp.types.js";
+import { prisma } from '../../../config/database.js';
+import { R2UploadService } from '../../file/r2/r2-upload.js';
+import type {
+    CreateProgramPayload,
+    CreateSessionInput,
+    CreateToSessionInput,
+} from '../types/olp.types.js';
 
 export async function program(data: CreateProgramPayload) {
     const isTO = data.area === 'terapia-ocupacional';
@@ -11,7 +15,7 @@ export async function program(data: CreateProgramPayload) {
             terapeuta: { connect: { id: data.therapistId } },
             nome_programa: data.name ?? data.goalTitle,
             data_inicio: new Date(data.prazoInicio),
-            data_fim: new Date (data.prazoFim),
+            data_fim: new Date(data.prazoFim),
             objetivo_programa: data.goalTitle,
             objetivo_descricao: data.goalDescription ?? null,
             criterio_aprendizagem: data.criteria ?? null,
@@ -26,17 +30,15 @@ export async function program(data: CreateProgramPayload) {
                     estimulo: {
                         connectOrCreate: {
                             where: { nome: s.label },
-                            create: { 
-                                nome: s.label
+                            create: {
+                                nome: s.label,
                             },
                         },
                     },
                 })),
             },
             area: data.area,
-            desempenho_atual: isTO
-                ? data.currentPerformanceLevel ?? null
-                : null,
+            desempenho_atual: isTO ? (data.currentPerformanceLevel ?? null) : null,
         },
     });
 }
@@ -54,12 +56,10 @@ export async function session(input: CreateSessionInput) {
     }
 
     const trialsData = attempts.map((a) => {
-        const vinculo = ocp.estimulo_ocp.find(
-        (v) => v.id_estimulo === Number(a.stimulusId)
-        );
+        const vinculo = ocp.estimulo_ocp.find((v) => v.id_estimulo === Number(a.stimulusId));
 
         if (!vinculo) {
-        throw new Error(`O estímulo ${a.stimulusId} não pertence a este programa.`);
+            throw new Error(`O estímulo ${a.stimulusId} não pertence a este programa.`);
         }
 
         return {
@@ -89,7 +89,7 @@ export async function TOSession(input: CreateToSessionInput) {
 
     const ocp = await prisma.ocp.findUnique({
         where: { id: programId },
-        include: { estimulo_ocp: true }
+        include: { estimulo_ocp: true },
     });
 
     if (!ocp) {
@@ -97,9 +97,7 @@ export async function TOSession(input: CreateToSessionInput) {
     }
 
     const trialsData = attempts.map((a) => {
-        const vinculo = ocp.estimulo_ocp.find(
-            (v) => v.id_estimulo === Number(a.activityId)
-        );
+        const vinculo = ocp.estimulo_ocp.find((v) => v.id_estimulo === Number(a.activityId));
 
         if (!vinculo) {
             throw new Error(`A atividade ${a.activityId} não pertence a este programa.`);
@@ -113,14 +111,14 @@ export async function TOSession(input: CreateToSessionInput) {
                 a.type = 'prompted';
                 break;
             default:
-                a.type = 'error'
+                a.type = 'error';
         }
 
         return {
             estimulos_ocp_id: vinculo.id,
             ordem: a.attemptNumber,
             resultado: a.type,
-            duracao_minutos: a.durationMinutes ?? null
+            duracao_minutos: a.durationMinutes ?? null,
         };
     });
 
@@ -132,12 +130,12 @@ export async function TOSession(input: CreateToSessionInput) {
             contentType: file.mimetype,
             filename: file.originalname,
             programId,
-            patientId
+            patientId,
         });
 
         uploadedFiles.push({
             nome: file.originalname,
-            caminho: uploaded.key
+            caminho: uploaded.key,
         });
     }
 
@@ -149,18 +147,18 @@ export async function TOSession(input: CreateToSessionInput) {
             observacoes_sessao: notes?.trim() || null,
             area,
             trials: {
-                create: trialsData
+                create: trialsData,
             },
 
             arquivos: {
-                create: uploadedFiles
-            }
+                create: uploadedFiles,
+            },
         },
 
         include: {
             trials: true,
-            arquivos: true
-        }
+            arquivos: true,
+        },
     });
 
     return session;

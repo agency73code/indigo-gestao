@@ -1,9 +1,9 @@
-import type { Prisma } from "@prisma/client";
-import { prisma } from "../../../../config/database.js";
-import { getVisibilityScope } from "../../../../utils/visibilityFilter.js";
-import { normalizeSupervisionLinks } from "../normalizers/supervisionLinkNormalizer.js";
-import type { LinkFilters } from "../types/supervisionLink.types.js";
-import { ACCESS_LEVELS } from "../../../../utils/accessLevels.js";
+import type { Prisma } from '@prisma/client';
+import { prisma } from '../../../../config/database.js';
+import { getVisibilityScope } from '../../../../utils/visibilityFilter.js';
+import { normalizeSupervisionLinks } from '../normalizers/supervisionLinkNormalizer.js';
+import type { LinkFilters } from '../types/supervisionLink.types.js';
+import { ACCESS_LEVELS } from '../../../../utils/accessLevels.js';
 
 const MANAGER_LEVEL = ACCESS_LEVELS['gerente'] ?? 5;
 
@@ -36,10 +36,7 @@ export async function getAllSupervisionLinks(userId: string, filters?: LinkFilte
         extraFilters.push({ status: 'ativo' });
     }
 
-    const finalWhere =
-        extraFilters.length > 0
-            ? { AND: [whereBase, ...extraFilters] }
-            : whereBase;
+    const finalWhere = extraFilters.length > 0 ? { AND: [whereBase, ...extraFilters] } : whereBase;
 
     const links = await prisma.vinculo_supervisao.findMany({
         where: finalWhere,
@@ -123,8 +120,8 @@ function buildWhere(filters?: LinkFilters) {
  * Define a ordenação dos resultados conforme o filtro.
  */
 function buildOrderBy(filters?: LinkFilters) {
-  const recent = filters?.orderBy === 'recent';
-  return { criado_em: recent ? 'desc' : 'asc' } as const;
+    const recent = filters?.orderBy === 'recent';
+    return { criado_em: recent ? 'desc' : 'asc' } as const;
 }
 
 /**

@@ -1,6 +1,6 @@
-import { Prisma } from "@prisma/client";
-import { prisma } from "../../../config/database.js";
-import type { UpdateProgramInput } from "../types/olp.types.js";
+import { Prisma } from '@prisma/client';
+import { prisma } from '../../../config/database.js';
+import type { UpdateProgramInput } from '../types/olp.types.js';
 
 export async function programUpdate(programId: number, input: UpdateProgramInput) {
     const {
@@ -15,7 +15,7 @@ export async function programUpdate(programId: number, input: UpdateProgramInput
         status,
         criteria,
         notes,
-    } = input
+    } = input;
 
     const data: Prisma.ocpUpdateInput = {};
 
@@ -27,7 +27,7 @@ export async function programUpdate(programId: number, input: UpdateProgramInput
     if (shortTermGoalDescription) data.objetivo_curto = shortTermGoalDescription;
     if (stimuliApplicationDescription) data.descricao_aplicacao = stimuliApplicationDescription;
     if (currentPerformanceLevel) data.desempenho_atual = currentPerformanceLevel;
-    if (status) data.status = status === "active" ? "ativado" : "arquivado";
+    if (status) data.status = status === 'active' ? 'ativado' : 'arquivado';
     if (criteria) data.criterio_aprendizagem = criteria;
     if (notes) data.observacao_geral = notes;
 
