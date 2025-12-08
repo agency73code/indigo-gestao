@@ -2,11 +2,10 @@ import { useMemo } from 'react';
 import type { Sessao, Patient, ProgramDetail, RegistroTentativa } from '@/features/programas/consulta-sessao/types';
 import { aggregateByStimulus, sumCounts } from '@/features/programas/consulta-sessao/pages/helpers';
 import HeaderSessao from '@/features/programas/consulta-sessao/components/HeaderSessao';
-import SessionSummary from '@/features/programas/consulta-sessao/pages/components/SessionSummary';
 import SessionNotes from '@/features/programas/consulta-sessao/pages/components/SessionNotes';
 import SessionFiles, { type SessionFile } from '@/features/programas/consulta-sessao/pages/components/SessionFiles';
 import { initializeMockSessionFiles } from '../../session/services';
-import { MusiActivitiesPerformanceList } from '.';
+import { MusiActivitiesPerformanceList, MusiSessionSummary } from '.';
 
 interface DetalheSessaoMusiProps {
     sessao: Sessao;
@@ -25,36 +24,51 @@ function getMusiStatus(counts: { erro: number; ajuda: number; indep: number }): 
     return 'vermelho';
 }
 
-function getMusiStatusConfig(kind: StatusKind) {
-    const configs = {
-        verde: {
-            label: 'Desempenhou',
-            cls: 'bg-green-100 text-green-700',
-        },
-        laranja: {
-            label: 'Desempenhou com Ajuda',
-            cls: 'bg-amber-100 text-amber-700',
-        },
-        vermelho: {
-            label: 'Não Desempenhou',
-            cls: 'bg-red-100 text-red-700',
-        },
-    };
-    return configs[kind];
-}
-
-function aggregateDurationsByActivity(registros: RegistroTentativa[]): Record<string, number | null> {
-    const durations: Record<string, number | null> = {};
+function aggregateScalesByActivity(registros: RegistroTentativa[]): Record<string, { participacao?: number | null; suporte?: number | null }> {
+    const scales: Record<string, { participacao?: number | null; suporte?: number | null }> = {};
     
     registros.forEach(r => {
-        if (r.stimulusId && r.durationMinutes !== undefined) {
-            if (!(r.stimulusId in durations)) {
-                durations[r.stimulusId] = r.durationMinutes;
+        if (r.stimulusId) {
+            if (!(r.stimulusId in scales)) {
+                scales[r.stimulusId] = {
+                    participacao: r.participacao,
+                    suporte: r.suporte,
+                };
             }
         }
     });
     
-    return durations;
+    return scales;
+}
+
+// Calcula a média de participação de todas as atividades
+function calculateAvgParticipacao(scalesByActivity: Record<string, { participacao?: number | null; suporte?: number | null }>): number | null {
+    const values = Object.values(scalesByActivity)
+        .map(s => s.participacao)
+        .filter((v): v is number => v !== null && v !== undefined);
+    
+    if (values.length === 0) return null;
+    return values.reduce((sum, v) => sum + v, 0) / values.length;
+}
+
+// Calcula a média de suporte de todas as atividades
+function calculateAvgSuporte(scalesByActivity: Record<string, { participacao?: number | null; suporte?: number | null }>): number | null {
+    const values = Object.values(scalesByActivity)
+        .map(s => s.suporte)
+        .filter((v): v is number => v !== null && v !== undefined);
+    
+    if (values.length === 0) return null;
+    return values.reduce((sum, v) => sum + v, 0) / values.length;
+}
+
+// Calcula a duração total da sessão (soma de todos os durationMinutes)
+function calculateTotalDuration(registros: RegistroTentativa[]): number | undefined {
+    const durations = registros
+        .map(r => r.durationMinutes)
+        .filter((d): d is number => d !== null && d !== undefined && d > 0);
+    
+    if (durations.length === 0) return undefined;
+    return durations.reduce((sum, d) => sum + d, 0);
 }
 
 // Mock de arquivos (para desenvolvimento)
@@ -71,8 +85,8 @@ export default function DetalheSessaoMusi({ sessao, paciente, programa, onBack }
         [sessao.registros],
     );
 
-    const durationsByActivity = useMemo(
-        () => aggregateDurationsByActivity(sessao.registros),
+    const scalesByActivity = useMemo(
+        () => aggregateScalesByActivity(sessao.registros),
         [sessao.registros],
     );
 
@@ -101,6 +115,22 @@ export default function DetalheSessaoMusi({ sessao, paciente, programa, onBack }
     const workedCount = Object.keys(countsByActivity).length;
     const plannedCount = programa.stimuli.filter((s) => s.active).length;
 
+    // Métricas para o summary
+    const avgParticipacao = useMemo(
+        () => calculateAvgParticipacao(scalesByActivity),
+        [scalesByActivity],
+    );
+
+    const avgSuporte = useMemo(
+        () => calculateAvgSuporte(scalesByActivity),
+        [scalesByActivity],
+    );
+
+    const totalDurationMinutes = useMemo(
+        () => calculateTotalDuration(sessao.registros),
+        [sessao.registros],
+    );
+
     const sessionFiles = useMemo(() => {
         return sessao.files || getSessionFiles(sessao.id);
     }, [sessao.id, sessao.files]);
@@ -109,20 +139,20 @@ export default function DetalheSessaoMusi({ sessao, paciente, programa, onBack }
         <div className="space-y-4">
             <HeaderSessao sessao={sessao} paciente={paciente} programa={programa} onBack={onBack} />
 
-            <SessionSummary
+            <MusiSessionSummary
                 counts={countsSessao}
-                duration={null}
-                planned={plannedCount}
-                worked={workedCount}
-                date={sessao.data}
-                status={'positivo' as any}
-                statusConfig={getMusiStatusConfig(statusSessao)}
+                plannedActivities={plannedCount}
+                workedActivities={workedCount}
+                avgParticipacao={avgParticipacao}
+                avgSuporte={avgSuporte}
+                status={statusSessao}
+                totalDurationMinutes={totalDurationMinutes}
             />
 
             <MusiActivitiesPerformanceList
                 activities={activitiesInfo}
                 countsByActivity={countsByActivity}
-                durationsByActivity={durationsByActivity}
+                scalesByActivity={scalesByActivity}
                 defaultSort="severity"
             />
 
