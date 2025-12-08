@@ -121,7 +121,7 @@ export async function getClientById(clientId: string) {
         name: client.nome,
         guardianName: client.cuidadores[0]?.nome ?? null,
         age: currentYear - birthYear,
-        photoUrl: `/api/arquivos/getAvatar?ownerType=cliente&ownerId=${client.id}`,
+        photoUrl: null,
     };
 }
 
@@ -358,6 +358,7 @@ export async function listSessionsByClient(filters: OcpType.ListSessionsFilters)
                     id: true,
                     nome: true,
                     caminho: true,
+                    tamanho: true,
                 },
             },
         },

@@ -58,7 +58,7 @@ export function mapSessionList(dto: OcpTypes.SessionDTO[]): OcpTypes.Session[] {
                 name: file.nome,
                 fileName,
                 type: typeof mimeType === 'string' ? mimeType : 'application/octet-stream',
-                size: Math.round(Math.random() * 1000000000) / 100, // TODO: kaio
+                size: file.tamanho,
                 url: file.caminho,
             };
         }),
