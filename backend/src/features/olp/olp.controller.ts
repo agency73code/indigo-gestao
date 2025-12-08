@@ -3,6 +3,12 @@ import * as OcpService from './olp.service.js';
 import * as OcpNormalizer from './olp.normalizer.js';
 import { Prisma } from '@prisma/client';
 import type { CreateProgramPayload } from './types/olp.types.js';
+import { getPhysioSessionData } from './services/reports/physiotherapy/getPhysioSessionData.js';
+import { calcActivityDuration } from './services/reports/physiotherapy/activityDurationData.js';
+import { calcAutonomyByCategory } from './services/reports/physiotherapy/autonomyByCategory.js';
+import { calcPerformanceLine } from './services/reports/physiotherapy/performanceLine.js';
+import { calcKpis } from './services/reports/physiotherapy/calculateKpis.js';
+import { calcAttentionActivities } from './services/reports/physiotherapy/attentionActivities.js';
 
 export async function createProgram(req: Request, res: Response) {
     try {
@@ -399,4 +405,31 @@ function getQueryString(value: unknown): string | undefined {
     }
 
     return undefined;
+}
+
+// Physiotherapy reports
+export async function physioKpis(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { sessionIds, stimulusIds } = req.body;
+
+        if (!Array.isArray(sessionIds) || sessionIds.length === 0) {
+            return res.status(400).json({
+                error: "sessionIds é obrigatório e deve ser um array",
+            });
+        }
+        
+        const sessions = await getPhysioSessionData(sessionIds, stimulusIds || []);
+
+        const result = {
+            activityDuration: calcActivityDuration(sessions),
+            autonomyByCategory: calcAutonomyByCategory(sessions),
+            performance: calcPerformanceLine(sessions),
+            attentionActivities: calcAttentionActivities(sessions),
+            kpis: calcKpis(sessions),
+        };
+
+        return res.json(result);
+    } catch (error) {
+        next (error);
+    }
 }
