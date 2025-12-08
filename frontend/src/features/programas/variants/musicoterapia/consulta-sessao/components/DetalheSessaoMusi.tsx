@@ -61,16 +61,6 @@ function calculateAvgSuporte(scalesByActivity: Record<string, { participacao?: n
     return values.reduce((sum, v) => sum + v, 0) / values.length;
 }
 
-// Calcula a duração total da sessão (soma de todos os durationMinutes)
-function calculateTotalDuration(registros: RegistroTentativa[]): number | undefined {
-    const durations = registros
-        .map(r => r.durationMinutes)
-        .filter((d): d is number => d !== null && d !== undefined && d > 0);
-    
-    if (durations.length === 0) return undefined;
-    return durations.reduce((sum, d) => sum + d, 0);
-}
-
 // Mock de arquivos (para desenvolvimento)
 function getSessionFiles(sessionId: string): SessionFile[] {
     initializeMockSessionFiles();
@@ -103,12 +93,19 @@ export default function DetalheSessaoMusi({ sessao, paciente, programa, onBack }
     const statusSessao = useMemo(() => getMusiStatus(countsSessao), [countsSessao]);
 
     const activitiesInfo = useMemo(
-        () =>
-            programa.stimuli.map((s) => ({
+        () => {
+            const info = programa.stimuli.map((s) => ({
                 id: s.id,
                 label: s.label,
                 order: s.order,
-            })),
+                objetivoEspecifico: s.description || null,
+                metodos: s.metodos || null,
+                tecnicasProcedimentos: s.tecnicasProcedimentos || null,
+            }));
+            console.log('🎵 [DetalheSessaoMusi] activitiesInfo:', info);
+            console.log('🎵 [DetalheSessaoMusi] programa.stimuli:', programa.stimuli);
+            return info;
+        },
         [programa.stimuli],
     );
 
@@ -126,11 +123,6 @@ export default function DetalheSessaoMusi({ sessao, paciente, programa, onBack }
         [scalesByActivity],
     );
 
-    const totalDurationMinutes = useMemo(
-        () => calculateTotalDuration(sessao.registros),
-        [sessao.registros],
-    );
-
     const sessionFiles = useMemo(() => {
         return sessao.files || getSessionFiles(sessao.id);
     }, [sessao.id, sessao.files]);
@@ -146,7 +138,6 @@ export default function DetalheSessaoMusi({ sessao, paciente, programa, onBack }
                 avgParticipacao={avgParticipacao}
                 avgSuporte={avgSuporte}
                 status={statusSessao}
-                totalDurationMinutes={totalDurationMinutes}
             />
 
             <MusiActivitiesPerformanceList

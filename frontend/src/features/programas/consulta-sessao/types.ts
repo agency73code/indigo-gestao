@@ -4,6 +4,9 @@ export type RegistroTentativa = {
   stimulusId?: string;
   stimulusLabel?: string;
   durationMinutes?: number | null; // tempo em minutos (para TO)
+  // Campos de Musicoterapia
+  participacao?: number | null; // 0-5: 0=Não participa, 5=Supera expectativas
+  suporte?: number | null; // 1-5: 1=Sem suporte, 5=Máximo físico
   // Metadata para Fisioterapia (pode vir como string JSON ou objeto)
   metadata?: string | {
     usedLoad?: boolean;

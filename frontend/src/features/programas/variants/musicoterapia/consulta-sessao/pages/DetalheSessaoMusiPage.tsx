@@ -78,12 +78,51 @@ export default function DetalheSessaoMusiPage() {
         const patientId = sessionData.pacienteId ?? pacienteIdFromQuery ?? '';
         let patientData: Patient | null = null;
         if (patientId) {
-          patientData = await getPatientById(patientId);
+          try {
+            patientData = await getPatientById(patientId);
+          } catch (err) {
+            // Se falhar ao buscar paciente (ex: 404), usar dados do mock
+            console.warn('Usando dados de paciente do mock:', err);
+            patientData = null;
+          }
         }
 
-        const mockProgramDetail: ProgramDetail = 
-        (await findProgramSessionById(sessaoId)) ??
-        (await import('@/features/programas/detalhe-ocp/mocks/program.mock')).mockProgramDetail;
+        let mockProgramDetail: ProgramDetail | null = await findProgramSessionById(sessaoId, 'musicoterapia');
+        
+        if (!mockProgramDetail) {
+          // Usa o mock específico de musicoterapia
+          const { mockMusiProgram } = await import('../../mocks/programMock');
+          mockProgramDetail = {
+            id: mockMusiProgram.id,
+            patientId: mockMusiProgram.patientId,
+            patientName: mockMusiProgram.patientName,
+            patientGuardian: mockMusiProgram.patient?.guardianName,
+            patientAge: mockMusiProgram.patient?.age,
+            patientPhotoUrl: mockMusiProgram.patient?.photoUrl ?? null,
+            prazoInicio: mockMusiProgram.prazoInicio,
+            prazoFim: mockMusiProgram.prazoFim,
+            therapistId: mockMusiProgram.therapistId,
+            therapistName: mockMusiProgram.therapistName,
+            therapistPhotoUrl: mockMusiProgram.therapistPhotoUrl,
+            createdAt: mockMusiProgram.createdAt,
+            goalTitle: mockMusiProgram.goalTitle,
+            goalDescription: mockMusiProgram.goalDescription,
+            shortTermGoalDescription: mockMusiProgram.shortTermGoalDescription,
+            stimuliApplicationDescription: mockMusiProgram.stimuliApplicationDescription,
+            stimuli: mockMusiProgram.stimuli.map(s => ({
+              id: s.id,
+              order: s.order,
+              label: s.label,
+              description: s.description,
+              metodos: s.metodos,
+              tecnicasProcedimentos: s.tecnicasProcedimentos,
+              active: s.active,
+            })),
+            criteria: mockMusiProgram.criteria,
+            notes: mockMusiProgram.notes,
+            status: mockMusiProgram.status,
+          };
+        }
 
         const derivedProgram: ProgramDetail = {
           ...mockProgramDetail,
@@ -93,6 +132,8 @@ export default function DetalheSessaoMusiPage() {
           patientAge: patientData?.age ?? mockProgramDetail.patientAge,
           patientPhotoUrl: patientData?.photoUrl ?? mockProgramDetail.patientPhotoUrl,
         };
+
+        console.log('🎵 [DetalheSessaoMusiPage] derivedProgram.stimuli:', derivedProgram.stimuli);
 
         const derivedPatient: Patient = patientData ?? {
           id: sessionData.pacienteId,

@@ -36,8 +36,6 @@ type ActivitySummary = {
     avgSuport: number | null;
 };
 
-const createEmptyCounts = (): Counts => ({ 'nao-desempenhou': 0, 'desempenhou-com-ajuda': 0, desempenhou: 0 });
-
 function sumCounts(a: Counts, b: Counts): Counts {
     return {
         'nao-desempenhou': a['nao-desempenhou'] + b['nao-desempenhou'],

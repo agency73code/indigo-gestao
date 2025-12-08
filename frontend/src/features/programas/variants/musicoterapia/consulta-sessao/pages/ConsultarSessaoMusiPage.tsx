@@ -247,15 +247,7 @@ export default function ConsultarSessaoMusiPage() {
             {/* Conteúdo quando paciente está selecionado */}
             {patient && (
                 <>
-                    {/* Botão Nova Sessão */}
-                    <div className="flex justify-end">
-                        <Button onClick={handleNovaSessao} className="gap-2">
-                            <Plus className="h-4 w-4" />
-                            Nova Sessão
-                        </Button>
-                    </div>
-
-                    {/* Filtros */}
+                    {/* Filtros com Botão Nova Sessão integrado */}
                     <SearchAndFilters
                         q={filters.q}
                         dateRange={filters.dateRange}
@@ -265,6 +257,12 @@ export default function ConsultarSessaoMusiPage() {
                         onChange={(partial) => applyFilters((prev) => ({ ...prev, ...partial }))}
                         programOptions={programOptions}
                         therapistOptions={therapistOptions}
+                        renderButton={
+                            <Button onClick={handleNovaSessao} className="gap-2">
+                                <Plus className="h-4 w-4" />
+                                Nova Sessão
+                            </Button>
+                        }
                     />
 
                     {/* Lista de Sessões */}

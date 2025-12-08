@@ -56,6 +56,7 @@ export type MusiProgramDetail = {
     goalDescription?: string | null;
     shortTermGoalDescription?: string | null;
     activitiesApplicationDescription?: string | null;
+    currentPerformanceLevel?: string | null;
     status: string;
     criteria?: string | null;
     prazoInicio?: string;

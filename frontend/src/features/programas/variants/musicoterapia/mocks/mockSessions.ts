@@ -14,9 +14,18 @@ import type { SessionListItem } from '../../../detalhe-ocp/types';
 import type { MusiActivitySummary } from '../types';
 
 /**
- * Sessões mock com dados de atividades de Musicoterapia
+ * Tipo para resumo de atividade com Participação e Suporte
  */
-export const mockMusiSessions: Array<SessionListItem & { activitiesSummary?: MusiActivitySummary[], observacoes?: string, programId?: string }> = [
+export type MusiActivitySummaryWithScales = MusiActivitySummary & {
+    participacao?: number; // 0-5: 0=Não participa, 5=Supera expectativas
+    suporte?: number; // 1-5: 1=Sem suporte, 5=Máximo físico
+};
+
+/**
+ * Sessões mock com dados de atividades de Musicoterapia
+ * Inclui escalas de Participação (0-5) e Suporte (1-5)
+ */
+export const mockMusiSessions: Array<SessionListItem & { activitiesSummary?: MusiActivitySummaryWithScales[], observacoes?: string, programId?: string }> = [
     {
         id: 'session-musi-001',
         programId: 'mock-musi-001',
@@ -45,6 +54,8 @@ export const mockMusiSessions: Array<SessionListItem & { activitiesSummary?: Mus
                 },
                 total: 10,
                 durationMinutes: 12,
+                participacao: 4, // Participa ativamente
+                suporte: 2, // Suporte verbal
             },
             {
                 activityId: 'stim-2',
@@ -56,6 +67,8 @@ export const mockMusiSessions: Array<SessionListItem & { activitiesSummary?: Mus
                 },
                 total: 10,
                 durationMinutes: 15,
+                participacao: 5, // Supera expectativas
+                suporte: 1, // Sem suporte
             },
             {
                 activityId: 'stim-3',
@@ -67,6 +80,8 @@ export const mockMusiSessions: Array<SessionListItem & { activitiesSummary?: Mus
                 },
                 total: 4,
                 durationMinutes: 10,
+                participacao: 3, // Participa com incentivo
+                suporte: 3, // Suporte visual/modelo
             },
         ],
     },
@@ -97,6 +112,8 @@ export const mockMusiSessions: Array<SessionListItem & { activitiesSummary?: Mus
                 },
                 total: 10,
                 durationMinutes: 12,
+                participacao: 4,
+                suporte: 2,
             },
             {
                 activityId: 'stim-3',
@@ -108,6 +125,8 @@ export const mockMusiSessions: Array<SessionListItem & { activitiesSummary?: Mus
                 },
                 total: 10,
                 durationMinutes: 18,
+                participacao: 3,
+                suporte: 3,
             },
         ],
     },
@@ -138,6 +157,8 @@ export const mockMusiSessions: Array<SessionListItem & { activitiesSummary?: Mus
                 },
                 total: 10,
                 durationMinutes: 15,
+                participacao: 3,
+                suporte: 3,
             },
             {
                 activityId: 'stim-4',
@@ -149,6 +170,8 @@ export const mockMusiSessions: Array<SessionListItem & { activitiesSummary?: Mus
                 },
                 total: 11,
                 durationMinutes: 20,
+                participacao: 2,
+                suporte: 4,
             },
         ],
     },
@@ -179,6 +202,8 @@ export const mockMusiSessions: Array<SessionListItem & { activitiesSummary?: Mus
                 },
                 total: 19,
                 durationMinutes: 30,
+                participacao: 3,
+                suporte: 4,
             },
         ],
     },
@@ -209,6 +234,8 @@ export const mockMusiSessions: Array<SessionListItem & { activitiesSummary?: Mus
                 },
                 total: 20,
                 durationMinutes: 25,
+                participacao: 2,
+                suporte: 4,
             },
         ],
     },

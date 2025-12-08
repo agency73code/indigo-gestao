@@ -3,7 +3,7 @@ import type { Sessao, ResumoSessao, ProgramDetail } from './types';
 import type { AreaType } from '@/contexts/AreaContext';
 
 // Toggle local mocks (follow existing pattern)
-const USE_LOCAL_MOCKS = false;
+const USE_LOCAL_MOCKS = true;
 
 /**
  * Parâmetros de filtragem para listagem de sessões
@@ -63,6 +63,14 @@ export async function listSessionsByPatient(
     page = 1,
     pageSize = 10
   } = filters;
+
+  // Se USE_LOCAL_MOCKS estiver ativo, usar mocks diretamente
+  if (USE_LOCAL_MOCKS) {
+    console.warn('🔄 Usando mock local (USE_LOCAL_MOCKS ativo)');
+    const mockData = await getMockSessionsData(patientId, area);
+    return processSessionsLocally(mockData, filters);
+  }
+
   try {
     // // Construir URL com query params
     // // const url = new URL(`/api/ocp/clients/${patientId}/sessions`, window.location.origin);
@@ -120,6 +128,7 @@ export async function listSessionsByPatient(
  * ⚠️ FUNÇÃO AUXILIAR: Converte mocks para formato Sessao[]
  */
 async function getMockSessionsData(patientId: string, area?: string): Promise<Sessao[]> {
+  
   // 🎯 Se for Fisioterapia, retornar sessões FISIO mocadas
   if (area === 'fisioterapia') {
     const { mockToSessions } = await import(
@@ -300,6 +309,94 @@ async function getMockSessionsData(patientId: string, area?: string): Promise<Se
     return result;
   }
 
+  // 🎵 Se for Musicoterapia, retornar sessões MUSI mocadas
+  if (area === 'musicoterapia') {
+    const { mockMusiSessions } = await import(
+      '@/features/programas/variants/musicoterapia/mocks/mockSessions'
+    );
+    const { mockMusiProgram } = await import(
+      '@/features/programas/variants/musicoterapia/mocks/programMock'
+    );
+
+    const result = mockMusiSessions.map((s) => {
+      // Gerar registros baseados no activitiesSummary com participação e suporte
+      const registros: Array<{
+        tentativa: number;
+        resultado: 'acerto' | 'erro' | 'ajuda';
+        stimulusId?: string;
+        stimulusLabel?: string;
+        durationMinutes?: number | null;
+        participacao?: number | null;
+        suporte?: number | null;
+      }> = [];
+
+      let tentativaCounter = 1;
+
+      if (s.activitiesSummary && s.activitiesSummary.length > 0) {
+        // Para cada atividade, criar tentativas baseadas nas contagens
+        s.activitiesSummary.forEach((activity) => {
+          const activityWithScales = activity as typeof activity & { participacao?: number; suporte?: number };
+          
+          // Adicionar tentativas de erro (não desempenhou)
+          for (let i = 0; i < activity.counts.naoDesempenhou; i++) {
+            registros.push({
+              tentativa: tentativaCounter++,
+              resultado: 'erro',
+              stimulusId: activity.activityId,
+              stimulusLabel: activity.activityName,
+              durationMinutes: activity.durationMinutes,
+              participacao: activityWithScales.participacao,
+              suporte: activityWithScales.suporte,
+            });
+          }
+
+          // Adicionar tentativas de ajuda (desempenhou com ajuda)
+          for (let i = 0; i < activity.counts.desempenhouComAjuda; i++) {
+            registros.push({
+              tentativa: tentativaCounter++,
+              resultado: 'ajuda',
+              stimulusId: activity.activityId,
+              stimulusLabel: activity.activityName,
+              durationMinutes: activity.durationMinutes,
+              participacao: activityWithScales.participacao,
+              suporte: activityWithScales.suporte,
+            });
+          }
+
+          // Adicionar tentativas de acerto (desempenhou)
+          for (let i = 0; i < activity.counts.desempenhou; i++) {
+            registros.push({
+              tentativa: tentativaCounter++,
+              resultado: 'acerto',
+              stimulusId: activity.activityId,
+              stimulusLabel: activity.activityName,
+              durationMinutes: activity.durationMinutes,
+              participacao: activityWithScales.participacao,
+              suporte: activityWithScales.suporte,
+            });
+          }
+        });
+      }
+
+      return {
+        id: s.id,
+        pacienteId: patientId,
+        terapeutaId: 'therapist-001',
+        terapeutaNome: s.therapistName || 'Mariana Santos',
+        data: s.date,
+        programa: mockMusiProgram?.name || 'Programa de Expressão Musical e Ritmo',
+        objetivo: mockMusiProgram?.goalDescription || 'Desenvolver habilidades de expressão musical',
+        prazoInicio: '',
+        prazoFim: '',
+        observacoes: s.observacoes ?? undefined,
+        registros,
+        area: 'musicoterapia',
+      };
+    });
+
+    return result;
+  }
+
   // Senão, retornar sessões de Fono (padrão)
   const { mockRecentSessions } = await import(
     '@/features/programas/detalhe-ocp/mocks/sessions.mock'
@@ -451,10 +548,17 @@ export async function findSessionById(
   if (USE_LOCAL_MOCKS) {
     let targetPatientId = patientId;
     
-    // Se não foi fornecido patientId, tenta usar o do mock
+    // Se não foi fornecido patientId, usa o patientId mock da área correspondente
     if (!targetPatientId) {
-      const { mockProgramDetail } = await import('@/features/programas/detalhe-ocp/mocks/program.mock');
-      targetPatientId = mockProgramDetail.patientId;
+      if (area === 'musicoterapia') {
+        const { mockMusiProgram } = await import('@/features/programas/variants/musicoterapia/mocks/programMock');
+        targetPatientId = mockMusiProgram.patientId;
+      } else if (area === 'terapia-ocupacional') {
+        targetPatientId = 'b6f174c5-87bc-4946-9bff-2eaf72d977b9';
+      } else {
+        const { mockProgramDetail } = await import('@/features/programas/detalhe-ocp/mocks/program.mock');
+        targetPatientId = mockProgramDetail.patientId;
+      }
     }
     
     const response = await listSessionsByPatient(targetPatientId, area);
@@ -463,7 +567,33 @@ export async function findSessionById(
   return null;
 }
 
-export async function findProgramSessionById(sessionId: string): Promise<ProgramDetail | null> {
+export async function findProgramSessionById(sessionId: string, area?: string): Promise<ProgramDetail | null> {
+  // Se estiver usando mocks, retorna mock diretamente
+  if (USE_LOCAL_MOCKS) {
+    // Detectar área pelo prefixo do sessionId
+    const detectedArea = area || (sessionId.includes('musi') ? 'musicoterapia' : 
+      sessionId.includes('to-') ? 'terapia-ocupacional' : 'fonoaudiologia');
+    
+    if (detectedArea === 'musicoterapia') {
+      const { mockMusiProgram } = await import('@/features/programas/variants/musicoterapia/mocks/programMock');
+      return {
+        ...mockMusiProgram,
+        stimuli: mockMusiProgram.stimuli.map((s: any) => ({
+          id: s.id,
+          label: s.label,
+          description: s.description || '',
+          metodos: s.metodos || null,
+          tecnicasProcedimentos: s.tecnicasProcedimentos || null,
+          active: s.active,
+          order: s.order,
+        })),
+      } as unknown as ProgramDetail;
+    }
+    
+    const { mockProgramDetail } = await import('@/features/programas/detalhe-ocp/mocks/program.mock');
+    return mockProgramDetail;
+  }
+  
   try {
     const res = await fetch(`/api/ocp/sessions/${sessionId}`, {
       method: 'GET',
@@ -477,13 +607,6 @@ export async function findProgramSessionById(sessionId: string): Promise<Program
     return data.data;
   } catch (error) {
     console.warn('Erro ao buscar programa da sessão da API, usando mock:', error);
-    
-    // Fallback para mock quando a API não responder
-    if (USE_LOCAL_MOCKS) {
-      const { mockProgramDetail } = await import('@/features/programas/detalhe-ocp/mocks/program.mock');
-      return mockProgramDetail;
-    }
-    
     return null;
   }
 }

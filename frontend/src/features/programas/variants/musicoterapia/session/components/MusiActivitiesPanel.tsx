@@ -3,7 +3,6 @@ import { Music, ChevronRight, Pause as PauseIcon, Play } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import MusiActivityBlockPanel, {
     type BlockCounts,
@@ -46,8 +45,6 @@ export default function MusiActivitiesPanel({
     // Estados para participação e suporte - compartilhados e aplicados ao finalizar
     const [participacao, setParticipacao] = useState<string>('');
     const [suporte, setSuporte] = useState<string>('');
-
-    const shortTermGoalDescription = program.shortTermGoalDescription ?? null;
 
     const activeActivities = useMemo(
         () => program.activities.filter((activity) => activity.active),

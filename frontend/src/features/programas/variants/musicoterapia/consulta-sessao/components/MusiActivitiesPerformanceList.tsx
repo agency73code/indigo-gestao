@@ -11,13 +11,17 @@ import {
     ChevronUp,
     ArrowUpDown,
     Users,
-    HeartHandshake
+    HeartHandshake,
+    FileText
 } from 'lucide-react';
 
 type ActivityInfo = {
     id: string;
     label: string;
     order: number;
+    objetivoEspecifico?: string | null;
+    metodos?: string | null;
+    tecnicasProcedimentos?: string | null;
 };
 
 type Counts = {
@@ -57,34 +61,34 @@ function getStatusConfig(status: StatusKind) {
         case 'verde':
             return {
                 label: 'Desempenhou',
-                bgColor: 'bg-green-50 dark:bg-green-950/30',
-                borderColor: 'border-green-200 dark:border-green-800',
-                textColor: 'text-green-700 dark:text-green-400',
-                badgeCls: 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/50 dark:text-green-400 dark:border-green-700',
+                bgColor: 'bg-muted/30',
+                borderColor: 'border-border',
+                textColor: 'text-foreground',
+                badgeCls: 'bg-muted text-foreground border-border',
             };
         case 'laranja':
             return {
                 label: 'Com Ajuda',
-                bgColor: 'bg-amber-50 dark:bg-amber-950/30',
-                borderColor: 'border-amber-200 dark:border-amber-800',
-                textColor: 'text-amber-700 dark:text-amber-400',
-                badgeCls: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/50 dark:text-amber-400 dark:border-amber-700',
+                bgColor: 'bg-muted/30',
+                borderColor: 'border-border',
+                textColor: 'text-foreground',
+                badgeCls: 'bg-muted text-foreground border-border',
             };
         case 'vermelho':
             return {
                 label: 'Não Desempenhou',
-                bgColor: 'bg-red-50 dark:bg-red-950/30',
-                borderColor: 'border-red-200 dark:border-red-800',
-                textColor: 'text-red-700 dark:text-red-400',
-                badgeCls: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/50 dark:text-red-400 dark:border-red-700',
+                bgColor: 'bg-muted/30',
+                borderColor: 'border-border',
+                textColor: 'text-foreground',
+                badgeCls: 'bg-muted text-foreground border-border',
             };
         default:
             return {
                 label: 'Sem dados',
-                bgColor: 'bg-gray-50 dark:bg-gray-900/30',
-                borderColor: 'border-gray-200 dark:border-gray-700',
-                textColor: 'text-gray-500 dark:text-gray-400',
-                badgeCls: 'bg-gray-100 text-gray-600 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600',
+                bgColor: 'bg-muted/30',
+                borderColor: 'border-border',
+                textColor: 'text-muted-foreground',
+                badgeCls: 'bg-muted text-muted-foreground border-border',
             };
     }
 }
@@ -94,11 +98,11 @@ function formatParticipacao(value: number | null | undefined): string {
     
     const labels: Record<number, string> = {
         0: 'Não participa',
-        1: 'Mínima',
-        2: 'Parcial',
-        3: 'Ativa',
-        4: 'Muito ativa',
-        5: 'Supera expect.',
+        1: 'Percebe, mas não participa',
+        2: 'Tenta participar, mas não consegue',
+        3: 'Participa, mas não como esperado',
+        4: 'Conforme esperado',
+        5: 'Supera expectativas',
     };
     
     return labels[Math.round(value)] || `${value}`;
@@ -110,9 +114,9 @@ function formatSuporte(value: number | null | undefined): string {
     const labels: Record<number, string> = {
         1: 'Sem suporte',
         2: 'Verbal',
-        3: 'Gestual',
-        4: 'Físico leve',
-        5: 'Físico máximo',
+        3: 'Visual',
+        4: 'Parcialmente físico',
+        5: 'Totalmente físico',
     };
     
     return labels[Math.round(value)] || `${value}`;
@@ -142,7 +146,8 @@ export default function MusiActivitiesPerformanceList({
     defaultSort = 'order',
 }: MusiActivitiesPerformanceListProps) {
     const [sortBy, setSortBy] = useState<SortType>(defaultSort);
-    const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+    // Inicia com todos expandidos
+    const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set(activities.map(a => a.id)));
 
     const sortedActivities = useMemo(() => {
         const activitiesWithData = activities.map((activity) => ({
@@ -213,7 +218,7 @@ export default function MusiActivitiesPerformanceList({
     }
 
     return (
-        <Card className="rounded-[5px]">
+        <Card className="rounded-lg border-0 shadow-none" style={{ backgroundColor: 'var(--hub-card-background)' }}>
             <CardHeader className="flex flex-row items-center justify-between pb-4">
                 <CardTitle className="text-base flex items-center gap-2">
                     <Music className="h-4 w-4" />
@@ -243,11 +248,11 @@ export default function MusiActivitiesPerformanceList({
                     return (
                         <div
                             key={activity.id}
-                            className={`rounded-lg border ${config.borderColor} ${config.bgColor} overflow-hidden transition-all`}
+                            className="rounded-lg border-0 overflow-hidden transition-all bg-background"
                         >
                             {/* Header da Atividade */}
                             <button
-                                className="w-full px-4 py-3 flex items-center justify-between gap-3 text-left hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                                className="w-full px-4 py-3 flex items-center justify-between gap-3 text-left hover:bg-muted/50 transition-colors"
                                 onClick={() => toggleExpand(activity.id)}
                             >
                                 <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -275,59 +280,145 @@ export default function MusiActivitiesPerformanceList({
 
                             {/* Detalhes Expandidos */}
                             {isExpanded && (
-                                <div className="px-4 pb-4 pt-2 border-t border-inherit">
-                                    {/* Contadores de Desempenho */}
-                                    <div className="grid grid-cols-3 gap-3 mb-4">
-                                        <div className="flex items-center gap-2 p-2 rounded-md bg-green-100 dark:bg-green-900/30">
-                                            <CheckCircle className="h-4 w-4 text-green-600" />
-                                            <div>
-                                                <p className="text-xs text-muted-foreground">Desempenhou</p>
-                                                <p className="text-sm font-medium text-green-700 dark:text-green-400">
-                                                    {activity.counts.indep}
-                                                </p>
+                                <div className="px-4 pb-4 pt-2 border-t border-inherit space-y-4">
+                                    {/* Descrição da Atividade (Sempre aberta) */}
+                                    {(activity.objetivoEspecifico || activity.metodos || activity.tecnicasProcedimentos) && (
+                                        <div className="space-y-3">
+                                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                                <FileText className="h-3 w-3 shrink-0" />
+                                                <span className="font-medium">Descrição</span>
+                                            </div>
+                                            <div className="space-y-3">
+                                                {/* Grid com Objetivo Específico e Métodos lado a lado */}
+                                                {(activity.objetivoEspecifico || activity.metodos) && (
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                        {activity.objetivoEspecifico && (
+                                                            <div className="space-y-1">
+                                                                <p className="text-xs font-medium text-foreground flex items-center gap-1">
+                                                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                                                    OBJETIVO ESPECÍFICO
+                                                                </p>
+                                                                <p className="text-xs text-muted-foreground leading-relaxed pl-2.5">
+                                                                    {activity.objetivoEspecifico}
+                                                                </p>
+                                                            </div>
+                                                        )}
+                                                        {activity.metodos && (
+                                                            <div className="space-y-1">
+                                                                <p className="text-xs font-medium text-foreground flex items-center gap-1">
+                                                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                                                    MÉTODOS
+                                                                </p>
+                                                                <p className="text-xs text-muted-foreground leading-relaxed pl-2.5">
+                                                                    {activity.metodos}
+                                                                </p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                                
+                                                {/* Técnicas/Procedimentos em largura completa */}
+                                                {activity.tecnicasProcedimentos && (
+                                                    <div className="pt-3 border-t space-y-1">
+                                                        <p className="text-xs font-medium text-foreground flex items-center gap-1">
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                                            TÉCNICAS/PROCEDIMENTOS
+                                                        </p>
+                                                        <p className="text-xs text-muted-foreground leading-relaxed pl-2.5">
+                                                            {activity.tecnicasProcedimentos}
+                                                        </p>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-2 p-2 rounded-md bg-amber-100 dark:bg-amber-900/30">
-                                            <HandHelping className="h-4 w-4 text-amber-600" />
-                                            <div>
-                                                <p className="text-xs text-muted-foreground">Com Ajuda</p>
-                                                <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
-                                                    {activity.counts.ajuda}
-                                                </p>
+                                    )}
+
+                                    {/* Contadores de Desempenho - 3 colunas */}
+                                    <div className="grid grid-cols-3 gap-3">
+                                        <div className="p-3 rounded-lg bg-[#E0E7FF]" style={{ backgroundColor: 'var(--hub-card-background)' }}>
+                                            <div className="flex items-center gap-2">
+                                                <div className="h-8 w-8 rounded-md bg-[#E0E7FF] flex items-center justify-center shrink-0">
+                                                    <CheckCircle className="h-4 w-4 text-indigo-600" />
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="text-xs text-muted-foreground">Desempenhou</p>
+                                                    <p className="text-xl font-normal text-foreground" style={{ fontFamily: 'Sora, sans-serif' }}>
+                                                        {activity.counts.indep}
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-2 p-2 rounded-md bg-red-100 dark:bg-red-900/30">
-                                            <XCircle className="h-4 w-4 text-red-600" />
-                                            <div>
-                                                <p className="text-xs text-muted-foreground">Não Desemp.</p>
-                                                <p className="text-sm font-medium text-red-700 dark:text-red-400">
-                                                    {activity.counts.erro}
-                                                </p>
+                                        <div className="p-3 rounded-lg" style={{ backgroundColor: 'var(--hub-card-background)' }}>
+                                            <div className="flex items-center gap-2">
+                                                <div className="h-8 w-8 rounded-md bg-[#DBEAFE] flex items-center justify-center shrink-0">
+                                                    <HandHelping className="h-4 w-4 text-blue-600" />
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="text-xs text-muted-foreground">Com Ajuda</p>
+                                                    <p className="text-xl font-normal text-foreground" style={{ fontFamily: 'Sora, sans-serif' }}>
+                                                        {activity.counts.ajuda}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="p-3 rounded-lg" style={{ backgroundColor: 'var(--hub-card-background)' }}>
+                                            <div className="flex items-center gap-2">
+                                                <div className="h-8 w-8 rounded-md bg-[#E0E7FF] flex items-center justify-center shrink-0">
+                                                    <XCircle className="h-4 w-4 text-indigo-600" />
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <p className="text-xs text-muted-foreground">Não Desemp.</p>
+                                                    <p className="text-xl font-normal text-foreground" style={{ fontFamily: 'Sora, sans-serif' }}>
+                                                        {activity.counts.erro}
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* Escalas de Participação e Suporte */}
+                                    {/* Participação e Suporte - 2 colunas (mais espaço) */}
                                     {(activity.scales.participacao !== undefined || activity.scales.suporte !== undefined) && (
                                         <div className="grid grid-cols-2 gap-3">
-                                            <div className="flex items-center gap-2 p-2 rounded-md bg-violet-100 dark:bg-violet-900/30">
-                                                <Users className="h-4 w-4 text-violet-600" />
-                                                <div>
-                                                    <p className="text-xs text-muted-foreground">Participação</p>
-                                                    <p className="text-sm font-medium text-violet-700 dark:text-violet-400">
-                                                        {formatParticipacao(activity.scales.participacao)}
-                                                    </p>
+                                            {activity.scales.participacao !== undefined && (
+                                                <div className="p-3 rounded-lg" style={{ backgroundColor: 'var(--hub-card-background)' }}>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="h-14 w-14 rounded-lg bg-[#EDE9FE] flex items-center justify-center shrink-0">
+                                                            <Users className="h-6 w-6 text-violet-600" />
+                                                        </div>
+                                                        <div className="min-w-0 flex-1">
+                                                            <p className="text-xs text-muted-foreground mb-0.5">Participação</p>
+                                                            <p className="text-base font-medium text-foreground leading-tight">
+                                                                {formatParticipacao(activity.scales.participacao)}
+                                                            </p>
+                                                            {activity.scales.participacao !== null && activity.scales.participacao !== undefined && (
+                                                                <p className="text-xs text-violet-600 mt-0.5" style={{ fontFamily: 'Sora, sans-serif' }}>
+                                                                    {activity.scales.participacao.toFixed(1)}/5
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div className="flex items-center gap-2 p-2 rounded-md bg-pink-100 dark:bg-pink-900/30">
-                                                <HeartHandshake className="h-4 w-4 text-pink-600" />
-                                                <div>
-                                                    <p className="text-xs text-muted-foreground">Suporte</p>
-                                                    <p className="text-sm font-medium text-pink-700 dark:text-pink-400">
-                                                        {formatSuporte(activity.scales.suporte)}
-                                                    </p>
+                                            )}
+                                            {activity.scales.suporte !== undefined && (
+                                                <div className="p-3 rounded-lg" style={{ backgroundColor: 'var(--hub-card-background)' }}>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="h-14 w-14 rounded-lg bg-[#FCE7F3] flex items-center justify-center shrink-0">
+                                                            <HeartHandshake className="h-6 w-6 text-pink-600" />
+                                                        </div>
+                                                        <div className="min-w-0 flex-1">
+                                                            <p className="text-xs text-muted-foreground mb-0.5">Suporte</p>
+                                                            <p className="text-base font-medium text-foreground leading-tight">
+                                                                {formatSuporte(activity.scales.suporte)}
+                                                            </p>
+                                                            {activity.scales.suporte !== null && activity.scales.suporte !== undefined && (
+                                                                <p className="text-xs text-pink-600 mt-0.5" style={{ fontFamily: 'Sora, sans-serif' }}>
+                                                                    {activity.scales.suporte.toFixed(1)}/5
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
