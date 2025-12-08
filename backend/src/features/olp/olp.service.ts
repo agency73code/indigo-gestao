@@ -343,6 +343,12 @@ export async function listSessionsByClient(filters: OcpType.ListSessionsFilters)
                     ordem: true,
                     resultado: true,
                     duracao_minutos: true,
+                    teve_desconforto: true,
+                    descricao_desconforto: true,
+                    teve_compensacao: true,
+                    descricao_compensacao: true,
+                    utilizou_carga: true,
+                    valor_carga: true,
                     estimulosOcp: {
                         select: {
                             id: true,

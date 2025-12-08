@@ -159,7 +159,7 @@ export default function ToSessionsList({ sessions, program }: ToSessionsListProp
     };
 
     const handleSeeAll = () => {
-        navigate(`/app/programas/sessoes/consultar?pacienteId=${program.patientId}`);
+        navigate(`/app/programas/fisioterapia/sessoes/consultar?pacienteId=${program.patientId}`);
     };
 
     const sessionsWithSummaries = useMemo(() => {

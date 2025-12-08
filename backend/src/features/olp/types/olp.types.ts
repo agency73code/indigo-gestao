@@ -192,12 +192,17 @@ export type ProgramRowDTO = {
     atualizado_em: Date;
     status: string;
 };
-
 export interface SessionTrialDTO {
     id: number;
     ordem: number;
     resultado: string;
     duracao_minutos: number | null;
+    teve_desconforto: boolean | null;
+    descricao_desconforto: string | null;
+    teve_compensacao: boolean | null;
+    descricao_compensacao: string | null;
+    utilizou_carga: boolean | null;
+    valor_carga: string | null;
     estimulosOcp: {
         id: number;
         nome: string | null;
@@ -250,6 +255,14 @@ export interface Session {
         resultado: 'acerto' | 'erro' | 'ajuda';
         stimulusId: string | undefined;
         stimulusLabel: string | undefined;
+        durationMinutes?: number | null;
+        // Fisioterapia
+        usedLoad?: boolean;
+        loadValue?: string | null;
+        hadDiscomfort?: boolean;
+        discomfortDescription?: string | null;
+        hadCompensation?: boolean;
+        compensationDescription?: string | null;
     }[];
 }
 

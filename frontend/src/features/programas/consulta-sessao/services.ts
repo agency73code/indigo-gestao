@@ -82,7 +82,7 @@ export async function listSessionsByPatient(
       periodStart,
       periodEnd,
     });
-    console.table(filters)
+
     const res = await fetch(url, {
       method: 'GET',
       credentials: 'include',
@@ -442,22 +442,10 @@ export async function getSessionById(
 }
 
 export async function findSessionById(
-  sessionId: string,
-  patientId?: string,
-  area: string = 'fonoaudiologia'
+  _sessionId: string,
+  _patientId?: string,
+  _area: string = 'fonoaudiologia'
 ): Promise<Sessao | null> {
-  if (USE_LOCAL_MOCKS) {
-    let targetPatientId = patientId;
-    
-    // Se não foi fornecido patientId, tenta usar o do mock
-    if (!targetPatientId) {
-      const { mockProgramDetail } = await import('@/features/programas/detalhe-ocp/mocks/program.mock');
-      targetPatientId = mockProgramDetail.patientId;
-    }
-    
-    const response = await listSessionsByPatient(targetPatientId, area);
-    return response.items.find((s) => s.id === sessionId) ?? null;
-  }
   return null;
 }
 

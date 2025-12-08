@@ -68,6 +68,13 @@ export function mapSessionList(dto: OcpTypes.SessionDTO[]): OcpTypes.Session[] {
             stimulusId: t.estimulosOcp?.id.toString(),
             stimulusLabel: t.estimulosOcp?.nome ?? undefined,
             durationMinutes: t.duracao_minutos ?? null,
+            // Fisioterapia
+            usedLoad: t.utilizou_carga ?? false,
+            loadValue: t.valor_carga ?? null,
+            hadDiscomfort: t.teve_desconforto ?? false,
+            discomfortDescription: t.descricao_desconforto ?? null,
+            hadCompensation: t.teve_compensacao ?? false,
+            compensationDescription: t.descricao_compensacao ?? null,
         })),
     }));
 }
