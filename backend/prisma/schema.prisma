@@ -324,7 +324,7 @@ model sessao_trial {
 
   // Fisioterapia
   utilizou_carga        Boolean?
-  valor_carga           String?
+  valor_carga           Float?
   teve_desconforto      Boolean?
   descricao_desconforto String?
   teve_compensacao      Boolean?

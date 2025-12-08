@@ -202,7 +202,7 @@ export interface SessionTrialDTO {
     teve_compensacao: boolean | null;
     descricao_compensacao: string | null;
     utilizou_carga: boolean | null;
-    valor_carga: string | null;
+    valor_carga: number | null;
     estimulosOcp: {
         id: number;
         nome: string | null;
@@ -258,7 +258,7 @@ export interface Session {
         durationMinutes?: number | null;
         // Fisioterapia
         usedLoad?: boolean;
-        loadValue?: string | null;
+        loadValue?: number | null;
         hadDiscomfort?: boolean;
         discomfortDescription?: string | null;
         hadCompensation?: boolean;

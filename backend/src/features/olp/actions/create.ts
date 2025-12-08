@@ -156,7 +156,7 @@ export async function physiotherapySession(input: CreatePhysiotherapySessionInpu
             resultado: a.type,
             duracao_minutos: a.durationMinutes ?? null,
             utilizou_carga: a.usedLoad ?? false,
-            valor_carga: a.loadValue ?? null,
+            valor_carga: parseLoadValue(a.loadValue),
             teve_desconforto: a.hadDiscomfort ?? false,
             descricao_desconforto: a.discomfortDescription ?? null,
             teve_compensacao: a.hadCompensation ?? false,
@@ -237,4 +237,23 @@ async function createSessionInDatabase(input: CreateSessionInDatabaseInput) {
       arquivos: true,
     },
   });
+}
+
+function parseLoadValue(raw: string | number | null | undefined): number | null {
+    if (raw === null || raw === undefined) return null;
+
+    if (typeof raw === 'number') {
+        return Number.isFinite(raw) ? raw : null;
+    }
+
+    const normalized = raw
+        .trim()
+        .replace(',', '.')
+        .replace(/[^0-9.]/g, '');
+
+    if (!normalized) return null;
+
+    const parsed = Number(normalized);
+
+    return Number.isFinite(parsed) ? parsed : null;
 }
