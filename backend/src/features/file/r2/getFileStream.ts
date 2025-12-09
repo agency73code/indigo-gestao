@@ -1,4 +1,4 @@
-import { GetObjectCommand } from "@aws-sdk/client-s3";
+import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { s3 } from '../../../config/r2.js';
 
 export async function getFileStreamFromR2(storageId: string) {
@@ -15,7 +15,7 @@ export async function getFileStreamFromR2(storageId: string) {
         new GetObjectCommand({
             Bucket: bucket,
             Key: storageId,
-        })
+        }),
     );
 
     return {

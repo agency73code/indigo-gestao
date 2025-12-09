@@ -7,13 +7,16 @@ import { ChevronDown, ChevronUp, Filter } from 'lucide-react';
 import type { Filters } from '../types';
 import SearchableSelect from './SearchableSelect';
 import { fetchAndSet } from '../utils/fetchAndSet';
+import type { AreaType } from '@/contexts/AreaContext';
+import { buildApiUrl } from '@/lib/api';
 
 interface FiltersBarProps {
     value: Filters;
     onChange: (filters: Filters) => void;
+    area?: AreaType | null;
 }
 
-export function FiltersBar({ value, onChange }: FiltersBarProps) {
+export function FiltersBar({ value, onChange, area }: FiltersBarProps) {
     const [isExpanded, setIsExpanded] = useState(false);
     const [terapeutas, setTerapeutas] = useState<{ id: string; nome: string }[]>([]);
     const [programas, setProgramas] = useState<{ id: string; nome: string }[]>([]);
@@ -24,17 +27,32 @@ export function FiltersBar({ value, onChange }: FiltersBarProps) {
     }, []);
 
     useEffect(() => {
-        if (value.pacienteId) {
-            fetchAndSet(`/api/ocp/reports/filters/programs?clientId=${value.pacienteId}`, setProgramas, 'programas');
+        if (value.pacienteId && area) {
+            const url = buildApiUrl('/api/ocp/reports/filters/programs', {
+                area,
+                clientId: value.pacienteId,
+                stimulusId: value.estimuloId,
+                therapistId: value.terapeutaId,
+            });
+
+            fetchAndSet(url, setProgramas, 'programas');
+        } else {
+            setProgramas([]);
         }
-    }, [value.pacienteId]);
+    }, [value, area]);
 
     useEffect(() => {
-        if (value.pacienteId) {
-            const url = `/api/ocp/reports/filters/stimulus?clientId=${value.pacienteId}${value.programaId ? `&programaId=${value.programaId}` : ''}`;
+        if (value.pacienteId && area) {
+            const url = buildApiUrl('/api/ocp/reports/filters/stimulus', {
+                area,
+                clientId: value.pacienteId,
+                programId: value.programaId,
+                therapistId: value.terapeutaId,
+            });
+            
             fetchAndSet(url, setEstimulos, 'estimulos');
         }
-    }, [value.pacienteId, value.programaId]);
+    }, [value, area]);
 
     const updateFilter = (key: keyof Filters, newValue: any) => {
         onChange({ ...value, [key]: newValue });

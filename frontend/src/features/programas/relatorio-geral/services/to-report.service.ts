@@ -17,18 +17,6 @@ export interface ToKpisData {
  * Calcula KPIs para relatório de TO a partir das sessões
  */
 export function calculateToKpis(sessoes: Sessao[]): ToKpisData {
-  // Dados mockados para demonstração
-  if (!sessoes || sessoes.length === 0) {
-    return {
-      desempenhou: 45,
-      desempenhouComAjuda: 28,
-      naoDesempenhou: 12,
-      tempoTotal: 180,
-      atividadesTotal: 8,
-      sessoesTotal: 6,
-    };
-  }
-
   let desempenhou = 0;
   let desempenhouComAjuda = 0;
   let naoDesempenhou = 0;
@@ -36,7 +24,9 @@ export function calculateToKpis(sessoes: Sessao[]): ToKpisData {
   const atividadesUnicas = new Set<string>();
 
   sessoes.forEach((sessao) => {
+    const countedStimuli = new Set<string>();
     sessao.registros.forEach((registro) => {
+      // 1) Contar resultados e atividades
       if (registro.resultado === 'acerto') {
         desempenhou++;
       } else if (registro.resultado === 'ajuda') {
@@ -45,9 +35,14 @@ export function calculateToKpis(sessoes: Sessao[]): ToKpisData {
         naoDesempenhou++;
       }
 
-      // Acumular tempo
+      // 2) Somar o tempo apenas uma vez por estímulo (ou sessão quando sem stimulusId)
       if (registro.durationMinutes) {
-        tempoTotal += registro.durationMinutes;
+        const key = registro.stimulusId ?? `sessao-${sessao.id}`;
+
+        if (!countedStimuli.has(key)) {
+          tempoTotal += registro.durationMinutes;
+          countedStimuli.add(key);
+        }
       }
 
       // Contar atividades únicas
@@ -76,7 +71,7 @@ export function calculateToKpis(sessoes: Sessao[]): ToKpisData {
  * Mapeamento de dados TO (dataKeys do backend são reutilizados de Fono):
  * - acerto (dataKey) → Desempenhou: Paciente realizou a atividade de forma independente, sem ajuda
  * - independencia (dataKey) → Desempenhou com Ajuda: Paciente realizou a atividade com suporte do terapeuta
- * - erro (calculado) → Não Desempenhou: Paciente não conseguiu realizar a atividade = 100% - acerto
+ * - erro (calculado) → Não Desempenhou: Paciente não conseguiu realizar a atividade = 100% - (acerto + independencia)
  * 
  * Tipos de resultado nas sessões TO (backend):
  * - resultado === 'acerto' → Interpretado como DESEMPENHOU (independente)
@@ -84,20 +79,11 @@ export function calculateToKpis(sessoes: Sessao[]): ToKpisData {
  * - resultado === 'erro' → Interpretado como NÃO DESEMPENHOU
  */
 export function prepareToPerformanceLineData(sessoes: Sessao[]): SerieLinha[] {
-  // Dados mockados para demonstração
-  if (!sessoes || sessoes.length === 0) {
-    return [
-      { x: '07/11', acerto: 75, independencia: 60 },
-      { x: '11/11', acerto: 80, independencia: 65 },
-      { x: '14/11', acerto: 85, independencia: 70 },
-      { x: '18/11', acerto: 78, independencia: 68 },
-      { x: '21/11', acerto: 90, independencia: 75 },
-      { x: '25/11', acerto: 88, independencia: 73 },
-    ];
-  }
-
   // Agrupar registros por sessão (data)
-  const sessoesPorData = new Map<string, { total: number; desempenhou: number; comAjuda: number }>();
+  const sessoesPorData = new Map<
+    string,
+    { total: number; desempenhou: number; comAjuda: number }
+  >();
 
   sessoes.forEach((sessao) => {
     const data = new Date(sessao.data).toLocaleDateString('pt-BR', {
@@ -118,7 +104,6 @@ export function prepareToPerformanceLineData(sessoes: Sessao[]): SerieLinha[] {
       // Backend retorna resultado === 'acerto', mas para TO interpretamos como "Desempenhou"
       if (registro.resultado === 'acerto') {
         stats.desempenhou++;
-        stats.comAjuda++; // Quem desempenhou sem ajuda também está no grupo "com ou sem ajuda"
       } 
       // DESEMPENHOU COM AJUDA: Paciente realizou a atividade, mas precisou de suporte do terapeuta
       // Backend retorna resultado === 'ajuda'
@@ -138,16 +123,17 @@ export function prepareToPerformanceLineData(sessoes: Sessao[]): SerieLinha[] {
   sessoesPorData.forEach((stats, data) => {
     // acerto (dataKey) = % de atividades DESEMPENHADAS (sem ajuda, independente)
     const acerto = stats.total > 0 ? Math.round((stats.desempenhou / stats.total) * 100) : 0;
-    
-    // independencia (dataKey) = % de atividades DESEMPENHADAS COM AJUDA (com suporte do terapeuta)
-    const independencia = stats.total > 0 ? Math.round((stats.comAjuda / stats.total) * 100) : 0;
 
-    result.push({
-      x: data,
-      acerto, // → Será exibido como "Desempenhou" (linha verde no gráfico)
-      independencia, // → Será exibido como "Desempenhou com Ajuda" (linha azul no gráfico)
-      // erro (calculado no componente) = 100 - acerto → Será exibido como "Não Desempenhou" (linha vermelha)
-    });
+    // independencia (dataKey) = % de atividades DESEMPENHADAS COM AJUDA (com suporte do terapeuta)
+    const independencia =
+      stats.total > 0 ? Math.round((stats.comAjuda / stats.total) * 100) : 0;
+
+      result.push({
+        x: data,
+        acerto, // → Será exibido como "Desempenhou" (linha verde no gráfico)
+        independencia, // → Será exibido como "Desempenhou com Ajuda" (linha azul no gráfico)
+        // erro (calculado no componente) = 100 - (acerto + independencia) → Será exibido como "Não Desempenhou" (linha vermelha)
+      });
   });
 
   return result;
@@ -157,20 +143,6 @@ export function prepareToPerformanceLineData(sessoes: Sessao[]): SerieLinha[] {
  * Prepara dados para gráfico de duração por atividade
  */
 export function prepareToActivityDurationData(sessoes: Sessao[]): ToActivityDurationData[] {
-  // Dados mockados para demonstração
-  if (!sessoes || sessoes.length === 0) {
-    return [
-      { atividade: 'Coordenação Motora Fina', duracao: 35 },
-      { atividade: 'Atividades de Vida Diária', duracao: 30 },
-      { atividade: 'Integração Sensorial', duracao: 28 },
-      { atividade: 'Força e Resistência', duracao: 25 },
-      { atividade: 'Equilíbrio e Postura', duracao: 22 },
-      { atividade: 'Coordenação Bilateral', duracao: 20 },
-      { atividade: 'Planejamento Motor', duracao: 18 },
-      { atividade: 'Destreza Manual', duracao: 15 },
-    ];
-  }
-
   // Mapear atividades e suas durações
   const atividadeDuracoes = new Map<string, { nome: string; duracoes: number[] }>();
 
@@ -208,56 +180,6 @@ export function prepareToActivityDurationData(sessoes: Sessao[]): ToActivityDura
  * Critério: atividades com "não desempenhou" > 0
  */
 export function prepareToAttentionActivities(sessoes: Sessao[]): ToAttentionActivityItem[] {
-  // Dados mockados para demonstração
-  if (!sessoes || sessoes.length === 0) {
-    return [
-      {
-        id: '1',
-        nome: 'Integração Sensorial',
-        counts: {
-          desempenhou: 4,
-          comAjuda: 5,
-          naoDesempenhou: 6,
-        },
-        total: 15,
-        durationMinutes: 28,
-      },
-      {
-        id: '2',
-        nome: 'Planejamento Motor',
-        counts: {
-          desempenhou: 5,
-          comAjuda: 6,
-          naoDesempenhou: 4,
-        },
-        total: 15,
-        durationMinutes: 18,
-      },
-      {
-        id: '3',
-        nome: 'Coordenação Bilateral',
-        counts: {
-          desempenhou: 8,
-          comAjuda: 4,
-          naoDesempenhou: 3,
-        },
-        total: 15,
-        durationMinutes: 20,
-      },
-      {
-        id: '4',
-        nome: 'Equilíbrio e Postura',
-        counts: {
-          desempenhou: 10,
-          comAjuda: 3,
-          naoDesempenhou: 2,
-        },
-        total: 15,
-        durationMinutes: 22,
-      },
-    ];
-  }
-
   // Mapear atividades e suas contagens
   const atividadeStats = new Map<
     string,
@@ -330,18 +252,6 @@ export function prepareToAttentionActivities(sessoes: Sessao[]): ToAttentionActi
  * Calcula o percentual de desempenho independente (sem ajuda) por categoria
  */
 export function prepareToAutonomyByCategory(sessoes: Sessao[]): ToAutonomyData[] {
-  // Dados mockados para demonstração
-  if (!sessoes || sessoes.length === 0) {
-    return [
-      { categoria: 'Atividades de Vida Diária', autonomia: 85 },
-      { categoria: 'Coordenação Motora Fina', autonomia: 78 },
-      { categoria: 'Equilíbrio e Postura', autonomia: 72 },
-      { categoria: 'Integração Sensorial', autonomia: 65 },
-      { categoria: 'Força e Resistência', autonomia: 60 },
-      { categoria: 'Planejamento Motor', autonomia: 55 },
-    ];
-  }
-
   // Mapear categorias e suas contagens
   const categoriaStats = new Map<
     string,

@@ -8,7 +8,7 @@ export function auth(req: Request, res: Response, next: NextFunction) {
     const header = req.headers.authorization || '';
     const [scheme, bearerToken] = header.split(' ');
 
-    const cookieToken = (req).cookies?.token as string | undefined;
+    const cookieToken = req.cookies?.token as string | undefined;
 
     let token: string | undefined;
     if (scheme === 'Bearer' && bearerToken) {
@@ -18,7 +18,7 @@ export function auth(req: Request, res: Response, next: NextFunction) {
     }
 
     if (!token) {
-        return res.status(401).json({ success: false, message: 'Missing authentication token' })
+        return res.status(401).json({ success: false, message: 'Missing authentication token' });
     }
 
     try {
@@ -30,6 +30,6 @@ export function auth(req: Request, res: Response, next: NextFunction) {
 
         return next();
     } catch {
-        return res.status(401).json({ success: false, message: 'Token inválido ou expirado' })
+        return res.status(401).json({ success: false, message: 'Token inválido ou expirado' });
     }
 }

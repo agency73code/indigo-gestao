@@ -1,4 +1,4 @@
-import type * as OcpTypes from "./types/olp.types.js";
+import type * as OcpTypes from './types/olp.types.js';
 import { differenceInYears } from 'date-fns';
 import { lookup as mimeLookup } from 'mime-types';
 
@@ -17,23 +17,24 @@ export function mapOcpDetail(dto: OcpTypes.OcpDetailDTO) {
         therapistName: dto.terapeuta.nome,
         therapistPhotoUrl: null,
         createdAt: dto.criado_em.toISOString(),
-        goalTitle: dto.objetivo_programa ?? "",
+        goalTitle: dto.objetivo_programa ?? '',
         goalDescription: dto.objetivo_descricao,
         longTermGoalDescription: dto.objetivo_descricao,
         shortTermGoalDescription: dto.objetivo_curto,
         stimuliApplicationDescription: dto.descricao_aplicacao,
-        stimuli: dto.estimulo_ocp?.map((s: OcpTypes.OcpStimuloDTO, idx: number) => ({
-            id: s.id_estimulo.toString(),
-            order: idx + 1,
-            label: s.nome ?? "",
-            active: s.status,
-            description: s.descricao ?? null,
-        })) ?? [],
+        stimuli:
+            dto.estimulo_ocp?.map((s: OcpTypes.OcpStimuloDTO, idx: number) => ({
+                id: s.id_estimulo.toString(),
+                order: idx + 1,
+                label: s.nome ?? '',
+                active: s.status,
+                description: s.descricao ?? null,
+            })) ?? [],
         criteria: dto.criterio_aprendizagem,
-        notes: dto.observacao_geral ?? "",
-        status: dto.status === 'ativado' ? "active" : "archived",
+        notes: dto.observacao_geral ?? '',
+        status: dto.status === 'ativado' ? 'active' : 'archived',
         currentPerformanceLevel: dto.desempenho_atual ?? null,
-    }
+    };
 }
 
 export function mapSessionList(dto: OcpTypes.SessionDTO[]): OcpTypes.Session[] {
@@ -57,7 +58,7 @@ export function mapSessionList(dto: OcpTypes.SessionDTO[]): OcpTypes.Session[] {
                 name: file.nome,
                 fileName,
                 type: typeof mimeType === 'string' ? mimeType : 'application/octet-stream',
-                size: Math.round(Math.random() * 1000000000) / 100, // TODO: kaio
+                size: file.tamanho,
                 url: file.caminho,
             };
         }),
@@ -66,22 +67,64 @@ export function mapSessionList(dto: OcpTypes.SessionDTO[]): OcpTypes.Session[] {
             resultado: translateResult(t.resultado),
             stimulusId: t.estimulosOcp?.id.toString(),
             stimulusLabel: t.estimulosOcp?.nome ?? undefined,
+            durationMinutes: t.duracao_minutos ?? null,
+            // Fisioterapia
+            usedLoad: t.utilizou_carga ?? false,
+            loadValue: t.valor_carga ?? null,
+            hadDiscomfort: t.teve_desconforto ?? false,
+            discomfortDescription: t.descricao_desconforto ?? null,
+            hadCompensation: t.teve_compensacao ?? false,
+            compensationDescription: t.descricao_compensacao ?? null,
         })),
     }));
 }
 
 export function mapSessionReturn(session: OcpTypes.UnmappedSession) {
     const totalTrials = session.trials.length;
-    const correctTrials = session.trials.filter(t => t.resultado !== 'error').length;
-    const independentTrials = session.trials.filter(t => t.resultado === 'independent').length;
+
+    const independentTrials = session.trials.filter((t) => t.resultado === 'independent').length;
+    const promptedTrials = session.trials.filter((t) => t.resultado === 'prompted').length;
+    const errorTrials = session.trials.filter((t) => t.resultado === 'error').length;
+
+    const performedPct = totalTrials > 0
+        ? Math.round(((independentTrials + promptedTrials) / totalTrials) * 100)
+        : 0;
+    
+    const assistedPct = totalTrials > 0
+        ? Math.round((promptedTrials / totalTrials) * 100)
+        : 0;
+    
+    const notPerformedPct = totalTrials > 0
+        ? Math.round((errorTrials / totalTrials) * 100)
+        : 0;
 
     return {
         id: session.id.toString(),
         date: session.data_criacao.toISOString(),
         therapistName: session.terapeuta?.nome,
-        overallScore: totalTrials > 0 ? Math.round((correctTrials / totalTrials) * 100) : null,
-        independenceRate: totalTrials > 0 ? Math.round((independentTrials / totalTrials) * 100) : null,
-        preview: session.trials.map(t => t.resultado as 'error' | 'prompted' | 'independent'),
+
+        // legado
+        overallScore:
+            totalTrials > 0
+                ? Math.round(((independentTrials + promptedTrials) / totalTrials) * 100)
+                : null,
+
+        independenceRate:
+            totalTrials > 0
+                ? Math.round((independentTrials / totalTrials) * 100)
+                : null,
+
+        preview: session.trials.map((t) => t.resultado as 'error' | 'prompted' | 'independent'),
+
+        kpis: {
+            performedPct,
+            assistedPct,
+            notPerformedPct,
+            totalTrials,
+            independentTrials,
+            promptedTrials,
+            errorTrials,
+        }
     };
 }
 
@@ -129,7 +172,7 @@ export function mapOcpProgramSession(dto: OcpTypes.ProgramSelectResult) {
             active: e.status,
         })),
         status: dto.status,
-    }
+    };
 }
 
 function translateResult(result: string): 'acerto' | 'erro' | 'ajuda' {

@@ -1,9 +1,9 @@
-import { createFolder } from "./r2/createFolder.js";
-import { prisma } from "../../config/database.js";
+import { createFolder } from './r2/createFolder.js';
+import { prisma } from '../../config/database.js';
 import { s3 } from '../../config/r2.js';
-import { PutObjectCommand } from "@aws-sdk/client-s3";
-import { DeleteObjectCommand } from "@aws-sdk/client-s3";
-import path from "path";
+import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { DeleteObjectCommand } from '@aws-sdk/client-s3';
+import path from 'path';
 
 type OwnerType = 'cliente' | 'terapeuta';
 
@@ -33,7 +33,7 @@ interface UploadResult {
  * Upload para o Cloudflare R2 + persistência no banco.
  */
 export async function uploadAndPersistFile(
-    input: UploadInput & { folderIds?: { parentPath: string; documentosPath: string } }
+    input: UploadInput & { folderIds?: { parentPath: string; documentosPath: string } },
 ): Promise<UploadResult> {
     const bucket = process.env.R2_BUCKET;
     if (!bucket) {
@@ -42,8 +42,7 @@ export async function uploadAndPersistFile(
 
     // Normaliza descrição
     const rawDesc = input.documentDescription?.trim();
-    const normalizedDescription =
-        rawDesc && rawDesc.length > 0 ? rawDesc : null;
+    const normalizedDescription = rawDesc && rawDesc.length > 0 ? rawDesc : null;
 
     // Gera caminhos do usuário
     const folderPaths = input.folderIds
@@ -53,18 +52,15 @@ export async function uploadAndPersistFile(
     const { parentPath, documentosPath } = folderPaths;
 
     // Identifica destino da key final
-    const targetPath = 
-        input.documentType === 'fotoPerfil'
-            ? parentPath
-            : documentosPath;
+    const targetPath = input.documentType === 'fotoPerfil' ? parentPath : documentosPath;
 
     // Determina o nome do arquivo
     const ext = path.extname(input.file.originalname || '').toLowerCase() || '';
 
-    const driveLabel = 
+    const driveLabel =
         normalizedDescription && input.documentType === 'outros'
-        ? `${input.documentType}-${normalizedDescription}`
-        : input.documentType;
+            ? `${input.documentType}-${normalizedDescription}`
+            : input.documentType;
 
     const finalName = `${driveLabel}${ext}`;
 
@@ -78,7 +74,7 @@ export async function uploadAndPersistFile(
             Key: storageKey,
             Body: input.file.buffer,
             ContentType: input.file.mimetype,
-        })
+        }),
     );
 
     // Persiste metadados no Banco
@@ -123,15 +119,13 @@ async function persistFileRecord({
     mimeType: string;
     size: number;
 }) {
-    const whereBase = ownerType === 'cliente'
-        ? { clienteId: ownerId }
-        : { terapeutaId: ownerId };
+    const whereBase = ownerType === 'cliente' ? { clienteId: ownerId } : { terapeutaId: ownerId };
 
     const where = {
         ...whereBase,
         tipo,
         descricao_documento: descricaoDocumento,
-    }
+    };
 
     const existing = await prisma.arquivos.findFirst({ where });
 
@@ -153,8 +147,8 @@ async function persistFileRecord({
 
     const createData =
         ownerType === 'cliente'
-        ? { ...data, cliente: { connect: { id: ownerId } } }
-        : { ...data, terapeuta: { connect: { id: ownerId } } };
+            ? { ...data, cliente: { connect: { id: ownerId } } }
+            : { ...data, terapeuta: { connect: { id: ownerId } } };
 
     return prisma.arquivos.create({ data: createData });
 }
@@ -172,13 +166,13 @@ export async function listFiles(ownerType: 'cliente' | 'terapeuta', ownerId: str
         tipo_conteudo: r.mime_type ?? 'application/octet-stream',
         data_envio: r.data_upload?.toISOString() ?? new Date().toISOString(),
         webViewLink: undefined,
-        descricao_documento: r.descricao_documento ?? undefined
+        descricao_documento: r.descricao_documento ?? undefined,
     }));
 }
 
 /** Busca um arquivo pelo ID (banco) */
-export async function findFileById(id: number) {
-    return prisma.arquivos.findUnique({ where: { id } });
+export async function findFileById(id: string) {
+    return prisma.arquivos.findFirst({ where: { arquivo_id: id } });
 }
 
 /** Exclui um arquivo do Google R2 */
@@ -193,7 +187,7 @@ export async function deleteFromR2(storageId: string) {
             new DeleteObjectCommand({
                 Bucket: bucket,
                 Key: storageId,
-            })
+            }),
         );
     } catch (error) {
         console.warn(`Falha ao excluir arquivo no R2 (key: ${storageId})`, error);

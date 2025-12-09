@@ -82,6 +82,7 @@ export type AttentionStimuliParams = {
     end?: string;
   };
   lastSessions: 1 | 3 | 5; // Filtro de últimas N sessões
+  area: string;
 };
 
 export type AttentionStimuliResponse = {

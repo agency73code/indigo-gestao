@@ -34,15 +34,16 @@ export type SerieLinha = {
 
 export type Filters = {
   pacienteId?: string;
-  periodo: { 
-    mode: '30d'|'90d'|'custom'; 
-    start?: string; 
-    end?: string; 
+  periodo: {
+    mode: '30d'|'90d'|'custom';
+    start?: string;
+    end?: string;
   };
   programaId?: string;
   estimuloId?: string;
   terapeutaId?: string;
   comparar?: boolean;
+  area?: import('@/contexts/AreaContext').AreaType | null;
 };
 
 export type PrazoPrograma = {

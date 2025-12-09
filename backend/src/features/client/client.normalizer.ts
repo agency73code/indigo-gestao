@@ -18,22 +18,20 @@ export async function normalizeList(db: ClientType.DBClientQueryPage[]) {
                 : '',
             pessoa: {
                 cpf: cuidador?.cpf ?? '',
-                dataNascimento: c.dataNascimento 
-                    ? c.dataNascimento.toISOString() 
-                    : null,
+                dataNascimento: c.dataNascimento ? c.dataNascimento.toISOString() : null,
                 genero: '',
                 observacoes: '',
             },
             endereco: primeiroEndereco
                 ? {
-                    cep: primeiroEndereco.cep ?? '',
-                    logradouro: primeiroEndereco.rua ?? '',
-                    numero: primeiroEndereco.numero ?? '',
-                    complemento: primeiroEndereco.complemento,
-                    bairro: primeiroEndereco.bairro ?? '',
-                    cidade: primeiroEndereco.cidade ?? '',
-                    uf: primeiroEndereco.uf ?? '',
-                }
+                      cep: primeiroEndereco.cep ?? '',
+                      logradouro: primeiroEndereco.rua ?? '',
+                      numero: primeiroEndereco.numero ?? '',
+                      complemento: primeiroEndereco.complemento,
+                      bairro: primeiroEndereco.bairro ?? '',
+                      cidade: primeiroEndereco.cidade ?? '',
+                      uf: primeiroEndereco.uf ?? '',
+                  }
                 : undefined,
             arquivos: c.arquivos.map((a) => ({
                 nome: a.tipo,
@@ -46,25 +44,25 @@ export async function normalizeList(db: ClientType.DBClientQueryPage[]) {
 }
 
 function sanitizeEnderecoKey(value: string | null | undefined) {
-  return value ?? '';
+    return value ?? '';
 }
 
 export function mapEnderecoToUniqueKey(endereco: {
-  cep: string | null | undefined;
-  logradouro: string | null | undefined;
-  numero: string | null | undefined;
-  bairro: string | null | undefined;
-  cidade: string | null | undefined;
-  uf: string | null | undefined;
-  complemento: string | null | undefined;
+    cep: string | null | undefined;
+    logradouro: string | null | undefined;
+    numero: string | null | undefined;
+    bairro: string | null | undefined;
+    cidade: string | null | undefined;
+    uf: string | null | undefined;
+    complemento: string | null | undefined;
 }) {
-  return {
-    cep: sanitizeEnderecoKey(endereco.cep),
-    rua: sanitizeEnderecoKey(endereco.logradouro),
-    numero: sanitizeEnderecoKey(endereco.numero),
-    bairro: sanitizeEnderecoKey(endereco.bairro),
-    cidade: sanitizeEnderecoKey(endereco.cidade),
-    uf: sanitizeEnderecoKey(endereco.uf),
-    complemento: sanitizeEnderecoKey(endereco.complemento),
-  };
+    return {
+        cep: sanitizeEnderecoKey(endereco.cep),
+        rua: sanitizeEnderecoKey(endereco.logradouro),
+        numero: sanitizeEnderecoKey(endereco.numero),
+        bairro: sanitizeEnderecoKey(endereco.bairro),
+        cidade: sanitizeEnderecoKey(endereco.cidade),
+        uf: sanitizeEnderecoKey(endereco.uf),
+        complemento: sanitizeEnderecoKey(endereco.complemento),
+    };
 }

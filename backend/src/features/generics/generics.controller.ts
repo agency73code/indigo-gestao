@@ -1,5 +1,5 @@
-import type { Request, Response } from "express";
-import * as GenericsService from "./generics.service.js";
+import type { Request, Response } from 'express';
+import * as GenericsService from './generics.service.js';
 
 export async function getUserInfos(req: Request, res: Response) {
     const { id } = req.params;
@@ -8,7 +8,7 @@ export async function getUserInfos(req: Request, res: Response) {
     }
 
     try {
-        const user = await GenericsService.getUserInfos(id)
+        const user = await GenericsService.getUserInfos(id);
 
         if (!user) {
             return res.status(404).json({ error: 'Usuário não encontrado.' });

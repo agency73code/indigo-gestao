@@ -16,37 +16,9 @@ export default function ToSummaryCard({
     chartData,
     chartLoading = false,
 }: ToSummaryCardProps) {
-    if (sessions.length === 0) {
-        return null;
-    }
-
-    // Calcular métricas baseadas nas sessões disponíveis
-    const validSessions = sessions.filter(
-        (session) => session.overallScore !== null && session.overallScore !== undefined,
-    );
-
-    // Para TO: overallScore representa % de "Desempenhou"
-    const desempenhouAverage =
-        validSessions.length > 0
-            ? validSessions.reduce((sum, session) => sum + (session.overallScore || 0), 0) /
-              validSessions.length
-            : 0;
-
-    // Para TO: independenceRate representa % de "Desempenhou com Ajuda"
-    const independenceValidSessions = sessions.filter(
-        (session) => session.independenceRate !== null && session.independenceRate !== undefined,
-    );
-
-    const comAjudaAverage =
-        independenceValidSessions.length > 0
-            ? independenceValidSessions.reduce(
-                  (sum, session) => sum + (session.independenceRate || 0),
-                  0,
-              ) / independenceValidSessions.length
-            : 0;
-
-    // Calcular % de "Não Desempenhou" (100 - Desempenhou - Desempenhou com Ajuda)
-    const naoDesempenhouAverage = Math.max(0, 100 - desempenhouAverage - comAjudaAverage);
+    const performedAverage = sessions.reduce((sum, s) => sum + s.kpis!.performedPct, 0) / sessions.length;
+    const assistedAverage = sessions.reduce((sum, s) => sum + s.kpis!.assistedPct, 0)  / sessions.length;
+    const notPerformedAverage = sessions.reduce((sum, s) => sum + s.kpis!.notPerformedPct, 0)  / sessions.length;
 
     const formatPercentage = (value: number) => {
         return `${Math.round(value)}%`;
@@ -69,14 +41,14 @@ export default function ToSummaryCard({
                         <div className="space-y-1">
                             <CardTitleHub className="text-lg">Desempenhou</CardTitleHub>
                             <p className="text-sm text-muted-foreground">
-                                Média das últimas {validSessions.length} sessões
+                                Média das últimas {sessions.length} sessões
                             </p>
                         </div>
                     </CardHeader>
                     <CardContent>
                         <div className="flex items-baseline gap-2">
                             <div className="text-3xl font-medium text-green-700 dark:text-green-400">
-                                {formatPercentage(desempenhouAverage)}
+                                {formatPercentage(performedAverage)}
                             </div>
                             <TooltipProvider>
                                 <Tooltip>
@@ -107,13 +79,13 @@ export default function ToSummaryCard({
                         </div>
                         <div className="space-y-1">
                             <CardTitleHub className="text-lg">Desempenhou com Ajuda</CardTitleHub>
-                            <p className="text-sm text-muted-foreground">Média das últimas {independenceValidSessions.length} sessões</p>
+                            <p className="text-sm text-muted-foreground">Média das últimas {sessions.length} sessões</p>
                         </div>
                     </CardHeader>
                     <CardContent>
                         <div className="flex items-baseline gap-2">
                             <div className="text-3xl font-medium text-amber-700 dark:text-amber-400">
-                                {formatPercentage(comAjudaAverage)}
+                                {formatPercentage(assistedAverage)}
                             </div>
                             <TooltipProvider>
                                 <Tooltip>
@@ -145,14 +117,14 @@ export default function ToSummaryCard({
                         <div className="space-y-1">
                             <CardTitleHub className="text-lg">Não Desempenhou</CardTitleHub>
                             <p className="text-sm text-muted-foreground">
-                                Média das últimas {validSessions.length} sessões
+                                Média das últimas {sessions.length} sessões
                             </p>
                         </div>
                     </CardHeader>
                     <CardContent>
                         <div className="flex items-baseline gap-2">
                             <div className="text-3xl font-medium text-red-700 dark:text-red-400">
-                                {formatPercentage(naoDesempenhouAverage)}
+                                {formatPercentage(notPerformedAverage)}
                             </div>
                             <TooltipProvider>
                                 <Tooltip>
@@ -172,7 +144,7 @@ export default function ToSummaryCard({
                 </Card>
             </div>
 
-            {validSessions.length === 0 && (
+            {sessions.length === 0 && (
                 <div className="text-center py-8 border-2 border-dashed rounded-[5px]">
                     <BarChart3 className="h-8 w-8 mx-auto mb-2 opacity-30 text-muted-foreground" />
                     <p className="text-sm text-muted-foreground">

@@ -1,4 +1,5 @@
 // Services para Sessão de Fisioterapia
+import { buildSessionFormData } from '@/lib/api';
 import type {
     Patient,
     FisioProgramDetail,
@@ -6,6 +7,7 @@ import type {
     FisioSessionSummary,
     SessionFile,
 } from './types';
+import type { AreaType } from '@/contexts/AreaContext';
 
 /**
  * Busca pacientes para seleção na sessão TO
@@ -21,38 +23,6 @@ export async function searchPatientsForFisioSession(_query: string): Promise<Pat
  * Busca detalhes do programa Fisio para registro de sessão
  */
 export async function getFisioProgramDetail(_programId: string): Promise<FisioProgramDetail> {
-    // Se for o programa mock, retorna o mock com currentPerformanceLevel
-    if (_programId === 'mock-to-001') {
-        const { fetchToProgramById } = await import('../mocks/mockService');
-        const detail = await fetchToProgramById(_programId);
-        
-        // Adapta para o formato TO
-        return {
-            id: detail.id,
-            name: detail.name,
-            patientId: detail.patientId,
-            patientName: detail.patientName,
-            therapistId: detail.therapistId,
-            therapistName: detail.therapistName,
-            goalTitle: detail.goalTitle,
-            goalDescription: detail.goalDescription,
-            shortTermGoalDescription: detail.shortTermGoalDescription,
-            activitiesApplicationDescription: detail.stimuliApplicationDescription,
-            status: detail.status,
-            criteria: detail.criteria,
-            currentPerformanceLevel: (detail as any).currentPerformanceLevel,
-            prazoInicio: detail.prazoInicio,
-            prazoFim: detail.prazoFim,
-            activities: detail.stimuli.map((stimulus: any) => ({
-                id: stimulus.id,
-                label: stimulus.label,
-                description: stimulus.description || '',
-                active: stimulus.active,
-                order: stimulus.order,
-            })),
-        };
-    }
-    
     // Para programas reais, usa o serviço padrão
     const { fetchProgramById } = await import('@/features/programas/detalhe-ocp/services');
     const detail = await fetchProgramById(_programId);
@@ -93,105 +63,27 @@ export async function saveFisioSession(payload: {
     attempts: FisioSessionAttempt[];
     notes?: string;
     files?: SessionFile[];
+    area: AreaType;
 }): Promise<void> {
     // TODO: Implementar chamada real à API
-    console.log('Salvando sessão TO:', payload);
+    const formData = buildSessionFormData(payload);
     
-    // Se houver arquivos, salvar no localStorage (mock)
-    if (payload.files && payload.files.length > 0) {
-        console.log('Arquivos para upload:', payload.files.map(f => ({
-            name: f.name,
-            fileName: f.file.name,
-            size: f.file.size,
-            type: f.file.type
-        })));
-        
-        // Salvar no localStorage (mock)
-        try {
-            const sessionKey = `to-session-${payload.programId}-${Date.now()}`;
-            
-            // Converter arquivos para base64 para salvar no localStorage
-            const filesData = await Promise.all(
-                payload.files.map(async (file) => {
-                    return new Promise<{
-                        id: string;
-                        name: string;
-                        fileName: string;
-                        type: string;
-                        size: number;
-                        data: string; // base64
-                    }>((resolve, reject) => {
-                        const reader = new FileReader();
-                        reader.onload = () => {
-                            resolve({
-                                id: file.id,
-                                name: file.name,
-                                fileName: file.file.name,
-                                type: file.file.type,
-                                size: file.file.size,
-                                data: reader.result as string,
-                            });
-                        };
-                        reader.onerror = reject;
-                        reader.readAsDataURL(file.file);
-                    });
-                })
-            );
-            
-            // Salvar no localStorage
-            const sessionData = {
-                id: sessionKey,
-                patientId: payload.patientId,
-                programId: payload.programId,
-                attempts: payload.attempts,
-                notes: payload.notes,
-                files: filesData,
-                createdAt: new Date().toISOString(),
-            };
-            
-            localStorage.setItem(sessionKey, JSON.stringify(sessionData));
-            
-            // Atualizar lista de sessões
-            const sessionsListKey = `to-sessions-list-${payload.programId}`;
-            const existingList = localStorage.getItem(sessionsListKey);
-            const sessionsList = existingList ? JSON.parse(existingList) : [];
-            sessionsList.unshift(sessionKey);
-            localStorage.setItem(sessionsListKey, JSON.stringify(sessionsList));
-            
-            console.log('✅ Sessão salva no localStorage com sucesso:', sessionKey);
-        } catch (error) {
-            console.error('❌ Erro ao salvar arquivos no localStorage:', error);
-            throw new Error('Erro ao salvar arquivos. Tente com arquivos menores.');
-        }
-    } else {
-        // Salvar sessão sem arquivos
-        const sessionKey = `to-session-${payload.programId}-${Date.now()}`;
-        const sessionData = {
-            id: sessionKey,
-            patientId: payload.patientId,
-            programId: payload.programId,
-            attempts: payload.attempts,
-            notes: payload.notes,
-            files: [],
-            createdAt: new Date().toISOString(),
-        };
-        
-        localStorage.setItem(sessionKey, JSON.stringify(sessionData));
-        
-        // Atualizar lista de sessões
-        const sessionsListKey = `to-sessions-list-${payload.programId}`;
-        const existingList = localStorage.getItem(sessionsListKey);
-        const sessionsList = existingList ? JSON.parse(existingList) : [];
-        sessionsList.unshift(sessionKey);
-        localStorage.setItem(sessionsListKey, JSON.stringify(sessionsList));
-        
-        console.log('✅ Sessão salva no localStorage com sucesso:', sessionKey);
+    const response = await fetch(`/api/ocp/physiotherapy/programs/${payload.programId}/sessions`, {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+    });
+
+    if (response.status === 413) {
+        throw new Error('FILE_TOO_LARGE');
     }
-    
-    // Simulação de delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    return Promise.resolve();
+
+    if (!response.ok) {
+        const err = await response.json();
+
+        console.error('Erro ao enviar sessão Fisioterapia:', err);
+        throw new Error('Erro ao criar sessão');
+    }
 }
 
 /**

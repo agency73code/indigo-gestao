@@ -8,7 +8,6 @@ import type { ProgramDetail } from '@/features/programas/detalhe-ocp/types';
 import DetalheSessaoFisio from '../components/DetalheSessaoFisio';
 import type { Sessao } from '@/features/programas/consulta-sessao/types';
 import { findSessionById, getSessionById, findProgramSessionById } from '@/features/programas/consulta-sessao/services';
-import { initializeMockSessionFiles } from '@/features/programas/variants/fisioterapia/session/services';
 
 type LocationState = {
   sessionDate?: string;
@@ -40,9 +39,6 @@ export default function DetalheSessaoToPage() {
 
   useEffect(() => {
     let cancelled = false;
-    
-    // Inicializar arquivos mock (apenas para desenvolvimento)
-    initializeMockSessionFiles();
     
     const loadSession = async () => {
       if (!sessaoId) {

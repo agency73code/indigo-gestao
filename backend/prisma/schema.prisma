@@ -20,29 +20,30 @@ model cargo {
 }
 
 model cliente {
-  id                String              @id @default(uuid())
-  nome              String?
-  status            String?
-  perfil_acesso     String?
-  senha             String?
-  token_redefinicao String?
-  validade_token    DateTime?
-  criado_em         DateTime            @default(now())
-  atualizado_em     DateTime            @updatedAt
-  cpf               String?
-  dataEntrada       DateTime?
-  dataNascimento    DateTime?
-  dataSaida         DateTime?
-  emailContato      String?             @unique
-  arquivos          arquivos[]
-  enderecos         cliente_endereco[]
-  cuidadores        cuidador[]
-  dadosEscola       dados_escola?
-  dadosPagamento    dados_pagamento?
-  ocp               ocp[]
-  sessao            sessao[]
-  terapeuta         terapeuta_cliente[]
-  relatorios        relatorio[]
+  id                  String              @id @default(uuid())
+  nome                String?
+  status              String?
+  perfil_acesso       String?
+  senha               String?
+  token_redefinicao   String?
+  validade_token      DateTime?
+  criado_em           DateTime            @default(now())
+  atualizado_em       DateTime            @updatedAt
+  cpf                 String?
+  dataEntrada         DateTime?
+  dataNascimento      DateTime?
+  dataSaida           DateTime?
+  emailContato        String?             @unique
+  senha_atualizada_em DateTime?
+  arquivos            arquivos[]
+  enderecos           cliente_endereco[]
+  cuidadores          cuidador[]
+  dadosEscola         dados_escola?
+  dadosPagamento      dados_pagamento?
+  ocp                 ocp[]
+  sessao              sessao[]
+  terapeuta           terapeuta_cliente[]
+  relatorios          relatorio[]
 
   @@index([nome], map: "nome_idx")
 }
@@ -166,12 +167,12 @@ model relatorio {
   pdf_nome               String?
   pdf_mime               String?
   pdf_tamanho            Int?
-  pdf_url                String?
   pasta_relatorios_drive String?
   clienteId              String
   terapeutaId            String
   criado_em              DateTime @default(now())
   atualizado_em          DateTime @updatedAt
+  area                   String   @default("fonoaudiologia")
 
   cliente   cliente   @relation(fields: [clienteId], references: [id])
   terapeuta terapeuta @relation(fields: [terapeutaId], references: [id])
@@ -179,6 +180,8 @@ model relatorio {
   @@index([clienteId], map: "relatorio_clienteId_idx")
   @@index([terapeutaId], map: "relatorio_terapeutaId_idx")
   @@index([periodo_inicio, periodo_fim], map: "relatorio_periodo_idx")
+  @@index([clienteId, area], map: "relatorio_clienteId_area_idx")
+  @@index([area], map: "relatorio_area_idx")
 }
 
 model endereco {
@@ -233,6 +236,7 @@ model terapeuta {
   criado_em             DateTime                @default(now())
   atualizado_em         DateTime                @updatedAt
   pix_tipo              String?
+  senha_atualizada_em   DateTime?
   arquivos              arquivos[]
   formacao              formacao?
   ocp                   ocp[]                   @relation("TerapeutaOcp")
@@ -311,14 +315,23 @@ model disciplina {
 }
 
 model sessao_trial {
-  id               Int          @id @default(autoincrement())
+  id               Int    @id @default(autoincrement())
   sessao_id        Int
   estimulos_ocp_id Int
   ordem            Int
   resultado        String
   duracao_minutos  Int?
-  estimulosOcp     estimulo_ocp @relation(fields: [estimulos_ocp_id], references: [id], onDelete: Cascade)
-  sessao           sessao       @relation(fields: [sessao_id], references: [id], onDelete: Cascade)
+
+  // Fisioterapia
+  utilizou_carga        Boolean?
+  valor_carga           Float?
+  teve_desconforto      Boolean?
+  descricao_desconforto String?
+  teve_compensacao      Boolean?
+  descricao_compensacao String?
+
+  estimulosOcp estimulo_ocp @relation(fields: [estimulos_ocp_id], references: [id], onDelete: Cascade)
+  sessao       sessao       @relation(fields: [sessao_id], references: [id], onDelete: Cascade)
 
   @@index([sessao_id])
   @@index([estimulos_ocp_id])
@@ -443,6 +456,7 @@ model sessao_arquivo {
   sessao_id     Int
   nome          String
   caminho       String
+  tamanho       Int
   criado_em     DateTime @default(now())
   atualizado_em DateTime @updatedAt
 

@@ -1,204 +1,256 @@
-import { prisma } from "../../config/database.js";
-import { hashPassword } from "../../utils/hash.util.js";
-import type { Tables, UserRow } from "./auth.types.js";
+import { prisma } from '../../config/database.js';
+import { hashPassword } from '../../utils/hash.util.js';
+import type { Tables, UserRow } from './auth.types.js';
 
-export async function findUserByEmail(email: string, table: Tables) {
-  if (table === 'terapeuta') {
-    const row = await prisma.terapeuta.findFirst({ where: { email_indigo: email } });
+type LastPasswordChangeResult = {
+    lastChangedAt: Date | null;
+    daysAgo: number | null;
+};
+
+export async function lastPasswordChange(
+    id: string,
+    table: Tables,
+): Promise<LastPasswordChangeResult | null> {
+    const row =
+        table === 'terapeuta'
+            ? await prisma.terapeuta.findUnique({
+                  where: { id },
+                  select: { senha_atualizada_em: true },
+              })
+            : await prisma.cliente.findUnique({
+                  where: { id },
+                  select: { senha_atualizada_em: true },
+              });
+
     if (!row) return null;
-    return { id: row.id, nome: row.nome, email: row.email_indigo, table: 'terapeuta' as const };
-  } else {
-    const row = await prisma.cliente.findUnique({ where: { emailContato: email } });
-    if (!row) return null;
-    return { id: row.id, nome: row.nome, email: row.emailContato, table: 'cliente' as const };
-  }
+    const lastChangedAt = row.senha_atualizada_em;
+
+    if (!lastChangedAt) {
+        return {
+            lastChangedAt: null,
+            daysAgo: null,
+        };
+    }
+
+    return { lastChangedAt, daysAgo: diffInDaysFromNow(lastChangedAt) };
 }
 
-export async function passwordResetToken(userId: string, token: string, expiresAt: Date, table: Tables) {
-  let result;
+export async function findUserByEmail(email: string, table: Tables) {
+    if (table === 'terapeuta') {
+        const row = await prisma.terapeuta.findFirst({ where: { email_indigo: email } });
+        if (!row) return null;
+        return { id: row.id, nome: row.nome, email: row.email_indigo, table: 'terapeuta' as const };
+    } else {
+        const row = await prisma.cliente.findUnique({ where: { emailContato: email } });
+        if (!row) return null;
+        return { id: row.id, nome: row.nome, email: row.emailContato, table: 'cliente' as const };
+    }
+}
 
-  if (table === 'terapeuta') {
-    result = prisma.terapeuta.update({
-      where: { id: userId },
-      data: {
-        token_redefinicao: token,
-        validade_token: expiresAt,
-      },
-    });
-  } else {
-    result = prisma.cliente.update({
-      where: { id: userId },
-      data: {
-        token_redefinicao: token,
-        validade_token: expiresAt,
-      },
-    });
-  }
+export async function passwordResetToken(
+    userId: string,
+    token: string,
+    expiresAt: Date,
+    table: Tables,
+) {
+    let result;
 
-  return result;
+    if (table === 'terapeuta') {
+        result = prisma.terapeuta.update({
+            where: { id: userId },
+            data: {
+                token_redefinicao: token,
+                validade_token: expiresAt,
+            },
+        });
+    } else {
+        result = prisma.cliente.update({
+            where: { id: userId },
+            data: {
+                token_redefinicao: token,
+                validade_token: expiresAt,
+            },
+        });
+    }
+
+    return result;
 }
 
 export async function findUserByResetToken(token: string, table: Tables) {
-  const where = {
-    token_redefinicao: token,
-    validade_token: { gte: new Date() },
-  };
+    const where = {
+        token_redefinicao: token,
+        validade_token: { gte: new Date() },
+    };
 
-  if (table === 'terapeuta') {
-    return prisma.terapeuta.findFirst({
-      where,
-      select: { nome: true, email: true },
-    });
-  } else {
-    return prisma.cliente.findFirst({
-      where,
-      select: { nome: true, emailContato: true },
-    });
-  }
+    if (table === 'terapeuta') {
+        return prisma.terapeuta.findFirst({
+            where,
+            select: { nome: true, email: true },
+        });
+    } else {
+        return prisma.cliente.findFirst({
+            where,
+            select: { nome: true, emailContato: true },
+        });
+    }
 }
 
-export async function loginUserByAccessInformation(accessInfo: string, table: Tables): Promise<UserRow | null> {
-  if (table === 'terapeuta') {
-    const row = await prisma.terapeuta.findFirst({
-      where: {
-        email_indigo: accessInfo
-      },
-      select: {
-        id: true,
-        senha: true,
-        nome: true,
-        email_indigo: true,
-        perfil_acesso: true,
-        arquivos: {
-          where: { tipo: 'fotoPerfil' },
-          select: { arquivo_id: true },
-          take: 1,
-        },
-      },
-    });
-
-    if (!row) return null;
-    return {
-      id: row.id,
-      senha: row.senha,
-      nome: row.nome,
-      email: row.email_indigo ?? null,
-      perfil_acesso: row.perfil_acesso,
-      avatar_url: row.arquivos[0] 
-        ? `${process.env.API_URL}/api/arquivos/${encodeURIComponent(row.arquivos[0].arquivo_id!)}/view/` 
-        : null,
-    };
-  } else {
-    const row = await prisma.cliente.findFirst({
-      where: {
-        OR: [
-            { emailContato: accessInfo },
-            {
-              cuidadores: {
-                some: { cpf: accessInfo }
-              },
+export async function loginUserByAccessInformation(
+    accessInfo: string,
+    table: Tables,
+): Promise<UserRow | null> {
+    if (table === 'terapeuta') {
+        const row = await prisma.terapeuta.findFirst({
+            where: {
+                email_indigo: accessInfo,
             },
-        ],
-       },
-      select: {
-        id: true,
-        senha: true,
-        nome: true,
-        emailContato: true,
-        perfil_acesso: true,
-        arquivos: {
-          where: { tipo: 'fotoPerfil' },
-          select: { arquivo_id: true },
-          take: 1,
-        },
-      },
-    });
+            select: {
+                id: true,
+                senha: true,
+                nome: true,
+                email_indigo: true,
+                perfil_acesso: true,
+                arquivos: {
+                    where: { tipo: 'fotoPerfil' },
+                    select: { arquivo_id: true },
+                    take: 1,
+                },
+            },
+        });
 
-    if (!row) return null;
-    return {
-      id: row.id,
-      senha: row.senha,
-      nome: row.nome!,
-      email: row.emailContato ?? null,
-      perfil_acesso: row.perfil_acesso!,
-      avatar_url: row.arquivos[0] 
-        ? `${process.env.API_URL}/api/arquivos/${encodeURIComponent(row.arquivos[0].arquivo_id!)}/view/` 
-        : null,
-    };
-  }
+        if (!row) return null;
+        return {
+            id: row.id,
+            senha: row.senha,
+            nome: row.nome,
+            email: row.email_indigo ?? null,
+            perfil_acesso: row.perfil_acesso,
+            avatar_url: row.arquivos[0]
+                ? `${process.env.API_URL}/api/arquivos/${encodeURIComponent(row.arquivos[0].arquivo_id!)}/view/`
+                : null,
+        };
+    } else {
+        const row = await prisma.cliente.findFirst({
+            where: {
+                OR: [
+                    { emailContato: accessInfo },
+                    {
+                        cuidadores: {
+                            some: { cpf: accessInfo },
+                        },
+                    },
+                ],
+            },
+            select: {
+                id: true,
+                senha: true,
+                nome: true,
+                emailContato: true,
+                perfil_acesso: true,
+                arquivos: {
+                    where: { tipo: 'fotoPerfil' },
+                    select: { arquivo_id: true },
+                    take: 1,
+                },
+            },
+        });
+
+        if (!row) return null;
+        return {
+            id: row.id,
+            senha: row.senha,
+            nome: row.nome!,
+            email: row.emailContato ?? null,
+            perfil_acesso: row.perfil_acesso!,
+            avatar_url: row.arquivos[0]
+                ? `${process.env.API_URL}/api/arquivos/${encodeURIComponent(row.arquivos[0].arquivo_id!)}/view/`
+                : null,
+        };
+    }
 }
 
 export async function newPassword(token: string, password: string, table: Tables) {
-  const where = { token_redefinicao: token, validade_token: { gte: new Date() } };
-  const data = {
-    senha: await hashPassword(password),
-    token_redefinicao: null,
-    validade_token: null,
-  };
+    const where = { token_redefinicao: token, validade_token: { gte: new Date() } };
+    const data = {
+        senha: await hashPassword(password),
+        token_redefinicao: null,
+        validade_token: null,
+        senha_atualizada_em: new Date(),
+    };
 
-  if (table === 'terapeuta') {
-    return prisma.terapeuta.updateMany({ where, data, });
-  } else {
-    return prisma.cliente.updateMany({ where, data, });
-  }
+    if (table === 'terapeuta') {
+        return prisma.terapeuta.updateMany({ where, data });
+    } else {
+        return prisma.cliente.updateMany({ where, data });
+    }
 }
 
 export async function findUserById(id: string, table: Tables) {
-  if (table === 'terapeuta') {
-    const row = await prisma.terapeuta.findUnique({
-      where: { id },
-      select: { 
-        id: true,
-        nome: true,
-        email_indigo: true,
-        perfil_acesso: true,
-        arquivos: { 
-          where: { tipo: 'fotoPerfil' }, 
-          select: { arquivo_id: true },
-          take: 1,
-        },
-      },
-    });
+    if (table === 'terapeuta') {
+        const row = await prisma.terapeuta.findUnique({
+            where: { id },
+            select: {
+                id: true,
+                nome: true,
+                email_indigo: true,
+                perfil_acesso: true,
+                arquivos: {
+                    where: { tipo: 'fotoPerfil' },
+                    select: { arquivo_id: true },
+                    take: 1,
+                },
+            },
+        });
 
-    if (!row) return null;
+        if (!row) return null;
 
-    return {
-      id: row.id,
-      nome: row.nome,
-      email: row.email_indigo,
-      perfil_acesso: row.perfil_acesso,
-      avatar_url: row.arquivos[0] 
-        ? `${process.env.API_URL}/api/arquivos/${encodeURIComponent(row.arquivos[0].arquivo_id!)}/view` 
-        : null,
-    };
-  } else {
-    const row = await prisma.cliente.findUnique({
-      where: { id },
-      select: { 
-        id: true, 
-        nome: true, 
-        emailContato: true, 
-        perfil_acesso: true,
-        arquivos: { 
-          where: { 
-            tipo: 'fotoPerfil' 
-          }, 
-          select: { arquivo_id: true },
-          take: 1,
-        },
-      },
-    });
+        return {
+            id: row.id,
+            nome: row.nome,
+            email: row.email_indigo,
+            perfil_acesso: row.perfil_acesso,
+            avatar_url: row.arquivos[0]
+                ? `${process.env.API_URL}/api/arquivos/${encodeURIComponent(row.arquivos[0].arquivo_id!)}/view`
+                : null,
+        };
+    } else {
+        const row = await prisma.cliente.findUnique({
+            where: { id },
+            select: {
+                id: true,
+                nome: true,
+                emailContato: true,
+                perfil_acesso: true,
+                arquivos: {
+                    where: {
+                        tipo: 'fotoPerfil',
+                    },
+                    select: { arquivo_id: true },
+                    take: 1,
+                },
+            },
+        });
 
-    if (!row) return null;
+        if (!row) return null;
 
-    return {
-      id: row.id,
-      nome:row.nome,
-      email: row.emailContato,
-      perfil_acesso: row.perfil_acesso,
-      avatar_url: row.arquivos[0] 
-        ? `${process.env.API_URL}/api/arquivos/${encodeURIComponent(row.arquivos[0].arquivo_id!)}/view` 
-        : null,
+        return {
+            id: row.id,
+            nome: row.nome,
+            email: row.emailContato,
+            perfil_acesso: row.perfil_acesso,
+            avatar_url: row.arquivos[0]
+                ? `${process.env.API_URL}/api/arquivos/${encodeURIComponent(row.arquivos[0].arquivo_id!)}/view`
+                : null,
+        };
     }
-  }
+}
+
+function diffInDaysFromNow(dateInput: string | Date): number {
+    const date = typeof dateInput === 'string' ? new Date(dateInput.replace(' ', 'T')) : dateInput;
+
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    return diffDays;
 }

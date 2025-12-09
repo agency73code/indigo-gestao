@@ -13,10 +13,11 @@ export default function HubProgramasPage() {
     }, [setPageTitle]);
 
     return (
-        <div className="flex flex-col min-h-full w-full p-1 md:p-4 lg:p-4 space-y-4">
+        <div className="flex flex-col min-h-full w-full px-1 py-2 md:p-4 lg:p-4 space-y-4">
             {/* Area Cards */}
             <div className="space-y-5 p-1">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Mobile: 2 colunas, Desktop: 4 colunas */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4">
                     {areas.map((area, index) => {
                         const isImplemented = area.implemented === true;
                         const isInProgress = area.implemented === 'in-progress';
@@ -71,16 +72,17 @@ export default function HubProgramasPage() {
                                     `}
                                     style={{ backgroundColor: 'var(--hub-card-background)' }}
                                 >
-                                    <CardHeader className="space-y-5">
+                                    {/* Mobile: padding e espaçamento menores, Desktop: padrão original */}
+                                    <CardHeader className="space-y-3 md:space-y-5 p-0 md:p-0">
                                         <div className="flex items-start justify-between">
                                             {IconComponent && (
-                                                <div className={`h-14 w-14 rounded-lg ${bgColors[index]} flex items-center justify-center`}>
-                                                    <IconComponent className={`h-7 w-7 ${iconColors[index]}`} />
+                                                <div className={`h-10 w-10 md:h-14 md:w-14 rounded-lg ${bgColors[index]} flex items-center justify-center`}>
+                                                    <IconComponent className={`h-5 w-5 md:h-7 md:w-7 ${iconColors[index]}`} />
                                                 </div>
                                             )}
                                             {isInProgress && (
                                                 <span 
-                                                    className="text-[14px] font-normal inline-block px-3 py-1" 
+                                                    className="text-[10px] md:text-[14px] font-normal inline-block px-2 py-0.5 md:px-3 md:py-1" 
                                                     style={{ 
                                                         fontFamily: 'Inter, sans-serif', 
                                                         backgroundColor: '#E3F2FD', 
@@ -93,7 +95,7 @@ export default function HubProgramasPage() {
                                             )}
                                             {isDisabled && (
                                                 <span 
-                                                    className="text-[14px] font-normal inline-block px-3 py-1" 
+                                                    className="text-[10px] md:text-[14px] font-normal inline-block px-2 py-0.5 md:px-3 md:py-1" 
                                                     style={{ 
                                                         fontFamily: 'Inter, sans-serif', 
                                                         backgroundColor: '#FFF3E0', 
@@ -105,11 +107,12 @@ export default function HubProgramasPage() {
                                                 </span>
                                             )}
                                         </div>
-                                        <div className="space-y-1">
-                                            <CardTitleHub className="text-lg">
+                                        <div className="space-y-0.5 md:space-y-1">
+                                            <CardTitleHub className="text-sm md:text-lg leading-tight">
                                                 {area.title}
                                             </CardTitleHub>
-                                            <p className="text-sm text-muted-foreground">
+                                            {/* Descrição só aparece no desktop */}
+                                            <p className="hidden md:block text-sm text-muted-foreground leading-tight">
                                                 {area.subtitle || 'Criar, consultar e acompanhar programas'}
                                             </p>
                                         </div>

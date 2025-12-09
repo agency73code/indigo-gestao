@@ -1,6 +1,6 @@
-import { prisma } from "../../../../config/database.js";
+import { prisma } from '../../../../config/database.js';
 import { normalizeSupervisionLink } from '../normalizers/supervisionLinkNormalizer.js';
-import type { CreateSupervisionLinkInput } from "../types/supervisionLink.types.js";
+import type { CreateSupervisionLinkInput } from '../types/supervisionLink.types.js';
 
 /**
  * Cria um novo vínculo de supervisão no banco.
@@ -24,7 +24,9 @@ export async function createSupervisionLink(data: CreateSupervisionLinkInput) {
     });
 
     if (existingLink) {
-        throw new Error('Já existe um vínculo ativo entre este supervisor e este clínico nesta área.');
+        throw new Error(
+            'Já existe um vínculo ativo entre este supervisor e este clínico nesta área.',
+        );
     }
 
     const newLink = await prisma.vinculo_supervisao.create({
@@ -34,10 +36,7 @@ export async function createSupervisionLink(data: CreateSupervisionLinkInput) {
             data_inicio: data.startDate,
             data_fim: data.endDate ?? null,
             nivel_hierarquia: data.hierarchyLevel ?? 1,
-            escopo_supervisao: 
-                data.supervisionScope === 'team'
-                    ? 'equipe'
-                    : 'direto',
+            escopo_supervisao: data.supervisionScope === 'team' ? 'equipe' : 'direto',
             observacoes: data.notes ?? null,
         },
     });

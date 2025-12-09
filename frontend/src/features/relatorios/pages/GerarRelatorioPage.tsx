@@ -31,13 +31,7 @@ import {
     prepareToPerformanceLineData,
     prepareToAutonomyByCategory,
 } from '../../programas/relatorio-geral/services/to-report.service';
-import {
-    calculateFisioKpis,
-    prepareFisioActivityDurationData,
-    prepareFisioAttentionActivities,
-    prepareFisioPerformanceLineData,
-    prepareFisioAutonomyByCategory,
-} from '../../programas/relatorio-geral/services/fisio-report.service';
+import { fetchPhysioReports } from '../../programas/relatorio-geral/services/fisio-report.service';
 import { listSessionsByPatient } from '../../programas/consulta-sessao/services';
 import type { Filters, KpisRelatorio, SerieLinha, PrazoPrograma } from '../gerar-relatorio/types';
 import type { SavedReport } from '../types';
@@ -94,7 +88,7 @@ export function GerarRelatorioPage() {
         const periodo = searchParams.get('periodo') || '30d';
         const periodoStart = searchParams.get('periodoStart');
         const periodoEnd = searchParams.get('periodoEnd');
-        
+
         return {
             pacienteId: searchParams.get('pacienteId') || undefined,
             periodo: periodo === 'custom' && periodoStart && periodoEnd
@@ -114,23 +108,18 @@ export function GerarRelatorioPage() {
             setSelectedArea(areaFromUrl);
         }
         // Não define área padrão - usuário deve selecionar explicitamente
-    }, []);  // Só executa uma vez no mount
+    }, [searchParams]);  // Só executa uma vez no mount
 
     // Carregar terapeutas
     useEffect(() => {
-        console.log('🔄 Carregando terapeutas...');
         fetch('/api/terapeutas/relatorio')
             .then(res => {
-                console.log('📡 Resposta terapeutas:', res.status);
                 return res.json();
             })
             .then(response => {
-                console.log('📦 Response completo terapeutas:', response);
                 const data = response.data || response; // Tentar response.data primeiro
-                console.log('📦 Dados terapeutas recebidos:', data);
                 if (Array.isArray(data)) {
                     setTerapeutas(data);
-                    console.log('✅ Terapeutas salvos:', data.length);
                 } else {
                     console.warn('⚠️ Dados terapeutas não é array:', data);
                 }
@@ -140,52 +129,43 @@ export function GerarRelatorioPage() {
 
     // Carregar programas quando houver paciente
     useEffect(() => {
-        if (filters.pacienteId) {
-            console.log('🔄 Carregando programas para paciente:', filters.pacienteId);
-            fetch(`/api/ocp/reports/filters/programs?clientId=${filters.pacienteId}`)
+        if (filters.pacienteId && selectedArea) {
+            const areaParam = encodeURIComponent(selectedArea);
+            fetch(`/api/ocp/reports/filters/programs?clientId=${filters.pacienteId}&area=${areaParam}`)
                 .then(res => {
-                    console.log('📡 Resposta programas:', res.status);
                     return res.json();
                 })
                 .then(response => {
-                    console.log('📦 Response completo programas:', response);
                     const data = response.data || response; // Tentar response.data primeiro
-                    console.log('📦 Dados programas recebidos:', data);
                     if (Array.isArray(data)) {
                         setProgramas(data);
-                        console.log('✅ Programas salvos:', data.length);
                     } else {
                         console.warn('⚠️ Dados programas não é array:', data);
                     }
                 })
                 .catch(err => console.error('❌ Erro ao carregar programas:', err));
         }
-    }, [filters.pacienteId]);
+    }, [filters.pacienteId, selectedArea]);
 
     // Carregar estímulos quando houver paciente/programa
     useEffect(() => {
-        if (filters.pacienteId) {
-            const url = `/api/ocp/reports/filters/stimulus?clientId=${filters.pacienteId}${filters.programaId ? `&programaId=${filters.programaId}` : ''}`;
-            console.log('🔄 Carregando estímulos:', url);
+        if (filters.pacienteId && selectedArea) {
+            const url = `/api/ocp/reports/filters/stimulus?clientId=${filters.pacienteId}${filters.programaId ? `&programaId=${filters.programaId}` : ''}&area=${selectedArea}`;
             fetch(url)
                 .then(res => {
-                    console.log('📡 Resposta estímulos:', res.status);
                     return res.json();
                 })
                 .then(response => {
-                    console.log('📦 Response completo estímulos:', response);
                     const data = response.data || response; // Tentar response.data primeiro
-                    console.log('📦 Dados estímulos recebidos:', data);
                     if (Array.isArray(data)) {
                         setEstimulos(data);
-                        console.log('✅ Estímulos salvos:', data.length);
                     } else {
                         console.warn('⚠️ Dados estímulos não é array:', data);
                     }
                 })
                 .catch(err => console.error('❌ Erro ao carregar estímulos:', err));
         }
-    }, [filters.pacienteId, filters.programaId]);
+    }, [filters.pacienteId, filters.programaId, selectedArea]);
 
     // 🔄 Sincroniza filtros com URL (incluindo área)
     const syncFiltersToUrl = useCallback((newFilters: Filters, area?: AreaType | null) => {
@@ -196,10 +176,10 @@ export function GerarRelatorioPage() {
         if (newFilters.estimuloId) params.set('estimuloId', newFilters.estimuloId);
         if (newFilters.terapeutaId) params.set('terapeutaId', newFilters.terapeutaId);
         if (newFilters.comparar) params.set('comparar', 'true');
-        
+
         // Adiciona área à URL
         if (area) params.set('area', area);
-        
+
         // Período
         if (newFilters.periodo.mode === 'custom') {
             params.set('periodo', 'custom');
@@ -208,7 +188,7 @@ export function GerarRelatorioPage() {
         } else {
             params.set('periodo', newFilters.periodo.mode);
         }
-        
+
         setSearchParams(params);
     }, [setSearchParams]);
 
@@ -217,7 +197,7 @@ export function GerarRelatorioPage() {
         const periodo = searchParams.get('periodo') || '30d';
         const periodoStart = searchParams.get('periodoStart');
         const periodoEnd = searchParams.get('periodoEnd');
-        
+
         setFilters(prev => ({
             ...prev,
             pacienteId: searchParams.get('pacienteId') || undefined,
@@ -268,6 +248,7 @@ export function GerarRelatorioPage() {
 
         const config = getAreaConfig(area);
         
+        const filtersWithArea = { ...currentFilters, area };
         try {
             setLoadingKpis(true);
             setLoadingCharts(true);
@@ -281,9 +262,15 @@ export function GerarRelatorioPage() {
                         'terapia-ocupacional',
                         {
                             dateRange: currentFilters.periodo.mode,
+                            periodStart: currentFilters.periodo.start,
+                            periodEnd: currentFilters.periodo.end,
+                            programId: currentFilters.programaId,
+                            therapistId: currentFilters.terapeutaId,
+                            stimulusId: currentFilters.estimuloId,
+                            sort: 'date-asc',
                         }
                     );
-
+                    
                     const sessoes = sessionsResponse.items || [];
 
                     // Calcular KPIs de TO
@@ -296,7 +283,7 @@ export function GerarRelatorioPage() {
                     const autonomyByCategory = prepareToAutonomyByCategory(sessoes);
 
                     // Carregar prazo do programa
-                    const prazoProgramaData = await fetchPrazoPrograma(currentFilters);
+                    const prazoProgramaData = await fetchPrazoPrograma(filtersWithArea);
                     setPrazoPrograma(prazoProgramaData);
 
                     // Armazenar dados adaptados
@@ -318,7 +305,7 @@ export function GerarRelatorioPage() {
 
                     // Tentar carregar prazo mesmo com erro nas sessões
                     try {
-                        const prazoProgramaData = await fetchPrazoPrograma(currentFilters);
+                        const prazoProgramaData = await fetchPrazoPrograma(filtersWithArea);
                         setPrazoPrograma(prazoProgramaData);
                     } catch (prazoError) {
                         console.error('Erro ao carregar prazo do programa:', prazoError);
@@ -348,56 +335,40 @@ export function GerarRelatorioPage() {
                         'fisioterapia',
                         {
                             dateRange: currentFilters.periodo.mode,
+                            periodStart: currentFilters.periodo.start,
+                            periodEnd: currentFilters.periodo.end,
+                            programId: currentFilters.programaId,
+                            therapistId: currentFilters.terapeutaId,
+                            stimulusId: currentFilters.estimuloId,
+                            sort: 'date-asc',
                         }
                     );
 
                     const sessoes = sessionsResponse.items || [];
 
-                    // Calcular KPIs de Fisio
-                    const fisioKpis = calculateFisioKpis(sessoes);
-                    
-                    // Preparar dados dos gráficos
-                    const performanceLineData = prepareFisioPerformanceLineData(sessoes);
-                    const activityDurationData = prepareFisioActivityDurationData(sessoes);
-                    const attentionActivitiesData = prepareFisioAttentionActivities(sessoes);
-                    const autonomyByCategory = prepareFisioAutonomyByCategory(sessoes);
+                    // Novo formato com solicitação unica para o backend
+                    const report = await fetchPhysioReports(sessoes);
 
                     // Carregar prazo do programa
-                    const prazoProgramaData = await fetchPrazoPrograma(currentFilters);
+                    const prazoProgramaData = await fetchPrazoPrograma(filtersWithArea); // tenho que analisar esse 
                     setPrazoPrograma(prazoProgramaData);
 
-                    // Armazenar dados adaptados
                     setAdaptedData({
-                        kpis: fisioKpis,
-                        performance: performanceLineData,
-                        activityDuration: activityDurationData,
-                        attentionActivities: attentionActivitiesData,
-                        autonomyByCategory,
+                        kpis: report.kpis,
+                        performance: report.performance,
+                        activityDuration: report.activityDuration,
+                        attentionActivities: report.attentionActivities,
+                        autonomyByCategory: report.autonomyByCategory,
                     });
                 } catch (error) {
                     console.error('Erro ao carregar dados de Fisio:', error);
-                    // Usar dados mockados em caso de erro
-                    const fisioKpis = calculateFisioKpis([]);
-                    const performanceLineData = prepareFisioPerformanceLineData([]);
-                    const activityDurationData = prepareFisioActivityDurationData([]);
-                    const attentionActivitiesData = prepareFisioAttentionActivities([]);
-                    const autonomyByCategory = prepareFisioAutonomyByCategory([]);
-
-                    // Tentar carregar prazo mesmo com erro nas sessões
-                    try {
-                        const prazoProgramaData = await fetchPrazoPrograma(currentFilters);
-                        setPrazoPrograma(prazoProgramaData);
-                    } catch (prazoError) {
-                        console.error('Erro ao carregar prazo do programa:', prazoError);
-                        setPrazoPrograma(null);
-                    }
 
                     setAdaptedData({
-                        kpis: fisioKpis,
-                        performanceLineData,
-                        activityDuration: activityDurationData,
-                        attentionActivities: attentionActivitiesData,
-                        autonomyByCategory,
+                        kpis: [],
+                        performance: [],
+                        activityDuration: [],
+                        attentionActivities: [],
+                        autonomyByCategory: [],
                     });
                 }
 
@@ -409,7 +380,6 @@ export function GerarRelatorioPage() {
             // Para áreas com config customizada (exceto TO e Fisio), usar endpoint específico
             if (config.apiEndpoint !== '/api/ocp/reports') {
                 // TODO: Implementar fetch para outros endpoints quando backend estiver pronto
-                console.log(`Endpoint customizado: ${config.apiEndpoint}`);
                 // Por enquanto, mantém dados vazios
                 setKpis(null);
                 setSerieLinha([]);
@@ -421,13 +391,13 @@ export function GerarRelatorioPage() {
             }
 
             // Área Fono usa endpoint atual
-            const kpisData = await fetchKpis(currentFilters);
+            const kpisData = await fetchKpis(filtersWithArea);
             setKpis(kpisData);
             setLoadingKpis(false);
 
             const [serieLinhaData, prazoProgramaData] = await Promise.all([
-                fetchSerieLinha(currentFilters),
-                fetchPrazoPrograma(currentFilters),
+                fetchSerieLinha(filtersWithArea),
+                fetchPrazoPrograma(filtersWithArea),
             ]);
 
             setSerieLinha(Array.isArray(serieLinhaData) ? serieLinhaData : []);
@@ -465,8 +435,7 @@ export function GerarRelatorioPage() {
         setFilters(prev => {
             // caso gerente/coordenador -> limpa terapeutaId
             if (isHighLevel && prev.terapeutaId) {
-            console.log('Removendo terapeutaId por perfil de alto nível');
-            return { ...prev, terapeutaId: undefined };
+                return { ...prev, terapeutaId: undefined };
             }
 
             if (user?.id && !isHighLevel && !prev.terapeutaId) {
@@ -506,23 +475,27 @@ export function GerarRelatorioPage() {
     };
 
     const handleFiltersChange = (newFilters: Filters) => {
-        setFilters(newFilters);
-        syncFiltersToUrl(newFilters, selectedArea);
+        const filtersWithArea = { ...newFilters, area: selectedArea ?? newFilters.area };
+        setFilters(filtersWithArea);
+        syncFiltersToUrl(filtersWithArea, selectedArea);
     };
 
     const handleAreaChange = (area: AreaType | null) => {
         setSelectedArea(area);
+        const nextFilters = { ...filters, area };
+        setFilters(nextFilters);
+
         if (area) {
             setCurrentArea(area); // Atualiza contexto global também
         }
-        syncFiltersToUrl(filters, area);
+        syncFiltersToUrl(nextFilters, area);
         
         // Recarregar dados com nova área
         if (selectedPatient && area) {
-            loadData(filters, area);
+            loadData(nextFilters, area);
         }
     };
-
+    
     // Handler para salvar o relatório (COM GERAÇÃO DE PDF)
     const handleSaveReport = async (title: string): Promise<SavedReport> => {
         if (!selectedPatient) {
@@ -539,8 +512,9 @@ export function GerarRelatorioPage() {
             throw new Error('Usuário não autenticado');
         }
 
-        // Validar se há dados para salvar
-        if (!kpis) {
+        // Validar se há dados para salvar 
+        const reportKpis = kpis || adaptedData?.kpis;
+        if (!reportKpis) {
             toast.error('Aguarde o carregamento dos dados do relatório');
             throw new Error('Dados do relatório ainda não foram carregados');
         }
@@ -576,12 +550,12 @@ export function GerarRelatorioPage() {
         // Preparar dados gerados do relatório
         const generatedData = {
             kpis: {
-                acerto: kpis.acerto || 0,
-                independencia: kpis.independencia || 0,
-                tentativas: kpis.tentativas || 0,
-                sessoes: kpis.sessoes || 0,
-                assiduidade: kpis.assiduidade,
-                gapIndependencia: kpis.gapIndependencia,
+                acerto: reportKpis.acerto || 0,
+                independencia: reportKpis.independencia || 0,
+                tentativas: reportKpis.tentativas || 0,
+                sessoes: reportKpis.sessoes || 0,
+                assiduidade: reportKpis.assiduidade,
+                gapIndependencia: reportKpis.gapIndependencia,
             },
             graphic: serieLinha.map(item => ({
                 x: item.x || '',
@@ -602,7 +576,7 @@ export function GerarRelatorioPage() {
             patientId: selectedPatient.id,
             patientName: selectedPatient.name,
             therapistId: user.id,
-            area: selectedArea, // 🆕 Incluir área no payload
+            area: selectedArea,
             filters: {
                 pacienteId: selectedPatient.id,
                 periodo: {
@@ -773,8 +747,9 @@ export function GerarRelatorioPage() {
                         {/* Filtros interativos - só aparece na tela */}
                         <div className="no-print">
                             <FiltersBar 
-                                value={filters} 
-                                onChange={handleFiltersChange} 
+                                value={filters}
+                                onChange={handleFiltersChange}
+                                area={selectedArea}
                             />
                         </div>
 
@@ -977,6 +952,7 @@ export function GerarRelatorioPage() {
                                     programaId={filters.programaId}
                                     terapeutaId={filters.terapeutaId}
                                     periodo={filters.periodo}
+                                    area={selectedArea}
                                 />
                             </section>
                         )}

@@ -1,3 +1,4 @@
+import { buildApiUrl } from '@/lib/api';
 import type { Sessao, ResumoSessao, ProgramDetail } from './types';
 import type { AreaType } from '@/contexts/AreaContext';
 
@@ -24,6 +25,9 @@ export interface SessionListFilters {
   page?: number;
   /** Itens por página */
   pageSize?: number;
+  stimulusId?: string;
+  periodStart?: string;
+  periodEnd?: string;
 }
 
 /**
@@ -60,54 +64,40 @@ export async function listSessionsByPatient(
     therapistId = '',
     sort = 'date-desc',
     page = 1,
-    pageSize = 10
+    pageSize = 10, // TODO: passar isso aqui pro backend pra colocar em take
+    stimulusId,
+    periodStart,
+    periodEnd,
   } = filters;
-  try {
-    // Construir URL com query params
-    const url = new URL(`/api/ocp/clients/${patientId}/sessions`, window.location.origin);
-    // Adiciona área (obrigatório)
-    url.searchParams.set('area', area);
-    // Adiciona filtros se houver
-    if (q) url.searchParams.set('q', q);
-    if (dateRange && dateRange !== 'all') url.searchParams.set('dateRange', dateRange);
-    if (programId) url.searchParams.set('programId', programId);
-    if (therapistId) url.searchParams.set('therapistId', therapistId);
-    if (sort) url.searchParams.set('sort', sort);
-    // NÃO envia page/pageSize por enquanto (backend atual não suporta)
 
-    const res = await fetch(url.pathname + url.search, {
+  try {
+    const url = buildApiUrl(`/api/ocp/clients/${patientId}/sessions`, {
+      area,
+      q,
+      periodMode: dateRange,
+      programId,
+      therapistId,
+      sort,
+      stimulusId,
+      periodStart,
+      periodEnd,
+    });
+
+    const res = await fetch(url, {
       method: 'GET',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' }
     });
 
     if (!res.ok) throw new Error(`Erro ao carregar sessões: ${res.status}`);
-    
     const response = await res.json();
     
     // Extrair array do campo 'data' se existir
     const data = response?.data ?? response;
 
-    // ============================================
-    // 🔄 ADAPTER: Detecta formato da resposta
-    // ============================================
-
-    // Caso 1: Backend retorna array simples (FORMATO ATUAL)
-    if (Array.isArray(data)) {
-      // ⚠️ TEMPORÁRIO: Faz paginação/filtro/ordenação local
-      return processSessionsLocally(data, filters);
-    }
-
-    // Caso 2: Backend FUTURO retorna formato paginado
-    if (data && typeof data === 'object' && 'items' in data) {
-      return data as SessionListResponse;
-    }
-
-    // Caso 3: Formato inesperado - retorna vazio
-    console.warn('⚠️ Formato de resposta inesperado:', data);
     return {
-      items: [],
-      total: 0,
+      items: data,
+      total: data.length,
       page,
       pageSize,
       totalPages: 0,
@@ -452,22 +442,10 @@ export async function getSessionById(
 }
 
 export async function findSessionById(
-  sessionId: string,
-  patientId?: string,
-  area: string = 'fonoaudiologia'
+  _sessionId: string,
+  _patientId?: string,
+  _area: string = 'fonoaudiologia'
 ): Promise<Sessao | null> {
-  if (USE_LOCAL_MOCKS) {
-    let targetPatientId = patientId;
-    
-    // Se não foi fornecido patientId, tenta usar o do mock
-    if (!targetPatientId) {
-      const { mockProgramDetail } = await import('@/features/programas/detalhe-ocp/mocks/program.mock');
-      targetPatientId = mockProgramDetail.patientId;
-    }
-    
-    const response = await listSessionsByPatient(targetPatientId, area);
-    return response.items.find((s) => s.id === sessionId) ?? null;
-  }
   return null;
 }
 

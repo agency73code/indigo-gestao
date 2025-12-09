@@ -1,5 +1,5 @@
-import type { Request, Response, NextFunction } from "express";
-import { getCardsOverview } from "../features/cards/cards.service.js";
+import type { Request, Response, NextFunction } from 'express';
+import { getCardsOverview } from '../features/cards/cards.service.js';
 
 export async function overview(req: Request, res: Response, next: NextFunction) {
     try {

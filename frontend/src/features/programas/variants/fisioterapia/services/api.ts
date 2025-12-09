@@ -1,3 +1,4 @@
+import { ageCalculation, buildApiUrl, fetchOwnerAvatar } from '@/lib/api';
 import type { Patient, Therapist, CreateProgramInput } from '../../../core/types';
 import { FISIO_AREA_ID } from '../constants';
 
@@ -9,7 +10,7 @@ const API_URL = import.meta.env.VITE_API_URL;
  */
 
 export async function fetchFisioPatientById(id: string): Promise<Patient> {
-    const response = await fetch(`${API_URL}/client/${id}`, {
+    const response = await fetch(`${API_URL}/clientes/${id}`, {
         credentials: 'include',
     });
 
@@ -18,13 +19,15 @@ export async function fetchFisioPatientById(id: string): Promise<Patient> {
     }
 
     const data = await response.json();
-    
+    const client = data.data;
+    const photoUrl = await fetchOwnerAvatar(client.id, 'cliente');
+
     return {
-        id: data.id,
-        name: data.name,
-        guardianName: data.guardianName,
-        age: data.age,
-        photoUrl: data.photoUrl,
+        id: client.id,
+        name: client.nome,
+        guardianName: client.cuidadores[0].nome,
+        age: ageCalculation(client.dataNascimento),
+        photoUrl,
     };
 }
 
@@ -41,7 +44,7 @@ export async function fetchFisioTherapistById(id: string): Promise<Therapist> {
     
     return {
         id: data.id,
-        name: data.nome, // Backend retorna 'nome' em português
+        name: data.nome,
         photoUrl: data.photoUrl,
         especialidade: data.especialidade,
     };
@@ -65,15 +68,16 @@ export async function fetchFisioTherapistAvatar(therapistId: string): Promise<st
 }
 
 export async function createFisioProgram(input: CreateProgramInput): Promise<{ id: string }> {
-    const response = await fetch(`${API_URL}/ocp/programs`, {
+    const response = await fetch(`${API_URL}/ocp/create`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         credentials: 'include',
+
         body: JSON.stringify({
             ...input,
-            area: FISIO_AREA_ID, // 🔧 CORRIGIDO: Usa constante 'fisioterapia'
+            area: FISIO_AREA_ID,
         }),
     });
 
@@ -93,19 +97,16 @@ export async function listFisioPrograms(params: {
     sort?: 'recent' | 'alphabetic';
     page?: number;
 }): Promise<any[]> {
-    const url = new URL(`${API_URL}/ocp/clients/${params.patientId}/programs`);
-    
-    // 🔧 CORRIGIDO: Usa filtro consistente com AreaContext
-    // Backend filtra por especialidade do terapeuta usando label
-    url.searchParams.set('area', 'Fisioterapia');
-    
-    if (params.page) url.searchParams.set('page', params.page.toString());
-    if (params.status && params.status !== 'all') url.searchParams.set('status', params.status);
-    if (params.q) url.searchParams.set('q', params.q);
-    if (params.sort) url.searchParams.set('sort', params.sort);
+    const teste = buildApiUrl(`/api/ocp/clients/${params.patientId}/programs`, {
+        area: 'fisioterapia',
+        page: params.page?.toString(),
+        status: params.status !== 'all' ? params.status : undefined,
+        q: params.q,
+        sort: params.sort,
+    });
 
     try {
-        const response = await fetch(url.toString(), {
+        const response = await fetch(teste, {
             credentials: 'include',
             headers: { Accept: 'application/json' },
         });
@@ -116,12 +117,8 @@ export async function listFisioPrograms(params: {
 
         const json = await response.json();
         const realPrograms = (json?.data ?? []);
-        
-        // MOCK: SEMPRE adicionar programa mockado para desenvolvimento
-        // TODO: Remover quando o backend de Fisio estiver pronto
-        const { mockToProgramListItem } = await import('../mocks/programListMock');
-        console.log('🎭 Adicionando programa MOCK de Fisio para desenvolvimento');
-        return [mockToProgramListItem, ...realPrograms];
+
+        return [...realPrograms];
     } catch (error) {
         console.error('Erro ao buscar programas de TO:', error);
         

@@ -2,7 +2,7 @@ import nodemailer from 'nodemailer';
 import { env } from '../config/env.js';
 
 function buildResetUrl(token: string) {
-  return new URL(`/reset-password?token=${token}`, env.FRONTEND_URL).toString();
+    return new URL(`/reset-password?token=${token}`, env.FRONTEND_URL).toString();
 }
 
 export async function sendWelcomeEmail({
@@ -50,7 +50,15 @@ export async function sendWelcomeEmail({
     }
 }
 
-export async function sendPasswordResetEmail({ to, name, token, }: { to: string, name: string, token: string }) {
+export async function sendPasswordResetEmail({
+    to,
+    name,
+    token,
+}: {
+    to: string;
+    name: string;
+    token: string;
+}) {
     const transporter = nodemailer.createTransport({
         host: env.SMTP_HOST,
         port: env.SMTP_PORT,

@@ -1,92 +1,92 @@
-import type { Decimal } from "@prisma/client/runtime/library"
+import type { Decimal } from '@prisma/client/runtime/library';
 
 export type TherapistProfessionalDataInput = {
-  areaAtuacao: string
-  areaAtuacaoId?: number | string | null | undefined
-  cargo: string
-  cargoId?: number | string | null | undefined
-  numeroConselho: string
-}
+    areaAtuacao: string;
+    areaAtuacaoId?: number | string | null | undefined;
+    cargo: string;
+    cargoId?: number | string | null | undefined;
+    numeroConselho: string;
+};
 
 export type EnderecoStringKeys =
-  | 'cep'
-  | 'rua'
-  | 'numero'
-  | 'complemento'
-  | 'bairro'
-  | 'cidade'
-  | 'uf';
+    | 'cep'
+    | 'rua'
+    | 'numero'
+    | 'complemento'
+    | 'bairro'
+    | 'cidade'
+    | 'uf';
 
 export type TherapistForm = {
-  nome: string
-  email: string
-  emailIndigo: string
-  telefone: string | null
-  celular: string
-  cpf: string
-  dataNascimento: Date
-  possuiVeiculo: string
-  placaVeiculo: string | null
-  modeloVeiculo: string | null
-  banco: string
-  agencia: string
-  conta: string
-  chavePix: string
-  pixTipo: 'email' | 'telefone' | 'cpf' | 'cnpj' | 'aleatoria'
-  valorHoraAcordado: string
-  professorUnindigo: string
-  disciplinaUniindigo?: string | null | undefined
+    nome: string;
+    email: string;
+    emailIndigo: string;
+    telefone: string | null;
+    celular: string;
+    cpf: string;
+    dataNascimento: Date;
+    possuiVeiculo: string;
+    placaVeiculo: string | null;
+    modeloVeiculo: string | null;
+    banco: string;
+    agencia: string;
+    conta: string;
+    chavePix: string;
+    pixTipo: 'email' | 'telefone' | 'cpf' | 'cnpj' | 'aleatoria';
+    valorHoraAcordado: string;
+    professorUnindigo: string;
+    disciplinaUniindigo?: string | null | undefined;
 
-  endereco: {
-    cep: string
-    rua: string
-    numero: string
-    complemento: string
-    bairro: string
-    cidade: string
-    estado: string
-  }
+    endereco: {
+        cep: string;
+        rua: string;
+        numero: string;
+        complemento: string;
+        bairro: string;
+        cidade: string;
+        estado: string;
+    };
 
-  dataInicio: Date
-  dataFim: Date | null | undefined
-  formacao?: {
-    graduacao: string
-    instituicaoGraduacao: string
-    anoFormatura: string
-    posGraduacoes: {
-      tipo: string
-      curso: string
-      instituicao: string
-      conclusao: string
-    }[]
-    participacaoCongressosDescricao?: string | null
-    publicacoesLivrosDescricao?: string | null
-  } | null
+    dataInicio: Date;
+    dataFim: Date | null | undefined;
+    formacao?: {
+        graduacao: string;
+        instituicaoGraduacao: string;
+        anoFormatura: string;
+        posGraduacoes: {
+            tipo: string;
+            curso: string;
+            instituicao: string;
+            conclusao: string;
+        }[];
+        participacaoCongressosDescricao?: string | null;
+        publicacoesLivrosDescricao?: string | null;
+    } | null;
 
-  cnpj?: {
-    numero?: string | null
-    razaoSocial?: string | null
-    endereco?: {
-      cep?: string | null
-      rua?: string | null
-      numero?: string | null
-      complemento?: string | null
-      bairro?: string | null
-      cidade?: string | null
-      estado?: string | null
-    } | null
-  } | null
-  dadosProfissionais: TherapistProfessionalDataInput[],
+    cnpj?: {
+        numero?: string | null;
+        razaoSocial?: string | null;
+        endereco?: {
+            cep?: string | null;
+            rua?: string | null;
+            numero?: string | null;
+            complemento?: string | null;
+            bairro?: string | null;
+            cidade?: string | null;
+            estado?: string | null;
+        } | null;
+    } | null;
+    dadosProfissionais: TherapistProfessionalDataInput[];
 
-  // Arquivos
-  arquivos?: Array<{
-      tipo: string | null,
-      arquivo_id: string | null,
-      mime_type: string | null,
-      tamanho: number | null,
-      data_upload: Date,
-  }>;
-}
+    // Arquivos
+    arquivos?: Array<{
+        tipo: string | null;
+        arquivo_id: string | null;
+        mime_type: string | null;
+        tamanho: number | null;
+        data_upload: Date;
+    }>;
+};
 
 export interface TherapistDB {
     id: string;
@@ -130,10 +130,10 @@ export interface TherapistDB {
         publicacoes_descricao?: string | null;
         pos_graduacao?: {
             id: number;
-            tipo?: string | null
-            curso?: string | null
-            instituicao?: string | null
-            conclusao?: string | null
+            tipo?: string | null;
+            curso?: string | null;
+            instituicao?: string | null;
+            conclusao?: string | null;
         }[];
     } | null;
     registro_profissional?: {
@@ -142,27 +142,27 @@ export interface TherapistDB {
         cargo_id?: number | null;
         numero_conselho?: string | null;
         area_atuacao: {
-          id: number;
-          nome: string;
+            id: number;
+            nome: string;
         };
         cargo?: {
-          id: number;
-          nome: string;
+            id: number;
+            nome: string;
         } | null;
     }[];
     pessoa_juridica?: {
-      id: number;
-      cnpj?: string | null;
-      razao_social?: string | null;
-      endereco?: {
-        cep?: string | null;
-        rua?: string | null;
-        numero?: string | null;
-        complemento?: string | null;
-        bairro?: string | null;
-        cidade?: string | null;
-        uf?: string | null;
-      } | null;
+        id: number;
+        cnpj?: string | null;
+        razao_social?: string | null;
+        endereco?: {
+            cep?: string | null;
+            rua?: string | null;
+            numero?: string | null;
+            complemento?: string | null;
+            bairro?: string | null;
+            cidade?: string | null;
+            uf?: string | null;
+        } | null;
     } | null;
     disciplina?: {
         id: number;
@@ -170,10 +170,10 @@ export interface TherapistDB {
     }[];
     // Arquivos
     arquivos?: Array<{
-        tipo: string | null,
-        arquivo_id: string | null,
-        mime_type: string | null,
-        tamanho: number | null,
-        data_upload: Date,
+        tipo: string | null;
+        arquivo_id: string | null;
+        mime_type: string | null;
+        tamanho: number | null;
+        data_upload: Date;
     }>;
 }

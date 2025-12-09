@@ -399,7 +399,7 @@ export function RelatoriosPage() {
                   key={patientId}
                   open={isPatientOpen}
                   onOpenChange={() => togglePatient(patientId)}
-                  className="border overflow-hidden"
+                  className="overflow-hidden"
                   style={{ 
                     backgroundColor: 'var(--hub-card-background)',
                     borderRadius: 'var(--radius)'
@@ -407,7 +407,7 @@ export function RelatoriosPage() {
                 >
                   {/* Cabeçalho do Cliente (sempre visível) */}
                   <CollapsibleTrigger className="w-full">
-                    <div className="flex items-center gap-3 p-4 hover:bg-muted/30 transition-colors">
+                    <div className="flex items-center gap-3 p-3 hover:bg-muted/30 transition-colors">
                       <div className="shrink-0">
                         {isPatientOpen ? (
                           <ChevronDown className="h-5 w-5 text-muted-foreground" />
@@ -418,13 +418,13 @@ export function RelatoriosPage() {
                       
                       <Avatar className="h-12 w-12 shrink-0">
                         <AvatarImage src={patientInfo.photoUrl || ''} alt={patientInfo.nome} />
-                        <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                        <AvatarFallback className="bg-primary/10 text-primary font-regular">
                           {getInitials(patientInfo.nome)}
                         </AvatarFallback>
                       </Avatar>
                       
                       <div className="flex-1 text-left min-w-0">
-                        <h3 className="text-base font-semibold truncate" style={{ fontFamily: 'Sora, sans-serif' }}>
+                        <h3 className="text-base font-regular truncate" style={{ fontFamily: 'Sora, sans-serif' }}>
                           {patientInfo.nome}
                         </h3>
                         {patientInfo.dataNascimento && (

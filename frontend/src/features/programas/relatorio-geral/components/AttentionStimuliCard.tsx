@@ -13,6 +13,7 @@ type Props = {
     programaId?: string;
     terapeutaId?: string;
     periodo?: AttentionStimuliParams['periodo'];
+    area: string;
 };
 
 const WINDOW_OPTIONS = [
@@ -35,7 +36,7 @@ const STATUS_LABELS = {
     insuficiente: 'Insuficiente',
 };
 
-export function AttentionStimuliCard({ pacienteId, programaId, terapeutaId, periodo }: Props) {
+export function AttentionStimuliCard({ pacienteId, programaId, terapeutaId, periodo, area }: Props) {
     const [lastSessions, setLastSessions] = useState<1 | 3 | 5>(5);
     const [data, setData] = useState<AttentionStimulusItem[]>([]);
     const [hasSufficientData, setHasSufficientData] = useState(false);
@@ -60,6 +61,7 @@ export function AttentionStimuliCard({ pacienteId, programaId, terapeutaId, peri
                     terapeutaId,
                     periodo,
                     lastSessions,
+                    area,
                 });
 
                 setData(result.items);
@@ -72,7 +74,7 @@ export function AttentionStimuliCard({ pacienteId, programaId, terapeutaId, peri
         };
 
         loadData();
-    }, [pacienteId, programaId, terapeutaId, periodo, lastSessions]);
+    }, [pacienteId, programaId, terapeutaId, periodo, lastSessions, area]);
 
     const subtitle = `Baseado nas últimas ${lastSessions} sessões. Mostra apenas estímulos com status Atenção.`;
 

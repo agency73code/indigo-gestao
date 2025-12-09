@@ -3,7 +3,7 @@ import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ToPerformanceChart from './FisioPerformanceChart';
 import type { SerieLinha } from '@/features/programas/relatorio-geral/types';
-import { fetchToStimulusChart } from '../mocks/mockChartService';
+import { fetchStimulusChart } from '@/features/programas/detalhe-ocp/services';
 
 interface ToStimulusEvolutionInlineProps {
     programId: string;
@@ -33,7 +33,7 @@ export default function ToStimulusEvolutionInline({
         setLoading(true);
         setError(null);
         try {
-            const data = await fetchToStimulusChart(programId, stimulusId);
+            const data = await fetchStimulusChart(programId, stimulusId);
             setChartData(data);
         } catch (err) {
             console.error('Erro ao carregar gráfico da atividade de TO:', err);
@@ -50,6 +50,9 @@ export default function ToStimulusEvolutionInline({
             void loadChart();
         }
     }, [isOpen, hasFetched, loading, loadChart]);
+
+    const showEmptyState = hasFetched && !loading && !error && (!chartData || chartData.length === 0);
+    const showChart = !loading && !error && chartData && chartData.length > 0;
 
     if (!isOpen) return null;
 
@@ -87,13 +90,13 @@ export default function ToStimulusEvolutionInline({
                 </div>
             )}
 
-            {!loading && !error && chartData && (
+            {showChart && (
                 <div className="border border-border/40 dark:border-white/15 rounded-lg p-4">
                     <ToPerformanceChart data={chartData} />
                 </div>
             )}
 
-            {!loading && !error && !chartData && (
+            {showEmptyState && (
                 <div className="text-center py-8 text-muted-foreground">
                     <p className="text-sm">Nenhum dado disponível ainda.</p>
                 </div>

@@ -1,3 +1,4 @@
+import { ageCalculation, fetchOwnerAvatar } from '@/lib/api';
 import type { Patient, Therapist, CreateProgramInput } from '../../../core/types';
 import { TO_AREA_ID } from '../constants';
 
@@ -12,19 +13,21 @@ export async function fetchToPatientById(id: string): Promise<Patient> {
     const response = await fetch(`${API_URL}/clientes/${id}`, {
         credentials: 'include',
     });
-
+    
     if (!response.ok) {
         throw new Error('Erro ao buscar cliente');
     }
-
-    const data = await response.json();
     
+    const data = await response.json();
+    const client = data.data;
+    const photoUrl = await fetchOwnerAvatar(client.id, 'cliente')
+
     return {
-        id: data.id,
-        name: data.name,
-        guardianName: data.guardianName,
-        age: data.age,
-        photoUrl: data.photoUrl,
+        id: client.id,
+        name: client.nome,
+        guardianName: client.cuidadores[0].nome,
+        age: ageCalculation(client.dataNascimento),
+        photoUrl,
     };
 }
 
@@ -38,12 +41,13 @@ export async function fetchToTherapistById(id: string): Promise<Therapist> {
     }
 
     const data = await response.json();
-    
+    const photoUrl = await fetchOwnerAvatar(id, 'terapeuta');
+
     return {
         id,
-        name: data.nome, // Backend retorna 'nome' em português
-        photoUrl: data.photoUrl,
-        especialidade: data.especialidade,
+        name: data.nome,
+        photoUrl,
+        especialidade: data.dadosProfissionais[0].areaAtuacao,
     };
 }
 
@@ -83,7 +87,7 @@ export async function createToProgram(input: CreateProgramInput): Promise<{ id: 
     }
 
     const result = await response.json();
-    return { id: String(result.data.id) };
+    return { id: String(result.id) };
 }
 
 export async function listToPrograms(params: {

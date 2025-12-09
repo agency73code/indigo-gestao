@@ -17,23 +17,34 @@ export async function saveReport(req: Request, res: Response, next: NextFunction
         }
 
         if (!pdfFile) {
-            throw new AppError('REPORT_PDF_REQUIRED', 'O arquivo PDF do relatório é obrigatório.', 400);
+            throw new AppError(
+                'REPORT_PDF_REQUIRED',
+                'O arquivo PDF do relatório é obrigatório.',
+                400,
+            );
         }
 
         const canSeeAll = userCanSeeAllReports(requester.perfil_acesso);
         if (!canSeeAll && requester.id !== metadata.therapistId) {
-            throw new AppError('REPORT_FORBIDDEN', 'Você só pode salvar relatórios vinculados ao seu usuário.', 403);
+            throw new AppError(
+                'REPORT_FORBIDDEN',
+                'Você só pode salvar relatórios vinculados ao seu usuário.',
+                403,
+            );
         }
 
         const saved = await ReportService.saveReport({
             title: metadata.title,
             type: metadata.type,
             status: metadata.status,
+            area: metadata.area,
             patientId: metadata.patientId,
             therapistId: metadata.therapistId,
             periodStart: metadata.periodStart,
             periodEnd: metadata.periodEnd,
-            ...(metadata.clinicalObservations && { clinicalObservations: metadata.clinicalObservations }),
+            ...(metadata.clinicalObservations && {
+                clinicalObservations: metadata.clinicalObservations,
+            }),
             data: structuredData,
             pdfFile,
         });
@@ -57,6 +68,7 @@ export async function listReports(req: Request, res: Response, next: NextFunctio
         const normalizedFilters: ReportListFilters = {
             ...(filters.patientId && { patientId: filters.patientId }),
             ...(canSeeAll && filters.therapistId && { therapistId: filters.therapistId }),
+            ...(filters.area && { area: filters.area }),
             ...(filters.startDate && { startDate: new Date(filters.startDate) }),
             ...(filters.endDate && { endDate: new Date(filters.endDate) }),
             ...(filters.status && filters.status !== 'all' && { status: filters.status }),
@@ -82,15 +94,19 @@ export async function getReport(req: Request, res: Response, next: NextFunction)
         if (!id) {
             throw new AppError('INVALID_ID', 'Parâmetro id é obrigatório.', 400);
         }
-        const report = await ReportService.getReportById(id);
 
+        const report = await ReportService.getReportById(id);
         if (!report) {
             return res.status(404).json({ message: 'Relatório não encontrado.' });
         }
 
         const canSeeAll = userCanSeeAllReports(requester.perfil_acesso);
         if (!canSeeAll && report.therapistId !== requester.id) {
-            throw new AppError('REPORT_FORBIDDEN', 'Você não tem permissão para visualizar este relatório.', 403);
+            throw new AppError(
+                'REPORT_FORBIDDEN',
+                'Você não tem permissão para visualizar este relatório.',
+                403,
+            );
         }
 
         return res.json(report);
@@ -110,18 +126,25 @@ export async function deleteReport(req: Request, res: Response, next: NextFuncti
         if (!id) {
             throw new AppError('INVALID_ID', 'Parâmetro id é obrigatório.', 400);
         }
-        const reportRecord = await ReportService.getReportRecord(id);
 
+        const reportRecord = await ReportService.getReportRecord(id);
         if (!reportRecord) {
             return res.status(404).json({ message: 'Relatório não encontrado.' });
         }
 
         const canSeeAll = userCanSeeAllReports(requester.perfil_acesso);
         if (!canSeeAll && reportRecord.terapeutaId !== requester.id) {
-            throw new AppError('REPORT_FORBIDDEN', 'Você não tem permissão para excluir este relatório.', 403);
+            throw new AppError(
+                'REPORT_FORBIDDEN',
+                'Você não tem permissão para excluir este relatório.',
+                403,
+            );
         }
 
-        await ReportService.deleteReport({ id: reportRecord.id, pdf_arquivo_id: reportRecord.pdf_arquivo_id });
+        await ReportService.deleteReport({
+            id: reportRecord.id,
+            pdf_arquivo_id: reportRecord.pdf_arquivo_id,
+        });
         return res.status(204).send();
     } catch (error) {
         next(error);

@@ -4,7 +4,7 @@ import { Separator } from '@/components/ui/separator';
 import DynamicBreadcrumb from '@/shared/components/DynamicBreadcrumb';
 import { NavUser } from '@/components/sidebar/nav-user';
 import { GlobalSearch } from '@/components/Dashboard/global-search';
-import { Bell, ChevronLeft } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useArea } from '@/contexts/AreaContext';
@@ -50,6 +50,7 @@ export default function Header() {
                     <div className="hidden md:block">
                         <NavUser />
                     </div>
+                    {/* TODO: Implementar sistema de notificações
                     <Button variant="ghost" size="sm" className="h-8 w-8 p-0 relative">
                         <Bell className="h-4 w-4" />
                         <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center">
@@ -60,6 +61,7 @@ export default function Header() {
                         orientation="vertical"
                         className="mx-1 data-[orientation=vertical]:h-4"
                     />
+                    */}
                     <ThemeToggle />
                 </div>
             </div>
