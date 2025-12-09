@@ -234,15 +234,23 @@ export default function RegistrarSessaoToPage() {
 
             const redirectUrl = `/app/programas/fisioterapia/programa/${sessionState.programId}?patientId=${sessionState.patientId}`;
             navigate(redirectUrl);
-        } catch (err) {
+        } catch (err: any) {
             console.error('Erro ao salvar sessão:', err);
-            setError('Erro ao salvar sessão. Tente novamente.');
-
+            
+            if (err.message === 'FILE_TOO_LARGE') {
+                toast.error('Arquivo muito grande', {
+                    description: 'O arquivo excede o limite de tamanho permitido. Envie um arquivo menor.',
+                    duration: 5000,
+                })
+            }
+            
             toast.error('Erro ao salvar sessão', {
                 description:
-                    'Não foi possível registrar a sessão. Verifique sua conexão e tente novamente.',
+                'Não foi possível registrar a sessão. Verifique sua conexão e tente novamente.',
                 duration: 5000,
             });
+
+            setError('Erro ao salvar sessão. Tente novamente.');
         } finally {
             setSavingSession(false);
         }

@@ -74,9 +74,14 @@ export async function saveFisioSession(payload: {
         body: formData,
     });
 
+    if (response.status === 413) {
+        throw new Error('FILE_TOO_LARGE');
+    }
+
     if (!response.ok) {
         const err = await response.json();
-        console.error('Erro ao enviar sessão TO:', err);
+
+        console.error('Erro ao enviar sessão Fisioterapia:', err);
         throw new Error('Erro ao criar sessão');
     }
 }

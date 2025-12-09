@@ -147,7 +147,7 @@ export default function ToSessionsList({ sessions, program }: ToSessionsListProp
     };
 
     const handleViewSession = (session: SessionListItem) => {
-        navigate(`/app/programas/sessoes/${session.id}?pacienteId=${program.patientId}`, {
+        navigate(`/app/programas/fisioterapia/sessoes/${session.id}?pacienteId=${program.patientId}`, {
             state: { sessionDate: session.date },
         });
     };
