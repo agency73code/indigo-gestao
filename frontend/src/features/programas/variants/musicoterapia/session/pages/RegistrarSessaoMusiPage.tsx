@@ -55,6 +55,8 @@ export default function RegistrarSessaoMusiPage() {
             desempenhouComAjuda: 0,
             naoDesempenhou: 0,
             totalAttempts: 0,
+            avgParticipacao: null,
+            avgSuporte: null,
         },
         notes: '',
         files: [],
@@ -156,6 +158,8 @@ export default function RegistrarSessaoMusiPage() {
                 desempenhouComAjuda: 0,
                 naoDesempenhou: 0,
                 totalAttempts: 0,
+                avgParticipacao: null,
+                avgSuporte: null,
             },
             files: [],
         });

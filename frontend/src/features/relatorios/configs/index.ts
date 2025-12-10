@@ -3,6 +3,7 @@ import { fonoConfig } from './fonoConfig';
 import { toConfig } from './toConfig';
 import { fisioConfig } from './fisioConfig';
 import { movimentoConfig } from './movimentoConfig';
+import { musiConfig } from './musiConfig';
 import type { AreaConfigMap, RelatorioAreaConfig } from './types';
 
 /**
@@ -19,6 +20,7 @@ export const AREA_CONFIGS: AreaConfigMap = {
   'fisioterapia': fisioConfig,
   'psicomotricidade': movimentoConfig,
   'educacao-fisica': movimentoConfig,
+  'musicoterapia': musiConfig,
 };
 
 /**

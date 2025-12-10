@@ -1,14 +1,20 @@
 /**
  * MusiLastSessionPreview
  * Versão adaptada de LastSessionPreview para Musicoterapia
+ * Com layout similar ao MusiAttentionActivitiesCard - incluindo Participação e Suporte
  */
 
-import type { ComponentType } from 'react';
+import { useState } from 'react';
 import {
     CheckCircle,
     Clock,
     AlertCircle,
-    CircleSlash,
+    XCircle,
+    HandHelping,
+    Users,
+    HeartHandshake,
+    ChevronDown,
+    ChevronUp,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitleHub } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -20,76 +26,63 @@ interface MusiLastSessionPreviewProps {
     activitiesSummary: MusiActivitySummary[];
 }
 
-type MusiStatusKind = 'desempenhou' | 'desempenhou_com_ajuda' | 'nao_desempenhou';
+type StatusKind = 'verde' | 'laranja' | 'vermelho' | 'neutro';
 
-type StatusBadgeConfig = {
-    icon: ComponentType<{ className?: string }>;
-    label: string;
-    cls: string;
-};
-
-const MUSI_STATUS_CONFIG: Record<MusiStatusKind, StatusBadgeConfig> = {
-    desempenhou: {
-        icon: CheckCircle,
-        label: 'Desempenhou',
-        cls: 'border-green-500/40 text-green-700 bg-green-50 dark:border-green-500/30 dark:text-green-400 dark:bg-green-950/30',
-    },
-    desempenhou_com_ajuda: {
-        icon: AlertCircle,
-        label: 'Desempenhou com Ajuda',
-        cls: 'border-orange-500/40 text-orange-700 bg-orange-50 dark:border-orange-500/30 dark:text-orange-400 dark:bg-orange-950/30',
-    },
-    nao_desempenhou: {
-        icon: CircleSlash,
-        label: 'Não Desempenhou',
-        cls: 'border-red-500/40 text-red-700 bg-red-50 dark:border-red-500/30 dark:text-red-400 dark:bg-red-950/30',
-    },
-};
-
-interface StatusBadgeProps {
-    activity: MusiActivitySummary;
+function getActivityStatus(counts: { desempenhou: number; desempenhouComAjuda: number; naoDesempenhou: number }): StatusKind {
+    const total = counts.desempenhou + counts.desempenhouComAjuda + counts.naoDesempenhou;
+    if (total === 0) return 'neutro';
+    
+    const max = Math.max(counts.desempenhou, counts.desempenhouComAjuda, counts.naoDesempenhou);
+    if (counts.desempenhou === max) return 'verde';
+    if (counts.desempenhouComAjuda === max) return 'laranja';
+    return 'vermelho';
 }
 
-function StatusBadge({ activity }: StatusBadgeProps) {
-    const { desempenhou, desempenhouComAjuda, naoDesempenhou } = activity.counts;
-    
-    let predominantStatus: MusiStatusKind;
-    let predominantCount: number;
-    
-    if (desempenhou >= desempenhouComAjuda && desempenhou >= naoDesempenhou) {
-        predominantStatus = 'desempenhou';
-        predominantCount = desempenhou;
-    } else if (desempenhouComAjuda >= naoDesempenhou) {
-        predominantStatus = 'desempenhou_com_ajuda';
-        predominantCount = desempenhouComAjuda;
-    } else {
-        predominantStatus = 'nao_desempenhou';
-        predominantCount = naoDesempenhou;
+function getStatusConfig(status: StatusKind) {
+    switch (status) {
+        case 'verde':
+            return { label: 'Desempenhou', badgeCls: 'bg-muted text-foreground border-border' };
+        case 'laranja':
+            return { label: 'Com Ajuda', badgeCls: 'bg-muted text-foreground border-border' };
+        case 'vermelho':
+            return { label: 'Não Desempenhou', badgeCls: 'bg-muted text-foreground border-border' };
+        default:
+            return { label: 'Sem dados', badgeCls: 'bg-muted text-muted-foreground border-border' };
     }
-    
-    const config = MUSI_STATUS_CONFIG[predominantStatus];
-    const Icon = config.icon;
-    const content = `${config.label} - ${predominantCount}/${activity.total}`;
+}
 
-    return (
-        <Tooltip>
-            <TooltipTrigger asChild>
-                <Badge
-                    variant="outline"
-                    className={`gap-2 p-2 rounded-lg ${config.cls}`}
-                >
-                    <Icon className="h-4 w-4" />
-                    <span className="whitespace-nowrap">{content}</span>
-                </Badge>
-            </TooltipTrigger>
-            <TooltipContent className="max-w-60 text-xs">
-                Resultado predominante para esta atividade nesta sessão: o que mais ocorreu entre Desempenhou, Desempenhou com Ajuda e Não Desempenhou.
-            </TooltipContent>
-        </Tooltip>
-    );
+function formatParticipacao(value: number | null | undefined): string {
+    if (value === null || value === undefined) return '—';
+    
+    const labels: Record<number, string> = {
+        0: 'Não participa',
+        1: 'Percebe, mas não participa',
+        2: 'Tenta participar, mas não consegue',
+        3: 'Participa, mas não como esperado',
+        4: 'Conforme esperado',
+        5: 'Supera expectativas',
+    };
+    
+    return labels[Math.round(value)] || `${value}`;
+}
+
+function formatSuporte(value: number | null | undefined): string {
+    if (value === null || value === undefined) return '—';
+    
+    const labels: Record<number, string> = {
+        1: 'Sem suporte',
+        2: 'Verbal',
+        3: 'Visual',
+        4: 'Parcialmente físico',
+        5: 'Totalmente físico',
+    };
+    
+    return labels[Math.round(value)] || `${value}`;
 }
 
 export default function MusiLastSessionPreview({ sessionDate, activitiesSummary }: MusiLastSessionPreviewProps) {
+    const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set(activitiesSummary.map(a => a.activityId)));
+
     const formatDate = (dateString: string) => {
         try {
             const date = new Date(dateString);
@@ -101,6 +94,18 @@ export default function MusiLastSessionPreview({ sessionDate, activitiesSummary 
         } catch {
             return dateString;
         }
+    };
+
+    const toggleExpand = (id: string) => {
+        setExpandedIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+            return next;
+        });
     };
 
     const showEmptyState = activitiesSummary.length === 0;
@@ -162,42 +167,114 @@ export default function MusiLastSessionPreview({ sessionDate, activitiesSummary 
                             Nenhum dado de tentativa foi encontrado para esta sessão.
                         </div>
                     ) : (
-                        <div className="space-y-3">
-                            {activitiesSummary.map((activity) => (
-                                <div
-                                    key={activity.activityId}
-                                    className="border border-border/40 dark:border-white/15 rounded-lg overflow-hidden"
-                                    style={{ backgroundColor: 'var(--hub-nested-card-background)' }}
-                                >
-                                    <div className="px-4 py-3 bg-muted/10 dark:bg-white/5 border-b border-border/40 dark:border-white/15">
-                                        <div className="font-medium text-sm truncate">
-                                            {activity.activityName}
-                                        </div>
-                                    </div>
-                                    <div className="px-4 py-3">
-                                        <div className="flex flex-wrap items-center gap-3">
-                                            <Badge variant="outline" className="p-2 rounded-lg border-border/40 dark:border-white/15">
-                                                Não Desempenhou: {activity.counts.naoDesempenhou}
-                                            </Badge>
-                                            <Badge variant="outline" className="p-2 rounded-lg border-border/40 dark:border-white/15">
-                                                Desempenhou com Ajuda: {activity.counts.desempenhouComAjuda}
-                                            </Badge>
-                                            <Badge variant="outline" className="p-2 rounded-lg border-border/40 dark:border-white/15">
-                                                Desempenhou: {activity.counts.desempenhou}
-                                            </Badge>
-                                            <div className="ml-auto flex items-center gap-3">
-                                                <StatusBadge activity={activity} />
-                                                <Badge
-                                                    variant="outline"
-                                                    className="font-semibold p-2 rounded-lg border-border/40 dark:border-white/15"
-                                                >
-                                                    Total: {activity.total}
-                                                </Badge>
+                        <div className="space-y-4">
+                            {activitiesSummary.map((activity, index) => {
+                                const status = getActivityStatus(activity.counts);
+                                const config = getStatusConfig(status);
+                                const isExpanded = expandedIds.has(activity.activityId);
+
+                                return (
+                                    <div
+                                        key={activity.activityId}
+                                        className="rounded-xl border bg-card shadow-sm overflow-hidden transition-all"
+                                    >
+                                        {/* Header da Atividade */}
+                                        <button
+                                            className="w-full px-4 py-3 flex items-center justify-between gap-3 text-left hover:bg-muted/30 transition-colors"
+                                            onClick={() => toggleExpand(activity.activityId)}
+                                        >
+                                            <div className="flex items-center gap-3 min-w-0 flex-1">
+                                                <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-xs font-semibold text-white shrink-0">
+                                                    {index + 1}
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="font-medium text-sm truncate">{activity.activityName}</p>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {activity.total} tentativas
+                                                    </p>
+                                                </div>
                                             </div>
-                                        </div>
+                                            <div className="flex items-center gap-2 shrink-0">
+                                                <Badge variant="outline" className={`text-xs ${config.badgeCls}`}>
+                                                    {config.label}
+                                                </Badge>
+                                                {isExpanded ? (
+                                                    <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                                                ) : (
+                                                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                                )}
+                                            </div>
+                                        </button>
+
+                                        {/* Detalhes Expandidos - Tudo em uma linha */}
+                                        {isExpanded && (
+                                            <div className="px-4 pb-4 pt-3 border-t border-inherit">
+                                                <div className="flex items-center gap-3">
+                                                    {/* Contadores compactos */}
+                                                    <div className="flex items-center gap-2 shrink-0">
+                                                        <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-muted/50">
+                                                            <CheckCircle className="h-3.5 w-3.5 text-green-600" />
+                                                            <span className="text-xs text-muted-foreground">Desemp.</span>
+                                                            <span className="text-sm font-semibold">{activity.counts.desempenhou}</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-muted/50">
+                                                            <HandHelping className="h-3.5 w-3.5 text-amber-600" />
+                                                            <span className="text-xs text-muted-foreground">Ajuda</span>
+                                                            <span className="text-sm font-semibold">{activity.counts.desempenhouComAjuda}</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-muted/50">
+                                                            <XCircle className="h-3.5 w-3.5 text-red-600" />
+                                                            <span className="text-xs text-muted-foreground">Não</span>
+                                                            <span className="text-sm font-semibold">{activity.counts.naoDesempenhou}</span>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Separador vertical */}
+                                                    <div className="h-8 w-px bg-border shrink-0" />
+
+                                                    {/* Participação e Suporte com mais espaço */}
+                                                    {(activity.participacao !== undefined || activity.suporte !== undefined) && (
+                                                        <div className="flex items-center gap-4 flex-1 min-w-0">
+                                                            {activity.participacao !== undefined && activity.participacao !== null && (
+                                                                <div className="flex items-center gap-2.5 flex-1 min-w-0 px-3 py-2 rounded-lg bg-[#EDE9FE]/50">
+                                                                    <div className="h-10 w-10 rounded-lg bg-[#EDE9FE] flex items-center justify-center shrink-0">
+                                                                        <Users className="h-5 w-5 text-violet-600" />
+                                                                    </div>
+                                                                    <div className="min-w-0 flex-1">
+                                                                        <p className="text-xs text-muted-foreground">Participação</p>
+                                                                        <p className="text-sm font-medium text-foreground truncate">
+                                                                            {formatParticipacao(activity.participacao)}
+                                                                        </p>
+                                                                    </div>
+                                                                    <span className="text-sm font-semibold text-violet-600 shrink-0">
+                                                                        {activity.participacao?.toFixed(1)}/5
+                                                                    </span>
+                                                                </div>
+                                                            )}
+                                                            {activity.suporte !== undefined && activity.suporte !== null && (
+                                                                <div className="flex items-center gap-2.5 flex-1 min-w-0 px-3 py-2 rounded-lg bg-[#FCE7F3]/50">
+                                                                    <div className="h-10 w-10 rounded-lg bg-[#FCE7F3] flex items-center justify-center shrink-0">
+                                                                        <HeartHandshake className="h-5 w-5 text-pink-600" />
+                                                                    </div>
+                                                                    <div className="min-w-0 flex-1">
+                                                                        <p className="text-xs text-muted-foreground">Suporte</p>
+                                                                        <p className="text-sm font-medium text-foreground truncate">
+                                                                            {formatSuporte(activity.suporte)}
+                                                                        </p>
+                                                                    </div>
+                                                                    <span className="text-sm font-semibold text-pink-600 shrink-0">
+                                                                        {activity.suporte?.toFixed(1)}/5
+                                                                    </span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     )}
                 </TooltipProvider>

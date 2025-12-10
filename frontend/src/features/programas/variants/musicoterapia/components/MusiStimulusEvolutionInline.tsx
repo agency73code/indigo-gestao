@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import MusiPerformanceChart from './MusiPerformanceChart';
-import type { SerieLinha } from '@/features/programas/relatorio-geral/types';
+import MusiEvolutionChart, { type MusiEvolutionDataPoint } from './MusiEvolutionChart';
 import { fetchStimulusChart } from '@/features/programas/detalhe-ocp/services';
 
 interface MusiStimulusEvolutionInlineProps {
@@ -22,7 +21,7 @@ export default function MusiStimulusEvolutionInline({
     isOpen,
     panelId,
 }: MusiStimulusEvolutionInlineProps) {
-    const [chartData, setChartData] = useState<SerieLinha[] | null>(null);
+    const [chartData, setChartData] = useState<MusiEvolutionDataPoint[] | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [hasFetched, setHasFetched] = useState(false);
@@ -34,8 +33,26 @@ export default function MusiStimulusEvolutionInline({
         setError(null);
 
         try {
+            // Buscar dados do estímulo - por enquanto usa os dados existentes e converte
             const data = await fetchStimulusChart(programId, stimulusId);
-            setChartData(data);
+            
+            // Converter dados de SerieLinha para MusiEvolutionDataPoint
+            // Os dados de participação e suporte devem vir da API no futuro
+            // Por enquanto, simulamos com base nos dados de acerto/independência
+            const evolutionData: MusiEvolutionDataPoint[] = data.map((item) => {
+                // Simular participação baseado no acerto (0-100 -> 0-5)
+                const participacao = ((item.acerto ?? 0) / 100) * 5;
+                // Simular suporte inversamente baseado na independência (maior independência = menor suporte)
+                const suporte = 5 - (((item.independencia ?? 0) / 100) * 4);
+                
+                return {
+                    x: item.x,
+                    participacao: Math.round(participacao * 10) / 10,
+                    suporte: Math.max(1, Math.round(suporte * 10) / 10), // Mínimo 1
+                };
+            });
+            
+            setChartData(evolutionData);
         } catch (err) {
             console.error('Erro ao carregar gráfico da atividade de Musicoterapia:', err);
             setChartData(null);
@@ -99,7 +116,7 @@ export default function MusiStimulusEvolutionInline({
 
             {showChart && (
                 <div className="border border-border/40 dark:border-white/15 rounded-lg p-4">
-                    <MusiPerformanceChart data={chartData} />
+                    <MusiEvolutionChart data={chartData} />
                 </div>
             )}
 

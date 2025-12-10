@@ -22,6 +22,8 @@ export type MusiSessionSummary = {
     desempenhouComAjuda: number;
     naoDesempenhou: number;
     totalAttempts: number;
+    avgParticipacao: number | null; // Média de participação (0-5)
+    avgSuporte: number | null; // Média de suporte (1-5)
 };
 
 export type SessionFile = {

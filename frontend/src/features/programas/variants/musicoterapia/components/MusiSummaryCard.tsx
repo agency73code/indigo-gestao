@@ -2,18 +2,17 @@ import { BarChart3, CircleHelp, Activity, CheckCircle, XCircle } from 'lucide-re
 import { Card, CardContent, CardHeader, CardTitleHub } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { SessionListItem } from '../../../detalhe-ocp/types';
-import type { SerieLinha } from '../../../relatorio-geral/types';
-import MusiPerformanceChart from './MusiPerformanceChart';
+import MusiEvolutionChart, { type MusiEvolutionDataPoint } from './MusiEvolutionChart';
 
 interface MusiSummaryCardProps {
     sessions: SessionListItem[];
-    chartData?: SerieLinha[];
+    evolutionData?: MusiEvolutionDataPoint[];
     chartLoading?: boolean;
 }
 
 export default function MusiSummaryCard({
     sessions,
-    chartData,
+    evolutionData,
     chartLoading = false,
 }: MusiSummaryCardProps) {
     if (sessions.length === 0) {
@@ -179,9 +178,9 @@ export default function MusiSummaryCard({
                 </div>
             )}
 
-            {chartData && chartData.length > 0 && (
+            {evolutionData && evolutionData.length > 0 && (
                 <div className="mt-6">
-                    <MusiPerformanceChart data={chartData} loading={chartLoading} />
+                    <MusiEvolutionChart data={evolutionData} loading={chartLoading} />
                 </div>
             )}
         </div>

@@ -4,19 +4,19 @@ import {
     CheckCircle, 
     HandHelping, 
     XCircle, 
-    Activity,
-    AlertTriangle,
     CircleHelp,
-    TrendingUp
+    TrendingUp,
+    Clock,
+    ListChecks
 } from 'lucide-react';
-import type { FisioStatus } from '../helpers';
+import type { ToStatus } from '../helpers';
 
-export interface FisioSessionSummaryProps {
-    status: FisioStatus;
+export interface ToSessionSummaryProps {
+    status: ToStatus;
+    totalTentativas: number;
     activitiesWorked: number;
     activitiesPlanned: number;
-    compensationCount: number;
-    discomfortCount: number;
+    totalDurationMinutes: number | null;
 }
 
 interface KpiCardProps {
@@ -31,7 +31,17 @@ interface KpiCardProps {
     highlighted?: boolean;
 }
 
-function KpiCard({ title, value, hint, icon: Icon, bgColor, iconColor, textColor, tooltip, highlighted }: KpiCardProps) {
+function KpiCard({ 
+    title, 
+    value, 
+    hint, 
+    icon: Icon, 
+    bgColor, 
+    iconColor, 
+    textColor, 
+    tooltip,
+    highlighted 
+}: KpiCardProps) {
     return (
         <Card 
             padding="hub" 
@@ -70,7 +80,7 @@ function KpiCard({ title, value, hint, icon: Icon, bgColor, iconColor, textColor
     );
 }
 
-function getStatusConfig(status: FisioStatus) {
+function getStatusConfig(status: ToStatus) {
     switch (status) {
         case 'desempenhou':
             return {
@@ -79,6 +89,7 @@ function getStatusConfig(status: FisioStatus) {
                 iconColor: 'text-emerald-600',
                 textColor: 'text-emerald-700 dark:text-emerald-400',
                 icon: CheckCircle,
+                hint: 'Maioria: independente',
             };
         case 'desempenhou-com-ajuda':
             return {
@@ -87,6 +98,7 @@ function getStatusConfig(status: FisioStatus) {
                 iconColor: 'text-amber-600',
                 textColor: 'text-amber-700 dark:text-amber-400',
                 icon: HandHelping,
+                hint: 'Maioria: com ajuda',
             };
         case 'nao-desempenhou':
             return {
@@ -95,6 +107,7 @@ function getStatusConfig(status: FisioStatus) {
                 iconColor: 'text-rose-600',
                 textColor: 'text-rose-700 dark:text-rose-400',
                 icon: XCircle,
+                hint: 'Maioria: sem desempenho',
             };
         default:
             return {
@@ -103,20 +116,36 @@ function getStatusConfig(status: FisioStatus) {
                 iconColor: 'text-muted-foreground',
                 textColor: 'text-muted-foreground',
                 icon: CheckCircle,
+                hint: 'Sem registros',
             };
     }
 }
 
-export default function FisioSessionSummary({
+function formatDuration(minutes: number | null): string {
+    if (minutes === null || minutes === 0) return '—';
+    
+    if (minutes < 60) {
+        return `${minutes} min`;
+    }
+    
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    
+    if (remainingMinutes === 0) {
+        return `${hours}h`;
+    }
+    
+    return `${hours}h ${remainingMinutes}min`;
+}
+
+export default function ToSessionSummary({
+    status,
+    totalTentativas,
     activitiesWorked,
     activitiesPlanned,
-    discomfortCount,
-    compensationCount,
-    status,
-}: FisioSessionSummaryProps) {
+    totalDurationMinutes,
+}: ToSessionSummaryProps) {
     const statusConfig = getStatusConfig(status);
-    const hasCompensation = compensationCount > 0;
-    const hasDiscomfort = discomfortCount > 0;
 
     return (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -124,7 +153,7 @@ export default function FisioSessionSummary({
             <KpiCard
                 title="Status Geral"
                 value={statusConfig.label}
-                hint={`Maioria: ${status === 'desempenhou' ? 'independente' : status === 'desempenhou-com-ajuda' ? 'com ajuda' : 'sem desempenho'}`}
+                hint={statusConfig.hint}
                 icon={statusConfig.icon}
                 bgColor={statusConfig.bgColor}
                 iconColor={statusConfig.iconColor}
@@ -133,7 +162,19 @@ export default function FisioSessionSummary({
                 highlighted
             />
 
-            {/* Atividades */}
+            {/* Tentativas */}
+            <KpiCard
+                title="Tentativas"
+                value={totalTentativas}
+                hint="Total registradas"
+                icon={ListChecks}
+                bgColor="bg-[#E0E7FF]"
+                iconColor="text-indigo-600"
+                textColor="text-indigo-700 dark:text-indigo-400"
+                tooltip="Total de tentativas registradas na sessão"
+            />
+
+            {/* Estímulos Trabalhados */}
             <KpiCard
                 title="Atividades"
                 value={`${activitiesWorked}/${activitiesPlanned}`}
@@ -145,28 +186,16 @@ export default function FisioSessionSummary({
                 tooltip="Atividades trabalhadas em relação ao total planejado para o programa"
             />
 
-            {/* Compensação */}
+            {/* Tempo Total */}
             <KpiCard
-                title="Compensação"
-                value={hasCompensation ? compensationCount : '—'}
-                hint={hasCompensation ? 'Atividades com comp.' : 'Sem compensação'}
-                icon={Activity}
-                bgColor={hasCompensation ? "bg-[#DBEAFE]" : "bg-muted/30"}
-                iconColor={hasCompensation ? "text-blue-600" : "text-muted-foreground"}
-                textColor={hasCompensation ? "text-blue-700 dark:text-blue-400" : "text-muted-foreground"}
-                tooltip="Número de atividades onde o paciente apresentou compensação motora"
-            />
-
-            {/* Desconforto */}
-            <KpiCard
-                title="Desconforto"
-                value={hasDiscomfort ? discomfortCount : '—'}
-                hint={hasDiscomfort ? 'Atividades com dor' : 'Sem desconforto'}
-                icon={AlertTriangle}
-                bgColor={hasDiscomfort ? "bg-[#FEF3C7]" : "bg-muted/30"}
-                iconColor={hasDiscomfort ? "text-amber-600" : "text-muted-foreground"}
-                textColor={hasDiscomfort ? "text-amber-700 dark:text-amber-400" : "text-muted-foreground"}
-                tooltip="Número de atividades onde o paciente relatou desconforto ou dor"
+                title="Tempo Total"
+                value={formatDuration(totalDurationMinutes)}
+                hint={totalDurationMinutes ? `${totalDurationMinutes} minutos` : 'Não registrado'}
+                icon={Clock}
+                bgColor="bg-[#EDE9FE]"
+                iconColor="text-violet-600"
+                textColor="text-violet-700 dark:text-violet-400"
+                tooltip="Tempo total de atividades na sessão (soma dos tempos por estímulo)"
             />
         </div>
     );

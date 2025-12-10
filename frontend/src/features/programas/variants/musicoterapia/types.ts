@@ -100,6 +100,8 @@ export type MusiActivitySummary = {
     };
     total: number;
     durationMinutes?: number | null; // tempo total em minutos
+    participacao?: number | null;    // 0-5: nível de participação
+    suporte?: number | null;         // 1-5: nível de suporte necessário
     // Status predominante é calculado no componente, não precisa vir do backend
 };
 

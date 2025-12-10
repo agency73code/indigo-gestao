@@ -7,6 +7,7 @@ export { default as MusiStimulusEvolutionInline } from './MusiStimulusEvolutionI
 export { default as MusiNotesSection } from './MusiNotesSection';
 export { default as MusiProgramActionBar } from './MusiProgramActionBar';
 export { default as MusiPerformanceChart } from './MusiPerformanceChart';
+export { default as MusiEvolutionChart, type MusiEvolutionDataPoint } from './MusiEvolutionChart';
 export { default as MusiSummaryCard } from './MusiSummaryCard';
 export { default as MusiSessionsList } from './MusiSessionsList';
 export { default as MusiLastSessionPreview } from './MusiLastSessionPreview';

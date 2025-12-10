@@ -5,8 +5,8 @@ import HeaderSessao from '@/features/programas/consulta-sessao/components/Header
 import SessionNotes from '@/features/programas/consulta-sessao/pages/components/SessionNotes';
 import SessionFiles from '@/features/programas/consulta-sessao/pages/components/SessionFiles';
 import { getSessionFiles } from '@/features/programas/variants/fisioterapia/session/services';
-import { getFisioStatus, getFisioStatusConfig } from '../helpers';
-import { ToActivitiesPerformanceList } from '.';
+import { getFisioStatus } from '../helpers';
+import FisioActivitiesPerformanceList from './FisioActivitiesPerformanceList';
 import FisioSessionSummary from './FisioSessionSummary';
 
 interface DetalheSessaoToProps {
@@ -92,10 +92,9 @@ export default function DetalheSessaoTo({ sessao, paciente, programa, onBack }: 
 
     // Calcular status geral da sessão (TO usa status predominante)
     const statusSessao = useMemo(() => getFisioStatus(countsSessao), [countsSessao]);
-    const statusConfig = useMemo(() => getFisioStatusConfig(statusSessao), [statusSessao]);
 
     // Calcular contadores de metadata
-    const { loadCount, discomfortCount, compensationCount } = useMemo(() => {
+    const { discomfortCount, compensationCount } = useMemo(() => {
         let load = 0;
         let discomfort = 0;
         let compensation = 0;
@@ -133,20 +132,14 @@ export default function DetalheSessaoTo({ sessao, paciente, programa, onBack }: 
             <HeaderSessao sessao={sessao} paciente={paciente} programa={programa} onBack={onBack} />
 
             <FisioSessionSummary
-                counts={countsSessao}
+                status={statusSessao}
                 activitiesWorked={workedCount}
                 activitiesPlanned={plannedCount}
-                hasLoad={loadCount > 0}
-                loadCount={loadCount}
-                hasDiscomfort={discomfortCount > 0}
-                discomfortCount={discomfortCount}
-                hasCompensation={compensationCount > 0}
                 compensationCount={compensationCount}
-                statusLabel={statusConfig.label}
-                statusCls={statusConfig.cls}
+                discomfortCount={discomfortCount}
             />
 
-            <ToActivitiesPerformanceList
+            <FisioActivitiesPerformanceList
                 activities={activitiesInfo}
                 countsByActivity={countsByActivity}
                 durationsByActivity={durationsByActivity}

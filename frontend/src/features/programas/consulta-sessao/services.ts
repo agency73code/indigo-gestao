@@ -2,8 +2,10 @@ import { buildApiUrl } from '@/lib/api';
 import type { Sessao, ResumoSessao, ProgramDetail } from './types';
 import type { AreaType } from '@/contexts/AreaContext';
 
-// Toggle local mocks (follow existing pattern)
-const USE_LOCAL_MOCKS = true;
+// Mock habilitado apenas para musicoterapia e fisioterapia
+// TO usa dados reais da API
+const AREAS_WITH_MOCK: AreaType[] = ['musicoterapia', 'fisioterapia'];
+const shouldUseMock = (area?: string) => AREAS_WITH_MOCK.includes(area as AreaType);
 
 /**
  * Parâmetros de filtragem para listagem de sessões
@@ -64,9 +66,9 @@ export async function listSessionsByPatient(
     pageSize = 10
   } = filters;
 
-  // Se USE_LOCAL_MOCKS estiver ativo, usar mocks diretamente
-  if (USE_LOCAL_MOCKS) {
-    console.warn('🔄 Usando mock local (USE_LOCAL_MOCKS ativo)');
+  // Usar mocks apenas para musicoterapia e fisioterapia
+  if (shouldUseMock(area)) {
+    console.warn(`🔄 Usando mock local para ${area}`);
     const mockData = await getMockSessionsData(patientId, area);
     return processSessionsLocally(mockData, filters);
   }
@@ -114,8 +116,8 @@ export async function listSessionsByPatient(
     };
 
   } catch (error) {
-    if (USE_LOCAL_MOCKS) {
-      console.warn('🔄 Usando mock local (erro na API)');
+    if (shouldUseMock(area)) {
+      console.warn(`🔄 Usando mock local para ${area} (erro na API)`);
       // Mock usa estrutura diferente - convertemos para Sessao[]
       const mockData = await getMockSessionsData(patientId, area);
       return processSessionsLocally(mockData, filters);
@@ -545,7 +547,7 @@ export async function findSessionById(
   patientId?: string,
   area: string = 'fonoaudiologia'
 ): Promise<Sessao | null> {
-  if (USE_LOCAL_MOCKS) {
+  if (shouldUseMock(area)) {
     let targetPatientId = patientId;
     
     // Se não foi fornecido patientId, usa o patientId mock da área correspondente
@@ -568,12 +570,13 @@ export async function findSessionById(
 }
 
 export async function findProgramSessionById(sessionId: string, area?: string): Promise<ProgramDetail | null> {
-  // Se estiver usando mocks, retorna mock diretamente
-  if (USE_LOCAL_MOCKS) {
-    // Detectar área pelo prefixo do sessionId
-    const detectedArea = area || (sessionId.includes('musi') ? 'musicoterapia' : 
-      sessionId.includes('to-') ? 'terapia-ocupacional' : 'fonoaudiologia');
-    
+  // Detectar área pelo prefixo do sessionId
+  const detectedArea = area || (sessionId.includes('musi') ? 'musicoterapia' : 
+    sessionId.includes('to-') ? 'terapia-ocupacional' : 
+    sessionId.includes('sess-') ? 'terapia-ocupacional' : 'fonoaudiologia');
+  
+  // Usar mocks apenas para musicoterapia e fisioterapia
+  if (shouldUseMock(detectedArea)) {
     if (detectedArea === 'musicoterapia') {
       const { mockMusiProgram } = await import('@/features/programas/variants/musicoterapia/mocks/programMock');
       return {
@@ -590,6 +593,7 @@ export async function findProgramSessionById(sessionId: string, area?: string): 
       } as unknown as ProgramDetail;
     }
     
+    // Fisioterapia e outras áreas com mock usam o mock genérico
     const { mockProgramDetail } = await import('@/features/programas/detalhe-ocp/mocks/program.mock');
     return mockProgramDetail;
   }

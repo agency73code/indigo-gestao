@@ -143,6 +143,8 @@ export function calculateMusiSessionSummary(attempts: MusiSessionAttempt[]): Mus
             desempenhouComAjuda: 0,
             naoDesempenhou: 0,
             totalAttempts: 0,
+            avgParticipacao: null,
+            avgSuporte: null,
         };
     }
 
@@ -151,11 +153,29 @@ export function calculateMusiSessionSummary(attempts: MusiSessionAttempt[]): Mus
     const naoDesempenhou = attempts.filter((a) => a.type === 'nao-desempenhou').length;
     const totalAttempts = attempts.length;
 
+    // Calcular média de participação (0-5)
+    const participacaoValues = attempts
+        .filter((a) => a.participacao !== undefined && a.participacao !== null)
+        .map((a) => a.participacao as number);
+    const avgParticipacao = participacaoValues.length > 0
+        ? participacaoValues.reduce((sum, val) => sum + val, 0) / participacaoValues.length
+        : null;
+
+    // Calcular média de suporte (1-5)
+    const suporteValues = attempts
+        .filter((a) => a.suporte !== undefined && a.suporte !== null)
+        .map((a) => a.suporte as number);
+    const avgSuporte = suporteValues.length > 0
+        ? suporteValues.reduce((sum, val) => sum + val, 0) / suporteValues.length
+        : null;
+
     return {
         desempenhou,
         desempenhouComAjuda,
         naoDesempenhou,
         totalAttempts,
+        avgParticipacao,
+        avgSuporte,
     };
 }
 

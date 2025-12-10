@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { AlertCircle, CheckCircle, History, MinusCircle, TrendingUp, HandHeart } from 'lucide-react';
+import { useMemo, useState, useEffect } from 'react';
+import { CheckCircle, History, HandHelping, XCircle, Users, HeartHandshake, ChevronDown, ChevronUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -55,59 +55,46 @@ function calcStatus(counts: Counts): StatusResult {
     return { kind, desempenhou, ajuda, naoDesempenhou, total };
 }
 
-type StatusBadgeProps = {
-    kind: StatusKind;
-    desempenhou: number;
-    ajuda: number;
-    naoDesempenhou: number;
-    total: number;
-    statusTestId: string;
-    tooltipTestId: string;
-};
+function getStatusConfig(kind: StatusKind) {
+    switch (kind) {
+        case 'verde':
+            return { label: 'Desempenhou', badgeCls: 'bg-muted text-foreground border-border' };
+        case 'laranja':
+            return { label: 'Com Ajuda', badgeCls: 'bg-muted text-foreground border-border' };
+        case 'vermelho':
+            return { label: 'Não Desempenhou', badgeCls: 'bg-muted text-foreground border-border' };
+        default:
+            return { label: 'Sem dados', badgeCls: 'bg-muted text-muted-foreground border-border' };
+    }
+}
 
-function StatusBadge({ kind, desempenhou, ajuda, naoDesempenhou, total, statusTestId, tooltipTestId }: StatusBadgeProps) {
-    const config = {
-        verde: {
-            icon: CheckCircle,
-            label: 'Desempenhou',
-            cls: 'text-green-700 bg-green-100 hover:bg-green-200 border-0',
-            count: desempenhou,
-        },
-        laranja: {
-            icon: MinusCircle,
-            label: 'Desempenhou com Ajuda',
-            cls: 'text-amber-700 bg-amber-100 hover:bg-amber-200 border-0',
-            count: ajuda,
-        },
-        vermelho: {
-            icon: AlertCircle,
-            label: 'Não Desempenhou',
-            cls: 'text-red-700 bg-red-100 hover:bg-red-200 border-0',
-            count: naoDesempenhou,
-        },
-    }[kind];
+function formatParticipacao(value: number | null): string {
+    if (value === null) return '—';
+    
+    const labels: Record<number, string> = {
+        0: 'Não participa',
+        1: 'Percebe, mas não participa',
+        2: 'Tenta participar, mas não consegue',
+        3: 'Participa, mas não como esperado',
+        4: 'Conforme esperado',
+        5: 'Supera expectativas',
+    };
+    
+    return labels[Math.round(value)] || `${value.toFixed(1)}`;
+}
 
-    const Icon = config.icon;
-    const content = `${config.label} - ${config.count}/${total}`;
-
-    return (
-        <Tooltip>
-            <TooltipTrigger asChild>
-                <Badge
-                    variant="secondary"
-                    className={`gap-1.5 px-3 py-1 ${config.cls}`}
-                    data-testid={statusTestId}
-                >
-                    <Icon className="h-3.5 w-3.5" />
-                    <span className="text-xs font-medium">{content}</span>
-                </Badge>
-            </TooltipTrigger>
-            <TooltipContent data-testid={tooltipTestId} className="max-w-[220px] text-xs">
-                Status predominante baseado no tipo de desempenho mais frequente nesta atividade.
-                Verde: desempenhou, Laranja: desempenhou com ajuda, Vermelho: não desempenhou.
-            </TooltipContent>
-        </Tooltip>
-    );
+function formatSuporte(value: number | null): string {
+    if (value === null) return '—';
+    
+    const labels: Record<number, string> = {
+        1: 'Sem suporte',
+        2: 'Verbal',
+        3: 'Visual',
+        4: 'Parcialmente físico',
+        5: 'Totalmente físico',
+    };
+    
+    return labels[Math.round(value)] || `${value.toFixed(1)}`;
 }
 
 export default function MusiAttemptsRegister({ attempts }: MusiAttemptsRegisterProps) {
@@ -178,6 +165,32 @@ export default function MusiAttemptsRegister({ attempts }: MusiAttemptsRegisterP
         });
     }, [attempts]);
 
+    // Estado para controlar cards expandidos
+    const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+    // Manter novos cards expandidos automaticamente
+    useEffect(() => {
+        setExpandedIds((prev) => {
+            const next = new Set(prev);
+            for (const activity of activitySummaries) {
+                next.add(activity.activityId);
+            }
+            return next;
+        });
+    }, [activitySummaries]);
+
+    const toggleExpand = (id: string) => {
+        setExpandedIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+            return next;
+        });
+    };
+
     if (activitySummaries.length === 0) {
         return (
             <Card className="rounded-[5px] px-6 py-2 md:px-8 md:py-10 lg:px-8 lg:py-0">
@@ -208,91 +221,129 @@ export default function MusiAttemptsRegister({ attempts }: MusiAttemptsRegisterP
             </CardHeader>
             <CardContent className="pb-3 sm:pb-6">
                 <TooltipProvider>
-                    <div className="space-y-3">
-                        {activitySummaries.map((activity) => {
+                    <div className="space-y-4">
+                        {activitySummaries.map((activity, index) => {
                             const counts = activity.counts;
                             const status = activity.status;
-                            const totalCounts = status.total;
+                            const config = getStatusConfig(status.kind);
+                            const isExpanded = expandedIds.has(activity.activityId);
 
                             return (
-                                <div key={activity.activityId} className="border rounded-[5px]">
-                                    <div className="px-4 py-3 bg-muted/30">
-                                        <div className="font-medium text-sm truncate ">
-                                            {activity.activityLabel}
-                                        </div>
-                                    </div>
-
-                                    <div
-                                        className="px-4 py-3"
-                                        data-testid={`activity-summary-row-${activity.activityId}`}
+                                <div 
+                                    key={activity.activityId} 
+                                    className="rounded-xl border bg-card shadow-sm overflow-hidden transition-all"
+                                >
+                                    {/* Header da Atividade */}
+                                    <button
+                                        className="w-full px-4 py-3 flex items-center justify-between gap-3 text-left hover:bg-muted/30 transition-colors"
+                                        onClick={() => toggleExpand(activity.activityId)}
                                     >
-                                        <div className="flex flex-wrap items-center gap-3 ">
-                                            <Badge variant="secondary" className="px-3 py-1 text-gray-700 bg-gray-100 hover:bg-gray-200 border-0">
-                                                <span className="text-xs font-medium">Não desempenhou: {counts['nao-desempenhou']}</span>
-                                            </Badge>
-                                            <Badge variant="secondary" className="px-3 py-1 text-gray-700 bg-gray-100 hover:bg-gray-200 border-0">
-                                                <span className="text-xs font-medium">Desempenhou com ajuda: {counts['desempenhou-com-ajuda']}</span>
-                                            </Badge>
-                                            <Badge variant="secondary" className="px-3 py-1 text-gray-700 bg-gray-100 hover:bg-gray-200 border-0">
-                                                <span className="text-xs font-medium">Desempenhou: {counts.desempenhou}</span>
-                                            </Badge>
-
-                                            {/* Badges de Participação e Suporte específicos de Musicoterapia */}
-                                            {activity.avgParticipacao !== null && (
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Badge
-                                                            variant="secondary"
-                                                            className="gap-1.5 px-3 py-1 text-purple-700 bg-purple-100 hover:bg-purple-200 border-0"
-                                                        >
-                                                            <TrendingUp className="h-3.5 w-3.5" />
-                                                            <span className="text-xs font-medium">
-                                                                Participação: {activity.avgParticipacao.toFixed(1)}
-                                                            </span>
-                                                        </Badge>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent className="max-w-[220px] text-xs">
-                                                        Média de participação do paciente nas atividades (0-5). Valores mais altos indicam maior engajamento.
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            )}
-
-                                            {activity.avgSuport !== null && (
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Badge
-                                                            variant="secondary"
-                                                            className="gap-1.5 px-3 py-1 text-indigo-700 bg-indigo-100 hover:bg-indigo-200 border-0"
-                                                        >
-                                                            <HandHeart className="h-3.5 w-3.5" />
-                                                            <span className="text-xs font-medium">
-                                                                Suporte: {activity.avgSuport.toFixed(1)}
-                                                            </span>
-                                                        </Badge>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent className="max-w-[220px] text-xs">
-                                                        Nível médio de suporte necessário (1-5). Valores menores indicam maior independência do paciente.
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            )}
-
-                                            <div className="ml-auto flex items-center gap-3 ">
-                                                <StatusBadge
-                                                    kind={status.kind}
-                                                    desempenhou={status.desempenhou}
-                                                    ajuda={status.ajuda}
-                                                    naoDesempenhou={status.naoDesempenhou}
-                                                    total={status.total}
-                                                    statusTestId={`activity-status-${activity.activityId}`}
-                                                    tooltipTestId={`activity-status-tip-${activity.activityId}`}
-                                                />
-                                                
-                                                <Badge variant="secondary" className="px-3 py-1 text-gray-700 bg-gray-100 hover:bg-gray-200 border-0">
-                                                    <span className="text-xs font-semibold">Total: {totalCounts}</span>
-                                                </Badge>
+                                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                                            <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-xs font-semibold text-white shrink-0">
+                                                {index + 1}
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                                <p className="font-medium text-sm truncate">{activity.activityLabel}</p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    {status.total} tentativas
+                                                </p>
                                             </div>
                                         </div>
-                                    </div>
+                                        <div className="flex items-center gap-2 shrink-0">
+                                            <Badge variant="outline" className={`text-xs ${config.badgeCls}`}>
+                                                {config.label}
+                                            </Badge>
+                                            {isExpanded ? (
+                                                <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                                            ) : (
+                                                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                            )}
+                                        </div>
+                                    </button>
+
+                                    {/* Detalhes Expandidos */}
+                                    {isExpanded && (
+                                        <div 
+                                            className="px-4 pb-4 pt-3 border-t border-inherit"
+                                            data-testid={`activity-summary-row-${activity.activityId}`}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                {/* Contadores compactos */}
+                                                <div className="flex items-center gap-2 shrink-0">
+                                                    <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-muted/50">
+                                                        <CheckCircle className="h-3.5 w-3.5 text-green-600" />
+                                                        <span className="text-xs text-muted-foreground">Desemp.</span>
+                                                        <span className="text-sm font-semibold">{counts.desempenhou}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-muted/50">
+                                                        <HandHelping className="h-3.5 w-3.5 text-amber-600" />
+                                                        <span className="text-xs text-muted-foreground">Ajuda</span>
+                                                        <span className="text-sm font-semibold">{counts['desempenhou-com-ajuda']}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-muted/50">
+                                                        <XCircle className="h-3.5 w-3.5 text-red-600" />
+                                                        <span className="text-xs text-muted-foreground">Não</span>
+                                                        <span className="text-sm font-semibold">{counts['nao-desempenhou']}</span>
+                                                    </div>
+                                                </div>
+
+                                                {/* Separador vertical */}
+                                                <div className="h-8 w-px bg-border shrink-0" />
+
+                                                {/* Participação e Suporte */}
+                                                {(activity.avgParticipacao !== null || activity.avgSuport !== null) && (
+                                                    <div className="flex items-center gap-4 flex-1 min-w-0">
+                                                        {activity.avgParticipacao !== null && (
+                                                            <Tooltip>
+                                                                <TooltipTrigger asChild>
+                                                                    <div className="flex items-center gap-2.5 flex-1 min-w-0 px-3 py-2 rounded-lg bg-[#EDE9FE]/50 cursor-help">
+                                                                        <div className="h-10 w-10 rounded-lg bg-[#EDE9FE] flex items-center justify-center shrink-0">
+                                                                            <Users className="h-5 w-5 text-violet-600" />
+                                                                        </div>
+                                                                        <div className="min-w-0 flex-1">
+                                                                            <p className="text-xs text-muted-foreground">Participação</p>
+                                                                            <p className="text-sm font-medium text-foreground truncate">
+                                                                                {formatParticipacao(activity.avgParticipacao)}
+                                                                            </p>
+                                                                        </div>
+                                                                        <span className="text-sm font-semibold text-violet-600 shrink-0">
+                                                                            {activity.avgParticipacao.toFixed(1)}/5
+                                                                        </span>
+                                                                    </div>
+                                                                </TooltipTrigger>
+                                                                <TooltipContent className="max-w-[220px] text-xs">
+                                                                    Média de participação do paciente nas atividades (0-5). Valores mais altos indicam maior engajamento.
+                                                                </TooltipContent>
+                                                            </Tooltip>
+                                                        )}
+                                                        {activity.avgSuport !== null && (
+                                                            <Tooltip>
+                                                                <TooltipTrigger asChild>
+                                                                    <div className="flex items-center gap-2.5 flex-1 min-w-0 px-3 py-2 rounded-lg bg-[#FCE7F3]/50 cursor-help">
+                                                                        <div className="h-10 w-10 rounded-lg bg-[#FCE7F3] flex items-center justify-center shrink-0">
+                                                                            <HeartHandshake className="h-5 w-5 text-pink-600" />
+                                                                        </div>
+                                                                        <div className="min-w-0 flex-1">
+                                                                            <p className="text-xs text-muted-foreground">Suporte</p>
+                                                                            <p className="text-sm font-medium text-foreground truncate">
+                                                                                {formatSuporte(activity.avgSuport)}
+                                                                            </p>
+                                                                        </div>
+                                                                        <span className="text-sm font-semibold text-pink-600 shrink-0">
+                                                                            {activity.avgSuport.toFixed(1)}/5
+                                                                        </span>
+                                                                    </div>
+                                                                </TooltipTrigger>
+                                                                <TooltipContent className="max-w-[220px] text-xs">
+                                                                    Nível médio de suporte necessário (1-5). Valores menores indicam maior independência do paciente.
+                                                                </TooltipContent>
+                                                            </Tooltip>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             );
                         })}

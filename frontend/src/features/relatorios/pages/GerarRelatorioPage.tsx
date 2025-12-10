@@ -13,6 +13,7 @@ import { ToKpiCards, ToActivityDurationChart, ToAttentionActivitiesCard, ToAuton
 import ToPerformanceChart from '../../programas/variants/terapia-ocupacional/components/ToPerformanceChart';
 import { FisioKpiCards, FisioActivityDurationChart, FisioAttentionActivitiesCard, FisioAutonomyByCategoryChart } from '../../programas/relatorio-geral/components/fisio';
 import FisioPerformanceChart from '../../programas/variants/fisioterapia/components/FisioPerformanceChart';
+import { MusiKpiCards, MusiAttentionActivitiesCard, MusiAutonomyByCategoryChart, MusiParticipacaoChart, MusiSuporteChart, MusiParticipacaoSuporteEvolutionChart } from '../../programas/relatorio-geral/components/musi';
 import { SaveReportDialog } from '../components';
 import { AreaSelectorCard } from '../components/AreaSelectorCard';
 import { KpiCardsRenderer } from '../components/KpiCardsRenderer';
@@ -38,6 +39,15 @@ import {
     prepareFisioPerformanceLineData,
     prepareFisioAutonomyByCategory,
 } from '../../programas/relatorio-geral/services/fisio-report.service';
+import {
+    calculateMusiKpis,
+    prepareMusiAttentionActivities,
+    prepareMusiPerformanceLineData,
+    prepareMusiAutonomyByCategory,
+    prepareMusiParticipacaoData,
+    prepareMusiSuporteData,
+    prepareMusiEvolutionData,
+} from '../../programas/relatorio-geral/services/musi-report.service';
 import { listSessionsByPatient } from '../../programas/consulta-sessao/services';
 import type { Filters, KpisRelatorio, SerieLinha, PrazoPrograma } from '../gerar-relatorio/types';
 import type { SavedReport } from '../types';
@@ -340,6 +350,99 @@ export function GerarRelatorioPage() {
                 return;
             }
 
+            // 🎯 TRATAMENTO ESPECÍFICO PARA MUSICOTERAPIA (usa mesmo layout de TO)
+            if (area === 'musicoterapia') {
+                try {
+                    // Carregar sessões de Musicoterapia do paciente
+                    const sessionsResponse = await listSessionsByPatient(
+                        currentFilters.pacienteId,
+                        'musicoterapia',
+                        {
+                            dateRange: currentFilters.periodo.mode,
+                            programId: currentFilters.programaId,
+                            therapistId: currentFilters.terapeutaId,
+                        }
+                    );
+                    
+                    let sessoes = sessionsResponse.items || [];
+
+                    // Aplicar filtro de estímulo localmente
+                    if (currentFilters.estimuloId) {
+                        sessoes = sessoes
+                            .map(sessao => ({
+                                ...sessao,
+                                registros: sessao.registros.filter(registro =>
+                                    String(registro.stimulusId) === String(currentFilters.estimuloId)
+                                ),
+                            }))
+                            .filter(sessao => sessao.registros.length > 0);
+                    }
+                    
+                    // Calcular KPIs (reutiliza funções de TO)
+                    const musiKpis = calculateMusiKpis(sessoes);
+                    
+                    // Preparar dados dos gráficos (reutiliza funções de TO)
+                    const performanceLineData = prepareMusiPerformanceLineData(sessoes);
+                    const attentionActivitiesData = prepareMusiAttentionActivities(sessoes);
+                    const autonomyByCategory = prepareMusiAutonomyByCategory(sessoes);
+                    
+                    // Preparar dados específicos de Musicoterapia (gráficos radiais)
+                    const participacaoData = prepareMusiParticipacaoData(sessoes);
+                    const suporteData = prepareMusiSuporteData(sessoes);
+                    
+                    // Evolução de Participação e Suporte ao longo do tempo
+                    const evolutionData = prepareMusiEvolutionData(sessoes);
+
+                    // Carregar prazo do programa
+                    const prazoProgramaData = await fetchPrazoPrograma(filtersWithArea);
+                    setPrazoPrograma(prazoProgramaData);
+
+                    // Armazenar dados adaptados
+                    setAdaptedData({
+                        kpis: musiKpis,
+                        performanceLineData,
+                        attentionActivities: attentionActivitiesData,
+                        autonomyByCategory,
+                        participacao: participacaoData,
+                        suporte: suporteData,
+                        evolution: evolutionData,
+                    });
+                } catch (error) {
+                    console.error('Erro ao carregar dados de Musicoterapia:', error);
+                    // Usar dados vazios em caso de erro
+                    const musiKpis = calculateMusiKpis([]);
+                    const performanceLineData = prepareMusiPerformanceLineData([]);
+                    const attentionActivitiesData = prepareMusiAttentionActivities([]);
+                    const autonomyByCategory = prepareMusiAutonomyByCategory([]);
+                    const participacaoData = prepareMusiParticipacaoData([]);
+                    const suporteData = prepareMusiSuporteData([]);
+                    const evolutionData = prepareMusiEvolutionData([]);
+
+                    // Tentar carregar prazo mesmo com erro nas sessões
+                    try {
+                        const prazoProgramaData = await fetchPrazoPrograma(filtersWithArea);
+                        setPrazoPrograma(prazoProgramaData);
+                    } catch (prazoError) {
+                        console.error('Erro ao carregar prazo do programa:', prazoError);
+                        setPrazoPrograma(null);
+                    }
+
+                    setAdaptedData({
+                        kpis: musiKpis,
+                        performanceLineData,
+                        attentionActivities: attentionActivitiesData,
+                        autonomyByCategory,
+                        participacao: participacaoData,
+                        suporte: suporteData,
+                        evolution: evolutionData,
+                    });
+                }
+
+                setLoadingKpis(false);
+                setLoadingCharts(false);
+                return;
+            }
+
             // 🎯 TRATAMENTO ESPECÍFICO PARA FISIOTERAPIA
             if (area === 'fisioterapia') {
                 try {
@@ -421,7 +524,7 @@ export function GerarRelatorioPage() {
                 return;
             }
 
-            // Para áreas com config customizada (exceto TO e Fisio), usar endpoint específico
+            // Para áreas com config customizada (exceto TO, Fisio e Musi), usar endpoint específico
             if (config.apiEndpoint !== '/api/ocp/reports') {
                 // TODO: Implementar fetch para outros endpoints quando backend estiver pronto
                 // Por enquanto, mantém dados vazios
@@ -849,8 +952,15 @@ export function GerarRelatorioPage() {
                             </section>
                         )}
                         
+                        {/* KPIs - Musicoterapia */}
+                        {selectedArea === 'musicoterapia' && adaptedData?.kpis && (
+                            <section data-print-block>
+                                <MusiKpiCards data={adaptedData.kpis} loading={loadingKpis} />
+                            </section>
+                        )}
+                        
                         {/* KPIs - Outras Áreas (genérico) */}
-                        {selectedArea !== 'fonoaudiologia' && selectedArea !== 'terapia-ocupacional' && selectedArea !== 'fisioterapia' && adaptedData?.kpis && (
+                        {selectedArea !== 'fonoaudiologia' && selectedArea !== 'terapia-ocupacional' && selectedArea !== 'fisioterapia' && selectedArea !== 'musicoterapia' && adaptedData?.kpis && (
                             <section data-print-block>
                                 <KpiCardsRenderer 
                                     configs={areaConfig.kpis}
@@ -975,8 +1085,82 @@ export function GerarRelatorioPage() {
                             </>
                         )}
                         
+                        {/* Gráficos - Musicoterapia (usa mesmos componentes de TO) */}
+                        {selectedArea === 'musicoterapia' && adaptedData && (
+                            <>
+                                {adaptedData.performanceLineData && (
+                                    <section data-print-block data-print-wide>
+                                        <ToPerformanceChart 
+                                            data={adaptedData.performanceLineData} 
+                                            loading={loadingCharts}
+                                            title="Evolução do Desempenho"
+                                            description="Acompanhamento do desempenho nas atividades musicoterapêuticas"
+                                            metaLabel="Meta: Convergência"
+                                        />
+                                    </section>
+                                )}
+                                
+                                {/* Gráficos Radiais: Participação + Suporte (específicos de Musicoterapia) */}
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                    <section data-print-block>
+                                        <div data-print-chart>
+                                            <MusiParticipacaoChart 
+                                                data={adaptedData.participacao} 
+                                                loading={loadingCharts} 
+                                            />
+                                        </div>
+                                    </section>
+
+                                    <section data-print-block>
+                                        <div data-print-chart>
+                                            <MusiSuporteChart 
+                                                data={adaptedData.suporte} 
+                                                loading={loadingCharts} 
+                                            />
+                                        </div>
+                                    </section>
+                                </div>
+                                
+                                {/* Gráficos lado a lado: Evolução Participação/Suporte + Autonomia por Categoria */}
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                    {adaptedData.evolution && (
+                                        <section data-print-block>
+                                            <div data-print-chart>
+                                                <MusiParticipacaoSuporteEvolutionChart 
+                                                    data={adaptedData.evolution} 
+                                                    loading={loadingCharts} 
+                                                />
+                                            </div>
+                                        </section>
+                                    )}
+
+                                    {/* Autonomia por Categoria - Musicoterapia */}
+                                    {adaptedData.autonomyByCategory && (
+                                        <section data-print-block>
+                                            <div data-print-chart>
+                                                <MusiAutonomyByCategoryChart 
+                                                    data={adaptedData.autonomyByCategory} 
+                                                    loading={loadingCharts} 
+                                                />
+                                            </div>
+                                        </section>
+                                    )}
+                                </div>
+
+                                {/* Atividades com Atenção - Musicoterapia */}
+                                {adaptedData.attentionActivities && (
+                                    <section data-print-block className="col-span-6">
+                                        <MusiAttentionActivitiesCard 
+                                            data={adaptedData.attentionActivities}
+                                            loading={loadingCharts}
+                                        />
+                                    </section>
+                                )}
+                            </>
+                        )}
+                        
                         {/* Gráficos - Outras Áreas (genérico) */}
-                        {selectedArea !== 'fonoaudiologia' && selectedArea !== 'terapia-ocupacional' && selectedArea !== 'fisioterapia' && areaConfig.charts.map((chartConfig) => (
+                        {selectedArea !== 'fonoaudiologia' && selectedArea !== 'terapia-ocupacional' && selectedArea !== 'fisioterapia' && selectedArea !== 'musicoterapia' && areaConfig.charts.map((chartConfig) => (
                             <section key={chartConfig.type} data-print-block data-print-wide>
                                 <div data-print-chart>
                                     <ChartRenderer
@@ -1028,6 +1212,19 @@ export function GerarRelatorioPage() {
                         
                         {/* Prazo do Programa - Fisioterapia */}
                         {selectedArea === 'fisioterapia' && prazoPrograma && (
+                            <section data-print-block data-print-wide>
+                                <OcpDeadlineCard
+                                    inicio={prazoPrograma.inicio}
+                                    fim={prazoPrograma.fim}
+                                    percent={prazoPrograma.percent}
+                                    label={prazoPrograma.label}
+                                    loading={loadingCharts}
+                                />
+                            </section>
+                        )}
+                        
+                        {/* Prazo do Programa - Musicoterapia */}
+                        {selectedArea === 'musicoterapia' && prazoPrograma && (
                             <section data-print-block data-print-wide>
                                 <OcpDeadlineCard
                                     inicio={prazoPrograma.inicio}

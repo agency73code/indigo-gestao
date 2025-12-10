@@ -147,7 +147,6 @@ function formatSuporte(value: number | null): string {
 }
 
 export default function MusiSessionSummary({
-    counts,
     plannedActivities,
     workedActivities,
     avgParticipacao,

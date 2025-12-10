@@ -8,9 +8,8 @@ import {
     HeaderProgram,
     ErrorBanner,
 } from '../../../detalhe-ocp/index';
-import { fetchProgramById, fetchRecentSessions, fetchProgramChart } from '../../../detalhe-ocp/services';
+import { fetchProgramById, fetchRecentSessions } from '../../../detalhe-ocp/services';
 import type { SessionListItem } from '../../../detalhe-ocp/types';
-import type { SerieLinha } from '../../../relatorio-geral/types';
 import { usePrint } from '../../../relatorio-geral/print/usePrint';
 import indigoLogo from '@/assets/logos/indigo.svg';
 import MusiGoalSection from '../components/MusiGoalSection';
@@ -21,6 +20,7 @@ import MusiSummaryCard from '../components/MusiSummaryCard';
 import MusiLastSessionPreview from '../components/MusiLastSessionPreview';
 import MusiSessionsList from '../components/MusiSessionsList';
 import type { MusiActivitySummary } from '../types';
+import type { MusiEvolutionDataPoint } from '../components/MusiEvolutionChart';
 
 // Tipo específico para Musicoterapia com campos adicionais
 type MusiProgramDetail = {
@@ -174,7 +174,7 @@ export default function MusiDetalheProgramaPage() {
 
     const [program, setProgram] = useState<MusiProgramDetail | null>(null);
     const [sessions, setSessions] = useState<SessionListItem[]>([]);
-    const [chartData, setChartData] = useState<SerieLinha[]>([]);
+    const [evolutionData, setEvolutionData] = useState<MusiEvolutionDataPoint[]>([]);
     const [loading, setLoading] = useState(true);
     const [chartLoading, setChartLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -276,30 +276,54 @@ export default function MusiDetalheProgramaPage() {
 
         try {
             setLoading(true);
+            setChartLoading(true);
             setError(null);
 
             const [programData, sessionsData] = await Promise.all([
                 fetchProgramById(programaId),
-                fetchRecentSessions(programaId, 5),
+                fetchRecentSessions(programaId, 10), // Busca mais sessões para o gráfico de evolução
             ]);
 
             setProgram(programData as MusiProgramDetail);
             setSessions(sessionsData);
             setRefreshKey(Date.now());
 
-            setChartLoading(true);
-            fetchProgramChart(programaId)
-                .then((data) => {
-                    setChartData(data);
-                    setChartLoading(false);
+            // Extrair dados de Participação e Suporte das sessões para o gráfico de evolução
+            const evolution: MusiEvolutionDataPoint[] = sessionsData
+                .filter((session: any) => session.activitiesSummary && session.activitiesSummary.length > 0)
+                .map((session: any) => {
+                    const activities = session.activitiesSummary as MusiActivitySummary[];
+                    
+                    // Calcular média de participação e suporte das atividades da sessão
+                    const validParticipacao = activities.filter(a => a.participacao !== undefined && a.participacao !== null);
+                    const validSuporte = activities.filter(a => a.suporte !== undefined && a.suporte !== null);
+                    
+                    const avgParticipacao = validParticipacao.length > 0
+                        ? validParticipacao.reduce((sum, a) => sum + (a.participacao ?? 0), 0) / validParticipacao.length
+                        : 0;
+                    
+                    const avgSuporte = validSuporte.length > 0
+                        ? validSuporte.reduce((sum, a) => sum + (a.suporte ?? 0), 0) / validSuporte.length
+                        : 0;
+                    
+                    // Formatar data para exibição
+                    const date = new Date(session.date);
+                    const formattedDate = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}`;
+                    
+                    return {
+                        x: formattedDate,
+                        participacao: avgParticipacao,
+                        suporte: avgSuporte,
+                    };
                 })
-                .catch((err) => {
-                    console.error('Erro ao carregar gráfico:', err);
-                    setChartLoading(false);
-                });
+                .reverse(); // Ordenar da mais antiga para a mais recente
+            
+            setEvolutionData(evolution);
+            setChartLoading(false);
         } catch (err) {
             console.error('Erro ao carregar dados do programa de Musicoterapia:', err);
             setError(err instanceof Error ? err.message : 'Erro desconhecido');
+            setChartLoading(false);
         } finally {
             setLoading(false);
         }
@@ -420,7 +444,7 @@ export default function MusiDetalheProgramaPage() {
                                 <div className="">
                                     <MusiSummaryCard
                                         sessions={sessions}
-                                        chartData={chartData}
+                                        evolutionData={evolutionData}
                                         chartLoading={chartLoading}
                                     />
                                 </div>

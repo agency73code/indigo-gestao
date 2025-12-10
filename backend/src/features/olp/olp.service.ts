@@ -155,6 +155,7 @@ export async function getProgramId(programId: string) {
                         select: {
                             id: true,
                             nome: true,
+                            descricao: true,
                             status: true,
                         },
                     },
