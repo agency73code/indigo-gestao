@@ -224,6 +224,7 @@ export default function RegistrarSessaoToPage() {
                 attempts: sessionState.attempts,
                 notes: sessionState.notes,
                 files: sessionState.files,
+                area: 'terapia-ocupacional',
             });
 
             // Toast de confirmação com mensagem focada na experiência do usuário

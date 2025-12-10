@@ -97,7 +97,7 @@ export async function fetchStimulusChart(
         estimuloId: stimulusId,
         periodo: { mode: '30d' as const },
     };
-    console.log('fetchStimulusChart')
+
     const filtersParam = encodeURIComponent(JSON.stringify(filters));
     const res = await fetch(`/api/ocp/reports/kpis/${filtersParam}`, {
         method: 'GET',

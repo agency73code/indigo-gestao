@@ -1,8 +1,8 @@
-import dayjs from "dayjs";
-import "dayjs/locale/pt-br.js";
-import { buildOwnerFolderName, sanitizeFolderName } from "../file/r2/createFolder.js";
+import dayjs from 'dayjs';
+import 'dayjs/locale/pt-br.js';
+import { buildOwnerFolderName, sanitizeFolderName } from '../file/r2/createFolder.js';
 
-dayjs.locale("pt-br");
+dayjs.locale('pt-br');
 
 interface EnsureReportFolderParams {
     fullName: string;
@@ -20,7 +20,12 @@ export interface ReportFolderInfo {
     areaFolderName?: string;
 }
 
-export function ensureMonthlyReportFolder({ fullName, birthDate, generationDate, area }: EnsureReportFolderParams): ReportFolderInfo {
+export function ensureMonthlyReportFolder({
+    fullName,
+    birthDate,
+    generationDate,
+    area,
+}: EnsureReportFolderParams): ReportFolderInfo {
     const clientFolderName = buildOwnerFolderName(fullName, birthDate);
     const monthFolderName = buildMonthFolderName(generationDate);
 

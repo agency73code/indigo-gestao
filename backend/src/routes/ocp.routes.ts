@@ -24,6 +24,10 @@ router.post('/programs/:programId/sessions', OlpController.createSession);
 router.patch('/programs/:programId', OlpController.updateProgram);
 
 // TO
-router.post('/to/programs/:programId/sessions', upload.any(), OlpController.createTOSession);
+router.post('/to/programs/:programId/sessions', upload.any(), OlpController.createAreaSession);
+
+// Physiotherapy
+router.post('/physiotherapy/programs/:programId/sessions', upload.any(), OlpController.createAreaSession);
+router.post('/physiotherapy/sessions/calculatePhysioKpis', OlpController.physioKpis);
 
 export default router;

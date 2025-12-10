@@ -18,7 +18,6 @@ import type {
     UpdateProgramInput,
 } from '../../../editar-ocp/types';
 import { toProgramConfig, toRoutes } from '../config';
-import { fetchToProgramById } from '../mocks/mockService';
 import ToStimuliEditor from '../components/ToStimuliEditor';
 import ToNotesSection from '../components/ToNotesSection';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -67,12 +66,7 @@ export default function ToEditarProgramaPage() {
             setError(null);
 
             // Usar mock service se for mock-to-001
-            let programData;
-            if (programaId === 'mock-to-001') {
-                programData = await fetchToProgramById(programaId);
-            } else {
-                programData = await fetchProgramById(programaId);
-            }
+            const programData = await fetchProgramById(programaId);
 
             setProgram(programData);
 
@@ -158,7 +152,8 @@ export default function ToEditarProgramaPage() {
             setIsSaving(true);
 
             const input: any = {
-                id: programaId,
+                id: program?.id,
+                name: program?.name,
                 goalTitle,
                 goalDescription,
                 currentPerformanceLevel,
@@ -170,6 +165,7 @@ export default function ToEditarProgramaPage() {
             };
 
             await updateProgram(input);
+            // console.log(input);
             toast.success('Programa atualizado com sucesso!');
 
             setHasChanges(false);

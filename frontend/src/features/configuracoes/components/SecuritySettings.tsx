@@ -24,22 +24,22 @@ export function SecuritySettings() {
         const fetchPasswordInfo = async () => {
             setIsLoading(true);
             try {
-                // TODO: Integrar com endpoint do backend
-                // const response = await fetch(`/api/usuarios/${user.id}/password-info`, {
-                //     credentials: 'include',
-                // });
-                // if (response.ok) {
-                //     const data = await response.json();
-                //     setPasswordInfo({
-                //         lastChangedAt: data.lastChangedAt,
-                //         daysAgo: data.daysAgo,
-                //     });
-                // }
-                
-                // Dados temporários até o backend estar pronto
+                const response = await fetch(`/api/auth/password-info`, {
+                    credentials: 'include',
+                });
+
+                const { data } = await response.json();
+
+                if (!response.ok) {
+                    setPasswordInfo({
+                        lastChangedAt: null,
+                        daysAgo: null,
+                    });
+                }
+
                 setPasswordInfo({
-                    lastChangedAt: null,
-                    daysAgo: null,
+                    lastChangedAt: data.lastChangedAt,
+                    daysAgo: data.daysAgo,
                 });
             } catch (error) {
                 console.error('Erro ao buscar informações da senha:', error);

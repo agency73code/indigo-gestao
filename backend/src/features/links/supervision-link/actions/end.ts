@@ -1,6 +1,6 @@
-import { prisma } from "../../../../config/database.js";
-import { normalizeSupervisionLink } from "../normalizers/supervisionLinkNormalizer.js";
-import type { EndSupervisionLinkInput } from "../types/supervisionLink.types.js";
+import { prisma } from '../../../../config/database.js';
+import { normalizeSupervisionLink } from '../normalizers/supervisionLinkNormalizer.js';
+import type { EndSupervisionLinkInput } from '../types/supervisionLink.types.js';
 
 /**
  * Encerra um vínculo de supervisão existente.
@@ -23,7 +23,6 @@ export async function endSupervisionLink(data: EndSupervisionLinkInput) {
     if (link.status === 'encerrado' || link.status === 'arquivado') {
         throw new Error('O vínculo já está encerrado ou arquivado.');
     }
-
 
     const endDate = new Date(data.endDate);
 

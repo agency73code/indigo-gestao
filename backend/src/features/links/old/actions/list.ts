@@ -1,8 +1,8 @@
-import type { Prisma } from "@prisma/client";
-import { prisma } from "../../../../config/database.js";
-import type { LinkFilters } from "../links.types.js";
-import { getVisibilityScope } from "../../../../utils/visibilityFilter.js";
-import { ACCESS_LEVELS } from "../../../../utils/accessLevels.js";
+import type { Prisma } from '@prisma/client';
+import { prisma } from '../../../../config/database.js';
+import type { LinkFilters } from '../links.types.js';
+import { getVisibilityScope } from '../../../../utils/visibilityFilter.js';
+import { ACCESS_LEVELS } from '../../../../utils/accessLevels.js';
 
 const MANAGER_LEVEL = ACCESS_LEVELS['gerente'] ?? 5;
 
@@ -11,7 +11,7 @@ export async function getAllClients(userId: string, search?: string) {
 
     // Filtro de nome (busca por texto)
     if (search && search.trim() !== '') {
-        whereBase.nome = { contains: search.trim().toLowerCase() }
+        whereBase.nome = { contains: search.trim().toLowerCase() };
     }
 
     const visibility = await getVisibilityScope(userId);
@@ -27,9 +27,7 @@ export async function getAllClients(userId: string, search?: string) {
             terapeuta: {
                 some: {
                     terapeuta_id: { in: visibility.therapistIds },
-                    ...(visibility.maxAccessLevel < MANAGER_LEVEL
-                        ? { status: 'active' }
-                        : {}),
+                    ...(visibility.maxAccessLevel < MANAGER_LEVEL ? { status: 'active' } : {}),
                 },
             },
         });
@@ -40,9 +38,7 @@ export async function getAllClients(userId: string, search?: string) {
     }
 
     const finalWhere: Prisma.clienteWhereInput =
-        extraFilters.length > 0
-            ? { AND: [whereBase, ...extraFilters] }
-            : whereBase;
+        extraFilters.length > 0 ? { AND: [whereBase, ...extraFilters] } : whereBase;
 
     return prisma.cliente.findMany({
         where: finalWhere,
@@ -91,7 +87,7 @@ export async function getAllTherapists(userId: string, search?: string, _role?: 
 
     // Filtro de nome (busca por texto)
     if (search && search.trim() !== '') {
-        whereBase.nome = { contains: search.trim().toLowerCase() }
+        whereBase.nome = { contains: search.trim().toLowerCase() };
     }
 
     const visibility = await getVisibilityScope(userId);
@@ -120,9 +116,7 @@ export async function getAllTherapists(userId: string, search?: string, _role?: 
     }
 
     const finalWhere: Prisma.terapeutaWhereInput =
-        extraFilters.length > 0
-        ? { AND: [whereBase, ...extraFilters] }
-        : whereBase;
+        extraFilters.length > 0 ? { AND: [whereBase, ...extraFilters] } : whereBase;
 
     const therapists = await prisma.terapeuta.findMany({
         where: finalWhere,
@@ -237,10 +231,7 @@ export async function getAllLinks(userId: string, filters?: LinkFilters) {
         extraFilters.push({ status: 'active' });
     }
 
-    const finalWhere =
-        extraFilters.length > 0
-        ? { AND: [whereBase, ...extraFilters] }
-        : whereBase;
+    const finalWhere = extraFilters.length > 0 ? { AND: [whereBase, ...extraFilters] } : whereBase;
 
     const links = await prisma.terapeuta_cliente.findMany({
         where: finalWhere,

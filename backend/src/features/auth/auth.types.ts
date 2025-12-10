@@ -1,18 +1,18 @@
 export type Tables = 'terapeuta' | 'cliente';
 
 export interface AuthUser {
-  id: string | number;
-  nome: string;
-  email: string | null
-  perfil_acesso: string;
-  avatar_url?: string | null;
+    id: string | number;
+    nome: string;
+    email: string | null;
+    perfil_acesso: string;
+    avatar_url?: string | null;
 }
 
 export interface UserRow extends AuthUser {
-  senha: string | null;
+    senha: string | null;
 }
 
 export interface ResetTokenData {
-  token: string;
-  expiresAt: Date;
+    token: string;
+    expiresAt: Date;
 }

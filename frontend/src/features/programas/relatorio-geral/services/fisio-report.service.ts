@@ -14,72 +14,88 @@ export interface FisioKpisData {
 }
 
 /**
- * Calcula KPIs para relatório de Fisioterapia a partir das sessões
+ * Função principal fazendo uma unica chamada ao backend e devolvendo os valores para as demais
  */
-export function calculateFisioKpis(sessoes: Sessao[]): FisioKpisData {
-  // Dados mockados para demonstração
+export async function fetchPhysioReports(sessoes: Sessao[]) {
   if (!sessoes || sessoes.length === 0) {
     return {
-      desempenhou: 11,
-      desempenhouComAjuda: 10,
-      naoDesempenhou: 8,
-      atividadesTotal: 3,
-      compensacaoTotal: 2,
-      desconfortoTotal: 1,
+      activityDuration: [],
+      performance: [],
+      autonomyByCategory: [],
+      attentionActivities: [],
+      kpis: {
+        desempenhou: 0,
+        desempenhouComAjuda: 0,
+        naoDesempenhou: 0,
+        atividadesTotal: 0,
+        compensacaoTotal: 0,
+        desconfortoTotal: 0,
+      },
     };
   }
 
-  let desempenhou = 0;
-  let desempenhouComAjuda = 0;
-  let naoDesempenhou = 0;
-  const atividadesUnicas = new Set<string>();
-  const atividadesComCompensacao = new Set<string>();
-  const atividadesComDesconforto = new Set<string>();
+  const sessionIds = sessoes.map(s => Number(s.id));
+  const stimulusIds = extractStimulusIds(sessoes)
 
-  sessoes.forEach((sessao) => {
-    sessao.registros.forEach((registro) => {
-      if (registro.resultado === 'acerto') {
-        desempenhou++;
-      } else if (registro.resultado === 'ajuda') {
-        desempenhouComAjuda++;
-      } else if (registro.resultado === 'erro') {
-        naoDesempenhou++;
-      }
-
-      // Contar atividades únicas
-      if (registro.stimulusId) {
-        atividadesUnicas.add(registro.stimulusId);
-      }
-
-      // Verificar metadata de compensação e desconforto
-      if (registro.metadata) {
-        const metadata = typeof registro.metadata === 'string' 
-          ? JSON.parse(registro.metadata) 
-          : registro.metadata;
-
-        if (metadata.hadCompensation && registro.stimulusId) {
-          atividadesComCompensacao.add(registro.stimulusId);
-        }
-
-        if (metadata.hadDiscomfort && registro.stimulusId) {
-          atividadesComDesconforto.add(registro.stimulusId);
-        }
-      }
-    });
+  const response = await fetch('/api/ocp/physiotherapy/sessions/calculatePhysioKpis', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sessionIds, stimulusIds }),
   });
 
-  return {
-    desempenhou,
-    desempenhouComAjuda,
-    naoDesempenhou,
-    atividadesTotal: atividadesUnicas.size,
-    compensacaoTotal: atividadesComCompensacao.size,
-    desconfortoTotal: atividadesComDesconforto.size,
-  };
+  if (!response.ok) {
+    console.error("Erro buscando relatórios:", await response.text());
+    return {
+      activityDuration: [],
+      performance: [],
+      autonomyByCategory: [],
+      attentionActivities: [],
+      kpis: {
+        desempenhou: 0,
+        desempenhouComAjuda: 0,
+        naoDesempenhou: 0,
+        atividadesTotal: 0,
+        compensacaoTotal: 0,
+        desconfortoTotal: 0,
+      },
+    };
+  }
+
+  return await response.json();
 }
 
 /**
- * Prepara dados para gráfico de linhas (desempenho por sessão)
+ * Calcula KPIs para relatório de Fisioterapia a partir das sessões [feito]
+ */
+export async function calculateFisioKpis(sessoes: Sessao[]) {
+  if (!sessoes || sessoes.length === 0) return {};
+
+  const sessionIds = sessoes.map(s => Number(s.id));
+  const stimulusIds = extractStimulusIds(sessoes);
+
+  const response = await fetch('/api/ocp/physiotherapy/sessions/calculatePhysioKpis', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      sessionIds,
+      stimulusIds,
+    })
+  });
+
+  if (!response.ok) {
+    console.error('Erro ao buscar relatório de tempo de atividade:', await response.text());
+    return {};
+  }
+
+  const data = await response.json();
+  console.log(data)
+  return data as FisioKpisData[];
+}
+
+/**
+ * Prepara dados para gráfico de linhas (desempenho por sessão) [feito]
  * Formato compatível com ToPerformanceChart (SerieLinha[])
  * 
  * IMPORTANTE: Fisio não usa terminologia "acerto/erro" - usamos "desempenhou/não desempenhou"
@@ -94,140 +110,129 @@ export function calculateFisioKpis(sessoes: Sessao[]): FisioKpisData {
  * - resultado === 'ajuda' → Interpretado como DESEMPENHOU COM AJUDA
  * - resultado === 'erro' → Interpretado como NÃO DESEMPENHOU
  */
-export function prepareFisioPerformanceLineData(sessoes: Sessao[]): SerieLinha[] {
-  // Dados mockados para demonstração
-  if (!sessoes || sessoes.length === 0) {
-    return [
-      { x: '07/11', acerto: 75, independencia: 60 },
-      { x: '11/11', acerto: 80, independencia: 65 },
-      { x: '14/11', acerto: 85, independencia: 70 },
-      { x: '18/11', acerto: 78, independencia: 68 },
-      { x: '21/11', acerto: 90, independencia: 75 },
-      { x: '25/11', acerto: 88, independencia: 73 },
-    ];
-  }
+export async function prepareFisioPerformanceLineData(sessoes: Sessao[]) {
+  if (!sessoes || sessoes.length === 0) return [];
 
-  // Agrupar registros por sessão (data)
-  const sessoesPorData = new Map<string, { total: number; desempenhou: number; comAjuda: number }>();
+  const sessionIds = sessoes.map(s => Number(s.id));
+  const stimulusIds = extractStimulusIds(sessoes);
 
-  sessoes.forEach((sessao) => {
-    const data = new Date(sessao.data).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-    });
+  const response = await fetch('/api/ocp/physiotherapy/sessions/performanceLine', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      sessionIds,
+      stimulusIds,
+    })
+  });
 
-    if (!sessoesPorData.has(data)) {
-      sessoesPorData.set(data, { total: 0, desempenhou: 0, comAjuda: 0 });
+  return await response.json() as SerieLinha[];
+  {
+    if (!response.ok) {
+      console.error('Erro ao buscar desempenho por sessão:', await response.text());
+      return [];
     }
-
-    const stats = sessoesPorData.get(data)!;
-
-    sessao.registros.forEach((registro) => {
-      stats.total++;
-      
-      // DESEMPENHOU: Paciente realizou a atividade de forma independente, sem ajuda do terapeuta
-      // Backend retorna resultado === 'acerto', mas para TO interpretamos como "Desempenhou"
-      if (registro.resultado === 'acerto') {
-        stats.desempenhou++;
-        stats.comAjuda++; // Quem desempenhou sem ajuda também está no grupo "com ou sem ajuda"
-      } 
-      // DESEMPENHOU COM AJUDA: Paciente realizou a atividade, mas precisou de suporte do terapeuta
-      // Backend retorna resultado === 'ajuda'
-      else if (registro.resultado === 'ajuda') {
-        stats.comAjuda++;
+  
+    // Dados mockados para demonstração
+    if (!sessoes || sessoes.length === 0) {
+      return [
+        { x: '07/11', acerto: 75, independencia: 60 },
+        { x: '11/11', acerto: 80, independencia: 65 },
+        { x: '14/11', acerto: 85, independencia: 70 },
+        { x: '18/11', acerto: 78, independencia: 68 },
+        { x: '21/11', acerto: 90, independencia: 75 },
+        { x: '25/11', acerto: 88, independencia: 73 },
+      ];
+    }
+  
+    // Agrupar registros por sessão (data)
+    const sessoesPorData = new Map<string, { total: number; desempenhou: number; comAjuda: number }>();
+  
+    sessoes.forEach((sessao) => {
+      const data = new Date(sessao.data).toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+      });
+  
+      if (!sessoesPorData.has(data)) {
+        sessoesPorData.set(data, { total: 0, desempenhou: 0, comAjuda: 0 });
       }
-      // NÃO DESEMPENHOU: Paciente não conseguiu realizar a atividade
-      // Backend retorna resultado === 'erro', mas para TO interpretamos como "Não Desempenhou"
-      // Não precisa contar explicitamente, será calculado como 100% - desempenhou
+  
+      const stats = sessoesPorData.get(data)!;
+  
+      sessao.registros.forEach((registro) => {
+        stats.total++;
+        
+        // DESEMPENHOU: Paciente realizou a atividade de forma independente, sem ajuda do terapeuta
+        // Backend retorna resultado === 'acerto', mas para TO interpretamos como "Desempenhou"
+        if (registro.resultado === 'acerto') {
+          stats.desempenhou++;
+          stats.comAjuda++; // Quem desempenhou sem ajuda também está no grupo "com ou sem ajuda"
+        } 
+        // DESEMPENHOU COM AJUDA: Paciente realizou a atividade, mas precisou de suporte do terapeuta
+        // Backend retorna resultado === 'ajuda'
+        else if (registro.resultado === 'ajuda') {
+          stats.comAjuda++;
+        }
+        // NÃO DESEMPENHOU: Paciente não conseguiu realizar a atividade
+        // Backend retorna resultado === 'erro', mas para TO interpretamos como "Não Desempenhou"
+        // Não precisa contar explicitamente, será calculado como 100% - desempenhou
+      });
     });
-  });
-
-  // Converter para formato SerieLinha
-  // NOTA: dataKeys 'acerto' e 'independencia' são reutilizados do backend de Fono
-  // mas em TO representam "Desempenhou" e "Desempenhou com Ajuda"
-  const result: SerieLinha[] = [];
-  sessoesPorData.forEach((stats, data) => {
-    // acerto (dataKey) = % de atividades DESEMPENHADAS (sem ajuda, independente)
-    const acerto = stats.total > 0 ? Math.round((stats.desempenhou / stats.total) * 100) : 0;
-    
-    // independencia (dataKey) = % de atividades DESEMPENHADAS COM AJUDA (com suporte do terapeuta)
-    const independencia = stats.total > 0 ? Math.round((stats.comAjuda / stats.total) * 100) : 0;
-
-    result.push({
-      x: data,
-      acerto, // → Será exibido como "Desempenhou" (linha verde no gráfico)
-      independencia, // → Será exibido como "Desempenhou com Ajuda" (linha azul no gráfico)
-      // erro (calculado no componente) = 100 - acerto → Será exibido como "Não Desempenhou" (linha vermelha)
+  
+    // Converter para formato SerieLinha
+    // NOTA: dataKeys 'acerto' e 'independencia' são reutilizados do backend de Fono
+    // mas em TO representam "Desempenhou" e "Desempenhou com Ajuda"
+    const result: SerieLinha[] = [];
+    sessoesPorData.forEach((stats, data) => {
+      // acerto (dataKey) = % de atividades DESEMPENHADAS (sem ajuda, independente)
+      const acerto = stats.total > 0 ? Math.round((stats.desempenhou / stats.total) * 100) : 0;
+      
+      // independencia (dataKey) = % de atividades DESEMPENHADAS COM AJUDA (com suporte do terapeuta)
+      const independencia = stats.total > 0 ? Math.round((stats.comAjuda / stats.total) * 100) : 0;
+  
+      result.push({
+        x: data,
+        acerto, // → Será exibido como "Desempenhou" (linha verde no gráfico)
+        independencia, // → Será exibido como "Desempenhou com Ajuda" (linha azul no gráfico)
+        // erro (calculado no componente) = 100 - acerto → Será exibido como "Não Desempenhou" (linha vermelha)
+      });
     });
-  });
-
-  return result;
+  
+    return result;
+  }
 }
 
 /**
- * Prepara dados para gráfico de carga por atividade
+ * Prepara dados para gráfico de carga por atividade [feito]
  */
-export function prepareFisioActivityDurationData(sessoes: Sessao[]): FisioActivityLoadData[] {
-  // Dados mockados para demonstração
-  if (!sessoes || sessoes.length === 0) {
-    return [
-      { atividade: 'Agachamento', carga: 15 },
-      { atividade: 'Leg Press', carga: 12 },
-      { atividade: 'Extensão de Joelho', carga: 10 },
-      { atividade: 'Flexão de Cotovelo', carga: 8 },
-      { atividade: 'Abdução de Ombro', carga: 6 },
-      { atividade: 'Rosca Direta', carga: 5 },
-      { atividade: 'Tríceps Testa', carga: 4 },
-      { atividade: 'Elevação Lateral', carga: 3 },
-    ];
+export async function prepareFisioActivityDurationData(sessoes: Sessao[]) {
+  if (!sessoes || sessoes.length === 0) return [];
+
+  const sessionIds = sessoes.map(s => Number(s.id));
+  const stimulusIds = extractStimulusIds(sessoes);
+
+  const response = await fetch('/api/ocp/physiotherapy/sessions/activityDurationData', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      sessionIds,
+      stimulusIds,
+    })
+  });
+
+  if (!response.ok) {
+    console.error('Erro ao buscar relatório de tempo de atividade:', await response.text());
+    return [];
   }
 
-  // Mapear atividades e suas cargas
-  const atividadeCargas = new Map<string, { nome: string; cargas: number[] }>();
-
-  sessoes.forEach((sessao) => {
-    sessao.registros.forEach((registro) => {
-      if (!registro.stimulusId || !registro.metadata) return;
-
-      const metadata = typeof registro.metadata === 'string' 
-        ? JSON.parse(registro.metadata) 
-        : registro.metadata;
-
-      if (!metadata.usedLoad || !metadata.loadValue) return;
-
-      // Extrair número do loadValue (ex: "2kg" -> 2, "5 kg" -> 5, "3.5kg" -> 3.5)
-      const cargaStr = metadata.loadValue.replace(/[^0-9.]/g, '');
-      const carga = parseFloat(cargaStr);
-
-      if (isNaN(carga)) return;
-
-      const key = registro.stimulusId;
-      if (!atividadeCargas.has(key)) {
-        atividadeCargas.set(key, {
-          nome: registro.stimulusLabel || 'Atividade sem nome',
-          cargas: [],
-        });
-      }
-      atividadeCargas.get(key)!.cargas.push(carga);
-    });
-  });
-
-  // Calcular média de carga para cada atividade
-  const result: FisioActivityLoadData[] = [];
-  atividadeCargas.forEach(({ nome, cargas }) => {
-    const media = cargas.reduce((acc, val) => acc + val, 0) / cargas.length;
-    result.push({
-      atividade: nome,
-      carga: Math.round(media * 10) / 10, // Arredondar para 1 casa decimal
-    });
-  });
-
-  // Ordenar por carga (maior primeiro)
-  return result.sort((a, b) => b.carga - a.carga);
+  const data = await response.json();
+  return data as FisioActivityLoadData[];
 }
 
 /**
- * Identifica atividades que precisam de atenção
+ * Identifica atividades que precisam de atenção [feito]
  * Critério: atividades com "não desempenhou" > 0
  * Inclui metadata (carga, desconforto, compensação)
  */
@@ -402,62 +407,36 @@ export function prepareFisioAttentionActivities(sessoes: Sessao[]): FisioAttenti
 }
 
 /**
- * Prepara dados para gráfico de taxa de desempenho por atividade
+ * Prepara dados para gráfico de taxa de desempenho por atividade [feito]
  * Calcula o percentual de execução independente (sem ajuda) por atividade
  */
-export function prepareFisioAutonomyByCategory(sessoes: Sessao[]): FisioPerformanceRateData[] {
-  // Dados mockados para demonstração
-  if (!sessoes || sessoes.length === 0) {
-    return [
-      { atividade: 'Extensão de Joelho', desempenho: 85 },
-      { atividade: 'Flexão de Cotovelo', desempenho: 78 },
-      { atividade: 'Agachamento', desempenho: 72 },
-      { atividade: 'Abdução de Ombro', desempenho: 65 },
-      { atividade: 'Leg Press', desempenho: 60 },
-      { atividade: 'Rosca Direta', desempenho: 55 },
-    ];
+export async function prepareFisioAutonomyByCategory(sessoes: Sessao[]) {
+  if (!sessoes || sessoes.length === 0) return [];
+
+  const sessionIds = sessoes.map(s => Number(s.id));
+  const stimulusIds = extractStimulusIds(sessoes);
+
+  const response = await fetch('/api/ocp/physiotherapy/sessions/autonomyByCategory', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      sessionIds,
+      stimulusIds,
+    }),
+  });
+
+  if (!response.ok) {
+    console.error('Erro ao buscar relatório de autonomia por categoria:', await response.text());
+    return [];
   }
 
-  // Mapear atividades e suas contagens
-  const atividadeStats = new Map<
-    string,
-    {
-      nome: string;
-      total: number;
-      independente: number; // Desempenhou sem ajuda
-    }
-  >();
+  return await response.json() as FisioPerformanceRateData[];
+}
 
-  sessoes.forEach((sessao) => {
-    sessao.registros.forEach((registro) => {
-      if (!registro.stimulusId) return;
+function extractStimulusIds(sessoes: Sessao[]): number[] {
+  const ids = sessoes
+    .flatMap(s => s.registros.map(r => Number(r.stimulusId)))
+    .filter(id => !isNaN(id));
 
-      const key = registro.stimulusId;
-      if (!atividadeStats.has(key)) {
-        atividadeStats.set(key, {
-          nome: registro.stimulusLabel || 'Atividade sem nome',
-          total: 0,
-          independente: 0,
-        });
-      }
-
-      const stats = atividadeStats.get(key)!;
-      stats.total++;
-
-      // Contar apenas desempenho independente (sem ajuda)
-      if (registro.resultado === 'acerto') {
-        stats.independente++;
-      }
-    });
-  });
-
-  // Converter para array e calcular percentuais
-  const result: FisioPerformanceRateData[] = [];
-  atividadeStats.forEach((stats) => {
-    const desempenho = stats.total > 0 ? Math.round((stats.independente / stats.total) * 100) : 0;
-    result.push({ atividade: stats.nome, desempenho });
-  });
-
-  // Ordenar por desempenho (maior primeiro)
-  return result.sort((a, b) => b.desempenho - a.desempenho).slice(0, 8); // Top 8 atividades
+  return Array.from(new Set(ids));
 }

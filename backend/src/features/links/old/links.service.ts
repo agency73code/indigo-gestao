@@ -18,7 +18,10 @@ const LINK_SELECT = {
     atualizado_em: true,
 } as const;
 
-async function resolveTherapistActuation(therapistId: string, actuation: string | null | undefined) {
+async function resolveTherapistActuation(
+    therapistId: string,
+    actuation: string | null | undefined,
+) {
     const normalizedActuation = actuation?.trim();
 
     if (!normalizedActuation) {
@@ -38,15 +41,14 @@ async function resolveTherapistActuation(therapistId: string, actuation: string 
             ...(isNumericActuation
                 ? { area_atuacao_id: parsedId }
                 : {
-                    area_atuacao: {
-                        is: {
-                            nome: {
-                                equals: normalizedActuation,
-                            }
-                        }
-                    }
-                }
-            )
+                      area_atuacao: {
+                          is: {
+                              nome: {
+                                  equals: normalizedActuation,
+                              },
+                          },
+                      },
+                  }),
         },
         select: {
             area_atuacao: {
@@ -84,13 +86,16 @@ async function resolveTherapistActuation(therapistId: string, actuation: string 
  * Não realiza normalização — responsabilidade da camada Controller.
  */
 export async function createLink(payload: LinkTypes.CreateLink) {
-    const actuationArea = await resolveTherapistActuation(payload.therapistId, payload.actuationArea);
+    const actuationArea = await resolveTherapistActuation(
+        payload.therapistId,
+        payload.actuationArea,
+    );
 
     if (payload.endDate && payload.startDate < payload.endDate) {
         throw new AppError(
             'DATE_RANGE_INVALID',
             'A data de término não pode ser anterior à data de início.',
-            400
+            400,
         );
     }
 
@@ -105,10 +110,9 @@ export async function createLink(payload: LinkTypes.CreateLink) {
         throw new AppError(
             'LINK_ALREADY_EXISTS',
             'Já existe um vínculo ativo entre o terapeuta e o cliente.',
-            400
+            400,
         );
     }
-    
 
     const created = await prisma.terapeuta_cliente.create({
         data: {
@@ -155,7 +159,7 @@ export async function updateLink(payload: LinkTypes.UpdateLink) {
     });
 
     if (!existing) {
-        throw new AppError('LINK_NOT_FOUND', 'Vínculo não encontrado.', 404)
+        throw new AppError('LINK_NOT_FOUND', 'Vínculo não encontrado.', 404);
     }
 
     const data: Prisma.terapeuta_clienteUpdateInput = {};
@@ -223,35 +227,35 @@ export async function updateLink(payload: LinkTypes.UpdateLink) {
  * Em caso de erro (vínculo inexistente ou status inválido), lança um AppError apropriado.
  */
 export async function reopenLink(id: number) {
-  const linkId = id;
+    const linkId = id;
 
-  const existing = await prisma.terapeuta_cliente.findUnique({
-    where: { id: linkId },
-    select: LINK_SELECT,
-  });
+    const existing = await prisma.terapeuta_cliente.findUnique({
+        where: { id: linkId },
+        select: LINK_SELECT,
+    });
 
-  if (!existing) {
-    throw new AppError('LINK_NOT_FOUND', 'Vínculo não encontrado.', 404);
-  }
+    if (!existing) {
+        throw new AppError('LINK_NOT_FOUND', 'Vínculo não encontrado.', 404);
+    }
 
-  if (existing.status !== 'ended' && existing.status !== 'archived') {
-    throw new AppError(
-      'LINK_NOT_ENDED_OR_ARCHIVED',
-      'Apenas vínculos encerrados ou arquivados podem ser reabertos.',
-      400
-    );
-  }
+    if (existing.status !== 'ended' && existing.status !== 'archived') {
+        throw new AppError(
+            'LINK_NOT_ENDED_OR_ARCHIVED',
+            'Apenas vínculos encerrados ou arquivados podem ser reabertos.',
+            400,
+        );
+    }
 
-  const updated = await prisma.terapeuta_cliente.update({
-    where: { id: linkId },
-    data: {
-      status: 'active',
-      data_fim: null,
-    },
-    select: LINK_SELECT,
-  });
+    const updated = await prisma.terapeuta_cliente.update({
+        where: { id: linkId },
+        data: {
+            status: 'active',
+            data_fim: null,
+        },
+        select: LINK_SELECT,
+    });
 
-  return updated;
+    return updated;
 }
 
 /**
@@ -271,17 +275,16 @@ export async function archiveLink(payload: LinkTypes.ArchiveLink) {
         select: LINK_SELECT,
     });
 
-    
     if (!existing) {
         throw new AppError('LINK_NOT_FOUND', 'Vínculo não encontrado.', 404);
     }
-    
+
     // Verificação de estado: só permite arquivar se o vínculo estiver encerrado
     if (existing.status !== 'ended') {
         throw new AppError(
             'LINK_NOT_ENDED',
             'Apenas vínculos encerrados podem ser arquivados.',
-            400
+            400,
         );
     }
 
@@ -338,7 +341,9 @@ export async function endLink(payload: LinkTypes.EndLink) {
     return updated;
 }
 
-export async function transferResponsible(payload: LinkTypes.TransferResponsible): Promise<LinkTypes.TransferResponsibleResult> {
+export async function transferResponsible(
+    payload: LinkTypes.TransferResponsible,
+): Promise<LinkTypes.TransferResponsibleResult> {
     if (payload.fromTherapistId === payload.toTherapistId) {
         throw new AppError(
             'LINK_TRANSFER_SAME_THERAPIST',
@@ -378,7 +383,7 @@ export async function transferResponsible(payload: LinkTypes.TransferResponsible
     const [newResponsibleArea, previousResponsibleArea] = await Promise.all([
         resolveTherapistActuation(payload.toTherapistId, payload.newResponsibleActuation),
         resolveTherapistActuation(payload.fromTherapistId, payload.oldResponsibleActuation),
-    ])
+    ]);
 
     const transferResult = await prisma.$transaction(async (trx) => {
         const existingNewTherapistLink = await trx.terapeuta_cliente.findFirst({
@@ -439,7 +444,10 @@ export async function transferResponsible(payload: LinkTypes.TransferResponsible
             select: LINK_SELECT,
         });
 
-        return { previousResponsible, newResponsible } satisfies LinkTypes.TransferResponsibleResult;
+        return {
+            previousResponsible,
+            newResponsible,
+        } satisfies LinkTypes.TransferResponsibleResult;
     });
 
     return transferResult;

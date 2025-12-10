@@ -7,7 +7,7 @@ export const errorHandler = (error: Error, req: Request, res: Response, _next: N
     console.error('Error:', error); // Log detalhado do erro para debugging
 
     if (error instanceof ZodError) {
-        const formatted = error.issues.map(issue => ({
+        const formatted = error.issues.map((issue) => ({
             path: issue.path.join('.'),
             code: 'VALIDATION_ERROR',
             message: issue.message,
@@ -25,7 +25,7 @@ export const errorHandler = (error: Error, req: Request, res: Response, _next: N
             success: false,
             code: error.code,
             message: error.message,
-        })
+        });
     }
 
     if (

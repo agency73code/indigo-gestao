@@ -32,13 +32,7 @@ import {
     prepareToPerformanceLineData,
     prepareToAutonomyByCategory,
 } from '../../programas/relatorio-geral/services/to-report.service';
-import {
-    calculateFisioKpis,
-    prepareFisioActivityDurationData,
-    prepareFisioAttentionActivities,
-    prepareFisioPerformanceLineData,
-    prepareFisioAutonomyByCategory,
-} from '../../programas/relatorio-geral/services/fisio-report.service';
+import { fetchPhysioReports } from '../../programas/relatorio-geral/services/fisio-report.service';
 import {
     calculateMusiKpis,
     prepareMusiAttentionActivities,
@@ -124,7 +118,7 @@ export function GerarRelatorioPage() {
             setSelectedArea(areaFromUrl);
         }
         // Não define área padrão - usuário deve selecionar explicitamente
-    }, []);  // Só executa uma vez no mount
+    }, [searchParams]);  // Só executa uma vez no mount
 
     // Carregar terapeutas
     useEffect(() => {
@@ -278,25 +272,17 @@ export function GerarRelatorioPage() {
                         'terapia-ocupacional',
                         {
                             dateRange: currentFilters.periodo.mode,
+                            periodStart: currentFilters.periodo.start,
+                            periodEnd: currentFilters.periodo.end,
                             programId: currentFilters.programaId,
                             therapistId: currentFilters.terapeutaId,
+                            stimulusId: currentFilters.estimuloId,
+                            sort: 'date-asc',
                         }
                     );
                     
-                    let sessoes = sessionsResponse.items || [];
+                    const sessoes = sessionsResponse.items || [];
 
-                    // Aplicar filtro de estímulo localmente
-                    if (currentFilters.estimuloId) {
-                        sessoes = sessoes
-                            .map(sessao => ({
-                                ...sessao,
-                                registros: sessao.registros.filter(registro =>
-                                    String(registro.stimulusId) === String(currentFilters.estimuloId)
-                                ),
-                            }))
-                            .filter(sessao => sessao.registros.length > 0);
-                    }
-                    
                     // Calcular KPIs de TO
                     const toKpis = calculateToKpis(sessoes);
                     
@@ -452,70 +438,40 @@ export function GerarRelatorioPage() {
                         'fisioterapia',
                         {
                             dateRange: currentFilters.periodo.mode,
+                            periodStart: currentFilters.periodo.start,
+                            periodEnd: currentFilters.periodo.end,
                             programId: currentFilters.programaId,
                             therapistId: currentFilters.terapeutaId,
+                            stimulusId: currentFilters.estimuloId,
+                            sort: 'date-asc',
                         }
                     );
 
-                    let sessoes = sessionsResponse.items || [];
+                    const sessoes = sessionsResponse.items || [];
 
-                    // Aplicar filtro de estímulo localmente
-                    if (currentFilters.estimuloId) {
-                        sessoes = sessoes
-                            .map(sessao => ({
-                                ...sessao,
-                                registros: sessao.registros.filter(registro =>
-                                    String(registro.stimulusId) === String(currentFilters.estimuloId)
-                                ),
-                            }))
-                            .filter(sessao => sessao.registros.length > 0);
-                    }
-
-                    // Calcular KPIs de Fisio
-                    const fisioKpis = calculateFisioKpis(sessoes);
-                    
-                    // Preparar dados dos gráficos
-                    const performanceLineData = prepareFisioPerformanceLineData(sessoes);
-                    const activityDurationData = prepareFisioActivityDurationData(sessoes);
-                    const attentionActivitiesData = prepareFisioAttentionActivities(sessoes);
-                    const autonomyByCategory = prepareFisioAutonomyByCategory(sessoes);
+                    // Novo formato com solicitação unica para o backend
+                    const report = await fetchPhysioReports(sessoes);
 
                     // Carregar prazo do programa
-                    const prazoProgramaData = await fetchPrazoPrograma(filtersWithArea);
+                    const prazoProgramaData = await fetchPrazoPrograma(filtersWithArea); // tenho que analisar esse 
                     setPrazoPrograma(prazoProgramaData);
 
-                    // Armazenar dados adaptados
                     setAdaptedData({
-                        kpis: fisioKpis,
-                        performance: performanceLineData,
-                        activityDuration: activityDurationData,
-                        attentionActivities: attentionActivitiesData,
-                        autonomyByCategory,
+                        kpis: report.kpis,
+                        performance: report.performance,
+                        activityDuration: report.activityDuration,
+                        attentionActivities: report.attentionActivities,
+                        autonomyByCategory: report.autonomyByCategory,
                     });
                 } catch (error) {
                     console.error('Erro ao carregar dados de Fisio:', error);
-                    // Usar dados mockados em caso de erro
-                    const fisioKpis = calculateFisioKpis([]);
-                    const performanceLineData = prepareFisioPerformanceLineData([]);
-                    const activityDurationData = prepareFisioActivityDurationData([]);
-                    const attentionActivitiesData = prepareFisioAttentionActivities([]);
-                    const autonomyByCategory = prepareFisioAutonomyByCategory([]);
-
-                    // Tentar carregar prazo mesmo com erro nas sessões
-                    try {
-                        const prazoProgramaData = await fetchPrazoPrograma(filtersWithArea);
-                        setPrazoPrograma(prazoProgramaData);
-                    } catch (prazoError) {
-                        console.error('Erro ao carregar prazo do programa:', prazoError);
-                        setPrazoPrograma(null);
-                    }
 
                     setAdaptedData({
-                        kpis: fisioKpis,
-                        performanceLineData,
-                        activityDuration: activityDurationData,
-                        attentionActivities: attentionActivitiesData,
-                        autonomyByCategory,
+                        kpis: [],
+                        performance: [],
+                        activityDuration: [],
+                        attentionActivities: [],
+                        autonomyByCategory: [],
                     });
                 }
 
@@ -723,7 +679,7 @@ export function GerarRelatorioPage() {
             patientId: selectedPatient.id,
             patientName: selectedPatient.name,
             therapistId: user.id,
-            area: selectedArea, // 🆕 Incluir área no payload
+            area: selectedArea,
             filters: {
                 pacienteId: selectedPatient.id,
                 periodo: {
@@ -1180,6 +1136,7 @@ export function GerarRelatorioPage() {
                                     programaId={filters.programaId}
                                     terapeutaId={filters.terapeutaId}
                                     periodo={filters.periodo}
+                                    area={selectedArea}
                                 />
                             </section>
                         )}

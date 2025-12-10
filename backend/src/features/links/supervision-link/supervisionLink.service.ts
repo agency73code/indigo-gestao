@@ -1,16 +1,22 @@
-import type { CreateSupervisionLinkInput, EndSupervisionLinkInput, LinkFilters, RawCreateSupervisionLinkInput, UpdateSupervisionLinkInput } from "./types/supervisionLink.types.js";
-import { createSupervisionLink } from "./actions/create.js";
-import { getAllSupervisionLinks } from "./actions/list.js";
-import { updateSupervisionLink } from "./actions/update.js";
-import { endSupervisionLink } from "./actions/end.js";
-import { archiveSupervisionLink } from "./actions/archive.js";
+import type {
+    CreateSupervisionLinkInput,
+    EndSupervisionLinkInput,
+    LinkFilters,
+    RawCreateSupervisionLinkInput,
+    UpdateSupervisionLinkInput,
+} from './types/supervisionLink.types.js';
+import { createSupervisionLink } from './actions/create.js';
+import { getAllSupervisionLinks } from './actions/list.js';
+import { updateSupervisionLink } from './actions/update.js';
+import { endSupervisionLink } from './actions/end.js';
+import { archiveSupervisionLink } from './actions/archive.js';
 
 /**
  * Service Responsável por orquestrar a criação de um vínculo de supervisão.
  * Recebe o payload do controller, valida tipos e encaminha ao action.
  */
 export async function createSupervisionLinkService(
-    payload: RawCreateSupervisionLinkInput
+    payload: RawCreateSupervisionLinkInput,
 ): Promise<ReturnType<typeof createSupervisionLink>> {
     if (!payload.supervisorId) {
         throw new Error('Supervisor não informado.');
@@ -50,7 +56,7 @@ export async function getAllSupervisionLinksService(userId: string, filters?: Li
  * Converte o payload recebido do controller e o encaminha para o action.
  */
 export async function UpdateSupervisionLinkService(
-    payload: UpdateSupervisionLinkInput
+    payload: UpdateSupervisionLinkInput,
 ): Promise<ReturnType<typeof updateSupervisionLink>> {
     // Conversão mínima de tipos, garantindo consistência com o schema Prisma
     const data: UpdateSupervisionLinkInput = {
@@ -72,7 +78,7 @@ export async function UpdateSupervisionLinkService(
  * Converte o payload recebido do controller e encaminha ao action.
  */
 export async function endSupervisionLinkService(
-    payload: EndSupervisionLinkInput
+    payload: EndSupervisionLinkInput,
 ): Promise<ReturnType<typeof endSupervisionLink>> {
     const data: EndSupervisionLinkInput = {
         id: payload.id,

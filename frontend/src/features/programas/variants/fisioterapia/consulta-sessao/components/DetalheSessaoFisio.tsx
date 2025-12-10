@@ -42,7 +42,7 @@ function aggregateMetadataByActivity(registros: RegistroTentativa[]): Record<str
     compensationDescription?: string;
 }> {
     const metadata: Record<string, any> = {};
-    
+
     registros.forEach(r => {
         if (r.stimulusId) {
             // Sempre atualizar com a última tentativa (sobrescreve)

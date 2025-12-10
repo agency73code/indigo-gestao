@@ -223,6 +223,7 @@ export default function RegistrarSessaoToPage() {
                 attempts: sessionState.attempts,
                 notes: sessionState.notes,
                 files: sessionState.files,
+                area: 'terapia-ocupacional',
             });
 
             toast.success('Sessão registrada com sucesso! 🎉', {

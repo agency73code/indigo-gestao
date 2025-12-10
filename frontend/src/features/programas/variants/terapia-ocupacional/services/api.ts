@@ -1,3 +1,4 @@
+import { ageCalculation, fetchOwnerAvatar } from '@/lib/api';
 import type { Patient, Therapist, CreateProgramInput } from '../../../core/types';
 import { TO_AREA_ID } from '../constants';
 
@@ -7,23 +8,6 @@ const API_URL = import.meta.env.VITE_API_URL;
  * Serviços de API para Terapia Ocupacional
  * 🔧 Usa TO_AREA_ID centralizado para garantir consistência
  */
-
-function ageCalculation(isoDateString: string): number {
-  const hoje = new Date();
-  const nascimento = new Date(isoDateString);
-
-  let idade = hoje.getFullYear() - nascimento.getFullYear();
-
-  const mes = hoje.getMonth() - nascimento.getMonth();
-  const dia = hoje.getDate() - nascimento.getDate();
-
-  // Se ainda não fez aniversário este ano, tira 1
-  if (mes < 0 || (mes === 0 && dia < 0)) {
-    idade--;
-  }
-
-  return idade;
-}
 
 export async function fetchToPatientById(id: string): Promise<Patient> {
     const response = await fetch(`${API_URL}/clientes/${id}`, {
@@ -36,7 +20,7 @@ export async function fetchToPatientById(id: string): Promise<Patient> {
     
     const data = await response.json();
     const client = data.data;
-    const photoUrl = await fetchToClientAvatar(client.id)
+    const photoUrl = await fetchOwnerAvatar(client.id, 'cliente')
 
     return {
         id: client.id,
@@ -45,23 +29,6 @@ export async function fetchToPatientById(id: string): Promise<Patient> {
         age: ageCalculation(client.dataNascimento),
         photoUrl,
     };
-}
-
-export async function fetchToClientAvatar(clientId: string): Promise<string | null> {
-    try {
-        const response = await fetch(
-            `${API_URL}/arquivos/getAvatar?ownerId=${clientId}&ownerType=cliente`,
-            { credentials: 'include' }
-        );
-        
-        if (!response.ok) return null;
-        
-        const data = await response.json();
-        return data.avatarUrl ?? null;
-    } catch (error) {
-        console.error('Erro ao buscar avatar:', error);
-        return null;
-    }
 }
 
 export async function fetchToTherapistById(id: string): Promise<Therapist> {
@@ -74,11 +41,11 @@ export async function fetchToTherapistById(id: string): Promise<Therapist> {
     }
 
     const data = await response.json();
-    const photoUrl = await fetchToTherapistAvatar(id);
+    const photoUrl = await fetchOwnerAvatar(id, 'terapeuta');
 
     return {
         id,
-        name: data.nome, // Backend retorna 'nome' em português
+        name: data.nome,
         photoUrl,
         especialidade: data.dadosProfissionais[0].areaAtuacao,
     };

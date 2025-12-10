@@ -6,7 +6,7 @@ type TherapistCacheEntry = {
         area_atuacao: { nome: string };
     }[];
     updatedAt: number;
-}
+};
 
 const CACHE_TTL_MS = 1000 * 60 * 60; // 1 hora
 const therapistCache = new Map<string, TherapistCacheEntry>();
@@ -20,7 +20,7 @@ export async function getTherapistData(therapistId: string) {
 
     const registros = await prisma.registro_profissional.findMany({
         where: { terapeuta_id: therapistId },
-        include: { cargo: true, area_atuacao: true, },
+        include: { cargo: true, area_atuacao: true },
     });
 
     therapistCache.set(therapistId, { registros, updatedAt: Date.now() });
