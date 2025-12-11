@@ -3,9 +3,11 @@ import { Card, CardHeader, CardTitleHub } from '@/components/ui/card';
 import { useProgramAreas } from '../core/hooks/useProgramConfig';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 import { useEffect } from 'react';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 
 export default function HubProgramasPage() {
-    const areas = useProgramAreas();
+    const { user } = useAuth();
+    const areas = useProgramAreas(user);
     const { setPageTitle } = usePageTitle();
 
     useEffect(() => {
