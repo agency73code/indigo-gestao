@@ -41,13 +41,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 setAuthState({ user: null, isAuthenticated: false, isLoading: false, error: null });
                 return;
             }
-
+            console.log(me)
             setAuthState({
-                user: { 
-                    id: String(me.user.id), 
-                    email: me.user.email ?? '', 
-                    name: me.user.name ?? '', 
-                    perfil_acesso: me.user.perfil_acesso, 
+                user: {
+                    id: String(me.user.id),
+                    email: me.user.email ?? '',
+                    name: me.user.name ?? '',
+                    perfil_acesso: me.user.perfil_acesso,
+                    area_atuacao: me.user.area_atuacao,
                     avatar_url: me.user.avatar_url ?? null,
                 },
                 isAuthenticated: true,

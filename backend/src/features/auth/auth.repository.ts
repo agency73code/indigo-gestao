@@ -1,11 +1,35 @@
 import { prisma } from '../../config/database.js';
 import { hashPassword } from '../../utils/hash.util.js';
-import type { Tables, UserRow } from './auth.types.js';
+import { AREA_NAME_TO_PROGRAM_ID, type Tables, type UserRow } from './auth.types.js';
 
 type LastPasswordChangeResult = {
     lastChangedAt: Date | null;
     daysAgo: number | null;
 };
+
+function normalizeAreaName(name?: string | null) {
+    if (!name) return '';
+    return name
+        .normalize('NFD')
+        .replace(/\p{Diacritic}/gu, '')
+        .toLowerCase()
+        .trim();
+}
+
+function mapAreaAtuacaoTOIds(
+    registros?: { area_atuacao: { nome: string } | null }[] | null,
+): string[] {
+    if (!registros?.length) return [];
+
+    const ids = registros
+        .map((registro) => {
+            const areaId = AREA_NAME_TO_PROGRAM_ID[normalizeAreaName(registro.area_atuacao?.nome)];
+            return areaId;
+        })
+        .filter((areaId): areaId is string => Boolean(areaId));
+    
+    return Array.from(new Set(ids));
+}
 
 export async function lastPasswordChange(
     id: string,
@@ -110,6 +134,9 @@ export async function loginUserByAccessInformation(
                 nome: true,
                 email_indigo: true,
                 perfil_acesso: true,
+                registro_profissional: {
+                    select: { area_atuacao: { select: { nome: true } } },
+                },
                 arquivos: {
                     where: { tipo: 'fotoPerfil' },
                     select: { arquivo_id: true },
@@ -119,12 +146,14 @@ export async function loginUserByAccessInformation(
         });
 
         if (!row) return null;
+
         return {
             id: row.id,
             senha: row.senha,
             nome: row.nome,
             email: row.email_indigo ?? null,
             perfil_acesso: row.perfil_acesso,
+            area_atuacao: mapAreaAtuacaoTOIds(row.registro_profissional),
             avatar_url: row.arquivos[0]
                 ? `${process.env.API_URL}/api/arquivos/${encodeURIComponent(row.arquivos[0].arquivo_id!)}/view/`
                 : null,
@@ -194,6 +223,9 @@ export async function findUserById(id: string, table: Tables) {
                 nome: true,
                 email_indigo: true,
                 perfil_acesso: true,
+                registro_profissional: {
+                    select: { area_atuacao: { select: { nome: true } } },
+                },
                 arquivos: {
                     where: { tipo: 'fotoPerfil' },
                     select: { arquivo_id: true },
@@ -209,6 +241,7 @@ export async function findUserById(id: string, table: Tables) {
             nome: row.nome,
             email: row.email_indigo,
             perfil_acesso: row.perfil_acesso,
+            area_atuacao: mapAreaAtuacaoTOIds(row.registro_profissional),
             avatar_url: row.arquivos[0]
                 ? `${process.env.API_URL}/api/arquivos/${encodeURIComponent(row.arquivos[0].arquivo_id!)}/view`
                 : null,

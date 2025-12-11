@@ -160,6 +160,7 @@ export async function getProgramId(programId: string) {
                         select: {
                             id: true,
                             nome: true,
+                            descricao: true,
                             status: true,
                         },
                     },
@@ -225,6 +226,7 @@ export async function listClientsByTherapist(therapistId: string, q?: string) {
 
 export async function listByClientId(
     clientId: string,
+    userId: string,
     page = 1,
     pageSize = 10,
     area: string,
@@ -238,6 +240,7 @@ export async function listByClientId(
     // cria o objeto base
     const where: Prisma.ocpWhereInput = {
         cliente_id: clientId,
+        terapeuta_id: userId,
         area,
         ...(translateStatus && { status: translateStatus }), // só inclui se existir
     };

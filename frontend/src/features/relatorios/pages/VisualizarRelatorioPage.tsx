@@ -5,9 +5,21 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
+// Componentes de Fono
 import { KpiCards } from '../gerar-relatorio/components/KpiCards';
 import { DualLineProgress } from '../gerar-relatorio/components/DualLineProgress';
 import { OcpDeadlineCard } from '../gerar-relatorio/components/OcpDeadlineCard';
+// Componentes de TO
+import { ToKpiCards, ToActivityDurationChart, ToAttentionActivitiesCard, ToAutonomyByCategoryChart } from '../../programas/relatorio-geral/components/to';
+import type { ToKpisData } from '../../programas/relatorio-geral/components/to/ToKpiCards';
+import ToPerformanceChart from '../../programas/variants/terapia-ocupacional/components/ToPerformanceChart';
+// Componentes de Fisio
+import { FisioKpiCards, FisioActivityDurationChart, FisioAttentionActivitiesCard, FisioAutonomyByCategoryChart } from '../../programas/relatorio-geral/components/fisio';
+import type { FisioKpisData } from '../../programas/relatorio-geral/components/fisio/FisioKpiCards';
+import FisioPerformanceChart from '../../programas/variants/fisioterapia/components/FisioPerformanceChart';
+// Componentes de Musicoterapia
+import { MusiKpiCards, MusiAttentionActivitiesCard, MusiAutonomyByCategoryChart, MusiParticipacaoChart, MusiSuporteChart, MusiParticipacaoSuporteEvolutionChart } from '../../programas/relatorio-geral/components/musi';
+import type { MusiKpisData } from '../../programas/relatorio-geral/components/musi/MusiKpiCards';
 import type { SavedReport, Paciente, Terapeuta } from '../types';
 import type { KpisRelatorio, SerieLinha } from '../gerar-relatorio/types';
 import { 
@@ -346,68 +358,204 @@ export function VisualizarRelatorioPage() {
             </div>
           </div>
 
-        {/* KPIs - Usando componente KpiCards */}
-        {report.generatedData?.kpis && (
+        {/* ========== KPIs por Área ========== */}
+        
+        {/* KPIs - Modelo Fono (Fonoaudiologia, Psicopedagogia, Terapia ABA) */}
+        {['fonoaudiologia', 'psicopedagogia', 'terapia-aba'].includes(report.area) && report.generatedData?.kpis && (
           <KpiCards data={report.generatedData.kpis as KpisRelatorio} loading={false} />
+        )}
+        
+        {/* KPIs - Terapia Ocupacional */}
+        {report.area === 'terapia-ocupacional' && report.generatedData?.kpis && (
+          // Verifica se os KPIs têm a estrutura correta de TO (com desempenhou, tempoTotal, etc.)
+          'desempenhou' in report.generatedData.kpis ? (
+            <ToKpiCards data={report.generatedData.kpis as unknown as ToKpisData} loading={false} />
+          ) : (
+            // Fallback: relatório antigo sem dados de TO - exibe mensagem
+            <div className="rounded-lg p-6 text-center text-muted-foreground" style={{ backgroundColor: 'var(--hub-card-background)' }}>
+              <p>Este relatório foi salvo antes da atualização do sistema.</p>
+              <p className="text-sm mt-1">Gere um novo relatório para visualizar os dados completos de Terapia Ocupacional.</p>
+            </div>
+          )
+        )}
+        
+        {/* KPIs - Modelo Fisio (Fisioterapia, Psicomotricidade, Educação Física) */}
+        {['fisioterapia', 'psicomotricidade', 'educacao-fisica'].includes(report.area) && report.generatedData?.kpis && (
+          // Verifica se os KPIs têm a estrutura correta de Fisio (com desempenhou, compensacaoTotal, etc.)
+          'desempenhou' in report.generatedData.kpis ? (
+            <FisioKpiCards data={report.generatedData.kpis as unknown as FisioKpisData} loading={false} />
+          ) : (
+            // Fallback: relatório antigo sem dados de Fisio - exibe mensagem
+            <div className="rounded-lg p-6 text-center text-muted-foreground" style={{ backgroundColor: 'var(--hub-card-background)' }}>
+              <p>Este relatório foi salvo antes da atualização do sistema.</p>
+              <p className="text-sm mt-1">Gere um novo relatório para visualizar os dados completos.</p>
+            </div>
+          )
+        )}
+        
+        {/* KPIs - Musicoterapia */}
+        {report.area === 'musicoterapia' && report.generatedData?.kpis && (
+          <MusiKpiCards data={report.generatedData.kpis as unknown as MusiKpisData} loading={false} />
         )}
 
         {/* Observações Clínicas */}
         {report.clinicalObservations && (
-          <div className="bg-card rounded-[5px] border px-4 py-6">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={{ fontFamily: 'Sora, sans-serif' }}>
-              <FileText className="h-5 w-5 text-primary" />
-              Observações Clínicas
-            </h3>
+          <div 
+            className="rounded-lg p-6 overflow-hidden"
+            style={{ backgroundColor: 'var(--hub-card-background)' }}
+          >
+            {/* Header com ícone */}
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-10 w-10 rounded-lg bg-[#DBEAFE] flex items-center justify-center flex-shrink-0">
+                <FileText className="h-5 w-5 text-blue-600" />
+              </div>
+              <h3 className="text-base font-normal text-foreground" style={{ fontFamily: 'Sora, sans-serif' }}>
+                Observações Clínicas
+              </h3>
+            </div>
+            
+            {/* Conteúdo das observações */}
             <div 
-              className="clinical-observations prose prose-sm dark:prose-invert max-w-none"
+              className="clinical-observations text-sm text-muted-foreground leading-relaxed break-words overflow-wrap-anywhere"
+              style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
               dangerouslySetInnerHTML={{ __html: report.clinicalObservations }}
-              style={{
-                '--tw-prose-headings': 'var(--foreground)',
-                '--tw-prose-body': 'var(--foreground)',
-                '--tw-prose-bold': 'var(--foreground)',
-                '--tw-prose-lists': 'var(--foreground)',
-              } as React.CSSProperties}
             />
-            <style>{`
-              .clinical-observations h3 {
-                font-size: 1.125rem;
-                font-weight: 600;
-                margin-top: 1.5rem;
-                margin-bottom: 0.75rem;
-                color: var(--foreground);
-              }
-              .clinical-observations h3:first-child {
-                margin-top: 0;
-              }
-              .clinical-observations p {
-                margin-bottom: 1rem;
-                line-height: 1.75;
-                color: var(--foreground);
-              }
-              .clinical-observations ul {
-                margin-top: 0.5rem;
-                margin-bottom: 1rem;
-              }
-              .clinical-observations ul li {
-                margin-bottom: 0.5rem;
-              }
-              .clinical-observations strong {
-                font-weight: 600;
-                color: var(--primary);
-              }
-              .clinical-observations .space-y-4 > * + * {
-                margin-top: 1rem;
-              }
-            `}</style>
           </div>
         )}
 
-        {/* Gráfico de Evolução - Usando componente DualLineProgress */}
-        {report.generatedData?.graphic && report.generatedData.graphic.length > 0 && (
+        {/* ========== Gráficos por Área ========== */}
+        
+        {/* Gráficos - Modelo Fono (Fonoaudiologia, Psicopedagogia, Terapia ABA) */}
+        {['fonoaudiologia', 'psicopedagogia', 'terapia-aba'].includes(report.area) && report.generatedData?.graphic && report.generatedData.graphic.length > 0 && (
           <DualLineProgress 
             data={report.generatedData.graphic as SerieLinha[]} 
             loading={false}
           />
+        )}
+        
+        {/* Gráficos - Terapia Ocupacional */}
+        {report.area === 'terapia-ocupacional' && report.generatedData && (
+          <>
+            {/* Gráfico de Evolução do Desempenho */}
+            {report.generatedData.performanceLineData && report.generatedData.performanceLineData.length > 0 && (
+              <ToPerformanceChart 
+                data={report.generatedData.performanceLineData} 
+                loading={false}
+                title="Evolução do Desempenho"
+                description="Acompanhamento do desempenho nas atividades de vida diária"
+                metaLabel="Meta: Convergência"
+              />
+            )}
+            
+            {/* Gráficos lado a lado: Tempo por Atividade + Autonomia por Categoria */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {report.generatedData.activityDuration && report.generatedData.activityDuration.length > 0 && (
+                <ToActivityDurationChart 
+                  data={report.generatedData.activityDuration} 
+                  loading={false} 
+                />
+              )}
+
+              {report.generatedData.autonomyByCategory && report.generatedData.autonomyByCategory.length > 0 && (
+                <ToAutonomyByCategoryChart 
+                  data={report.generatedData.autonomyByCategory} 
+                  loading={false} 
+                />
+              )}
+            </div>
+
+            {/* Atividades com Atenção */}
+            {report.generatedData.attentionActivities && report.generatedData.attentionActivities.length > 0 && (
+              <ToAttentionActivitiesCard 
+                data={report.generatedData.attentionActivities}
+                loading={false}
+              />
+            )}
+          </>
+        )}
+        
+        {/* Gráficos - Modelo Fisio (Fisioterapia, Psicomotricidade, Educação Física) */}
+        {['fisioterapia', 'psicomotricidade', 'educacao-fisica'].includes(report.area) && report.generatedData && (
+          <>
+            {/* Gráfico de Performance */}
+            {report.generatedData.performance && report.generatedData.performance.length > 0 && (
+              <FisioPerformanceChart 
+                data={report.generatedData.performance} 
+                loading={false}
+              />
+            )}
+            
+            {/* Gráficos lado a lado */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {report.generatedData.activityDuration && report.generatedData.activityDuration.length > 0 && (
+                <FisioActivityDurationChart 
+                  data={report.generatedData.activityDuration} 
+                  loading={false} 
+                />
+              )}
+
+              {report.generatedData.autonomyByCategory && report.generatedData.autonomyByCategory.length > 0 && (
+                <FisioAutonomyByCategoryChart 
+                  data={report.generatedData.autonomyByCategory} 
+                  loading={false} 
+                />
+              )}
+            </div>
+
+            {/* Atividades com Atenção */}
+            {report.generatedData.attentionActivities && report.generatedData.attentionActivities.length > 0 && (
+              <FisioAttentionActivitiesCard 
+                data={report.generatedData.attentionActivities}
+                loading={false}
+              />
+            )}
+          </>
+        )}
+        
+        {/* Gráficos - Musicoterapia */}
+        {report.area === 'musicoterapia' && report.generatedData && (
+          <>
+            {/* Gráfico de Evolução */}
+            {report.generatedData.evolutionData && report.generatedData.evolutionData.length > 0 && (
+              <MusiParticipacaoSuporteEvolutionChart 
+                data={report.generatedData.evolutionData} 
+                loading={false}
+              />
+            )}
+            
+            {/* Gráficos lado a lado: Participação + Suporte */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {report.generatedData.participacao && report.generatedData.participacao.length > 0 && (
+                <MusiParticipacaoChart 
+                  data={report.generatedData.participacao} 
+                  loading={false} 
+                />
+              )}
+
+              {report.generatedData.suporte && report.generatedData.suporte.length > 0 && (
+                <MusiSuporteChart 
+                  data={report.generatedData.suporte} 
+                  loading={false} 
+                />
+              )}
+            </div>
+
+            {/* Autonomia por Categoria */}
+            {report.generatedData.autonomyByCategory && report.generatedData.autonomyByCategory.length > 0 && (
+              <MusiAutonomyByCategoryChart 
+                data={report.generatedData.autonomyByCategory} 
+                loading={false} 
+              />
+            )}
+
+            {/* Atividades com Atenção */}
+            {report.generatedData.attentionActivities && report.generatedData.attentionActivities.length > 0 && (
+              <MusiAttentionActivitiesCard 
+                data={report.generatedData.attentionActivities}
+                loading={false}
+              />
+            )}
+          </>
         )}
 
         {/* Prazo do Programa - Usando componente OcpDeadlineCard */}

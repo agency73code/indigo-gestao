@@ -1,10 +1,26 @@
 import type { Patient, Therapist, CreateProgramInput } from '../../core/types';
+import { getCurrentAreaFromStorage } from '@/utils/apiWithArea';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 /**
- * Serviços de API para Fonoaudiologia
+ * Serviços de API para o modelo base (Fonoaudiologia, Psicopedagogia, Terapia ABA)
+ * 
+ * IMPORTANTE: Estes serviços são compartilhados por áreas que usam o mesmo modelo:
+ * - Fonoaudiologia
+ * - Psicopedagogia  
+ * - Terapia ABA
+ * 
+ * A área é obtida automaticamente do contexto (localStorage) para garantir
+ * que os dados sejam salvos e filtrados pela área correta.
  */
+
+/**
+ * Retorna a área atual do contexto, com fallback para 'fonoaudiologia'
+ */
+function getArea(): string {
+    return getCurrentAreaFromStorage() || 'fonoaudiologia';
+}
 
 function ageCalculation(isoDateString: string): number {
   const hoje = new Date();
@@ -99,6 +115,8 @@ export async function fetchFonoTherapistAvatar(therapistId: string): Promise<str
 }
 
 export async function createFonoProgram(input: CreateProgramInput): Promise<{ id: string }> {
+    const area = getArea();
+    
     const response = await fetch(`${API_URL}/ocp/create`, {
         method: 'POST',
         headers: {
@@ -107,7 +125,7 @@ export async function createFonoProgram(input: CreateProgramInput): Promise<{ id
         credentials: 'include',
         body: JSON.stringify({
             ...input,
-            area: 'fonoaudiologia',
+            area,
         }),
     });
 
@@ -128,10 +146,11 @@ export async function listFonoPrograms(params: {
     sort?: 'recent' | 'alphabetic';
     page?: number;
 }): Promise<any[]> {
+    const area = getArea();
     const url = new URL(`${API_URL}/ocp/clients/${params.patientId}/programs`);
     
-    // Filtrar apenas programas de Fonoaudiologia pela área de atuação do terapeuta
-    url.searchParams.set('area', 'fonoaudiologia');
+    // Filtrar programas pela área atual do contexto
+    url.searchParams.set('area', area);
     
     if (params.page) url.searchParams.set('page', params.page.toString());
     if (params.status && params.status !== 'all') url.searchParams.set('status', params.status);
@@ -144,7 +163,7 @@ export async function listFonoPrograms(params: {
     });
 
     if (!response.ok) {
-        throw new Error('Erro ao buscar programas de Fonoaudiologia');
+        throw new Error(`Erro ao buscar programas de ${area}`);
     }
 
     const json = await response.json();

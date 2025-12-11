@@ -22,6 +22,8 @@
         order: number;
         label: string;
         description?: string | null;
+        metodos?: string | null;
+        tecnicasProcedimentos?: string | null;
         active: boolean;
     }[];
     criteria?: string | null;

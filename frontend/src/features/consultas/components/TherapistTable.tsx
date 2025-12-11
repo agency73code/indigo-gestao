@@ -2,7 +2,7 @@ import { useState, memo } from 'react';
 import { ChevronUp, ChevronDown, ArrowUpRight, User } from 'lucide-react';
 import { Button } from '@/ui/button';
 import type { Therapist, SortState } from '../types/consultas.types';
-import { getSpecialtyColors } from '@/utils/specialtyColors';
+import { SpecialtyBadgeStack } from './SpecialtyBadgeStack';
 
 interface AvatarWithSkeletonProps {
     src?: string | null;
@@ -130,26 +130,6 @@ const TherapistTable = memo(function TherapistTable({
         return <span className={`${baseClasses} ${statusClasses}`}>{displayText}</span>;
     };
 
-    const getEspecialidadeBadge = (especialidade: string | undefined) => {
-        if (!especialidade) return <span className="text-sm" style={{ color: 'var(--table-text)' }}>Não informado</span>;
-
-        const colors = getSpecialtyColors(especialidade);
-
-        return (
-            <span 
-                className="text-[14px] font-normal inline-block px-3 py-1" 
-                style={{ 
-                    fontFamily: 'Inter, sans-serif', 
-                    backgroundColor: colors.bg, 
-                    color: colors.text,
-                    borderRadius: '24px'
-                }}
-            >
-                {especialidade}
-            </span>
-        );
-    };
-
     const getInitials = (name: string) => {
         return name
             .split(' ')
@@ -181,11 +161,17 @@ const TherapistTable = memo(function TherapistTable({
                                     size="md"
                                 />
                                 <div>
-                                    <p className="font-medium text-sm text-foreground">
+                                    <button
+                                        onClick={() => onViewProfile(therapist)}
+                                        className="font-medium text-sm text-foreground text-left hover:underline cursor-pointer"
+                                    >
                                         {therapist.nome}
-                                    </p>
+                                    </button>
                                     <div className="mt-1">
-                                        {getEspecialidadeBadge(therapist.especialidade)}
+                                        <SpecialtyBadgeStack 
+                                            especialidades={therapist.profissional?.especialidades || []}
+                                            especialidadePrincipal={therapist.especialidade}
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -313,14 +299,21 @@ const TherapistTable = memo(function TherapistTable({
                                             size="sm"
                                         />
                                         <div className="min-w-0 flex-1">
-                                            <div className="font-medium text-sm break-words" style={{ color: 'var(--table-text)' }}>
+                                            <button
+                                                onClick={() => onViewProfile(therapist)}
+                                                className="font-medium text-sm break-words text-left hover:underline cursor-pointer transition-colors"
+                                                style={{ color: 'var(--table-text)' }}
+                                            >
                                                 {therapist.nome}
-                                            </div>
+                                            </button>
                                         </div>
                                     </div>
                                 </td>
                                 <td className="p-3">
-                                    {getEspecialidadeBadge(therapist.especialidade)}
+                                    <SpecialtyBadgeStack 
+                                        especialidades={therapist.profissional?.especialidades || []}
+                                        especialidadePrincipal={therapist.especialidade}
+                                    />
                                 </td>
                                 <td className="p-3 hidden lg:table-cell">
                                     <span className="text-sm break-words" style={{ color: 'var(--table-text)' }}>

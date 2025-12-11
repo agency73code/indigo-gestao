@@ -321,6 +321,7 @@ export type ProgramSelectResult = {
     estimulo_ocp: {
         id: number;
         nome: string | null;
+        descricao: string | null;
         status: boolean;
     }[];
     status: string;

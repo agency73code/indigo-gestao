@@ -29,6 +29,7 @@ interface SidebarSubItem {
   title: string;
   url: string;
   ability?: { action: Actions; subject: Subjects };
+  status?: 'em-breve' | 'quase-pronto';
 }
 
 interface SidebarItem {
@@ -74,15 +75,15 @@ const data: {
             icon: Activity,
             items: [
                 { title: 'Fonoaudiologia', url: '/app/programas/fonoaudiologia' },
-                { title: 'Psicoterapia', url: '/app/programas/psicoterapia' },
+                { title: 'Psicoterapia', url: '/app/programas/psicoterapia', status: 'em-breve' },
                 { title: 'Terapia ABA', url: '/app/programas/terapia-aba' },
                 { title: 'Terapia Ocupacional', url: '/app/programas/terapia-ocupacional' },
                 { title: 'Fisioterapia', url: '/app/programas/fisioterapia' },
                 { title: 'Psicomotricidade', url: '/app/programas/psicomotricidade' },
                 { title: 'Educação Física', url: '/app/programas/educacao-fisica' },
                 { title: 'Psicopedagogia', url: '/app/programas/psicopedagogia' },
-                { title: 'Musicoterapia', url: '/app/programas/musicoterapia' },
-                { title: 'Neuropsicologia', url: '/app/programas/neuropsicologia' },
+                { title: 'Musicoterapia', url: '/app/programas/musicoterapia', status: 'quase-pronto' },
+                { title: 'Neuropsicologia', url: '/app/programas/neuropsicologia', status: 'em-breve' },
             ],
         },
         {

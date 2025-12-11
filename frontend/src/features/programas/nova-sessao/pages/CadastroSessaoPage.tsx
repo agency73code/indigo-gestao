@@ -15,7 +15,9 @@ import {
     AttemptsRegister,
     SessionSummary,
     SessionObservations,
+    FonoSessionFiles,
 } from '../components/index.ts';
+import type { SessionFile } from '../components/index.ts';
 import {
     searchPatientsForSession,
     getProgramDetail,
@@ -55,6 +57,9 @@ export default function CadastroSessaoPage() {
         },
         notes: '',
     });
+
+    // Estado para arquivos da sessão
+    const [sessionFiles, setSessionFiles] = useState<SessionFile[]>([]);
 
     // Estados de carregamento
     const [loadingProgram, setLoadingProgram] = useState(false);
@@ -210,6 +215,7 @@ export default function CadastroSessaoPage() {
                 programId: sessionState.programId!,
                 attempts: sessionState.attempts,
                 notes: sessionState.notes,
+                files: sessionFiles,
             });
 
             // Toast de confirmação com mensagem focada na experiência do usuário
@@ -303,6 +309,13 @@ export default function CadastroSessaoPage() {
                             <SessionObservations
                                 notes={sessionState.notes || ''}
                                 onNotesChange={handleNotesChange}
+                            />
+
+                            {/* Upload de arquivos da sessão */}
+                            <FonoSessionFiles
+                                files={sessionFiles}
+                                onFilesChange={setSessionFiles}
+                                disabled={savingSession}
                             />
 
                             {/* Registro de tentativas */}

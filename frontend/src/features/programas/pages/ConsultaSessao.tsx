@@ -164,7 +164,7 @@ export default function ConsultaSessao() {
                 // 🔄 Passa filtros da URL para o service
                 const response = await services.listSessionsByPatient(
                     patient.id,
-                    'fonoaudiologia',
+                    area,
                     {
                         q: filters.q,
                         dateRange: filters.dateRange,

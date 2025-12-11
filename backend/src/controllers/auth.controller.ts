@@ -38,6 +38,7 @@ export async function me(req: Request, res: Response) {
             name: user.nome,
             email: user.email,
             perfil_acesso: user.perfil_acesso,
+            area_atuacao: user.area_atuacao,
             avatar_url: user.avatar_url,
         },
     });
@@ -152,6 +153,7 @@ export async function validateLogin(req: Request, res: Response, next: NextFunct
                 name: user.nome,
                 email: user.email,
                 perfil_acesso: user.perfil_acesso,
+                area_atuacao: user.area_atuacao,
                 avatar_url: user.avatar_url,
             },
         });

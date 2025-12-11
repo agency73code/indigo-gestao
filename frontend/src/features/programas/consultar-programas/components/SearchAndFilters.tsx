@@ -63,7 +63,7 @@ export default function SearchAndFilters({
                     placeholder="Buscar..."
                     value={q}
                     onChange={(e) => onChange({ q: e.target.value })}
-                    className="pl-10"
+                    className="pl-10 h-10 rounded-full py-0 shadow-none"
                     disabled={disabled}
                 />
             </div>

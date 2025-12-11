@@ -1,10 +1,13 @@
 import { prisma } from "../../../../../config/database.js";
 
+// Áreas que usam o modelo Fisio/TO (terapia ocupacional)
+const FISIO_MODEL_AREAS = ['fisioterapia', 'psicomotricidade', 'educacao-fisica'];
+
 export async function getPhysioSessionData(sessionIds: number[], stimulusIds: number[]) {
   return prisma.sessao.findMany({
     where: {
       id: { in: sessionIds },
-      area: 'fisioterapia',
+      area: { in: FISIO_MODEL_AREAS },
     },
     include: {
       trials: {

@@ -62,9 +62,9 @@ export function ToAutonomyByCategoryChart({ data, loading = false }: ToAutonomyB
               <div key={index} className="space-y-1.5">
                 {/* Barra com valor */}
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 h-6 bg-muted rounded overflow-hidden">
+                  <div className="flex-1 h-3 bg-muted rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-[#10B981] rounded transition-all duration-300"
+                      className="h-full bg-[#10B981] rounded-full transition-all duration-300"
                       style={{ width: `${Math.max(item.autonomia, 2)}%` }}
                     />
                   </div>

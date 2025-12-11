@@ -2,12 +2,12 @@ import { useMemo } from 'react';
 import type { Sessao, Patient, ProgramDetail, RegistroTentativa } from '@/features/programas/consulta-sessao/types';
 import { aggregateByStimulus, sumCounts } from '@/features/programas/consulta-sessao/pages/helpers';
 import HeaderSessao from '@/features/programas/consulta-sessao/components/HeaderSessao';
-import SessionSummary from '@/features/programas/consulta-sessao/pages/components/SessionSummary';
 import SessionNotes from '@/features/programas/consulta-sessao/pages/components/SessionNotes';
 import SessionFiles from '@/features/programas/consulta-sessao/pages/components/SessionFiles';
 import { getSessionFiles } from '@/features/programas/variants/terapia-ocupacional/session/services';
-import { getToStatus, getToStatusConfig } from '../helpers';
-import { ToActivitiesPerformanceList } from '.';
+import { getToStatus } from '../helpers';
+import ToSessionSummary from './ToSessionSummary';
+import ToActivitiesPerformanceList from './ToActivitiesPerformanceListNew';
 
 interface DetalheSessaoToProps {
     sessao: Sessao;
@@ -59,13 +59,26 @@ export default function DetalheSessaoTo({ sessao, paciente, programa, onBack }: 
     // Calcular status geral da sessão (TO usa status predominante)
     const statusSessao = useMemo(() => getToStatus(countsSessao), [countsSessao]);
 
-    // Mapear atividades com informações necessárias
+    // Calcular tempo total
+    const totalDurationMinutes = useMemo(() => {
+        const durations = Object.values(durationsByActivity).filter((d): d is number => d !== null && d > 0);
+        if (durations.length === 0) return null;
+        return durations.reduce((acc, d) => acc + d, 0);
+    }, [durationsByActivity]);
+
+    // Calcular total de tentativas
+    const totalTentativas = useMemo(() => {
+        return countsSessao.erro + countsSessao.ajuda + countsSessao.indep;
+    }, [countsSessao]);
+
+    // Mapear atividades com informações necessárias incluindo descrição
     const activitiesInfo = useMemo(
         () =>
             programa.stimuli.map((s) => ({
                 id: s.id,
                 label: s.label,
                 order: s.order,
+                description: s.description ?? null,
             })),
         [programa.stimuli],
     );
@@ -82,14 +95,12 @@ export default function DetalheSessaoTo({ sessao, paciente, programa, onBack }: 
         <div className="space-y-4">
             <HeaderSessao sessao={sessao} paciente={paciente} programa={programa} onBack={onBack} />
 
-            <SessionSummary
-                counts={countsSessao}
-                duration={null}
-                planned={plannedCount}
-                worked={workedCount}
-                date={sessao.data}
-                status={'positivo' as any} // Ignorado pois passamos statusConfig customizado
-                statusConfig={getToStatusConfig(statusSessao)}
+            <ToSessionSummary
+                status={statusSessao}
+                totalTentativas={totalTentativas}
+                activitiesWorked={workedCount}
+                activitiesPlanned={plannedCount}
+                totalDurationMinutes={totalDurationMinutes}
             />
 
             <ToActivitiesPerformanceList

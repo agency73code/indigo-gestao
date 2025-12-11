@@ -67,9 +67,9 @@ export function ToActivityDurationChart({ data, loading = false }: ToActivityDur
               <div key={index} className="space-y-1.5">
                 {/* Barra com valor */}
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 h-6 bg-muted rounded overflow-hidden">
+                  <div className="flex-1 h-3 bg-muted rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-[#2C7FFF] rounded transition-all duration-300"
+                      className="h-full bg-[#2C7FFF] rounded-full transition-all duration-300"
                       style={{ width: `${Math.max(percentage, 2)}%` }}
                     />
                   </div>

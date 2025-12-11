@@ -169,6 +169,7 @@ export function mapOcpProgramSession(dto: OcpTypes.ProgramSelectResult) {
             id: String(e.id),
             order: idx + 1,
             label: e.nome ?? '',
+            description: e.descricao ?? null,
             active: e.status,
         })),
         status: dto.status,

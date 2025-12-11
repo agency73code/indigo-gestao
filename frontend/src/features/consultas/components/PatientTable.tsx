@@ -196,9 +196,13 @@ const PatientTable = memo(function PatientTable({
                                                 size="sm"
                                             />
                                             <div className="min-w-0 flex-1">
-                                                <div className="font-medium text-[14px] truncate" style={{ fontFamily: 'Inter, sans-serif', color: 'var(--table-text)' }}>
+                                                <button
+                                                    onClick={() => onViewProfile(patient)}
+                                                    className="font-medium text-[14px] truncate text-left hover:underline cursor-pointer transition-colors"
+                                                    style={{ fontFamily: 'Inter, sans-serif', color: 'var(--table-text)' }}
+                                                >
                                                     {patient.nome}
-                                                </div>
+                                                </button>
                                             </div>
                                         </div>
                                     </td>
@@ -254,9 +258,13 @@ const PatientTable = memo(function PatientTable({
                                         size="md"
                                     />
                                     <div>
-                                        <p className="font-medium text-[14px] text-[#1F2937]" style={{ fontFamily: 'Inter, sans-serif' }}>
+                                        <button
+                                            onClick={() => onViewProfile(patient)}
+                                            className="font-medium text-[14px] text-[#1F2937] text-left hover:underline cursor-pointer"
+                                            style={{ fontFamily: 'Inter, sans-serif' }}
+                                        >
                                             {patient.nome}
-                                        </p>
+                                        </button>
                                         <p className="text-xs text-[#6B7280]">
                                             {age !== null ? `${age} anos` : 'Idade não informada'}
                                         </p>

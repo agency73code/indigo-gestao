@@ -102,7 +102,7 @@ export function AreaSelectorCard({ value, onChange, disabled }: AreaSelectorCard
           />
           
           {/* Drawer */}
-          <div className="fixed right-0 top-0 h-full w-full max-w-2xl bg-background shadow-lg z-50 flex flex-col animate-in slide-in-from-right duration-300 no-print">
+          <div className="fixed right-0 top-0 h-full w-full max-w-2xl bg-background shadow-lg z-50 flex flex-col animate-in slide-in-from-right duration-300 no-print rounded-l-2xl">
             {/* Header */}
             <div className="flex items-center justify-between p-4 sm:p-6 border-b shrink-0">
               <h2 className="text-lg font-regular" style={{fontFamily: "sora"}}>Selecionar Área Terapêutica</h2>

@@ -112,6 +112,8 @@ export async function createAreaSession(req: Request, res: Response, next: NextF
                 });
                 break;
             case 'fisioterapia':
+            case 'psicomotricidade':
+            case 'educacao-fisica':
                 session = await OcpService.createPhysiotherapySession({
                     programId: Number(programId),
                     patientId,
@@ -229,13 +231,16 @@ export async function listClientPrograms(req: Request, res: Response) {
     const sort = (req.query.sort as 'recent' | 'alphabetic') ?? 'recent';
     const rawArea = req.query.area;
     const area = Array.isArray(rawArea) ? rawArea[0] : rawArea;
+    const userId = req.user?.id;
 
     if (!clientId)
         return res.status(400).json({ success: false, message: 'ClientId é obrigatório' });
     if (typeof area !== 'string')
         return res.status(400).json({ success: false, message: 'Area é obrigatório' });
+    if (!userId)
+        return res.status(400).json({ success: false, message: 'Id do usuário é obrigatório' })
 
-    const rows = await OcpService.listByClientId(clientId, page, 10, area, status, q, sort);
+    const rows = await OcpService.listByClientId(clientId, userId, page, 10, area, status, q, sort);
 
     return res.json({ success: true, data: rows.map(OcpNormalizer.mapOcpReturn) });
 }

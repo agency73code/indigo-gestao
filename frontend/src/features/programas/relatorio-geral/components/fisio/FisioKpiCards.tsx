@@ -1,7 +1,7 @@
 import { Card, CardHeader, CardTitleHub } from '@/components/ui/card';
 import { CheckCircle, HandHelping, XCircle, Activity, AlertTriangle } from 'lucide-react';
 
-interface FisioKpisData {
+export interface FisioKpisData {
   desempenhou: number;
   desempenhouComAjuda: number;
   naoDesempenhou: number;
@@ -79,7 +79,7 @@ export function FisioKpiCards({ data, loading = false }: FisioKpiCardsProps) {
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3" data-print-kpi-grid>
       <KpiCard
         title="Atividades"
-        value={`${data.atividadesTotal}`}
+        value={`${data.atividadesTotal ?? 0}`}
         hint="Trabalhadas"
         icon={Activity}
         bgColor="bg-[#E0F2FE]"
@@ -89,7 +89,7 @@ export function FisioKpiCards({ data, loading = false }: FisioKpiCardsProps) {
 
       <KpiCard
         title="Desempenhou"
-        value={data.desempenhou}
+        value={data.desempenhou ?? 0}
         hint="Realizou sozinho"
         icon={CheckCircle}
         bgColor="bg-[#D1FAE5]"
@@ -99,7 +99,7 @@ export function FisioKpiCards({ data, loading = false }: FisioKpiCardsProps) {
 
       <KpiCard
         title="Com Ajuda"
-        value={data.desempenhouComAjuda}
+        value={data.desempenhouComAjuda ?? 0}
         hint="Precisou de suporte"
         icon={HandHelping}
         bgColor="bg-[#FEF3C7]"
@@ -109,7 +109,7 @@ export function FisioKpiCards({ data, loading = false }: FisioKpiCardsProps) {
 
       <KpiCard
         title="Não Desempenhou"
-        value={data.naoDesempenhou}
+        value={data.naoDesempenhou ?? 0}
         hint="Não conseguiu"
         icon={XCircle}
         bgColor="bg-[#FEE2E2]"
@@ -119,7 +119,7 @@ export function FisioKpiCards({ data, loading = false }: FisioKpiCardsProps) {
 
       <KpiCard
         title="Compensação"
-        value={data.compensacaoTotal}
+        value={data.compensacaoTotal ?? 0}
         hint="Atividades com comp."
         icon={Activity}
         bgColor="bg-[#DBEAFE]"
@@ -129,7 +129,7 @@ export function FisioKpiCards({ data, loading = false }: FisioKpiCardsProps) {
 
       <KpiCard
         title="Desconforto"
-        value={data.desconfortoTotal}
+        value={data.desconfortoTotal ?? 0}
         hint="Atividades com dor"
         icon={AlertTriangle}
         bgColor="bg-[#FED7AA]"

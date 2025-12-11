@@ -46,7 +46,6 @@ const suspenseFallback = (
 const ConsultarSessaoPage = lazy(
     () => import('@/features/programas/sessoes/pages/ConsultarSessao'),
 );
-const DetalheSessaoPage = lazy(() => import('@/features/programas/sessoes/pages/DetalheSessao'));
 
 // Lazy imports para as páginas de área
 const AreaHubTOPage = lazy(
@@ -105,6 +104,32 @@ const AreaHubMovimentoPage = lazy(
 );
 const AreaHubMusiPage = lazy(
     () => import('@/features/programas/variants/musicoterapia/pages/AreaHubMusiPage'),
+);
+const MusiCadastroProgramaPage = lazy(
+    () => import('@/features/programas/variants/musicoterapia/pages/MusiCadastroProgramaPage'),
+);
+const MusiConsultaProgramasPage = lazy(
+    () => import('@/features/programas/variants/musicoterapia/pages/MusiConsultaProgramasPage'),
+);
+const MusiDetalheProgramaPage = lazy(
+    () => import('@/features/programas/variants/musicoterapia/pages/MusiDetalheProgramaPage'),
+);
+const MusiEditarProgramaPage = lazy(
+    () => import('@/features/programas/variants/musicoterapia/pages/MusiEditarProgramaPage'),
+);
+const RegistrarSessaoMusiPage = lazy(
+    () => import('@/features/programas/variants/musicoterapia/pages/RegistrarSessaoMusiPage'),
+);
+const ConsultarSessoesMusiPage = lazy(
+    () => import('@/features/programas/variants/musicoterapia/pages/ConsultarSessoesMusiPage'),
+);
+const DetalheSessaoMusiPage = lazy(
+    () => import('@/features/programas/variants/musicoterapia/pages/DetalheSessaoMusiPage'),
+);
+
+// Fono
+const DetalheSessaoFonoPage = lazy(
+    () => import('@/features/programas/variants/fono/pages/DetalheSessaoFonoPage'),
 );
 
 // Novas áreas - páginas em construção
@@ -455,6 +480,78 @@ export const router = createBrowserRouter([
                                 handle: { breadcrumb: 'Musicoterapia', title: 'Musicoterapia' },
                             },
                             {
+                                path: 'programas/musicoterapia/ocp/novo',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <MusiCadastroProgramaPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Novo Programa', title: 'Novo Programa - Musicoterapia' },
+                            },
+                            {
+                                path: 'programas/musicoterapia/ocp/:programaId/editar',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <MusiEditarProgramaPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Editar Programa', title: 'Editar Programa - Musicoterapia' },
+                            },
+                            {
+                                path: 'programas/musicoterapia/consultar',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <MusiConsultaProgramasPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Consultar Programas', title: 'Consultar Programas - Musicoterapia' },
+                            },
+                            {
+                                path: 'programas/musicoterapia/programa/:programaId',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <MusiDetalheProgramaPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Detalhe do Programa', title: 'Programa - Musicoterapia' },
+                            },
+                            {
+                                path: 'programas/musicoterapia/sessoes/registrar',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <RegistrarSessaoMusiPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Registrar Sessão', title: 'Registrar Sessão - Musicoterapia' },
+                            },
+                            {
+                                path: 'programas/musicoterapia/sessoes',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <ConsultarSessoesMusiPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Sessões', title: 'Sessões - Musicoterapia' },
+                            },
+                            {
+                                path: 'programas/musicoterapia/sessoes/consultar',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <ConsultarSessoesMusiPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Consultar Sessões', title: 'Consultar Sessões - Musicoterapia' },
+                            },
+                            {
+                                path: 'programas/musicoterapia/sessoes/:sessaoId',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <DetalheSessaoMusiPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Detalhe da Sessão', title: 'Detalhe da Sessão - Musicoterapia' },
+                            },
+                            {
                                 path: 'programas/psicoterapia',
                                 element: (
                                     <Suspense fallback={suspenseFallback}>
@@ -506,6 +603,53 @@ export const router = createBrowserRouter([
                                         <ConsultaOcpPage />
                                     </Suspense>
                                 ),
+                            },
+                            // Rotas base para modelo Fisio (compartilhadas por Fisio, Psicomotricidade, Educação Física)
+                            // Não contêm "fisioterapia" na URL para não mudar o contexto de área
+                            {
+                                path: 'programas/novo-fisio',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <FisioCadastroProgramaPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Novo Programa' },
+                            },
+                            {
+                                path: 'programas/lista-fisio',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <FisioConsultaProgramasPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Consultar Programas' },
+                            },
+                            {
+                                path: 'programas/sessoes-fisio/consultar',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <ConsultarSessoesFisioPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Consultar Sessões' },
+                            },
+                            {
+                                path: 'programas/sessoes-fisio/registrar',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <RegistrarSessaoFisioPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Registrar Sessão' },
+                            },
+                            {
+                                path: 'programas/sessoes-fisio/:sessaoId',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <DetalheSessaoFisioPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Detalhe da Sessão' },
                             },
                             {
                                 path: 'programas/novo',
@@ -588,7 +732,7 @@ export const router = createBrowserRouter([
                                 path: 'programas/sessoes/:sessaoId',
                                 element: (
                                     <Suspense fallback={suspenseFallback}>
-                                        <DetalheSessaoPage />
+                                        <DetalheSessaoFonoPage />
                                     </Suspense>
                                 ),
                                 handle: { breadcrumb: 'Detalhe da Sessão' },

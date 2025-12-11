@@ -12,12 +12,12 @@ import {
     StatusToggle,
     ValidationErrors,
 } from '../../../editar-ocp';
-import { fetchProgramById } from '../../../editar-ocp/services';
+import { fetchProgramById, updateProgram } from '../../../editar-ocp/services';
 import type {
     ProgramDetail,
     UpdateProgramInput,
 } from '../../../editar-ocp/types';
-import { fisioProgramConfig, fisioRoutes } from '../config';
+import { fisioProgramConfig, fisioBaseRoutes } from '../config';
 import { fetchToProgramById } from '../mocks/mockService';
 import ToStimuliEditor from '../components/FisioStimuliEditor';
 import ToNotesSection from '../components/FisioNotesSection';
@@ -116,11 +116,6 @@ export default function ToEditarProgramaPage() {
             errors.goalDescription = 'A descrição do objetivo é obrigatória.';
         }
 
-        // Validar objetivo de curto prazo
-        if (!shortTermGoalDescription.trim()) {
-            errors.shortTermGoalDescription = 'O objetivo de curto prazo é obrigatório.';
-        }
-
         // Validar estímulos/atividades
         if (!stimuli || stimuli.length === 0) {
             errors.general = 'Adicione pelo menos uma atividade.';
@@ -177,8 +172,24 @@ export default function ToEditarProgramaPage() {
                 await new Promise((resolve) => setTimeout(resolve, 500));
                 toast.success('Programa atualizado com sucesso! (Mock)');
             } else {
-                // Para programas reais, usar a API (não implementado ainda)
-                console.warn('[ToEditarProgramaPage] Atualização de programas reais não implementada ainda');
+                // Chamar API real para atualizar o programa
+                await updateProgram({
+                    id: programaId,
+                    name: program?.name || goalTitle, // nome do programa (obrigatório no backend)
+                    goalTitle,
+                    goalDescription,
+                    shortTermGoalDescription: shortTermGoalDescription || null,
+                    stimuli: (stimuli || []).map((s) => ({
+                        id: s.id,
+                        label: s.label,
+                        active: s.active,
+                        order: s.order,
+                    })),
+                    notes,
+                    status,
+                    prazoInicio,
+                    prazoFim,
+                });
                 toast.success('Programa atualizado com sucesso!');
             }
 
@@ -186,8 +197,8 @@ export default function ToEditarProgramaPage() {
             
             // Navegar de volta para o detalhe
             const detailUrl = patientId 
-                ? `${fisioRoutes.detail(programaId)}?patientId=${patientId}`
-                : fisioRoutes.detail(programaId);
+                ? `${fisioBaseRoutes.detail(programaId)}?patientId=${patientId}`
+                : fisioBaseRoutes.detail(programaId);
             navigate(detailUrl);
         } catch (err) {
             console.error('Erro ao salvar programa:', err);
@@ -204,8 +215,8 @@ export default function ToEditarProgramaPage() {
         }
 
         const detailUrl = patientId 
-            ? `${fisioRoutes.detail(programaId!)}?patientId=${patientId}`
-            : fisioRoutes.detail(programaId!);
+            ? `${fisioBaseRoutes.detail(programaId!)}?patientId=${patientId}`
+            : fisioBaseRoutes.detail(programaId!);
         navigate(detailUrl);
     };
 

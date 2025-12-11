@@ -2,7 +2,7 @@ import { Plus, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ActionBar from '@/components/ui/action-bar';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { fisioRoutes } from '../config';
+import { fisioBaseRoutes } from '../config';
 
 interface ToProgramActionBarProps {
     program: {
@@ -16,17 +16,17 @@ export default function ToProgramActionBar({ program }: ToProgramActionBarProps)
     const [searchParams] = useSearchParams();
 
     const handleRegisterSession = () => {
-        navigate(fisioRoutes.newSession(program.id, program.patientId));
+        navigate(fisioBaseRoutes.newSession(program.id, program.patientId));
     };
 
     const handleEditProgram = () => {
         const patientId = searchParams.get('patientId');
-        const path = fisioRoutes.edit(program.id);
+        const path = fisioBaseRoutes.edit(program.id);
         const url = patientId ? `${path}?patientId=${patientId}` : path;
 
         console.log('[ToProgramActionBar] Navegando para:', url);
         console.log('[ToProgramActionBar] Program ID:', program.id);
-        console.log('[ToProgramActionBar] Path from fisioRoutes.edit:', path);
+        console.log('[ToProgramActionBar] Path from fisioBaseRoutes.edit:', path);
 
         navigate(url);
     };

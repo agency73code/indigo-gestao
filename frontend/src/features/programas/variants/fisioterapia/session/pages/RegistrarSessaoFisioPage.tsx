@@ -5,6 +5,7 @@ import { Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ActionBar from '@/components/ui/action-bar';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
+import { useCurrentArea, AREA_LABELS } from '@/contexts/AreaContext';
 import PatientSelector from '@/features/programas/consultar-programas/components/PatientSelector';
 import {
     ToProgramSelector,
@@ -34,10 +35,12 @@ import type {
 
 export default function RegistrarSessaoToPage() {
     const { setPageTitle } = usePageTitle();
+    const area = useCurrentArea('fisioterapia');
+    const areaLabel = AREA_LABELS[area] || 'Fisioterapia';
 
     useEffect(() => {
-        setPageTitle('Nova Sessão - TO');
-    }, [setPageTitle]);
+        setPageTitle(`Nova Sessão - ${areaLabel}`);
+    }, [setPageTitle, areaLabel]);
 
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
@@ -224,7 +227,7 @@ export default function RegistrarSessaoToPage() {
                 attempts: sessionState.attempts,
                 notes: sessionState.notes,
                 files: sessionState.files,
-                area: 'fisioterapia',
+                area,
             });
 
             // Toast de confirmação com mensagem focada na experiência do usuário

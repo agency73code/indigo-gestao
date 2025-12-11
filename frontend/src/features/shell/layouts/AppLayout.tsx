@@ -5,7 +5,6 @@ import { AppSidebar } from '@/components/sidebar/app-sidebar';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AbilityProvider } from '@/features/auth/abilities/AbilityProvider';
 import { AreaProvider } from '@/contexts/AreaContext';
-import PageTransition from '@/shared/components/layout/PageTransition';
 import ThemeToggle from '../components/ThemeToggle';
 import { BackButton } from '@/components/layout/BackButton';
 
@@ -109,6 +108,7 @@ export default function AppLayout() {
         '/app/programas/sessoes/consultar',
         '/app/programas/sessoes/nova',
         '/app/relatorios/novo',
+        '/app/relatorios/',
         '/app/cadastros/vinculos'
     ], []);
 
@@ -204,17 +204,13 @@ export default function AppLayout() {
                                     {noMainContainer ? (
                                         <div className="flex-1 overflow-y-auto min-h-0">
                                             <ErrorBoundary>
-                                                <PageTransition>
                                                     <Outlet />
-                                                </PageTransition>
                                             </ErrorBoundary>
                                         </div>
                                     ) : (
                                         <main className="flex-1 overflow-y-auto bg-(--bg-main) border border-gray-200/10 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] min-h-0">
                                             <ErrorBoundary>
-                                                <PageTransition>
                                                     <Outlet />
-                                                </PageTransition>
                                             </ErrorBoundary>
                                         </main>
                                     )}
