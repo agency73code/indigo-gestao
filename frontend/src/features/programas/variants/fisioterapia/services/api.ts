@@ -1,13 +1,27 @@
 import { ageCalculation, buildApiUrl, fetchOwnerAvatar } from '@/lib/api';
 import type { Patient, Therapist, CreateProgramInput } from '../../../core/types';
-import { FISIO_AREA_ID } from '../constants';
+import { getCurrentAreaFromStorage } from '@/utils/apiWithArea';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 /**
- * Serviços de API para Fisioterapia
- * 🔧 Usa FISIO_AREA_ID centralizado para garantir consistência
+ * Serviços de API para o modelo Fisioterapia (Fisioterapia, Psicomotricidade, Educação Física)
+ * 
+ * IMPORTANTE: Estes serviços são compartilhados por áreas que usam o mesmo modelo:
+ * - Fisioterapia
+ * - Psicomotricidade
+ * - Educação Física
+ * 
+ * A área é obtida automaticamente do contexto (localStorage) para garantir
+ * que os dados sejam salvos e filtrados pela área correta.
  */
+
+/**
+ * Retorna a área atual do contexto, com fallback para 'fisioterapia'
+ */
+function getArea(): string {
+    return getCurrentAreaFromStorage() || 'fisioterapia';
+}
 
 export async function fetchFisioPatientById(id: string): Promise<Patient> {
     const response = await fetch(`${API_URL}/clientes/${id}`, {
@@ -68,16 +82,17 @@ export async function fetchFisioTherapistAvatar(therapistId: string): Promise<st
 }
 
 export async function createFisioProgram(input: CreateProgramInput): Promise<{ id: string }> {
+    const area = getArea();
+    
     const response = await fetch(`${API_URL}/ocp/create`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         credentials: 'include',
-
         body: JSON.stringify({
             ...input,
-            area: FISIO_AREA_ID,
+            area,
         }),
     });
 
@@ -97,8 +112,9 @@ export async function listFisioPrograms(params: {
     sort?: 'recent' | 'alphabetic';
     page?: number;
 }): Promise<any[]> {
+    const area = getArea();
     const teste = buildApiUrl(`/api/ocp/clients/${params.patientId}/programs`, {
-        area: 'fisioterapia',
+        area,
         page: params.page?.toString(),
         status: params.status !== 'all' ? params.status : undefined,
         q: params.q,
@@ -112,7 +128,7 @@ export async function listFisioPrograms(params: {
         });
 
         if (!response.ok) {
-            throw new Error('Erro ao buscar programas de TO');
+            throw new Error(`Erro ao buscar programas de ${area}`);
         }
 
         const json = await response.json();
@@ -120,11 +136,11 @@ export async function listFisioPrograms(params: {
 
         return [...realPrograms];
     } catch (error) {
-        console.error('Erro ao buscar programas de TO:', error);
+        console.error(`Erro ao buscar programas de ${area}:`, error);
         
         // Em caso de erro, retornar apenas o mock para desenvolvimento
         const { mockToProgramListItem } = await import('../mocks/programListMock');
-        console.log('🎭 Retornando apenas programa MOCK de Fisio (erro na API)');
+        console.log(`🎭 Retornando apenas programa MOCK de ${area} (erro na API)`);
         return [mockToProgramListItem];
     }
 }

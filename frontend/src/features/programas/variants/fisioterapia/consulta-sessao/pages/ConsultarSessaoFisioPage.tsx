@@ -11,6 +11,7 @@ import { ToListaSessoes } from '../components';
 import * as services from '@/features/programas/consulta-sessao/services';
 import { getPatientById } from '@/features/programas/consultar-programas/services';
 import type { Sessao, SessaoFiltersState } from '@/features/programas/consulta-sessao/types';
+import { useCurrentArea, AREA_LABELS } from '@/contexts/AreaContext';
 
 const DEFAULT_FILTERS: SessaoFiltersState = {
     q: '',
@@ -24,6 +25,8 @@ export default function ConsultarSessaoToPage() {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const { setPageTitle, setOnBackClick } = usePageTitle();
+    const area = useCurrentArea('fisioterapia');
+    const areaLabel = AREA_LABELS[area] || 'Fisioterapia';
 
     const [filters, setFilters] = useState<SessaoFiltersState>(DEFAULT_FILTERS);
     const [patient, setPatient] = useState<Patient | null>(null);
@@ -37,19 +40,26 @@ export default function ConsultarSessaoToPage() {
     const pacienteIdFromQuery = useMemo(() => searchParams.get('pacienteId'), [searchParams]);
 
     useEffect(() => {
-        setPageTitle('Consultar Sessão - TO');
-    }, [setPageTitle]);
+        setPageTitle(`Consultar Sessão - ${areaLabel}`);
+    }, [setPageTitle, areaLabel]);
 
-    // Configurar botão de voltar para ir para o hub de TO
+    // Mapeamento de área para rota do hub
+    const areaHubRoutes: Record<string, string> = {
+        'fisioterapia': '/app/programas/fisioterapia',
+        'psicomotricidade': '/app/programas/psicomotricidade',
+        'educacao-fisica': '/app/programas/educacao-fisica',
+    };
+
+    // Configurar botão de voltar para ir para o hub da área correta
     useEffect(() => {
         setOnBackClick(() => () => {
-            navigate('/app/programas/fisioterapia');
+            navigate(areaHubRoutes[area] || '/app/programas/fisioterapia');
         });
 
         return () => {
             setOnBackClick(undefined);
         };
-    }, [setOnBackClick, navigate]);
+    }, [setOnBackClick, navigate, area]);
 
     const syncFiltersToParams = useCallback(
         (nextFilters: SessaoFiltersState, patientId: string | null) => {
@@ -152,7 +162,7 @@ export default function ConsultarSessaoToPage() {
             try {
                 const response = await services.listSessionsByPatient(
                     patient.id,
-                    'fisioterapia',
+                    area,
                     {
                         q: filters.q,
                         dateRange: filters.dateRange,
@@ -183,7 +193,7 @@ export default function ConsultarSessaoToPage() {
         return () => {
             cancelled = true;
         };
-    }, [patient, filters]);
+    }, [patient, filters, area]);
 
     const programOptions = useMemo(() => {
         if (!patient) return [] as string[];
@@ -249,14 +259,16 @@ export default function ConsultarSessaoToPage() {
     const handleViewDetails = (sessionId: string) => {
         if (!patient) return;
         const selectedSession = sessions.find((item) => item.id === sessionId);
-        navigate(`/app/programas/fisioterapia/sessoes/${sessionId}?pacienteId=${patient.id}`, {
+        // Usar rota base para não alterar contexto da área
+        navigate(`/app/programas/sessoes-fisio/${sessionId}?pacienteId=${patient.id}`, {
             state: selectedSession ? { sessionDate: selectedSession.data } : undefined,
         });
     };
 
     const handleCreateSession = () => {
         if (!patient) return;
-        navigate(`/app/programas/fisioterapia/sessoes/registrar?pacienteId=${patient.id}`);
+        // Usar rota base para não alterar contexto da área
+        navigate(`/app/programas/sessoes-fisio/registrar?pacienteId=${patient.id}`);
     };
 
     return (

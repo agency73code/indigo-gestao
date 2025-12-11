@@ -45,28 +45,28 @@ export function useProgramAreas(): AreaMeta[] {
             title: 'Musicoterapia', 
             path: '/app/programas/musicoterapia',
             icon: Music,
-            implemented: true
+            implemented: 'in-progress'
         },
         { 
             id: 'fisioterapia', 
             title: 'Fisioterapia', 
             path: '/app/programas/fisioterapia',
             icon: Activity,
-            implemented: 'in-progress'
+            implemented: true
         },
         { 
             id: 'psicomotricidade', 
             title: 'Psicomotricidade', 
             path: '/app/programas/psicomotricidade',
             icon: Footprints,
-            implemented: false
+            implemented: true
         },
         { 
             id: 'educacao-fisica', 
             title: 'Educação Física', 
             path: '/app/programas/educacao-fisica',
             icon: Dumbbell,
-            implemented: false
+            implemented: true
         },
         { 
             id: 'neuropsicologia', 

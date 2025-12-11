@@ -112,6 +112,8 @@ export async function createAreaSession(req: Request, res: Response, next: NextF
                 });
                 break;
             case 'fisioterapia':
+            case 'psicomotricidade':
+            case 'educacao-fisica':
                 session = await OcpService.createPhysiotherapySession({
                     programId: Number(programId),
                     patientId,

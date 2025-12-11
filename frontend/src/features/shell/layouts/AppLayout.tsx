@@ -108,6 +108,7 @@ export default function AppLayout() {
         '/app/programas/sessoes/consultar',
         '/app/programas/sessoes/nova',
         '/app/relatorios/novo',
+        '/app/relatorios/',
         '/app/cadastros/vinculos'
     ], []);
 

@@ -1,5 +1,5 @@
 import { BaseCadastroProgramaPage } from '../../../core/pages/BaseCadastroProgramaPage';
-import { fisioProgramConfig, fisioRoutes } from '../config';
+import { fisioProgramConfig, fisioBaseRoutes } from '../config';
 import {
     fetchFisioPatientById,
     fetchFisioTherapistById,
@@ -19,9 +19,9 @@ export default function ToCadastroProgramaPage() {
             onFetchTherapist={fetchFisioTherapistById}
             onFetchTherapistAvatar={fetchFisioTherapistAvatar}
             onCreateProgram={createFisioProgram}
-            detailRoute={fisioRoutes.detail}
-            newSessionRoute={fisioRoutes.newSession}
-            listRoute={fisioRoutes.list}
+            detailRoute={fisioBaseRoutes.detail}
+            newSessionRoute={fisioBaseRoutes.newSession}
+            listRoute={fisioBaseRoutes.list}
         />
     );
 }

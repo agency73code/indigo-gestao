@@ -30,6 +30,7 @@ export function NavMain({
             title: string;
             url: string;
             ability?: { action: Actions; subject: Subjects };
+            status?: 'em-breve' | 'quase-pronto';
         }[];
     }[];
 }) {
@@ -208,7 +209,7 @@ export function NavMain({
                                                         >
                                                             <SidebarMenuSubItem key={subItem.title}>
                                                                 <SidebarMenuSubButton asChild isActive={isSubActive}>
-                                                                    <Link to={subItem.url}>
+                                                                    <Link to={subItem.url} className="flex items-center justify-between w-full">
                                                                         <span
                                                                             style={{
                                                                                 fontFamily: 'Sora, sans-serif',
@@ -217,6 +218,32 @@ export function NavMain({
                                                                         >
                                                                             {subItem.title}
                                                                         </span>
+                                                                        {subItem.status === 'em-breve' && (
+                                                                            <span 
+                                                                                className="text-[10px] font-normal ml-0.5 px-2 py-0.5 shrink-0" 
+                                                                                style={{ 
+                                                                                    fontFamily: 'Inter, sans-serif', 
+                                                                                    backgroundColor: '#FFF3E0', 
+                                                                                    color: '#A57A5A',
+                                                                                    borderRadius: '24px'
+                                                                                }}
+                                                                            >
+                                                                                Em breve
+                                                                            </span>
+                                                                        )}
+                                                                        {subItem.status === 'quase-pronto' && (
+                                                                            <span 
+                                                                                className="text-[10px] font-normal px-2 py-0.5 shrink-0" 
+                                                                                style={{ 
+                                                                                    fontFamily: 'Inter, sans-serif', 
+                                                                                    backgroundColor: '#E3F2FD', 
+                                                                                    color: '#4A6A8F',
+                                                                                    borderRadius: '24px'
+                                                                                }}
+                                                                            >
+                                                                                Quase pronto
+                                                                            </span>
+                                                                        )}
                                                                     </Link>
                                                                 </SidebarMenuSubButton>
                                                             </SidebarMenuSubItem>

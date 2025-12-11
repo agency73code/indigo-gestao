@@ -600,6 +600,53 @@ export const router = createBrowserRouter([
                                     </Suspense>
                                 ),
                             },
+                            // Rotas base para modelo Fisio (compartilhadas por Fisio, Psicomotricidade, Educação Física)
+                            // Não contêm "fisioterapia" na URL para não mudar o contexto de área
+                            {
+                                path: 'programas/novo-fisio',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <FisioCadastroProgramaPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Novo Programa' },
+                            },
+                            {
+                                path: 'programas/lista-fisio',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <FisioConsultaProgramasPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Consultar Programas' },
+                            },
+                            {
+                                path: 'programas/sessoes-fisio/consultar',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <ConsultarSessoesFisioPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Consultar Sessões' },
+                            },
+                            {
+                                path: 'programas/sessoes-fisio/registrar',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <RegistrarSessaoFisioPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Registrar Sessão' },
+                            },
+                            {
+                                path: 'programas/sessoes-fisio/:sessaoId',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <DetalheSessaoFisioPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Detalhe da Sessão' },
+                            },
                             {
                                 path: 'programas/novo',
                                 element: (

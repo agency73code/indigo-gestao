@@ -1,8 +1,16 @@
 import { fetchClients } from '../api';
 import type { Patient, ProgramListItem } from './types';
+import { getCurrentAreaFromStorage } from '@/utils/apiWithArea';
 
 export async function searchPatients(q: string): Promise<Patient[]> {
     return await fetchClients(q);
+}
+
+/**
+ * Retorna a área atual do contexto, com fallback para 'fonoaudiologia'
+ */
+function getArea(): string {
+    return getCurrentAreaFromStorage() || 'fonoaudiologia';
 }
 
 export async function listPrograms(params: {
@@ -12,9 +20,10 @@ export async function listPrograms(params: {
     sort?: 'recent' | 'alphabetic';
     page?: number;
 }): Promise<ProgramListItem[]> {
+    const area = getArea();
     const url = new URL(`/api/ocp/clients/${params.patientId}/programs`, window.location.origin);
 
-    url.searchParams.set('area', 'fonoaudiologia');
+    url.searchParams.set('area', area);
     
     if (params.page) url.searchParams.set('page', params.page.toString());
     if (params.status) url.searchParams.set('status', params.status);

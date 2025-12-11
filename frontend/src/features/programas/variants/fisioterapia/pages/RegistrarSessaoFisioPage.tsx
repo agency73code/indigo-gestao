@@ -5,6 +5,7 @@ import { Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ActionBar from '@/components/ui/action-bar';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
+import { useCurrentArea, AREA_LABELS } from '@/contexts/AreaContext';
 import {
     ToPatientSelector,
     ToProgramSelector,
@@ -38,10 +39,12 @@ import type {
  */
 export default function RegistrarSessaoToPage() {
     const { setPageTitle } = usePageTitle();
+    const area = useCurrentArea('fisioterapia');
+    const areaLabel = AREA_LABELS[area] || 'Fisioterapia';
 
     useEffect(() => {
-        setPageTitle('Nova Sessão - Fisioterapia');
-    }, [setPageTitle]);
+        setPageTitle(`Nova Sessão - ${areaLabel}`);
+    }, [setPageTitle, areaLabel]);
 
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
@@ -223,7 +226,7 @@ export default function RegistrarSessaoToPage() {
                 attempts: sessionState.attempts,
                 notes: sessionState.notes,
                 files: sessionState.files,
-                area: 'fisioterapia',
+                area,
             });
 
             toast.success('Sessão registrada com sucesso! 🎉', {
@@ -232,8 +235,13 @@ export default function RegistrarSessaoToPage() {
                 duration: 4000,
             });
 
-            const redirectUrl = `/app/programas/fisioterapia/programa/${sessionState.programId}?patientId=${sessionState.patientId}`;
-            navigate(redirectUrl);
+            // Redirecionar para o hub da área atual ao invés de página específica de fisioterapia
+            const areaHubRoutes: Record<string, string> = {
+                'fisioterapia': '/app/programas/fisioterapia',
+                'psicomotricidade': '/app/programas/psicomotricidade',
+                'educacao-fisica': '/app/programas/educacao-fisica',
+            };
+            navigate(areaHubRoutes[area] || '/app/programas/fisioterapia');
         } catch (err: any) {
             console.error('Erro ao salvar sessão:', err);
             
@@ -257,12 +265,13 @@ export default function RegistrarSessaoToPage() {
     };
 
     const handleCancel = () => {
-        if (sessionState.programId && sessionState.patientId) {
-            const backUrl = `/app/programas/fisioterapia/ocp/${sessionState.programId}?patientId=${sessionState.patientId}`;
-            navigate(backUrl);
-        } else {
-            navigate('/app/programas/fisioterapia');
-        }
+        // Mapeamento de área para hub correto
+        const areaHubRoutes: Record<string, string> = {
+            'fisioterapia': '/app/programas/fisioterapia',
+            'psicomotricidade': '/app/programas/psicomotricidade',
+            'educacao-fisica': '/app/programas/educacao-fisica',
+        };
+        navigate(areaHubRoutes[area] || '/app/programas/fisioterapia');
     };
 
     // Validações

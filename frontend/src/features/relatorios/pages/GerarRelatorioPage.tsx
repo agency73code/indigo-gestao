@@ -429,13 +429,17 @@ export function GerarRelatorioPage() {
                 return;
             }
 
-            // 🎯 TRATAMENTO ESPECÍFICO PARA FISIOTERAPIA
-            if (area === 'fisioterapia') {
+            // 🎯 TRATAMENTO PARA MODELO FONO (Fonoaudiologia, Psicopedagogia, Terapia ABA)
+            const fonoModelAreas = ['fonoaudiologia', 'psicopedagogia', 'terapia-aba'];
+            
+            // 🎯 TRATAMENTO PARA MODELO FISIO (Fisioterapia, Psicomotricidade, Educação Física)
+            const fisioModelAreas = ['fisioterapia', 'psicomotricidade', 'educacao-fisica'];
+            if (fisioModelAreas.includes(area)) {
                 try {
-                    // Carregar sessões de Fisio do paciente
+                    // Carregar sessões do paciente filtradas pela área específica
                     const sessionsResponse = await listSessionsByPatient(
                         currentFilters.pacienteId,
-                        'fisioterapia',
+                        area, // Usa a área real para filtrar os dados corretos
                         {
                             dateRange: currentFilters.periodo.mode,
                             periodStart: currentFilters.periodo.start,
@@ -493,7 +497,18 @@ export function GerarRelatorioPage() {
                 return;
             }
 
-            // Área Fono usa endpoint atual
+            // Modelo Fono (Fonoaudiologia, Psicopedagogia, Terapia ABA) usa endpoint atual
+            if (!fonoModelAreas.includes(area)) {
+                // Área não reconhecida - mantém dados vazios
+                setKpis(null);
+                setSerieLinha([]);
+                setPrazoPrograma(null);
+                setAdaptedData(null);
+                setLoadingKpis(false);
+                setLoadingCharts(false);
+                return;
+            }
+
             const kpisData = await fetchKpis(filtersWithArea);
             setKpis(kpisData);
             setLoadingKpis(false);
@@ -651,7 +666,7 @@ export function GerarRelatorioPage() {
         const { start, end } = calculatePeriodDates();
 
         // Preparar dados gerados do relatório
-        const generatedData = {
+        const generatedData: any = {
             kpis: {
                 acerto: reportKpis.acerto || 0,
                 independencia: reportKpis.independencia || 0,
@@ -672,6 +687,36 @@ export function GerarRelatorioPage() {
                 fim: prazoPrograma.fim,
             } : undefined,
         };
+
+        // Adicionar dados específicos de cada área
+        if (selectedArea === 'terapia-ocupacional' && adaptedData) {
+            generatedData.activityDuration = adaptedData.activityDuration || [];
+            generatedData.autonomyByCategory = adaptedData.autonomyByCategory || [];
+            generatedData.attentionActivities = adaptedData.attentionActivities || [];
+            generatedData.performanceLineData = adaptedData.performanceLineData || [];
+            // Sobrescrever kpis com dados específicos de TO
+            if (adaptedData.kpis) {
+                generatedData.kpis = adaptedData.kpis;
+            }
+        } else if (['fisioterapia', 'psicomotricidade', 'educacao-fisica'].includes(selectedArea) && adaptedData) {
+            // Modelo Fisio (compartilhado entre Fisioterapia, Psicomotricidade e Educação Física)
+            generatedData.activityDuration = adaptedData.activityDuration || [];
+            generatedData.autonomyByCategory = adaptedData.autonomyByCategory || [];
+            generatedData.attentionActivities = adaptedData.attentionActivities || [];
+            generatedData.performance = adaptedData.performance || [];
+            if (adaptedData.kpis) {
+                generatedData.kpis = adaptedData.kpis;
+            }
+        } else if (selectedArea === 'musicoterapia' && adaptedData) {
+            generatedData.autonomyByCategory = adaptedData.autonomyByCategory || [];
+            generatedData.attentionActivities = adaptedData.attentionActivities || [];
+            generatedData.participacao = adaptedData.participacao || [];
+            generatedData.suporte = adaptedData.suporte || [];
+            generatedData.evolutionData = adaptedData.evolutionData || [];
+            if (adaptedData.kpis) {
+                generatedData.kpis = adaptedData.kpis;
+            }
+        }
 
         // Usar o serviço otimizado para salvar
         const savedReport = await saveReportToBackend({
@@ -887,8 +932,8 @@ export function GerarRelatorioPage() {
                             </div>
                         </div>
 
-                        {/* KPIs - Fonoaudiologia */}
-                        {selectedArea === 'fonoaudiologia' && kpis && (
+                        {/* KPIs - Modelo Fono (Fonoaudiologia, Psicopedagogia, Terapia ABA) */}
+                        {['fonoaudiologia', 'psicopedagogia', 'terapia-aba'].includes(selectedArea) && kpis && (
                             <section data-print-block>
                                 <KpiCards data={kpis} loading={loadingKpis} />
                             </section>
@@ -901,8 +946,8 @@ export function GerarRelatorioPage() {
                             </section>
                         )}
                         
-                        {/* KPIs - Fisioterapia */}
-                        {selectedArea === 'fisioterapia' && adaptedData?.kpis && (
+                        {/* KPIs - Modelo Fisio (Fisioterapia, Psicomotricidade, Educação Física) */}
+                        {['fisioterapia', 'psicomotricidade', 'educacao-fisica'].includes(selectedArea) && adaptedData?.kpis && (
                             <section data-print-block>
                                 <FisioKpiCards data={adaptedData.kpis} loading={loadingKpis} />
                             </section>
@@ -916,7 +961,7 @@ export function GerarRelatorioPage() {
                         )}
                         
                         {/* KPIs - Outras Áreas (genérico) */}
-                        {selectedArea !== 'fonoaudiologia' && selectedArea !== 'terapia-ocupacional' && selectedArea !== 'fisioterapia' && selectedArea !== 'musicoterapia' && adaptedData?.kpis && (
+                        {!['fonoaudiologia', 'psicopedagogia', 'terapia-aba'].includes(selectedArea) && selectedArea !== 'terapia-ocupacional' && !['fisioterapia', 'psicomotricidade', 'educacao-fisica'].includes(selectedArea) && selectedArea !== 'musicoterapia' && adaptedData?.kpis && (
                             <section data-print-block>
                                 <KpiCardsRenderer 
                                     configs={areaConfig.kpis}
@@ -926,8 +971,8 @@ export function GerarRelatorioPage() {
                             </section>
                         )}
 
-                        {/* Gráficos - Fonoaudiologia */}
-                        {selectedArea === 'fonoaudiologia' && (
+                        {/* Gráficos - Modelo Fono (Fonoaudiologia, Psicopedagogia, Terapia ABA) */}
+                        {['fonoaudiologia', 'psicopedagogia', 'terapia-aba'].includes(selectedArea) && (
                             <section data-print-block data-print-wide>
                                 <div data-print-chart>
                                     <DualLineProgress data={serieLinha} loading={loadingCharts} />
@@ -988,10 +1033,10 @@ export function GerarRelatorioPage() {
                             </>
                         )}
                         
-                        {/* Gráficos - Fisioterapia */}
-                        {selectedArea === 'fisioterapia' && (
+                        {/* Gráficos - Modelo Fisio (Fisioterapia, Psicomotricidade, Educação Física) */}
+                        {['fisioterapia', 'psicomotricidade', 'educacao-fisica'].includes(selectedArea) && (
                             <>
-                                {/* Performance - Fisioterapia */}
+                                {/* Performance - Modelo Fisio */}
                                 {adaptedData?.performance && (
                                     <section data-print-block className="col-span-6">
                                         <div data-print-chart>
@@ -1004,7 +1049,7 @@ export function GerarRelatorioPage() {
                                 )}
 
                                 <div className="grid grid-cols-2 gap-6 col-span-6">
-                                    {/* Duração de Atividade - Fisioterapia */}
+                                    {/* Duração de Atividade - Modelo Fisio */}
                                     {adaptedData?.activityDuration && (
                                         <section data-print-block>
                                             <div data-print-chart>
@@ -1016,7 +1061,7 @@ export function GerarRelatorioPage() {
                                         </section>
                                     )}
 
-                                    {/* Autonomia por Categoria - Fisioterapia */}
+                                    {/* Autonomia por Categoria - Modelo Fisio */}
                                     {adaptedData?.autonomyByCategory && (
                                         <section data-print-block>
                                             <div data-print-chart>
@@ -1029,7 +1074,7 @@ export function GerarRelatorioPage() {
                                     )}
                                 </div>
 
-                                {/* Atividades com Atenção - Fisioterapia */}
+                                {/* Atividades com Atenção - Modelo Fisio */}
                                 {adaptedData?.attentionActivities && (
                                     <section data-print-block className="col-span-6">
                                         <FisioAttentionActivitiesCard 
@@ -1116,7 +1161,7 @@ export function GerarRelatorioPage() {
                         )}
                         
                         {/* Gráficos - Outras Áreas (genérico) */}
-                        {selectedArea !== 'fonoaudiologia' && selectedArea !== 'terapia-ocupacional' && selectedArea !== 'fisioterapia' && selectedArea !== 'musicoterapia' && areaConfig.charts.map((chartConfig) => (
+                        {!['fonoaudiologia', 'psicopedagogia', 'terapia-aba'].includes(selectedArea) && selectedArea !== 'terapia-ocupacional' && !['fisioterapia', 'psicomotricidade', 'educacao-fisica'].includes(selectedArea) && selectedArea !== 'musicoterapia' && areaConfig.charts.map((chartConfig) => (
                             <section key={chartConfig.type} data-print-block data-print-wide>
                                 <div data-print-chart>
                                     <ChartRenderer
@@ -1128,8 +1173,8 @@ export function GerarRelatorioPage() {
                             </section>
                         ))}
 
-                        {/* Estímulos com Atenção - Fonoaudiologia */}
-                        {areaConfig.attentionComponent && selectedArea === 'fonoaudiologia' && (
+                        {/* Estímulos com Atenção - Modelo Fono */}
+                        {areaConfig.attentionComponent && ['fonoaudiologia', 'psicopedagogia', 'terapia-aba'].includes(selectedArea) && (
                             <section data-print-block data-print-wide>
                                 <AttentionStimuliCard
                                     pacienteId={selectedPatient?.id || ''}
@@ -1141,8 +1186,8 @@ export function GerarRelatorioPage() {
                             </section>
                         )}
 
-                        {/* Prazo do Programa - Todas as áreas que usam */}
-                        {areaConfig.deadlineComponent && selectedArea === 'fonoaudiologia' && (
+                        {/* Prazo do Programa - Modelo Fono */}
+                        {areaConfig.deadlineComponent && ['fonoaudiologia', 'psicopedagogia', 'terapia-aba'].includes(selectedArea) && (
                             <section data-print-block data-print-wide>
                                 <OcpDeadlineCard
                                     inicio={prazoPrograma?.inicio}
@@ -1167,8 +1212,8 @@ export function GerarRelatorioPage() {
                             </section>
                         )}
                         
-                        {/* Prazo do Programa - Fisioterapia */}
-                        {selectedArea === 'fisioterapia' && prazoPrograma && (
+                        {/* Prazo do Programa - Modelo Fisio (Fisioterapia, Psicomotricidade, Educação Física) */}
+                        {['fisioterapia', 'psicomotricidade', 'educacao-fisica'].includes(selectedArea) && prazoPrograma && (
                             <section data-print-block data-print-wide>
                                 <OcpDeadlineCard
                                     inicio={prazoPrograma.inicio}
@@ -1194,7 +1239,7 @@ export function GerarRelatorioPage() {
                         )}
                         
                         {/* Mensagem para áreas sem dados ainda */}
-                        {selectedArea && selectedArea !== 'fonoaudiologia' && !adaptedData && !loadingKpis && (
+                        {selectedArea && !['fonoaudiologia', 'psicopedagogia', 'terapia-aba'].includes(selectedArea) && !adaptedData && !loadingKpis && (
                             <section data-print-block>
                                 <div className="text-center py-12 border-2 border-dashed rounded-lg">
                                     <p className="text-muted-foreground">

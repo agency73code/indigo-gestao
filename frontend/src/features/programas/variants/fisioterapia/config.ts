@@ -1,10 +1,11 @@
 import type { BaseProgramPageConfig } from '../../core/types';
 
 /**
- * Configuração de textos e labels para Fisioterapia
+ * Configuração de textos e labels para Fisioterapia/Psicomotricidade/Educação Física
+ * Modelo compartilhado entre as três áreas
  */
 export const fisioProgramConfig: BaseProgramPageConfig = {
-    pageTitle: 'Novo Objetivo - Fisioterapia',
+    pageTitle: 'Novo Objetivo',
     
     labels: {
         programName: 'Nome do Programa',
@@ -16,7 +17,7 @@ export const fisioProgramConfig: BaseProgramPageConfig = {
         criteria: 'Critério de Aprendizagem',
         notes: 'Observações Gerais',
         patient: 'Cliente',
-        therapist: 'Fisioterapeuta',
+        therapist: 'Terapeuta',
         dateStart: 'Data de Início',
         dateEnd: 'Data de Fim',
     },
@@ -60,7 +61,22 @@ export const fisioProgramConfig: BaseProgramPageConfig = {
 };
 
 /**
- * Configuração de rotas para Fisioterapia
+ * Rotas base que não alteram o contexto da área
+ * Usadas por Fisioterapia, Psicomotricidade e Educação Física
+ */
+export const fisioBaseRoutes = {
+    create: '/app/programas/novo-fisio',
+    list: '/app/programas/lista',
+    detail: (id: string) => `/app/programas/fisioterapia/programa/${id}`,
+    edit: (id: string) => `/app/programas/fisioterapia/ocp/${id}/editar`,
+    newSession: (programId: string, patientId: string) => 
+        `/app/programas/sessoes-fisio/registrar?programaId=${programId}&patientId=${patientId}`,
+    sessions: '/app/programas/sessoes/consultar',
+    sessionDetail: (id: string) => `/app/programas/sessoes-fisio/${id}`,
+};
+
+/**
+ * Configuração de rotas para Fisioterapia (legado)
  */
 export const fisioRoutes = {
     hub: '/app/programas/fisioterapia',

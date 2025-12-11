@@ -147,19 +147,22 @@ export default function ToSessionsList({ sessions, program }: ToSessionsListProp
     };
 
     const handleViewSession = (session: SessionListItem) => {
-        navigate(`/app/programas/fisioterapia/sessoes/${session.id}?pacienteId=${program.patientId}`, {
+        // Usar rota base para não alterar contexto da área
+        navigate(`/app/programas/sessoes-fisio/${session.id}?pacienteId=${program.patientId}`, {
             state: { sessionDate: session.date },
         });
     };
 
     const handleNewSession = () => {
+        // Usar rota base para não alterar contexto da área
         navigate(
-            `/app/programas/fisioterapia/sessoes/nova?programaId=${program.id}&patientId=${program.patientId}`,
+            `/app/programas/sessoes-fisio/registrar?programaId=${program.id}&patientId=${program.patientId}`,
         );
     };
 
     const handleSeeAll = () => {
-        navigate(`/app/programas/fisioterapia/sessoes/consultar?pacienteId=${program.patientId}`);
+        // Usar rota base para não alterar contexto da área
+        navigate(`/app/programas/sessoes/consultar?pacienteId=${program.patientId}`);
     };
 
     const sessionsWithSummaries = useMemo(() => {

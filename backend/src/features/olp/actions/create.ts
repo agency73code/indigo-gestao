@@ -82,7 +82,7 @@ export async function session(input: CreateSessionInput) {
             trials: {
                 create: trialsData,
             },
-            area: 'fonoaudiologia',
+            area: ocp.area ?? 'fonoaudiologia',
         },
     });
 }

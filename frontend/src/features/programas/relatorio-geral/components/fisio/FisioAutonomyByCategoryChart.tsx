@@ -1,21 +1,4 @@
-import { Bar, BarChart, CartesianGrid, LabelList, XAxis, YAxis } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from '@/components/ui/chart';
-
-const chartConfig = {
-  desempenho: {
-    label: 'Desempenho',
-    color: '#10B981', // Verde para sucesso
-  },
-  label: {
-    color: 'hsl(var(--background))',
-  },
-} satisfies ChartConfig;
 
 export interface FisioPerformanceRateData {
   atividade: string;
@@ -32,7 +15,7 @@ export function FisioAutonomyByCategoryChart({ data, loading = false }: FisioPer
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Taxa de Desempenho</CardTitle>
+          <CardTitle>Taxa de Desempenho por Atividade</CardTitle>
           <CardDescription>Carregando dados de desempenho...</CardDescription>
         </CardHeader>
         <CardContent>
@@ -48,7 +31,7 @@ export function FisioAutonomyByCategoryChart({ data, loading = false }: FisioPer
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Taxa de Desempenho</CardTitle>
+          <CardTitle>Taxa de Desempenho por Atividade</CardTitle>
           <CardDescription>Nenhum dado disponível para exibição</CardDescription>
         </CardHeader>
         <CardContent>
@@ -69,60 +52,33 @@ export function FisioAutonomyByCategoryChart({ data, loading = false }: FisioPer
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="h-[280px] w-full">
-          <BarChart
-            accessibilityLayer
-            data={data}
-            layout="vertical"
-            margin={{
-              top: 5,
-              right: 60,
-              bottom: 5,
-              left: 5,
-            }}
-            barSize={20}
-            barGap={1}
-            barCategoryGap={3}
-          >
-            <CartesianGrid horizontal={false} />
-            <YAxis
-              dataKey="atividade"
-              type="category"
-              tickLine={false}
-              tickMargin={10}
-              axisLine={false}
-              tickFormatter={(value) => value.slice(0, 3)}
-              hide
-            />
-            <XAxis dataKey="desempenho" type="number" hide />
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent indicator="line" />}
-            />
-            <Bar
-              dataKey="desempenho"
-              layout="vertical"
-              fill="var(--color-desempenho)"
-              radius={4}
-            >
-              <LabelList
-                dataKey="atividade"
-                position="insideLeft"
-                offset={8}
-                className="fill-white"
-                fontSize={12}
-              />
-              <LabelList
-                dataKey="desempenho"
-                position="right"
-                offset={8}
-                className="fill-foreground"
-                fontSize={12}
-                formatter={(value: number) => `${value}%`}
-              />
-            </Bar>
-          </BarChart>
-        </ChartContainer>
+        <div className="space-y-4">
+          {data.map((item, index) => {
+            // Para desempenho, o máximo é 100%
+            const percentage = Math.min(item.desempenho, 100);
+            
+            return (
+              <div key={index} className="space-y-1.5">
+                {/* Barra com valor */}
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-3 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-[#10B981] rounded-full transition-all duration-300"
+                      style={{ width: `${Math.max(percentage, 2)}%` }}
+                    />
+                  </div>
+                  <span className="text-sm font-medium text-foreground whitespace-nowrap min-w-[50px] text-right">
+                    {item.desempenho}%
+                  </span>
+                </div>
+                {/* Nome da atividade abaixo */}
+                <p className="text-xs text-muted-foreground leading-tight">
+                  {item.atividade}
+                </p>
+              </div>
+            );
+          })}
+        </div>
       </CardContent>
     </Card>
   );

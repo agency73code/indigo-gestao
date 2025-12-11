@@ -2,9 +2,9 @@ import { buildApiUrl } from '@/lib/api';
 import type { Sessao, ResumoSessao, ProgramDetail } from './types';
 import type { AreaType } from '@/contexts/AreaContext';
 
-// Mock habilitado apenas para musicoterapia e fisioterapia
-// TO usa dados reais da API
-const AREAS_WITH_MOCK: AreaType[] = ['musicoterapia', 'fisioterapia'];
+// Mock habilitado apenas para musicoterapia
+// TO e Fisioterapia usam dados reais da API
+const AREAS_WITH_MOCK: AreaType[] = ['musicoterapia'];
 const shouldUseMock = (area?: string) => AREAS_WITH_MOCK.includes(area as AreaType);
 
 /**

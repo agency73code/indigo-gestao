@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
+import { useCurrentArea } from '@/contexts/AreaContext';
 import type { Patient } from '@/features/programas/consultar-programas/types';
 import { getPatientById } from '@/features/programas/consultar-programas/services';
 import type { ProgramDetail } from '@/features/programas/detalhe-ocp/types';
@@ -20,6 +21,7 @@ export default function DetalheSessaoToPage() {
   const location = useLocation();
   const locationState = location.state as LocationState | null;
   const { setPageTitle } = usePageTitle();
+  const area = useCurrentArea('fisioterapia');
 
   const pacienteIdFromQuery = useMemo(() => searchParams.get('pacienteId'), [searchParams]);
 
@@ -54,11 +56,11 @@ export default function DetalheSessaoToPage() {
         let sessionData: Sessao | null = null;
 
         if (pacienteIdFromQuery) {
-          sessionData = await getSessionById(pacienteIdFromQuery, sessaoId, 'fisioterapia');
+          sessionData = await getSessionById(pacienteIdFromQuery, sessaoId, area);
         }
 
         if (!sessionData) {
-          sessionData = await findSessionById(sessaoId, undefined, 'fisioterapia');
+          sessionData = await findSessionById(sessaoId, undefined, area);
         }
 
         if (!sessionData) {
@@ -134,11 +136,19 @@ export default function DetalheSessaoToPage() {
     };
   }, [sessaoId, pacienteIdFromQuery, navigate, locationState?.sessionDate]);
 
+  // Mapeamento de área para hub correto
+  const areaHubRoutes: Record<string, string> = {
+    'fisioterapia': '/app/programas/fisioterapia',
+    'psicomotricidade': '/app/programas/psicomotricidade',
+    'educacao-fisica': '/app/programas/educacao-fisica',
+  };
+
   const handleBack = () => {
+    // Usar rota base para não alterar contexto da área
     if (pacienteIdFromQuery) {
-      navigate(`/app/programas/fisioterapia/sessoes/consultar?pacienteId=${pacienteIdFromQuery}`);
+      navigate(`/app/programas/sessoes/consultar?pacienteId=${pacienteIdFromQuery}`);
     } else {
-      navigate('/app/programas/fisioterapia/sessoes/consultar');
+      navigate(areaHubRoutes[area] || '/app/programas/fisioterapia');
     }
   };
 

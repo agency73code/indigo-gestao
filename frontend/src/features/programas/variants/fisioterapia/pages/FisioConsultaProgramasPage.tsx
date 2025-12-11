@@ -11,16 +11,26 @@ import {
     type SearchAndFiltersState,
 } from '../../../consultar-programas/components';
 import { listFisioPrograms } from '../services';
-import { fisioRoutes } from '../config';
+import { useCurrentArea, AREA_LABELS } from '@/contexts/AreaContext';
+
+// Rotas base que não alteram o contexto de área
+const baseRoutes = {
+    create: '/app/programas/novo-fisio',
+    detail: (id: string) => `/app/programas/fisioterapia/programa/${id}`,
+    newSession: (programId: string, patientId: string) => 
+        `/app/programas/sessoes-fisio/registrar?programaId=${programId}&patientId=${patientId}`,
+};
 
 export default function ToConsultaProgramasPage() {
     const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
     const { setPageTitle } = usePageTitle();
+    const area = useCurrentArea('fisioterapia');
+    const areaLabel = AREA_LABELS[area] || 'Fisioterapia';
 
     useEffect(() => {
-        setPageTitle('Consultar Programas & Objetivos - Fisioterapia');
-    }, [setPageTitle]);
+        setPageTitle(`Consultar Programas & Objetivos - ${areaLabel}`);
+    }, [setPageTitle, areaLabel]);
 
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
     const [searchState, setSearchState] = useState<SearchAndFiltersState>({
@@ -50,20 +60,20 @@ export default function ToConsultaProgramasPage() {
 
     const handleCreateProgram = () => {
         if (!selectedPatient) {
-            alert('Por favor, selecione um cliente antes de criar um programa de Fisio.');
+            alert('Por favor, selecione um cliente antes de criar um programa.');
             return;
         }
 
-        navigate(`${fisioRoutes.create}?patientId=${selectedPatient.id}&patientName=${encodeURIComponent(selectedPatient.name)}`);
+        navigate(`${baseRoutes.create}?patientId=${selectedPatient.id}&patientName=${encodeURIComponent(selectedPatient.name)}`);
     };
 
     const handleOpenProgram = (programId: string) => {
-        navigate(fisioRoutes.detail(programId));
+        navigate(baseRoutes.detail(programId));
     };
 
     const handleNewSession = (programId: string) => {
         if (!selectedPatient) return;
-        navigate(fisioRoutes.newSession(programId, selectedPatient.id));
+        navigate(baseRoutes.newSession(programId, selectedPatient.id));
     };
 
     const selectedFilters = [
