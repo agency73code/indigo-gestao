@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, User, MapPin, Briefcase, Building, GraduationCap, FileText, Car, Save, Loader2, Edit2, Plus, Trash2 } from 'lucide-react';
 import { useForm, useFieldArray } from 'react-hook-form';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { CloseButton } from '@/components/layout/CloseButton';
 import { Input } from '@/components/ui/input';
@@ -91,7 +92,6 @@ export default function TherapistProfileDrawer({
     const [currentStep, setCurrentStep] = useState(1);
     const [isEditMode, setIsEditMode] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
-    const [saveError, setSaveError] = useState<string | null>(null);
     const [files, setFiles] = useState<FileMeta[]>([]);
     const [filesLoading, setFilesLoading] = useState(true);
     const [profilePhoto, setProfilePhoto] = useState<File | string | null>(null);
@@ -319,7 +319,6 @@ export default function TherapistProfileDrawer({
     useEffect(() => {
         if (!open && isEditMode) {
             setIsEditMode(false);
-            setSaveError(null);
         }
     }, [open, isEditMode]);
 
@@ -417,7 +416,6 @@ export default function TherapistProfileDrawer({
 
     const handleEditClick = () => {
         setIsEditMode(true);
-        setSaveError(null);
         
         if (therapist?.id) {
             setFilesLoading(true);
@@ -454,7 +452,6 @@ export default function TherapistProfileDrawer({
         }
 
         setIsEditMode(false);
-        setSaveError(null);
         reset();
 
         window.dispatchEvent(
@@ -468,7 +465,6 @@ export default function TherapistProfileDrawer({
         if (!therapist?.id) return;
 
         setIsSaving(true);
-        setSaveError(null);
 
         try {
             // Fazer upload da foto primeiro, se houver uma nova
@@ -542,7 +538,10 @@ export default function TherapistProfileDrawer({
             window.location.reload();
         } catch (err: any) {
             const msg = err.message ?? 'Erro ao salvar dados do terapeuta';
-            setSaveError(msg);
+            toast.error('Erro ao salvar', {
+                description: msg,
+                duration: 5000,
+            });
 
             window.dispatchEvent(
                 new CustomEvent('consulta:edit:save:error', {
@@ -664,13 +663,6 @@ export default function TherapistProfileDrawer({
                         )}
                     </div>
                 </div>
-
-                {/* Error Message */}
-                {saveError && (
-                    <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 text-sm shrink-0">
-                        {saveError}
-                    </div>
-                )}
 
                 {/* Layout: Sidebar + Content */}
                 <div className="flex flex-1 min-h-0 p-2 gap-2 bg-background rounded-2xl">

@@ -46,7 +46,6 @@ const suspenseFallback = (
 const ConsultarSessaoPage = lazy(
     () => import('@/features/programas/sessoes/pages/ConsultarSessao'),
 );
-const DetalheSessaoPage = lazy(() => import('@/features/programas/sessoes/pages/DetalheSessao'));
 
 // Lazy imports para as páginas de área
 const AreaHubTOPage = lazy(
@@ -126,6 +125,11 @@ const ConsultarSessoesMusiPage = lazy(
 );
 const DetalheSessaoMusiPage = lazy(
     () => import('@/features/programas/variants/musicoterapia/pages/DetalheSessaoMusiPage'),
+);
+
+// Fono
+const DetalheSessaoFonoPage = lazy(
+    () => import('@/features/programas/variants/fono/pages/DetalheSessaoFonoPage'),
 );
 
 // Novas áreas - páginas em construção
@@ -728,7 +732,7 @@ export const router = createBrowserRouter([
                                 path: 'programas/sessoes/:sessaoId',
                                 element: (
                                     <Suspense fallback={suspenseFallback}>
-                                        <DetalheSessaoPage />
+                                        <DetalheSessaoFonoPage />
                                     </Suspense>
                                 ),
                                 handle: { breadcrumb: 'Detalhe da Sessão' },

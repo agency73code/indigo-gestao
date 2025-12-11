@@ -12,3 +12,5 @@ export { default as SessionObservations } from './SessionObservations.tsx';
 export { default as SaveBar } from './SaveBar.tsx';
 export { default as ValidationHint } from './ValidationHint.tsx';
 export { default as StimulusBlockPanel } from './StimulusBlockPanel.tsx';
+export { default as FonoSessionFiles } from './FonoSessionFiles.tsx';
+export type { SessionFile } from './FonoSessionFiles.tsx';

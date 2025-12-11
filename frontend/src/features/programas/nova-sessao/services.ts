@@ -1,7 +1,9 @@
 import type { ProgramDetail, SessionState } from './types';
+import type { SessionFile } from './components/FonoSessionFiles';
 import * as Api from '../api';
 import { searchPatients } from '@/features/programas/consultar-programas/services';
 import { listPrograms } from '@/features/programas/consultar-programas/services';
+import { buildSessionFormData } from '@/lib/api';
 
 export const searchPatientsForSession = searchPatients;
 export const listProgramsForSession = listPrograms;
@@ -16,16 +18,24 @@ export async function saveSession(sessionData: {
     programId: string; 
     attempts: SessionState['attempts'];
     notes?: string;
+    files?: SessionFile[];
 }): Promise<{ id: string }> {
+    // Preparar payload para FormData (suporta arquivos)
+    const payload = {
+        patientId: sessionData.patientId,
+        programId: sessionData.programId,
+        attempts: sessionData.attempts,
+        notes: sessionData.notes,
+        files: sessionData.files,
+        area: 'fonoaudiologia' as const,
+    };
+
+    const formData = buildSessionFormData(payload);
+
     const res = await fetch(`/api/ocp/programs/${sessionData.programId}/sessions`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ 
-            patientId: sessionData.patientId, 
-            attempts: sessionData.attempts,
-            notes: sessionData.notes,
-        }),
+        body: formData,
     });
     
     if (!res.ok) {
