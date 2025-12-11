@@ -6,6 +6,7 @@ import { Save, FileDown, FileText } from 'lucide-react';
 import { FiltersBar } from '../gerar-relatorio/components/FiltersBar';
 import { KpiCards } from '../gerar-relatorio/components/KpiCards';
 import { DualLineProgress } from '../gerar-relatorio/components/DualLineProgress';
+import { SessionObservationsCard } from '../gerar-relatorio/components/SessionObservationsCard';
 import { PatientSelector, type Patient } from '../../programas/consultar-programas/components';
 import { OcpDeadlineCard } from '../gerar-relatorio/components/OcpDeadlineCard';
 import { AttentionStimuliCard } from '../../programas/relatorio-geral/components/AttentionStimuliCard';
@@ -82,6 +83,16 @@ export function GerarRelatorioPage() {
 
     const [loadingKpis, setLoadingKpis] = useState(true);
     const [loadingCharts, setLoadingCharts] = useState(true);
+    
+    // Estado para observações de sessão (modelo Fono)
+    const [sessionObservations, setSessionObservations] = useState<Array<{
+        id: string;
+        data: string;
+        programa: string;
+        terapeutaNome?: string;
+        observacoes: string;
+    }>>([]);
+    const [loadingObservations, setLoadingObservations] = useState(false);
 
     // Estados para os filtros (programas, estímulos, terapeutas)
     const [programas, setProgramas] = useState<{ id: string; nome: string }[]>([]);
@@ -513,6 +524,44 @@ export function GerarRelatorioPage() {
             setKpis(kpisData);
             setLoadingKpis(false);
 
+            // Carregar sessões para extrair observações (modelo Fono)
+            setLoadingObservations(true);
+            try {
+                const sessionsResponse = await listSessionsByPatient(
+                    currentFilters.pacienteId,
+                    area,
+                    {
+                        dateRange: currentFilters.periodo.mode,
+                        periodStart: currentFilters.periodo.start,
+                        periodEnd: currentFilters.periodo.end,
+                        programId: currentFilters.programaId,
+                        therapistId: currentFilters.terapeutaId,
+                        stimulusId: currentFilters.estimuloId,
+                        sort: 'date-desc',
+                    }
+                );
+                
+                const sessoes = sessionsResponse.items || [];
+                
+                // Extrair observações das sessões
+                const observations = sessoes
+                    .filter((s: any) => s.observacoes && s.observacoes.trim() !== '')
+                    .map((s: any) => ({
+                        id: s.id,
+                        data: s.data,
+                        programa: s.programa || '',
+                        terapeutaNome: s.terapeutaNome,
+                        observacoes: s.observacoes,
+                    }));
+                
+                setSessionObservations(observations);
+            } catch (error) {
+                console.error('Erro ao carregar observações de sessão:', error);
+                setSessionObservations([]);
+            } finally {
+                setLoadingObservations(false);
+            }
+
             const [serieLinhaData, prazoProgramaData] = await Promise.all([
                 fetchSerieLinha(filtersWithArea),
                 fetchPrazoPrograma(filtersWithArea),
@@ -716,6 +765,11 @@ export function GerarRelatorioPage() {
             if (adaptedData.kpis) {
                 generatedData.kpis = adaptedData.kpis;
             }
+        }
+        
+        // Adicionar observações de sessão para áreas do modelo Fono
+        if (['fonoaudiologia', 'psicopedagogia', 'terapia-aba'].includes(selectedArea)) {
+            generatedData.sessionObservations = sessionObservations;
         }
 
         // Usar o serviço otimizado para salvar
@@ -1195,6 +1249,18 @@ export function GerarRelatorioPage() {
                                     percent={prazoPrograma?.percent}
                                     label={prazoPrograma?.label}
                                     loading={loadingCharts}
+                                />
+                            </section>
+                        )}
+                        
+                        {/* Observações das Sessões - Modelo Fono */}
+                        {['fonoaudiologia', 'psicopedagogia', 'terapia-aba'].includes(selectedArea) && (
+                            <section data-print-block data-print-wide>
+                                <SessionObservationsCard
+                                    observations={sessionObservations}
+                                    loading={loadingObservations}
+                                    maxItems={30}
+                                    title="Observações das Sessões"
                                 />
                             </section>
                         )}
