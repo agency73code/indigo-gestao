@@ -1,3 +1,5 @@
+import type { AreaId } from "@/features/programas/core/config/types";
+
 export interface User {
   id: string;
   email: string;
@@ -5,7 +7,8 @@ export interface User {
   firstName?: string;
   lastName?: string;
   perfil_acesso: string;
-  avatar_url?: string | null 
+  area_atuacao?: AreaId | AreaId[];
+  avatar_url?: string | null;
 }
 
 export interface LoginCredentials {
