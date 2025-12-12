@@ -32,5 +32,20 @@ export function isSupervisorRole(cargo: string): boolean {
  * @returns Nível de acesso (1-6) ou 0 se não encontrado
  */
 export function getAccessLevel(cargo: string): number {
-  return ACCESS_LEVELS[cargo] ?? 0;
+  const normalized = normalizeCargoNome(cargo);
+
+  const foundKey = Object.keys(ACCESS_LEVELS).find(
+    key => normalizeCargoNome(key) === normalized
+  );
+
+  return foundKey ? ACCESS_LEVELS[foundKey] : 0;
+}
+
+function normalizeCargoNome(cargo?: string) {
+  if (!cargo) return '';
+  return cargo
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
 }

@@ -1,6 +1,7 @@
 import { MessageSquareText, Hand, Footprints, Music, Heart, Brain, Puzzle, Activity, Dumbbell, BookOpen } from 'lucide-react';
 import type { User } from '@/features/auth/types/auth.types';
 import type { AreaId, AreaMeta } from '../config/types';
+import { getAccessLevel } from '@/features/cadastros';
 
 type AreaInput = AreaId | AreaId[] | null | undefined;
 type AreaSource = AreaInput | Pick<User, 'area_atuacao'> | { area_atuacao?: AreaInput } | null;
@@ -95,9 +96,27 @@ function resolveAllowedAreas(source?: AreaSource): AreaId[] | null {
     return normalizeAreaInput(source.area_atuacao);
 }
 
+function hasPerfilAcesso(source: unknown): source is { perfil_acesso: string } {
+    return (
+        typeof source === 'object' &&
+        source !== null &&
+        'perfil_acesso' in source &&
+        typeof (source as any).perfil_acesso === 'string'
+    );
+}
+
 export function useProgramAreas(source?: AreaSource): AreaMeta[] {
-    const allowedAreas = resolveAllowedAreas(source);
     console.log(source);
+    if (hasPerfilAcesso(source)) {
+        const level = getAccessLevel(source.perfil_acesso);
+
+        if (level >= 5) {
+            return PROGRAM_AREAS;
+        }
+    }
+
+    const allowedAreas = resolveAllowedAreas(source);
+
     if (!allowedAreas || allowedAreas.length === 0) {
         return PROGRAM_AREAS;
     }
