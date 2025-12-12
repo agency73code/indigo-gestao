@@ -296,6 +296,7 @@ export function buildSessionFormData<TAttempt>(payload: SaveSessionPayload<TAtte
   // Arquivos
   const files = payload.files ?? [];
   const meta = [];
+
   for (const file of files) {
     const originalName = file.file.name;
     const customName = file.name?.trim();

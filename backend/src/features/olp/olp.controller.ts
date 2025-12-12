@@ -100,6 +100,17 @@ export async function createAreaSession(req: Request, res: Response, next: NextF
         let session;
 
         switch(area) {
+            case 'fonoaudiologia':
+                session = await OcpService.createSpeechSession({
+                    programId: Number(programId),
+                    patientId,
+                    therapistId,
+                    notes,
+                    attempts,
+                    files: uploadedFiles,
+                    area,
+                });
+                break;
             case 'terapia-ocupacional':
                 session = await OcpService.createTOSession({
                     programId: Number(programId),

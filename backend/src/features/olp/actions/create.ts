@@ -5,6 +5,7 @@ import type {
     CreateProgramPayload,
     CreateSessionInDatabaseInput,
     CreateSessionInput,
+    CreateSpeechSessionInput,
     CreateToSessionInput,
 } from '../types/olp.types.js';
 
@@ -85,6 +86,45 @@ export async function session(input: CreateSessionInput) {
             area: ocp.area ?? 'fonoaudiologia',
         },
     });
+}
+
+export async function SpeechSession (input: CreateSpeechSessionInput) {
+    const { programId, patientId, therapistId, notes, attempts, files = [], area } = input;
+
+    const ocp = await prisma.ocp.findUnique({
+        where: { id: programId },
+        include: { estimulo_ocp: true },
+    });
+
+    if (!ocp) {
+        throw new Error('Programa não encontrado.');
+    }
+
+    const trialsData = attempts.map((a) => {
+        const link = ocp.estimulo_ocp.find((v) => v.id_estimulo === Number(a.stimulusId));
+
+        if (!link) {
+            throw new Error(`A atividade ${a.stimulusId} não pertence a este programa.`);
+        }
+
+        return {
+            estimulos_ocp_id: link.id,
+            ordem: a.attemptNumber,
+            resultado: a.type,
+        };
+    });
+
+    const uploadedFiles = await uploadSessionFiles(files, programId, patientId);
+
+    return await createSessionInDatabase({
+        programId,
+        patientId,
+        therapistId,
+        notes,
+        area,
+        trialsData,
+        uploadedFiles,
+    })
 }
 
 export async function TOSession(input: CreateToSessionInput) {

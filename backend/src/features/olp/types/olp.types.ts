@@ -97,6 +97,20 @@ export type CreateSessionInput = {
     }[];
 };
 
+export type CreateSpeechSessionInput = {
+    programId: number;
+    patientId: string;
+    therapistId: string;
+    notes: string | null;
+    attempts: {
+        stimulusId: string;
+        attemptNumber: number;
+        type: 'error' | 'prompted' | 'independent';
+    }[];
+    files: Express.Multer.File[];
+    area: string;
+};
+
 export type CreateToSessionInput = {
     programId: number;
     patientId: string;

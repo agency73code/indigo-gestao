@@ -20,7 +20,7 @@ router.get('/reports/filters/programs', OlpController.getProgramsReport);
 router.get('/reports/filters/stimulus', OlpController.getStimulusReport);
 router.get('/reports/attention-stimuli', OlpController.getAttentionStimuli);
 router.post('/create', OlpController.createProgram);
-router.post('/programs/:programId/sessions', OlpController.createSession);
+router.post('/programs/:programId/sessions', upload.any(), OlpController.createAreaSession);
 router.patch('/programs/:programId', OlpController.updateProgram);
 
 // TO
