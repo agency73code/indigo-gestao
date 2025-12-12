@@ -85,18 +85,6 @@ export type OcpDetailDTO = {
     desempenho_atual: string | null;
 };
 
-export type CreateSessionInput = {
-    programId: number;
-    patientId: string;
-    therapistId: string;
-    notes: string | null;
-    attempts: {
-        stimulusId: string;
-        attemptNumber: number;
-        type: 'error' | 'prompted' | 'independent';
-    }[];
-};
-
 export type CreateSpeechSessionInput = {
     programId: number;
     patientId: string;

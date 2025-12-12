@@ -4,7 +4,6 @@ import type {
     CreatePhysiotherapySessionInput,
     CreateProgramPayload,
     CreateSessionInDatabaseInput,
-    CreateSessionInput,
     CreateSpeechSessionInput,
     CreateToSessionInput,
 } from '../types/olp.types.js';
@@ -43,47 +42,6 @@ export async function program(data: CreateProgramPayload) {
             },
             area: data.area,
             desempenho_atual: isTO ? (data.currentPerformanceLevel ?? null) : null,
-        },
-    });
-}
-
-export async function session(input: CreateSessionInput) {
-    const { programId, patientId, therapistId, notes, attempts } = input;
-
-    const ocp = await prisma.ocp.findUnique({
-        where: { id: Number(programId) },
-        include: { estimulo_ocp: true },
-    });
-
-    if (!ocp) {
-        throw new Error('Programa não encontrado.');
-    }
-
-    const trialsData = attempts.map((a) => {
-        const vinculo = ocp.estimulo_ocp.find((v) => v.id_estimulo === Number(a.stimulusId));
-
-        if (!vinculo) {
-            throw new Error(`O estímulo ${a.stimulusId} não pertence a este programa.`);
-        }
-
-        return {
-            estimulos_ocp_id: vinculo.id,
-            ordem: a.attemptNumber,
-            resultado: a.type,
-        };
-    });
-
-    return await prisma.sessao.create({
-        data: {
-            ocp_id: programId,
-            cliente_id: patientId,
-            terapeuta_id: therapistId,
-            data_criacao: new Date(),
-            observacoes_sessao: notes?.trim() || null,
-            trials: {
-                create: trialsData,
-            },
-            area: ocp.area ?? 'fonoaudiologia',
         },
     });
 }
