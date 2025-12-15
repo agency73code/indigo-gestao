@@ -15,12 +15,14 @@ export type Therapist = {
     especialidade?: string | null;
 };
 
-export type StimulusInput = { 
-    id?: string; 
-    label: string; 
+export type StimulusInput = {
+    id?: string;
+    label: string;
     description?: string;
-    active: boolean; 
+    active: boolean;
     order: number;
+    methods?: string;
+    techniquesProcedures?: string;
 };
 
 export type CreateProgramInput = {

@@ -19,7 +19,7 @@ import {
     fetchMusiTherapistAvatar,
     createMusiProgram,
 } from '../services';
-import type { MusiStimulus } from '../types';
+import { musiStimulusToApi, type MusiStimulus } from '../types';
 import type { Patient, Therapist } from '../../../core/types';
 
 // Estado do formulário específico de Musicoterapia
@@ -286,13 +286,7 @@ export default function MusiCadastroProgramaPage() {
             // Converte MusiStimulus para formato da API
             const stimuliForApi = formState.stimuli
                 .filter((s) => s.objetivo.trim())
-                .map((s) => ({
-                    id: s.id,
-                    order: s.order,
-                    label: s.objetivo,
-                    description: s.objetivoEspecifico || undefined,
-                    active: s.active,
-                }));
+                .map((s) => musiStimulusToApi(s));
 
             const payload = {
                 patientId: formState.patient!.id,

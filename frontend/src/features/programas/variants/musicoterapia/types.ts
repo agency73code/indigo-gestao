@@ -148,7 +148,7 @@ export function musiStimulusToApi(stimulus: MusiStimulus): {
     id?: string;
     order: number;
     label: string;
-    description: string | null;
+    description?: string;
     active: boolean;
     metodos?: string;
     tecnicasProcedimentos?: string;
@@ -157,7 +157,7 @@ export function musiStimulusToApi(stimulus: MusiStimulus): {
         id: stimulus.id,
         order: stimulus.order,
         label: stimulus.objetivo,
-        description: stimulus.objetivoEspecifico || null,
+        description: stimulus.objetivoEspecifico || undefined,
         active: stimulus.active,
         metodos: stimulus.metodos,
         tecnicasProcedimentos: stimulus.tecnicasProcedimentos,

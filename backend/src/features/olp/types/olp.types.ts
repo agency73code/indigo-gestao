@@ -17,6 +17,8 @@ export type createOCP = {
         active: boolean;
         order: number;
         description?: string | null;
+        metodos?: string | null;
+        tecnicasProcedimentos?: string | null;
     }[];
 };
 
@@ -25,39 +27,16 @@ export type TOcreateOCP = {
 };
 
 export type CreateProgramPayload =
-    | (createOCP & { area: 'fonoaudiologia' | 'psicopedagogia' | 'terapia-aba' })
+    | (createOCP & { area: 'fonoaudiologia' | 'psicopedagogia' | 'terapia-aba' | 'musicoterapia' })
     | (createOCP & { area: 'terapia-ocupacional' } & TOcreateOCP);
-
-export type getOCP = {
-    id: string;
-    name?: string | null;
-    patientId: string;
-    patientName: string;
-    patientGuardian: string | undefined;
-    patientAge?: number | null;
-    patientPhotoUrl?: string | null;
-    therapistId: string;
-    therapistName: string;
-    createdAt: string; // ISO
-    goalTitle: string;
-    goalDescription?: string | null;
-    stimuli: {
-        id: string;
-        order: number;
-        label: string;
-        description?: string | null;
-        active: boolean;
-    }[];
-    criteria?: string | null;
-    notes?: string | null;
-    status: 'active' | 'archived';
-};
 
 export type OcpStimuloDTO = {
     id_estimulo: number;
     nome: string | null;
     status: boolean;
     descricao: string | null;
+    metodos?: string | null;
+    tecnicas_procedimentos?: string | null;
 };
 
 export type OcpDetailDTO = {
@@ -325,6 +304,8 @@ export type ProgramSelectResult = {
         nome: string | null;
         descricao: string | null;
         status: boolean;
+        metodos?: string | null;
+        tecnicas_procedimentos?: string | null;
     }[];
     status: string;
 };

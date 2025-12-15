@@ -17,7 +17,7 @@ export async function createProgram(req: Request, res: Response) {
         if (!body.area) {
             return res.status(400).json({ error: 'Campo area é obrigatório' });
         }
-
+        console.log(body, '==========================')
         const ocp = await OcpService.createProgram(body);
         return res.status(201).json(ocp);
     } catch (error) {

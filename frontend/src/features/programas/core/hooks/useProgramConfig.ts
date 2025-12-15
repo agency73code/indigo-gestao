@@ -106,7 +106,6 @@ function hasPerfilAcesso(source: unknown): source is { perfil_acesso: string } {
 }
 
 export function useProgramAreas(source?: AreaSource): AreaMeta[] {
-    console.log(source);
     if (hasPerfilAcesso(source)) {
         const level = getAccessLevel(source.perfil_acesso);
 

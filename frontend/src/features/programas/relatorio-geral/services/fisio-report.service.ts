@@ -14,7 +14,7 @@ export interface FisioKpisData {
 }
 
 /**
- * Função principal fazendo uma unica chamada ao backend e devolvendo os valores para as demais
+ * Função principal fazendo uma unica chamada ao backend e devolvendo os valores necessários
  */
 export async function fetchPhysioReports(sessoes: Sessao[]) {
   if (!sessoes || sessoes.length === 0) {
@@ -90,7 +90,7 @@ export async function calculateFisioKpis(sessoes: Sessao[]) {
   }
 
   const data = await response.json();
-  console.log(data)
+
   return data as FisioKpisData[];
 }
 

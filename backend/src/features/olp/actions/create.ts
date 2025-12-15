@@ -29,6 +29,8 @@ export async function program(data: CreateProgramPayload) {
                     nome: s.label,
                     status: s.active,
                     descricao: s.description ?? null,
+                    metodos: s.metodos ?? null,
+                    tecnicas_procedimentos: s.tecnicasProcedimentos ?? null,
                     estimulo: {
                         connectOrCreate: {
                             where: { nome: s.label },

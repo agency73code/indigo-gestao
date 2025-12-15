@@ -29,6 +29,8 @@ export function mapOcpDetail(dto: OcpTypes.OcpDetailDTO) {
                 label: s.nome ?? '',
                 active: s.status,
                 description: s.descricao ?? null,
+                methods: s.metodos ?? null,
+                techniquesProcedures: s.tecnicas_procedimentos ?? null,
             })) ?? [],
         criteria: dto.criterio_aprendizagem,
         notes: dto.observacao_geral ?? '',
@@ -171,6 +173,8 @@ export function mapOcpProgramSession(dto: OcpTypes.ProgramSelectResult) {
             label: e.nome ?? '',
             description: e.descricao ?? null,
             active: e.status,
+            methods: e.metodos ?? null,
+            techniquesProcedures: e.tecnicas_procedimentos ?? null,
         })),
         status: dto.status,
     };

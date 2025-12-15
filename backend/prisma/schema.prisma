@@ -373,6 +373,8 @@ model estimulo_ocp {
   id_ocp      Int
   nome        String?
   descricao   String?        @db.Text
+  metodos     String?        @db.Text
+  tecnicas_procedimentos String? @db.Text
   status      Boolean
   estimulo    estimulo       @relation(fields: [id_estimulo], references: [id], onDelete: Cascade)
   ocp         ocp            @relation(fields: [id_ocp], references: [id], onDelete: Cascade)

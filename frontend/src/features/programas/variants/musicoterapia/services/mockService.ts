@@ -129,6 +129,8 @@ export async function createMusiProgram(data: CreateProgramInput): Promise<{ id:
         label: s.label,
         description: s.description || null,
         active: true,
+        methods: s.methods ?? null,
+        techniquesProcedures: s.techniquesProcedures ?? null,
     })) || [];
 
     const newProgram: ProgramDetail = {
@@ -148,7 +150,7 @@ export async function createMusiProgram(data: CreateProgramInput): Promise<{ id:
         notes: data.notes || '',
         prazoInicio: data.prazoInicio || null,
         prazoFim: data.prazoFim || null,
-    } as ProgramDetail;
+    } as any;
     
     storage.programs.push(newProgram);
     saveStorage(storage);
