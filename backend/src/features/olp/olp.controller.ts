@@ -39,35 +39,6 @@ export async function createProgram(req: Request, res: Response) {
     }
 }
 
-export async function createSession(req: Request, res: Response) {
-    try {
-        if (!req.params.programId)
-            return res
-                .status(400)
-                .json({ success: false, message: 'ID do programa não informado' });
-        const programId = parseInt(req.params.programId, 10);
-
-        const { patientId, notes, attempts } = req.body;
-        if (!patientId || !Array.isArray(attempts))
-            return res.status(400).json({ error: 'Dados inválidos para criar sessão' });
-
-        const therapistId = req.user?.id;
-        if (!therapistId) return res.status(401).json({ error: 'Usuário não autenticado' });
-
-        const session = await OcpService.createSession({
-            programId,
-            patientId,
-            therapistId,
-            notes,
-            attempts,
-        });
-        res.status(201).json(session);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false, message: 'Erro ao registrar sessão' });
-    }
-}
-
 export async function createAreaSession(req: Request, res: Response, next: NextFunction) {
     try {
         const { programId } = req.params;
@@ -100,6 +71,17 @@ export async function createAreaSession(req: Request, res: Response, next: NextF
         let session;
 
         switch(area) {
+            case 'fonoaudiologia':
+                session = await OcpService.createSpeechSession({
+                    programId: Number(programId),
+                    patientId,
+                    therapistId,
+                    notes,
+                    attempts,
+                    files: uploadedFiles,
+                    area,
+                });
+                break;
             case 'terapia-ocupacional':
                 session = await OcpService.createTOSession({
                     programId: Number(programId),

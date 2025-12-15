@@ -85,7 +85,7 @@ export type OcpDetailDTO = {
     desempenho_atual: string | null;
 };
 
-export type CreateSessionInput = {
+export type CreateSpeechSessionInput = {
     programId: number;
     patientId: string;
     therapistId: string;
@@ -95,6 +95,8 @@ export type CreateSessionInput = {
         attemptNumber: number;
         type: 'error' | 'prompted' | 'independent';
     }[];
+    files: Express.Multer.File[];
+    area: string;
 };
 
 export type CreateToSessionInput = {

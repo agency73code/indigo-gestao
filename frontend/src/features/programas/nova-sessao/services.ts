@@ -30,6 +30,8 @@ export async function saveSession(sessionData: {
         area: 'fonoaudiologia' as const,
     };
 
+    console.log(payload);
+
     const formData = buildSessionFormData(payload);
 
     const res = await fetch(`/api/ocp/programs/${sessionData.programId}/sessions`, {

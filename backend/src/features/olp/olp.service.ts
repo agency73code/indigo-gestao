@@ -4,7 +4,7 @@ import * as OcpType from './types/olp.types.js';
 import * as OcpNormalizer from './olp.normalizer.js';
 import { endOfDay, format, parseISO, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { physiotherapySession, program, session, TOSession } from './actions/create.js';
+import { physiotherapySession, program, SpeechSession, TOSession } from './actions/create.js';
 import { programUpdate } from './actions/update.js';
 import { updateProgramSchema } from './types/olp.schema.js';
 import { getVisibilityScope } from '../../utils/visibilityFilter.js';
@@ -17,8 +17,8 @@ export async function createProgram(data: OcpType.CreateProgramPayload) {
     return await program(data);
 }
 
-export async function createSession(input: OcpType.CreateSessionInput) {
-    return await session(input);
+export async function createSpeechSession(input: OcpType.CreateSpeechSessionInput) {
+    return await SpeechSession(input);
 }
 
 export async function createTOSession(input: OcpType.CreateToSessionInput) {
