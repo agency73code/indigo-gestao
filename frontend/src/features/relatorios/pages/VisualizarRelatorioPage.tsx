@@ -570,9 +570,8 @@ export function VisualizarRelatorioPage() {
           />
         )}
         
-        {/* Observações das Sessões - Modelo Fono */}
-        {['fonoaudiologia', 'psicopedagogia', 'terapia-aba'].includes(report.area) && 
-         report.generatedData?.sessionObservations && 
+        {/* Observações das Sessões - Todas as áreas */}
+        {report.generatedData?.sessionObservations && 
          report.generatedData.sessionObservations.length > 0 && (
           <SessionObservationsCard
             observations={report.generatedData.sessionObservations}
