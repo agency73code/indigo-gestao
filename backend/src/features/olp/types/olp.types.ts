@@ -158,6 +158,25 @@ export type UpdateProgramInput = {
     prazoFim: string;
 };
 
+export type UpdateMusicProgramInput = {
+  id: string;
+  goalTitle: string;
+  goalDescription: string;
+  stimuli: {
+    id: string;
+    order: number;
+    active: boolean;
+    objetivo: string;
+    objetivoEspecifico: string;
+    metodos: string;
+    tecnicasProcedimentos: string;
+  }[];
+  notes: string;
+  status: 'active' | 'archived';
+  prazoInicio: string;
+  prazoFim: string;
+};
+
 export type ClientRowDTO = {
     id: string;
     nome: string | null;

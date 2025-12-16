@@ -10,6 +10,7 @@ import type { MusiSessionPayload, MusiSessionResponse, MusiSessionListItem, Musi
 import { ageCalculation, buildApiUrl } from '@/lib/api';
 
 const API_URL = import.meta.env.VITE_API_URL;
+const area = MUSI_AREA_ID;
 
 export async function fetchMusiPatientById(id: string): Promise<Patient> {
     const response = await fetch(`${API_URL}/clientes/${id}`, {
@@ -96,7 +97,7 @@ export async function createMusiProgram(input: CreateProgramInput): Promise<{ id
         credentials: 'include',
         body: JSON.stringify({
             ...input,
-            area: MUSI_AREA_ID,
+            area,
         }),
     });
 
@@ -116,7 +117,6 @@ export async function listMusiPrograms(params: {
     sort?: 'recent' | 'alphabetic';
     page?: number;
 }): Promise<any[]> {
-    const area = MUSI_AREA_ID;
     const url = buildApiUrl(`/api/ocp/clients/${params.patientId}/programs`, {
         area,
         page: params.page?.toString(),
@@ -149,7 +149,7 @@ export async function listMusiPrograms(params: {
  * Busca programa de Musicoterapia por ID
  */
 export async function fetchMusiProgram(id: string): Promise<ProgramDetail> {
-    const response = await fetch(`${API_URL}/ocp/${id}?area=${MUSI_AREA_ID}`, {
+    const response = await fetch(`${API_URL}/ocp/${id}?area=${area}`, {
         credentials: 'include',
     });
     
@@ -163,19 +163,23 @@ export async function fetchMusiProgram(id: string): Promise<ProgramDetail> {
 /**
  * Atualiza programa de Musicoterapia
  */
-export async function updateMusiProgram(id: string, data: Partial<ProgramDetail>): Promise<ProgramDetail> {
-    const response = await fetch(`${API_URL}/ocp/${id}`, {
-        method: 'PUT',
+export async function updateMusiProgram(id: string, data: Partial<ProgramDetail>) {
+
+    const res = await fetch(`${API_URL}/ocp/programs/${id}`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ ...data, area: MUSI_AREA_ID }),
+        body: JSON.stringify({
+            ...data,
+            area,
+        })
     });
     
-    if (!response.ok) {
+    if (!res.ok) {
         throw new Error('Erro ao atualizar programa de Musicoterapia');
     }
     
-    return response.json();
+    return res.json();
 }
 
 /**
@@ -206,7 +210,7 @@ export async function fetchMusiSessions(filters?: {
     startDate?: string;
     endDate?: string;
 }): Promise<MusiSessionListItem[]> {
-    const params = new URLSearchParams({ area: MUSI_AREA_ID });
+    const params = new URLSearchParams({ area });
     
     if (filters?.patientId) params.append('clienteId', filters.patientId);
     if (filters?.programId) params.append('programaId', filters.programId);
@@ -228,7 +232,7 @@ export async function fetchMusiSessions(filters?: {
  * Busca detalhe de sessão de Musicoterapia
  */
 export async function fetchMusiSessionById(id: string): Promise<MusiSessionDetail> {
-    const response = await fetch(`${API_URL}/sessoes/${id}?area=${MUSI_AREA_ID}`, {
+    const response = await fetch(`${API_URL}/sessoes/${id}?area=${area}`, {
         credentials: 'include',
     });
     

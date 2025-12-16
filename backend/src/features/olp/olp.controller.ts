@@ -17,7 +17,7 @@ export async function createProgram(req: Request, res: Response) {
         if (!body.area) {
             return res.status(400).json({ error: 'Campo area é obrigatório' });
         }
-        console.log(body, '==========================')
+
         const ocp = await OcpService.createProgram(body);
         return res.status(201).json(ocp);
     } catch (error) {
@@ -119,11 +119,15 @@ export async function createAreaSession(req: Request, res: Response, next: NextF
 
 export async function updateProgram(req: Request, res: Response, next: NextFunction) {
     try {
-        if (!req.params.programId)
-            return res
-                .status(400)
-                .json({ success: false, message: 'ID do programa não informado' });
+        if (!req.params.programId) return res.status(400).json({ success: false, message: 'ID do programa não informado' });
         const programId = parseInt(req.params.programId, 10);
+
+        if (req.body.area === 'musicoterapia') {
+            const ocp = await OcpService.updateMusicProgram(programId, req.body);
+            if (!ocp) return res.status(404).json({ success: false, message: 'OCP não encontrado' });
+            
+            return res.status(200).json({ data: ocp });
+        }
 
         const ocp = await OcpService.updateProgram(programId, req.body);
         if (!ocp) return res.status(404).json({ success: false, message: 'OCP não encontrado' });

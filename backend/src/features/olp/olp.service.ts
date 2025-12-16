@@ -5,7 +5,7 @@ import * as OcpNormalizer from './olp.normalizer.js';
 import { endOfDay, format, parseISO, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { physiotherapySession, program, SpeechSession, TOSession } from './actions/create.js';
-import { programUpdate } from './actions/update.js';
+import { programMusicUpdate, programUpdate } from './actions/update.js';
 import { updateProgramSchema } from './types/olp.schema.js';
 import { getVisibilityScope } from '../../utils/visibilityFilter.js';
 import { ACCESS_LEVELS } from '../../utils/accessLevels.js';
@@ -33,6 +33,10 @@ export async function updateProgram(programId: number, input: OcpType.UpdateProg
     const parsed = updateProgramSchema.parse({ ...input, id: programId });
     const result = await programUpdate(programId, parsed);
     return result;
+}
+
+export async function updateMusicProgram(programId: number, input: OcpType.UpdateMusicProgramInput) {
+    return await programMusicUpdate(programId, input);
 }
 
 export async function getProgramById(programId: string) {
