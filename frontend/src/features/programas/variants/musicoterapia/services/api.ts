@@ -117,7 +117,7 @@ export async function listMusiPrograms(params: {
     sort?: 'recent' | 'alphabetic';
     page?: number;
 }): Promise<any[]> {
-    const url = buildApiUrl(`/api/ocp/clients/${params.patientId}/programs`, {
+    const url = buildApiUrl(`${API_URL}/ocp/clients/${params.patientId}/programs`, {
         area,
         page: params.page?.toString(),
         status: params.status !== 'all' ? params.status : undefined,
@@ -164,7 +164,6 @@ export async function fetchMusiProgram(id: string): Promise<ProgramDetail> {
  * Atualiza programa de Musicoterapia
  */
 export async function updateMusiProgram(id: string, data: Partial<ProgramDetail>) {
-
     const res = await fetch(`${API_URL}/ocp/programs/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },

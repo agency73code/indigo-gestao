@@ -232,25 +232,23 @@ export async function listClientsByTherapist(therapistId: string, q?: string) {
     });
 }
 
-export async function listByClientId(
+export async function listProgramsByClientId(
     clientId: string,
     userId: string,
     page = 1,
     pageSize = 10,
     area: string,
-    status: 'active' | 'archived' | 'all' = 'all',
+    status: 'active' | 'archived',
     q?: string,
     sort: 'recent' | 'alphabetic' = 'recent',
 ) {
-    const translateStatus =
-        status === 'active' ? 'ativado' : status === 'archived' ? 'arquivado' : undefined;
-
+    const translateResult = status ? status === 'active' ? 'ativado' : 'archived' : null;
     // cria o objeto base
     const where: Prisma.ocpWhereInput = {
         cliente_id: clientId,
         terapeuta_id: userId,
         area,
-        ...(translateStatus && { status: translateStatus }), // só inclui se existir
+        ...(translateResult && { status: translateResult }), // só inclui se existir
     };
 
     // adiciona o filtro de busca se q existir
