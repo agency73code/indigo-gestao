@@ -10,11 +10,11 @@ async function main() {
     // 🔊 Programa de Fonoaudiologia
     const fonoOcp = await prisma.ocp.create({
         data: {
-            cliente_id: CLIENTE_ID, // <-- troca aqui
-            terapeuta_id: TERAPEUTA_ID, // <-- troca aqui
+            cliente_id: CLIENTE_ID,
+            terapeuta_id: TERAPEUTA_ID,
             nome_programa: 'Aprimoramento da linguagem oral',
             data_inicio: new Date('2025-12-05T00:00:00.000Z'),
-            data_fim: new Date('2026-06-05T00:00:00.000Z'),
+            data_fim: new Date('2026-06-04T00:00:00.000Z'),
             area: 'fonoaudiologia',
 
             objetivo_programa:
