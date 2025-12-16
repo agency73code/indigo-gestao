@@ -68,47 +68,39 @@ export async function createAreaSession(req: Request, res: Response, next: NextF
             size: meta[i]?.size ?? file.size
         }));
 
+        const payload = {
+            programId: Number(programId),
+            patientId,
+            therapistId,
+            notes,
+            attempts,
+            files: uploadedFiles,
+            area,
+        };
+
         let session;
 
-        switch(area) {
+        switch (area) {
             case 'fonoaudiologia':
-                session = await OcpService.createSpeechSession({
-                    programId: Number(programId),
-                    patientId,
-                    therapistId,
-                    notes,
-                    attempts,
-                    files: uploadedFiles,
-                    area,
-                });
+                session = await OcpService.createSpeechSession(payload);
                 break;
+
             case 'terapia-ocupacional':
-                session = await OcpService.createTOSession({
-                    programId: Number(programId),
-                    patientId,
-                    therapistId,
-                    notes,
-                    attempts,
-                    files: uploadedFiles,
-                    area,
-                });
+                session = await OcpService.createTOSession(payload);
                 break;
+
             case 'fisioterapia':
             case 'psicomotricidade':
             case 'educacao-fisica':
-                session = await OcpService.createPhysiotherapySession({
-                    programId: Number(programId),
-                    patientId,
-                    therapistId,
-                    notes,
-                    attempts,
-                    files: uploadedFiles,
-                    area,
-                });
+                session = await OcpService.createPhysiotherapySession(payload);
                 break;
+
+            case 'musicoterapia':
+                session = await OcpService.createMusictherapySession(payload);
+                break;
+
             default:
                 session = [];
-                break;
         }
 
         return res.status(201).json(session);

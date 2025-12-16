@@ -78,6 +78,24 @@ export type CreateSpeechSessionInput = {
     area: string;
 };
 
+type BaseCreateSessionInput<TAttempt> = {
+    programId: number;
+    patientId: string;
+    therapistId: string;
+    notes?: string;
+
+    files: Express.Multer.File[];
+    area: string;
+
+    attempts: TAttempt[];
+};
+
+type BaseSessionAttempt = {
+    attemptNumber: number;
+    activityId: string;
+    type: string;
+};
+
 export type CreateToSessionInput = {
     programId: number;
     patientId: string;
@@ -121,6 +139,15 @@ export type CreatePhysiotherapySessionInput = {
     files: Express.Multer.File[];
     area: string;
 };
+
+type MusictherapySessionAttempt =
+    BaseSessionAttempt & {
+        participacao: number;
+        suporte: number;
+    };
+    
+export type CreateMusictherapySessionInput =
+    BaseCreateSessionInput<MusictherapySessionAttempt>;
 
 export type CreateSessionInDatabaseInput = {
   programId: number;
@@ -192,6 +219,7 @@ export type ProgramRowDTO = {
     atualizado_em: Date;
     status: string;
 };
+
 export interface SessionTrialDTO {
     id: number;
     ordem: number;
@@ -207,7 +235,7 @@ export interface SessionTrialDTO {
         id: number;
         nome: string | null;
     } | null;
-}
+};
 
 export interface SessionDTO {
     id: number;
@@ -229,7 +257,7 @@ export interface SessionDTO {
         caminho: string;
         tamanho: number;
     }[];
-}
+};
 
 export interface Session {
     id: string;
@@ -264,7 +292,7 @@ export interface Session {
         hadCompensation?: boolean;
         compensationDescription?: string | null;
     }[];
-}
+};
 
 export interface AttentionStimulusItem {
     id: string;
@@ -277,7 +305,7 @@ export interface AttentionStimulusItem {
     total: number;
     independence: number;
     status: 'atencao' | 'mediano' | 'positivo' | 'insuficiente';
-}
+};
 
 export type ListSessionsFilters = {
     clientId: string;
@@ -296,7 +324,7 @@ export interface UnmappedSession {
     data_criacao: Date;
     terapeuta?: { nome: string | null } | null;
     trials: { resultado: string; ordem: number }[];
-}
+};
 
 export type ProgramSelectResult = {
     id: number;

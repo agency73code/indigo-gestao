@@ -1,6 +1,7 @@
 import { prisma } from '../../../config/database.js';
 import { R2UploadService } from '../../file/r2/r2-upload.js';
 import type {
+    CreateMusictherapySessionInput,
     CreatePhysiotherapySessionInput,
     CreateProgramPayload,
     CreateSessionInDatabaseInput,
@@ -161,6 +162,49 @@ export async function physiotherapySession(input: CreatePhysiotherapySessionInpu
             descricao_desconforto: a.discomfortDescription ?? null,
             teve_compensacao: a.hadCompensation ?? false,
             descricao_compensacao: a.compensationDescription ?? null,
+        };
+    });
+
+    const uploadedFiles = await uploadSessionFiles(files, programId, patientId);
+
+    return await createSessionInDatabase({
+        programId,
+        patientId,
+        therapistId,
+        notes,
+        area,
+        trialsData,
+        uploadedFiles,
+    });
+}
+
+export async function musictherapySession(input: CreateMusictherapySessionInput) {
+    const { programId, patientId, therapistId, notes, attempts, files = [], area } = input;
+
+    const ocp = await prisma.ocp.findUnique({
+        where: { id: programId },
+        include: { estimulo_ocp: true },
+    });
+
+    if (!ocp) {
+        throw new Error('Programa não encontrado.');
+    }
+
+    const trialsData = attempts.map((a) => {
+        const vinculo = ocp.estimulo_ocp.find((v) => v.id_estimulo === Number(a.activityId));
+
+        if (!vinculo) {
+            throw new Error(`A atividade ${a.activityId} não pertence a este programa.`);
+        }
+
+        a.type = mapPerformanceType(a.type);
+
+        return {
+            estimulos_ocp_id: vinculo.id,
+            ordem: a.attemptNumber,
+            resultado: a.type,
+            participacao: a.participacao,
+            suporte: a.suporte,
         };
     });
 

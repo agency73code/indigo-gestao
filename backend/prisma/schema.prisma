@@ -330,6 +330,10 @@ model sessao_trial {
   teve_compensacao      Boolean?
   descricao_compensacao String?
 
+  // Musicoterapia
+  participacao Int?
+  suporte Int?
+
   estimulosOcp estimulo_ocp @relation(fields: [estimulos_ocp_id], references: [id], onDelete: Cascade)
   sessao       sessao       @relation(fields: [sessao_id], references: [id], onDelete: Cascade)
 
