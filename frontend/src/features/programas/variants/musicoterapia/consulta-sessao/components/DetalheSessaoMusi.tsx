@@ -99,11 +99,10 @@ export default function DetalheSessaoMusi({ sessao, paciente, programa, onBack }
                 label: s.label,
                 order: s.order,
                 objetivoEspecifico: s.description || null,
-                metodos: s.metodos || null,
-                tecnicasProcedimentos: s.tecnicasProcedimentos || null,
+                metodos: s.methods || null,
+                tecnicasProcedimentos: s.techniquesProcedures || null,
             }));
-            console.log('🎵 [DetalheSessaoMusi] activitiesInfo:', info);
-            console.log('🎵 [DetalheSessaoMusi] programa.stimuli:', programa.stimuli);
+
             return info;
         },
         [programa.stimuli],

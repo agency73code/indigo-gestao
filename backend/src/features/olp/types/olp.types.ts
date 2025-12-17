@@ -145,7 +145,7 @@ type MusictherapySessionAttempt =
         participacao: number;
         suporte: number;
     };
-    
+
 export type CreateMusictherapySessionInput =
     BaseCreateSessionInput<MusictherapySessionAttempt>;
 
@@ -317,6 +317,7 @@ export type ListSessionsFilters = {
     stimulusId?: string | undefined;
     periodStart?: string | undefined;
     periodEnd?: string | undefined;
+    pageSize?: string | undefined;
 };
 
 export interface UnmappedSession {

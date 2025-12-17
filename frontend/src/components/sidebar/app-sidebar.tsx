@@ -132,7 +132,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         items: programItems,
     },
 
-    ...data.navMain.slice(4), // Relatórios em diante
+    ...data.navMain.slice(3, 6), // Relatórios em diante
     ];
 
     return (

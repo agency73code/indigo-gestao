@@ -9,6 +9,13 @@ import { calcAutonomyByCategory } from './services/reports/physiotherapy/autonom
 import { calcPerformanceLine } from './services/reports/physiotherapy/performanceLine.js';
 import { calcKpis } from './services/reports/physiotherapy/calculateKpis.js';
 import { calcAttentionActivities } from './services/reports/physiotherapy/attentionActivities.js';
+import { getMusicSessionData } from './services/reports/musictherapy/getMusicSessionData.js';
+import { calcMusicKpis } from './services/reports/musictherapy/calcMusicKpis.js';
+import { calcMusicPerformanceLine } from './services/reports/musictherapy/performanceLine.js';
+import { prepareMusiEvolutionData } from './services/reports/musictherapy/prepareMusiEvolutionData.js';
+import { prepareMusiAttentionActivities } from './services/reports/musictherapy/prepareMusiAttentionActivities.js';
+import { prepareMusiAutonomyByCategory } from './services/reports/musictherapy/prepareMusiAutonomyByCategory.js';
+import { calcAverageAndTrend } from './services/reports/musictherapy/calcAverageAndTrend.js';
 
 export async function createProgram(req: Request, res: Response) {
     try {
@@ -236,6 +243,7 @@ export async function listSessionsByClient(req: Request, res: Response) {
         const periodStart = getQueryString(req.query.periodStart);
         const periodEnd = getQueryString(req.query.periodEnd);
         const sort = getQueryString(req.query.sort);
+        const pageSize = getQueryString(req.query.pageSize);
 
         const sessions = await OcpService.listSessionsByClient({
             clientId,
@@ -247,6 +255,7 @@ export async function listSessionsByClient(req: Request, res: Response) {
             stimulusId,
             periodStart,
             periodEnd,
+            pageSize,
         });
 
         return res.json({ data: OcpNormalizer.mapSessionList(sessions) });
@@ -393,9 +402,7 @@ export async function physioKpis(req: Request, res: Response, next: NextFunction
         const { sessionIds, stimulusIds } = req.body;
 
         if (!Array.isArray(sessionIds) || sessionIds.length === 0) {
-            return res.status(400).json({
-                error: "sessionIds é obrigatório e deve ser um array",
-            });
+            return res.status(400).json({ error: "sessionIds é obrigatório e deve ser um array" });
         }
         
         const sessions = await getPhysioSessionData(sessionIds, stimulusIds || []);
@@ -406,6 +413,35 @@ export async function physioKpis(req: Request, res: Response, next: NextFunction
             performance: calcPerformanceLine(sessions),
             attentionActivities: calcAttentionActivities(sessions),
             kpis: calcKpis(sessions),
+        };
+
+        return res.json(result);
+    } catch (error) {
+        next (error);
+    }
+}
+
+// Musictherapy reports
+export async function musicKpis(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { sessionIds, stimulusIds } = req.body;
+
+        if (!Array.isArray(sessionIds) || sessionIds.length === 0) {
+            return res.status(400).json({ error: "sessionIds é obrigatório e deve ser um array" });
+        }
+        
+        const sessions = await getMusicSessionData(sessionIds, stimulusIds || []);
+
+        const result = {
+            kpis: calcMusicKpis(sessions),
+            performance: calcMusicPerformanceLine(sessions),
+            prepareMusiEvolutionData: prepareMusiEvolutionData(sessions),
+            prepareMusiAttentionActivities: prepareMusiAttentionActivities(sessions),
+            prepareMusiAutonomyByCategory: prepareMusiAutonomyByCategory(sessions),
+            calculateAverageAndTrend: {
+                participation: calcAverageAndTrend(sessions, 'participacao'),
+                support: calcAverageAndTrend(sessions, 'suporte'),
+            }
         };
 
         return res.json(result);

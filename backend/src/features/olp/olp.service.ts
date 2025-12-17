@@ -295,6 +295,7 @@ export async function listSessionsByClient(filters: OcpType.ListSessionsFilters)
         periodMode,
         periodStart,
         periodEnd,
+        pageSize,
     } = filters;
 
     const where: Prisma.sessaoWhereInput = {};
@@ -381,6 +382,7 @@ export async function listSessionsByClient(filters: OcpType.ListSessionsFilters)
                 },
             },
         },
+        take: pageSize ? Number(pageSize) : 10,
         orderBy: { data_criacao: order },
     });
 

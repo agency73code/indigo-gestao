@@ -30,7 +30,8 @@ router.post('/to/programs/:programId/sessions', upload.any(), OlpController.crea
 router.post('/physiotherapy/programs/:programId/sessions', upload.any(), OlpController.createAreaSession);
 router.post('/physiotherapy/sessions/calculatePhysioKpis', OlpController.physioKpis);
 
-// TO
+// Musictherapy
 router.post('/musictherapy/programs/:programId/sessions', upload.any(), OlpController.createAreaSession);
+router.post('/musictherapy/sessions/calculateMusicKpis', OlpController.musicKpis);
 
 export default router;

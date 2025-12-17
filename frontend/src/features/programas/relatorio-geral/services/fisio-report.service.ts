@@ -3,6 +3,7 @@ import type { SerieLinha } from '@/features/relatorios/gerar-relatorio/types';
 import type { FisioActivityLoadData } from '../components/fisio/FisioActivityDurationChart';
 import type { FisioAttentionActivityItem } from '../components/fisio/FisioAttentionActivitiesCard';
 import type { FisioPerformanceRateData } from '../components/fisio/FisioAutonomyByCategoryChart';
+import { extractStimulusIds } from '../utils/extractStimulusIds';
 
 export interface FisioKpisData {
   desempenhou: number;
@@ -433,10 +434,3 @@ export async function prepareFisioAutonomyByCategory(sessoes: Sessao[]) {
   return await response.json() as FisioPerformanceRateData[];
 }
 
-function extractStimulusIds(sessoes: Sessao[]): number[] {
-  const ids = sessoes
-    .flatMap(s => s.registros.map(r => Number(r.stimulusId)))
-    .filter(id => !isNaN(id));
-
-  return Array.from(new Set(ids));
-}

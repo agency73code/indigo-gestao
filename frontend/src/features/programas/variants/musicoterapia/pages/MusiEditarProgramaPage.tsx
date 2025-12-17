@@ -15,7 +15,6 @@ import {
 import { fetchProgramById } from '../../../editar-ocp/services';
 import type { ProgramDetail } from '../../../editar-ocp/types';
 import { musiProgramConfig, musiRoutes } from '../config';
-import { fetchMusiProgramById } from '../mocks/mockService';
 import MusiStimuliEditor from '../components/MusiStimuliEditor';
 import MusiNotesSection from '../components/MusiNotesSection';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

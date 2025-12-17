@@ -34,15 +34,7 @@ import {
     prepareToAutonomyByCategory,
 } from '../../programas/relatorio-geral/services/to-report.service';
 import { fetchPhysioReports } from '../../programas/relatorio-geral/services/fisio-report.service';
-import {
-    calculateMusiKpis,
-    prepareMusiAttentionActivities,
-    prepareMusiPerformanceLineData,
-    prepareMusiAutonomyByCategory,
-    prepareMusiParticipacaoData,
-    prepareMusiSuporteData,
-    prepareMusiEvolutionData,
-} from '../../programas/relatorio-geral/services/musi-report.service';
+import { fetchMusicReports } from '../../programas/relatorio-geral/services/musi-report.service';
 import { listSessionsByPatient } from '../../programas/consulta-sessao/services';
 import type { Filters, KpisRelatorio, SerieLinha, PrazoPrograma } from '../gerar-relatorio/types';
 import type { SavedReport } from '../types';
@@ -57,6 +49,7 @@ import {
     exportPdfDirectly,
     sanitizeForFileName
 } from '../services/pdf-export.service';
+import { emptyMusiDashboardResult } from '@/features/programas/relatorio-geral';
 
 export function GerarRelatorioPage() {
     const { user } = useAuth();
@@ -356,39 +349,16 @@ export function GerarRelatorioPage() {
                         'musicoterapia',
                         {
                             dateRange: currentFilters.periodo.mode,
+                            periodStart: currentFilters.periodo.start,
+                            periodEnd: currentFilters.periodo.end,
                             programId: currentFilters.programaId,
                             therapistId: currentFilters.terapeutaId,
+                            stimulusId: currentFilters.estimuloId,
+                            sort: 'date-asc',
                         }
                     );
                     
-                    let sessoes = sessionsResponse.items || [];
-
-                    // Aplicar filtro de estímulo localmente
-                    if (currentFilters.estimuloId) {
-                        sessoes = sessoes
-                            .map(sessao => ({
-                                ...sessao,
-                                registros: sessao.registros.filter(registro =>
-                                    String(registro.stimulusId) === String(currentFilters.estimuloId)
-                                ),
-                            }))
-                            .filter(sessao => sessao.registros.length > 0);
-                    }
-                    
-                    // Calcular KPIs (reutiliza funções de TO)
-                    const musiKpis = calculateMusiKpis(sessoes);
-                    
-                    // Preparar dados dos gráficos (reutiliza funções de TO)
-                    const performanceLineData = prepareMusiPerformanceLineData(sessoes);
-                    const attentionActivitiesData = prepareMusiAttentionActivities(sessoes);
-                    const autonomyByCategory = prepareMusiAutonomyByCategory(sessoes);
-                    
-                    // Preparar dados específicos de Musicoterapia (gráficos radiais)
-                    const participacaoData = prepareMusiParticipacaoData(sessoes);
-                    const suporteData = prepareMusiSuporteData(sessoes);
-                    
-                    // Evolução de Participação e Suporte ao longo do tempo
-                    const evolutionData = prepareMusiEvolutionData(sessoes);
+                    const sessoes = await fetchMusicReports(sessionsResponse.items);
 
                     // Carregar prazo do programa
                     const prazoProgramaData = await fetchPrazoPrograma(filtersWithArea);
@@ -396,42 +366,19 @@ export function GerarRelatorioPage() {
 
                     // Armazenar dados adaptados
                     setAdaptedData({
-                        kpis: musiKpis,
-                        performanceLineData,
-                        attentionActivities: attentionActivitiesData,
-                        autonomyByCategory,
-                        participacao: participacaoData,
-                        suporte: suporteData,
-                        evolution: evolutionData,
+                        kpis: sessoes.kpis,
+                        performanceLineData: sessoes.performance,
+                        attentionActivities: sessoes.prepareMusiAttentionActivities,
+                        autonomyByCategory: sessoes.prepareMusiAutonomyByCategory,
+                        participacao: sessoes.calculateAverageAndTrend.participation,
+                        suporte: sessoes.calculateAverageAndTrend.support,
+                        evolution: sessoes.prepareMusiEvolutionData,
                     });
                 } catch (error) {
                     console.error('Erro ao carregar dados de Musicoterapia:', error);
-                    // Usar dados vazios em caso de erro
-                    const musiKpis = calculateMusiKpis([]);
-                    const performanceLineData = prepareMusiPerformanceLineData([]);
-                    const attentionActivitiesData = prepareMusiAttentionActivities([]);
-                    const autonomyByCategory = prepareMusiAutonomyByCategory([]);
-                    const participacaoData = prepareMusiParticipacaoData([]);
-                    const suporteData = prepareMusiSuporteData([]);
-                    const evolutionData = prepareMusiEvolutionData([]);
-
-                    // Tentar carregar prazo mesmo com erro nas sessões
-                    try {
-                        const prazoProgramaData = await fetchPrazoPrograma(filtersWithArea);
-                        setPrazoPrograma(prazoProgramaData);
-                    } catch (prazoError) {
-                        console.error('Erro ao carregar prazo do programa:', prazoError);
-                        setPrazoPrograma(null);
-                    }
 
                     setAdaptedData({
-                        kpis: musiKpis,
-                        performanceLineData,
-                        attentionActivities: attentionActivitiesData,
-                        autonomyByCategory,
-                        participacao: participacaoData,
-                        suporte: suporteData,
-                        evolution: evolutionData,
+                        emptyMusiDashboardResult
                     });
                 }
 
