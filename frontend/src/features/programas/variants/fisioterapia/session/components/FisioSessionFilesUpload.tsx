@@ -69,8 +69,6 @@ export default function ToSessionFilesUpload({
     const [isDragOver, setIsDragOver] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    console.log('🎬 ToSessionFilesUpload renderizado!', { filesCount: files.length, disabled });
-
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {

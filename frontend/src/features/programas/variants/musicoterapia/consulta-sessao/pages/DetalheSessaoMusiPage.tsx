@@ -55,7 +55,6 @@ export default function DetalheSessaoMusiPage() {
 
       try {
         let sessionData: Sessao | null = null;
-        console.log(pacienteIdFromQuery)
         if (pacienteIdFromQuery) {
           sessionData = await getSessionById(pacienteIdFromQuery, sessaoId, 'musicoterapia');
         }

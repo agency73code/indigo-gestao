@@ -225,12 +225,19 @@ export interface SessionTrialDTO {
     ordem: number;
     resultado: string;
     duracao_minutos: number | null;
+
+    // Fisioterapia
     teve_desconforto: boolean | null;
     descricao_desconforto: string | null;
     teve_compensacao: boolean | null;
     descricao_compensacao: string | null;
     utilizou_carga: boolean | null;
     valor_carga: number | null;
+
+    //Musicoterapia
+    participacao?: number | null;
+    suporte?: number | null;
+
     estimulosOcp: {
         id: number;
         nome: string | null;
@@ -284,6 +291,7 @@ export interface Session {
         stimulusId: string | undefined;
         stimulusLabel: string | undefined;
         durationMinutes?: number | null;
+
         // Fisioterapia
         usedLoad?: boolean;
         loadValue?: number | null;
@@ -291,6 +299,10 @@ export interface Session {
         discomfortDescription?: string | null;
         hadCompensation?: boolean;
         compensationDescription?: string | null;
+
+        //Musicoterapia
+        participacao?: number | null;
+        suporte?: number | null;
     }[];
 };
 

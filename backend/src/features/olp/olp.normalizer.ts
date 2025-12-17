@@ -70,6 +70,7 @@ export function mapSessionList(dto: OcpTypes.SessionDTO[]): OcpTypes.Session[] {
             stimulusId: t.estimulosOcp?.id.toString(),
             stimulusLabel: t.estimulosOcp?.nome ?? undefined,
             durationMinutes: t.duracao_minutos ?? null,
+
             // Fisioterapia
             usedLoad: t.utilizou_carga ?? false,
             loadValue: t.valor_carga ?? null,
@@ -77,6 +78,10 @@ export function mapSessionList(dto: OcpTypes.SessionDTO[]): OcpTypes.Session[] {
             discomfortDescription: t.descricao_desconforto ?? null,
             hadCompensation: t.teve_compensacao ?? false,
             compensationDescription: t.descricao_compensacao ?? null,
+
+            // Musicoterapia
+            participacao: t.participacao ?? null,
+            suporte: t.suporte ?? null,
         })),
     }));
 }
