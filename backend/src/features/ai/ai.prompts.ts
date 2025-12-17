@@ -68,7 +68,7 @@ export function formatObservationsForPrompt(
 ): string {
     return observations
         .map(
-            (obs, i) =>
+            (obs, _i) =>
                 `[${obs.data}]${obs.programa ? ` (${obs.programa})` : ''}\n${obs.observacoes}`
         )
         .join('\n\n---\n\n');

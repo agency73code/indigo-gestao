@@ -721,10 +721,11 @@ export function GerarRelatorioPage() {
         }
 
         setGeneratingAI(true);
+
         try {
-            const periodLabel = filters.periodo.mode === 'last30' 
+            const periodLabel = filters.periodo.mode === '30d' 
                 ? 'Últimos 30 dias' 
-                : filters.periodo.mode === 'last90'
+                : filters.periodo.mode === '90d'
                     ? 'Últimos 90 dias'
                     : `${filters.periodo.start || ''} a ${filters.periodo.end || ''}`;
 

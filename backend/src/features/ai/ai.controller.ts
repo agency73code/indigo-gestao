@@ -7,6 +7,7 @@
 import type { Request, Response } from 'express';
 import { generateClinicalSummary } from './ai.service.js';
 import type { GenerateSummaryRequest } from './ai.types.js';
+import { AIServiceError } from './ai.errors.js';
 
 export async function handleGenerateSummary(req: Request, res: Response) {
     try {
@@ -28,9 +29,6 @@ export async function handleGenerateSummary(req: Request, res: Response) {
             });
         }
 
-        // Log para auditoria (MVP - depois pode ir para banco)
-        console.log(`[AI] Gerando resumo clínico - Paciente: ${patientName}, Área: ${area}, Observações: ${observations.length}`);
-
         // Chama o serviço
         const result = await generateClinicalSummary({
             observations,
@@ -39,31 +37,27 @@ export async function handleGenerateSummary(req: Request, res: Response) {
             periodLabel: periodLabel || 'Período não especificado',
         });
 
-        console.log(`[AI] Resumo gerado com sucesso para ${patientName}`);
-
         return res.json(result);
     } catch (error) {
-        console.error('[AI] Erro ao gerar resumo:', error);
-
-        // Verifica se é erro da API OpenAI
-        if (error instanceof Error) {
-            if (error.message.includes('API key')) {
-                return res.status(500).json({
+        if (error instanceof AIServiceError) {
+            if (error.code === 'AI_EMPTY_RESPONSE') {
+                return res.status(502).json({
                     success: false,
-                    error: 'Erro de configuração do serviço de IA. Contate o suporte.',
+                    error: 'Não foi possível gerar o resumo automaticamente. Tente novamente.',
                 });
             }
-            if (error.message.includes('rate limit')) {
-                return res.status(429).json({
+
+            if (error.code === 'AI_CONFIG_ERROR') {
+                return res.status(500).json({
                     success: false,
-                    error: 'Limite de requisições atingido. Tente novamente em alguns minutos.',
+                    error: 'Serviço de IA indisponível. Contate o suporte.',
                 });
             }
         }
 
         return res.status(500).json({
             success: false,
-            error: 'Erro ao processar solicitação de IA. Tente novamente.',
+            error: 'Erro ao processar solicitação de IA.',
         });
     }
 }

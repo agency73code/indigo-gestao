@@ -10,8 +10,6 @@ import { auth } from '../../middleware/auth.middleware.js';
 
 const router: ExpressRouter = Router();
 
-// POST /api/ai/generate-summary
-// Gera um rascunho de resumo clínico baseado nas observações
 router.post('/generate-summary', auth, handleGenerateSummary);
 
 export default router;
