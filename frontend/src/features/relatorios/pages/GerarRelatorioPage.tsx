@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Save, FileDown, FileText } from 'lucide-react';
+import { Save, FileDown, FileText, Sparkles, Loader2 } from 'lucide-react';
 import { FiltersBar } from '../gerar-relatorio/components/FiltersBar';
 import { KpiCards } from '../gerar-relatorio/components/KpiCards';
 import { DualLineProgress } from '../gerar-relatorio/components/DualLineProgress';
@@ -50,6 +50,8 @@ import {
     sanitizeForFileName
 } from '../services/pdf-export.service';
 import { emptyMusiDashboardResult } from '@/features/programas/relatorio-geral';
+import { generateClinicalSummaryWithAI } from '../services/ai.service';
+import { AIDraftValidationBanner } from '../gerar-relatorio/components/AIDraftValidationBanner';
 
 export function GerarRelatorioPage() {
     const { user } = useAuth();
@@ -86,6 +88,10 @@ export function GerarRelatorioPage() {
         observacoes: string;
     }>>([]);
     const [loadingObservations, setLoadingObservations] = useState(false);
+    
+    // Estado para geração de resumo com IA
+    const [generatingAI, setGeneratingAI] = useState(false);
+    const [aiDraftPendingValidation, setAiDraftPendingValidation] = useState(false);
 
     // Estados para os filtros (programas, estímulos, terapeutas)
     const [programas, setProgramas] = useState<{ id: string; nome: string }[]>([]);
@@ -296,6 +302,18 @@ export function GerarRelatorioPage() {
                     const attentionActivitiesData = prepareToAttentionActivities(sessoes);
                     const autonomyByCategory = prepareToAutonomyByCategory(sessoes);
 
+                    // Extrair observações das sessões
+                    const observations = sessoes
+                        .filter((s: any) => s.observacoes && s.observacoes.trim() !== '')
+                        .map((s: any) => ({
+                            id: s.id,
+                            data: s.data,
+                            programa: s.programa || '',
+                            terapeutaNome: s.terapeutaNome,
+                            observacoes: s.observacoes,
+                        }));
+                    setSessionObservations(observations);
+
                     // Carregar prazo do programa
                     const prazoProgramaData = await fetchPrazoPrograma(filtersWithArea);
                     setPrazoPrograma(prazoProgramaData);
@@ -310,6 +328,7 @@ export function GerarRelatorioPage() {
                     });
                 } catch (error) {
                     console.error('Erro ao carregar dados de TO:', error);
+                    setSessionObservations([]);
                     // Usar dados mockados em caso de erro
                     const toKpis = calculateToKpis([]);
                     const performanceLineData = prepareToPerformanceLineData([]);
@@ -359,6 +378,18 @@ export function GerarRelatorioPage() {
                     );
                     
                     const sessoes = await fetchMusicReports(sessionsResponse.items);
+
+                    // Extrair observações das sessões
+                    const observations = sessoes
+                        .filter((s: any) => s.observacoes && s.observacoes.trim() !== '')
+                        .map((s: any) => ({
+                            id: s.id,
+                            data: s.data,
+                            programa: s.programa || '',
+                            terapeutaNome: s.terapeutaNome,
+                            observacoes: s.observacoes,
+                        }));
+                    setSessionObservations(observations);
 
                     // Carregar prazo do programa
                     const prazoProgramaData = await fetchPrazoPrograma(filtersWithArea);
@@ -414,6 +445,18 @@ export function GerarRelatorioPage() {
                     // Novo formato com solicitação unica para o backend
                     const report = await fetchPhysioReports(sessoes);
 
+                    // Extrair observações das sessões
+                    const observations = sessoes
+                        .filter((s: any) => s.observacoes && s.observacoes.trim() !== '')
+                        .map((s: any) => ({
+                            id: s.id,
+                            data: s.data,
+                            programa: s.programa || '',
+                            terapeutaNome: s.terapeutaNome,
+                            observacoes: s.observacoes,
+                        }));
+                    setSessionObservations(observations);
+
                     // Carregar prazo do programa
                     const prazoProgramaData = await fetchPrazoPrograma(filtersWithArea); // tenho que analisar esse 
                     setPrazoPrograma(prazoProgramaData);
@@ -427,6 +470,7 @@ export function GerarRelatorioPage() {
                     });
                 } catch (error) {
                     console.error('Erro ao carregar dados de Fisio:', error);
+                    setSessionObservations([]);
 
                     setAdaptedData({
                         kpis: [],
@@ -610,6 +654,56 @@ export function GerarRelatorioPage() {
         }
     };
     
+    // Handler para gerar rascunho com IA
+    const handleGenerateWithAI = async () => {
+        if (sessionObservations.length === 0) {
+            toast.error('Não há observações de sessão para analisar. Selecione um período com sessões registradas.');
+            return;
+        }
+
+        if (!selectedPatient) {
+            toast.error('Selecione um paciente primeiro.');
+            return;
+        }
+
+        setGeneratingAI(true);
+
+        try {
+            const periodLabel = filters.periodo.mode === '30d' 
+                ? 'Últimos 30 dias' 
+                : filters.periodo.mode === '90d'
+                    ? 'Últimos 90 dias'
+                    : `${filters.periodo.start || ''} a ${filters.periodo.end || ''}`;
+
+            const result = await generateClinicalSummaryWithAI({
+                observations: sessionObservations,
+                patientName: selectedPatient.name,
+                area: areaConfig.label,
+                periodLabel,
+            });
+
+            // Inserir no editor (sem disclaimer inline - usamos banner separado)
+            const formattedContent = `<p>${result.summary.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br/>')}</p>`;
+            setObservacaoClinica(formattedContent);
+            
+            // Ativar estado de validação pendente
+            setAiDraftPendingValidation(true);
+            
+            toast.info(`Rascunho gerado com base em ${result.observationsUsed} observações. Valide o conteúdo antes de salvar.`);
+        } catch (error) {
+            console.error('Erro ao gerar resumo com IA:', error);
+            toast.error(error instanceof Error ? error.message : 'Erro ao gerar rascunho com IA');
+        } finally {
+            setGeneratingAI(false);
+        }
+    };
+
+    // Handler para validar rascunho gerado por IA
+    const handleValidateAIDraft = () => {
+        setAiDraftPendingValidation(false);
+        toast.success('Rascunho validado! Você pode agora salvar o relatório.');
+    };
+    
     // Handler para salvar o relatório (COM GERAÇÃO DE PDF)
     const handleSaveReport = async (title: string): Promise<SavedReport> => {
         if (!selectedPatient) {
@@ -714,8 +808,8 @@ export function GerarRelatorioPage() {
             }
         }
         
-        // Adicionar observações de sessão para áreas do modelo Fono
-        if (['fonoaudiologia', 'psicopedagogia', 'terapia-aba'].includes(selectedArea)) {
+        // Adicionar observações de sessão para todas as áreas principais
+        if (['fonoaudiologia', 'psicopedagogia', 'terapia-aba', 'terapia-ocupacional', 'fisioterapia', 'psicomotricidade', 'educacao-fisica', 'musicoterapia'].includes(selectedArea)) {
             generatedData.sessionObservations = sessionObservations;
         }
 
@@ -817,9 +911,17 @@ export function GerarRelatorioPage() {
             setHeaderActions(
                 <div className="flex items-center gap-3 no-print">
                     <Button
-                        onClick={() => setSaveDialogOpen(true)}
+                        onClick={() => {
+                            if (aiDraftPendingValidation) {
+                                toast.warning('Valide o rascunho gerado por IA antes de salvar o relatório.');
+                                return;
+                            }
+                            setSaveDialogOpen(true);
+                        }}
                         className="h-10 rounded-full gap-2"
                         variant="default"
+                        disabled={aiDraftPendingValidation}
+                        title={aiDraftPendingValidation ? 'Valide o rascunho de IA antes de salvar' : undefined}
                     >
                         <Save className="h-4 w-4" />
                         Salvar Relatório
@@ -828,6 +930,8 @@ export function GerarRelatorioPage() {
                         onClick={handleExportPdf}
                         className="h-10 rounded-full gap-2"
                         variant="outline"
+                        disabled={aiDraftPendingValidation}
+                        title={aiDraftPendingValidation ? 'Valide o rascunho de IA antes de exportar' : undefined}
                     >
                         <FileDown className="h-4 w-4" />
                         Exportar PDF
@@ -839,7 +943,7 @@ export function GerarRelatorioPage() {
         }
 
         return () => setHeaderActions(null);
-    }, [selectedPatient, selectedArea, setHeaderActions, handleExportPdf]);
+    }, [selectedPatient, selectedArea, setHeaderActions, handleExportPdf, aiDraftPendingValidation]);
 
     return (
         <div className="flex flex-col w-full">
@@ -879,10 +983,32 @@ export function GerarRelatorioPage() {
 
                         {/* Observação Clínica - aparece em tela e PDF */}
                         <div data-print-block className="bg-muted/30 border border-border rounded-[5px] p-4 space-y-2">
-                            <Label className="flex items-center gap-2 text-sm font-semibold">
-                                <FileText className="w-4 h-4" />
-                                Observação Clínica (Relatório)
-                            </Label>
+                            <div className="flex items-center justify-between">
+                                <Label className="flex items-center gap-2 text-sm font-semibold">
+                                    <FileText className="w-4 h-4" />
+                                    Observação Clínica (Relatório)
+                                </Label>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleGenerateWithAI}
+                                    disabled={generatingAI || sessionObservations.length === 0}
+                                    className="gap-2 no-print"
+                                >
+                                    {generatingAI ? (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                        <Sparkles className="h-4 w-4" />
+                                    )}
+                                    {generatingAI ? 'Gerando...' : 'Gerar rascunho com IA'}
+                                </Button>
+                            </div>
+                            
+                            {/* Banner de validação obrigatória para rascunhos de IA */}
+                            {aiDraftPendingValidation && (
+                                <AIDraftValidationBanner onValidate={handleValidateAIDraft} />
+                            )}
+                            
                             <RichTextEditor
                                 placeholder="Adicione observações relevantes sobre o progresso do cliente, comportamentos observados durante as sessões, ou informações importantes para o relatório..."
                                 value={observacaoClinica}
@@ -1225,6 +1351,18 @@ export function GerarRelatorioPage() {
                             </section>
                         )}
                         
+                        {/* Observações das Sessões - Terapia Ocupacional */}
+                        {selectedArea === 'terapia-ocupacional' && (
+                            <section data-print-block data-print-wide>
+                                <SessionObservationsCard
+                                    observations={sessionObservations}
+                                    loading={loadingObservations}
+                                    maxItems={30}
+                                    title="Observações das Sessões"
+                                />
+                            </section>
+                        )}
+                        
                         {/* Prazo do Programa - Modelo Fisio (Fisioterapia, Psicomotricidade, Educação Física) */}
                         {['fisioterapia', 'psicomotricidade', 'educacao-fisica'].includes(selectedArea) && prazoPrograma && (
                             <section data-print-block data-print-wide>
@@ -1238,6 +1376,18 @@ export function GerarRelatorioPage() {
                             </section>
                         )}
                         
+                        {/* Observações das Sessões - Modelo Fisio (Fisioterapia, Psicomotricidade, Educação Física) */}
+                        {['fisioterapia', 'psicomotricidade', 'educacao-fisica'].includes(selectedArea) && (
+                            <section data-print-block data-print-wide>
+                                <SessionObservationsCard
+                                    observations={sessionObservations}
+                                    loading={loadingObservations}
+                                    maxItems={30}
+                                    title="Observações das Sessões"
+                                />
+                            </section>
+                        )}
+                        
                         {/* Prazo do Programa - Musicoterapia */}
                         {selectedArea === 'musicoterapia' && prazoPrograma && (
                             <section data-print-block data-print-wide>
@@ -1247,6 +1397,18 @@ export function GerarRelatorioPage() {
                                     percent={prazoPrograma.percent}
                                     label={prazoPrograma.label}
                                     loading={loadingCharts}
+                                />
+                            </section>
+                        )}
+                        
+                        {/* Observações das Sessões - Musicoterapia */}
+                        {selectedArea === 'musicoterapia' && (
+                            <section data-print-block data-print-wide>
+                                <SessionObservationsCard
+                                    observations={sessionObservations}
+                                    loading={loadingObservations}
+                                    maxItems={30}
+                                    title="Observações das Sessões"
                                 />
                             </section>
                         )}

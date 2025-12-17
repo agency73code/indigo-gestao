@@ -147,9 +147,9 @@ export function OcpDeadlineCard({
     const progresso = calcularProgresso();
 
     return (
-        <Card className="w-full px-1 py-0 md:px-8 md:py-10 lg:px-2 lg:py-4">
+        <Card className="w-full px-1 py-0 md:px-4 md:py-10 lg:px-2 lg:py-2">
             <CardHeader className="pb-2">
-                <CardTitle style={{ fontFamily: 'Sora, sans-serif' }} className='text-primary'>
+                <CardTitle style={{ fontFamily: 'Sora, sans-serif' }} className='text-primary font-normal'>
                     Prazo do Programa / Objetivo
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">
