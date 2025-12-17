@@ -310,7 +310,7 @@ export async function listSessionsByClient(filters: OcpType.ListSessionsFilters)
         where.trials = {
             some: {
                 estimulosOcp: {
-                    id_estimulo: Number(stimulusId),
+                    id: Number(stimulusId),
                 },
             },
         };
@@ -391,7 +391,7 @@ export async function listSessionsByClient(filters: OcpType.ListSessionsFilters)
     if (stimulusId) {
         sessions.forEach((session) => {
             session.trials = session.trials.filter(
-                (t) => t.estimulosOcp.id_estimulo === Number(stimulusId),
+                (t) => t.estimulosOcp.id === Number(stimulusId),
             );
         });
     }

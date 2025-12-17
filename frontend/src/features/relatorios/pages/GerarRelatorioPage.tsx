@@ -380,16 +380,16 @@ export function GerarRelatorioPage() {
                     const sessoes = await fetchMusicReports(sessionsResponse.items);
 
                     // Extrair observações das sessões
-                    const observations = sessoes
-                        .filter((s: any) => s.observacoes && s.observacoes.trim() !== '')
-                        .map((s: any) => ({
-                            id: s.id,
-                            data: s.data,
-                            programa: s.programa || '',
-                            terapeutaNome: s.terapeutaNome,
-                            observacoes: s.observacoes,
-                        }));
-                    setSessionObservations(observations);
+                    // const observations = sessoes
+                    //     .filter((s: any) => s.observacoes && s.observacoes.trim() !== '')
+                    //     .map((s: any) => ({
+                    //         id: s.id,
+                    //         data: s.data,
+                    //         programa: s.programa || '',
+                    //         terapeutaNome: s.terapeutaNome,
+                    //         observacoes: s.observacoes,
+                    //     }));
+                    // setSessionObservations(observations);
 
                     // Carregar prazo do programa
                     const prazoProgramaData = await fetchPrazoPrograma(filtersWithArea);
