@@ -111,7 +111,7 @@ export async function programMusicUpdate(programId: number, input: UpdateMusicPr
     if (goalTitle) data.objetivo_programa = goalTitle;
     if (goalDescription) data.objetivo_descricao = goalDescription;
     if (notes) data.observacao_geral = notes;
-    if (status) data.status = status;
+    if (status) data.status = status === 'active' ? 'ativado' : 'arquivado';
     if (prazoInicio) data.data_inicio = prazoInicio;
     if (prazoFim) data.data_fim = prazoFim;
 
