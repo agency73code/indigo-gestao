@@ -174,18 +174,19 @@ const PatientTable = memo(function PatientTable({
                             </th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y" style={{ borderColor: 'var(--table-border)' }}>
-                        {patients.map((patient) => {
+                    <tbody>
+                        {patients.map((patient, index) => {
                             const age = calculateAge(patient.pessoa?.dataNascimento);
+                            const rowBg = index % 2 === 0 ? 'var(--table-bg)' : 'var(--table-row-alt)';
                             return (
                                 <tr
                                     key={patient.id}
                                     className="transition-colors"
                                     style={{ 
-                                        backgroundColor: 'var(--table-bg)',
+                                        backgroundColor: rowBg,
                                     }}
                                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-row-hover)'}
-                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--table-bg)'}
+                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = rowBg}
                                 >
                                     <td className="p-3">
                                         <div className="flex items-center gap-3">
@@ -244,11 +245,12 @@ const PatientTable = memo(function PatientTable({
             </div>
 
             {/* Versão Mobile */}
-            <div className="md:hidden overflow-auto divide-y divide-gray-100">
-                {patients.map((patient) => {
+            <div className="md:hidden overflow-auto">
+                {patients.map((patient, index) => {
                     const age = calculateAge(patient.pessoa?.dataNascimento);
+                    const rowBg = index % 2 === 0 ? 'var(--table-bg)' : 'var(--table-row-alt)';
                     return (
-                        <div key={patient.id} className="p-4 space-y-3 hover:bg-gray-50">
+                        <div key={patient.id} className="p-4 space-y-3 hover:bg-gray-50" style={{ backgroundColor: rowBg }}>
                             <div className="flex items-start justify-between gap-3">
                                 <div className="flex items-center gap-3">
                                     <AvatarWithSkeleton

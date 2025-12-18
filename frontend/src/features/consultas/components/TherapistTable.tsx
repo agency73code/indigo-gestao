@@ -149,9 +149,9 @@ const TherapistTable = memo(function TherapistTable({
 
     return (
         <div className="flex flex-col min-h-0 rounded-lg overflow-hidden" style={{ backgroundColor: 'var(--table-bg)' }}>
-            <div className="md:hidden divide-y" style={{ borderColor: 'var(--table-border)' }}>
-                {therapists.map((therapist) => (
-                    <div key={therapist.id} className="p-4 space-y-3">
+            <div className="md:hidden">
+                {therapists.map((therapist, index) => (
+                    <div key={therapist.id} className="p-4 space-y-3" style={{ backgroundColor: index % 2 === 0 ? 'var(--table-bg)' : 'var(--table-row-alt)' }}>
                         <div className="flex items-start justify-between gap-3">
                             <div className="flex items-center gap-3">
                                 <AvatarWithSkeleton
@@ -279,16 +279,16 @@ const TherapistTable = memo(function TherapistTable({
                             <th className="text-center p-3 font-medium text-sm last:rounded-tr-lg" style={{ color: 'var(--table-text-secondary)' }}>Ações</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y" style={{ borderColor: 'var(--table-border)' }}>
-                        {therapists.map((therapist) => (
+                    <tbody>
+                        {therapists.map((therapist, index) => (
                             <tr
                                 key={therapist.id}
                                 className="transition-colors"
                                 style={{ 
-                                    backgroundColor: 'var(--table-bg)',
+                                    backgroundColor: index % 2 === 0 ? 'var(--table-bg)' : 'var(--table-row-alt)',
                                 }}
                                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-row-hover)'}
-                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--table-bg)'}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = index % 2 === 0 ? 'var(--table-bg)' : 'var(--table-row-alt)'}
                             >
                                 <td className="p-3">
                                     <div className="flex items-center gap-2.5">

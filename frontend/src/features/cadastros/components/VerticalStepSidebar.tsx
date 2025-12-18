@@ -77,7 +77,7 @@ export default function VerticalStepSidebar({
                                             fontWeight: "var(--hub-card-title-font-weight)",
                                             color: isCurrent ? "var(--primary)" : "var(--hub-card-title-color)"
                                         }}
-                                        className="text-base truncate leading-none tracking-tight"
+                                        className="text-base leading-snug tracking-tight"
                                     >
                                         {step}
                                     </p>
