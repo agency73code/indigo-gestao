@@ -41,6 +41,7 @@ export async function fetchProgram(programId: string): Promise<ProgramDetail> {
     const res = await fetchWithArea(`/api/ocp/programs/${programId}`, { 
         credentials: 'include' 
     });
+    
     if (!res.ok) throw new Error(`Erro ao buscar programas: ${res.statusText}`);
 
     const json = await res.json();

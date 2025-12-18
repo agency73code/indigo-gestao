@@ -2,7 +2,7 @@ import { prisma } from "../../../../../config/database.js";
 
 const MODEL_AREAS = 'musicoterapia';
 
-export async function getMusicSessionData(sessionIds: number[], stimulusIds: number[]) {
+export async function getMusicSessionsData(sessionIds: number[], stimulusIds: number[]) {
   return prisma.sessao.findMany({
     where: {
       id: { in: sessionIds },

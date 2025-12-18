@@ -241,3 +241,22 @@ export async function fetchMusiSessionById(id: string): Promise<MusiSessionDetai
     
     return response.json();
 }
+
+export async function fetchMusiEvolutionChart(programId: string, stimulusId?: string, sort?: 'asc' | 'desc') {
+    const url = buildApiUrl(`/api/ocp/musictherapy/programs/graficMusicDetails`, {
+        programId,
+        stimulusId,
+        sort,
+    });
+
+    const response = await fetch(url, {
+        credentials: 'include',
+        method: 'GET',
+    });
+    
+    if (!response.ok) {
+        throw new Error('Erro ao buscar sessão de Musicoterapia');
+    }
+    
+    return response.json();
+}

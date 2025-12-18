@@ -33,5 +33,6 @@ router.post('/physiotherapy/sessions/calculatePhysioKpis', OlpController.physioK
 // Musictherapy
 router.post('/musictherapy/programs/:programId/sessions', upload.any(), OlpController.createAreaSession);
 router.post('/musictherapy/sessions/calculateMusicKpis', OlpController.musicKpis);
+router.get('/musictherapy/programs/graficMusicDetails', OlpController.getMusicTherapyEvolutionChart)
 
 export default router;

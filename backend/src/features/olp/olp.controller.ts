@@ -9,7 +9,7 @@ import { calcAutonomyByCategory } from './services/reports/physiotherapy/autonom
 import { calcPerformanceLine } from './services/reports/physiotherapy/performanceLine.js';
 import { calcKpis } from './services/reports/physiotherapy/calculateKpis.js';
 import { calcAttentionActivities } from './services/reports/physiotherapy/attentionActivities.js';
-import { getMusicSessionData } from './services/reports/musictherapy/getMusicSessionData.js';
+import { getMusicSessionsData } from './services/reports/musictherapy/getMusicSessionsData.js';
 import { calcMusicKpis } from './services/reports/musictherapy/calcMusicKpis.js';
 import { calcMusicPerformanceLine } from './services/reports/musictherapy/performanceLine.js';
 import { prepareMusiEvolutionData } from './services/reports/musictherapy/prepareMusiEvolutionData.js';
@@ -17,6 +17,8 @@ import { prepareMusiAttentionActivities } from './services/reports/musictherapy/
 import { prepareMusiAutonomyByCategory } from './services/reports/musictherapy/prepareMusiAutonomyByCategory.js';
 import { calcAverageAndTrend } from './services/reports/musictherapy/calcAverageAndTrend.js';
 import { sessionObservations } from '../../utils/sessionObservations.js';
+import { fetchMusicSessionsForChart } from './services/reports/musictherapy/fetchMusicSessionsForChart.js';
+import { mapMusicSessionToChartPoint } from './services/reports/musictherapy/mapMusicSessionToChartPoint.js';
 
 export async function createProgram(req: Request, res: Response) {
     try {
@@ -432,7 +434,7 @@ export async function musicKpis(req: Request, res: Response, next: NextFunction)
             return res.status(400).json({ error: "sessionIds é obrigatório e deve ser um array" });
         }
         
-        const sessions = await getMusicSessionData(sessionIds, stimulusIds || []);
+        const sessions = await getMusicSessionsData(sessionIds, stimulusIds || []);
         
         const result = {
             kpis: calcMusicKpis(sessions),
@@ -450,5 +452,23 @@ export async function musicKpis(req: Request, res: Response, next: NextFunction)
         return res.json(result);
     } catch (error) {
         next (error);
+    }
+}
+
+export async function getMusicTherapyEvolutionChart(req: Request, res: Response, next: NextFunction) {
+    try {
+        const programId = getQueryString(req.query.programId);
+        const stimulusId = getQueryString(req.query.stimulusId);
+        const sort = getQueryString(req.query.sort) === 'desc' ? 'desc' : 'asc';
+
+        if (!programId) return res.status(400).json({ success: false, message: 'programId é obrigatório' });
+
+        const sessions = await fetchMusicSessionsForChart(programId, stimulusId, sort);
+
+        const chartData = sessions.map(mapMusicSessionToChartPoint);
+
+        return res.status(201).json({ data: chartData });
+    } catch (error) {
+        next (error)
     }
 }

@@ -32,6 +32,7 @@ export async function fetchRecentSessions(programId: string, _limit = 5): Promis
     const res = await fetch(`/api/ocp/programs/${programId}/sessions`, { 
         credentials: 'include' 
     });
+    
     if (!res.ok) throw new Error(`Erro ao buscar as sessoes: ${res.statusText}`);
 
     const data = await res.json();
