@@ -376,20 +376,9 @@ export function GerarRelatorioPage() {
                             sort: 'date-asc',
                         }
                     );
-                    
                     const sessoes = await fetchMusicReports(sessionsResponse.items);
 
-                    // Extrair observações das sessões
-                    // const observations = sessoes
-                    //     .filter((s: any) => s.observacoes && s.observacoes.trim() !== '')
-                    //     .map((s: any) => ({
-                    //         id: s.id,
-                    //         data: s.data,
-                    //         programa: s.programa || '',
-                    //         terapeutaNome: s.terapeutaNome,
-                    //         observacoes: s.observacoes,
-                    //     }));
-                    // setSessionObservations(observations);
+                    setSessionObservations(sessoes.sessionObservations);
 
                     // Carregar prazo do programa
                     const prazoProgramaData = await fetchPrazoPrograma(filtersWithArea);
@@ -445,17 +434,7 @@ export function GerarRelatorioPage() {
                     // Novo formato com solicitação unica para o backend
                     const report = await fetchPhysioReports(sessoes);
 
-                    // Extrair observações das sessões
-                    const observations = sessoes
-                        .filter((s: any) => s.observacoes && s.observacoes.trim() !== '')
-                        .map((s: any) => ({
-                            id: s.id,
-                            data: s.data,
-                            programa: s.programa || '',
-                            terapeutaNome: s.terapeutaNome,
-                            observacoes: s.observacoes,
-                        }));
-                    setSessionObservations(observations);
+                    setSessionObservations(report.sessionObservations);
 
                     // Carregar prazo do programa
                     const prazoProgramaData = await fetchPrazoPrograma(filtersWithArea); // tenho que analisar esse 
@@ -514,6 +493,8 @@ export function GerarRelatorioPage() {
             const kpisData = await fetchKpis(filtersWithArea);
             setKpis(kpisData);
             setLoadingKpis(false);
+            
+            // TODO: Arrumar isso aqui que ta sinistro
 
             // Carregar sessões para extrair observações (modelo Fono)
             setLoadingObservations(true);

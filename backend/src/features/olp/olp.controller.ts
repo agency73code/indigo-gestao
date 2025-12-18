@@ -16,6 +16,7 @@ import { prepareMusiEvolutionData } from './services/reports/musictherapy/prepar
 import { prepareMusiAttentionActivities } from './services/reports/musictherapy/prepareMusiAttentionActivities.js';
 import { prepareMusiAutonomyByCategory } from './services/reports/musictherapy/prepareMusiAutonomyByCategory.js';
 import { calcAverageAndTrend } from './services/reports/musictherapy/calcAverageAndTrend.js';
+import { sessionObservations } from '../../utils/sessionObservations.js';
 
 export async function createProgram(req: Request, res: Response) {
     try {
@@ -413,6 +414,7 @@ export async function physioKpis(req: Request, res: Response, next: NextFunction
             performance: calcPerformanceLine(sessions),
             attentionActivities: calcAttentionActivities(sessions),
             kpis: calcKpis(sessions),
+            sessionObservations: await sessionObservations(sessions),
         };
 
         return res.json(result);
@@ -431,17 +433,18 @@ export async function musicKpis(req: Request, res: Response, next: NextFunction)
         }
         
         const sessions = await getMusicSessionData(sessionIds, stimulusIds || []);
-
+        
         const result = {
             kpis: calcMusicKpis(sessions),
             performance: calcMusicPerformanceLine(sessions),
             prepareMusiEvolutionData: prepareMusiEvolutionData(sessions),
             prepareMusiAttentionActivities: prepareMusiAttentionActivities(sessions),
             prepareMusiAutonomyByCategory: prepareMusiAutonomyByCategory(sessions),
+            sessionObservations: await sessionObservations(sessions),
             calculateAverageAndTrend: {
                 participation: calcAverageAndTrend(sessions, 'participacao'),
                 support: calcAverageAndTrend(sessions, 'suporte'),
-            }
+            },
         };
 
         return res.json(result);
