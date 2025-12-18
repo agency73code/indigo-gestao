@@ -20,30 +20,6 @@ export async function saveSession(sessionData: {
     notes?: string;
     files?: SessionFile[];
 }): Promise<{ id: string }> {
-    // Se não houver arquivos, enviar JSON normal (backend atual não suporta arquivos para Fono)
-    const hasFiles = sessionData.files && sessionData.files.length > 0;
-    
-    if (!hasFiles) {
-        // Enviar como JSON (compatível com backend atual)
-        const res = await fetch(`/api/ocp/programs/${sessionData.programId}/sessions`, {
-            method: 'POST',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                patientId: sessionData.patientId,
-                attempts: sessionData.attempts,
-                notes: sessionData.notes,
-            }),
-        });
-        
-        if (!res.ok) {
-            throw new Error('Erro ao salvar sessão');
-        }
-
-        return res.json();
-    }
 
     // Com arquivos: usar FormData (quando backend suportar)
     const payload = {
