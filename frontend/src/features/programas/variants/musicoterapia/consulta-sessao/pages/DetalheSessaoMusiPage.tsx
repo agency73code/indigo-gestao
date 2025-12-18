@@ -55,7 +55,6 @@ export default function DetalheSessaoMusiPage() {
 
       try {
         let sessionData: Sessao | null = null;
-
         if (pacienteIdFromQuery) {
           sessionData = await getSessionById(pacienteIdFromQuery, sessaoId, 'musicoterapia');
         }
@@ -78,13 +77,7 @@ export default function DetalheSessaoMusiPage() {
         const patientId = sessionData.pacienteId ?? pacienteIdFromQuery ?? '';
         let patientData: Patient | null = null;
         if (patientId) {
-          try {
-            patientData = await getPatientById(patientId);
-          } catch (err) {
-            // Se falhar ao buscar paciente (ex: 404), usar dados do mock
-            console.warn('Usando dados de paciente do mock:', err);
-            patientData = null;
-          }
+          patientData = await getPatientById(patientId);
         }
 
         let mockProgramDetail: ProgramDetail | null = await findProgramSessionById(sessaoId, 'musicoterapia');
@@ -133,8 +126,6 @@ export default function DetalheSessaoMusiPage() {
           patientPhotoUrl: patientData?.photoUrl ?? mockProgramDetail.patientPhotoUrl,
         };
 
-        console.log('🎵 [DetalheSessaoMusiPage] derivedProgram.stimuli:', derivedProgram.stimuli);
-
         const derivedPatient: Patient = patientData ?? {
           id: sessionData.pacienteId,
           name: derivedProgram.patientName,
@@ -151,12 +142,13 @@ export default function DetalheSessaoMusiPage() {
         setPatient(derivedPatient);
         setProgram(derivedProgram);
 
-        if (!locationState?.sessionDate) {
-          navigate('.', {
+        navigate(
+          `${location.pathname}${location.search}`,
+          {
             replace: true,
             state: { sessionDate: sessionData.data },
-          });
-        }
+          }
+        );
       } catch {
         if (!cancelled) {
           setError('Erro ao carregar sessão');
@@ -176,7 +168,7 @@ export default function DetalheSessaoMusiPage() {
     return () => {
       cancelled = true;
     };
-  }, [sessaoId, pacienteIdFromQuery, navigate, locationState?.sessionDate]);
+  }, [sessaoId, pacienteIdFromQuery, navigate, locationState?.sessionDate, location.pathname, location.search]);
 
   const handleBack = () => {
     if (pacienteIdFromQuery) {

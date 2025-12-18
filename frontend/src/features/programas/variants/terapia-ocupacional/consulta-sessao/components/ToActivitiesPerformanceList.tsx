@@ -49,8 +49,6 @@ export default function ToActivitiesPerformanceList({
     const toggleSort = () => {
         const newMode = sortMode === 'severity' ? 'alphabetical' : 'severity';
         setSortMode(newMode);
-
-        console.log('[Event] sessao:detalhe:activity:sort:change', { mode: newMode });
     };
 
     return (

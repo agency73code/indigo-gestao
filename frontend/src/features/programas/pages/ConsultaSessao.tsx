@@ -40,7 +40,6 @@ export default function ConsultaSessao() {
 
     // Configurar título
     useEffect(() => {
-        console.log('[ConsultaSessao] Setando título');
         setPageTitle('Consultar Sessão');
     }, [setPageTitle]);
 

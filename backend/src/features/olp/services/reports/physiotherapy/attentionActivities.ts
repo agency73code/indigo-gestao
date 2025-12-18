@@ -1,10 +1,6 @@
 import type { PhysioSession } from "./types.js";
 
 export function calcAttentionActivities(sessions: PhysioSession[]) {
-    if (!sessions || sessions.length === 0) {
-        return [];
-    }
-
     // Mapa por estímulo
     const statsMap: Record<number, {
         name: string;

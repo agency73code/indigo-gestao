@@ -48,9 +48,8 @@ interface ToPerformanceChartProps {
 const addErrorData = (data: SerieLinha[]) => {
     if (!Array.isArray(data)) return [];
     return data.map((item) => {
-        const totalDesempenho = (item.acerto ?? 0) + (item.independencia ?? 0);
-        const erro = Math.max(0, 100 - totalDesempenho); // "Não desempenhou" = 100% - (desempenhou + com ajuda)
-
+        const erro = Math.max(0, 100 - (item.acerto ?? 0)); // "Não desempenhou" = 100% - (desempenhou + com ajuda)
+        
         return {
             ...item,
             erro,
@@ -80,7 +79,7 @@ export default function ToPerformanceChart({
 
     // Adicionar campo de erro calculado aos dados
     const dataWithError = addErrorData(data || []);
-
+    console.log(data)
     const chartTitle = title ?? 'Evolução do desempenho';
     const chartMetaLabel = metaLabel ?? 'Meta: Convergência';
 

@@ -165,7 +165,6 @@ export default function ToEditarProgramaPage() {
             };
 
             await updateProgram(input);
-            // console.log(input);
             toast.success('Programa atualizado com sucesso!');
 
             setHasChanges(false);

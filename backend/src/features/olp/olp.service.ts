@@ -4,8 +4,8 @@ import * as OcpType from './types/olp.types.js';
 import * as OcpNormalizer from './olp.normalizer.js';
 import { endOfDay, format, parseISO, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { physiotherapySession, program, session, TOSession } from './actions/create.js';
-import { programUpdate } from './actions/update.js';
+import { musictherapySession, physiotherapySession, program, SpeechSession, TOSession } from './actions/create.js';
+import { programMusicUpdate, programUpdate } from './actions/update.js';
 import { updateProgramSchema } from './types/olp.schema.js';
 import { getVisibilityScope } from '../../utils/visibilityFilter.js';
 import { ACCESS_LEVELS } from '../../utils/accessLevels.js';
@@ -17,8 +17,8 @@ export async function createProgram(data: OcpType.CreateProgramPayload) {
     return await program(data);
 }
 
-export async function createSession(input: OcpType.CreateSessionInput) {
-    return await session(input);
+export async function createSpeechSession(input: OcpType.CreateSpeechSessionInput) {
+    return await SpeechSession(input);
 }
 
 export async function createTOSession(input: OcpType.CreateToSessionInput) {
@@ -29,10 +29,18 @@ export async function createPhysiotherapySession(input: OcpType.CreatePhysiother
     return await physiotherapySession(input);
 }
 
+export async function createMusictherapySession(input: OcpType.CreateMusictherapySessionInput) {
+    return await musictherapySession(input);
+}
+
 export async function updateProgram(programId: number, input: OcpType.UpdateProgramInput) {
     const parsed = updateProgramSchema.parse({ ...input, id: programId });
     const result = await programUpdate(programId, parsed);
     return result;
+}
+
+export async function updateMusicProgram(programId: number, input: OcpType.UpdateMusicProgramInput) {
+    return await programMusicUpdate(programId, input);
 }
 
 export async function getProgramById(programId: string) {
@@ -73,6 +81,8 @@ export async function getProgramById(programId: string) {
                     nome: true,
                     status: true,
                     descricao: true,
+                    metodos: true,
+                    tecnicas_procedimentos: true,
                 },
                 orderBy: { id_estimulo: 'desc' },
             },
@@ -162,6 +172,8 @@ export async function getProgramId(programId: string) {
                             nome: true,
                             descricao: true,
                             status: true,
+                            metodos: true,
+                            tecnicas_procedimentos: true,
                         },
                     },
                     status: true,
@@ -224,25 +236,23 @@ export async function listClientsByTherapist(therapistId: string, q?: string) {
     });
 }
 
-export async function listByClientId(
+export async function listProgramsByClientId(
     clientId: string,
     userId: string,
     page = 1,
     pageSize = 10,
     area: string,
-    status: 'active' | 'archived' | 'all' = 'all',
+    status: 'active' | 'archived',
     q?: string,
     sort: 'recent' | 'alphabetic' = 'recent',
 ) {
-    const translateStatus =
-        status === 'active' ? 'ativado' : status === 'archived' ? 'arquivado' : undefined;
-
+    const translateResult = status ? status === 'active' ? 'ativado' : 'archived' : null;
     // cria o objeto base
     const where: Prisma.ocpWhereInput = {
         cliente_id: clientId,
         terapeuta_id: userId,
         area,
-        ...(translateStatus && { status: translateStatus }), // só inclui se existir
+        ...(translateResult && { status: translateResult }), // só inclui se existir
     };
 
     // adiciona o filtro de busca se q existir
@@ -285,6 +295,7 @@ export async function listSessionsByClient(filters: OcpType.ListSessionsFilters)
         periodMode,
         periodStart,
         periodEnd,
+        pageSize,
     } = filters;
 
     const where: Prisma.sessaoWhereInput = {};
@@ -299,7 +310,7 @@ export async function listSessionsByClient(filters: OcpType.ListSessionsFilters)
         where.trials = {
             some: {
                 estimulosOcp: {
-                    id_estimulo: Number(stimulusId),
+                    id: Number(stimulusId),
                 },
             },
         };
@@ -352,6 +363,8 @@ export async function listSessionsByClient(filters: OcpType.ListSessionsFilters)
                     descricao_compensacao: true,
                     utilizou_carga: true,
                     valor_carga: true,
+                    participacao: true,
+                    suporte: true,
                     estimulosOcp: {
                         select: {
                             id: true,
@@ -371,13 +384,14 @@ export async function listSessionsByClient(filters: OcpType.ListSessionsFilters)
                 },
             },
         },
+        take: pageSize ? Number(pageSize) : 10,
         orderBy: { data_criacao: order },
     });
 
     if (stimulusId) {
         sessions.forEach((session) => {
             session.trials = session.trials.filter(
-                (t) => t.estimulosOcp.id_estimulo === Number(stimulusId),
+                (t) => t.estimulosOcp.id === Number(stimulusId),
             );
         });
     }

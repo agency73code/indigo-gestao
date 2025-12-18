@@ -9,6 +9,16 @@ import { calcAutonomyByCategory } from './services/reports/physiotherapy/autonom
 import { calcPerformanceLine } from './services/reports/physiotherapy/performanceLine.js';
 import { calcKpis } from './services/reports/physiotherapy/calculateKpis.js';
 import { calcAttentionActivities } from './services/reports/physiotherapy/attentionActivities.js';
+import { getMusicSessionsData } from './services/reports/musictherapy/getMusicSessionsData.js';
+import { calcMusicKpis } from './services/reports/musictherapy/calcMusicKpis.js';
+import { calcMusicPerformanceLine } from './services/reports/musictherapy/performanceLine.js';
+import { prepareMusiEvolutionData } from './services/reports/musictherapy/prepareMusiEvolutionData.js';
+import { prepareMusiAttentionActivities } from './services/reports/musictherapy/prepareMusiAttentionActivities.js';
+import { prepareMusiAutonomyByCategory } from './services/reports/musictherapy/prepareMusiAutonomyByCategory.js';
+import { calcAverageAndTrend } from './services/reports/musictherapy/calcAverageAndTrend.js';
+import { sessionObservations } from '../../utils/sessionObservations.js';
+import { fetchMusicSessionsForChart } from './services/reports/musictherapy/fetchMusicSessionsForChart.js';
+import { mapMusicSessionToChartPoint } from './services/reports/musictherapy/mapMusicSessionToChartPoint.js';
 
 export async function createProgram(req: Request, res: Response) {
     try {
@@ -36,35 +46,6 @@ export async function createProgram(req: Request, res: Response) {
             success: false,
             message: error instanceof Error ? error.message : 'Erro inesperado',
         });
-    }
-}
-
-export async function createSession(req: Request, res: Response) {
-    try {
-        if (!req.params.programId)
-            return res
-                .status(400)
-                .json({ success: false, message: 'ID do programa não informado' });
-        const programId = parseInt(req.params.programId, 10);
-
-        const { patientId, notes, attempts } = req.body;
-        if (!patientId || !Array.isArray(attempts))
-            return res.status(400).json({ error: 'Dados inválidos para criar sessão' });
-
-        const therapistId = req.user?.id;
-        if (!therapistId) return res.status(401).json({ error: 'Usuário não autenticado' });
-
-        const session = await OcpService.createSession({
-            programId,
-            patientId,
-            therapistId,
-            notes,
-            attempts,
-        });
-        res.status(201).json(session);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false, message: 'Erro ao registrar sessão' });
     }
 }
 
@@ -97,36 +78,39 @@ export async function createAreaSession(req: Request, res: Response, next: NextF
             size: meta[i]?.size ?? file.size
         }));
 
+        const payload = {
+            programId: Number(programId),
+            patientId,
+            therapistId,
+            notes,
+            attempts,
+            files: uploadedFiles,
+            area,
+        };
+
         let session;
 
-        switch(area) {
-            case 'terapia-ocupacional':
-                session = await OcpService.createTOSession({
-                    programId: Number(programId),
-                    patientId,
-                    therapistId,
-                    notes,
-                    attempts,
-                    files: uploadedFiles,
-                    area,
-                });
+        switch (area) {
+            case 'fonoaudiologia':
+                session = await OcpService.createSpeechSession(payload);
                 break;
+
+            case 'terapia-ocupacional':
+                session = await OcpService.createTOSession(payload);
+                break;
+
             case 'fisioterapia':
             case 'psicomotricidade':
             case 'educacao-fisica':
-                session = await OcpService.createPhysiotherapySession({
-                    programId: Number(programId),
-                    patientId,
-                    therapistId,
-                    notes,
-                    attempts,
-                    files: uploadedFiles,
-                    area,
-                });
+                session = await OcpService.createPhysiotherapySession(payload);
                 break;
+
+            case 'musicoterapia':
+                session = await OcpService.createMusictherapySession(payload);
+                break;
+
             default:
                 session = [];
-                break;
         }
 
         return res.status(201).json(session);
@@ -137,11 +121,15 @@ export async function createAreaSession(req: Request, res: Response, next: NextF
 
 export async function updateProgram(req: Request, res: Response, next: NextFunction) {
     try {
-        if (!req.params.programId)
-            return res
-                .status(400)
-                .json({ success: false, message: 'ID do programa não informado' });
+        if (!req.params.programId) return res.status(400).json({ success: false, message: 'ID do programa não informado' });
         const programId = parseInt(req.params.programId, 10);
+
+        if (req.body.area === 'musicoterapia') {
+            const ocp = await OcpService.updateMusicProgram(programId, req.body);
+            if (!ocp) return res.status(404).json({ success: false, message: 'OCP não encontrado' });
+            
+            return res.status(200).json({ data: ocp });
+        }
 
         const ocp = await OcpService.updateProgram(programId, req.body);
         if (!ocp) return res.status(404).json({ success: false, message: 'OCP não encontrado' });
@@ -226,21 +214,18 @@ export async function listTherapistClients(req: Request, res: Response) {
 export async function listClientPrograms(req: Request, res: Response) {
     const { clientId } = req.params;
     const page = parseInt(req.query.page as string) || 1;
-    const status = (req.query.status as 'active' | 'archived' | 'all') || 'all';
+    const status = (req.query.status as 'active' | 'archived');
     const q = req.query.q as string | undefined;
     const sort = (req.query.sort as 'recent' | 'alphabetic') ?? 'recent';
     const rawArea = req.query.area;
     const area = Array.isArray(rawArea) ? rawArea[0] : rawArea;
     const userId = req.user?.id;
 
-    if (!clientId)
-        return res.status(400).json({ success: false, message: 'ClientId é obrigatório' });
-    if (typeof area !== 'string')
-        return res.status(400).json({ success: false, message: 'Area é obrigatório' });
-    if (!userId)
-        return res.status(400).json({ success: false, message: 'Id do usuário é obrigatório' })
+    if (!clientId) return res.status(400).json({ success: false, message: 'ClientId é obrigatório' });
+    if (typeof area !== 'string') return res.status(400).json({ success: false, message: 'Area é obrigatório' });
+    if (!userId) return res.status(400).json({ success: false, message: 'Id do usuário é obrigatório' });
 
-    const rows = await OcpService.listByClientId(clientId, userId, page, 10, area, status, q, sort);
+    const rows = await OcpService.listProgramsByClientId(clientId, userId, page, 10, area, status, q, sort);
 
     return res.json({ success: true, data: rows.map(OcpNormalizer.mapOcpReturn) });
 }
@@ -261,6 +246,7 @@ export async function listSessionsByClient(req: Request, res: Response) {
         const periodStart = getQueryString(req.query.periodStart);
         const periodEnd = getQueryString(req.query.periodEnd);
         const sort = getQueryString(req.query.sort);
+        const pageSize = getQueryString(req.query.pageSize);
 
         const sessions = await OcpService.listSessionsByClient({
             clientId,
@@ -272,6 +258,7 @@ export async function listSessionsByClient(req: Request, res: Response) {
             stimulusId,
             periodStart,
             periodEnd,
+            pageSize,
         });
 
         return res.json({ data: OcpNormalizer.mapSessionList(sessions) });
@@ -418,9 +405,7 @@ export async function physioKpis(req: Request, res: Response, next: NextFunction
         const { sessionIds, stimulusIds } = req.body;
 
         if (!Array.isArray(sessionIds) || sessionIds.length === 0) {
-            return res.status(400).json({
-                error: "sessionIds é obrigatório e deve ser um array",
-            });
+            return res.status(400).json({ error: "sessionIds é obrigatório e deve ser um array" });
         }
         
         const sessions = await getPhysioSessionData(sessionIds, stimulusIds || []);
@@ -431,10 +416,59 @@ export async function physioKpis(req: Request, res: Response, next: NextFunction
             performance: calcPerformanceLine(sessions),
             attentionActivities: calcAttentionActivities(sessions),
             kpis: calcKpis(sessions),
+            sessionObservations: await sessionObservations(sessions),
         };
 
         return res.json(result);
     } catch (error) {
         next (error);
+    }
+}
+
+// Musictherapy reports
+export async function musicKpis(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { sessionIds, stimulusIds } = req.body;
+
+        if (!Array.isArray(sessionIds) || sessionIds.length === 0) {
+            return res.status(400).json({ error: "sessionIds é obrigatório e deve ser um array" });
+        }
+        
+        const sessions = await getMusicSessionsData(sessionIds, stimulusIds || []);
+        
+        const result = {
+            kpis: calcMusicKpis(sessions),
+            performance: calcMusicPerformanceLine(sessions),
+            prepareMusiEvolutionData: prepareMusiEvolutionData(sessions),
+            prepareMusiAttentionActivities: prepareMusiAttentionActivities(sessions),
+            prepareMusiAutonomyByCategory: prepareMusiAutonomyByCategory(sessions),
+            sessionObservations: await sessionObservations(sessions),
+            calculateAverageAndTrend: {
+                participation: calcAverageAndTrend(sessions, 'participacao'),
+                support: calcAverageAndTrend(sessions, 'suporte'),
+            },
+        };
+
+        return res.json(result);
+    } catch (error) {
+        next (error);
+    }
+}
+
+export async function getMusicTherapyEvolutionChart(req: Request, res: Response, next: NextFunction) {
+    try {
+        const programId = getQueryString(req.query.programId);
+        const stimulusId = getQueryString(req.query.stimulusId);
+        const sort = getQueryString(req.query.sort) === 'desc' ? 'desc' : 'asc';
+
+        if (!programId) return res.status(400).json({ success: false, message: 'programId é obrigatório' });
+
+        const sessions = await fetchMusicSessionsForChart(programId, stimulusId, sort);
+
+        const chartData = sessions.map(mapMusicSessionToChartPoint);
+
+        return res.status(201).json({ data: chartData });
+    } catch (error) {
+        next (error)
     }
 }

@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { KpiCards } from '../gerar-relatorio/components/KpiCards';
 import { DualLineProgress } from '../gerar-relatorio/components/DualLineProgress';
 import { OcpDeadlineCard } from '../gerar-relatorio/components/OcpDeadlineCard';
+import { SessionObservationsCard } from '../gerar-relatorio/components/SessionObservationsCard';
 // Componentes de TO
 import { ToKpiCards, ToActivityDurationChart, ToAttentionActivitiesCard, ToAutonomyByCategoryChart } from '../../programas/relatorio-geral/components/to';
 import type { ToKpisData } from '../../programas/relatorio-geral/components/to/ToKpiCards';
@@ -566,6 +567,17 @@ export function VisualizarRelatorioPage() {
             percent={report.generatedData.programDeadline.percent}
             label={report.generatedData.programDeadline.label}
             loading={false}
+          />
+        )}
+        
+        {/* Observações das Sessões - Todas as áreas */}
+        {report.generatedData?.sessionObservations && 
+         report.generatedData.sessionObservations.length > 0 && (
+          <SessionObservationsCard
+            observations={report.generatedData.sessionObservations}
+            loading={false}
+            maxItems={30}
+            title="Observações das Sessões"
           />
         )}
         </div>

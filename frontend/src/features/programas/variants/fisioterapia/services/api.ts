@@ -113,7 +113,7 @@ export async function listFisioPrograms(params: {
     page?: number;
 }): Promise<any[]> {
     const area = getArea();
-    const teste = buildApiUrl(`/api/ocp/clients/${params.patientId}/programs`, {
+    const url = buildApiUrl(`/api/ocp/clients/${params.patientId}/programs`, {
         area,
         page: params.page?.toString(),
         status: params.status !== 'all' ? params.status : undefined,
@@ -122,7 +122,7 @@ export async function listFisioPrograms(params: {
     });
 
     try {
-        const response = await fetch(teste, {
+        const response = await fetch(url, {
             credentials: 'include',
             headers: { Accept: 'application/json' },
         });
@@ -137,10 +137,6 @@ export async function listFisioPrograms(params: {
         return [...realPrograms];
     } catch (error) {
         console.error(`Erro ao buscar programas de ${area}:`, error);
-        
-        // Em caso de erro, retornar apenas o mock para desenvolvimento
-        const { mockToProgramListItem } = await import('../mocks/programListMock');
-        console.log(`🎭 Retornando apenas programa MOCK de ${area} (erro na API)`);
-        return [mockToProgramListItem];
+        return [];
     }
 }

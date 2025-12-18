@@ -1,4 +1,6 @@
 // Services para Sessão de Musicoterapia
+import { buildSessionFormData } from '@/lib/api';
+import { MUSI_AREA_ID } from '../constants';
 import type {
     Patient,
     MusiProgramDetail,
@@ -6,8 +8,8 @@ import type {
     MusiSessionSummary,
     SessionFile,
 } from './types';
-import type { AreaType } from '@/contexts/AreaContext';
 
+const area = MUSI_AREA_ID;
 /**
  * Busca pacientes para seleção na sessão de Musicoterapia
  */
@@ -20,40 +22,9 @@ export async function searchPatientsForMusiSession(_query: string): Promise<Pati
  * Busca detalhes do programa de Musicoterapia para registro de sessão
  */
 export async function getMusiProgramDetail(_programId: string): Promise<MusiProgramDetail> {
-    // Se for um ID mock, retorna o programa mock
-    if (_programId.startsWith('mock-musi-')) {
-        const { mockMusiProgram } = await import('../mocks/programMock');
-        
-        return {
-            id: mockMusiProgram.id,
-            name: mockMusiProgram.name,
-            patientId: mockMusiProgram.patientId,
-            patientName: mockMusiProgram.patientName,
-            therapistId: mockMusiProgram.therapistId,
-            therapistName: mockMusiProgram.therapistName,
-            goalTitle: mockMusiProgram.goalTitle,
-            goalDescription: mockMusiProgram.goalDescription,
-            shortTermGoalDescription: mockMusiProgram.shortTermGoalDescription,
-            activitiesApplicationDescription: mockMusiProgram.stimuliApplicationDescription,
-            status: mockMusiProgram.status,
-            criteria: mockMusiProgram.criteria,
-            prazoInicio: mockMusiProgram.prazoInicio,
-            prazoFim: mockMusiProgram.prazoFim,
-            activities: mockMusiProgram.stimuli.map((stimulus: any) => ({
-                id: stimulus.id,
-                label: stimulus.label,
-                description: stimulus.description || '',
-                metodos: stimulus.metodos || '',
-                tecnicasProcedimentos: stimulus.tecnicasProcedimentos || '',
-                active: stimulus.active,
-                order: stimulus.order,
-            })),
-        };
-    }
-    
     const { fetchProgramById } = await import('@/features/programas/detalhe-ocp/services');
     const detail = await fetchProgramById(_programId);
-    
+
     return {
         id: detail.id,
         name: detail.name,
@@ -73,8 +44,8 @@ export async function getMusiProgramDetail(_programId: string): Promise<MusiProg
             id: stimulus.id,
             label: stimulus.label,
             description: stimulus.description || '',
-            metodos: stimulus.metodos || '',
-            tecnicasProcedimentos: stimulus.tecnicasProcedimentos || '',
+            metodos: stimulus.methods || '',
+            tecnicasProcedimentos: stimulus.techniquesProcedures || '',
             active: stimulus.active,
             order: stimulus.order,
         })),
@@ -91,36 +62,12 @@ export async function saveMusiSession(payload: {
     notes?: string;
     files?: SessionFile[];
 }): Promise<void> {
-    const formData = new FormData();
-    const area: AreaType = 'musicoterapia';
-
-    formData.append('data', JSON.stringify({
-        patientId: payload.patientId,
-        notes: payload.notes ?? '',
-        attempts: payload.attempts,
-        area
-    }));
-
-    const files = payload.files ?? [];
-    files.forEach((file) => {
-        const originalName = file.file.name;
-        const customName = file.name?.trim();
-        const originalExtension = originalName.includes('.')
-            ? originalName.slice(originalName.lastIndexOf('.'))
-            : '';
-
-        const filename = customName
-            ? `${customName}${
-                  originalExtension && !customName.toLowerCase().endsWith(originalExtension.toLowerCase())
-                      ? originalExtension
-                      : ''
-              }`
-            : originalName;
-
-        formData.append('files', file.file, filename);
+    const formData = buildSessionFormData({
+        ...payload,
+        area,
     });
 
-    const response = await fetch(`/api/ocp/musicoterapia/programs/${payload.programId}/sessions`, {
+    const response = await fetch(`/api/ocp/musictherapy/programs/${payload.programId}/sessions`, {
         method: 'POST',
         credentials: 'include',
         body: formData,

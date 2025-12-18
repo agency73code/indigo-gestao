@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import MusiEvolutionChart, { type MusiEvolutionDataPoint } from './MusiEvolutionChart';
-import { fetchStimulusChart } from '@/features/programas/detalhe-ocp/services';
+import { fetchMusiEvolutionChart } from '../services/api';
 
 interface MusiStimulusEvolutionInlineProps {
     programId: string;
@@ -33,26 +33,9 @@ export default function MusiStimulusEvolutionInline({
         setError(null);
 
         try {
-            // Buscar dados do estímulo - por enquanto usa os dados existentes e converte
-            const data = await fetchStimulusChart(programId, stimulusId);
+            const res = await fetchMusiEvolutionChart(programId, stimulusId);
             
-            // Converter dados de SerieLinha para MusiEvolutionDataPoint
-            // Os dados de participação e suporte devem vir da API no futuro
-            // Por enquanto, simulamos com base nos dados de acerto/independência
-            const evolutionData: MusiEvolutionDataPoint[] = data.map((item) => {
-                // Simular participação baseado no acerto (0-100 -> 0-5)
-                const participacao = ((item.acerto ?? 0) / 100) * 5;
-                // Simular suporte inversamente baseado na independência (maior independência = menor suporte)
-                const suporte = 5 - (((item.independencia ?? 0) / 100) * 4);
-                
-                return {
-                    x: item.x,
-                    participacao: Math.round(participacao * 10) / 10,
-                    suporte: Math.max(1, Math.round(suporte * 10) / 10), // Mínimo 1
-                };
-            });
-            
-            setChartData(evolutionData);
+            setChartData(res.data);
         } catch (err) {
             console.error('Erro ao carregar gráfico da atividade de Musicoterapia:', err);
             setChartData(null);

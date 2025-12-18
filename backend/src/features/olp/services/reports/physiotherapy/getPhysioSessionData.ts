@@ -1,6 +1,5 @@
 import { prisma } from "../../../../../config/database.js";
 
-// Áreas que usam o modelo Fisio/TO (terapia ocupacional)
 const FISIO_MODEL_AREAS = ['fisioterapia', 'psicomotricidade', 'educacao-fisica'];
 
 export async function getPhysioSessionData(sessionIds: number[], stimulusIds: number[]) {

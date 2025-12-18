@@ -22,7 +22,6 @@ export interface SaveReportParams {
  * Usa o mesmo sistema de impressão que já funciona no ReportExporter
  */
 async function generatePdfViaPrint(_element: HTMLElement, _filename: string): Promise<void> {
-  console.log('🔵 [PDF] Abrindo janela de impressão...');
   
   // Aguarda um pouco antes de abrir
   await new Promise(resolve => setTimeout(resolve, 300));
@@ -39,7 +38,6 @@ export async function generatePdfBlob(
   element: HTMLElement, 
   filename: string
 ): Promise<Blob> {
-  console.log('🔵 [PDF] Usando sistema de impressão nativo...');
   
   // Usa window.print() que já funciona
   await generatePdfViaPrint(element, filename);

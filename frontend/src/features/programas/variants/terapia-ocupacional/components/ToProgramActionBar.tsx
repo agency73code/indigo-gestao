@@ -24,10 +24,6 @@ export default function ToProgramActionBar({ program }: ToProgramActionBarProps)
         const path = toRoutes.edit(program.id);
         const url = patientId ? `${path}?patientId=${patientId}` : path;
 
-        console.log('[ToProgramActionBar] Navegando para:', url);
-        console.log('[ToProgramActionBar] Program ID:', program.id);
-        console.log('[ToProgramActionBar] Path from toRoutes.edit:', path);
-
         navigate(url);
     };
 

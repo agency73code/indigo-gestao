@@ -20,7 +20,8 @@ export async function saveSession(sessionData: {
     notes?: string;
     files?: SessionFile[];
 }): Promise<{ id: string }> {
-    // Preparar payload para FormData (suporta arquivos)
+
+    // Com arquivos: usar FormData (quando backend suportar)
     const payload = {
         patientId: sessionData.patientId,
         programId: sessionData.programId,
@@ -29,7 +30,6 @@ export async function saveSession(sessionData: {
         files: sessionData.files,
         area: 'fonoaudiologia' as const,
     };
-
     const formData = buildSessionFormData(payload);
 
     const res = await fetch(`/api/ocp/programs/${sessionData.programId}/sessions`, {

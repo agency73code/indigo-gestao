@@ -154,44 +154,25 @@ export default function ToEditarProgramaPage() {
         try {
             setIsSaving(true);
 
-            const input: any = {
+            // Chamar API real para atualizar o programa
+            await updateProgram({
+                id: programaId,
+                name: program?.name || goalTitle, // nome do programa (obrigatório no backend)
                 goalTitle,
                 goalDescription,
-                shortTermGoalDescription,
-                currentPerformanceLevel,
-                stimuli,
+                shortTermGoalDescription: shortTermGoalDescription || null,
+                stimuli: (stimuli || []).map((s) => ({
+                    id: s.id,
+                    label: s.label,
+                    active: s.active,
+                    order: s.order,
+                })),
                 notes,
                 status,
                 prazoInicio,
                 prazoFim,
-            };
-
-            // Mock: apenas simular salvamento
-            if (programaId === 'mock-to-001') {
-                console.log('[ToEditarProgramaPage] Mock: Salvando programa', input);
-                await new Promise((resolve) => setTimeout(resolve, 500));
-                toast.success('Programa atualizado com sucesso! (Mock)');
-            } else {
-                // Chamar API real para atualizar o programa
-                await updateProgram({
-                    id: programaId,
-                    name: program?.name || goalTitle, // nome do programa (obrigatório no backend)
-                    goalTitle,
-                    goalDescription,
-                    shortTermGoalDescription: shortTermGoalDescription || null,
-                    stimuli: (stimuli || []).map((s) => ({
-                        id: s.id,
-                        label: s.label,
-                        active: s.active,
-                        order: s.order,
-                    })),
-                    notes,
-                    status,
-                    prazoInicio,
-                    prazoFim,
-                });
-                toast.success('Programa atualizado com sucesso!');
-            }
+            });
+            toast.success('Programa atualizado com sucesso!');
 
             setHasChanges(false);
             

@@ -24,6 +24,8 @@ import {
 } from '@/components/ui/sidebar';
 import type { Actions, Subjects } from '@/features/auth/abilities/ability';
 import type { LucideIcon } from 'lucide-react';
+import { useAuth } from '@/features/auth/hooks/useAuth';
+import { useProgramAreas } from '@/features/programas/core/hooks/useProgramConfig';
 
 interface SidebarSubItem {
   title: string;
@@ -70,23 +72,6 @@ const data: {
             ability: { action: 'read', subject: 'Consultar' },
         },
         {
-            title: 'Programas & Objetivos',
-            url: '/app/programas',
-            icon: Activity,
-            items: [
-                { title: 'Fonoaudiologia', url: '/app/programas/fonoaudiologia' },
-                { title: 'Psicoterapia', url: '/app/programas/psicoterapia', status: 'em-breve' },
-                { title: 'Terapia ABA', url: '/app/programas/terapia-aba' },
-                { title: 'Terapia Ocupacional', url: '/app/programas/terapia-ocupacional' },
-                { title: 'Fisioterapia', url: '/app/programas/fisioterapia' },
-                { title: 'Psicomotricidade', url: '/app/programas/psicomotricidade' },
-                { title: 'Educação Física', url: '/app/programas/educacao-fisica' },
-                { title: 'Psicopedagogia', url: '/app/programas/psicopedagogia' },
-                { title: 'Musicoterapia', url: '/app/programas/musicoterapia', status: 'quase-pronto' },
-                { title: 'Neuropsicologia', url: '/app/programas/neuropsicologia', status: 'em-breve' },
-            ],
-        },
-        {
             title: 'Relatórios',
             url: '/app/relatorios/lista',
             icon: FileText,
@@ -123,6 +108,33 @@ const data: {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+    const { user } = useAuth();
+    const programAreas = useProgramAreas(user);
+
+    const programItems: SidebarSubItem[] = programAreas.map((area): SidebarSubItem => ({
+        title: area.title,
+        url: area.path,
+        status:
+        area.implemented === true
+            ? undefined
+            : area.implemented === 'in-progress'
+            ? 'quase-pronto'
+            : 'em-breve',
+    }));
+
+    const navMain: SidebarItem[] = [
+    ...data.navMain.slice(0, 3), // Dashboard, Cliente, Terapeuta
+
+    {
+        title: 'Programas & Objetivos',
+        url: '/app/programas',
+        icon: Activity,
+        items: programItems,
+    },
+
+    ...data.navMain.slice(3, 6), // Relatórios em diante
+    ];
+
     return (
         <Sidebar 
             variant="inset" 
@@ -133,7 +145,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <NavUser />
             </SidebarHeader>
             <SidebarContent className="pt-2">
-                <NavMain items={data.navMain} />
+                <NavMain items={navMain} />
                 <SidebarSeparator className="mx-0 bg-border/40" />
                 <NavProjects projects={data.projects} />
                 <NavSecondary items={data.navSecondary} className="mt-auto" />

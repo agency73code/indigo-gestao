@@ -1,10 +1,11 @@
 import { prisma } from '../../../config/database.js';
 import { R2UploadService } from '../../file/r2/r2-upload.js';
 import type {
+    CreateMusictherapySessionInput,
     CreatePhysiotherapySessionInput,
     CreateProgramPayload,
     CreateSessionInDatabaseInput,
-    CreateSessionInput,
+    CreateSpeechSessionInput,
     CreateToSessionInput,
 } from '../types/olp.types.js';
 
@@ -29,6 +30,8 @@ export async function program(data: CreateProgramPayload) {
                     nome: s.label,
                     status: s.active,
                     descricao: s.description ?? null,
+                    metodos: s.metodos ?? null,
+                    tecnicas_procedimentos: s.tecnicasProcedimentos ?? null,
                     estimulo: {
                         connectOrCreate: {
                             where: { nome: s.label },
@@ -46,11 +49,11 @@ export async function program(data: CreateProgramPayload) {
     });
 }
 
-export async function session(input: CreateSessionInput) {
-    const { programId, patientId, therapistId, notes, attempts } = input;
+export async function SpeechSession (input: CreateSpeechSessionInput) {
+    const { programId, patientId, therapistId, notes, attempts, files = [], area } = input;
 
     const ocp = await prisma.ocp.findUnique({
-        where: { id: Number(programId) },
+        where: { id: programId },
         include: { estimulo_ocp: true },
     });
 
@@ -59,32 +62,30 @@ export async function session(input: CreateSessionInput) {
     }
 
     const trialsData = attempts.map((a) => {
-        const vinculo = ocp.estimulo_ocp.find((v) => v.id_estimulo === Number(a.stimulusId));
+        const link = ocp.estimulo_ocp.find((v) => v.id_estimulo === Number(a.stimulusId));
 
-        if (!vinculo) {
-            throw new Error(`O estímulo ${a.stimulusId} não pertence a este programa.`);
+        if (!link) {
+            throw new Error(`A atividade ${a.stimulusId} não pertence a este programa.`);
         }
 
         return {
-            estimulos_ocp_id: vinculo.id,
+            estimulos_ocp_id: link.id,
             ordem: a.attemptNumber,
             resultado: a.type,
         };
     });
 
-    return await prisma.sessao.create({
-        data: {
-            ocp_id: programId,
-            cliente_id: patientId,
-            terapeuta_id: therapistId,
-            data_criacao: new Date(),
-            observacoes_sessao: notes?.trim() || null,
-            trials: {
-                create: trialsData,
-            },
-            area: ocp.area ?? 'fonoaudiologia',
-        },
-    });
+    const uploadedFiles = await uploadSessionFiles(files, programId, patientId);
+
+    return await createSessionInDatabase({
+        programId,
+        patientId,
+        therapistId,
+        notes,
+        area,
+        trialsData,
+        uploadedFiles,
+    })
 }
 
 export async function TOSession(input: CreateToSessionInput) {
@@ -161,6 +162,49 @@ export async function physiotherapySession(input: CreatePhysiotherapySessionInpu
             descricao_desconforto: a.discomfortDescription ?? null,
             teve_compensacao: a.hadCompensation ?? false,
             descricao_compensacao: a.compensationDescription ?? null,
+        };
+    });
+
+    const uploadedFiles = await uploadSessionFiles(files, programId, patientId);
+
+    return await createSessionInDatabase({
+        programId,
+        patientId,
+        therapistId,
+        notes,
+        area,
+        trialsData,
+        uploadedFiles,
+    });
+}
+
+export async function musictherapySession(input: CreateMusictherapySessionInput) {
+    const { programId, patientId, therapistId, notes, attempts, files = [], area } = input;
+
+    const ocp = await prisma.ocp.findUnique({
+        where: { id: programId },
+        include: { estimulo_ocp: true },
+    });
+
+    if (!ocp) {
+        throw new Error('Programa não encontrado.');
+    }
+
+    const trialsData = attempts.map((a) => {
+        const vinculo = ocp.estimulo_ocp.find((v) => v.id_estimulo === Number(a.activityId));
+
+        if (!vinculo) {
+            throw new Error(`A atividade ${a.activityId} não pertence a este programa.`);
+        }
+
+        a.type = mapPerformanceType(a.type);
+
+        return {
+            estimulos_ocp_id: vinculo.id,
+            ordem: a.attemptNumber,
+            resultado: a.type,
+            participacao: a.participacao,
+            suporte: a.suporte,
         };
     });
 

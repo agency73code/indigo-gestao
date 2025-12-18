@@ -17,6 +17,8 @@ export type createOCP = {
         active: boolean;
         order: number;
         description?: string | null;
+        metodos?: string | null;
+        tecnicasProcedimentos?: string | null;
     }[];
 };
 
@@ -25,39 +27,16 @@ export type TOcreateOCP = {
 };
 
 export type CreateProgramPayload =
-    | (createOCP & { area: 'fonoaudiologia' | 'psicopedagogia' | 'terapia-aba' })
+    | (createOCP & { area: 'fonoaudiologia' | 'psicopedagogia' | 'terapia-aba' | 'musicoterapia' })
     | (createOCP & { area: 'terapia-ocupacional' } & TOcreateOCP);
-
-export type getOCP = {
-    id: string;
-    name?: string | null;
-    patientId: string;
-    patientName: string;
-    patientGuardian: string | undefined;
-    patientAge?: number | null;
-    patientPhotoUrl?: string | null;
-    therapistId: string;
-    therapistName: string;
-    createdAt: string; // ISO
-    goalTitle: string;
-    goalDescription?: string | null;
-    stimuli: {
-        id: string;
-        order: number;
-        label: string;
-        description?: string | null;
-        active: boolean;
-    }[];
-    criteria?: string | null;
-    notes?: string | null;
-    status: 'active' | 'archived';
-};
 
 export type OcpStimuloDTO = {
     id_estimulo: number;
     nome: string | null;
     status: boolean;
     descricao: string | null;
+    metodos?: string | null;
+    tecnicas_procedimentos?: string | null;
 };
 
 export type OcpDetailDTO = {
@@ -85,7 +64,7 @@ export type OcpDetailDTO = {
     desempenho_atual: string | null;
 };
 
-export type CreateSessionInput = {
+export type CreateSpeechSessionInput = {
     programId: number;
     patientId: string;
     therapistId: string;
@@ -95,6 +74,26 @@ export type CreateSessionInput = {
         attemptNumber: number;
         type: 'error' | 'prompted' | 'independent';
     }[];
+    files: Express.Multer.File[];
+    area: string;
+};
+
+type BaseCreateSessionInput<TAttempt> = {
+    programId: number;
+    patientId: string;
+    therapistId: string;
+    notes?: string;
+
+    files: Express.Multer.File[];
+    area: string;
+
+    attempts: TAttempt[];
+};
+
+type BaseSessionAttempt = {
+    attemptNumber: number;
+    activityId: string;
+    type: string;
 };
 
 export type CreateToSessionInput = {
@@ -141,6 +140,15 @@ export type CreatePhysiotherapySessionInput = {
     area: string;
 };
 
+type MusictherapySessionAttempt =
+    BaseSessionAttempt & {
+        participacao: number;
+        suporte: number;
+    };
+
+export type CreateMusictherapySessionInput =
+    BaseCreateSessionInput<MusictherapySessionAttempt>;
+
 export type CreateSessionInDatabaseInput = {
   programId: number;
   patientId: string;
@@ -177,6 +185,25 @@ export type UpdateProgramInput = {
     prazoFim: string;
 };
 
+export type UpdateMusicProgramInput = {
+  id: string;
+  goalTitle: string;
+  goalDescription: string;
+  stimuli: {
+    id: string;
+    order: number;
+    active: boolean;
+    objetivo: string;
+    objetivoEspecifico: string;
+    metodos: string;
+    tecnicasProcedimentos: string;
+  }[];
+  notes: string;
+  status: 'active' | 'archived';
+  prazoInicio: string;
+  prazoFim: string;
+};
+
 export type ClientRowDTO = {
     id: string;
     nome: string | null;
@@ -192,22 +219,30 @@ export type ProgramRowDTO = {
     atualizado_em: Date;
     status: string;
 };
+
 export interface SessionTrialDTO {
     id: number;
     ordem: number;
     resultado: string;
     duracao_minutos: number | null;
+
+    // Fisioterapia
     teve_desconforto: boolean | null;
     descricao_desconforto: string | null;
     teve_compensacao: boolean | null;
     descricao_compensacao: string | null;
     utilizou_carga: boolean | null;
     valor_carga: number | null;
+
+    //Musicoterapia
+    participacao?: number | null;
+    suporte?: number | null;
+
     estimulosOcp: {
         id: number;
         nome: string | null;
     } | null;
-}
+};
 
 export interface SessionDTO {
     id: number;
@@ -229,7 +264,7 @@ export interface SessionDTO {
         caminho: string;
         tamanho: number;
     }[];
-}
+};
 
 export interface Session {
     id: string;
@@ -256,6 +291,7 @@ export interface Session {
         stimulusId: string | undefined;
         stimulusLabel: string | undefined;
         durationMinutes?: number | null;
+
         // Fisioterapia
         usedLoad?: boolean;
         loadValue?: number | null;
@@ -263,8 +299,12 @@ export interface Session {
         discomfortDescription?: string | null;
         hadCompensation?: boolean;
         compensationDescription?: string | null;
+
+        //Musicoterapia
+        participacao?: number | null;
+        suporte?: number | null;
     }[];
-}
+};
 
 export interface AttentionStimulusItem {
     id: string;
@@ -277,7 +317,7 @@ export interface AttentionStimulusItem {
     total: number;
     independence: number;
     status: 'atencao' | 'mediano' | 'positivo' | 'insuficiente';
-}
+};
 
 export type ListSessionsFilters = {
     clientId: string;
@@ -289,6 +329,7 @@ export type ListSessionsFilters = {
     stimulusId?: string | undefined;
     periodStart?: string | undefined;
     periodEnd?: string | undefined;
+    pageSize?: string | undefined;
 };
 
 export interface UnmappedSession {
@@ -296,7 +337,7 @@ export interface UnmappedSession {
     data_criacao: Date;
     terapeuta?: { nome: string | null } | null;
     trials: { resultado: string; ordem: number }[];
-}
+};
 
 export type ProgramSelectResult = {
     id: number;
@@ -323,6 +364,8 @@ export type ProgramSelectResult = {
         nome: string | null;
         descricao: string | null;
         status: boolean;
+        metodos?: string | null;
+        tecnicas_procedimentos?: string | null;
     }[];
     status: string;
 };

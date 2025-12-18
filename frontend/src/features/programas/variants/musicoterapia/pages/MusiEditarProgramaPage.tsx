@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Save, X, Target, TrendingUp } from 'lucide-react';
+import { Save, X, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ActionBar from '@/components/ui/action-bar';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
@@ -12,10 +12,9 @@ import {
     StatusToggle,
     ValidationErrors,
 } from '../../../editar-ocp';
-import { fetchProgramById, updateProgram } from '../../../editar-ocp/services';
+import { fetchProgramById } from '../../../editar-ocp/services';
 import type { ProgramDetail } from '../../../editar-ocp/types';
 import { musiProgramConfig, musiRoutes } from '../config';
-import { fetchMusiProgramById } from '../mocks/mockService';
 import MusiStimuliEditor from '../components/MusiStimuliEditor';
 import MusiNotesSection from '../components/MusiNotesSection';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,6 +22,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import type { MusiStimulus } from '../types';
 import { apiToMusiStimulus } from '../types';
+import { updateMusiProgram } from '../services';
 
 export default function MusiEditarProgramaPage() {
     const { programaId } = useParams<{ programaId: string }>();
@@ -42,7 +42,6 @@ export default function MusiEditarProgramaPage() {
     // Estados do formulário
     const [goalTitle, setGoalTitle] = useState('');
     const [goalDescription, setGoalDescription] = useState('');
-    const [currentPerformanceLevel, setCurrentPerformanceLevel] = useState('');
     const [stimuli, setStimuli] = useState<MusiStimulus[]>([]);
     const [notes, setNotes] = useState('');
     const [status, setStatus] = useState<'active' | 'archived'>('active');
@@ -66,19 +65,13 @@ export default function MusiEditarProgramaPage() {
             setError(null);
 
             // Usar mock service se for mock-musi-001
-            let programData;
-            if (programaId === 'mock-musi-001') {
-                programData = await fetchMusiProgramById(programaId);
-            } else {
-                programData = await fetchProgramById(programaId);
-            }
+            const programData = await fetchProgramById(programaId);
 
             setProgram(programData);
 
             // Pré-preencher formulário
             setGoalTitle(programData.goalTitle);
             setGoalDescription(programData.goalDescription || '');
-            setCurrentPerformanceLevel((programData as any).currentPerformanceLevel || '');
             // Converter stimuli da API para formato MusiStimulus
             setStimuli(
                 programData.stimuli.map((s) => apiToMusiStimulus({
@@ -87,8 +80,8 @@ export default function MusiEditarProgramaPage() {
                     label: s.label,
                     description: s.description,
                     active: s.active,
-                    metodos: (s as any).metodos,
-                    tecnicasProcedimentos: (s as any).tecnicasProcedimentos,
+                    metodos: (s as any).methods,
+                    tecnicasProcedimentos: (s as any).techniquesProcedures,
                 })),
             );
             setNotes(programData.notes ?? '');
@@ -112,10 +105,6 @@ export default function MusiEditarProgramaPage() {
 
         if (!goalDescription.trim()) {
             errors.goalDescription = 'A descrição do objetivo é obrigatória.';
-        }
-
-        if (!currentPerformanceLevel.trim()) {
-            errors.currentPerformanceLevel = 'O nível atual de desempenho é obrigatório.';
         }
 
         if (!stimuli || stimuli.length === 0) {
@@ -154,28 +143,18 @@ export default function MusiEditarProgramaPage() {
         try {
             setIsSaving(true);
 
-            // Converter MusiStimulus de volta para formato da API
-            const stimuliForApi = stimuli.map((s) => ({
-                id: s.id,
-                order: s.order,
-                label: s.objetivo,
-                description: s.objetivoEspecifico || undefined,
-                active: s.active,
-            }));
-
             const input: any = {
                 id: programaId,
                 goalTitle,
                 goalDescription,
-                currentPerformanceLevel,
-                stimuli: stimuliForApi,
+                stimuli: stimuli,
                 notes,
                 status,
                 prazoInicio,
                 prazoFim,
             };
 
-            await updateProgram(input);
+            await updateMusiProgram(programaId, input);
             toast.success('Programa atualizado com sucesso!');
 
             setHasChanges(false);
@@ -226,7 +205,6 @@ export default function MusiEditarProgramaPage() {
         const hasFormChanges =
             goalTitle !== program.goalTitle ||
             goalDescription !== (program.goalDescription || '') ||
-            currentPerformanceLevel !== ((program as any).currentPerformanceLevel || '') ||
             notes !== (program.notes || '') ||
             status !== program.status ||
             prazoInicio !== (program.prazoInicio || '') ||
@@ -237,7 +215,6 @@ export default function MusiEditarProgramaPage() {
     }, [
         goalTitle,
         goalDescription,
-        currentPerformanceLevel,
         stimuli,
         notes,
         status,
@@ -324,31 +301,6 @@ export default function MusiEditarProgramaPage() {
                                 <p className="text-sm text-destructive">{validationErrors.goalDescription}</p>
                             )}
                         </div>
-                    </CardContent>
-                </Card>
-
-                {/* Nível Atual de Desempenho */}
-                <Card padding="small" className="rounded-[5px]">
-                    <CardHeader className="pb-2 sm:pb-3 pt-3 sm:pt-6">
-                        <CardTitle className="text-base flex items-center gap-2">
-                            <TrendingUp className="h-4 w-4" />
-                            Nível atual de Desempenho
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="pb-3 sm:pb-6">
-                        <textarea
-                            placeholder="Descreva o nível atual de desempenho do cliente..."
-                            value={currentPerformanceLevel}
-                            onChange={(e) => setCurrentPerformanceLevel(e.target.value)}
-                            maxLength={1000}
-                            rows={4}
-                            className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
-                        />
-                        {validationErrors.currentPerformanceLevel && (
-                            <p className="mt-1 text-sm text-destructive">
-                                {validationErrors.currentPerformanceLevel}
-                            </p>
-                        )}
                     </CardContent>
                 </Card>
 

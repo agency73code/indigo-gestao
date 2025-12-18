@@ -25,6 +25,8 @@
         metodos?: string | null;
         tecnicasProcedimentos?: string | null;
         active: boolean;
+        methods?: string | null;
+        techniquesProcedures?: string | null;
     }[];
     criteria?: string | null;
     notes?: string | null;

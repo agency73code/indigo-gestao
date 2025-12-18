@@ -7,24 +7,10 @@ import type { Patient, Therapist, CreateProgramInput } from '../../../core/types
 import { MUSI_AREA_ID } from '../constants';
 import type { ProgramDetail } from '../../../nova-sessao/types';
 import type { MusiSessionPayload, MusiSessionResponse, MusiSessionListItem, MusiSessionDetail } from '../types';
+import { ageCalculation, buildApiUrl } from '@/lib/api';
 
 const API_URL = import.meta.env.VITE_API_URL;
-
-function ageCalculation(isoDateString: string): number {
-    const hoje = new Date();
-    const nascimento = new Date(isoDateString);
-
-    let idade = hoje.getFullYear() - nascimento.getFullYear();
-
-    const mes = hoje.getMonth() - nascimento.getMonth();
-    const dia = hoje.getDate() - nascimento.getDate();
-
-    if (mes < 0 || (mes === 0 && dia < 0)) {
-        idade--;
-    }
-
-    return idade;
-}
+const area = MUSI_AREA_ID;
 
 export async function fetchMusiPatientById(id: string): Promise<Patient> {
     const response = await fetch(`${API_URL}/clientes/${id}`, {
@@ -103,15 +89,6 @@ export async function fetchMusiTherapistAvatar(therapistId: string): Promise<str
 }
 
 export async function createMusiProgram(input: CreateProgramInput): Promise<{ id: string }> {
-    // Transforma stimuli para o formato esperado pela API
-    const stimuliForApi = input.stimuli?.map((s, index) => ({
-        id: s.id || crypto.randomUUID(),
-        order: index,
-        label: s.label,
-        description: s.description || null,
-        active: true,
-    })) || [];
-
     const response = await fetch(`${API_URL}/ocp/create`, {
         method: 'POST',
         headers: {
@@ -120,8 +97,7 @@ export async function createMusiProgram(input: CreateProgramInput): Promise<{ id
         credentials: 'include',
         body: JSON.stringify({
             ...input,
-            stimuli: stimuliForApi,
-            area: MUSI_AREA_ID,
+            area,
         }),
     });
 
@@ -141,21 +117,16 @@ export async function listMusiPrograms(params: {
     sort?: 'recent' | 'alphabetic';
     page?: number;
 }): Promise<any[]> {
-    console.log('🎵 [listMusiPrograms] Chamado com params:', params);
-    
-    const url = new URL(`${API_URL}/ocp/clients/${params.patientId}/programs`);
-    
-    url.searchParams.set('area', MUSI_AREA_ID);
-    
-    if (params.page) url.searchParams.set('page', params.page.toString());
-    if (params.status && params.status !== 'all') url.searchParams.set('status', params.status);
-    if (params.q) url.searchParams.set('q', params.q);
-    if (params.sort) url.searchParams.set('sort', params.sort);
-
-    console.log('🎵 [listMusiPrograms] URL da API:', url.toString());
+    const url = buildApiUrl(`${API_URL}/ocp/clients/${params.patientId}/programs`, {
+        area,
+        page: params.page?.toString(),
+        status: params.status !== 'all' ? params.status : undefined,
+        q: params.q,
+        sort: params.sort,
+    });
 
     try {
-        const response = await fetch(url.toString(), {
+        const response = await fetch(url, {
             credentials: 'include',
             headers: { Accept: 'application/json' },
         });
@@ -166,73 +137,11 @@ export async function listMusiPrograms(params: {
 
         const json = await response.json();
         const realPrograms = (json?.data ?? []);
-        
-        console.log('✅ [API] Retornando', realPrograms.length, 'programas de Musicoterapia da API');
-        
-        // Se a API não retornar programas, usar mocks para desenvolvimento
-        if (realPrograms.length === 0) {
-            console.log('📦 [API] Nenhum programa encontrado na API, carregando mocks...');
-            
-            const { mockMusiProgramList } = await import('../mocks/programListMock');
-            let result = [...mockMusiProgramList];
-            
-            console.log('📦 [MOCK] Total de programas no mock:', result.length);
-            
-            // Aplicar apenas filtros de status e query (ignorar patientId em desenvolvimento)
-            if (params.status && params.status !== 'all') {
-                result = result.filter(p => p.status === params.status);
-                console.log('🔍 [MOCK] Após filtro de status:', result.length, 'programas');
-            }
-            
-            if (params.q) {
-                const query = params.q.toLowerCase();
-                result = result.filter(p => 
-                    (p.title?.toLowerCase() || '').includes(query) ||
-                    (p.objective?.toLowerCase() || '').includes(query) ||
-                    (p.patientName?.toLowerCase() || '').includes(query)
-                );
-                console.log('🔍 [MOCK] Após filtro de busca:', result.length, 'programas');
-            }
-            
-            console.log('✅ [MOCK] Retornando', result.length, 'programas de Musicoterapia');
-            console.log('📋 [MOCK] Programas:', result.map(p => ({ id: p.id, title: p.title })));
-            return result;
-        }
-        
+  
         return realPrograms;
     } catch (error) {
-        console.error('❌ [API] Erro ao buscar programas de Musicoterapia:', error);
-        console.log('🔄 [MOCK] Carregando dados mock...');
-        
-        // Retornar mocks em caso de erro
-        const { mockMusiProgramList } = await import('../mocks/programListMock');
-        let result = [...mockMusiProgramList];
-        
-        console.log('📦 [MOCK] Total de programas no mock:', result.length);
-        
-        // TEMPORÁRIO: Aceitar qualquer patientId para desenvolvimento
-        // O mock sempre retorna programas, independente do patientId
-        console.log('🎵 [MOCK] Retornando todos os programas mock (ignorando patientId para desenvolvimento)');
-        
-        // Aplicar apenas filtros de status e query
-        if (params.status && params.status !== 'all') {
-            result = result.filter(p => p.status === params.status);
-            console.log('🔍 [MOCK] Após filtro de status:', result.length, 'programas');
-        }
-        
-        if (params.q) {
-            const query = params.q.toLowerCase();
-            result = result.filter(p => 
-                (p.title?.toLowerCase() || '').includes(query) ||
-                (p.objective?.toLowerCase() || '').includes(query) ||
-                (p.patientName?.toLowerCase() || '').includes(query)
-            );
-            console.log('🔍 [MOCK] Após filtro de busca:', result.length, 'programas');
-        }
-        
-        console.log('✅ [MOCK] Retornando', result.length, 'programas de Musicoterapia');
-        console.log('📋 [MOCK] Programas:', result.map(p => ({ id: p.id, title: p.title })));
-        return result;
+        console.error('Erro ao buscar programas de Musicoterapia:', error);
+        return [];
     }
 }
 
@@ -240,7 +149,7 @@ export async function listMusiPrograms(params: {
  * Busca programa de Musicoterapia por ID
  */
 export async function fetchMusiProgram(id: string): Promise<ProgramDetail> {
-    const response = await fetch(`${API_URL}/ocp/${id}?area=${MUSI_AREA_ID}`, {
+    const response = await fetch(`${API_URL}/ocp/${id}?area=${area}`, {
         credentials: 'include',
     });
     
@@ -254,19 +163,22 @@ export async function fetchMusiProgram(id: string): Promise<ProgramDetail> {
 /**
  * Atualiza programa de Musicoterapia
  */
-export async function updateMusiProgram(id: string, data: Partial<ProgramDetail>): Promise<ProgramDetail> {
-    const response = await fetch(`${API_URL}/ocp/${id}`, {
-        method: 'PUT',
+export async function updateMusiProgram(id: string, data: Partial<ProgramDetail>) {
+    const res = await fetch(`${API_URL}/ocp/programs/${id}`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ ...data, area: MUSI_AREA_ID }),
+        body: JSON.stringify({
+            ...data,
+            area,
+        })
     });
     
-    if (!response.ok) {
+    if (!res.ok) {
         throw new Error('Erro ao atualizar programa de Musicoterapia');
     }
     
-    return response.json();
+    return res.json();
 }
 
 /**
@@ -297,7 +209,7 @@ export async function fetchMusiSessions(filters?: {
     startDate?: string;
     endDate?: string;
 }): Promise<MusiSessionListItem[]> {
-    const params = new URLSearchParams({ area: MUSI_AREA_ID });
+    const params = new URLSearchParams({ area });
     
     if (filters?.patientId) params.append('clienteId', filters.patientId);
     if (filters?.programId) params.append('programaId', filters.programId);
@@ -319,8 +231,27 @@ export async function fetchMusiSessions(filters?: {
  * Busca detalhe de sessão de Musicoterapia
  */
 export async function fetchMusiSessionById(id: string): Promise<MusiSessionDetail> {
-    const response = await fetch(`${API_URL}/sessoes/${id}?area=${MUSI_AREA_ID}`, {
+    const response = await fetch(`${API_URL}/sessoes/${id}?area=${area}`, {
         credentials: 'include',
+    });
+    
+    if (!response.ok) {
+        throw new Error('Erro ao buscar sessão de Musicoterapia');
+    }
+    
+    return response.json();
+}
+
+export async function fetchMusiEvolutionChart(programId: string, stimulusId?: string, sort?: 'asc' | 'desc') {
+    const url = buildApiUrl(`/api/ocp/musictherapy/programs/graficMusicDetails`, {
+        programId,
+        stimulusId,
+        sort,
+    });
+
+    const response = await fetch(url, {
+        credentials: 'include',
+        method: 'GET',
     });
     
     if (!response.ok) {

@@ -6,16 +6,16 @@
 
 // Durante desenvolvimento, usar mock para programas e sessões
 export {
-    fetchMusiProgramById,
-    fetchMusiPrograms,
+    // fetchMusiProgramById,
+    // fetchMusiPrograms,
     createMusiProgram,
     updateMusiProgram,
-    fetchMusiRecentSessions,
-    fetchMusiProgramChart,
+    // fetchMusiRecentSessions,
+    // fetchMusiProgramChart,
     saveMusiSession,
     fetchMusiSessions,
     fetchMusiSessionById,
-} from './mockService';
+} from './api';
 
 // Funções que chamam API real (para buscar dados de clientes e terapeutas)
 export {

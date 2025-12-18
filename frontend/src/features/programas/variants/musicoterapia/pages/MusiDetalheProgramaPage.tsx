@@ -21,6 +21,7 @@ import MusiLastSessionPreview from '../components/MusiLastSessionPreview';
 import MusiSessionsList from '../components/MusiSessionsList';
 import type { MusiActivitySummary } from '../types';
 import type { MusiEvolutionDataPoint } from '../components/MusiEvolutionChart';
+import { fetchMusiEvolutionChart } from '../services/api';
 
 // Tipo específico para Musicoterapia com campos adicionais
 type MusiProgramDetail = {
@@ -279,46 +280,17 @@ export default function MusiDetalheProgramaPage() {
             setChartLoading(true);
             setError(null);
 
-            const [programData, sessionsData] = await Promise.all([
+            const [programData, sessionsData, evolutionRes] = await Promise.all([
                 fetchProgramById(programaId),
                 fetchRecentSessions(programaId, 10), // Busca mais sessões para o gráfico de evolução
+                fetchMusiEvolutionChart(programaId, undefined, 'asc'),
             ]);
 
             setProgram(programData as MusiProgramDetail);
             setSessions(sessionsData);
+            setEvolutionData(evolutionRes.data)
             setRefreshKey(Date.now());
 
-            // Extrair dados de Participação e Suporte das sessões para o gráfico de evolução
-            const evolution: MusiEvolutionDataPoint[] = sessionsData
-                .filter((session: any) => session.activitiesSummary && session.activitiesSummary.length > 0)
-                .map((session: any) => {
-                    const activities = session.activitiesSummary as MusiActivitySummary[];
-                    
-                    // Calcular média de participação e suporte das atividades da sessão
-                    const validParticipacao = activities.filter(a => a.participacao !== undefined && a.participacao !== null);
-                    const validSuporte = activities.filter(a => a.suporte !== undefined && a.suporte !== null);
-                    
-                    const avgParticipacao = validParticipacao.length > 0
-                        ? validParticipacao.reduce((sum, a) => sum + (a.participacao ?? 0), 0) / validParticipacao.length
-                        : 0;
-                    
-                    const avgSuporte = validSuporte.length > 0
-                        ? validSuporte.reduce((sum, a) => sum + (a.suporte ?? 0), 0) / validSuporte.length
-                        : 0;
-                    
-                    // Formatar data para exibição
-                    const date = new Date(session.date);
-                    const formattedDate = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}`;
-                    
-                    return {
-                        x: formattedDate,
-                        participacao: avgParticipacao,
-                        suporte: avgSuporte,
-                    };
-                })
-                .reverse(); // Ordenar da mais antiga para a mais recente
-            
-            setEvolutionData(evolution);
             setChartLoading(false);
         } catch (err) {
             console.error('Erro ao carregar dados do programa de Musicoterapia:', err);

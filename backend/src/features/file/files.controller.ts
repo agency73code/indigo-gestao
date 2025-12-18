@@ -175,7 +175,7 @@ export async function downloadFile(req: Request, res: Response) {
  */
 export async function deleteFile(req: Request, res: Response) {
     const fileId = req.params.id;
-    console.log(fileId, '===============================');
+    
     if (!fileId) {
         return res.status(400).json({ error: 'ID é obrigatório.' });
     }

@@ -90,3 +90,62 @@ export type AttentionStimuliResponse = {
   total: number;
   hasSufficientData: boolean; // Se tem tentativas suficientes (>= 5)
 };
+
+// Modelo de retorno musicoterapia
+export interface MediaTendencia {
+  media: number;
+  tendencia: number;
+  totalRegistros: number;
+}
+
+export interface CalculateAverageAndTrend {
+  participation: MediaTendencia;
+  support: MediaTendencia;
+}
+
+export interface MusiKpis {
+  atividadesTotal: number;
+  avgParticipacao: number;
+  avgSuporte: number;
+  desempenhou: number;
+  desempenhouComAjuda: number;
+  naoDesempenhou: number;
+  sessoesTotal: number;
+}
+
+export interface MusiDashboardResult {
+  performance: any[];
+  prepareMusiEvolutionData: any[];
+  prepareMusiAttentionActivities: any[];
+  prepareMusiAutonomyByCategory: any[];
+  calculateAverageAndTrend: CalculateAverageAndTrend;
+  kpis: MusiKpis;
+}
+
+export const emptyMusiDashboardResult: MusiDashboardResult = {
+  performance: [],
+  prepareMusiEvolutionData: [],
+  prepareMusiAttentionActivities: [],
+  prepareMusiAutonomyByCategory: [],
+  calculateAverageAndTrend: {
+    participation: {
+      media: 0,
+      tendencia: 0,
+      totalRegistros: 0,
+    },
+    support: {
+      media: 0,
+      tendencia: 0,
+      totalRegistros: 0,
+    },
+  },
+  kpis: {
+    atividadesTotal: 0,
+    avgParticipacao: 0,
+    avgSuporte: 0,
+    desempenhou: 0,
+    desempenhouComAjuda: 0,
+    naoDesempenhou: 0,
+    sessoesTotal: 0,
+  },
+};
