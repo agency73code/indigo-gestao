@@ -312,7 +312,7 @@ export function GerarRelatorioPage() {
                             terapeutaNome: s.terapeutaNome,
                             observacoes: s.observacoes,
                         }));
-                    setSessionObservations(observations);
+                    setSessionObservations(observations ?? []);
 
                     // Carregar prazo do programa
                     const prazoProgramaData = await fetchPrazoPrograma(filtersWithArea);
@@ -378,7 +378,7 @@ export function GerarRelatorioPage() {
                     );
                     const sessoes = await fetchMusicReports(sessionsResponse.items);
 
-                    setSessionObservations(sessoes.sessionObservations);
+                    setSessionObservations(sessoes.sessionObservations ?? []);
 
                     // Carregar prazo do programa
                     const prazoProgramaData = await fetchPrazoPrograma(filtersWithArea);
@@ -434,7 +434,7 @@ export function GerarRelatorioPage() {
                     // Novo formato com solicitação unica para o backend
                     const report = await fetchPhysioReports(sessoes);
 
-                    setSessionObservations(report.sessionObservations);
+                    setSessionObservations(report.sessionObservations ?? []);
 
                     // Carregar prazo do programa
                     const prazoProgramaData = await fetchPrazoPrograma(filtersWithArea); // tenho que analisar esse 
@@ -526,7 +526,7 @@ export function GerarRelatorioPage() {
                         observacoes: s.observacoes,
                     }));
                 
-                setSessionObservations(observations);
+                setSessionObservations(observations ?? []);
             } catch (error) {
                 console.error('Erro ao carregar observações de sessão:', error);
                 setSessionObservations([]);
