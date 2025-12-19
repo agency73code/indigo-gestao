@@ -71,6 +71,7 @@ export default function ProgramList({
                 status,
                 sort,
             });
+            
             setPrograms(result);
         } catch {
             setError('Erro ao carregar programas. Tente novamente.');

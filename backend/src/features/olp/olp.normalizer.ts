@@ -45,6 +45,7 @@ export function mapSessionList(dto: OcpTypes.SessionDTO[]): OcpTypes.Session[] {
         pacienteId: s.cliente_id,
         terapeutaId: s.terapeuta_id,
         data: s.data_criacao.toISOString(),
+        programId: s.ocp.id,
         programa: s.ocp?.nome_programa ?? '',
         objetivo: s.ocp?.objetivo_programa ?? '',
         prazoInicio: s.ocp?.criado_em.toISOString(),

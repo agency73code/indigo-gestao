@@ -3,22 +3,29 @@ import * as OcpService from './olp.service.js';
 import * as OcpNormalizer from './olp.normalizer.js';
 import { Prisma } from '@prisma/client';
 import type { CreateProgramPayload } from './types/olp.types.js';
-import { getPhysioSessionData } from './services/reports/physiotherapy/getPhysioSessionData.js';
-import { calcActivityDuration } from './services/reports/physiotherapy/activityDurationData.js';
-import { calcAutonomyByCategory } from './services/reports/physiotherapy/autonomyByCategory.js';
-import { calcPerformanceLine } from './services/reports/physiotherapy/performanceLine.js';
-import { calcKpis } from './services/reports/physiotherapy/calculateKpis.js';
-import { calcAttentionActivities } from './services/reports/physiotherapy/attentionActivities.js';
-import { getMusicSessionsData } from './services/reports/musictherapy/getMusicSessionsData.js';
-import { calcMusicKpis } from './services/reports/musictherapy/calcMusicKpis.js';
-import { calcMusicPerformanceLine } from './services/reports/musictherapy/performanceLine.js';
-import { prepareMusiEvolutionData } from './services/reports/musictherapy/prepareMusiEvolutionData.js';
-import { prepareMusiAttentionActivities } from './services/reports/musictherapy/prepareMusiAttentionActivities.js';
-import { prepareMusiAutonomyByCategory } from './services/reports/musictherapy/prepareMusiAutonomyByCategory.js';
-import { calcAverageAndTrend } from './services/reports/musictherapy/calcAverageAndTrend.js';
+import { listClientProgramsSchema, listSessionsByClientSchema } from '../../schemas/queries/listSessions.query.js';
 import { sessionObservations } from '../../utils/sessionObservations.js';
-import { fetchMusicSessionsForChart } from './services/reports/musictherapy/fetchMusicSessionsForChart.js';
-import { mapMusicSessionToChartPoint } from './services/reports/musictherapy/mapMusicSessionToChartPoint.js';
+
+import {
+    getPhysioSessionData,
+    calcActivityDuration,
+    calcAutonomyByCategory,
+    calcPerformanceLine,
+    calcKpis,
+    calcAttentionActivities,
+} from './services/reports/physiotherapy/index.js';
+
+import {
+    getMusicSessionsData,
+    calcMusicKpis,
+    calcMusicPerformanceLine,
+    prepareMusiEvolutionData,
+    prepareMusiAttentionActivities,
+    prepareMusiAutonomyByCategory,
+    calcAverageAndTrend,
+    fetchMusicSessionsForChart,
+    mapMusicSessionToChartPoint,
+} from './services/reports/musictherapy/index.js';
 
 export async function createProgram(req: Request, res: Response) {
     try {
@@ -212,17 +219,12 @@ export async function listTherapistClients(req: Request, res: Response) {
 }
 
 export async function listClientPrograms(req: Request, res: Response) {
+    const query = listClientProgramsSchema.parse(req.query);
     const { clientId } = req.params;
-    const page = parseInt(req.query.page as string) || 1;
-    const status = (req.query.status as 'active' | 'archived');
-    const q = req.query.q as string | undefined;
-    const sort = (req.query.sort as 'recent' | 'alphabetic') ?? 'recent';
-    const rawArea = req.query.area;
-    const area = Array.isArray(rawArea) ? rawArea[0] : rawArea;
+    const { q, status, sort, page, area } = query;
     const userId = req.user?.id;
 
     if (!clientId) return res.status(400).json({ success: false, message: 'ClientId é obrigatório' });
-    if (typeof area !== 'string') return res.status(400).json({ success: false, message: 'Area é obrigatório' });
     if (!userId) return res.status(400).json({ success: false, message: 'Id do usuário é obrigatório' });
 
     const rows = await OcpService.listProgramsByClientId(clientId, userId, page, 10, area, status, q, sort);
@@ -232,36 +234,32 @@ export async function listClientPrograms(req: Request, res: Response) {
 
 export async function listSessionsByClient(req: Request, res: Response) {
     try {
+        const query = listSessionsByClientSchema.parse(req.query);
         const { clientId } = req.params;
-        if (!clientId)
-            return res.status(400).json({ sucess: false, message: 'ID do paciente é obrigatório' });
+        const { area, q, periodMode, programId, therapistId, sort, page, pageSize, stimulusId, periodStart, periodEnd } = query;
 
-        const area = getQueryString(req.query.area);
-        if (!area) return res.status(400).json({ success: false, message: 'Area é obrigatório' });
+        if (!clientId) return res.status(400).json({ sucess: false, message: 'ID do paciente é obrigatório' });
 
-        const therapistId = getQueryString(req.query.therapistId);
-        const programId = getQueryString(req.query.programId);
-        const periodMode = getQueryString(req.query.periodMode);
-        const stimulusId = getQueryString(req.query.stimulusId);
-        const periodStart = getQueryString(req.query.periodStart);
-        const periodEnd = getQueryString(req.query.periodEnd);
-        const sort = getQueryString(req.query.sort);
-        const pageSize = getQueryString(req.query.pageSize);
-
-        const sessions = await OcpService.listSessionsByClient({
+        const result = await OcpService.listSessionsByClient({
             clientId,
             area,
             periodMode,
+            sort,
+            page,
+            pageSize,
+            q,
             programId,
             therapistId,
-            sort,
             stimulusId,
             periodStart,
             periodEnd,
-            pageSize,
         });
 
-        return res.json({ data: OcpNormalizer.mapSessionList(sessions) });
+        return res.json({
+            items: OcpNormalizer.mapSessionList(result.items),
+            total: result.total,
+            totalPages: Math.ceil(result.total / pageSize),
+        });
     } catch (error) {
         console.error(error);
         return res

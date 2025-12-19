@@ -271,6 +271,7 @@ export interface Session {
     pacienteId: string;
     terapeutaId: string;
     data: string;
+    programId: number;
     programa: string;
     objetivo: string;
     prazoInicio: string;
@@ -322,14 +323,16 @@ export interface AttentionStimulusItem {
 export type ListSessionsFilters = {
     clientId: string;
     area: string;
-    periodMode?: string | undefined;
+    periodMode: string;
+    sort: string;
+    page: number;
+    pageSize: number;
+    q?: string | undefined;
+    programId?: number | undefined;
     therapistId?: string | undefined;
-    programId?: string | undefined;
-    sort?: string | undefined;
-    stimulusId?: string | undefined;
+    stimulusId?: number | undefined;
     periodStart?: string | undefined;
     periodEnd?: string | undefined;
-    pageSize?: string | undefined;
 };
 
 export interface UnmappedSession {

@@ -1,0 +1,9 @@
+export { getMusicSessionsData } from './getMusicSessionsData.js';
+export { calcMusicKpis } from './calcMusicKpis.js';
+export { calcMusicPerformanceLine } from './performanceLine.js';
+export { prepareMusiEvolutionData } from './prepareMusiEvolutionData.js';
+export { prepareMusiAttentionActivities } from './prepareMusiAttentionActivities.js';
+export { prepareMusiAutonomyByCategory } from './prepareMusiAutonomyByCategory.js';
+export { calcAverageAndTrend } from './calcAverageAndTrend.js';
+export { fetchMusicSessionsForChart } from './fetchMusicSessionsForChart.js';
+export { mapMusicSessionToChartPoint } from './mapMusicSessionToChartPoint.js';

@@ -1,3 +1,4 @@
+import { buildApiUrl } from '@/lib/api';
 import { fetchClients } from '../api';
 import type { Patient, ProgramListItem } from './types';
 import { getCurrentAreaFromStorage } from '@/utils/apiWithArea';
@@ -21,21 +22,22 @@ export async function listPrograms(params: {
     page?: number;
 }): Promise<ProgramListItem[]> {
     const area = getArea();
-    const url = new URL(`/api/ocp/clients/${params.patientId}/programs`, window.location.origin);
 
-    url.searchParams.set('area', area);
-    
-    if (params.page) url.searchParams.set('page', params.page.toString());
-    if (params.status) url.searchParams.set('status', params.status);
-    if (params.q) url.searchParams.set('q', params.q);
-    if (params.sort) url.searchParams.set('sort', params.sort);
+    const url = buildApiUrl(`/api/ocp/clients/${params.patientId}/programs`, {
+        q: params.q,
+        status: params.status,
+        sort: params.sort,
+        page: params.page,
+        area,
+    });
 
-    const res = await fetch(url.toString(), {
+    const res = await fetch(url, {
         credentials: 'include',
         headers: { Accept: 'application/json' },
     });
 
     if (!res.ok) throw new Error('Erro ao buscar programas');
+    
     const json = await res.json();
     return (json?.data ?? []) as ProgramListItem[];
 }
