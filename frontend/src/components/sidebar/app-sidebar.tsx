@@ -11,6 +11,7 @@ import {
     Activity,
     ReceiptText,
     FileText,
+    ClipboardList,
 } from 'lucide-react';
 import { NavMain } from '@/components/sidebar/nav-main';
 import { NavProjects } from '@/components/sidebar/nav-projects';
@@ -70,6 +71,11 @@ const data: {
             url: '/app/consultar/terapeutas',
             icon: UserPlus,
             ability: { action: 'read', subject: 'Consultar' },
+        },
+        {
+            title: 'Anamnese',
+            url: '/app/anamnese',
+            icon: ClipboardList,
         },
         {
             title: 'Relatórios',
@@ -132,7 +138,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         items: programItems,
     },
 
-    ...data.navMain.slice(3, 6), // Relatórios em diante
+    ...data.navMain.slice(3), // Anamnese, Relatórios, Faturamento, Configuração
     ];
 
     return (

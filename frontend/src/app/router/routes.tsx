@@ -31,6 +31,7 @@ import EditarProgramaPage from '../../features/programas/pages/EditarProgramaPag
 import { CadastroSessaoPage } from '../../features/programas/nova-sessao';
 import { HubFaturamentoPage } from '../../features/faturamento';
 import RegistrarLancamentoPage from '../../features/faturamento/registrar-lancamento/pages/RegistrarLancamentoPage';
+import { AnamnesePage } from '../../features/anamnese';
 import MinhasHorasPage from '../../features/faturamento/minhas-horas/pages/MinhasHorasPage';
 import GestaoHorasPage from '../../features/faturamento/gestao/pages/GestaoHorasPage';
 import NotAccessPage from '@/features/shell/pages/NotAccessPage';
@@ -205,6 +206,16 @@ export const router = createBrowserRouter([
                                     <RequireAbility action="create" subject="Cadastro">
                                         <Suspense fallback={suspenseFallback}>
                                             <CadastroClientePage />
+                                        </Suspense>
+                                    </RequireAbility>
+                                ),
+                            },
+                            {
+                                path: 'anamnese',
+                                element: (
+                                    <RequireAbility action="create" subject="Cadastro">
+                                        <Suspense fallback={suspenseFallback}>
+                                            <AnamnesePage />
                                         </Suspense>
                                     </RequireAbility>
                                 ),

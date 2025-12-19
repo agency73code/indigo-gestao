@@ -148,7 +148,7 @@ export default function PacientesListPage() {
     }
 
     return (
-        <div className="flex flex-col h-full overflow-hidden ">
+        <div className="flex flex-col h-full overflow-hidden p-1">
             {/* Header com busca e botão */}
             <div className="flex-none pb-4">
                 <div className="flex items-center justify-between gap-4">
