@@ -303,7 +303,7 @@ export async function listSessionsByClient(filters: OcpType.ListSessionsFilters)
         periodStart,
         periodEnd,
     } = filters;
-
+    console.log(area)
     const where: Prisma.sessaoWhereInput = {};
     const order = sort === 'date-asc' ? 'asc' : 'desc';
 
@@ -346,17 +346,9 @@ export async function listSessionsByClient(filters: OcpType.ListSessionsFilters)
 
     if (q) {
         where.OR = [
-            { observacoes_sessao: { contains: q } },
+            { ocp: { objetivo_programa: { contains: q } } },
             { ocp: { nome_programa: { contains: q } } },
-            {
-                trials: {
-                    some: {
-                        estimulosOcp: {
-                            nome: { contains: q },
-                        },
-                    },
-                },
-            },
+            { terapeuta: { nome: { contains: q } } },
         ];
     }
 
@@ -469,7 +461,7 @@ export async function getKpis(filtros: OcpType.KpisFilters) {
     const stimulusId = filtros.estimuloId ? Number(filtros.estimuloId) : undefined;
 
     if (stimulusId) {
-        where.trials = { some: { estimulos_ocp_id: stimulusId } };
+        where.trials = { some: { estimulosOcp: { id_estimulo: stimulusId } } };
     }
 
     // Períodos
@@ -496,7 +488,7 @@ export async function getKpis(filtros: OcpType.KpisFilters) {
     const sessions = await prisma.sessao.findMany({
         where,
         include: {
-            trials: stimulusId ? { where: { estimulos_ocp_id: stimulusId } } : true,
+            trials: stimulusId ? { where: { estimulosOcp: { id_estimulo: stimulusId } } } : true,
         },
     });
 
