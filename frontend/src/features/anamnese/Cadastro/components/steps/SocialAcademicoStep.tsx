@@ -1,5 +1,5 @@
 import { InputField } from '@/ui/input-field';
-import AutoExpandTextarea from '../ui/AutoExpandTextarea';
+import AutoExpandTextarea from '../../ui/AutoExpandTextarea';
 import type { AnamneseSocialAcademico, SimNao } from '../../types/anamnese.types';
 
 interface SocialAcademicoStepProps {
@@ -19,7 +19,7 @@ function SimNaoField({
 }) {
     return (
         <div className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-            <span className="text-sm text-foreground flex-1">{label}</span>
+            <span className="text-sm text-foreground flex-1">{label} <span className="text-red-500">*</span></span>
             <div className="flex items-center gap-4">
                 <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -103,7 +103,7 @@ export default function SocialAcademicoStep({ data, onChange }: SocialAcademicoS
         <div className="space-y-4">
             {/* 17. Desenvolvimento Social */}
             <div className="rounded-2xl border bg-white p-4 space-y-4">
-                <h3 className="text-sm font-medium">17. Desenvolvimento Social (Relações Interpessoais e Brincar)</h3>
+                <h3 className="text-sm font-medium">17. Desenvolvimento Social (Relações Interpessoais e Brincar) <span className="text-red-500">*</span></h3>
                 
                 <div className="space-y-1">
                     <SimNaoField
@@ -165,7 +165,7 @@ export default function SocialAcademicoStep({ data, onChange }: SocialAcademicoS
 
                 <AutoExpandTextarea
                     label="Observações"
-                    placeholder="Sua resposta"
+                    placeholder="Ex: Como os pais percebem as dificuldades de relacionamento social? Em quais situações ocorrem? Como a criança reage em grupos?"
                     value={data.desenvolvimentoSocial?.observacoes ?? ''}
                     onChange={(value) => updateDesenvolvimentoSocial('observacoes', value)}
                 />
@@ -173,7 +173,7 @@ export default function SocialAcademicoStep({ data, onChange }: SocialAcademicoS
 
             {/* 18. Desenvolvimento Acadêmico */}
             <div className="rounded-2xl border bg-white p-4 space-y-4">
-                <h3 className="text-sm font-medium">18. Desenvolvimento Acadêmico</h3>
+                <h3 className="text-sm font-medium">18. Desenvolvimento Acadêmico <span className="text-red-500">*</span></h3>
                 
                 {/* Dados da Escola */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -290,7 +290,7 @@ export default function SocialAcademicoStep({ data, onChange }: SocialAcademicoS
 
                 <AutoExpandTextarea
                     label="Observações"
-                    placeholder="Sua resposta"
+                    placeholder="Ex: Quais são as dificuldades pedagógicas observadas? Como se manifestam em sala de aula? Há áreas de maior desafio (leitura, escrita, matemática)?"
                     value={data.desenvolvimentoAcademico?.observacoes ?? ''}
                     onChange={(value) => updateDesenvolvimentoAcademico('observacoes', value)}
                 />

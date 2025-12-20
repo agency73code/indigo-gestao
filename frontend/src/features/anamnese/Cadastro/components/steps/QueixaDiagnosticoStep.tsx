@@ -1,11 +1,222 @@
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Upload, X, FileText, Image } from 'lucide-react';
+import { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
 import { SelectField } from '@/ui/select-field';
 import { InputField } from '@/ui/input-field';
 import { DateFieldWithLabel } from '@/ui/date-field-with-label';
-import AutoExpandTextarea from '../ui/AutoExpandTextarea';
-import type { AnamneseQueixaDiagnostico, EspecialidadeConsultada, MedicamentoEmUso, ExamePrevio, TerapiaPrevia, EspecialidadeMedica } from '../../types/anamnese.types';
+import AutoExpandTextarea from '../../ui/AutoExpandTextarea';
+import type { AnamneseQueixaDiagnostico, EspecialidadeConsultada, MedicamentoEmUso, ExamePrevio, TerapiaPrevia, EspecialidadeMedica, ArquivoAnexo } from '../../types/anamnese.types';
 import { ESPECIALIDADES_MEDICAS } from '../../types/anamnese.types';
+
+// Subcomponente para card de exame com upload de arquivos
+interface ExameCardProps {
+    exame: ExamePrevio;
+    index: number;
+    onUpdate: (id: string, field: keyof ExamePrevio, value: string | ArquivoAnexo[]) => void;
+    onRemove: (id: string) => void;
+    onAddArquivo: (exameId: string, file: File, nomePersonalizado: string) => void;
+    onRemoveArquivo: (exameId: string, arquivoId: string) => void;
+}
+
+function ExameCard({ exame, index, onUpdate, onRemove, onAddArquivo, onRemoveArquivo }: ExameCardProps) {
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [nomeArquivo, setNomeArquivo] = useState('');
+
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setSelectedFile(file);
+            // Sugerir o nome do arquivo (sem extensão) como nome inicial
+            const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
+            setNomeArquivo(nameWithoutExt);
+        }
+    };
+
+    const handleAddFile = () => {
+        if (!selectedFile || !nomeArquivo.trim()) return;
+        
+        onAddArquivo(exame.id, selectedFile, nomeArquivo.trim());
+        
+        // Limpar campos
+        setSelectedFile(null);
+        setNomeArquivo('');
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
+
+    const handleCancelFile = () => {
+        setSelectedFile(null);
+        setNomeArquivo('');
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
+
+    const formatFileSize = (bytes: number): string => {
+        if (bytes < 1024) return `${bytes} B`;
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    };
+
+    const isImageFile = (tipo: string): boolean => {
+        return tipo.startsWith('image/');
+    };
+
+    return (
+        <div className="rounded-2xl border bg-white p-4 space-y-4">
+            {/* Título da linha com botão de remover */}
+            <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-foreground">
+                    Exame {index + 1}
+                </span>
+                <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onRemove(exame.id)}
+                    className="text-red-500 hover:text-red-700 hover:bg-red-50 h-6 w-6"
+                >
+                    <Trash2 className="h-4 w-4" />
+                </Button>
+            </div>
+
+            {/* Linha 1: Nome, Data */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <InputField
+                    label="Nome do Exame *"
+                    placeholder="Ex: Audiometria, EEG..."
+                    value={exame.nome}
+                    onChange={(e) => onUpdate(exame.id, 'nome', e.target.value)}
+                />
+                <DateFieldWithLabel
+                    label="Data do Exame"
+                    value={exame.data || ''}
+                    onChange={(iso) => onUpdate(exame.id, 'data', iso)}
+                />
+            </div>
+
+            {/* Linha 2: Resultado */}
+            <InputField
+                label="Resultado"
+                placeholder="Resumo do resultado do exame"
+                value={exame.resultado}
+                onChange={(e) => onUpdate(exame.id, 'resultado', e.target.value)}
+            />
+
+            {/* Upload de Arquivos */}
+            <div className="space-y-3">
+                <span className="text-sm font-medium text-foreground">Anexos</span>
+                
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*,.pdf,.doc,.docx"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                />
+
+                {/* Formulário de upload quando arquivo selecionado */}
+                {selectedFile ? (
+                    <div className="p-3 bg-muted/30 rounded-lg border space-y-3">
+                        <div className="flex items-center gap-2 text-sm">
+                            {isImageFile(selectedFile.type) ? (
+                                <Image className="h-4 w-4 text-blue-500" />
+                            ) : (
+                                <FileText className="h-4 w-4 text-orange-500" />
+                            )}
+                            <span className="text-muted-foreground truncate">
+                                {selectedFile.name} ({formatFileSize(selectedFile.size)})
+                            </span>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-medium">Nome do arquivo *</label>
+                            <Input
+                                placeholder="Digite o nome do arquivo"
+                                value={nomeArquivo}
+                                onChange={(e) => setNomeArquivo(e.target.value)}
+                                className="h-9"
+                            />
+                        </div>
+                        <div className="flex gap-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={handleCancelFile}
+                                className="flex-1"
+                            >
+                                Cancelar
+                            </Button>
+                            <Button
+                                type="button"
+                                size="sm"
+                                onClick={handleAddFile}
+                                disabled={!nomeArquivo.trim()}
+                                className="flex-1"
+                            >
+                                Adicionar
+                            </Button>
+                        </div>
+                    </div>
+                ) : (
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="gap-2 w-full"
+                    >
+                        <Upload className="h-4 w-4" />
+                        Selecionar arquivo
+                    </Button>
+                )}
+
+                {/* Lista de arquivos anexados */}
+                {(exame.arquivos || []).length > 0 && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {exame.arquivos?.map((arquivo) => (
+                            <div
+                                key={arquivo.id}
+                                className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg border"
+                            >
+                                {isImageFile(arquivo.tipo) ? (
+                                    <Image className="h-4 w-4 text-blue-500 shrink-0" />
+                                ) : (
+                                    <FileText className="h-4 w-4 text-orange-500 shrink-0" />
+                                )}
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-medium truncate">{arquivo.nome}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                        {formatFileSize(arquivo.tamanho)}
+                                    </p>
+                                </div>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => onRemoveArquivo(exame.id, arquivo.id)}
+                                    className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                >
+                                    <X className="h-3 w-3" />
+                                </Button>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {(exame.arquivos || []).length === 0 && !selectedFile && (
+                    <div className="text-center py-4 text-xs text-muted-foreground border-2 border-dashed rounded-lg">
+                        Nenhum arquivo anexado
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
 
 interface QueixaDiagnosticoStepProps {
     data: Partial<AnamneseQueixaDiagnostico>;
@@ -36,6 +247,7 @@ export default function QueixaDiagnosticoStep({ data, onChange }: QueixaDiagnost
             nome: '',
             data: '',
             observacao: '',
+            ativo: true,
         };
         onChange({
             ...data,
@@ -43,7 +255,7 @@ export default function QueixaDiagnosticoStep({ data, onChange }: QueixaDiagnost
         });
     };
 
-    const handleUpdateEspecialidade = (id: string, field: keyof EspecialidadeConsultada, value: string) => {
+    const handleUpdateEspecialidade = (id: string, field: keyof EspecialidadeConsultada, value: string | boolean) => {
         const updated = (data.especialidadesConsultadas || []).map((esp) =>
             esp.id === id ? { ...esp, [field]: value } : esp
         );
@@ -61,6 +273,7 @@ export default function QueixaDiagnosticoStep({ data, onChange }: QueixaDiagnost
             id: generateId(),
             nome: '',
             dosagem: '',
+            dataInicio: '',
             motivo: '',
         };
         onChange({
@@ -88,6 +301,7 @@ export default function QueixaDiagnosticoStep({ data, onChange }: QueixaDiagnost
             nome: '',
             data: '',
             resultado: '',
+            arquivos: [],
         };
         onChange({
             ...data,
@@ -95,11 +309,32 @@ export default function QueixaDiagnosticoStep({ data, onChange }: QueixaDiagnost
         });
     };
 
-    const handleUpdateExame = (id: string, field: keyof ExamePrevio, value: string) => {
+    const handleUpdateExame = (id: string, field: keyof ExamePrevio, value: string | ArquivoAnexo[]) => {
         const updated = (data.examesPrevios || []).map((exame) =>
             exame.id === id ? { ...exame, [field]: value } : exame
         );
         onChange({ ...data, examesPrevios: updated });
+    };
+
+    const handleAddArquivoExame = (exameId: string, file: File, nomePersonalizado: string) => {
+        const novoArquivo: ArquivoAnexo = {
+            id: generateId(),
+            nome: nomePersonalizado,
+            tipo: file.type,
+            tamanho: file.size,
+            file: file,
+        };
+        const exame = data.examesPrevios?.find(e => e.id === exameId);
+        if (exame) {
+            handleUpdateExame(exameId, 'arquivos', [...(exame.arquivos || []), novoArquivo]);
+        }
+    };
+
+    const handleRemoveArquivoExame = (exameId: string, arquivoId: string) => {
+        const exame = data.examesPrevios?.find(e => e.id === exameId);
+        if (exame) {
+            handleUpdateExame(exameId, 'arquivos', (exame.arquivos || []).filter(a => a.id !== arquivoId));
+        }
     };
 
     const handleRemoveExame = (id: string) => {
@@ -115,6 +350,7 @@ export default function QueixaDiagnosticoStep({ data, onChange }: QueixaDiagnost
             especialidadeAbordagem: '',
             tempoIntervencao: '',
             observacao: '',
+            ativo: true,
         };
         onChange({
             ...data,
@@ -122,7 +358,7 @@ export default function QueixaDiagnosticoStep({ data, onChange }: QueixaDiagnost
         });
     };
 
-    const handleUpdateTerapia = (id: string, field: keyof TerapiaPrevia, value: string) => {
+    const handleUpdateTerapia = (id: string, field: keyof TerapiaPrevia, value: string | boolean) => {
         const updated = (data.terapiasPrevias || []).map((ter) =>
             ter.id === id ? { ...ter, [field]: value } : ter
         );
@@ -157,6 +393,7 @@ export default function QueixaDiagnosticoStep({ data, onChange }: QueixaDiagnost
                     placeholder="Sua resposta"
                     value={data.diagnosticoPrevio || ''}
                     onChange={(value) => onChange({ ...data, diagnosticoPrevio: value })}
+                    required
                 />
             </div>
 
@@ -167,15 +404,16 @@ export default function QueixaDiagnosticoStep({ data, onChange }: QueixaDiagnost
                     placeholder="Sua resposta"
                     value={data.suspeitaCondicaoAssociada || ''}
                     onChange={(value) => onChange({ ...data, suspeitaCondicaoAssociada: value })}
+                    required
                 />
             </div>
 
-            {/* 4. Especialidades Consultadas */}
+            {/* 4. Médicos Consultados */}
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
                     <div>
                         <span className="text-sm font-medium">
-                            4. Especialidades Consultadas até o Momento
+                            4. Médicos Consultados até o Momento
                         </span>
                         <p className="text-xs text-muted-foreground">
                             (Nome do profissional e data - mês e ano)
@@ -200,11 +438,22 @@ export default function QueixaDiagnosticoStep({ data, onChange }: QueixaDiagnost
                             key={esp.id}
                             className="rounded-2xl border bg-white p-4 space-y-4"
                         >
-                            {/* Título da linha com botão de remover */}
+                            {/* Título da linha com switch e botão de remover */}
                             <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-foreground">
-                                    Especialidade {index + 1}
-                                </span>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-sm font-medium text-foreground">
+                                        Médico {index + 1}
+                                    </span>
+                                    <div className="flex items-center gap-2">
+                                        <Switch
+                                            checked={esp.ativo ?? true}
+                                            onCheckedChange={(checked) => handleUpdateEspecialidade(esp.id, 'ativo', checked)}
+                                        />
+                                        <span className={`text-xs ${esp.ativo ? 'text-green-600' : 'text-muted-foreground'}`}>
+                                            {esp.ativo ? 'Ainda consulta' : 'Não consulta mais'}
+                                        </span>
+                                    </div>
+                                </div>
                                 <Button
                                     type="button"
                                     variant="ghost"
@@ -256,7 +505,7 @@ export default function QueixaDiagnosticoStep({ data, onChange }: QueixaDiagnost
 
                     {(data.especialidadesConsultadas || []).length === 0 && (
                         <div className="text-center py-6 text-sm text-muted-foreground border-2 border-dashed rounded-2xl">
-                            Nenhuma especialidade adicionada. Clique em "Adicionar" para incluir.
+                            Nenhum médico adicionado. Clique em "Adicionar" para incluir.
                         </div>
                     )}
                 </div>
@@ -308,9 +557,9 @@ export default function QueixaDiagnosticoStep({ data, onChange }: QueixaDiagnost
                                 </Button>
                             </div>
                             
-                            {/* Linha 1: Medicamento e Dosagem */}
+                            {/* Linha 1: Medicamento (2/4), Dosagem (1/4), Data (1/4) */}
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                <div className="md:col-span-3">
+                                <div className="md:col-span-2">
                                     <InputField
                                         label="Medicamento *"
                                         placeholder="Nome do medicamento"
@@ -324,12 +573,17 @@ export default function QueixaDiagnosticoStep({ data, onChange }: QueixaDiagnost
                                     value={med.dosagem}
                                     onChange={(e) => handleUpdateMedicamento(med.id, 'dosagem', e.target.value)}
                                 />
+                                <DateFieldWithLabel
+                                    label="Início do uso"
+                                    value={med.dataInicio || ''}
+                                    onChange={(iso) => handleUpdateMedicamento(med.id, 'dataInicio', iso)}
+                                />
                             </div>
                             
                             {/* Linha 2: Observações (estilo Google Forms) */}
                             <AutoExpandTextarea
                                 label="Observações"
-                                description="(Desde quando usa o medicamento; existe algum em fase de adaptação? Já foram tentadas outras medicações? Como foi a resposta a outras medicações?)"
+                                description="(Existe algum em fase de adaptação? Já foram tentadas outras medicações? Como foi a resposta?)"
                                 placeholder="Sua resposta"
                                 value={med.motivo}
                                 onChange={(value) => handleUpdateMedicamento(med.id, 'motivo', value)}
@@ -352,6 +606,9 @@ export default function QueixaDiagnosticoStep({ data, onChange }: QueixaDiagnost
                         <span className="text-sm font-medium">
                             6. Exames Prévios Realizados, Datas e Resultados
                         </span>
+                        <p className="text-xs text-muted-foreground">
+                            Anexe laudos e documentos relacionados
+                        </p>
                     </div>
                     <Button
                         type="button"
@@ -368,51 +625,15 @@ export default function QueixaDiagnosticoStep({ data, onChange }: QueixaDiagnost
                 {/* Lista de Exames */}
                 <div className="space-y-3 mb-4">
                     {(data.examesPrevios || []).map((exame, index) => (
-                        <div
+                        <ExameCard 
                             key={exame.id}
-                            className="rounded-2xl border bg-white p-4 space-y-4"
-                        >
-                            {/* Título da linha com botão de remover */}
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-foreground">
-                                    Exame {index + 1}
-                                </span>
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => handleRemoveExame(exame.id)}
-                                    className="text-red-500 hover:text-red-700 hover:bg-red-50 h-6 w-6"
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
-                            </div>
-                            
-                            {/* Linha 1: Nome do Exame e Data */}
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                <div className="md:col-span-3">
-                                    <InputField
-                                        label="Exame *"
-                                        placeholder="Nome do exame"
-                                        value={exame.nome}
-                                        onChange={(e) => handleUpdateExame(exame.id, 'nome', e.target.value)}
-                                    />
-                                </div>
-                                <DateFieldWithLabel
-                                    label="Data *"
-                                    value={exame.data}
-                                    onChange={(iso) => handleUpdateExame(exame.id, 'data', iso)}
-                                />
-                            </div>
-                            
-                            {/* Linha 2: Resultado (estilo Google Forms) */}
-                            <AutoExpandTextarea
-                                label="Resultado"
-                                placeholder="Sua resposta"
-                                value={exame.resultado}
-                                onChange={(value) => handleUpdateExame(exame.id, 'resultado', value)}
-                            />
-                        </div>
+                            exame={exame}
+                            index={index}
+                            onUpdate={handleUpdateExame}
+                            onRemove={handleRemoveExame}
+                            onAddArquivo={handleAddArquivoExame}
+                            onRemoveArquivo={handleRemoveArquivoExame}
+                        />
                     ))}
 
                     {(data.examesPrevios || []).length === 0 && (
@@ -450,11 +671,22 @@ export default function QueixaDiagnosticoStep({ data, onChange }: QueixaDiagnost
                             key={terapia.id}
                             className="rounded-2xl border bg-white p-4 space-y-4"
                         >
-                            {/* Título da linha com botão de remover */}
+                            {/* Título da linha com switch e botão de remover */}
                             <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium text-foreground">
-                                    Terapia {index + 1}
-                                </span>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-sm font-medium text-foreground">
+                                        Terapia {index + 1}
+                                    </span>
+                                    <div className="flex items-center gap-2">
+                                        <Switch
+                                            checked={terapia.ativo ?? true}
+                                            onCheckedChange={(checked) => handleUpdateTerapia(terapia.id, 'ativo', checked)}
+                                        />
+                                        <span className={`text-xs ${terapia.ativo ? 'text-green-600' : 'text-muted-foreground'}`}>
+                                            {terapia.ativo ? 'Em andamento' : 'Encerrada'}
+                                        </span>
+                                    </div>
+                                </div>
                                 <Button
                                     type="button"
                                     variant="ghost"

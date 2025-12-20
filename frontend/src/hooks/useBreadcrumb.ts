@@ -13,6 +13,8 @@ const routeToTitleMap: Record<string, string> = {
     '/app/cadastro/cliente': 'Cadastro de Cliente',
     '/app/cadastro/paciente': 'Cadastro de Cliente',
     '/app/anamnese': 'Anamnese',
+    '/app/anamnese/lista': 'Anamnese',
+    '/app/anamnese/cadastro': 'Cadastrar Anamnese',
     '/app/consultar': 'Consultar',
     '/app/consultar/terapeutas': 'Terapeutas',
     '/app/consultar/pacientes': 'Clientes',

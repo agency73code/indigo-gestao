@@ -31,7 +31,8 @@ import EditarProgramaPage from '../../features/programas/pages/EditarProgramaPag
 import { CadastroSessaoPage } from '../../features/programas/nova-sessao';
 import { HubFaturamentoPage } from '../../features/faturamento';
 import RegistrarLancamentoPage from '../../features/faturamento/registrar-lancamento/pages/RegistrarLancamentoPage';
-import { AnamnesePage } from '../../features/anamnese';
+import { AnamnesePage } from '../../features/anamnese/Cadastro';
+import { AnamneseListPage } from '../../features/anamnese/Tabela';
 import MinhasHorasPage from '../../features/faturamento/minhas-horas/pages/MinhasHorasPage';
 import GestaoHorasPage from '../../features/faturamento/gestao/pages/GestaoHorasPage';
 import NotAccessPage from '@/features/shell/pages/NotAccessPage';
@@ -210,8 +211,19 @@ export const router = createBrowserRouter([
                                     </RequireAbility>
                                 ),
                             },
+                            // ========== ROTAS DE ANAMNESE ==========
                             {
-                                path: 'anamnese',
+                                path: 'anamnese/lista',
+                                element: (
+                                    <RequireAbility action="read" subject="Consultar">
+                                        <Suspense fallback={suspenseFallback}>
+                                            <AnamneseListPage />
+                                        </Suspense>
+                                    </RequireAbility>
+                                ),
+                            },
+                            {
+                                path: 'anamnese/cadastro',
                                 element: (
                                     <RequireAbility action="create" subject="Cadastro">
                                         <Suspense fallback={suspenseFallback}>
@@ -220,6 +232,18 @@ export const router = createBrowserRouter([
                                     </RequireAbility>
                                 ),
                             },
+                            // Rota legada para compatibilidade (redireciona para lista)
+                            {
+                                path: 'anamnese',
+                                element: (
+                                    <RequireAbility action="read" subject="Consultar">
+                                        <Suspense fallback={suspenseFallback}>
+                                            <AnamneseListPage />
+                                        </Suspense>
+                                    </RequireAbility>
+                                ),
+                            },
+                            // ========================================
                             {
                                 path: 'cadastros/vinculos',
                                 element: (

@@ -1,4 +1,4 @@
-import AutoExpandTextarea from '../ui/AutoExpandTextarea';
+import AutoExpandTextarea from '../../ui/AutoExpandTextarea';
 import type { AnamneseComportamento, SimNao } from '../../types/anamnese.types';
 
 interface ComportamentoStepProps {
@@ -18,7 +18,7 @@ function SimNaoField({
 }) {
     return (
         <div className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-            <span className="text-sm text-foreground flex-1">{label}</span>
+            <span className="text-sm text-foreground flex-1">{label} <span className="text-red-500">*</span></span>
             <div className="flex items-center gap-4">
                 <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -90,7 +90,7 @@ export default function ComportamentoStep({ data, onChange }: ComportamentoStepP
         <div className="space-y-4">
             {/* 19. Estereotipias, Tiques, Rituais e Rotinas */}
             <div className="rounded-2xl border bg-white p-4 space-y-4">
-                <h3 className="text-sm font-medium">19. Estereotipias, Tiques, Rituais e Rotinas</h3>
+                <h3 className="text-sm font-medium">19. Estereotipias, Tiques, Rituais e Rotinas <span className="text-red-500">*</span></h3>
                 
                 <div className="space-y-1">
                     <SimNaoField
@@ -147,7 +147,7 @@ export default function ComportamentoStep({ data, onChange }: ComportamentoStepP
 
                 <AutoExpandTextarea
                     label="Observações e descrição das topografias mais relevantes"
-                    placeholder="Sua resposta"
+                    placeholder="Ex: Como ocorrem esses comportamentos? Em quais situações se manifestam? Com que frequência?"
                     value={data.estereotipiasRituais?.observacoesTopografias ?? ''}
                     onChange={(value) => updateEstereotipiasRituais('observacoesTopografias', value)}
                 />
@@ -155,7 +155,7 @@ export default function ComportamentoStep({ data, onChange }: ComportamentoStepP
 
             {/* 20. Problemas de Comportamento */}
             <div className="rounded-2xl border bg-white p-4 space-y-4">
-                <h3 className="text-sm font-medium">20. Problemas de Comportamento</h3>
+                <h3 className="text-sm font-medium">20. Problemas de Comportamento <span className="text-red-500">*</span></h3>
                 
                 {/* Comportamentos Auto Lesivos */}
                 <div className="space-y-2">
@@ -208,16 +208,16 @@ export default function ComportamentoStep({ data, onChange }: ComportamentoStepP
                     )}
                 </div>
 
-                {/* Contenção Mecânica */}
+                {/* Contenção Física */}
                 <SimNaoField
-                    label="Necessita ou já necessitou de contenção mecânica."
+                    label="Necessita ou já necessitou de contenção física."
                     value={data.problemasComportamento?.necessitouContencaoMecanica ?? null}
                     onChange={(v) => updateProblemasComportamento('necessitouContencaoMecanica', v)}
                 />
 
                 <AutoExpandTextarea
                     label="Observações e descrição das topografias mais relevantes"
-                    placeholder="Sua resposta"
+                    placeholder="Ex: Descreva os comportamentos heterolesivos (tapas, socos, chutes, belções, cabeçadas). Se houve contenção física, descreva como ocorreu."
                     value={data.problemasComportamento?.observacoesTopografias ?? ''}
                     onChange={(value) => updateProblemasComportamento('observacoesTopografias', value)}
                 />

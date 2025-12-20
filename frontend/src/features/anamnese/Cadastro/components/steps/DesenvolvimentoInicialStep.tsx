@@ -1,7 +1,6 @@
 import { InputField } from '@/ui/input-field';
-import { Checkbox } from '@/components/ui/checkbox';
-import AutoExpandTextarea from '../ui/AutoExpandTextarea';
-import NumberSpinner from '../ui/NumberSpinner';
+import AutoExpandTextarea from '../../ui/AutoExpandTextarea';
+import NumberSpinner from '../../ui/NumberSpinner';
 import type { AnamneseDesenvolvimentoInicial, SimNao } from '../../types/anamnese.types';
 
 interface DesenvolvimentoInicialStepProps {
@@ -48,76 +47,164 @@ function SimNaoField({
     );
 }
 
-// Componente para marco motor com meses + checkbox "Não realiza"
+// Componente para marco motor com meses + checkbox "Não realiza" + checkbox "Não soube informar"
 function MarcoMotorField({
     label,
     meses,
     naoRealiza,
+    naoSoubeInformar,
     onMesesChange,
-    onNaoRealizaChange,
+    onOptionChange,
 }: {
     label: string;
     meses: string;
     naoRealiza: boolean;
+    naoSoubeInformar: boolean;
     onMesesChange: (value: string) => void;
-    onNaoRealizaChange: (value: boolean) => void;
+    onOptionChange: (naoRealiza: boolean, naoSoubeInformar: boolean) => void;
 }) {
+    const handleNaoRealizaClick = () => {
+        const newValue = !naoRealiza;
+        onOptionChange(newValue, newValue ? false : naoSoubeInformar);
+    };
+
+    const handleNaoSoubeInformarClick = () => {
+        const newValue = !naoSoubeInformar;
+        onOptionChange(newValue ? false : naoRealiza, newValue);
+    };
+
     return (
         <div className="flex items-center gap-4 py-2 border-b border-gray-100 last:border-0">
-            <span className="text-sm text-foreground flex-1">{label}</span>
+            <span className="text-sm text-foreground flex-1">{label} <span className="text-red-500">*</span></span>
             <NumberSpinner
                 value={meses}
-                onChange={onMesesChange}
-                disabled={naoRealiza}
+                onChange={(v) => {
+                    onMesesChange(v);
+                    onOptionChange(false, false);
+                }}
+                disabled={naoRealiza || naoSoubeInformar}
                 placeholder="0"
                 suffix="meses."
                 min={0}
                 max={120}
             />
-            <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap">
-                <Checkbox
-                    checked={naoRealiza}
-                    onCheckedChange={(checked) => onNaoRealizaChange(checked === true)}
-                />
-                <span className="text-sm text-muted-foreground">Não realiza até o momento</span>
-            </label>
+            <button
+                type="button"
+                onClick={handleNaoRealizaClick}
+                className="flex items-center gap-2 cursor-pointer whitespace-nowrap"
+            >
+                <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
+                    naoRealiza 
+                        ? 'bg-primary border-primary' 
+                        : 'border-gray-300 hover:border-gray-400'
+                }`}>
+                    {naoRealiza && (
+                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                    )}
+                </div>
+                <span className="text-sm text-muted-foreground">Não realiza</span>
+            </button>
+            <button
+                type="button"
+                onClick={handleNaoSoubeInformarClick}
+                className="flex items-center gap-2 cursor-pointer whitespace-nowrap"
+            >
+                <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
+                    naoSoubeInformar 
+                        ? 'bg-primary border-primary' 
+                        : 'border-gray-300 hover:border-gray-400'
+                }`}>
+                    {naoSoubeInformar && (
+                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                    )}
+                </div>
+                <span className="text-sm text-muted-foreground">Não soube informar</span>
+            </button>
         </div>
     );
 }
 
-// Componente para marco de fala com meses + checkbox "Não"
+// Componente para marco de fala com meses + checkbox "Não" + checkbox "Não soube informar"
 function MarcoFalaField({
     label,
     meses,
     nao,
+    naoSoubeInformar,
     onMesesChange,
-    onNaoChange,
+    onOptionChange,
 }: {
     label: string;
     meses: string;
     nao: boolean;
+    naoSoubeInformar: boolean;
     onMesesChange: (value: string) => void;
-    onNaoChange: (value: boolean) => void;
+    onOptionChange: (nao: boolean, naoSoubeInformar: boolean) => void;
 }) {
+    const handleNaoClick = () => {
+        const newValue = !nao;
+        onOptionChange(newValue, newValue ? false : naoSoubeInformar);
+    };
+
+    const handleNaoSoubeInformarClick = () => {
+        const newValue = !naoSoubeInformar;
+        onOptionChange(newValue ? false : nao, newValue);
+    };
+
     return (
         <div className="flex items-center gap-4 py-2 border-b border-gray-100 last:border-0">
-            <span className="text-sm text-foreground flex-1">{label}</span>
+            <span className="text-sm text-foreground flex-1">{label} <span className="text-red-500">*</span></span>
             <NumberSpinner
                 value={meses}
-                onChange={onMesesChange}
-                disabled={nao}
+                onChange={(v) => {
+                    onMesesChange(v);
+                    onOptionChange(false, false);
+                }}
+                disabled={nao || naoSoubeInformar}
                 placeholder="0"
                 suffix="meses."
                 min={0}
                 max={120}
             />
-            <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap">
-                <Checkbox
-                    checked={nao}
-                    onCheckedChange={(checked) => onNaoChange(checked === true)}
-                />
+            <button
+                type="button"
+                onClick={handleNaoClick}
+                className="flex items-center gap-2 cursor-pointer whitespace-nowrap"
+            >
+                <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
+                    nao 
+                        ? 'bg-primary border-primary' 
+                        : 'border-gray-300 hover:border-gray-400'
+                }`}>
+                    {nao && (
+                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                    )}
+                </div>
                 <span className="text-sm text-muted-foreground">Não</span>
-            </label>
+            </button>
+            <button
+                type="button"
+                onClick={handleNaoSoubeInformarClick}
+                className="flex items-center gap-2 cursor-pointer whitespace-nowrap"
+            >
+                <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
+                    naoSoubeInformar 
+                        ? 'bg-primary border-primary' 
+                        : 'border-gray-300 hover:border-gray-400'
+                }`}>
+                    {naoSoubeInformar && (
+                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                    )}
+                </div>
+                <span className="text-sm text-muted-foreground">Não soube informar</span>
+            </button>
         </div>
     );
 }
@@ -131,7 +218,8 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
                 ...data.gestacaoParto,
                 tipoParto: data.gestacaoParto?.tipoParto ?? null,
                 semanas: data.gestacaoParto?.semanas ?? '',
-                apgar: data.gestacaoParto?.apgar ?? '',
+                apgar1min: data.gestacaoParto?.apgar1min ?? '',
+                apgar5min: data.gestacaoParto?.apgar5min ?? '',
                 intercorrencias: data.gestacaoParto?.intercorrencias ?? '',
                 [field]: value,
             },
@@ -139,7 +227,7 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
     };
 
     const updateNeuropsicomotor = (field: string, value: unknown) => {
-        const defaultMarco = { meses: '', naoRealiza: false };
+        const defaultMarco = { meses: '', naoRealiza: false, naoSoubeInformar: false };
         onChange({
             ...data,
             neuropsicomotor: {
@@ -161,7 +249,7 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
     };
 
     const updateFalaLinguagem = (field: string, value: unknown) => {
-        const defaultMarcoFala = { meses: '', nao: false };
+        const defaultMarcoFala = { meses: '', nao: false, naoSoubeInformar: false };
         onChange({
             ...data,
             falaLinguagem: {
@@ -175,6 +263,7 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
                 teveOtiteDeRepeticao: data.falaLinguagem?.teveOtiteDeRepeticao ?? null,
                 otiteVezes: data.falaLinguagem?.otiteVezes ?? '',
                 otitePeriodoMeses: data.falaLinguagem?.otitePeriodoMeses ?? '',
+                otiteFrequencia: data.falaLinguagem?.otiteFrequencia ?? '',
                 fazOuFezUsoTuboVentilacao: data.falaLinguagem?.fazOuFezUsoTuboVentilacao ?? null,
                 fazOuFezUsoObjetoOral: data.falaLinguagem?.fazOuFezUsoObjetoOral ?? null,
                 objetoOralEspecificar: data.falaLinguagem?.objetoOralEspecificar ?? '',
@@ -188,21 +277,39 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
         });
     };
 
-    const updateMarcoNeuropsicomotor = (marco: string, field: 'meses' | 'naoRealiza', value: string | boolean) => {
-        const currentMarco = data.neuropsicomotor?.[marco as keyof typeof data.neuropsicomotor] as { meses: string; naoRealiza: boolean } | undefined;
+    const updateMarcoNeuropsicomotor = (marco: string, value: string) => {
+        const currentMarco = data.neuropsicomotor?.[marco as keyof typeof data.neuropsicomotor] as { meses: string; naoRealiza: boolean; naoSoubeInformar: boolean } | undefined;
         updateNeuropsicomotor(marco, {
-            meses: currentMarco?.meses ?? '',
+            meses: value,
             naoRealiza: currentMarco?.naoRealiza ?? false,
-            [field]: value,
+            naoSoubeInformar: currentMarco?.naoSoubeInformar ?? false,
         });
     };
 
-    const updateMarcoFala = (marco: string, field: 'meses' | 'nao', value: string | boolean) => {
-        const currentMarco = data.falaLinguagem?.[marco as keyof typeof data.falaLinguagem] as { meses: string; nao: boolean } | undefined;
+    const updateMarcoNeuropsicomotorOptions = (marco: string, naoRealiza: boolean, naoSoubeInformar: boolean) => {
+        const currentMarco = data.neuropsicomotor?.[marco as keyof typeof data.neuropsicomotor] as { meses: string; naoRealiza: boolean; naoSoubeInformar: boolean } | undefined;
+        updateNeuropsicomotor(marco, {
+            meses: currentMarco?.meses ?? '',
+            naoRealiza,
+            naoSoubeInformar,
+        });
+    };
+
+    const updateMarcoFala = (marco: string, value: string) => {
+        const currentMarco = data.falaLinguagem?.[marco as keyof typeof data.falaLinguagem] as { meses: string; nao: boolean; naoSoubeInformar: boolean } | undefined;
+        updateFalaLinguagem(marco, {
+            meses: value,
+            nao: currentMarco?.nao ?? false,
+            naoSoubeInformar: currentMarco?.naoSoubeInformar ?? false,
+        });
+    };
+
+    const updateMarcoFalaOptions = (marco: string, nao: boolean, naoSoubeInformar: boolean) => {
+        const currentMarco = data.falaLinguagem?.[marco as keyof typeof data.falaLinguagem] as { meses: string; nao: boolean; naoSoubeInformar: boolean } | undefined;
         updateFalaLinguagem(marco, {
             meses: currentMarco?.meses ?? '',
-            nao: currentMarco?.nao ?? false,
-            [field]: value,
+            nao,
+            naoSoubeInformar,
         });
     };
 
@@ -210,7 +317,7 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
         <div className="space-y-4">
             {/* 10. Gestação e Parto */}
             <div className="rounded-2xl border bg-white p-4 space-y-4">
-                <h3 className="text-sm font-medium">10. Gestação e Parto</h3>
+                <h3 className="text-sm font-medium">10. Gestação e Parto <span className="text-red-500">*</span></h3>
                 
                 {/* Tipo de Parto */}
                 <div className="flex items-center gap-6">
@@ -237,18 +344,24 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
                 </div>
 
                 {/* Semanas e Apgar */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <InputField
-                        label="Semanas"
+                        label="Semanas *"
                         placeholder="Ex: 38"
                         value={data.gestacaoParto?.semanas ?? ''}
                         onChange={(e) => updateGestacaoParto('semanas', e.target.value)}
                     />
                     <InputField
-                        label="Apgar"
-                        placeholder="Ex: 9/10"
-                        value={data.gestacaoParto?.apgar ?? ''}
-                        onChange={(e) => updateGestacaoParto('apgar', e.target.value)}
+                        label="Apgar 1º minuto *"
+                        placeholder="Ex: 9"
+                        value={data.gestacaoParto?.apgar1min ?? ''}
+                        onChange={(e) => updateGestacaoParto('apgar1min', e.target.value)}
+                    />
+                    <InputField
+                        label="Apgar 5º minuto *"
+                        placeholder="Ex: 10"
+                        value={data.gestacaoParto?.apgar5min ?? ''}
+                        onChange={(e) => updateGestacaoParto('apgar5min', e.target.value)}
                     />
                 </div>
 
@@ -264,78 +377,88 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
 
             {/* 11. Desenvolvimento Neuropsicomotor */}
             <div className="rounded-2xl border bg-white p-4 space-y-4">
-                <h3 className="text-sm font-medium">11. Desenvolvimento Neuropsicomotor</h3>
+                <h3 className="text-sm font-medium">11. Desenvolvimento Neuropsicomotor <span className="text-red-500">*</span></h3>
                 
                 <div className="space-y-1">
                     <MarcoMotorField
                         label="Sustentou a cabeça com aproximadamente"
                         meses={data.neuropsicomotor?.sustentouCabeca?.meses ?? ''}
                         naoRealiza={data.neuropsicomotor?.sustentouCabeca?.naoRealiza ?? false}
-                        onMesesChange={(v) => updateMarcoNeuropsicomotor('sustentouCabeca', 'meses', v)}
-                        onNaoRealizaChange={(v) => updateMarcoNeuropsicomotor('sustentouCabeca', 'naoRealiza', v)}
+                        naoSoubeInformar={data.neuropsicomotor?.sustentouCabeca?.naoSoubeInformar ?? false}
+                        onMesesChange={(v) => updateMarcoNeuropsicomotor('sustentouCabeca', v)}
+                        onOptionChange={(nr, nsi) => updateMarcoNeuropsicomotorOptions('sustentouCabeca', nr, nsi)}
                     />
                     <MarcoMotorField
                         label="Rolou com aproximadamente"
                         meses={data.neuropsicomotor?.rolou?.meses ?? ''}
                         naoRealiza={data.neuropsicomotor?.rolou?.naoRealiza ?? false}
-                        onMesesChange={(v) => updateMarcoNeuropsicomotor('rolou', 'meses', v)}
-                        onNaoRealizaChange={(v) => updateMarcoNeuropsicomotor('rolou', 'naoRealiza', v)}
+                        naoSoubeInformar={data.neuropsicomotor?.rolou?.naoSoubeInformar ?? false}
+                        onMesesChange={(v) => updateMarcoNeuropsicomotor('rolou', v)}
+                        onOptionChange={(nr, nsi) => updateMarcoNeuropsicomotorOptions('rolou', nr, nsi)}
                     />
                     <MarcoMotorField
                         label="Sentou com aproximadamente"
                         meses={data.neuropsicomotor?.sentou?.meses ?? ''}
                         naoRealiza={data.neuropsicomotor?.sentou?.naoRealiza ?? false}
-                        onMesesChange={(v) => updateMarcoNeuropsicomotor('sentou', 'meses', v)}
-                        onNaoRealizaChange={(v) => updateMarcoNeuropsicomotor('sentou', 'naoRealiza', v)}
+                        naoSoubeInformar={data.neuropsicomotor?.sentou?.naoSoubeInformar ?? false}
+                        onMesesChange={(v) => updateMarcoNeuropsicomotor('sentou', v)}
+                        onOptionChange={(nr, nsi) => updateMarcoNeuropsicomotorOptions('sentou', nr, nsi)}
                     />
                     <MarcoMotorField
                         label="Engatinhou com aproximadamente"
                         meses={data.neuropsicomotor?.engatinhou?.meses ?? ''}
                         naoRealiza={data.neuropsicomotor?.engatinhou?.naoRealiza ?? false}
-                        onMesesChange={(v) => updateMarcoNeuropsicomotor('engatinhou', 'meses', v)}
-                        onNaoRealizaChange={(v) => updateMarcoNeuropsicomotor('engatinhou', 'naoRealiza', v)}
+                        naoSoubeInformar={data.neuropsicomotor?.engatinhou?.naoSoubeInformar ?? false}
+                        onMesesChange={(v) => updateMarcoNeuropsicomotor('engatinhou', v)}
+                        onOptionChange={(nr, nsi) => updateMarcoNeuropsicomotorOptions('engatinhou', nr, nsi)}
                     />
                     <MarcoMotorField
                         label="Andou com apoio com aproximadamente"
                         meses={data.neuropsicomotor?.andouComApoio?.meses ?? ''}
                         naoRealiza={data.neuropsicomotor?.andouComApoio?.naoRealiza ?? false}
-                        onMesesChange={(v) => updateMarcoNeuropsicomotor('andouComApoio', 'meses', v)}
-                        onNaoRealizaChange={(v) => updateMarcoNeuropsicomotor('andouComApoio', 'naoRealiza', v)}
+                        naoSoubeInformar={data.neuropsicomotor?.andouComApoio?.naoSoubeInformar ?? false}
+                        onMesesChange={(v) => updateMarcoNeuropsicomotor('andouComApoio', v)}
+                        onOptionChange={(nr, nsi) => updateMarcoNeuropsicomotorOptions('andouComApoio', nr, nsi)}
                     />
                     <MarcoMotorField
                         label="Andou sem apoio com aproximadamente"
                         meses={data.neuropsicomotor?.andouSemApoio?.meses ?? ''}
                         naoRealiza={data.neuropsicomotor?.andouSemApoio?.naoRealiza ?? false}
-                        onMesesChange={(v) => updateMarcoNeuropsicomotor('andouSemApoio', 'meses', v)}
-                        onNaoRealizaChange={(v) => updateMarcoNeuropsicomotor('andouSemApoio', 'naoRealiza', v)}
+                        naoSoubeInformar={data.neuropsicomotor?.andouSemApoio?.naoSoubeInformar ?? false}
+                        onMesesChange={(v) => updateMarcoNeuropsicomotor('andouSemApoio', v)}
+                        onOptionChange={(nr, nsi) => updateMarcoNeuropsicomotorOptions('andouSemApoio', nr, nsi)}
                     />
                     <MarcoMotorField
                         label="Correu com aproximadamente"
                         meses={data.neuropsicomotor?.correu?.meses ?? ''}
                         naoRealiza={data.neuropsicomotor?.correu?.naoRealiza ?? false}
-                        onMesesChange={(v) => updateMarcoNeuropsicomotor('correu', 'meses', v)}
-                        onNaoRealizaChange={(v) => updateMarcoNeuropsicomotor('correu', 'naoRealiza', v)}
+                        naoSoubeInformar={data.neuropsicomotor?.correu?.naoSoubeInformar ?? false}
+                        onMesesChange={(v) => updateMarcoNeuropsicomotor('correu', v)}
+                        onOptionChange={(nr, nsi) => updateMarcoNeuropsicomotorOptions('correu', nr, nsi)}
                     />
                     <MarcoMotorField
                         label="Andou de motoca com aproximadamente"
                         meses={data.neuropsicomotor?.andouDeMotoca?.meses ?? ''}
                         naoRealiza={data.neuropsicomotor?.andouDeMotoca?.naoRealiza ?? false}
-                        onMesesChange={(v) => updateMarcoNeuropsicomotor('andouDeMotoca', 'meses', v)}
-                        onNaoRealizaChange={(v) => updateMarcoNeuropsicomotor('andouDeMotoca', 'naoRealiza', v)}
+                        naoSoubeInformar={data.neuropsicomotor?.andouDeMotoca?.naoSoubeInformar ?? false}
+                        onMesesChange={(v) => updateMarcoNeuropsicomotor('andouDeMotoca', v)}
+                        onOptionChange={(nr, nsi) => updateMarcoNeuropsicomotorOptions('andouDeMotoca', nr, nsi)}
                     />
                     <MarcoMotorField
                         label="Andou de bicicleta com aproximadamente"
                         meses={data.neuropsicomotor?.andouDeBicicleta?.meses ?? ''}
                         naoRealiza={data.neuropsicomotor?.andouDeBicicleta?.naoRealiza ?? false}
-                        onMesesChange={(v) => updateMarcoNeuropsicomotor('andouDeBicicleta', 'meses', v)}
-                        onNaoRealizaChange={(v) => updateMarcoNeuropsicomotor('andouDeBicicleta', 'naoRealiza', v)}
+                        naoSoubeInformar={data.neuropsicomotor?.andouDeBicicleta?.naoSoubeInformar ?? false}
+                        onMesesChange={(v) => updateMarcoNeuropsicomotor('andouDeBicicleta', v)}
+                        onOptionChange={(nr, nsi) => updateMarcoNeuropsicomotorOptions('andouDeBicicleta', nr, nsi)}
                     />
                     <MarcoMotorField
                         label="Subiu escadas sozinho com aproximadamente"
                         meses={data.neuropsicomotor?.subiuEscadasSozinho?.meses ?? ''}
                         naoRealiza={data.neuropsicomotor?.subiuEscadasSozinho?.naoRealiza ?? false}
-                        onMesesChange={(v) => updateMarcoNeuropsicomotor('subiuEscadasSozinho', 'meses', v)}
-                        onNaoRealizaChange={(v) => updateMarcoNeuropsicomotor('subiuEscadasSozinho', 'naoRealiza', v)}
+                        naoSoubeInformar={data.neuropsicomotor?.subiuEscadasSozinho?.naoSoubeInformar ?? false}
+                        onMesesChange={(v) => updateMarcoNeuropsicomotor('subiuEscadasSozinho', v)}
+                        onOptionChange={(nr, nsi) => updateMarcoNeuropsicomotorOptions('subiuEscadasSozinho', nr, nsi)}
                     />
                 </div>
 
@@ -350,36 +473,40 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
 
             {/* 12. Desenvolvimento da Fala e da Linguagem */}
             <div className="rounded-2xl border bg-white p-4 space-y-4">
-                <h3 className="text-sm font-medium">12. Desenvolvimento da Fala e da Linguagem</h3>
+                <h3 className="text-sm font-medium">12. Desenvolvimento da Fala e da Linguagem <span className="text-red-500">*</span></h3>
                 
                 <div className="space-y-1">
                     <MarcoFalaField
                         label="Balbuciou com aproximadamente"
                         meses={data.falaLinguagem?.balbuciou?.meses ?? ''}
                         nao={data.falaLinguagem?.balbuciou?.nao ?? false}
-                        onMesesChange={(v) => updateMarcoFala('balbuciou', 'meses', v)}
-                        onNaoChange={(v) => updateMarcoFala('balbuciou', 'nao', v)}
+                        naoSoubeInformar={data.falaLinguagem?.balbuciou?.naoSoubeInformar ?? false}
+                        onMesesChange={(v) => updateMarcoFala('balbuciou', v)}
+                        onOptionChange={(n, nsi) => updateMarcoFalaOptions('balbuciou', n, nsi)}
                     />
                     <MarcoFalaField
                         label="Primeiras palavras com aproximadamente"
                         meses={data.falaLinguagem?.primeirasPalavras?.meses ?? ''}
                         nao={data.falaLinguagem?.primeirasPalavras?.nao ?? false}
-                        onMesesChange={(v) => updateMarcoFala('primeirasPalavras', 'meses', v)}
-                        onNaoChange={(v) => updateMarcoFala('primeirasPalavras', 'nao', v)}
+                        naoSoubeInformar={data.falaLinguagem?.primeirasPalavras?.naoSoubeInformar ?? false}
+                        onMesesChange={(v) => updateMarcoFala('primeirasPalavras', v)}
+                        onOptionChange={(n, nsi) => updateMarcoFalaOptions('primeirasPalavras', n, nsi)}
                     />
                     <MarcoFalaField
                         label="Primeiras frases com aproximadamente"
                         meses={data.falaLinguagem?.primeirasFrases?.meses ?? ''}
                         nao={data.falaLinguagem?.primeirasFrases?.nao ?? false}
-                        onMesesChange={(v) => updateMarcoFala('primeirasFrases', 'meses', v)}
-                        onNaoChange={(v) => updateMarcoFala('primeirasFrases', 'nao', v)}
+                        naoSoubeInformar={data.falaLinguagem?.primeirasFrases?.naoSoubeInformar ?? false}
+                        onMesesChange={(v) => updateMarcoFala('primeirasFrases', v)}
+                        onOptionChange={(n, nsi) => updateMarcoFalaOptions('primeirasFrases', n, nsi)}
                     />
                     <MarcoFalaField
                         label="Apontou para fazer pedidos com aproximadamente"
                         meses={data.falaLinguagem?.apontouParaFazerPedidos?.meses ?? ''}
                         nao={data.falaLinguagem?.apontouParaFazerPedidos?.nao ?? false}
-                        onMesesChange={(v) => updateMarcoFala('apontouParaFazerPedidos', 'meses', v)}
-                        onNaoChange={(v) => updateMarcoFala('apontouParaFazerPedidos', 'nao', v)}
+                        naoSoubeInformar={data.falaLinguagem?.apontouParaFazerPedidos?.naoSoubeInformar ?? false}
+                        onMesesChange={(v) => updateMarcoFala('apontouParaFazerPedidos', v)}
+                        onOptionChange={(n, nsi) => updateMarcoFalaOptions('apontouParaFazerPedidos', n, nsi)}
                     />
                 </div>
 
@@ -429,7 +556,7 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
                         onChange={(v) => updateFalaLinguagem('teveOtiteDeRepeticao', v)}
                     />
                     {data.falaLinguagem?.teveOtiteDeRepeticao === 'sim' && (
-                        <div className="grid grid-cols-2 gap-4 mt-2">
+                        <div className="grid grid-cols-3 gap-4 mt-2">
                             <InputField
                                 label="Quantas vezes?"
                                 placeholder="Ex: 5"
@@ -441,6 +568,12 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
                                 placeholder="Ex: 12"
                                 value={data.falaLinguagem?.otitePeriodoMeses ?? ''}
                                 onChange={(e) => updateFalaLinguagem('otitePeriodoMeses', e.target.value)}
+                            />
+                            <InputField
+                                label="Frequência"
+                                placeholder="Ex: Mensal"
+                                value={data.falaLinguagem?.otiteFrequencia ?? ''}
+                                onChange={(e) => updateFalaLinguagem('otiteFrequencia', e.target.value)}
                             />
                         </div>
                     )}

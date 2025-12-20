@@ -1,7 +1,7 @@
 import { Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { InputField } from '@/ui/input-field';
-import AutoExpandTextarea from '../ui/AutoExpandTextarea';
+import AutoExpandTextarea from '../../ui/AutoExpandTextarea';
 import type { AnamneseContextoFamiliarRotina, HistoricoFamiliar, AtividadeRotina } from '../../types/anamnese.types';
 
 interface ContextoFamiliarRotinaStepProps {
@@ -44,6 +44,7 @@ export default function ContextoFamiliarRotinaStep({ data, onChange }: ContextoF
         const novaAtividade: AtividadeRotina = {
             id: generateId(),
             atividade: '',
+            horario: '',
             frequencia: '',
             observacao: '',
         };
@@ -147,12 +148,12 @@ export default function ContextoFamiliarRotinaStep({ data, onChange }: ContextoF
                 </div>
             </div>
 
-            {/* 9. Outras Atividades da Criança na Rotina */}
+            {/* 9. Rotina Atual */}
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
                     <div>
                         <span className="text-sm font-medium">
-                            9. Outras Atividades da Criança na Rotina
+                            9. Rotina Atual
                         </span>
                         <p className="text-xs text-muted-foreground">
                             (Esportes, música, entre outros)
@@ -193,9 +194,9 @@ export default function ContextoFamiliarRotinaStep({ data, onChange }: ContextoF
                                 </Button>
                             </div>
                             
-                            {/* Linha: Atividade e Frequência */}
+                            {/* Linha: Atividade, Horário e Frequência */}
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                <div className="md:col-span-3">
+                                <div className="md:col-span-2">
                                     <InputField
                                         label="Atividade *"
                                         placeholder="Ex: Natação, Piano, Futebol..."
@@ -204,7 +205,13 @@ export default function ContextoFamiliarRotinaStep({ data, onChange }: ContextoF
                                     />
                                 </div>
                                 <InputField
-                                    label="Frequência *"
+                                    label="Horário *"
+                                    placeholder="Ex: 14:00 - 15:00"
+                                    value={ativ.horario}
+                                    onChange={(e) => handleUpdateAtividade(ativ.id, 'horario', e.target.value)}
+                                />
+                                <InputField
+                                    label="Frequência"
                                     placeholder="Ex: 2x/semana"
                                     value={ativ.frequencia}
                                     onChange={(e) => handleUpdateAtividade(ativ.id, 'frequencia', e.target.value)}

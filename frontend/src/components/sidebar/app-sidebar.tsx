@@ -74,7 +74,7 @@ const data: {
         },
         {
             title: 'Anamnese',
-            url: '/app/anamnese',
+            url: '/app/anamnese/lista',
             icon: ClipboardList,
         },
         {

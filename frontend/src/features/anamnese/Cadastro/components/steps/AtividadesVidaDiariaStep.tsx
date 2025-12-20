@@ -1,6 +1,6 @@
 import { Checkbox } from '@/components/ui/checkbox';
-import AutoExpandTextarea from '../ui/AutoExpandTextarea';
-import NumberSpinner from '../ui/NumberSpinner';
+import AutoExpandTextarea from '../../ui/AutoExpandTextarea';
+import NumberSpinner from '../../ui/NumberSpinner';
 import type { AnamneseAtividadesVidaDiaria, SimNao, SimNaoComAjuda } from '../../types/anamnese.types';
 
 interface AtividadesVidaDiariaStepProps {
@@ -12,15 +12,17 @@ interface AtividadesVidaDiariaStepProps {
 function SimNaoField({ 
     label, 
     value, 
-    onChange 
+    onChange,
+    required = true 
 }: { 
     label: string; 
     value: SimNao; 
     onChange: (value: SimNao) => void;
+    required?: boolean;
 }) {
     return (
         <div className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-            <span className="text-sm text-foreground flex-1">{label}</span>
+            <span className="text-sm text-foreground flex-1">{label} {required && <span className="text-red-500">*</span>}</span>
             <div className="flex items-center gap-4">
                 <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -59,7 +61,7 @@ function SimNaoComAjudaField({
 }) {
     return (
         <div className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-            <span className="text-sm text-foreground flex-1">{label}</span>
+            <span className="text-sm text-foreground flex-1">{label} <span className="text-red-500">*</span></span>
             <div className="flex items-center gap-4">
                 <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -116,7 +118,7 @@ function DesfraldeField({
 }) {
     return (
         <div className="flex items-center gap-4 py-2 border-b border-gray-100 last:border-0">
-            <span className="text-sm text-foreground flex-1">{label}</span>
+            <span className="text-sm text-foreground flex-1">{label} <span className="text-red-500">*</span></span>
             <div className="flex items-center gap-2 shrink-0">
                 <NumberSpinner
                     value={anos}
@@ -241,7 +243,7 @@ export default function AtividadesVidaDiariaStep({ data, onChange }: AtividadesV
         <div className="space-y-4">
             {/* 13. Desfralde */}
             <div className="rounded-2xl border bg-white p-4 space-y-4">
-                <h3 className="text-sm font-medium">13. Desfralde</h3>
+                <h3 className="text-sm font-medium">13. Desfralde <span className="text-red-500">*</span></h3>
                 
                 <div className="space-y-1">
                     <DesfraldeField
@@ -275,7 +277,7 @@ export default function AtividadesVidaDiariaStep({ data, onChange }: AtividadesV
 
                 <div className="space-y-1 pt-2">
                     <SimNaoField
-                        label="Se limpa sozinho quando usa o vaso para fazer urinar."
+                        label="Se limpa sozinho quando usa o vaso para urinar."
                         value={data.desfralde?.seLimpaSozinhoUrinar ?? null}
                         onChange={(v) => updateDesfralde('seLimpaSozinhoUrinar', v)}
                     />
@@ -306,11 +308,11 @@ export default function AtividadesVidaDiariaStep({ data, onChange }: AtividadesV
 
             {/* 14. Sono */}
             <div className="rounded-2xl border bg-white p-4 space-y-4">
-                <h3 className="text-sm font-medium">14. Sono</h3>
+                <h3 className="text-sm font-medium">14. Sono <span className="text-red-500">*</span></h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex items-center gap-2">
-                        <span className="text-sm whitespace-nowrap">Dorme em média</span>
+                        <span className="text-sm whitespace-nowrap">Dorme em média <span className="text-red-500">*</span></span>
                         <NumberSpinner
                             value={data.sono?.dormemMediaHorasNoite ?? ''}
                             onChange={(v) => updateSono('dormemMediaHorasNoite', v)}
@@ -334,7 +336,7 @@ export default function AtividadesVidaDiariaStep({ data, onChange }: AtividadesV
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <span className="text-sm">Período:</span>
+                    <span className="text-sm">Período: <span className="text-red-500">*</span></span>
                     <label className="flex items-center gap-2 cursor-pointer">
                         <input
                             type="radio"
@@ -400,7 +402,7 @@ export default function AtividadesVidaDiariaStep({ data, onChange }: AtividadesV
 
             {/* 15. Hábitos Diários de Higiene */}
             <div className="rounded-2xl border bg-white p-4 space-y-4">
-                <h3 className="text-sm font-medium">15. Hábitos Diários de Higiene</h3>
+                <h3 className="text-sm font-medium">15. Hábitos Diários de Higiene <span className="text-red-500">*</span></h3>
                 
                 <div className="space-y-1">
                     <SimNaoComAjudaField
@@ -447,7 +449,7 @@ export default function AtividadesVidaDiariaStep({ data, onChange }: AtividadesV
 
                 <AutoExpandTextarea
                     label="Observações"
-                    placeholder="Sua resposta"
+                    placeholder="Descreva qual o tipo de ajuda"
                     value={data.habitosHigiene?.observacoes ?? ''}
                     onChange={(value) => updateHabitosHigiene('observacoes', value)}
                 />
@@ -455,10 +457,7 @@ export default function AtividadesVidaDiariaStep({ data, onChange }: AtividadesV
 
             {/* 16. Alimentação */}
             <div className="rounded-2xl border bg-white p-4 space-y-4">
-                <h3 className="text-sm font-medium">16. Alimentação</h3>
-                <p className="text-xs text-muted-foreground">
-                    (Caso identifique demandas nesta área, consultar equipe para investigação mais aprofundada, se for o caso)
-                </p>
+                <h3 className="text-sm font-medium">16. Alimentação <span className="text-red-500">*</span></h3>
                 
                 <div className="space-y-1">
                     <SimNaoField
@@ -505,7 +504,7 @@ export default function AtividadesVidaDiariaStep({ data, onChange }: AtividadesV
 
                 <AutoExpandTextarea
                     label="Observações"
-                    placeholder="Sua resposta"
+                    placeholder="Ex: Como a seletividade se manifesta? Há dificuldades da família com a rotina alimentar? Descreva comportamentos específicos..."
                     value={data.alimentacao?.observacoes ?? ''}
                     onChange={(value) => updateAlimentacao('observacoes', value)}
                 />

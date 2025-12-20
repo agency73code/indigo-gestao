@@ -57,12 +57,14 @@ export interface EspecialidadeConsultada {
     nome: string;
     data: string;
     observacao?: string;
+    ativo: boolean; // Ainda consulta este profissional?
 }
 
 export interface MedicamentoEmUso {
     id: string;
     nome: string;
     dosagem: string;
+    dataInicio: string; // Data de início do uso
     motivo: string;
 }
 
@@ -71,6 +73,17 @@ export interface ExamePrevio {
     nome: string;
     data: string;
     resultado: string;
+    arquivos?: ArquivoAnexo[]; // Fotos/documentos do exame
+}
+
+// Tipo para arquivos anexados
+export interface ArquivoAnexo {
+    id: string;
+    nome: string;
+    tipo: string; // MIME type
+    tamanho: number;
+    url?: string; // URL após upload
+    file?: File; // Arquivo local antes do upload
 }
 
 export interface TerapiaPrevia {
@@ -79,6 +92,7 @@ export interface TerapiaPrevia {
     especialidadeAbordagem: string;
     tempoIntervencao: string;
     observacao?: string;
+    ativo: boolean; // Ainda realiza esta terapia?
 }
 
 export interface AnamneseQueixaDiagnostico {
@@ -105,6 +119,7 @@ export interface HistoricoFamiliar {
 export interface AtividadeRotina {
     id: string;
     atividade: string;
+    horario: string; // Horário de realização (obrigatório)
     frequencia: string;
     observacao: string;
 }
@@ -122,31 +137,32 @@ export interface AnamneseContextoFamiliarRotina {
 export interface GestacaoParto {
     tipoParto: 'cesarea' | 'natural' | null;
     semanas: string;
-    apgar: string;
+    apgar1min: string;
+    apgar5min: string;
     intercorrencias: string;
 }
 
 // Item 11 - Desenvolvimento Neuropsicomotor
 export interface DesenvolvimentoNeuropsicomotor {
-    sustentouCabeca: { meses: string; naoRealiza: boolean };
-    rolou: { meses: string; naoRealiza: boolean };
-    sentou: { meses: string; naoRealiza: boolean };
-    engatinhou: { meses: string; naoRealiza: boolean };
-    andouComApoio: { meses: string; naoRealiza: boolean };
-    andouSemApoio: { meses: string; naoRealiza: boolean };
-    correu: { meses: string; naoRealiza: boolean };
-    andouDeMotoca: { meses: string; naoRealiza: boolean };
-    andouDeBicicleta: { meses: string; naoRealiza: boolean };
-    subiuEscadasSozinho: { meses: string; naoRealiza: boolean };
+    sustentouCabeca: { meses: string; naoRealiza: boolean; naoSoubeInformar: boolean };
+    rolou: { meses: string; naoRealiza: boolean; naoSoubeInformar: boolean };
+    sentou: { meses: string; naoRealiza: boolean; naoSoubeInformar: boolean };
+    engatinhou: { meses: string; naoRealiza: boolean; naoSoubeInformar: boolean };
+    andouComApoio: { meses: string; naoRealiza: boolean; naoSoubeInformar: boolean };
+    andouSemApoio: { meses: string; naoRealiza: boolean; naoSoubeInformar: boolean };
+    correu: { meses: string; naoRealiza: boolean; naoSoubeInformar: boolean };
+    andouDeMotoca: { meses: string; naoRealiza: boolean; naoSoubeInformar: boolean };
+    andouDeBicicleta: { meses: string; naoRealiza: boolean; naoSoubeInformar: boolean };
+    subiuEscadasSozinho: { meses: string; naoRealiza: boolean; naoSoubeInformar: boolean };
     motricidadeFina: string;
 }
 
 // Item 12 - Desenvolvimento da Fala e Linguagem
 export interface DesenvolvimentoFalaLinguagem {
-    balbuciou: { meses: string; nao: boolean };
-    primeirasPalavras: { meses: string; nao: boolean };
-    primeirasFrases: { meses: string; nao: boolean };
-    apontouParaFazerPedidos: { meses: string; nao: boolean };
+    balbuciou: { meses: string; nao: boolean; naoSoubeInformar: boolean };
+    primeirasPalavras: { meses: string; nao: boolean; naoSoubeInformar: boolean };
+    primeirasFrases: { meses: string; nao: boolean; naoSoubeInformar: boolean };
+    apontouParaFazerPedidos: { meses: string; nao: boolean; naoSoubeInformar: boolean };
     fazUsoDeGestos: SimNao;
     fazUsoDeGestosQuais: string;
     // Audição
@@ -154,6 +170,7 @@ export interface DesenvolvimentoFalaLinguagem {
     teveOtiteDeRepeticao: SimNao;
     otiteVezes: string;
     otitePeriodoMeses: string;
+    otiteFrequencia: string;
     fazOuFezUsoTuboVentilacao: SimNao;
     // Hábitos orais
     fazOuFezUsoObjetoOral: SimNao;
@@ -325,6 +342,7 @@ export interface AnamneseComportamento {
 export interface AnamneseFinalizacao {
     outrasInformacoesRelevantes: string;
     observacoesImpressoesTerapeuta: string;
+    expectativasFamilia: string;
 }
 
 // ============================================

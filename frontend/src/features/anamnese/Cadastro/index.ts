@@ -6,5 +6,8 @@
 // Pages
 export { default as AnamnesePage } from './pages/AnamnesePage';
 
+// Components
+export { CabecalhoAnamnese } from './components';
+
 // Types
 export * from './types/anamnese.types';
