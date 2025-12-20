@@ -2,7 +2,7 @@ import type { NextFunction, Request, Response } from 'express';
 import * as OcpService from './olp.service.js';
 import * as OcpNormalizer from './olp.normalizer.js';
 import { Prisma } from '@prisma/client';
-import type { CreateProgramPayload } from './types/olp.types.js';
+import type { CreateProgramPayload, OcpDetailDTO, SessionDTO } from './types/olp.types.js';
 import { listClientProgramsSchema, listSessionsByClientSchema } from '../../schemas/queries/listSessions.query.js';
 import { sessionObservations } from '../../utils/sessionObservations.js';
 
@@ -158,7 +158,7 @@ export async function getProgramById(req: Request, res: Response) {
         const ocp = await OcpService.getProgramById(programId);
         if (!ocp) return res.status(404).json({ success: false, message: 'OCP não encontrado' });
 
-        return res.status(201).json({ data: OcpNormalizer.mapOcpDetail(ocp) });
+        return res.status(201).json({ data: OcpNormalizer.mapOcpDetail(ocp as unknown as OcpDetailDTO) });
     } catch (error) {
         console.error(error);
         return res.status(400).json({ success: false, message: 'Erro programa não encontrado' });
@@ -256,12 +256,14 @@ export async function listSessionsByClient(req: Request, res: Response) {
         });
 
         return res.json({
-            items: OcpNormalizer.mapSessionList(result.items),
+            items: OcpNormalizer.mapSessionList(result.items as unknown as SessionDTO[]),
             total: result.total,
             totalPages: Math.ceil(result.total / pageSize),
         });
     } catch (error) {
-        console.error(error);
+        console.error('=== ERRO listSessionsByClient ===');
+        console.error('Error:', error);
+        console.error('Stack:', error instanceof Error ? error.stack : 'N/A');
         return res
             .status(500)
             .json({ success: false, message: 'Erro ao  buscar sessões do cliente' });

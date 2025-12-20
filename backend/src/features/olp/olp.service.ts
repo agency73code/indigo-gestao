@@ -413,7 +413,7 @@ export async function listSessionsByClient(filters: OcpType.ListSessionsFilters)
     if (stimulusId) {
         sessions.forEach((session) => {
             session.trials = session.trials.filter(
-                (t) => t.estimulosOcp.id === Number(stimulusId),
+                (t) => t.estimulosOcp?.id === Number(stimulusId),
             );
         });
     }

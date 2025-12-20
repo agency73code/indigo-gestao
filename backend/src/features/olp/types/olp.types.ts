@@ -274,7 +274,7 @@ export interface Session {
     programId: number;
     programa: string;
     objetivo: string;
-    prazoInicio: string;
+    prazoInicio: string | null;
     prazoFim: string | null;
     observacoes: string | null;
     area: string;
