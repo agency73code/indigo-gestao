@@ -21,23 +21,6 @@ function ageCalc(birthDate: string) {
 }
 
 export async function fetchProgram(programId: string): Promise<ProgramDetail> {
-    // 🎵 Se for um ID mockado, retornar dados do mock
-    if (programId.startsWith('mock-')) {
-        console.log('📦 [MOCK] Detectado ID mockado, carregando do mock:', programId);
-        const area = getCurrentAreaFromStorage();
-        
-        if (area === 'musicoterapia') {
-            const { mockMusiProgram } = await import('./variants/musicoterapia/mocks/programMock');
-            // mockMusiProgram é um objeto único, não um array
-            if (mockMusiProgram.id === programId) {
-                console.log('✅ [MOCK] Programa encontrado:', mockMusiProgram);
-                return mockMusiProgram as ProgramDetail;
-            }
-        }
-        
-        throw new Error(`Mock não encontrado para ID: ${programId}`);
-    }
-    
     const res = await fetchWithArea(`/api/ocp/programs/${programId}`, { 
         credentials: 'include' 
     });

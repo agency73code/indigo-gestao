@@ -26,6 +26,12 @@ import {
     fetchMusicSessionsForChart,
     mapMusicSessionToChartPoint,
 } from './services/reports/musictherapy/index.js';
+import { getOccupationalSessionData } from './services/reports/occupationaltherapy/getOccupationalSessionData.js';
+import { calcOcuppationalKpis } from './services/reports/occupationaltherapy/calcOccupationalKpis.js';
+import { calcOcuppationalPerformanceLine } from './services/reports/occupationaltherapy/performanceLine.js';
+import { averageOccupationalMinutesActivities } from './services/reports/occupationaltherapy/averageOccupationalMinutesActivities.js';
+import { prepareToAttentionActivities } from './services/reports/occupationaltherapy/prepareToAttentionActivities.js';
+import { prepareToAutonomyByCategory } from './services/reports/occupationaltherapy/prepareToAutonomyByCategory.js';
 
 export async function createProgram(req: Request, res: Response) {
     try {
@@ -397,6 +403,32 @@ function getQueryString(value: unknown): string | undefined {
     }
 
     return undefined;
+}
+
+// Occupational therapy reports
+export async function occupationalKpis(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { sessionIds, stimulusIds } = req.body;
+
+        if (!Array.isArray(sessionIds) || sessionIds.length === 0) {
+            return res.status(400).json({ error: "sessionIds é obrigatório e deve ser um array" });
+        }
+        
+        const sessions = await getOccupationalSessionData(sessionIds, stimulusIds || []);
+
+        const result = {
+            kpis: calcOcuppationalKpis(sessions),
+            performance: calcOcuppationalPerformanceLine(sessions),
+            activityDurationData: averageOccupationalMinutesActivities(sessions),
+            attentionActivitiesData: prepareToAttentionActivities(sessions),
+            autonomyByCategory: prepareToAutonomyByCategory(sessions),
+            sessionObservations: await sessionObservations(sessions),
+        };
+
+        return res.json(result);
+    } catch (error) {
+        next(error);
+    }
 }
 
 // Physiotherapy reports

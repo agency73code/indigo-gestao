@@ -93,19 +93,52 @@ export type AttentionStimuliResponse = {
   hasSufficientData: boolean; // Se tem tentativas suficientes (>= 5)
 };
 
+// Modelo de retorno terapia ocupacional
+interface OccupationalKpis {
+  desempenhou: number;
+  desempenhouComAjuda: number;
+  naoDesempenhou: number;
+  tempoTotal: number;
+  atividadesTotal: number;
+  sessoesTotal: number;
+}
+
+interface OccupationalDashboardResult {
+  kpis: OccupationalKpis;
+  performance: any[],
+  activityDurationData: any[],
+  attentionActivitiesData: any[],
+  autonomyByCategory: any[],
+}
+
+export const emptyOccupationalDashboardResult: OccupationalDashboardResult = {
+  kpis: {
+    desempenhou: 0,
+    desempenhouComAjuda: 0,
+    naoDesempenhou: 0,
+    tempoTotal: 0,
+    atividadesTotal: 0,
+    sessoesTotal: 0,
+  },
+  performance: [],
+  activityDurationData: [],
+  attentionActivitiesData: [],
+  autonomyByCategory: [],
+};
+
 // Modelo de retorno musicoterapia
-export interface MediaTendencia {
+interface MediaTendencia {
   media: number;
   tendencia: number;
   totalRegistros: number;
 }
 
-export interface CalculateAverageAndTrend {
+interface CalculateAverageAndTrend {
   participation: MediaTendencia;
   support: MediaTendencia;
 }
 
-export interface MusiKpis {
+interface MusiKpis {
   atividadesTotal: number;
   avgParticipacao: number;
   avgSuporte: number;
@@ -115,7 +148,7 @@ export interface MusiKpis {
   sessoesTotal: number;
 }
 
-export interface MusiDashboardResult {
+interface MusiDashboardResult {
   performance: any[];
   prepareMusiEvolutionData: any[];
   prepareMusiAttentionActivities: any[];
