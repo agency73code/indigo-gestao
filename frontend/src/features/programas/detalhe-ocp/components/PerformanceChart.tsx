@@ -39,7 +39,7 @@ interface PerformanceChartProps {
 const addErrorData = (data: SerieLinha[]) => {
     return data.map((item) => ({
         ...item,
-        erro: 100 - item.acerto,
+        erro: item.erro ?? 0,
     }));
 };
 

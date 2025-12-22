@@ -41,18 +41,33 @@ interface FisioPerformanceChartProps {
     className?: string;
 }
 
-// Função para adicionar o cálculo de "não desempenhou" aos dados
-// IMPORTANTE: Em Fisio não usamos "erro" - o paciente "não desempenhou" a atividade
-// Mapeamento dos dataKeys:
-// - acerto (dataKey backend) → Desempenhou (sem ajuda)
-// - independencia (dataKey backend) → Desempenhou com Ajuda
-// - erro (dataKey calculado) → Não Desempenhou = 100% - Desempenhou
+/**
+ * ATENÇÃO — MAPEAMENTO LEGADO CONSCIENTE
+ *
+ * O backend fornece:
+ * - ajuda = percentual de "Desempenhou com ajuda"
+ *
+ * Este gráfico legado utiliza o campo `independencia` para representar
+ * "Desempenhou com ajuda". Por esse motivo, o valor de `ajuda` é
+ * propositalmente atribuído a `independencia` aqui.
+ *
+ * Isso NÃO representa independência clínica.
+ * NÃO alterar este mapeamento sem revisar todos os gráficos dependentes.
+ *
+ * Este ajuste é intencional para manter compatibilidade visual com o frontend atual.
+ */
 const addErrorData = (data: SerieLinha[]) => {
     if (!Array.isArray(data)) return [];
-    return data.map((item) => ({
-        ...item,
-        erro: 100 - item.acerto, // "Não desempenhou" = 100% - "Desempenhou"
-    }));
+    return data.map((item) => {
+        const ajuda = item.ajuda ?? 0;
+        const erro = item.erro ?? 0;
+
+        return {
+            ...item,
+            independencia: ajuda,
+            erro,
+        };
+    });
 };
 
 export function FisioPerformanceChart({

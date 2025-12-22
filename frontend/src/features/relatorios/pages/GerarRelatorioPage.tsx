@@ -52,6 +52,7 @@ import {
 import { emptyMusiDashboardResult } from '@/features/programas/relatorio-geral';
 import { generateClinicalSummaryWithAI } from '../services/ai.service';
 import { AIDraftValidationBanner } from '../gerar-relatorio/components/AIDraftValidationBanner';
+import { MusiPerformanceChart } from '@/features/programas/variants/musicoterapia/components';
 
 export function GerarRelatorioPage() {
     const { user } = useAuth();
@@ -1199,7 +1200,7 @@ export function GerarRelatorioPage() {
                             <>
                                 {adaptedData.performanceLineData && (
                                     <section data-print-block data-print-wide>
-                                        <ToPerformanceChart 
+                                        <MusiPerformanceChart 
                                             data={adaptedData.performanceLineData} 
                                             loading={loadingCharts}
                                             title="Evolução do Desempenho"
