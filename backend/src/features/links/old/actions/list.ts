@@ -77,6 +77,15 @@ export async function getAllClients(userId: string, search?: string) {
                 },
                 orderBy: { id: 'asc' },
             },
+            arquivos: {
+                where: {
+                    tipo: 'fotoPerfil',
+                },
+                select: {
+                    arquivo_id: true,
+                },
+                take: 1,
+            },
         },
         orderBy: { nome: 'asc' },
     });
@@ -205,10 +214,20 @@ export async function getAllTherapists(userId: string, search?: string, _role?: 
                     },
                 },
             },
+            arquivos: {
+                where: {
+                    tipo: 'fotoPerfil',
+                },
+                select: {
+                    arquivo_id: true,
+                },
+                take: 1,
+            },
         },
         orderBy: { nome: 'asc' },
     });
-    return therapists;
+
+    return therapists
 }
 
 export async function getAllLinks(userId: string, filters?: LinkFilters) {
@@ -235,7 +254,7 @@ export async function getAllLinks(userId: string, filters?: LinkFilters) {
 
     const links = await prisma.terapeuta_cliente.findMany({
         where: finalWhere,
-        take: 10,
+        take: 50,
         orderBy,
         include: {
             terapeuta: {

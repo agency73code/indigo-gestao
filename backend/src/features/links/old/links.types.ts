@@ -31,6 +31,9 @@ export interface DBClient {
     status: string | null;
     cuidadores: DBCarregiver[];
     enderecos: DBClientAddress[];
+    arquivos?: {
+        arquivo_id: string | null;
+    }[];
 }
 
 export interface DBAreaAtuacao {
@@ -96,6 +99,9 @@ export interface DBTherapist {
     registro_profissional: DBProfessionalRegistration[];
     formacao: DBFormation | null;
     pessoa_juridica: DBLegalPerson | null;
+    arquivos?: {
+        arquivo_id: string | null;
+    }[];
 }
 
 export interface DBLink {

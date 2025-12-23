@@ -251,31 +251,16 @@ export async function getAllPatients(): Promise<Paciente[]> {
     }
 
     const clients = (await res.json()) as Paciente[];
+
+    const clientsWithViewFields = clients.map((p) => {
+      return {
+        ...p,
+        photoUrl: p.avatarUrl ?? null,
+        guardianName: p.responsavel?.nome ?? null,
+      };
+    });
     
-    const clientsWithAvatar = await Promise.all(
-      clients.map(async (p) => {
-        try {
-          const avatarRes = await fetch(`${import.meta.env.VITE_API_URL}/arquivos/getAvatar?ownerId=${p.id}&ownerType=cliente`, {
-            credentials: 'include',
-          });
-          const data = await avatarRes.json();
-          
-          // Mapear responsavel.nome para guardianName (compatibilidade com PatientSelector)
-          const guardianName = (p as any).responsavel?.nome || (p as any).guardianName || null;
-          
-          return { 
-            ...p, 
-            photoUrl: data.avatarUrl ?? null,
-            guardianName // Adicionar guardianName ao objeto
-          };
-        } catch {
-          const guardianName = (p as any).responsavel?.nome || (p as any).guardianName || null;
-          return { ...p, photoUrl: null, guardianName };
-        }
-      })
-    );
-    
-    return clientsWithAvatar;
+    return clientsWithViewFields;
   } catch (error) {
     console.error('Erro ao buscar clientes:', error);
     throw error;
@@ -300,21 +285,14 @@ export async function getAllTherapists(): Promise<Terapeuta[]> {
   
   const therapists = (await res.json()) as Terapeuta[];
 
-  const therapistsWithAvatar = await Promise.all(
-    therapists.map(async (t) => {
-      try {
-        const avatarRes = await fetch(`${import.meta.env.VITE_API_URL}/arquivos/getAvatar?ownerId=${t.id}&ownerType=terapeuta`, {
-          credentials: 'include',
-        });
-        const data = await avatarRes.json();
-        return { ...t, photoUrl: data.avatarUrl ?? null };
-      } catch {
-        return { ...t, photoUrl: null };
-      }
-    })
-  );
-  
-  return therapistsWithAvatar;
+  const therapistsWithViewFields = therapists.map((t) => {
+    return {
+      ...t,
+      photoUrl: t.avatarUrl ?? null,
+    };
+  });
+
+  return therapistsWithViewFields;
 }
 
 // ==================== FUNÇÕES AUXILIARES (FILTROS LOCAIS) ====================

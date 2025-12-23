@@ -16,9 +16,6 @@ import {
   mockSupervisionLinks,
 } from '../mocks/links.mock';
 
-// Simula delay de rede
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
 export async function searchTherapists(role: 'supervisor' | 'clinico' | 'all', search: string): Promise<Terapeuta[]> {
   try {
     const query = new URLSearchParams();
@@ -32,27 +29,8 @@ export async function searchTherapists(role: 'supervisor' | 'clinico' | 'all', s
     });
 
     if (!res.ok) throw new Error('Falha ao buscar terapeutas.');
-
-    const therapists = (await res.json()) as Terapeuta[];
-
-    const therapistsWithAvatar = await Promise.all(
-      therapists.map(async (t) => {
-        try {
-          const avatarRes = await fetch(`${import.meta.env.VITE_API_URL}/arquivos/getAvatar?ownerId=${t.id}&ownerType=terapeuta`, {
-            credentials: 'include',
-          });
-
-          if (!avatarRes.ok) return { ...t, avatarUrl: '' };
-
-          const data = await avatarRes.json();
-          return { ...t, avatarUrl: data.avatarUrl ?? '' };
-        } catch {
-          return { ...t, avatarUrl: '' };
-        }
-      })
-    );
-
-    return therapistsWithAvatar;
+    
+    return await res.json();
   } catch (err) {
     console.error('Erro ao buscar terapeutas:', err);
     return [];
@@ -76,26 +54,7 @@ export async function searchPatients(search: string): Promise<Paciente[]> {
 
     const clients = (await res.json()) as Paciente[];
 
-    // Adiciona avatar se existir
-    const clientsWithAvatar = await Promise.all(
-      clients.map(async (c) => {
-        try {
-          const avatarRes = await fetch(
-            `${import.meta.env.VITE_API_URL}/arquivos/getAvatar?ownerId=${c.id}&ownerType=cliente`,
-            { credentials: 'include' }
-          );
-
-          if (!avatarRes.ok) return { ...c, avatarUrl: '' };
-
-          const data = await avatarRes.json();
-          return { ...c, avatarUrl: data.avatarUrl ?? '' };
-        } catch {
-          return { ...c, avatarUrl: '' };
-        }
-      })
-    );
-
-    return clientsWithAvatar;
+    return clients;
   } catch (err) {
     console.error('Erro ao buscar clientes:', err);
     return [];
@@ -107,8 +66,6 @@ export async function searchPatients(search: string): Promise<Paciente[]> {
  * Regras: Apenas 1 responsible ativo por paciente
  */
 export async function createLink(input: CreateLinkInput): Promise<PatientTherapistLink> {
-  await delay(800);
-
   const res = await fetch('/api/links/createLink', {
     method: 'POST',
     credentials: 'include',
@@ -144,8 +101,6 @@ export async function createLink(input: CreateLinkInput): Promise<PatientTherapi
  * Atualiza vínculo existente
  */
 export async function updateLink(input: UpdateLinkInput): Promise<PatientTherapistLink> {
-  await delay(400);
-
   try {
     const res = await fetch('/api/links/updateLink', {
       method: 'PATCH',
@@ -187,8 +142,6 @@ export async function updateLink(input: UpdateLinkInput): Promise<PatientTherapi
  * O antigo responsável vira co-terapeuta
  */
 export async function transferResponsible(input: TransferResponsibleInput): Promise<void> {
-  await delay(800);
-
   try {
     const res = await fetch('/api/links/transferResponsible', {
       method: 'POST',
@@ -229,8 +182,6 @@ export async function transferResponsible(input: TransferResponsibleInput): Prom
  * Encerra vínculo (seta endDate e status='ended')
  */
 export async function endLink(id: string, endDate: string): Promise<void> {
-  await delay(500);
-
   try {
     const res = await fetch('/api/links/endLink', {
       method: 'POST',
@@ -271,8 +222,6 @@ export async function endLink(id: string, endDate: string): Promise<void> {
  * Arquiva vínculo (status='archived')
  */
 export async function archiveLink(id: string): Promise<void> {
-  await delay(400);
-
   try {
     const res = await fetch('/api/links/archiveLink', {
       method: 'POST',
@@ -309,8 +258,6 @@ export async function archiveLink(id: string): Promise<void> {
  * Reativa vínculo encerrado (remove endDate e volta status para 'active')
  */
 export async function reactivateLink(id: string, actuationArea?: string | null): Promise<void> {
-  await delay(400);
-
   try {
     const res = await fetch('/api/links/updateLink', {
       method: 'PATCH',
@@ -370,20 +317,7 @@ export async function getAllPatients(): Promise<Paciente[]> {
 
     const clients = (await res.json()) as Paciente[];
 
-    const clientsWithAvatar = await Promise.all(
-      clients.map(async (p) => {
-        try {
-          const avatarRes = await fetch(`${import.meta.env.VITE_API_URL}/arquivos/getAvatar?ownerId=${p.id}&ownerType=cliente`, {
-            credentials: 'include',
-          });
-          const data = await avatarRes.json();
-          return { ...p, avatarUrl: data.avatarUrl ?? '' };
-        } catch {
-          return { ...p, avatarUrl: '' };
-        }
-      })
-    );
-    return clientsWithAvatar;
+    return clients;
   } catch (error) {
     console.error('Erro ao buscar clientes:', error);
     return [];
@@ -409,21 +343,7 @@ export async function getAllTherapists(): Promise<Terapeuta[]> {
 
     const therapists = (await res.json()) as Terapeuta[];
 
-    const therapistsWithAvatar = await Promise.all(
-      therapists.map(async (t) => {
-        try {
-          const avatarRes = await fetch(`${import.meta.env.VITE_API_URL}/arquivos/getAvatar?ownerId=${t.id}&ownerType=terapeuta`, {
-            credentials: 'include',
-          });
-          const data = await avatarRes.json();
-          return { ...t, avatarUrl: data.avatarUrl ?? '' };
-        } catch {
-          return { ...t, avatarUrl: '' };
-        }
-      })
-    );
-
-    return therapistsWithAvatar;
+    return therapists;
   } catch (error) {
     console.error('Erro ao buscar terapeutas:', error);
     return [];
@@ -451,7 +371,6 @@ export async function getAllLinks(filters?: LinkFilters): Promise<PatientTherapi
   }
   
   const json = await res.json();
-  console.log({ 'terapeuta-cliente': json })
   return json as PatientTherapistLink[];
 }
 
@@ -485,8 +404,6 @@ export async function getAllSupervisionLinks(filters?: LinkFilters): Promise<The
  * Cria novo vínculo de supervisão [feito]
  */
 export async function createSupervisionLink(input: CreateSupervisionLinkInput): Promise<TherapistSupervisionLink> {
-  await delay(800);
-
   // Validações básicas (front)
   if (input.supervisorId === input.supervisedTherapistId) {
     throw new Error('Um terapeuta não pode supervisionar a si mesmo.');
@@ -534,8 +451,6 @@ export async function createSupervisionLink(input: CreateSupervisionLinkInput): 
  * Atualiza vínculo de supervisão existente [feito]
  */
 export async function updateSupervisionLink(input: UpdateSupervisionLinkInput): Promise<TherapistSupervisionLink> {
-  await delay(600);
-
   const res = await fetch('/api/links/updateSupervisionLink', {
     method: 'PATCH',
     credentials: 'include',
@@ -571,8 +486,6 @@ export async function updateSupervisionLink(input: UpdateSupervisionLinkInput): 
  * Encerra vínculo de supervisão (seta endDate e status='ended') [feito]
  */
 export async function endSupervisionLink(id: string, endDate: string): Promise<void> {
-  await delay(500);
-  
   const res = await fetch('/api/links/endSupervisionLink', {
     method: 'POST',
     credentials: 'include',
@@ -607,8 +520,6 @@ export async function endSupervisionLink(id: string, endDate: string): Promise<v
  * Arquiva vínculo de supervisão (status='archived') [feito]
  */
 export async function archiveSupervisionLink(id: string): Promise<void> {
-  await delay(400);
-  
   const res = await fetch('/api/links/archiveSupervisionLink', {
     method: 'POST',
     credentials: 'include',
@@ -643,8 +554,6 @@ export async function archiveSupervisionLink(id: string): Promise<void> {
  * Reativa vínculo de supervisão encerrado (remove endDate e volta status para 'active')
  */
 export async function reactivateSupervisionLink(id: string): Promise<void> {
-  await delay(400);
-  
   const res = await fetch('/api/links/updateSupervisionLink', {
     method: 'PATCH',
     credentials: 'include',

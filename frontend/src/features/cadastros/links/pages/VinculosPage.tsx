@@ -115,10 +115,10 @@ export default function VinculosPage() {
     try {
         setLoading(true);
         const [linksData, supervisionLinksData, patientsData, therapistsData] = await Promise.all([
-        getAllLinks(filters),
-        getAllSupervisionLinks(filters),
-        getAllPatients(),
-        getAllTherapists(),
+            getAllLinks(filters),
+            getAllSupervisionLinks(filters),
+            getAllPatients(),
+            getAllTherapists(),
         ]);
         setLinks(linksData);
         setSupervisionLinks(supervisionLinksData);

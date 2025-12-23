@@ -47,6 +47,7 @@ export function getAllClients(dto: LinkTypes.DBClient[]) {
     return dto.map((client) => {
         const primaryCaregiver = client.cuidadores?.[0] ?? null;
         const primaryAddress = client.enderecos?.[0]?.endereco ?? null;
+        const avatarFile = client.arquivos?.[0];
 
         return {
             id: client.id,
@@ -78,6 +79,9 @@ export function getAllClients(dto: LinkTypes.DBClient[]) {
                   }
                 : undefined,
             observacoes: '',
+            avatarUrl: avatarFile?.arquivo_id
+                ? `/api/arquivos/${encodeURIComponent(avatarFile.arquivo_id)}/view`
+                : null,
         };
     });
 }
@@ -85,9 +89,11 @@ export function getAllClients(dto: LinkTypes.DBClient[]) {
 export function getAllTherapists(dto: LinkTypes.DBTherapist[]) {
     return dto.map((therapist) => {
         const address = therapist.endereco;
+        
         const mainTraining = Array.isArray(therapist.formacao)
             ? (therapist.formacao[0] ?? null)
             : (therapist.formacao ?? null);
+        
         const professionalData =
             therapist.registro_profissional?.map((register) => ({
                 areaAtuacaoId: register.area_atuacao?.id ?? null,
@@ -96,6 +102,7 @@ export function getAllTherapists(dto: LinkTypes.DBTherapist[]) {
                 cargo: register.cargo?.nome ?? '',
                 numeroConselho: register.numero_conselho ?? undefined,
             })) ?? [];
+        
         const postgraduates =
             mainTraining?.pos_graduacao?.map((pg: LinkTypes.DBPostgraduate) => ({
                 tipo: normalizePostgraduateType(pg.tipo),
@@ -104,6 +111,8 @@ export function getAllTherapists(dto: LinkTypes.DBTherapist[]) {
                 conclusao: pg.conclusao ?? '',
                 comprovanteUrl: null,
             })) ?? [];
+
+        const avatarFile = therapist.arquivos?.[0];
 
         return {
             id: therapist.id,
@@ -157,7 +166,9 @@ export function getAllTherapists(dto: LinkTypes.DBTherapist[]) {
                       anoFormatura: '',
                       posGraduacoes: postgraduates,
                   },
-            arquivos: {},
+            avatarUrl: avatarFile?.arquivo_id
+                ? `/api/arquivos/${encodeURIComponent(avatarFile.arquivo_id)}/view`
+                : null,
             cnpj: therapist.pessoa_juridica
                 ? {
                       numero: therapist.pessoa_juridica.cnpj ?? '',

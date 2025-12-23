@@ -392,7 +392,7 @@ export function GerarRelatorioPage() {
                     setSessionObservations(report.sessionObservations ?? []);
 
                     // Carregar prazo do programa
-                    const prazoProgramaData = await fetchPrazoPrograma(filtersWithArea); // tenho que analisar esse 
+                    const prazoProgramaData = await fetchPrazoPrograma(filtersWithArea);
                     setPrazoPrograma(prazoProgramaData);
 
                     setAdaptedData({
@@ -449,7 +449,7 @@ export function GerarRelatorioPage() {
             setKpis(kpisData);
             setLoadingKpis(false);
             
-            // TODO: Arrumar isso aqui que ta sinistro
+            // TODO: Arrumar isso aqui que ta sinistro (kkkkkkkkkkkkkkkkkkkkkkk)
 
             // Carregar sessões para extrair observações (modelo Fono)
             setLoadingObservations(true);

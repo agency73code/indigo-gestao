@@ -86,6 +86,8 @@ export interface Terapeuta {
             estado: string;
         };
     };
+
+    avatarUrl?: string;
 }
 
 export interface Paciente {
@@ -111,6 +113,7 @@ export interface Paciente {
         parentesco: string;
     };
     observacoes?: string;
+    avatarUrl?: string;
 }
 
 export interface Cuidador {
