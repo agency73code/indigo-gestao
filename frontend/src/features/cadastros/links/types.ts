@@ -1,8 +1,22 @@
 // IMPORTS: pegue do types central do projeto (não duplique)
-import type { Paciente, Terapeuta, CadastroFormProps } from '../types/cadastros.types';
+import type { Terapeuta, CadastroFormProps } from '../types/cadastros.types';
+
+export interface ClientOption {
+  id: string;
+  nome: string;
+  avatarUrl: string | null;
+}
+
+export interface ClientListItem {
+  id: string;
+  nome: string;
+  avatarUrl: string | null;
+  dataNascimento: string | null;
+  responsavelNome?: string | null;
+}
 
 // Derivar IDs seguros a partir dos types fornecidos
-export type PatientId = NonNullable<Paciente['id']>;
+export type PatientId = string;
 export type TherapistId = NonNullable<Terapeuta['id']>;
 
 // Domínio do vínculo
@@ -107,7 +121,7 @@ export interface LinkFilters {
 
 // Estruturas de agrupamento para consolidação
 export interface PatientWithLinks {
-  patient: Paciente;
+  patient: ClientListItem;
   links: PatientTherapistLink[];
 }
 
@@ -151,7 +165,7 @@ export interface LinkFiltersProps {
 export interface LinkListProps {
   links: PatientTherapistLink[];
   supervisionLinks: TherapistSupervisionLink[];
-  patients: Paciente[];
+  patients: ClientListItem[];
   therapists: Terapeuta[];
   filters: LinkFilters;
   loading?: boolean;
@@ -185,7 +199,7 @@ export interface LinkCardProps {
   // Modo de visualização
   viewBy: 'patient' | 'therapist' | 'supervision';
   // Listas para lookup de dados
-  patients: Paciente[];
+  patients: ClientListItem[];
   therapists: Terapeuta[];
   // Ações individuais
   onEdit: (link: PatientTherapistLink) => void;
@@ -215,7 +229,7 @@ export interface LinkFormModalProps {
   onClose: () => void;
   onSubmit: (data: CreateLinkInput | UpdateLinkInput) => void;
   initialData?: PatientTherapistLink | null;
-  patients: Paciente[];
+  patients: ClientListItem[];
   therapists: Terapeuta[];
   loading?: boolean;
 }
@@ -225,7 +239,7 @@ export interface TransferResponsibleDialogProps {
   onClose: () => void;
   onConfirm: (data: TransferResponsibleInput) => void;
   link: PatientTherapistLink | null;
-  patient?: Paciente;
+  patient?: ClientListItem;
   therapist?: Terapeuta;
   therapists: Terapeuta[];
   loading?: boolean;
@@ -278,4 +292,4 @@ export type TerapeutaAvatar = Terapeuta & {
 };
 
 // Re-export necessários
-export type { Paciente, Terapeuta, CadastroFormProps };
+export type { Terapeuta, CadastroFormProps };

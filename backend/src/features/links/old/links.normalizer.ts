@@ -43,45 +43,44 @@ export function normalizeLink(link: LinkTypes.DBLink) {
     };
 }
 
-export function getAllClients(dto: LinkTypes.DBClient[]) {
+export function normalizeClientOptions(dto: LinkTypes.DBClientOption[]): LinkTypes.ClientOptionDTO[] {
     return dto.map((client) => {
-        const primaryCaregiver = client.cuidadores?.[0] ?? null;
-        const primaryAddress = client.enderecos?.[0]?.endereco ?? null;
         const avatarFile = client.arquivos?.[0];
 
         return {
             id: client.id,
             nome: client.nome ?? '',
-            email: client.emailContato ?? '',
-            telefone: primaryCaregiver?.telefone ?? '',
-            dataNascimento: client.dataNascimento
-                ? client.dataNascimento.toISOString().split('T')[0]
-                : '',
-            cpf: client.cpf ?? '',
-            endereco: primaryAddress
-                ? {
-                      cep: primaryAddress.cep ?? '',
-                      rua: primaryAddress.rua ?? '',
-                      numero: primaryAddress.numero ?? '',
-                      complemento: primaryAddress.complemento ?? '',
-                      bairro: primaryAddress.bairro ?? '',
-                      cidade: primaryAddress.cidade ?? '',
-                      estado: primaryAddress.uf ?? '',
-                  }
-                : { ...EMPTY_ADDRESS },
-            responsavel: primaryCaregiver
-                ? {
-                      nome: primaryCaregiver.nome ?? '',
-                      telefone: primaryCaregiver.telefone ?? '',
-                      email: primaryCaregiver.email ?? '',
-                      parentesco:
-                          primaryCaregiver.descricaoRelacao ?? primaryCaregiver.relacao ?? '',
-                  }
-                : undefined,
-            observacoes: '',
             avatarUrl: avatarFile?.arquivo_id
                 ? `/api/arquivos/${encodeURIComponent(avatarFile.arquivo_id)}/view`
                 : null,
+        };
+    });
+}
+
+export function normalizeClientList(
+    dto: Array<{
+        id: string;
+        nome: string | null;
+        dataNascimento: Date | null;
+        cuidadores?: Array <{ nome: string | null }> | null;
+        arquivos?: Array<{ arquivo_id: string | null }> | null;
+    }>,
+    includeResponsavel: boolean,
+): LinkTypes.ClientListDTO[] {
+    return dto.map((client) => {
+        const avatarFile = client.arquivos?.[0];
+        const caregiver = includeResponsavel ? client.cuidadores?.[0] ?? null : null;
+
+        return {
+            id: client.id,
+            nome: client.nome ?? 'Cliente sem nome',
+            dataNascimento: client.dataNascimento
+                ? client.dataNascimento.toISOString().split('T')[0]
+                : null,
+            avatarUrl: avatarFile?.arquivo_id
+                ? `/api/arquivos/${encodeURIComponent(avatarFile.arquivo_id)}/view`
+                : null,
+            ...(includeResponsavel ? { responsavelNome: caregiver?.nome ?? null }: {}),
         };
     });
 }

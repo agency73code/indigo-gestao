@@ -1,5 +1,6 @@
 import type {
-  Paciente,
+  ClientListItem,
+  ClientOption,
   Terapeuta,
   PatientTherapistLink,
   CreateLinkInput,
@@ -37,12 +38,12 @@ export async function searchTherapists(role: 'supervisor' | 'clinico' | 'all', s
   }
 }
 
-export async function searchPatients(search: string): Promise<Paciente[]> {
+export async function searchPatients(search: string): Promise<ClientOption[]> {
   try {
     const query = new URLSearchParams();
     if (search.trim()) query.set('search', search.trim());
 
-    const res = await fetch(`/api/links/getAllClients?${query.toString()}`, {
+    const res = await fetch(`/api/links/clientOptions?${query.toString()}`, {
       method: 'GET',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
@@ -52,7 +53,7 @@ export async function searchPatients(search: string): Promise<Paciente[]> {
       throw new Error('Falha ao buscar clientes.');
     }
 
-    const clients = (await res.json()) as Paciente[];
+    const clients = (await res.json()) as ClientOption[];
 
     return clients;
   } catch (err) {
@@ -301,9 +302,9 @@ export async function reactivateLink(id: string, actuationArea?: string | null):
 /**
  * Busca todos os pacientes (para formulários)
  */
-export async function getAllPatients(): Promise<Paciente[]> {
+export async function getAllPatients(): Promise<ClientListItem[]> {
   try {
-    const res = await fetch('/api/links/getAllClients', {
+    const res = await fetch('/api/links/clients', {
       method: 'GET',
       credentials: 'include',
       headers: {
@@ -315,7 +316,7 @@ export async function getAllPatients(): Promise<Paciente[]> {
       throw new Error('Falha ao carregar clientes');
     }
 
-    const clients = (await res.json()) as Paciente[];
+    const clients = (await res.json()) as ClientListItem[];
 
     return clients;
   } catch (error) {

@@ -26,7 +26,7 @@ import type {
     UpdateLinkInput,
     CreateSupervisionLinkInput,
     UpdateSupervisionLinkInput,
-    Paciente,
+    ClientListItem,
     Terapeuta,
     TransferResponsibleInput,
 } from '../types';
@@ -54,7 +54,7 @@ export default function VinculosPage() {
     const canCreateLinks = ability.can('create', 'Vinculos');
     const [links, setLinks] = useState<PatientTherapistLink[]>([]);
     const [supervisionLinks, setSupervisionLinks] = useState<TherapistSupervisionLink[]>([]);
-    const [patients, setPatients] = useState<Paciente[]>([]);
+    const [patients, setPatients] = useState<ClientListItem[]>([]);
     const [therapists, setTherapists] = useState<Terapeuta[]>([]);
     const [loading, setLoading] = useState(true);
     

@@ -65,8 +65,12 @@ function getTherapistRole(therapist: any): string | null {
 }
 
 // Helper para calcular idade a partir da data de nascimento
-function calculateAge(birthDate: string): number {
+function calculateAge(birthDate?: string | null): number | null {
+    if (!birthDate) return null;
+
     const birth = new Date(birthDate);
+    if (Number.isNaN(birth.getTime())) return null;
+
     const today = new Date();
     let age = today.getFullYear() - birth.getFullYear();
     const monthDiff = today.getMonth() - birth.getMonth();
@@ -242,7 +246,9 @@ function renderPatientCard(
                             <CardTitleHub className="text-base truncate">
                                 {patient.nome}
                             </CardTitleHub>
-                            <p className="text-sm text-muted-foreground">{age} anos</p>
+                            {age !== null && (
+                                <p className="text-sm text-muted-foreground">{age} anos</p>
+                            )}
                         </div>
                     </div>
 

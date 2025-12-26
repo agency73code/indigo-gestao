@@ -238,7 +238,7 @@ export async function fetchReportData(filters: ReportFiltersApplied): Promise<Re
  */
 export async function getAllPatients(): Promise<Paciente[]> {
   try {
-    const res = await fetch('/api/links/getAllClients', {
+    const res = await fetch('/api/links/clients?includeResponsavel=true', {
       method: 'GET',
       credentials: 'include',
       headers: {
@@ -256,7 +256,6 @@ export async function getAllPatients(): Promise<Paciente[]> {
       return {
         ...p,
         photoUrl: p.avatarUrl ?? null,
-        guardianName: p.responsavel?.nome ?? null,
       };
     });
     

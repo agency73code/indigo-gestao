@@ -46,8 +46,6 @@ export function VisualizarRelatorioPage() {
   const [programaNome, setProgramaNome] = useState<string | null>(null);
   const [estimuloNome, setEstimuloNome] = useState<string | null>(null);
 
-  console.log('🎯 VisualizarRelatorioPage montado - ID:', id);
-
   useEffect(() => {
     console.log('🔄 useEffect loadReport - ID:', id);
     loadReport();
@@ -97,7 +95,7 @@ export function VisualizarRelatorioPage() {
             const programa = programas.find((p: any) => String(p.id) === String(reportData.filters.programaId));
             setProgramaNome(programa?.nome || null);
           }
-        } catch (e) {
+        } catch (_e) {
           console.warn('Não foi possível buscar nome do programa');
         }
       }
@@ -111,7 +109,7 @@ export function VisualizarRelatorioPage() {
             const estimulo = estimulos.find((e: any) => String(e.id) === String(reportData.filters.estimuloId));
             setEstimuloNome(estimulo?.nome || null);
           }
-        } catch (e) {
+        } catch (_e) {
           console.warn('Não foi possível buscar nome do estímulo');
         }
       }
@@ -153,8 +151,12 @@ export function VisualizarRelatorioPage() {
       .toUpperCase();
   };
 
-  const calculateAge = (birthDate: string): number => {
+  const calculateAge = (birthDate?: string | null): number | null => {
+    if (!birthDate) return null;
+
     const birth = new Date(birthDate);
+    if (Number.isNaN(birth.getTime())) return null;
+
     const today = new Date();
     let age = today.getFullYear() - birth.getFullYear();
     const monthDiff = today.getMonth() - birth.getMonth();
@@ -274,15 +276,15 @@ export function VisualizarRelatorioPage() {
                         {patient.nome}
                       </h2>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        {patient.dataNascimento && (
-                          <span>{calculateAge(patient.dataNascimento)} anos</span>
+                        {patientAge !== null && patientAge !== undefined && (
+                          <span>{patientAge} anos</span>
                         )}
-                        {patient.responsavel?.nome && (
+                        {patient.responsavelNome && (
                           <>
                             <span>•</span>
                             <span className="flex items-center gap-1">
                               <Users className="h-3.5 w-3.5" />
-                              {patient.responsavel.nome}
+                              {patient.responsavelNome}
                             </span>
                           </>
                         )}

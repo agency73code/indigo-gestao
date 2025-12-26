@@ -203,10 +203,9 @@ export function RelatoriosPage() {
     if (patient) {
       return {
         nome: patient.nome || 'Paciente',
-        cpf: patient.cpf,
         photoUrl: (patient as any)?.photoUrl,
         dataNascimento: patient.dataNascimento,
-        responsavel: (patient as any)?.guardianName || patient.responsavel?.nome,
+        responsavel: patient.responsavelNome,
       };
     }
 
@@ -214,10 +213,9 @@ export function RelatoriosPage() {
     if (firstReport?.patient) {
       return {
         nome: firstReport.patient.nome || 'Paciente',
-        cpf: firstReport.patient.cpf,
         photoUrl: undefined, // Backend não retorna foto no relatório
         dataNascimento: firstReport.patient.dataNascimento,
-        responsavel: (firstReport.patient as any)?.guardianName || firstReport.patient.responsavel?.nome,
+        responsavel: (firstReport.patient as any)?.guardianName || (firstReport.patient as any)?.responsavelNome,
       };
     }
 
@@ -230,7 +228,6 @@ export function RelatoriosPage() {
         if (possibleName && possibleName.length > 2) {
           return {
             nome: possibleName,
-            cpf: undefined,
             photoUrl: undefined,
             dataNascimento: undefined,
             responsavel: undefined,
@@ -242,7 +239,6 @@ export function RelatoriosPage() {
     // 4º: Fallback final
     return {
       nome: 'Paciente',
-      cpf: undefined,
       photoUrl: undefined,
       dataNascimento: undefined,
       responsavel: undefined,

@@ -15,8 +15,14 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { DateField } from '@/common/components/layout/DateField';
 import { Combobox } from '@/ui/combobox';
-import type { CreateLinkInput, UpdateLinkInput, LinkFormModalProps } from '../types';
-import type { Paciente, Terapeuta } from '../../types/cadastros.types';
+import type {
+    CreateLinkInput,
+    UpdateLinkInput,
+    LinkFormModalProps,
+    ClientListItem,
+    ClientOption,
+} from '../types';
+import type { Terapeuta } from '../../types/cadastros.types';
 import { isSupervisorRole } from '../../constants/access-levels';
 import { searchPatients, searchTherapists } from '../services/links.service';
 
@@ -82,9 +88,9 @@ export default function LinkFormModal({
     // Estados para busca de pacientes/terapeutas
     const [patientSearch, setPatientSearch] = useState('');
     const [therapistSearch, setTherapistSearch] = useState('');
-    const [patientResults, setPatientResults] = useState<Paciente[]>([]);
+    const [patientResults, setPatientResults] = useState<ClientOption[]>([]);
     const [therapistResults, setTherapistResults] = useState<Terapeuta[]>([]);
-    const [selectedPatient, setSelectedPatient] = useState<Paciente | null>(null);
+    const [selectedPatient, setSelectedPatient] = useState<ClientListItem | ClientOption | null>(null);
     const [selectedTherapist, setSelectedTherapist] = useState<Terapeuta | null>(null);
     const [showPatientSearch, setShowPatientSearch] = useState(false);
     const [showTherapistSearch, setShowTherapistSearch] = useState(false);
@@ -291,7 +297,7 @@ export default function LinkFormModal({
         }
     };
 
-    const handlePatientSelect = (patient: Paciente) => {
+    const handlePatientSelect = (patient: ClientListItem | ClientOption) => {
         setSelectedPatient(patient);
         setPatientId(patient.id || '');
         setPatientSearch(patient.nome);

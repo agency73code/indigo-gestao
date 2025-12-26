@@ -190,3 +190,23 @@ export type LinkFilters = {
     orderBy?: 'recent' | 'oldest';
     q?: string;
 };
+
+export interface DBClientOption {
+    id: string;
+    nome: string | null;
+    arquivos?: Array<{ arquivo_id: string | null }> | null;
+}
+
+export interface ClientOptionDTO {
+    id: string;
+    nome: string;
+    avatarUrl: string | null;
+}
+
+export interface ClientListDTO {
+    id: string;
+    nome: string;
+    avatarUrl: string | null;
+    dataNascimento: string | null | undefined;
+    responsavelNome?: string | null;
+}
