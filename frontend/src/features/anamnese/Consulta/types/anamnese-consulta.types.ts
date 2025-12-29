@@ -218,6 +218,7 @@ export interface FalaLinguagemDetalhe {
     teveOtiteDeRepeticao: SimNao;
     otiteDetalhes: string;
     fazOuFezUsoTuboVentilacao: SimNao;
+    tuboVentilacaoObservacao: string;
     fazOuFezUsoObjetoOral: SimNao;
     objetoOralEspecificar: string;
     usaMamadeira: SimNao;
@@ -278,8 +279,11 @@ export interface AlimentacaoDetalhe {
     passaDiaInteiroSemComer: SimNao;
     apresentaRituaisParaAlimentar: SimNao;
     estaAbaixoOuAcimaPeso: SimNao;
+    estaAbaixoOuAcimaPesoDescricao: string;
     temHistoricoAnemia: SimNao;
+    temHistoricoAnemiaDescricao: string;
     rotinaAlimentarEProblemaFamilia: SimNao;
+    rotinaAlimentarEProblemaFamiliaDescricao: string;
     observacoes: string;
 }
 
@@ -293,14 +297,31 @@ export interface InteracaoSocialDetalhe {
 }
 
 export interface VidaEscolarDetalhe {
-    frequentaEscola: SimNao;
-    nomeEscola: string;
-    serie: string;
+    // Dados da escola
+    escola: string;
+    ano: string;
     periodo: string;
-    temAcompanhante: SimNao;
+    direcao: string;
+    coordenacao: string;
+    professoraPrincipal: string;
+    professoraAssistente: string;
+    // Campos Sim/Não
+    frequentaEscolaRegular: SimNao;
+    frequentaEscolaEspecial: SimNao;
+    acompanhaTurmaDemandasPedagogicas: SimNao;
+    segueRegrasRotinaSalaAula: SimNao;
+    necessitaApoioAT: SimNao;
+    necessitaAdaptacaoMateriais: SimNao;
+    necessitaAdaptacaoCurricular: SimNao;
+    houveReprovacaoRetencao: SimNao;
+    escolaPossuiEquipeInclusao: SimNao;
+    haIndicativoDeficienciaIntelectual: SimNao;
+    escolaApresentaQueixaComportamental: SimNao;
+    // Campos descritivos
     adaptacaoEscolar: string;
     dificuldadesEscolares: string;
     relacionamentoComColegas: string;
+    observacoes: string;
 }
 
 // Item 19 - Estereotipias, Tiques, Rituais e Rotinas

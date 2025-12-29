@@ -134,6 +134,7 @@ export interface AtividadeRotina {
     id: string;
     atividade: string;
     horario: string; // Horário de realização (obrigatório)
+    responsavel: string; // Responsável pela atividade
     frequencia: string;
     observacao: string;
 }
@@ -186,6 +187,7 @@ export interface DesenvolvimentoFalaLinguagem {
     otitePeriodoMeses: string;
     otiteFrequencia: string;
     fazOuFezUsoTuboVentilacao: SimNao;
+    tuboVentilacaoObservacao: string;
     // Hábitos orais
     fazOuFezUsoObjetoOral: SimNao;
     objetoOralEspecificar: string;
@@ -253,8 +255,11 @@ export interface Alimentacao {
     passaDiaInteiroSemComer: SimNao;
     apresentaRituaisParaAlimentar: SimNao;
     estaAbaixoOuAcimaPeso: SimNao;
+    estaAbaixoOuAcimaPesoDescricao: string;
     temHistoricoAnemia: SimNao;
+    temHistoricoAnemiaDescricao: string;
     rotinaAlimentarEProblemaFamilia: SimNao;
+    rotinaAlimentarEProblemaFamiliaDescricao: string;
     observacoes: string;
 }
 
@@ -305,6 +310,10 @@ export interface DesenvolvimentoAcademico {
     escolaPossuiEquipeInclusao: SimNao;
     haIndicativoDeficienciaIntelectual: SimNao;
     escolaApresentaQueixaComportamental: SimNao;
+    // Campos descritivos
+    adaptacaoEscolar: string;
+    dificuldadesEscolares: string;
+    relacionamentoComColegas: string;
     observacoes: string;
 }
 

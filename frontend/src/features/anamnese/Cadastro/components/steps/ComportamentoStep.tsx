@@ -147,7 +147,7 @@ export default function ComportamentoStep({ data, onChange }: ComportamentoStepP
 
                 <AutoExpandTextarea
                     label="Observações e descrição das topografias mais relevantes"
-                    placeholder="Ex: Como ocorrem esses comportamentos? Em quais situações se manifestam? Com que frequência?"
+                    placeholder="Descreva outras estereotipias não listadas acima, como ocorrem esses comportamentos, em quais situações se manifestam e com que frequência..."
                     value={data.estereotipiasRituais?.observacoesTopografias ?? ''}
                     onChange={(value) => updateEstereotipiasRituais('observacoesTopografias', value)}
                 />

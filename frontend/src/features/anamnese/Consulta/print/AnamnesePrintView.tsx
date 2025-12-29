@@ -6,7 +6,7 @@
 import { forwardRef } from 'react';
 import indigoLogo from '@/assets/logos/indigo.svg';
 import type { AnamneseDetalhe, MarcoDesenvolvimento } from '../types/anamnese-consulta.types';
-import type { SimNao, SimNaoComAjuda } from '../../Cadastro/types/anamnese.types';
+import type { SimNao } from '../../Cadastro/types/anamnese.types';
 
 // Dados da clínica para o rodapé
 const CLINIC_INFO = {
@@ -252,7 +252,7 @@ export const AnamnesePrintView = forwardRef<HTMLDivElement, AnamnesePrintViewPro
                     <TextBlock label="3. Há Suspeita de Outra Condição Associada?" value={qd.suspeitaCondicaoAssociada} />
                     
                     <ListSection
-                        title="4. Especialidades Consultadas"
+                        title="4. Médicos Consultados até o Momento"
                         items={qd.especialidadesConsultadas}
                         renderItem={(item) => (
                             <div className="grid grid-cols-2 gap-2">
@@ -291,7 +291,7 @@ export const AnamnesePrintView = forwardRef<HTMLDivElement, AnamnesePrintViewPro
                     />
 
                     <ListSection
-                        title="7. Terapias Prévias"
+                        title="7. Terapias curso ou já realizadas"
                         items={qd.terapiasPrevias}
                         renderItem={(item) => (
                             <div className="grid grid-cols-2 gap-2">
@@ -375,6 +375,7 @@ export const AnamnesePrintView = forwardRef<HTMLDivElement, AnamnesePrintViewPro
                         {dev.falaLinguagem.fazUsoDeGestos === 'sim' && (
                             <Field label="Quais gestos" value={dev.falaLinguagem.fazUsoDeGestosQuais} />
                         )}
+                        <TextBlock label="Comunicação Atual" value={dev.falaLinguagem.comunicacaoAtual} />
                         <FieldGrid>
                             <Field label="Audição (percepção do responsável)" value={dev.falaLinguagem.audicao === 'boa' ? 'Boa' : dev.falaLinguagem.audicao === 'ruim' ? 'Ruim' : dev.falaLinguagem.audicao} />
                             <Field label="Teve otite de repetição" value={formatSimNao(dev.falaLinguagem.teveOtiteDeRepeticao)} />
@@ -383,6 +384,9 @@ export const AnamnesePrintView = forwardRef<HTMLDivElement, AnamnesePrintViewPro
                             <Field label="Detalhes da otite" value={dev.falaLinguagem.otiteDetalhes} />
                         )}
                         <Field label="Faz ou fez uso de tubo de ventilação" value={formatSimNao(dev.falaLinguagem.fazOuFezUsoTuboVentilacao)} />
+                        {dev.falaLinguagem.fazOuFezUsoTuboVentilacao === 'sim' && dev.falaLinguagem.tuboVentilacaoObservacao && (
+                            <Field label="Observação do tubo de ventilação" value={dev.falaLinguagem.tuboVentilacaoObservacao} />
+                        )}
                         
                         <div className="mt-2 pt-2 border-t">
                             <span className="text-sm font-medium text-gray-700">Hábitos Orais:</span>
@@ -395,7 +399,6 @@ export const AnamnesePrintView = forwardRef<HTMLDivElement, AnamnesePrintViewPro
                         {dev.falaLinguagem.usaMamadeira === 'sim' && (
                             <Field label="Detalhes da mamadeira" value={dev.falaLinguagem.mamadeiraDetalhes} />
                         )}
-                        <TextBlock label="Comunicação Atual" value={dev.falaLinguagem.comunicacaoAtual} />
                     </SubSection>
                 </Section>
 
@@ -455,9 +458,22 @@ export const AnamnesePrintView = forwardRef<HTMLDivElement, AnamnesePrintViewPro
                             <Field label="Passa o dia inteiro sem comer" value={formatSimNao(avd.alimentacao.passaDiaInteiroSemComer)} />
                             <Field label="Apresenta rituais para se alimentar" value={formatSimNao(avd.alimentacao.apresentaRituaisParaAlimentar)} />
                             <Field label="Está abaixo ou acima do peso" value={formatSimNao(avd.alimentacao.estaAbaixoOuAcimaPeso)} />
+                        </FieldGrid>
+                        {avd.alimentacao.estaAbaixoOuAcimaPeso === 'sim' && avd.alimentacao.estaAbaixoOuAcimaPesoDescricao && (
+                            <Field label="Peso/Altura e acompanhamento" value={avd.alimentacao.estaAbaixoOuAcimaPesoDescricao} />
+                        )}
+                        <FieldGrid>
                             <Field label="Tem histórico de anemia" value={formatSimNao(avd.alimentacao.temHistoricoAnemia)} />
+                        </FieldGrid>
+                        {avd.alimentacao.temHistoricoAnemia === 'sim' && avd.alimentacao.temHistoricoAnemiaDescricao && (
+                            <Field label="Histórico de anemia - desde quando" value={avd.alimentacao.temHistoricoAnemiaDescricao} />
+                        )}
+                        <FieldGrid>
                             <Field label="Rotina alimentar é problema para a família" value={formatSimNao(avd.alimentacao.rotinaAlimentarEProblemaFamilia)} />
                         </FieldGrid>
+                        {avd.alimentacao.rotinaAlimentarEProblemaFamilia === 'sim' && avd.alimentacao.rotinaAlimentarEProblemaFamiliaDescricao && (
+                            <Field label="Maiores dificuldades" value={avd.alimentacao.rotinaAlimentarEProblemaFamiliaDescricao} />
+                        )}
                         {avd.alimentacao.observacoes && <TextBlock label="Observações" value={avd.alimentacao.observacoes} />}
                     </SubSection>
                 </Section>
@@ -475,24 +491,45 @@ export const AnamnesePrintView = forwardRef<HTMLDivElement, AnamnesePrintViewPro
                         </FieldGrid>
                     </SubSection>
 
-                    <SubSection title="18. Vida Escolar">
-                        <Field label="Frequenta escola" value={formatSimNao(sa.vidaEscolar.frequentaEscola)} />
-                        {sa.vidaEscolar.frequentaEscola === 'sim' && (
-                            <>
-                                <Field label="Nome da escola" value={sa.vidaEscolar.nomeEscola} />
-                                <Field label="Série" value={sa.vidaEscolar.serie} />
-                                <FieldGrid>
-                                    <Field label="Período" value={sa.vidaEscolar.periodo} />
-                                    <Field label="Tem acompanhante" value={formatSimNao(sa.vidaEscolar.temAcompanhante)} />
-                                </FieldGrid>
-                            </>
+                    <SubSection title="18. Desenvolvimento Acadêmico">
+                        {/* Dados da escola */}
+                        <Field label="Escola" value={sa.vidaEscolar.escola} />
+                        <Field label="Ano/Série" value={sa.vidaEscolar.ano} />
+                        <Field label="Período" value={sa.vidaEscolar.periodo} />
+                        <Field label="Direção" value={sa.vidaEscolar.direcao} />
+                        <Field label="Coordenação" value={sa.vidaEscolar.coordenacao} />
+                        <FieldGrid>
+                            <Field label="Professora Principal" value={sa.vidaEscolar.professoraPrincipal} />
+                            <Field label="Professora Assistente" value={sa.vidaEscolar.professoraAssistente} />
+                        </FieldGrid>
+
+                        {/* Campos Sim/Não */}
+                        <FieldGrid>
+                            <Field label="Frequenta escola regular" value={formatSimNao(sa.vidaEscolar.frequentaEscolaRegular)} />
+                            <Field label="Frequenta escola especial" value={formatSimNao(sa.vidaEscolar.frequentaEscolaEspecial)} />
+                            <Field label="Acompanha a turma (demandas pedagógicas)" value={formatSimNao(sa.vidaEscolar.acompanhaTurmaDemandasPedagogicas)} />
+                            <Field label="Segue regras e rotinas de sala" value={formatSimNao(sa.vidaEscolar.segueRegrasRotinaSalaAula)} />
+                            <Field label="Necessita apoio de AT" value={formatSimNao(sa.vidaEscolar.necessitaApoioAT)} />
+                            <Field label="Necessita adaptação de materiais" value={formatSimNao(sa.vidaEscolar.necessitaAdaptacaoMateriais)} />
+                            <Field label="Necessita adaptação curricular" value={formatSimNao(sa.vidaEscolar.necessitaAdaptacaoCurricular)} />
+                            <Field label="Houve reprovação/retenção" value={formatSimNao(sa.vidaEscolar.houveReprovacaoRetencao)} />
+                            <Field label="Escola possui equipe de inclusão" value={formatSimNao(sa.vidaEscolar.escolaPossuiEquipeInclusao)} />
+                            <Field label="Indicativo de deficiência intelectual" value={formatSimNao(sa.vidaEscolar.haIndicativoDeficienciaIntelectual)} />
+                            <Field label="Escola apresenta queixa comportamental" value={formatSimNao(sa.vidaEscolar.escolaApresentaQueixaComportamental)} />
+                        </FieldGrid>
+
+                        {/* Campos descritivos */}
+                        {sa.vidaEscolar.adaptacaoEscolar && (
+                            <TextBlock label="Adaptação Escolar" value={sa.vidaEscolar.adaptacaoEscolar} />
                         )}
-                        {sa.vidaEscolar.frequentaEscola === 'sim' && (
-                            <>
-                                <TextBlock label="Adaptação Escolar" value={sa.vidaEscolar.adaptacaoEscolar} />
-                                <TextBlock label="Dificuldades Escolares" value={sa.vidaEscolar.dificuldadesEscolares} />
-                                <TextBlock label="Relacionamento com Colegas" value={sa.vidaEscolar.relacionamentoComColegas} />
-                            </>
+                        {sa.vidaEscolar.dificuldadesEscolares && (
+                            <TextBlock label="Dificuldades Escolares" value={sa.vidaEscolar.dificuldadesEscolares} />
+                        )}
+                        {sa.vidaEscolar.relacionamentoComColegas && (
+                            <TextBlock label="Relacionamento com Colegas" value={sa.vidaEscolar.relacionamentoComColegas} />
+                        )}
+                        {sa.vidaEscolar.observacoes && (
+                            <TextBlock label="Observações" value={sa.vidaEscolar.observacoes} />
                         )}
                     </SubSection>
                 </Section>

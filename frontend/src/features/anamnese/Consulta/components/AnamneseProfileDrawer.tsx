@@ -252,7 +252,7 @@ export default function AnamneseProfileDrawer({
                             <div>
                                 <h4 className="text-sm font-medium text-muted-foreground mb-3">Cuidadores</h4>
                                 <div className="space-y-3">
-                                    {anamneseDetalhe.cabecalho.cuidadores.map((cuidador, index) => {
+                                    {anamneseDetalhe.cabecalho.cuidadores.map((cuidador) => {
                                         // Calcular idade a partir da data de nascimento
                                         const calcularIdade = (dataNasc?: string) => {
                                             if (!dataNasc) return null;
@@ -508,7 +508,7 @@ export default function AnamneseProfileDrawer({
                                                     Atividade {index + 1}
                                                 </span>
                                             </div>
-                                            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                                            <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
                                                 <div className="md:col-span-2">
                                                     <p className="text-xs text-muted-foreground">Atividade</p>
                                                     <p className="text-sm font-medium">{rot.atividade || 'Não informado'}</p>
@@ -516,6 +516,10 @@ export default function AnamneseProfileDrawer({
                                                 <div>
                                                     <p className="text-xs text-muted-foreground">Horário</p>
                                                     <p className="text-sm font-medium">{rot.horario || 'Não informado'}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs text-muted-foreground">Responsável</p>
+                                                    <p className="text-sm font-medium">{rot.responsavel || 'Não informado'}</p>
                                                 </div>
                                                 <div>
                                                     <p className="text-xs text-muted-foreground">Frequência</p>
@@ -592,6 +596,12 @@ export default function AnamneseProfileDrawer({
                                     <ReadOnlyField label="Quais gestos" value={dev.falaLinguagem.fazUsoDeGestosQuais} />
                                 </div>
                             )}
+
+                            {/* Comunicação Atual - movido para depois de Faz uso de gestos */}
+                            <div className="mt-4">
+                                <ReadOnlyField label="Comunicação Atual" value={dev.falaLinguagem.comunicacaoAtual} />
+                            </div>
+
                             <div className="grid grid-cols-2 gap-3 mt-3">
                                 <ReadOnlyField label="Audição (percepção do responsável)" value={dev.falaLinguagem.audicao === 'boa' ? 'Boa' : dev.falaLinguagem.audicao === 'ruim' ? 'Ruim' : dev.falaLinguagem.audicao} />
                                 <ReadOnlyField label="Teve otite de repetição" value={formatSimNao(dev.falaLinguagem.teveOtiteDeRepeticao)} />
@@ -604,6 +614,11 @@ export default function AnamneseProfileDrawer({
                             <div className="mt-3">
                                 <ReadOnlyField label="Faz ou fez uso de tubo de ventilação" value={formatSimNao(dev.falaLinguagem.fazOuFezUsoTuboVentilacao)} />
                             </div>
+                            {dev.falaLinguagem.fazOuFezUsoTuboVentilacao === 'sim' && dev.falaLinguagem.tuboVentilacaoObservacao && (
+                                <div className="mt-3">
+                                    <ReadOnlyField label="Observação do tubo de ventilação" value={dev.falaLinguagem.tuboVentilacaoObservacao} />
+                                </div>
+                            )}
 
                             {/* Hábitos orais */}
                             <h5 className="text-sm font-medium text-muted-foreground mt-4 mb-3">Hábitos Orais</h5>
@@ -616,10 +631,6 @@ export default function AnamneseProfileDrawer({
                                 {dev.falaLinguagem.usaMamadeira === 'sim' && dev.falaLinguagem.mamadeiraDetalhes && (
                                     <ReadOnlyField label="Detalhes (há quantos anos/meses, quantas vezes ao dia)" value={dev.falaLinguagem.mamadeiraDetalhes} />
                                 )}
-                            </div>
-
-                            <div className="mt-4">
-                                <ReadOnlyField label="Comunicação Atual" value={dev.falaLinguagem.comunicacaoAtual} />
                             </div>
                         </div>
                     </div>
@@ -713,9 +724,28 @@ export default function AnamneseProfileDrawer({
                                 <ReadOnlyField label="Passa longos períodos sem comer" value={formatSimNao(avd.alimentacao.passaDiaInteiroSemComer)} />
                                 <ReadOnlyField label="Apresenta rituais para se alimentar" value={formatSimNao(avd.alimentacao.apresentaRituaisParaAlimentar)} />
                                 <ReadOnlyField label="Está abaixo ou acima do peso" value={formatSimNao(avd.alimentacao.estaAbaixoOuAcimaPeso)} />
+                            </div>
+                            {avd.alimentacao.estaAbaixoOuAcimaPeso === 'sim' && avd.alimentacao.estaAbaixoOuAcimaPesoDescricao && (
+                                <div className="mt-3">
+                                    <ReadOnlyField label="Peso/Altura e acompanhamento" value={avd.alimentacao.estaAbaixoOuAcimaPesoDescricao} />
+                                </div>
+                            )}
+                            <div className="grid grid-cols-2 gap-3 mt-3">
                                 <ReadOnlyField label="Tem histórico de anemia" value={formatSimNao(avd.alimentacao.temHistoricoAnemia)} />
+                            </div>
+                            {avd.alimentacao.temHistoricoAnemia === 'sim' && avd.alimentacao.temHistoricoAnemiaDescricao && (
+                                <div className="mt-3">
+                                    <ReadOnlyField label="Histórico de anemia - desde quando" value={avd.alimentacao.temHistoricoAnemiaDescricao} />
+                                </div>
+                            )}
+                            <div className="grid grid-cols-2 gap-3 mt-3">
                                 <ReadOnlyField label="Rotina alimentar é problema para a família" value={formatSimNao(avd.alimentacao.rotinaAlimentarEProblemaFamilia)} />
                             </div>
+                            {avd.alimentacao.rotinaAlimentarEProblemaFamilia === 'sim' && avd.alimentacao.rotinaAlimentarEProblemaFamiliaDescricao && (
+                                <div className="mt-3">
+                                    <ReadOnlyField label="Maiores dificuldades" value={avd.alimentacao.rotinaAlimentarEProblemaFamiliaDescricao} />
+                                </div>
+                            )}
                             {avd.alimentacao.observacoes && (
                                 <div className="mt-3">
                                     <ReadOnlyField label="Observações" value={avd.alimentacao.observacoes} />
@@ -744,19 +774,51 @@ export default function AnamneseProfileDrawer({
 
                         <div>
                             <h4 className="text-sm font-medium text-muted-foreground mb-3">18. Desenvolvimento Acadêmico</h4>
-                            <div className="grid grid-cols-2 gap-3">
-                                <ReadOnlyField label="Frequenta escola" value={formatSimNao(social.vidaEscolar.frequentaEscola)} />
-                                <ReadOnlyField label="Tem acompanhante" value={formatSimNao(social.vidaEscolar.temAcompanhante)} />
-                            </div>
-                            <div className="space-y-3 mt-3">
-                                <ReadOnlyField label="Escola" value={social.vidaEscolar.nomeEscola} />
+                            
+                            {/* Dados da escola */}
+                            <div className="space-y-3">
+                                <ReadOnlyField label="Escola" value={social.vidaEscolar.escola} />
                                 <div className="grid grid-cols-2 gap-3">
-                                    <ReadOnlyField label="Série" value={social.vidaEscolar.serie} />
+                                    <ReadOnlyField label="Ano/Série" value={social.vidaEscolar.ano} />
                                     <ReadOnlyField label="Período" value={social.vidaEscolar.periodo} />
                                 </div>
-                                <ReadOnlyField label="Adaptação Escolar" value={social.vidaEscolar.adaptacaoEscolar} />
-                                <ReadOnlyField label="Dificuldades Escolares" value={social.vidaEscolar.dificuldadesEscolares} />
-                                <ReadOnlyField label="Relacionamento com Colegas" value={social.vidaEscolar.relacionamentoComColegas} />
+                                <ReadOnlyField label="Direção" value={social.vidaEscolar.direcao} />
+                                <ReadOnlyField label="Coordenação" value={social.vidaEscolar.coordenacao} />
+                                <div className="grid grid-cols-2 gap-3">
+                                    <ReadOnlyField label="Professora Principal" value={social.vidaEscolar.professoraPrincipal} />
+                                    <ReadOnlyField label="Professora Assistente" value={social.vidaEscolar.professoraAssistente} />
+                                </div>
+                            </div>
+
+                            {/* Campos Sim/Não */}
+                            <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t">
+                                <ReadOnlyField label="Frequenta escola regular" value={formatSimNao(social.vidaEscolar.frequentaEscolaRegular)} />
+                                <ReadOnlyField label="Frequenta escola especial" value={formatSimNao(social.vidaEscolar.frequentaEscolaEspecial)} />
+                                <ReadOnlyField label="Acompanha a turma (demandas pedagógicas)" value={formatSimNao(social.vidaEscolar.acompanhaTurmaDemandasPedagogicas)} />
+                                <ReadOnlyField label="Segue regras e rotinas de sala" value={formatSimNao(social.vidaEscolar.segueRegrasRotinaSalaAula)} />
+                                <ReadOnlyField label="Necessita apoio de AT" value={formatSimNao(social.vidaEscolar.necessitaApoioAT)} />
+                                <ReadOnlyField label="Necessita adaptação de materiais" value={formatSimNao(social.vidaEscolar.necessitaAdaptacaoMateriais)} />
+                                <ReadOnlyField label="Necessita adaptação curricular" value={formatSimNao(social.vidaEscolar.necessitaAdaptacaoCurricular)} />
+                                <ReadOnlyField label="Houve reprovação/retenção" value={formatSimNao(social.vidaEscolar.houveReprovacaoRetencao)} />
+                                <ReadOnlyField label="Escola possui equipe de inclusão" value={formatSimNao(social.vidaEscolar.escolaPossuiEquipeInclusao)} />
+                                <ReadOnlyField label="Indicativo de deficiência intelectual" value={formatSimNao(social.vidaEscolar.haIndicativoDeficienciaIntelectual)} />
+                                <ReadOnlyField label="Escola apresenta queixa comportamental" value={formatSimNao(social.vidaEscolar.escolaApresentaQueixaComportamental)} />
+                            </div>
+
+                            {/* Campos descritivos */}
+                            <div className="space-y-3 mt-4 pt-4 border-t">
+                                {social.vidaEscolar.adaptacaoEscolar && (
+                                    <ReadOnlyField label="Adaptação Escolar" value={social.vidaEscolar.adaptacaoEscolar} />
+                                )}
+                                {social.vidaEscolar.dificuldadesEscolares && (
+                                    <ReadOnlyField label="Dificuldades Escolares" value={social.vidaEscolar.dificuldadesEscolares} />
+                                )}
+                                {social.vidaEscolar.relacionamentoComColegas && (
+                                    <ReadOnlyField label="Relacionamento com Colegas" value={social.vidaEscolar.relacionamentoComColegas} />
+                                )}
+                                {social.vidaEscolar.observacoes && (
+                                    <ReadOnlyField label="Observações" value={social.vidaEscolar.observacoes} />
+                                )}
                             </div>
                         </div>
                     </div>
