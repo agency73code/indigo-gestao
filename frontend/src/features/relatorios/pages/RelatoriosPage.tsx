@@ -12,13 +12,13 @@ import { getAreaStyle } from '../constants/areaStyles';
 import type {
   SavedReport,
   Paciente,
-  Terapeuta,
   ReportListFilters,
 } from '../types';
 import {
   getAllReports,
   getAllPatients,
-  getAllTherapists,
+  getTherapistsForReports,
+  type TherapistListItem,
 } from '../services/relatorios.service';
 
 // Tipo para controlar estados de expansão (agora com 3 níveis: paciente -> área -> mês)
@@ -45,7 +45,7 @@ export function RelatoriosPage() {
   const [total, setTotal] = useState(0);
   void total; // Silencia warning - será usado na paginação
   const [patients, setPatients] = useState<Paciente[]>([]);
-  const [therapists, setTherapists] = useState<Terapeuta[]>([]);
+  const [therapists, setTherapists] = useState<TherapistListItem[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Estado para controlar accordion de clientes e pastas
@@ -93,7 +93,7 @@ export function RelatoriosPage() {
       const [reportsResponse, patientsData, therapistsData] = await Promise.all([
         getAllReports(filters),
         getAllPatients(),
-        getAllTherapists(),
+        getTherapistsForReports(),
       ]);
       
       // 🔄 Extrai items e total da resposta paginada

@@ -22,13 +22,13 @@ import type {
     ClientListItem,
     ClientOption,
 } from '../types';
-import type { Terapeuta } from '../../types/cadastros.types';
+import type { TherapistListDTO, TherapistSelectDTO } from '@/features/therapists/types';
 import { isSupervisorRole } from '../../constants/access-levels';
 import { searchPatients, searchTherapists } from '../services/links.service';
 
 type ComboboxOption = { value: string; label: string };
 
-function buildActuationOptions(therapist: Terapeuta | null | undefined): ComboboxOption[] {
+function buildActuationOptions(therapist: TherapistListDTO | null | undefined): ComboboxOption[] {
     if (!therapist?.dadosProfissionais?.length) {
         return [];
     }
@@ -53,7 +53,7 @@ function buildActuationOptions(therapist: Terapeuta | null | undefined): Combobo
 /**
  * Calcula o role baseado no cargo do terapeuta
  */
-function calculateRoleFromTherapist(therapist: Terapeuta | null | undefined): 'responsible' | 'co' {
+function calculateRoleFromTherapist(therapist: TherapistListDTO | null | undefined): 'responsible' | 'co' {
     if (!therapist?.dadosProfissionais?.length) {
         return 'co';
     }
@@ -89,9 +89,9 @@ export default function LinkFormModal({
     const [patientSearch, setPatientSearch] = useState('');
     const [therapistSearch, setTherapistSearch] = useState('');
     const [patientResults, setPatientResults] = useState<ClientOption[]>([]);
-    const [therapistResults, setTherapistResults] = useState<Terapeuta[]>([]);
+    const [therapistResults, setTherapistResults] = useState<TherapistSelectDTO[]>([]);
     const [selectedPatient, setSelectedPatient] = useState<ClientListItem | ClientOption | null>(null);
-    const [selectedTherapist, setSelectedTherapist] = useState<Terapeuta | null>(null);
+    const [selectedTherapist, setSelectedTherapist] = useState<TherapistSelectDTO | null>(null);
     const [showPatientSearch, setShowPatientSearch] = useState(false);
     const [showTherapistSearch, setShowTherapistSearch] = useState(false);
 
@@ -309,7 +309,7 @@ export default function LinkFormModal({
         }
     };
 
-    const handleTherapistSelect = (therapist: Terapeuta) => {
+    const handleTherapistSelect = (therapist: TherapistSelectDTO) => {
         setSelectedTherapist(therapist);
         setTherapistId(therapist.id || '');
         setTherapistSearch(therapist.nome);

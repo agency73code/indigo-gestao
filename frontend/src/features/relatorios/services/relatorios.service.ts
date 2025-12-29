@@ -3,10 +3,10 @@ import type {
   CreateReportInput,
   ReportListFilters,
   Paciente,
-  Terapeuta,
   ReportGeneratedData,
   ReportFiltersApplied,
 } from '../types';
+import type { TherapistListDTO } from '@/features/therapists/types';
 
 /**
  * Resposta paginada da API de relatórios
@@ -269,8 +269,13 @@ export async function getAllPatients(): Promise<Paciente[]> {
 /**
  * Busca todos os terapeutas (para formulários/filtros)
  */
-export async function getAllTherapists(): Promise<Terapeuta[]> {
-  const res = await fetch('/api/links/getAllTherapists', {
+export type TherapistListItem = TherapistListDTO;
+
+export async function getTherapistsForReports(includeNumeroConselho = false): Promise<TherapistListItem[]> {
+  const query = new URLSearchParams();
+  if (includeNumeroConselho) query.set('includeNumeroConselho', 'true');
+
+  const res = await fetch(`/api/links/therapists/list?${query.toString()}`, {
     method: 'GET',
     credentials: 'include',
     headers: {
@@ -282,7 +287,7 @@ export async function getAllTherapists(): Promise<Terapeuta[]> {
     throw new Error('Falha ao carregar terapeutas');
   }
   
-  const therapists = (await res.json()) as Terapeuta[];
+  const therapists = (await res.json()) as TherapistListItem[];
 
   const therapistsWithViewFields = therapists.map((t) => {
     return {

@@ -1,4 +1,5 @@
-import type { ClientListItem, Terapeuta, PatientTherapistLink, TherapistSupervisionLink, LinkFilters } from '../types';
+import type { ClientListItem, PatientTherapistLink, TherapistSupervisionLink, LinkFilters } from '../types';
+import type { TherapistListDTO } from '@/features/therapists/types';
 
 // Mock de pacientes
 export const mockPatients: ClientListItem[] = [
@@ -54,7 +55,7 @@ export const mockPatients: ClientListItem[] = [
   },
 ];
 
-export const mockTherapists: Terapeuta[] = [];
+export const mockTherapists: TherapistListDTO[] = [];
 export const mockSupervisionLinks: TherapistSupervisionLink[] = [];
 
 export function searchPatientsByName(patients: ClientListItem[], query: string): ClientListItem[] {

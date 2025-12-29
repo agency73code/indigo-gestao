@@ -4,6 +4,9 @@ import { AppError } from '../../../errors/AppError.js';
 import * as LinkTypes from './links.types.js';
 import * as list from './actions/list.js';
 import * as clients from './actions/clients.js';
+import * as therapists from './actions/therapist.js';
+import type { TherapistListQuery, TherapistSelectQuery } from '../../../schemas/queries/therapists.schema.js';
+import { normalizeListTherapists, normalizeSelectTherapists } from './links.normalizer.js';
 
 const LINK_SELECT = {
     id: true,
@@ -147,9 +150,14 @@ export async function listClients(
     return clientList;
 }
 
-export async function getAllTherapists(userId: string, search?: string, _role?: string) {
-    const therapists = await list.getAllTherapists(userId, search);
-    return therapists;
+export async function selectTherapists(userId: string, query: TherapistSelectQuery) {
+    const records = await therapists.selectTherapists(userId, query);
+    return normalizeSelectTherapists(records);
+}
+
+export async function listTherapists(userId: string, query: TherapistListQuery) {
+    const records = await therapists.listTherapists(userId, query);
+    return normalizeListTherapists(records, query.includeNumeroConselho ?? false);
 }
 
 export async function getAllLinks(userId: string, filters?: LinkTypes.LinkFilters) {

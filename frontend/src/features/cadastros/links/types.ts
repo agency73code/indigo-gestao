@@ -1,5 +1,6 @@
 // IMPORTS: pegue do types central do projeto (não duplique)
-import type { Terapeuta, CadastroFormProps } from '../types/cadastros.types';
+import type { CadastroFormProps } from '../types/cadastros.types';
+import type { TherapistListDTO, TherapistSelectDTO, TherapistId as TherapistIdDTO } from '@/features/therapists/types';
 
 export interface ClientOption {
   id: string;
@@ -17,7 +18,7 @@ export interface ClientListItem {
 
 // Derivar IDs seguros a partir dos types fornecidos
 export type PatientId = string;
-export type TherapistId = NonNullable<Terapeuta['id']>;
+export type TherapistId = TherapistIdDTO;
 
 // Domínio do vínculo
 export type LinkId = string;
@@ -126,12 +127,12 @@ export interface PatientWithLinks {
 }
 
 export interface TherapistWithLinks {
-  therapist: Terapeuta;
+  therapist: TherapistListDTO;
   links: PatientTherapistLink[];
 }
 
 export interface SupervisorWithLinks {
-  supervisor: Terapeuta;
+  supervisor: TherapistListDTO;
   links: TherapistSupervisionLink[];
   hierarchyLevels?: SubordinatesByLevel[];  // Subordinados agrupados por nível
   totalSubordinates?: number;                // Total de subordinados (todos níveis)
@@ -141,7 +142,7 @@ export interface SupervisorWithLinks {
 // Interface para representar hierarquia completa (retorno do backend)
 export interface SupervisionHierarchy {
   supervisorId: TherapistId;
-  supervisor: Terapeuta;
+  supervisor: TherapistListDTO;
   directSubordinates: TherapistSupervisionLink[];      // Nível 1
   indirectSubordinates: TherapistSupervisionLink[];    // Nível 2+
   totalSubordinatesCount: number;
@@ -152,7 +153,7 @@ export interface SupervisionHierarchy {
 export interface SubordinatesByLevel {
   level: number;
   subordinates: Array<{
-    therapist: Terapeuta;
+    therapist: TherapistListDTO;
     link: TherapistSupervisionLink;
   }>;
 }
@@ -166,7 +167,7 @@ export interface LinkListProps {
   links: PatientTherapistLink[];
   supervisionLinks: TherapistSupervisionLink[];
   patients: ClientListItem[];
-  therapists: Terapeuta[];
+  therapists: TherapistListDTO[];
   filters: LinkFilters;
   loading?: boolean;
   onEditLink: (link: PatientTherapistLink) => void;
@@ -200,7 +201,7 @@ export interface LinkCardProps {
   viewBy: 'patient' | 'therapist' | 'supervision';
   // Listas para lookup de dados
   patients: ClientListItem[];
-  therapists: Terapeuta[];
+  therapists: TherapistListDTO[];
   // Ações individuais
   onEdit: (link: PatientTherapistLink) => void;
   onAddTherapist: (patientId: string) => void;
@@ -230,7 +231,7 @@ export interface LinkFormModalProps {
   onSubmit: (data: CreateLinkInput | UpdateLinkInput) => void;
   initialData?: PatientTherapistLink | null;
   patients: ClientListItem[];
-  therapists: Terapeuta[];
+  therapists: TherapistListDTO[];
   loading?: boolean;
 }
 
@@ -240,8 +241,8 @@ export interface TransferResponsibleDialogProps {
   onConfirm: (data: TransferResponsibleInput) => void;
   link: PatientTherapistLink | null;
   patient?: ClientListItem;
-  therapist?: Terapeuta;
-  therapists: Terapeuta[];
+  therapist?: TherapistListDTO;
+  therapists: TherapistListDTO[];
   loading?: boolean;
 }
 
@@ -266,7 +267,7 @@ export interface SupervisionLinkFormModalProps {
   onClose: () => void;
   onSubmit: (data: CreateSupervisionLinkInput | UpdateSupervisionLinkInput) => void;
   initialData?: TherapistSupervisionLink | null;
-  therapists: Terapeuta[];
+  therapists: TherapistListDTO[];
   loading?: boolean;
   preSelectedSupervisorId?: string; // Para pré-selecionar supervisor ao adicionar terapeuta
 }
@@ -287,9 +288,7 @@ export interface ArchiveSupervisionDialogProps {
   loading?: boolean;
 }
 
-export type TerapeutaAvatar = Terapeuta & {
-  avatarUrl?: string | null;
-};
+export type TerapeutaAvatar = TherapistSelectDTO & { avatarUrl: string | null };
 
 // Re-export necessários
-export type { Terapeuta, CadastroFormProps };
+export type { CadastroFormProps };

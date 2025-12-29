@@ -606,7 +606,7 @@ function renderTherapistCard(
                                 {therapist.nome}
                             </CardTitleHub>
                             <p className="text-sm text-muted-foreground">
-                                {therapist.especialidade || 'Terapeuta'}
+                                {therapist.dadosProfissionais?.[0]?.areaAtuacao || 'Terapeuta'}
                             </p>
                         </div>
                     </div>

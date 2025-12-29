@@ -21,12 +21,13 @@ import FisioPerformanceChart from '../../programas/variants/fisioterapia/compone
 // Componentes de Musicoterapia
 import { MusiKpiCards, MusiAttentionActivitiesCard, MusiAutonomyByCategoryChart, MusiParticipacaoChart, MusiSuporteChart, MusiParticipacaoSuporteEvolutionChart } from '../../programas/relatorio-geral/components/musi';
 import type { MusiKpisData } from '../../programas/relatorio-geral/components/musi/MusiKpiCards';
-import type { SavedReport, Paciente, Terapeuta } from '../types';
+import type { SavedReport, Paciente } from '../types';
 import type { KpisRelatorio, SerieLinha } from '../gerar-relatorio/types';
 import { 
   getReportById, 
   getAllPatients, 
-  getAllTherapists
+  getTherapistsForReports,
+  type TherapistListItem,
 } from '../services/relatorios.service';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 import { AREA_LABELS } from '@/contexts/AreaContext';
@@ -39,7 +40,7 @@ export function VisualizarRelatorioPage() {
   const { setPageTitle, setHeaderActions, setOnBackClick } = usePageTitle();
   const [report, setReport] = useState<SavedReport | null>(null);
   const [patient, setPatient] = useState<Paciente | null>(null);
-  const [therapist, setTherapist] = useState<Terapeuta | null>(null);
+  const [therapist, setTherapist] = useState<TherapistListItem | null>(null);
   const [loading, setLoading] = useState(true);
   
   // Estados para nomes dos filtros
@@ -64,7 +65,7 @@ export function VisualizarRelatorioPage() {
       const [reportData, patientsData, therapistsData] = await Promise.all([
         getReportById(id),
         getAllPatients(),
-        getAllTherapists(),
+        getTherapistsForReports(true),
       ]);
 
       console.log('✅ Dados carregados:', {

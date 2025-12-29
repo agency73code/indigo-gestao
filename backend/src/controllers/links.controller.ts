@@ -3,6 +3,7 @@ import * as LinkService from '../features/links/old/links.service.js';
 import * as LinkNormalizer from '../features/links/old/links.normalizer.js';
 import * as LinkTypes from '../features/links/old/links.types.js';
 import { clientListSchema, clientOptionsSchema } from '../schemas/queries/client.schema.js';
+import { therapistListQuerySchema, therapistSelectQuerySchema } from '../schemas/queries/therapists.schema.js';
 
 export async function createLink(
     req: Request<unknown, unknown, LinkTypes.CreateLink>,
@@ -134,16 +135,21 @@ export async function listClients(req: Request, res: Response, next: NextFunctio
     }
 }
 
-export async function getAllTherapists(req: Request, res: Response, next: NextFunction) {
+export async function selectTherapists(req: Request, res: Response, next: NextFunction) {
     try {
-        const { search = '', role } = req.query;
-        const data = await LinkService.getAllTherapists(
-            req.user!.id,
-            search.toString(),
-            role?.toString(),
-        );
-        const normalized = LinkNormalizer.getAllTherapists(data);
-        res.json(normalized);
+        const query = therapistSelectQuerySchema.parse(req.query);
+        const data = await LinkService.selectTherapists(req.user!.id, query);
+        res.json(data);
+    } catch (err) {
+        next(err);
+    }
+}
+
+export async function listTherapists(req: Request, res: Response, next: NextFunction) {
+    try {
+        const query = therapistListQuerySchema.parse(req.query);
+        const data = await LinkService.listTherapists(req.user!.id, query);
+        res.json(data);
     } catch (err) {
         next(err);
     }

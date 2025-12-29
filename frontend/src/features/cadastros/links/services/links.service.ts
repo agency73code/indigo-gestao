@@ -1,7 +1,6 @@
 import type {
   ClientListItem,
   ClientOption,
-  Terapeuta,
   PatientTherapistLink,
   CreateLinkInput,
   UpdateLinkInput,
@@ -16,14 +15,16 @@ import {
   mockTherapists,
   mockSupervisionLinks,
 } from '../mocks/links.mock';
+import type { TherapistListDTO, TherapistSelectDTO } from '@/features/therapists/types';
 
-export async function searchTherapists(role: 'supervisor' | 'clinico' | 'all', search: string): Promise<Terapeuta[]> {
+export async function searchTherapists(role: 'supervisor' | 'clinico' | 'all', search: string): Promise<TherapistSelectDTO[]> {
   try {
     const query = new URLSearchParams();
     if (role && role !== 'all') query.set('role', role);
     if (search.trim()) query.set('search', search.trim());
+    query.set('limit', '50');
 
-    const res = await fetch(`/api/links/getAllTherapists?${query.toString()}`, {
+    const res = await fetch(`/api/links/therapists/select?${query.toString()}`, {
       method: 'GET',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
@@ -328,9 +329,9 @@ export async function getAllPatients(): Promise<ClientListItem[]> {
 /**
  * Busca todos os terapeutas (para formulários)
  */
-export async function getAllTherapists(): Promise<Terapeuta[]> {
+export async function getTherapistsForLinks(): Promise<TherapistListDTO[]> {
   try {
-    const res = await fetch('/api/links/getAllTherapists', {
+    const res = await fetch('/api/links/therapists/list', {
       method: 'GET',
       credentials: 'include',
       headers: {
@@ -342,7 +343,7 @@ export async function getAllTherapists(): Promise<Terapeuta[]> {
       throw new Error('Falha ao carregar terapeutas');
     }
 
-    const therapists = (await res.json()) as Terapeuta[];
+    const therapists = (await res.json()) as TherapistListDTO[];
 
     return therapists;
   } catch (error) {
