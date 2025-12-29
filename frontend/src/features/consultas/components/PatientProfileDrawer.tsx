@@ -241,6 +241,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                 descricaoRelacao: c.descricaoRelacao ?? '',
                 nome: maskPersonName(c.nome ?? ''),
                 cpf: maskCPF(c.cpf ?? ''),
+                dataNascimento: (c as any).dataNascimento ?? '',
                 profissao: c.profissao ?? '',
                 escolaridade: c.escolaridade ?? '',
                 telefone: maskBRPhone(c.telefone ?? ''),
@@ -936,6 +937,18 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                                                 </div>
                                                             )}
 
+                                                            {/* Data de Nascimento */}
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                <div className="space-y-2">
+                                                                    <Label>Data de Nascimento</Label>
+                                                                    <Input 
+                                                                        className="h-10" 
+                                                                        type="date"
+                                                                        {...register(`cuidadores.${index}.dataNascimento` as const)}
+                                                                    />
+                                                                </div>
+                                                            </div>
+
                                                             {/* Linha 2: Telefone | E-mail */}
                                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                                 <div className="space-y-2">
@@ -1069,6 +1082,10 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                             <ReadOnlyField label="Nome" value={maskPersonName(cuidador.nome ?? '')} />
                                                             <ReadOnlyField label="CPF" value={maskCPF(cuidador.cpf ?? '')} />
+                                                            <ReadOnlyField 
+                                                                label="Data de Nascimento" 
+                                                                value={cuidador.dataNascimento ? new Date(cuidador.dataNascimento).toLocaleDateString('pt-BR') : 'Não informado'} 
+                                                            />
                                                             <ReadOnlyField label="Profissão" value={cuidador.profissao} />
                                                             <ReadOnlyField label="Escolaridade" value={cuidador.escolaridade} />
                                                             <ReadOnlyField label="Telefone" value={maskBRPhone(cuidador.telefone ?? '')} />
@@ -1112,6 +1129,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                                 descricaoRelacao: '',
                                                 nome: '',
                                                 cpf: '',
+                                                dataNascimento: '',
                                                 profissao: '',
                                                 escolaridade: '',
                                                 telefone: '',

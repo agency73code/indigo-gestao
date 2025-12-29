@@ -118,6 +118,7 @@ export interface Cuidador {
     descricaoRelacao?: string;
     nome: string;
     cpf: string;
+    dataNascimento?: string;
     profissao?: string;
     escolaridade?: string;
     telefone: string;

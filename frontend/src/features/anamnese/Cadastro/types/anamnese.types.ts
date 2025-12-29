@@ -34,6 +34,18 @@ export type SimNaoComAjuda = 'sim' | 'nao' | 'com_ajuda' | null;
 // STEP 1 - IDENTIFICAÇÃO (CABEÇALHO)
 // ============================================
 
+export interface CuidadorAnamnese {
+    id: string;
+    nome: string;
+    relacao: string;
+    descricaoRelacao?: string;
+    telefone?: string;
+    email?: string;
+    profissao?: string;
+    escolaridade?: string;
+    dataNascimento?: string;
+}
+
 export interface AnamnseeCabecalho {
     dataEntrevista: string;
     clienteId: string;
@@ -42,9 +54,11 @@ export interface AnamnseeCabecalho {
     idade: string;
     informante: string;
     parentesco: string;
+    parentescoDescricao?: string;
     quemIndicou: string;
     profissionalId: string;
     profissionalNome: string;
+    cuidadores?: CuidadorAnamnese[];
 }
 
 // ============================================

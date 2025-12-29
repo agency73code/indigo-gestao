@@ -5,6 +5,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import ToolbarConsulta from '../components/ToolbarConsulta';
 import PatientTable from '../components/PatientTable';
 import { listPatients } from '../services/patient.service';
+import { getAllLinks } from '@/features/cadastros/links/services/links.service';
 import type { Patient, SortState, PaginationState } from '../types/consultas.types';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 
@@ -59,16 +60,39 @@ export default function PacientesListPage() {
             setLoading(true);
             setError(null);
             try {
-                // Chamar API com filtros da URL
-                const response = await listPatients({
-                    q: searchTerm || undefined,
-                    page: currentPage,
-                    pageSize: pagination.pageSize,
-                    sort: sortParam,
-                });
+                // Buscar clientes e vínculos em paralelo
+                const [response, links] = await Promise.all([
+                    listPatients({
+                        q: searchTerm || undefined,
+                        page: currentPage,
+                        pageSize: pagination.pageSize,
+                        sort: sortParam,
+                    }),
+                    // Buscar todos os vínculos ativos para obter as áreas de atendimento
+                    getAllLinks({ status: 'active', viewBy: 'patient' }).catch(() => [])
+                ]);
+
+                // Criar mapa de áreas por cliente
+                const areasMap = new Map<string, Set<string>>();
+                for (const link of links) {
+                    if (link.patientId && link.actuationArea) {
+                        if (!areasMap.has(link.patientId)) {
+                            areasMap.set(link.patientId, new Set());
+                        }
+                        areasMap.get(link.patientId)!.add(link.actuationArea);
+                    }
+                }
+
+                // Merge: adicionar áreas de atendimento aos pacientes
+                const patientsWithAreas = response.items.map(patient => ({
+                    ...patient,
+                    areasAtendimento: areasMap.has(patient.id) 
+                        ? Array.from(areasMap.get(patient.id)!) 
+                        : []
+                }));
 
                 // Atualizar estado com dados do backend
-                setPatients(response.items);
+                setPatients(patientsWithAreas);
                 setPagination({
                     page: response.page,
                     pageSize: response.pageSize,

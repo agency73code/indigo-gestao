@@ -188,6 +188,25 @@ export default function DadosPessoaisStep({
                                 error={errors[`cuidadores.${index}.cpf`]}
                             />
 
+                            {/* Data de Nascimento - 1/4 */}
+                            <DateFieldWithLabel
+                                label="Data de Nascimento"
+                                value={cuidador.dataNascimento || ''}
+                                onChange={(iso) => {
+                                    const cuidadores = [...(data.cuidadores || [])];
+                                    cuidadores[index] = {
+                                        ...cuidadores[index],
+                                        dataNascimento: iso,
+                                    };
+                                    onUpdate('cuidadores', cuidadores);
+                                }}
+                                placeholder="dd/mm/aaaa"
+                                error={errors[`cuidadores.${index}.dataNascimento`]}
+                            />
+                        </div>
+
+                        {/* Segunda linha - Relação */}
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                             {/* Relação com o cliente - 1/4 */}
                             <SelectField
                                 label="Relação com o cliente *"
@@ -231,12 +250,9 @@ export default function DadosPessoaisStep({
                                     error={errors[`cuidadores.${index}.descricaoRelacao`]}
                                 />
                             )}
-                        </div>
 
-                        {/* Segunda linha - Email e Telefone */}
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                            {/* E-mail - 3/4 */}
-                            <div className="md:col-span-3">
+                            {/* E-mail - 2/4 */}
+                            <div className="md:col-span-2">
                                 <InputField
                                     label="E-mail *"
                                     id={`email-${index}`}
@@ -256,7 +272,7 @@ export default function DadosPessoaisStep({
                                 />
                             </div>
 
-                            {/* Telefone/Celular - 1/4 */}
+                            {/* Telefone - 1/4 */}
                             <InputField
                                 label="Telefone *"
                                 id={`telefone-${index}`}
@@ -270,7 +286,7 @@ export default function DadosPessoaisStep({
                                     onUpdate('cuidadores', cuidadores);
                                 }}
                                 onBlur={() => onBlur(`cuidadores.${index}.telefone`)}
-                                placeholder="(11) 99999-9999"
+                                placeholder="(00) 00000-0000"
                                 error={errors[`cuidadores.${index}.telefone`]}
                             />
                         </div>

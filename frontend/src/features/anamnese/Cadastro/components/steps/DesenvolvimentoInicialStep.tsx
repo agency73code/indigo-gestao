@@ -185,7 +185,7 @@ function MarcoFalaField({
                         </svg>
                     )}
                 </div>
-                <span className="text-sm text-muted-foreground">Não</span>
+                <span className="text-sm text-muted-foreground">Não realiza</span>
             </button>
             <button
                 type="button"

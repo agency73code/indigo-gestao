@@ -73,6 +73,7 @@ export const cuidadorSchema = z.object({
   descricaoRelacao: z.string().optional(),
   nome: z.string().min(1, 'Nome é obrigatório'),
   cpf: z.string().min(1, 'CPF é obrigatório').refine(mask.isValidCPF, 'CPF inválido'),
+  dataNascimento: z.string().optional(),
   telefone: z.string().min(1, 'Telefone é obrigatório'),
   email: z.string().min(1, 'E-mail é obrigatório').refine(mask.isValidEmail, 'E-mail inválido'),
   profissao: z.string().optional(),
