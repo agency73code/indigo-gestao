@@ -16,7 +16,7 @@ export interface ReportProfessionalInfo {
 // Informações do cliente para cabeçalho do relatório
 export interface ReportClientInfo {
     nome: string;
-    idade?: number;
+    idade?: number | null;
 }
 
 type ReportExporterProps = {

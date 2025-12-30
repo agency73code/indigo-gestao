@@ -26,15 +26,15 @@ import type {
     UpdateLinkInput,
     CreateSupervisionLinkInput,
     UpdateSupervisionLinkInput,
-    Paciente,
-    Terapeuta,
+    ClientListItem,
     TransferResponsibleInput,
 } from '../types';
+import type { TherapistListDTO } from '@/features/therapists/types';
 import {
     getAllLinks,
     getAllSupervisionLinks,
     getAllPatients,
-    getAllTherapists,
+    getTherapistsForLinks,
     createLink,
     updateLink,
     createSupervisionLink,
@@ -54,8 +54,8 @@ export default function VinculosPage() {
     const canCreateLinks = ability.can('create', 'Vinculos');
     const [links, setLinks] = useState<PatientTherapistLink[]>([]);
     const [supervisionLinks, setSupervisionLinks] = useState<TherapistSupervisionLink[]>([]);
-    const [patients, setPatients] = useState<Paciente[]>([]);
-    const [therapists, setTherapists] = useState<Terapeuta[]>([]);
+    const [patients, setPatients] = useState<ClientListItem[]>([]);
+    const [therapists, setTherapists] = useState<TherapistListDTO[]>([]);
     const [loading, setLoading] = useState(true);
     
     useEffect(() => {
@@ -115,10 +115,10 @@ export default function VinculosPage() {
     try {
         setLoading(true);
         const [linksData, supervisionLinksData, patientsData, therapistsData] = await Promise.all([
-        getAllLinks(filters),
-        getAllSupervisionLinks(filters),
-        getAllPatients(),
-        getAllTherapists(),
+            getAllLinks(filters),
+            getAllSupervisionLinks(filters),
+            getAllPatients(),
+            getTherapistsForLinks(),
         ]);
         setLinks(linksData);
         setSupervisionLinks(supervisionLinksData);

@@ -3,10 +3,10 @@ import type {
   CreateReportInput,
   ReportListFilters,
   Paciente,
-  Terapeuta,
   ReportGeneratedData,
   ReportFiltersApplied,
 } from '../types';
+import type { TherapistListDTO } from '@/features/therapists/types';
 
 /**
  * Resposta paginada da API de relatórios
@@ -238,7 +238,7 @@ export async function fetchReportData(filters: ReportFiltersApplied): Promise<Re
  */
 export async function getAllPatients(): Promise<Paciente[]> {
   try {
-    const res = await fetch('/api/links/getAllClients', {
+    const res = await fetch('/api/links/clients?includeResponsavel=true', {
       method: 'GET',
       credentials: 'include',
       headers: {
@@ -251,31 +251,15 @@ export async function getAllPatients(): Promise<Paciente[]> {
     }
 
     const clients = (await res.json()) as Paciente[];
+
+    const clientsWithViewFields = clients.map((p) => {
+      return {
+        ...p,
+        photoUrl: p.avatarUrl ?? null,
+      };
+    });
     
-    const clientsWithAvatar = await Promise.all(
-      clients.map(async (p) => {
-        try {
-          const avatarRes = await fetch(`${import.meta.env.VITE_API_URL}/arquivos/getAvatar?ownerId=${p.id}&ownerType=cliente`, {
-            credentials: 'include',
-          });
-          const data = await avatarRes.json();
-          
-          // Mapear responsavel.nome para guardianName (compatibilidade com PatientSelector)
-          const guardianName = (p as any).responsavel?.nome || (p as any).guardianName || null;
-          
-          return { 
-            ...p, 
-            photoUrl: data.avatarUrl ?? null,
-            guardianName // Adicionar guardianName ao objeto
-          };
-        } catch {
-          const guardianName = (p as any).responsavel?.nome || (p as any).guardianName || null;
-          return { ...p, photoUrl: null, guardianName };
-        }
-      })
-    );
-    
-    return clientsWithAvatar;
+    return clientsWithViewFields;
   } catch (error) {
     console.error('Erro ao buscar clientes:', error);
     throw error;
@@ -285,8 +269,13 @@ export async function getAllPatients(): Promise<Paciente[]> {
 /**
  * Busca todos os terapeutas (para formulários/filtros)
  */
-export async function getAllTherapists(): Promise<Terapeuta[]> {
-  const res = await fetch('/api/links/getAllTherapists', {
+export type TherapistListItem = TherapistListDTO;
+
+export async function getTherapistsForReports(includeNumeroConselho = false): Promise<TherapistListItem[]> {
+  const query = new URLSearchParams();
+  if (includeNumeroConselho) query.set('includeNumeroConselho', 'true');
+
+  const res = await fetch(`/api/links/therapists/list?${query.toString()}`, {
     method: 'GET',
     credentials: 'include',
     headers: {
@@ -298,23 +287,16 @@ export async function getAllTherapists(): Promise<Terapeuta[]> {
     throw new Error('Falha ao carregar terapeutas');
   }
   
-  const therapists = (await res.json()) as Terapeuta[];
+  const therapists = (await res.json()) as TherapistListItem[];
 
-  const therapistsWithAvatar = await Promise.all(
-    therapists.map(async (t) => {
-      try {
-        const avatarRes = await fetch(`${import.meta.env.VITE_API_URL}/arquivos/getAvatar?ownerId=${t.id}&ownerType=terapeuta`, {
-          credentials: 'include',
-        });
-        const data = await avatarRes.json();
-        return { ...t, photoUrl: data.avatarUrl ?? null };
-      } catch {
-        return { ...t, photoUrl: null };
-      }
-    })
-  );
-  
-  return therapistsWithAvatar;
+  const therapistsWithViewFields = therapists.map((t) => {
+    return {
+      ...t,
+      photoUrl: t.avatarUrl ?? null,
+    };
+  });
+
+  return therapistsWithViewFields;
 }
 
 // ==================== FUNÇÕES AUXILIARES (FILTROS LOCAIS) ====================

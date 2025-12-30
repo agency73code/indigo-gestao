@@ -26,13 +26,7 @@ import {
     fetchSerieLinha,
     fetchPrazoPrograma,
 } from '../gerar-relatorio/services/relatorio.service';
-import {
-    calculateToKpis,
-    prepareToActivityDurationData,
-    prepareToAttentionActivities,
-    prepareToPerformanceLineData,
-    prepareToAutonomyByCategory,
-} from '../../programas/relatorio-geral/services/to-report.service';
+import { fetchOccupationalReports } from '../../programas/relatorio-geral/services/to-report.service';
 import { fetchPhysioReports } from '../../programas/relatorio-geral/services/fisio-report.service';
 import { fetchMusicReports } from '../../programas/relatorio-geral/services/musi-report.service';
 import { listSessionsByPatient } from '../../programas/consulta-sessao/services';
@@ -52,6 +46,7 @@ import {
 import { emptyMusiDashboardResult } from '@/features/programas/relatorio-geral';
 import { generateClinicalSummaryWithAI } from '../services/ai.service';
 import { AIDraftValidationBanner } from '../gerar-relatorio/components/AIDraftValidationBanner';
+import { MusiPerformanceChart } from '@/features/programas/variants/musicoterapia/components';
 
 export function GerarRelatorioPage() {
     const { user } = useAuth();
@@ -291,66 +286,26 @@ export function GerarRelatorioPage() {
                         }
                     );
                     
-                    const sessoes = sessionsResponse.items || [];
-
-                    // Calcular KPIs de TO
-                    const toKpis = calculateToKpis(sessoes);
-                    
-                    // Preparar dados dos gráficos
-                    const performanceLineData = prepareToPerformanceLineData(sessoes);
-                    const activityDurationData = prepareToActivityDurationData(sessoes);
-                    const attentionActivitiesData = prepareToAttentionActivities(sessoes);
-                    const autonomyByCategory = prepareToAutonomyByCategory(sessoes);
-
-                    // Extrair observações das sessões
-                    const observations = sessoes
-                        .filter((s: any) => s.observacoes && s.observacoes.trim() !== '')
-                        .map((s: any) => ({
-                            id: s.id,
-                            data: s.data,
-                            programa: s.programa || '',
-                            terapeutaNome: s.terapeutaNome,
-                            observacoes: s.observacoes,
-                        }));
-                    setSessionObservations(observations ?? []);
-
+                    const sessoes = await fetchOccupationalReports(sessionsResponse.items);
+                        
                     // Carregar prazo do programa
                     const prazoProgramaData = await fetchPrazoPrograma(filtersWithArea);
                     setPrazoPrograma(prazoProgramaData);
-
+                    
                     // Armazenar dados adaptados
+                    setSessionObservations(sessoes.sessionObservations ?? []);
                     setAdaptedData({
-                        kpis: toKpis,
-                        performanceLineData,
-                        activityDuration: activityDurationData,
-                        attentionActivities: attentionActivitiesData,
-                        autonomyByCategory,
+                        kpis: sessoes.kpis,
+                        performanceLineData: sessoes.performance,
+                        activityDuration: sessoes.activityDurationData,
+                        attentionActivities: sessoes.attentionActivitiesData,
+                        autonomyByCategory: sessoes.autonomyByCategory,
                     });
                 } catch (error) {
                     console.error('Erro ao carregar dados de TO:', error);
-                    setSessionObservations([]);
-                    // Usar dados mockados em caso de erro
-                    const toKpis = calculateToKpis([]);
-                    const performanceLineData = prepareToPerformanceLineData([]);
-                    const activityDurationData = prepareToActivityDurationData([]);
-                    const attentionActivitiesData = prepareToAttentionActivities([]);
-                    const autonomyByCategory = prepareToAutonomyByCategory([]);
-
-                    // Tentar carregar prazo mesmo com erro nas sessões
-                    try {
-                        const prazoProgramaData = await fetchPrazoPrograma(filtersWithArea);
-                        setPrazoPrograma(prazoProgramaData);
-                    } catch (prazoError) {
-                        console.error('Erro ao carregar prazo do programa:', prazoError);
-                        setPrazoPrograma(null);
-                    }
 
                     setAdaptedData({
-                        kpis: toKpis,
-                        performanceLineData,
-                        activityDuration: activityDurationData,
-                        attentionActivities: attentionActivitiesData,
-                        autonomyByCategory,
+                        emptyMusiDashboardResult
                     });
                 }
 
@@ -437,7 +392,7 @@ export function GerarRelatorioPage() {
                     setSessionObservations(report.sessionObservations ?? []);
 
                     // Carregar prazo do programa
-                    const prazoProgramaData = await fetchPrazoPrograma(filtersWithArea); // tenho que analisar esse 
+                    const prazoProgramaData = await fetchPrazoPrograma(filtersWithArea);
                     setPrazoPrograma(prazoProgramaData);
 
                     setAdaptedData({
@@ -494,7 +449,7 @@ export function GerarRelatorioPage() {
             setKpis(kpisData);
             setLoadingKpis(false);
             
-            // TODO: Arrumar isso aqui que ta sinistro
+            // TODO: Arrumar isso aqui que ta sinistro (kkkkkkkkkkkkkkkkkkkkkkk)
 
             // Carregar sessões para extrair observações (modelo Fono)
             setLoadingObservations(true);
@@ -1199,7 +1154,7 @@ export function GerarRelatorioPage() {
                             <>
                                 {adaptedData.performanceLineData && (
                                     <section data-print-block data-print-wide>
-                                        <ToPerformanceChart 
+                                        <MusiPerformanceChart 
                                             data={adaptedData.performanceLineData} 
                                             loading={loadingCharts}
                                             title="Evolução do Desempenho"

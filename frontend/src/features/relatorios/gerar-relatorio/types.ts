@@ -29,7 +29,9 @@ export type KpisRelatorio = {
 export type SerieLinha = { 
   x: string; 
   acerto: number; 
-  independencia: number; 
+  independencia: number;
+  ajuda?: number;
+  erro?: number;
 };
 
 export type Filters = {

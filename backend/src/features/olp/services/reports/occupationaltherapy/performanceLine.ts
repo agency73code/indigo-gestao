@@ -1,8 +1,8 @@
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import type { MusicSession } from "./types.js";
+import type { OccupationalSession } from "./types.js";
 
-export function calcMusicPerformanceLine(sessions: MusicSession[]) {
+export function calcOcuppationalPerformanceLine(sessions: OccupationalSession[]) {
   const result = [];
 
   for (const session of sessions) {

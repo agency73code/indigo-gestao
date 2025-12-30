@@ -25,7 +25,6 @@ import {
 } from '@/components/ui/dialog';
 import type {
     SupervisionLinkFormModalProps,
-    Terapeuta,
     CreateSupervisionLinkInput,
     UpdateSupervisionLinkInput,
     TerapeutaAvatar,
@@ -54,8 +53,8 @@ export default function SupervisionLinkFormModal({
     const [selectedTherapist, setSelectedTherapist] = useState<TerapeutaAvatar | null>(null);
     const [showSupervisorSearch, setShowSupervisorSearch] = useState(false);
     const [showTherapistSearch, setShowTherapistSearch] = useState(false);
-    const [supervisorResults, setSupervisorResults] = useState<Terapeuta[]>([]);
-    const [therapistResults, setTherapistResults] = useState<Terapeuta[]>([]);
+    const [supervisorResults, setSupervisorResults] = useState<TerapeutaAvatar[]>([]);
+    const [therapistResults, setTherapistResults] = useState<TerapeutaAvatar[]>([]);
 
     // Estados de validação
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -183,7 +182,7 @@ export default function SupervisionLinkFormModal({
         }
     };
 
-    const handleSupervisorSelect = (supervisor: Terapeuta) => {
+    const handleSupervisorSelect = (supervisor: TerapeutaAvatar) => {
         setSelectedSupervisor(supervisor);
         setSupervisorId(supervisor.id || '');
         setSupervisorSearch(supervisor.nome);
@@ -195,7 +194,7 @@ export default function SupervisionLinkFormModal({
         }
     };
 
-    const handleTherapistSelect = (therapist: Terapeuta) => {
+    const handleTherapistSelect = (therapist: TerapeutaAvatar) => {
         setSelectedTherapist(therapist);
         setSupervisedTherapistId(therapist.id || '');
         setTherapistSearch(therapist.nome);
