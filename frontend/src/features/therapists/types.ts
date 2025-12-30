@@ -1,7 +1,7 @@
 export interface TherapistProfessionalData {
   cargo: string;
   areaAtuacao: string;
-  numeroConselho?: string | null;
+  numeroConselho?: string | null | undefined;
 }
 
 export interface TherapistSelectDTO {

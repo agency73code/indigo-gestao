@@ -244,7 +244,7 @@ export function VisualizarRelatorioPage() {
         therapistInfo={therapist ? {
           nome: therapist.nome,
           areaAtuacao: therapist.dadosProfissionais?.[0]?.areaAtuacao,
-          numeroConselho: therapist.dadosProfissionais?.[0]?.numeroConselho,
+          numeroConselho: therapist.dadosProfissionais?.[0]?.numeroConselho ?? undefined,
         } : undefined}
       >
         <div className="max-w-7xl mx-auto px-4 py-4 space-y-6">
