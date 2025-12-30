@@ -13,5 +13,5 @@ export * from './services/anamnese-consulta.service';
 // Types
 export * from './types/anamnese-consulta.types';
 
-// Mocks (para desenvolvimento)
-export * from './mocks/anamnese-consulta.mock';
+// Nota: Mocks não são exportados aqui para evitar inclusão em produção
+// Para desenvolvimento, importe diretamente de './mocks/anamnese-consulta.mock'

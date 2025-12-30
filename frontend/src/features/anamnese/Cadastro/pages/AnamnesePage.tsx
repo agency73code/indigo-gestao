@@ -1,10 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/ui/button';
 import { ArrowLeft, ArrowRight, Check, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import VerticalStepSidebar from '@/features/cadastros/components/VerticalStepSidebar';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
+import { UnsavedChangesDialog } from '@/components/dialogs/UnsavedChangesDialog';
 import { CabecalhoAnamnese } from '../components';
 import { 
     QueixaDiagnosticoStep, 
@@ -312,6 +314,24 @@ export default function AnamnesePage() {
     // Estado de Finalização
     const [finalizacao, setFinalizacao] = useState<Partial<AnamneseFinalizacao>>(initialFinalizacao);
 
+    // Detectar se o formulário tem alterações não salvas
+    const isDirty = useMemo(() => {
+        // Verificar se o cabeçalho tem dados preenchidos (clienteId é o principal)
+        const hasClienteSelected = !!cabecalho.clienteId;
+        
+        // Verificar se há queixa preenchida
+        const hasQueixa = !!queixaDiagnostico.queixaPrincipal;
+        
+        // Considera "dirty" se tiver cliente selecionado ou queixa preenchida
+        return hasClienteSelected || hasQueixa;
+    }, [cabecalho.clienteId, queixaDiagnostico.queixaPrincipal]);
+
+    // Hook de alterações não salvas
+    const { isBlocked, proceed, reset } = useUnsavedChanges({
+        isDirty,
+        message: 'Você tem uma anamnese em andamento. Deseja realmente sair?',
+    });
+
     // Montar objeto completo da anamnese
     const getAnamneseData = useCallback((): Anamnese => {
         return {
@@ -551,6 +571,15 @@ export default function AnamnesePage() {
                     )}
                 </div>
             </div>
+
+            {/* Dialog de confirmação para sair com alterações não salvas */}
+            <UnsavedChangesDialog
+                open={isBlocked}
+                onConfirm={() => proceed?.()}
+                onCancel={() => reset?.()}
+                title="Anamnese em andamento"
+                description="Você tem uma anamnese em andamento que não foi salva. Se sair agora, todos os dados preenchidos serão perdidos. Deseja continuar?"
+            />
         </div>
     );
 }

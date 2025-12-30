@@ -166,12 +166,12 @@ export function transformToBackendFormat(data: Anamnese): Record<string, unknown
         })),
         
         // Contexto Familiar
-        historicosFamiliares: data.contextoFamiliarRotina.historicosFamiliares.map(hist => ({
+        historicosFamiliares: (data.contextoFamiliarRotina.historicosFamiliares || []).map(hist => ({
             condicaoDiagnostico: hist.condicaoDiagnostico,
             parentesco: hist.parentesco,
             observacao: hist.observacao || null,
         })),
-        atividadesRotina: data.contextoFamiliarRotina.atividadesRotina.map(rot => ({
+        atividadesRotina: (data.contextoFamiliarRotina.atividadesRotina || []).map(rot => ({
             atividade: rot.atividade,
             horario: rot.horario,
             responsavel: rot.responsavel || null,
