@@ -35,7 +35,8 @@ export type ClienteCompleto = Cliente;
 
 // Buscar lista de clientes para o select
 export async function listarClientes(): Promise<ClienteResumido[]> {
-    return listarClientesApi();
+    const result = await listarClientesApi();
+    return result.items;
 }
 
 // Buscar cliente completo por ID (com cuidadores)
@@ -45,7 +46,18 @@ export async function buscarCliente(id: string): Promise<ClienteCompleto> {
 
 // Buscar lista de terapeutas para o select
 export async function listarTerapeutas(): Promise<TerapeutaResumido[]> {
-    return listarTerapeutasApi();
+    const result = await listarTerapeutasApi();
+    return result.items;
+}
+
+// Buscar terapeuta por ID
+export async function buscarTerapeuta(id: string): Promise<TerapeutaResumido> {
+    const result = await listarTerapeutasApi();
+    const terapeuta = result.items.find((t: TerapeutaResumido) => t.id === id);
+    if (!terapeuta) {
+        throw new Error(`Terapeuta com ID ${id} não encontrado`);
+    }
+    return terapeuta;
 }
 
 // Calcular idade a partir da data de nascimento
