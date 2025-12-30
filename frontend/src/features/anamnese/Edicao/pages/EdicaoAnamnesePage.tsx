@@ -1,11 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/ui/button';
-import { ArrowLeft, ArrowRight, Check, AlertCircle } from 'lucide-react';
-import { toast } from 'sonner';
+import { ArrowLeft, ArrowRight, Check, Loader2 } from 'lucide-react';
 import VerticalStepSidebar from '@/features/cadastros/components/VerticalStepSidebar';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
-import { CabecalhoAnamnese } from '../components';
+import { CabecalhoAnamnese } from '../../Cadastro/components';
 import { 
     QueixaDiagnosticoStep, 
     ContextoFamiliarRotinaStep,
@@ -14,7 +13,7 @@ import {
     SocialAcademicoStep,
     ComportamentoStep,
     FinalizacaoStep
-} from '../components/steps';
+} from '../../Cadastro/components/steps';
 import type { 
     AnamnseeCabecalho, 
     AnamneseQueixaDiagnostico, 
@@ -23,14 +22,8 @@ import type {
     AnamneseAtividadesVidaDiaria,
     AnamneseSocialAcademico,
     AnamneseComportamento,
-    AnamneseFinalizacao,
-    Anamnese
-} from '../types/anamnese.types';
-import { 
-    criarAnamnese,
-    validarAnamneseMinima,
-    getValidationErrorMessages
-} from '../services/anamnese-cadastro.service';
+    AnamneseFinalizacao
+} from '../../Cadastro/types/anamnese.types';
 import { 
     User, 
     Baby, 
@@ -268,13 +261,16 @@ const initialFinalizacao: Partial<AnamneseFinalizacao> = {
     observacoesImpressoesTerapeuta: '',
 };
 
-export default function AnamnesePage() {
-    // Configurar título da página
-    const { setPageTitle, setNoMainContainer, setShowBackButton } = usePageTitle();
+export default function EdicaoAnamnesePage() {
+    // Obter o ID da anamnese da URL
+    const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     
+    // Configurar título da página
+    const { setPageTitle, setNoMainContainer, setShowBackButton } = usePageTitle();
+    
     useEffect(() => {
-        setPageTitle('Anamnese');
+        setPageTitle('Editar Anamnese');
         setNoMainContainer(true);
         setShowBackButton(true);
         
@@ -286,7 +282,7 @@ export default function AnamnesePage() {
     
     const [currentStep, setCurrentStep] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
-    const [validationErrors, setValidationErrors] = useState<string[]>([]);
+    const [isLoadingData, setIsLoadingData] = useState(true);
     
     // Estado do cabeçalho
     const [cabecalho, setCabecalho] = useState<AnamnseeCabecalho>(initialCabecalho);
@@ -312,95 +308,65 @@ export default function AnamnesePage() {
     // Estado de Finalização
     const [finalizacao, setFinalizacao] = useState<Partial<AnamneseFinalizacao>>(initialFinalizacao);
 
-    // Montar objeto completo da anamnese
-    const getAnamneseData = useCallback((): Anamnese => {
-        return {
-            cabecalho: {
-                ...cabecalho,
-                clienteNome: cabecalho.clienteNome || '',
-                dataNascimento: cabecalho.dataNascimento || '',
-                idade: cabecalho.idade || '',
-            },
-            queixaDiagnostico: {
-                queixaPrincipal: queixaDiagnostico.queixaPrincipal || '',
-                diagnosticoPrevio: queixaDiagnostico.diagnosticoPrevio || '',
-                suspeitaCondicaoAssociada: queixaDiagnostico.suspeitaCondicaoAssociada || '',
-                especialidadesConsultadas: queixaDiagnostico.especialidadesConsultadas || [],
-                medicamentosEmUso: queixaDiagnostico.medicamentosEmUso || [],
-                examesPrevios: queixaDiagnostico.examesPrevios || [],
-                terapiasPrevias: queixaDiagnostico.terapiasPrevias || [],
-            },
-            contextoFamiliarRotina: {
-                historicosFamiliares: contextoFamiliarRotina.historicosFamiliares || [],
-                atividadesRotina: contextoFamiliarRotina.atividadesRotina || [],
-            },
-            desenvolvimentoInicial: desenvolvimentoInicial as AnamneseDesenvolvimentoInicial,
-            atividadesVidaDiaria: atividadesVidaDiaria as AnamneseAtividadesVidaDiaria,
-            socialAcademico: socialAcademico as AnamneseSocialAcademico,
-            comportamento: comportamento as AnamneseComportamento,
-            finalizacao: {
-                outrasInformacoesRelevantes: finalizacao.outrasInformacoesRelevantes || '',
-                observacoesImpressoesTerapeuta: finalizacao.observacoesImpressoesTerapeuta || '',
-                expectativasFamilia: finalizacao.expectativasFamilia || '',
-            },
+    // Carregar dados da anamnese existente
+    useEffect(() => {
+        const loadAnamnese = async () => {
+            if (!id) {
+                navigate('/app/anamnese/lista');
+                return;
+            }
+            
+            setIsLoadingData(true);
+            try {
+                // TODO: Implementar chamada ao serviço para buscar dados da anamnese
+                // const data = await getAnamneseById(id);
+                // 
+                // Aqui você deve mapear os dados do backend para os estados do formulário:
+                // setCabecalho(mapCabecalhoFromApi(data.cabecalho));
+                // setQueixaDiagnostico(mapQueixaDiagnosticoFromApi(data.queixaDiagnostico));
+                // setContextoFamiliarRotina(mapContextoFamiliarRotinaFromApi(data.contextoFamiliarRotina));
+                // setDesenvolvimentoInicial(mapDesenvolvimentoInicialFromApi(data.desenvolvimentoInicial));
+                // setAtividadesVidaDiaria(mapAtividadesVidaDiariaFromApi(data.atividadesVidaDiaria));
+                // setSocialAcademico(mapSocialAcademicoFromApi(data.socialAcademico));
+                // setComportamento(mapComportamentoFromApi(data.comportamento));
+                // setFinalizacao(mapFinalizacaoFromApi(data.finalizacao));
+                
+                console.log('Carregando anamnese para edição:', id);
+                
+                // Simulando delay de carregamento
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+            } catch (error) {
+                console.error('Erro ao carregar anamnese:', error);
+                // TODO: Mostrar toast de erro
+            } finally {
+                setIsLoadingData(false);
+            }
         };
-    }, [
-        cabecalho, 
-        queixaDiagnostico, 
-        contextoFamiliarRotina, 
-        desenvolvimentoInicial, 
-        atividadesVidaDiaria, 
-        socialAcademico, 
-        comportamento, 
-        finalizacao
-    ]);
+
+        loadAnamnese();
+    }, [id, navigate]);
 
     const prevStep = () => {
         if (currentStep > 1) {
             setCurrentStep(currentStep - 1);
-            setValidationErrors([]);
         }
     };
 
     const nextStep = () => {
         if (currentStep < STEPS.length) {
             setCurrentStep(currentStep + 1);
-            setValidationErrors([]);
         }
     };
 
     const handleSubmit = async () => {
         setIsLoading(true);
-        setValidationErrors([]);
-        
         try {
-            const anamneseData = getAnamneseData();
+            // TODO: Implementar lógica de atualização
+            console.log('Atualizando anamnese...', id);
             
-            // Validar dados mínimos antes de enviar
-            const validation = validarAnamneseMinima(anamneseData);
-            if (!validation.success) {
-                const errorMessages = getValidationErrorMessages(validation.errors);
-                setValidationErrors(errorMessages);
-                toast.error('Preencha os campos obrigatórios antes de finalizar.');
-                return;
-            }
-            
-            // Enviar para o service
-            const response = await criarAnamnese(anamneseData, true); // Skip full validation
-            
-            if (response.success) {
-                toast.success('Anamnese cadastrada com sucesso!');
-                navigate('/anamnese');
-            } else {
-                if (response.errors && response.errors.length > 0) {
-                    const errorMessages = getValidationErrorMessages(response.errors);
-                    setValidationErrors(errorMessages);
-                }
-                toast.error(response.message || 'Erro ao salvar anamnese.');
-            }
-        } catch (error) {
-            console.error('Erro ao salvar anamnese:', error);
-            toast.error('Erro inesperado ao salvar anamnese.');
+            // Após salvar com sucesso, redirecionar para a lista
+            // navigate('/app/anamnese/lista');
         } finally {
             setIsLoading(false);
         }
@@ -470,6 +436,18 @@ export default function AnamnesePage() {
         }
     };
 
+    // Mostrar loading enquanto carrega os dados
+    if (isLoadingData) {
+        return (
+            <div className="flex h-full items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="text-sm text-muted-foreground">Carregando anamnese...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="flex h-full gap-1">
             {/* Sidebar Vertical com Steps */}
@@ -494,25 +472,6 @@ export default function AnamnesePage() {
                     borderRadius: '16px'
                 }}
             >
-                {/* Erros de validação */}
-                {validationErrors.length > 0 && (
-                    <div className="mb-4 p-4 bg-destructive/10 border border-destructive/30 rounded-lg">
-                        <div className="flex items-start gap-2">
-                            <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
-                            <div className="space-y-1">
-                                <p className="text-sm font-medium text-destructive">
-                                    Corrija os seguintes erros:
-                                </p>
-                                <ul className="text-sm text-destructive/80 list-disc list-inside space-y-0.5">
-                                    {validationErrors.map((error, index) => (
-                                        <li key={index}>{error}</li>
-                                    ))}
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
                 {/* Form Content */}
                 <div className="flex-1 overflow-auto px-1 pb-4">
                     {renderCurrentStep()}
@@ -544,7 +503,7 @@ export default function AnamnesePage() {
                             ) : (
                                 <>
                                     <Check className="w-4 h-4 mr-2" />
-                                    Finalizar Anamnese
+                                    Salvar Alterações
                                 </>
                             )}
                         </Button>

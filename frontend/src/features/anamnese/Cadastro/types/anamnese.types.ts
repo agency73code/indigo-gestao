@@ -1,7 +1,3 @@
-/**
- * Tipos para a feature de Anamnese
- * Organizado por Steps conforme formulário modelo
- */
 
 // ============================================
 // CONSTANTES E TIPOS AUXILIARES
@@ -24,10 +20,8 @@ export const ESPECIALIDADES_MEDICAS = [
 
 export type EspecialidadeMedica = (typeof ESPECIALIDADES_MEDICAS)[number];
 
-// Tipo para campos Sim/Não
 export type SimNao = 'sim' | 'nao' | null;
 
-// Tipo para campos com opção "Com ajuda"
 export type SimNaoComAjuda = 'sim' | 'nao' | 'com_ajuda' | null;
 
 // ============================================
@@ -59,6 +53,7 @@ export interface AnamnseeCabecalho {
     profissionalId: string;
     profissionalNome: string;
     cuidadores?: CuidadorAnamnese[];
+    escolaCliente?: string | null;
 }
 
 // ============================================
@@ -71,14 +66,14 @@ export interface EspecialidadeConsultada {
     nome: string;
     data: string;
     observacao?: string;
-    ativo: boolean; // Ainda consulta este profissional?
+    ativo: boolean; 
 }
 
 export interface MedicamentoEmUso {
     id: string;
     nome: string;
     dosagem: string;
-    dataInicio: string; // Data de início do uso
+    dataInicio: string; 
     motivo: string;
 }
 
@@ -87,17 +82,17 @@ export interface ExamePrevio {
     nome: string;
     data: string;
     resultado: string;
-    arquivos?: ArquivoAnexo[]; // Fotos/documentos do exame
+    arquivos?: ArquivoAnexo[]; 
 }
 
 // Tipo para arquivos anexados
 export interface ArquivoAnexo {
     id: string;
     nome: string;
-    tipo: string; // MIME type
+    tipo: string; 
     tamanho: number;
-    url?: string; // URL após upload
-    file?: File; // Arquivo local antes do upload
+    url?: string; 
+    file?: File; 
 }
 
 export interface TerapiaPrevia {
@@ -106,7 +101,7 @@ export interface TerapiaPrevia {
     especialidadeAbordagem: string;
     tempoIntervencao: string;
     observacao?: string;
-    ativo: boolean; // Ainda realiza esta terapia?
+    ativo: boolean; 
 }
 
 export interface AnamneseQueixaDiagnostico {
@@ -133,8 +128,8 @@ export interface HistoricoFamiliar {
 export interface AtividadeRotina {
     id: string;
     atividade: string;
-    horario: string; // Horário de realização (obrigatório)
-    responsavel: string; // Responsável pela atividade
+    horario: string; 
+    responsavel: string; 
     frequencia: string;
     observacao: string;
 }
@@ -151,9 +146,9 @@ export interface AnamneseContextoFamiliarRotina {
 // Item 10 - Gestação e Parto
 export interface GestacaoParto {
     tipoParto: 'cesarea' | 'natural' | null;
-    semanas: string;
-    apgar1min: string;
-    apgar5min: string;
+    semanas: number | null;
+    apgar1min: number | null;
+    apgar5min: number | null;
     intercorrencias: string;
 }
 
@@ -183,8 +178,8 @@ export interface DesenvolvimentoFalaLinguagem {
     // Audição
     audicao: 'boa' | 'ruim' | null;
     teveOtiteDeRepeticao: SimNao;
-    otiteVezes: string;
-    otitePeriodoMeses: string;
+    otiteVezes: number | null;
+    otitePeriodoMeses: number | null;
     otiteFrequencia: string;
     fazOuFezUsoTuboVentilacao: SimNao;
     tuboVentilacaoObservacao: string;
@@ -193,7 +188,7 @@ export interface DesenvolvimentoFalaLinguagem {
     objetoOralEspecificar: string;
     usaMamadeira: SimNao;
     mamadeiraHa: string;
-    mamadeiraVezesAoDia: string;
+    mamadeiraVezesAoDia: number | null;
     // Comunicação atual
     comunicacaoAtual: string;
 }
@@ -293,7 +288,7 @@ export interface DesenvolvimentoSocial {
 // Item 18 - Desenvolvimento Acadêmico
 export interface DesenvolvimentoAcademico {
     escola: string;
-    ano: string;
+    ano: number | null;
     periodo: string;
     direcao: string;
     coordenacao: string;
@@ -402,3 +397,27 @@ export const ANAMNESE_STEPS = [
     'Comportamento',
     'Finalização'
 ];
+
+// ============================================
+// TIPOS DE RESPOSTA DA API
+// ============================================
+
+export interface ValidationError {
+    field: string;
+    message: string;
+}
+
+export interface AnamneseResponse {
+    success: boolean;
+    data?: Anamnese;
+    message?: string;
+    errors?: ValidationError[];
+}
+
+export interface AnamneseListResponse {
+    success: boolean;
+    data: Anamnese[];
+    total: number;
+    page: number;
+    limit: number;
+}

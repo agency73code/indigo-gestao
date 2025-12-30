@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { Button } from '@/ui/button';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import ToolbarConsulta from '@/features/consultas/components/ToolbarConsulta';
 import AnamneseTable from '../components/AnamneseTable';
 import { listAnamneses } from '../services/anamnese-table.service';
@@ -14,6 +14,7 @@ const AnamneseProfileDrawer = lazy(() => import('../../Consulta/components/Anamn
 export default function AnamneseListPage() {
     // ✅ Definir título da página
     const { setPageTitle, setNoMainContainer } = usePageTitle();
+    const navigate = useNavigate();
     
     useEffect(() => {
         setPageTitle('Anamnese');
@@ -136,9 +137,11 @@ export default function AnamneseListPage() {
     }, []);
 
     const handleEdit = useCallback(() => {
-        // TODO: Implementar navegação para edição
-        console.log('Editar anamnese:', selectedAnamnese?.id);
-    }, [selectedAnamnese]);
+        if (selectedAnamnese?.id) {
+            setDrawerOpen(false);
+            navigate(`/app/anamnese/editar/${selectedAnamnese.id}`);
+        }
+    }, [selectedAnamnese, navigate]);
 
     // Calcular páginas para paginação
     const totalPages = Math.ceil(pagination.total / pagination.pageSize);

@@ -11,7 +11,7 @@ import {
     buscarCliente, 
     calcularIdade, 
     formatarData,
-} from '../services/anamnese.service';
+} from '../services/anamnese-cadastro.service';
 
 // Mapa de relações para exibição
 const RELACAO_LABELS: Record<string, string> = {
@@ -105,6 +105,7 @@ export default function CabecalhoAnamnese({ data, onChange }: CabecalhoAnamneseP
                 informante: '', // Deixar vazio para o terapeuta preencher
                 parentesco: '', // Deixar vazio para o terapeuta selecionar
                 cuidadores: cuidadoresMapeados,
+                escolaCliente: clienteCompleto.dadosEscola?.nome || null,
             });
         } catch (error) {
             console.error('Erro ao buscar cliente:', error);

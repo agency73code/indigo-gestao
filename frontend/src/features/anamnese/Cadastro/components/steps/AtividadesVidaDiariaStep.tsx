@@ -9,7 +9,6 @@ interface AtividadesVidaDiariaStepProps {
     onChange: (data: Partial<AnamneseAtividadesVidaDiaria>) => void;
 }
 
-// Componente auxiliar para campo Sim/Não
 function SimNaoField({ 
     label, 
     value, 
@@ -50,7 +49,6 @@ function SimNaoField({
     );
 }
 
-// Componente para campo Sim/Não/Com ajuda
 function SimNaoComAjudaField({ 
     label, 
     value, 

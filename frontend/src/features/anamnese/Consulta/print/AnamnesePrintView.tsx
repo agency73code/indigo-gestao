@@ -615,7 +615,7 @@ export const AnamnesePrintView = forwardRef<HTMLDivElement, AnamnesePrintViewPro
                 </div>
 
                 {/* ===== RODAPÉ ===== */}
-                <footer className="border-t-1 border-primary pt-4 mt-8 text-center text-xs text-gray-600">
+                <footer className="border-t-2 border-primary pt-4 mt-8 text-center text-xs text-gray-600">
                     <p className="font-semibold text-sm mb-1" style={{ fontFamily: 'Sora, sans-serif' }}>
                         {CLINIC_INFO.name}
                     </p>
