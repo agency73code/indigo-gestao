@@ -53,13 +53,14 @@ model cuidador {
   relacao          String?
   descricaoRelacao String?
   nome             String?
-  cpf              String    @unique @db.Char(11)
+  cpf              String    @db.Char(11)
   profissao        String?
   escolaridade     String?
   telefone         String?
   email            String?
   clienteId        String
   enderecoId       Int?
+  dataNascimento   DateTime?
   cliente          cliente   @relation(fields: [clienteId], references: [id])
   endereco         endereco? @relation(fields: [enderecoId], references: [id])
 
@@ -332,7 +333,7 @@ model sessao_trial {
 
   // Musicoterapia
   participacao Int?
-  suporte Int?
+  suporte      Int?
 
   estimulosOcp estimulo_ocp @relation(fields: [estimulos_ocp_id], references: [id], onDelete: Cascade)
   sessao       sessao       @relation(fields: [sessao_id], references: [id], onDelete: Cascade)
@@ -372,17 +373,17 @@ model estimulo {
 }
 
 model estimulo_ocp {
-  id          Int            @id @default(autoincrement())
-  id_estimulo Int
-  id_ocp      Int
-  nome        String?
-  descricao   String?        @db.Text
-  metodos     String?        @db.Text
-  tecnicas_procedimentos String? @db.Text
-  status      Boolean
-  estimulo    estimulo       @relation(fields: [id_estimulo], references: [id], onDelete: Cascade)
-  ocp         ocp            @relation(fields: [id_ocp], references: [id], onDelete: Cascade)
-  trials      sessao_trial[]
+  id                     Int            @id @default(autoincrement())
+  id_estimulo            Int
+  id_ocp                 Int
+  nome                   String?
+  descricao              String?        @db.Text
+  metodos                String?        @db.Text
+  tecnicas_procedimentos String?        @db.Text
+  status                 Boolean
+  estimulo               estimulo       @relation(fields: [id_estimulo], references: [id], onDelete: Cascade)
+  ocp                    ocp            @relation(fields: [id_ocp], references: [id], onDelete: Cascade)
+  trials                 sessao_trial[]
 
   @@unique([id_estimulo, id_ocp])
   @@index([id_ocp], map: "estimulo_ocp_id_ocp_fkey")

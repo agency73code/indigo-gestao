@@ -135,6 +135,7 @@ export async function buscarClientePorId(id: string): Promise<Cliente> {
 }
 
 export async function cadastrarCliente(payload: Partial<Cliente>) {
+  return console.log(payload);
   const res = await authFetch('/api/clientes/cadastrar', {
     method: 'POST',
     headers: { 'Content-Type':'application/json' },

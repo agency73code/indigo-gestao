@@ -25,6 +25,7 @@ const caregiverSchema = z.object({
     escolaridade: z.string().min(1, 'Escolaridade é obrigatório'),
     telefone: z.string().min(1, 'Telefone do responsável é obrigatório').transform(strip),
     email: z.email({ message: 'E-mail inválido' }),
+    dataNascimento: z.coerce.date().optional().nullable().default(null),
     endereco: caregiverAddressSchema,
 });
 
