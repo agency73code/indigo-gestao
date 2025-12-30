@@ -7,7 +7,7 @@ import type { Patient } from '@/features/programas/consultar-programas/types';
 import type { AnamnseeCabecalho } from '../types/anamnese.types';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { 
-    listarTerapeutas,
+    buscarTerapeuta,
     buscarCliente, 
     calcularIdade, 
     formatarData,
@@ -45,34 +45,23 @@ export default function CabecalhoAnamnese({ data, onChange }: CabecalhoAnamneseP
         }
     }, []);
 
-    // Carregar terapeutas e preencher profissional logado
+    // Carregar terapeuta logado e preencher profissional automaticamente
     useEffect(() => {
-        async function loadTerapeutas() {
+        async function loadTerapeutaLogado() {
+            if (!user || data.profissionalId) {
+                return;
+            }
+
             try {
-                const terapeutasData = await listarTerapeutas();
-                
-                // Preencher automaticamente com o terapeuta logado
-                if (user && !data.profissionalId) {
-                    const terapeuta = terapeutasData.find(t => t.id === user.id);
-                    if (terapeuta) {
-                        onChange({
-                            ...data,
-                            dataEntrevista: data.dataEntrevista || getDataHoje(),
-                            profissionalId: terapeuta.id,
-                            profissionalNome: terapeuta.nome,
-                        });
-                    } else {
-                        // Fallback: usar dados básicos do usuário logado
-                        onChange({
-                            ...data,
-                            dataEntrevista: data.dataEntrevista || getDataHoje(),
-                            profissionalId: user.id,
-                            profissionalNome: user.name ?? 'Terapeuta',
-                        });
-                    }
-                }
+                const terapeuta = await buscarTerapeuta(user.id);
+                onChange({
+                    ...data,
+                    dataEntrevista: data.dataEntrevista || getDataHoje(),
+                    profissionalId: terapeuta.id,
+                    profissionalNome: terapeuta.nome,
+                });
             } catch (error) {
-                console.error('Erro ao carregar terapeutas:', error);
+                console.error('Erro ao carregar terapeuta:', error);
                 // Em caso de erro, ainda tenta usar os dados do usuário logado
                 if (user && !data.profissionalId) {
                     onChange({
@@ -84,8 +73,8 @@ export default function CabecalhoAnamnese({ data, onChange }: CabecalhoAnamneseP
                 }
             }
         }
-        loadTerapeutas();
-    }, [user]);
+        loadTerapeutaLogado();
+    }, [user, data.profissionalId, data.dataEntrevista, onChange]);
 
     // Quando seleciona um cliente pelo PatientSelector
     const handlePatientSelect = async (patient: Patient) => {

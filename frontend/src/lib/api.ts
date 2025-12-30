@@ -3,7 +3,7 @@ import { authFetch } from "./http";
 import type { Terapeuta, Cliente } from "@/features/cadastros/types/cadastros.types";
 import type { Bank } from '@/common/constants/banks';
 import type { Therapist as TerapeutaConsulta, Patient } from '@/features/consultas/types/consultas.types'
-import type { QueryParams, SaveSessionPayload } from "./types/api.types";
+import type { ListQueryParams, PaginatedListResult, QueryParams, SaveSessionPayload } from "./types/api.types";
 
 const AUTH_BYPASS =
   import.meta.env.DEV && import.meta.env.VITE_AUTH_BYPASS === 'true';
@@ -20,8 +20,17 @@ export async function buscarTerapeutaPorId(id: string): Promise<Terapeuta> {
     return data as Terapeuta;
 }
 
-export async function listarTerapeutas(): Promise<TerapeutaConsulta[]> {
-  const res = await authFetch('/api/terapeutas', { method: 'GET' });
+export async function listarTerapeutas(
+  params: ListQueryParams = {},
+): Promise<PaginatedListResult<TerapeutaConsulta>> {
+  const query = buildApiUrl('/api/terapeutas', {
+    q: params.q,
+    sort: params.sort,
+    page: params.page,
+    pageSize: params.pageSize
+  });
+
+  const res = await authFetch(query, { method: 'GET' });
   const text = await res.text();
   const data = text ? JSON.parse(text) : null;
 
@@ -30,7 +39,17 @@ export async function listarTerapeutas(): Promise<TerapeutaConsulta[]> {
     throw new Error(msg);
   }
   
-  return (data ?? []) as TerapeutaConsulta[];
+  if (Array.isArray(data)) {
+    return { items: data as TerapeutaConsulta[] };
+  }
+
+  return {
+    items: (data?.items ?? []) as TerapeutaConsulta[],
+    total: data?.total,
+    page: data?.page,
+    pageSize: data?.pageSize,
+    totalPages: data?.totalPages,
+  };
 }
 
 export async function fetchBrazilianBanks(): Promise<Bank[]> {
@@ -73,8 +92,16 @@ export async function fetchProfessionalMetadata(): Promise<ProfessionalMetadataR
   }
 }
 
-export async function listarClientes(): Promise<Patient[]> {
-  const res = await authFetch('/api/clientes', { method: 'GET' });
+export async function listarClientes(
+  params: ListQueryParams = {},
+): Promise<PaginatedListResult<Patient>> {
+  const query = buildApiUrl('/api/clientes', {
+    q: params.q,
+    sort: params.sort,
+    page: params.page,
+    pageSize: params.pageSize
+  });
+  const res = await authFetch(query, { method: 'GET' });
   const text = await res.text();
   const data = text ? JSON.parse(text) : null;
 
@@ -83,7 +110,15 @@ export async function listarClientes(): Promise<Patient[]> {
     throw new Error(msg);
   }
 
-  return (data?.normalized ?? []) as Patient[];
+  const items = (data?.items ?? data?.normalized ?? []) as Patient[];
+
+  return {
+    items,
+    total: data?.total,
+    page: data?.page,
+    pageSize: data?.pageSize,
+    totalPages: data?.totalPages,
+  }
 }
 
 export async function buscarClientePorId(id: string): Promise<Cliente> {
@@ -177,6 +212,7 @@ export async function signIn(accessInfo: string, password: string) {
       user: { id: 'dev-uid', name: 'Dev User', email: accessInfo },
     } as const;
   }
+  
   const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -269,7 +305,8 @@ export async function getClientesAtivos(): Promise<number> {
 // UTILITY KAIO
 
 export function buildApiUrl(path: string, params?: QueryParams): string {
-  const url = new URL(path, window.location.origin);
+  const base = typeof window !== 'undefined' ? window.location.origin : 'http://localhost';
+  const url = new URL(path, base);
 
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
@@ -335,17 +372,17 @@ export function ageCalculation(isoDateString: string): number {
 }
 
 export async function fetchOwnerAvatar(ownerId: string, ownerType: 'cliente' | 'terapeuta'): Promise<string | null> {
-    try {
-        const response = await fetch(`/api/arquivos/getAvatar?ownerId=${ownerId}&ownerType=${ownerType}`, { 
-          credentials: 'include' 
-        });
-        
-        if (!response.ok) return null;
-        
-        const data = await response.json();
-        return data.avatarUrl ?? null;
-    } catch (error) {
-        console.error('Erro ao buscar avatar:', error);
-        return null;
-    }
+  try {
+    const response = await fetch(`/api/arquivos/getAvatar?ownerId=${ownerId}&ownerType=${ownerType}`, { 
+      credentials: 'include' 
+    });
+      
+    if (!response.ok) return null;
+    
+    const data = await response.json();
+    return data.avatarUrl ?? null;
+  } catch (error) {
+    console.error('Erro ao buscar avatar:', error);
+    return null;
+  }
 }

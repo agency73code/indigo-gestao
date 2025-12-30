@@ -1,15 +1,22 @@
-import { listarClientes as listarClientesApi, listarTerapeutas as listarTerapeutasApi, buscarClientePorId } from '@/lib/api';
+import {
+    listarClientes as listarClientesApi,
+    listarTerapeutas as listarTerapeutasApi,
+    buscarClientePorId,
+    buscarTerapeutaPorId,
+} from '@/lib/api';
 import type { Patient } from '@/features/consultas/types/consultas.types';
 import type { Therapist } from '@/features/consultas/types/consultas.types';
 import type { Cliente } from '@/features/cadastros/types/cadastros.types';
 
 export type ClienteResumido = Patient;
-export type TerapeutaResumido = Therapist;
+export type TerapeutaResumido = Pick<Therapist, 'id' | 'nome'>;
 export type ClienteCompleto = Cliente;
 
 // Buscar lista de clientes para o select
-export async function listarClientes(): Promise<ClienteResumido[]> {
-    return listarClientesApi();
+export async function listarClientes(
+    params?: ListQueryParams,
+): Promise<PaginatedListResult<ClienteResumido>> {
+    return listarClientesApi(params);
 }
 
 // Buscar cliente completo por ID (com cuidadores)
@@ -17,9 +24,28 @@ export async function buscarCliente(id: string): Promise<ClienteCompleto> {
     return buscarClientePorId(id);
 }
 
+export async function buscarTerapeuta(id: string): Promise<TerapeutaResumido> {
+    const terapeuta = await buscarTerapeutaPorId(id);
+
+    return {
+        id: terapeuta.id ?? id,
+        nome: terapeuta.nome,
+    };
+}
+
 // Buscar lista de terapeutas para o select
-export async function listarTerapeutas(): Promise<TerapeutaResumido[]> {
-    return listarTerapeutasApi();
+export async function listarTerapeutas(
+    params?: ListQueryParams,
+): Promise<PaginatedListResult<TerapeutaResumido>> {
+    const result = await listarTerapeutasApi(params);
+
+    return {
+        ...result,
+        items: result.items.map((terapeuta) => ({
+            id: terapeuta.id,
+            nome: terapeuta.nome,
+        })),
+    };
 }
 
 // Calcular idade a partir da data de nascimento
@@ -66,6 +92,7 @@ export function formatarData(dataISO: string): string {
 // ============================================
 
 import type { Anamnese } from '../types/anamnese.types';
+import type { ListQueryParams, PaginatedListResult } from '@/lib/types/api.types';
 
 // Base URL para API - será configurada quando backend estiver pronto
 // const API_BASE_URL = '/api';
@@ -192,4 +219,3 @@ export function parseAnamneseDoBackend(backendData: Record<string, unknown>): An
     // Aqui podemos fazer transformações inversas
     return backendData as unknown as Anamnese;
 }
-
