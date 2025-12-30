@@ -2,6 +2,7 @@ import { useState, memo } from 'react';
 import { ArrowUpRight, Users } from 'lucide-react';
 import { Button } from '@/ui/button';
 import type { Patient, SortState } from '../types/consultas.types';
+import { SpecialtyBadgeStack } from './SpecialtyBadgeStack';
 
 interface AvatarWithSkeletonProps {
     src?: string | null;
@@ -164,6 +165,9 @@ const PatientTable = memo(function PatientTable({
                                 Telefone
                             </th>
                             <th className="text-left p-3 font-medium text-sm" style={{ color: 'var(--table-text-secondary)' }}>
+                                Especialidades
+                            </th>
+                            <th className="text-left p-3 font-medium text-sm" style={{ color: 'var(--table-text-secondary)' }}>
                                 Responsável
                             </th>
                             <th className="text-left p-3 font-medium text-sm" style={{ color: 'var(--table-text-secondary)' }}>
@@ -216,6 +220,11 @@ const PatientTable = memo(function PatientTable({
                                         <span className="text-[14px] font-normal inline-block px-3 py-0.5 whitespace-nowrap" style={{ fontFamily: 'Inter, sans-serif', color: 'var(--table-text)' }}>
                                             {patient.telefone || '-'}
                                         </span>
+                                    </td>
+                                    <td className="p-3">
+                                        <SpecialtyBadgeStack 
+                                            especialidades={patient.areasAtendimento || []} 
+                                        />
                                     </td>
                                     <td className="p-3">
                                         <span className="text-[14px] font-normal inline-block px-3 py-0.5 truncate" style={{ fontFamily: 'Inter, sans-serif', color: 'var(--table-text)' }}>
@@ -284,6 +293,16 @@ const PatientTable = memo(function PatientTable({
                                     <span className="block text-[14px] font-normal text-[#1F2937]" style={{ fontFamily: 'Inter, sans-serif' }}>
                                         {patient.telefone || '-'}
                                     </span>
+                                </div>
+                                <div>
+                                    <span className="font-semibold text-[#374151] block text-xs mb-1">
+                                        Especialidades
+                                    </span>
+                                    <div className="mt-1">
+                                        <SpecialtyBadgeStack 
+                                            especialidades={patient.areasAtendimento || []} 
+                                        />
+                                    </div>
                                 </div>
                                 <div>
                                     <span className="font-semibold text-[#374151] block text-xs mb-1">

@@ -45,6 +45,7 @@ export default function ContextoFamiliarRotinaStep({ data, onChange }: ContextoF
             id: generateId(),
             atividade: '',
             horario: '',
+            responsavel: '',
             frequencia: '',
             observacao: '',
         };
@@ -194,8 +195,8 @@ export default function ContextoFamiliarRotinaStep({ data, onChange }: ContextoF
                                 </Button>
                             </div>
                             
-                            {/* Linha: Atividade, Horário e Frequência */}
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            {/* Linha: Atividade, Horário, Responsável e Frequência */}
+                            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                                 <div className="md:col-span-2">
                                     <InputField
                                         label="Atividade *"
@@ -209,6 +210,12 @@ export default function ContextoFamiliarRotinaStep({ data, onChange }: ContextoF
                                     placeholder="Ex: 14:00 - 15:00"
                                     value={ativ.horario}
                                     onChange={(e) => handleUpdateAtividade(ativ.id, 'horario', e.target.value)}
+                                />
+                                <InputField
+                                    label="Responsável"
+                                    placeholder="Ex: Mãe, Pai..."
+                                    value={ativ.responsavel}
+                                    onChange={(e) => handleUpdateAtividade(ativ.id, 'responsavel', e.target.value)}
                                 />
                                 <InputField
                                     label="Frequência"

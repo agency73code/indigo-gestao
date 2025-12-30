@@ -1,4 +1,5 @@
 import { Checkbox } from '@/components/ui/checkbox';
+import { InputField } from '@/ui/input-field';
 import AutoExpandTextarea from '../../ui/AutoExpandTextarea';
 import NumberSpinner from '../../ui/NumberSpinner';
 import type { AnamneseAtividadesVidaDiaria, SimNao, SimNaoComAjuda } from '../../types/anamnese.types';
@@ -230,8 +231,11 @@ export default function AtividadesVidaDiariaStep({ data, onChange }: AtividadesV
                 passaDiaInteiroSemComer: data.alimentacao?.passaDiaInteiroSemComer ?? null,
                 apresentaRituaisParaAlimentar: data.alimentacao?.apresentaRituaisParaAlimentar ?? null,
                 estaAbaixoOuAcimaPeso: data.alimentacao?.estaAbaixoOuAcimaPeso ?? null,
+                estaAbaixoOuAcimaPesoDescricao: data.alimentacao?.estaAbaixoOuAcimaPesoDescricao ?? '',
                 temHistoricoAnemia: data.alimentacao?.temHistoricoAnemia ?? null,
+                temHistoricoAnemiaDescricao: data.alimentacao?.temHistoricoAnemiaDescricao ?? '',
                 rotinaAlimentarEProblemaFamilia: data.alimentacao?.rotinaAlimentarEProblemaFamilia ?? null,
+                rotinaAlimentarEProblemaFamiliaDescricao: data.alimentacao?.rotinaAlimentarEProblemaFamiliaDescricao ?? '',
                 observacoes: data.alimentacao?.observacoes ?? '',
                 ...data.alimentacao,
                 [field]: value,
@@ -490,16 +494,40 @@ export default function AtividadesVidaDiariaStep({ data, onChange }: AtividadesV
                         value={data.alimentacao?.estaAbaixoOuAcimaPeso ?? null}
                         onChange={(v) => updateAlimentacao('estaAbaixoOuAcimaPeso', v)}
                     />
+                    {data.alimentacao?.estaAbaixoOuAcimaPeso === 'sim' && (
+                        <InputField
+                            label="Descreva - se possível qual o peso e altura da criança e se faz acompanhamento"
+                            placeholder="Ex: Peso 18kg, altura 1,10m. Faz acompanhamento com nutricionista."
+                            value={data.alimentacao?.estaAbaixoOuAcimaPesoDescricao ?? ''}
+                            onChange={(e) => updateAlimentacao('estaAbaixoOuAcimaPesoDescricao', e.target.value)}
+                        />
+                    )}
                     <SimNaoField
                         label="Tem histórico de anemia."
                         value={data.alimentacao?.temHistoricoAnemia ?? null}
                         onChange={(v) => updateAlimentacao('temHistoricoAnemia', v)}
                     />
+                    {data.alimentacao?.temHistoricoAnemia === 'sim' && (
+                        <InputField
+                            label="Descreva - desde quando"
+                            placeholder="Ex: Desde os 2 anos de idade, faz suplementação."
+                            value={data.alimentacao?.temHistoricoAnemiaDescricao ?? ''}
+                            onChange={(e) => updateAlimentacao('temHistoricoAnemiaDescricao', e.target.value)}
+                        />
+                    )}
                     <SimNaoField
                         label="A rotina alimentar atual é um problema para a família."
                         value={data.alimentacao?.rotinaAlimentarEProblemaFamilia ?? null}
                         onChange={(v) => updateAlimentacao('rotinaAlimentarEProblemaFamilia', v)}
                     />
+                    {data.alimentacao?.rotinaAlimentarEProblemaFamilia === 'sim' && (
+                        <InputField
+                            label="Descreva as maiores dificuldades"
+                            placeholder="Ex: Recusa alimentar frequente, hora das refeições é muito estressante."
+                            value={data.alimentacao?.rotinaAlimentarEProblemaFamiliaDescricao ?? ''}
+                            onChange={(e) => updateAlimentacao('rotinaAlimentarEProblemaFamiliaDescricao', e.target.value)}
+                        />
+                    )}
                 </div>
 
                 <AutoExpandTextarea

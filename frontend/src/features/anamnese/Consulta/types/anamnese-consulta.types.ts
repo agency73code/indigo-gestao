@@ -26,6 +26,20 @@ export interface AnamneseResumo {
 // DADOS COMPLETOS PARA CONSULTA
 // ============================================
 
+// Tipo para cuidadores do cliente
+export interface CuidadorDetalhe {
+    id: ID;
+    nome: string;
+    relacao: string;
+    descricaoRelacao?: string;
+    cpf: string;
+    dataNascimento?: string;
+    telefone: string;
+    email: string;
+    escolaridade?: string;
+    profissao?: string;
+}
+
 export interface AnamneseDetalhe {
     id: ID;
     
@@ -39,15 +53,18 @@ export interface AnamneseDetalhe {
         idade: string;
         informante: string;
         parentesco: string;
+        parentescoDescricao?: string;
         quemIndicou: string;
         profissionalId: ID;
         profissionalNome: string;
+        cuidadores: CuidadorDetalhe[];
     };
 
     // Queixa e Diagnóstico
     queixaDiagnostico: {
         queixaPrincipal: string;
         diagnosticoPrevio: string;
+        suspeitaCondicaoAssociada: string;
         especialidadesConsultadas: EspecialidadeConsultadaDetalhe[];
         medicamentosEmUso: MedicamentoDetalhe[];
         examesPrevios: ExameDetalhe[];
@@ -71,10 +88,10 @@ export interface AnamneseDetalhe {
 
     // Atividades de Vida Diária
     atividadesVidaDiaria: {
-        alimentacao: AlimentacaoDetalhe;
-        higiene: HigieneDetalhe;
-        vestuario: VestuarioDetalhe;
+        desfralde: DesfraldeDetalhe;
         sono: SonoDetalhe;
+        habitosHigiene: HabitosHigieneDetalhe;
+        alimentacao: AlimentacaoDetalhe;
     };
 
     // Social e Acadêmico
@@ -85,11 +102,8 @@ export interface AnamneseDetalhe {
 
     // Comportamento
     comportamento: {
-        aspectosComportamentais: string;
-        interessesRestritos: string;
-        estereotipias: string;
-        sensibilidadesSensoriais: string;
-        autoRegulacao: string;
+        estereotipiasRituais: EstereotipiasRituaisDetalhe;
+        problemasComportamento: ProblemasComportamentoDetalhe;
     };
 
     // Finalização
@@ -125,11 +139,20 @@ export interface MedicamentoDetalhe {
     motivo: string;
 }
 
+export interface ArquivoAnexoDetalhe {
+    id: ID;
+    nome: string;
+    tipo: string;
+    tamanho: number;
+    url?: string;
+}
+
 export interface ExameDetalhe {
     id: ID;
     nome: string;
     data: string;
     resultado: string;
+    arquivos?: ArquivoAnexoDetalhe[];
 }
 
 export interface TerapiaDetalhe {
@@ -153,6 +176,7 @@ export interface AtividadeRotinaDetalhe {
     horario: string;
     atividade: string;
     responsavel: string;
+    frequencia?: string;
     observacao?: string;
 }
 
@@ -194,6 +218,7 @@ export interface FalaLinguagemDetalhe {
     teveOtiteDeRepeticao: SimNao;
     otiteDetalhes: string;
     fazOuFezUsoTuboVentilacao: SimNao;
+    tuboVentilacaoObservacao: string;
     fazOuFezUsoObjetoOral: SimNao;
     objetoOralEspecificar: string;
     usaMamadeira: SimNao;
@@ -201,39 +226,65 @@ export interface FalaLinguagemDetalhe {
     comunicacaoAtual: string;
 }
 
-export interface AlimentacaoDetalhe {
-    amamentacao: string;
-    introducaoAlimentar: string;
-    alimentacaoAtual: string;
-    restricoesAlimentares: string;
-    seletividadeAlimentar: string;
-    usaTalheres: SimNaoComAjuda;
-    comeAlone: SimNaoComAjuda;
+// Item 13 - Desfralde
+export interface DesfraldeTempo {
+    anos: string;
+    meses: string;
+    utilizaFralda: boolean;
 }
 
-export interface HigieneDetalhe {
-    desfralde: string;
-    controlaEsfincterDiurno: SimNao;
-    controlaEsfincterNoturno: SimNao;
-    tomaBANHOSozinho: SimNaoComAjuda;
-    escovaD: SimNaoComAjuda;
+export interface DesfraldeDetalhe {
+    desfraldeDiurnoUrina: DesfraldeTempo;
+    desfraldeNoturnoUrina: DesfraldeTempo;
+    desfraldeFezes: DesfraldeTempo;
+    seLimpaSozinhoUrinar: SimNao;
+    seLimpaSozinhoDefecar: SimNao;
+    lavaAsMaosAposUsoBanheiro: SimNao;
+    apresentaAlteracaoHabitoIntestinal: SimNao;
+    observacoes: string;
 }
 
-export interface VestuarioDetalhe {
-    vesteSozinho: SimNaoComAjuda;
-    calcaSapatos: SimNaoComAjuda;
-    abotoaSozinho: SimNaoComAjuda;
-    preferenciasRoupas: string;
-}
-
+// Item 14 - Sono
 export interface SonoDetalhe {
-    dormeOnde: string;
-    horarioDormir: string;
-    horarioAcordar: string;
-    qualidadeSono: string;
-    dificuldadesParaDormir: string;
-    acordaDuranteNoite: SimNao;
-    pesadelos: SimNao;
+    dormemMediaHorasNoite: string;
+    dormemMediaHorasDia: string;
+    periodoSonoDia: 'manha' | 'tarde' | null;
+    temDificuldadeIniciarSono: SimNao;
+    acordaDeMadrugada: SimNao;
+    dormeNaPropriaCama: SimNao;
+    dormeNoProprioQuarto: SimNao;
+    apresentaSonoAgitado: SimNao;
+    eSonambulo: SimNao;
+    observacoes: string;
+}
+
+// Item 15 - Hábitos Diários de Higiene
+export interface HabitosHigieneDetalhe {
+    tomaBanhoLavaCorpoTodo: SimNaoComAjuda;
+    secaCorpoTodo: SimNaoComAjuda;
+    retiraTodasPecasRoupa: SimNaoComAjuda;
+    colocaTodasPecasRoupa: SimNaoComAjuda;
+    poeCalcadosSemCadarco: SimNaoComAjuda;
+    poeCalcadosComCadarco: SimNaoComAjuda;
+    escovaOsDentes: SimNaoComAjuda;
+    penteiaOCabelo: SimNaoComAjuda;
+    observacoes: string;
+}
+
+// Item 16 - Alimentação
+export interface AlimentacaoDetalhe {
+    apresentaQueixaAlimentacao: SimNao;
+    seAlimentaSozinho: SimNao;
+    eSeletivoQuantoAlimentos: SimNao;
+    passaDiaInteiroSemComer: SimNao;
+    apresentaRituaisParaAlimentar: SimNao;
+    estaAbaixoOuAcimaPeso: SimNao;
+    estaAbaixoOuAcimaPesoDescricao: string;
+    temHistoricoAnemia: SimNao;
+    temHistoricoAnemiaDescricao: string;
+    rotinaAlimentarEProblemaFamilia: SimNao;
+    rotinaAlimentarEProblemaFamiliaDescricao: string;
+    observacoes: string;
 }
 
 export interface InteracaoSocialDetalhe {
@@ -246,12 +297,56 @@ export interface InteracaoSocialDetalhe {
 }
 
 export interface VidaEscolarDetalhe {
-    frequentaEscola: SimNao;
-    nomeEscola: string;
-    serie: string;
+    // Dados da escola
+    escola: string;
+    ano: string;
     periodo: string;
-    temAcompanhante: SimNao;
+    direcao: string;
+    coordenacao: string;
+    professoraPrincipal: string;
+    professoraAssistente: string;
+    // Campos Sim/Não
+    frequentaEscolaRegular: SimNao;
+    frequentaEscolaEspecial: SimNao;
+    acompanhaTurmaDemandasPedagogicas: SimNao;
+    segueRegrasRotinaSalaAula: SimNao;
+    necessitaApoioAT: SimNao;
+    necessitaAdaptacaoMateriais: SimNao;
+    necessitaAdaptacaoCurricular: SimNao;
+    houveReprovacaoRetencao: SimNao;
+    escolaPossuiEquipeInclusao: SimNao;
+    haIndicativoDeficienciaIntelectual: SimNao;
+    escolaApresentaQueixaComportamental: SimNao;
+    // Campos descritivos
     adaptacaoEscolar: string;
     dificuldadesEscolares: string;
     relacionamentoComColegas: string;
+    observacoes: string;
+}
+
+// Item 19 - Estereotipias, Tiques, Rituais e Rotinas
+export interface EstereotipiasRituaisDetalhe {
+    balancaMaosLadoCorpoOuFrente: SimNao;
+    balancaCorpoFrenteParaTras: SimNao;
+    pulaOuGiraEmTornoDeSi: SimNao;
+    repeteSonsSemFuncaoComunicativa: SimNao;
+    repeteMovimentosContinuos: SimNao;
+    exploraAmbienteLambendoTocando: SimNao;
+    procuraObservarObjetosCantoOlho: SimNao;
+    organizaObjetosLadoALado: SimNao;
+    realizaTarefasSempreMesmaOrdem: SimNao;
+    apresentaRituaisDiarios: SimNao;
+    observacoesTopografias: string;
+}
+
+// Item 20 - Problemas de Comportamento
+export interface ProblemasComportamentoDetalhe {
+    apresentaComportamentosAutoLesivos: SimNao;
+    autoLesivosQuais: string;
+    apresentaComportamentosHeteroagressivos: SimNao;
+    heteroagressivosQuais: string;
+    apresentaDestruicaoPropriedade: SimNao;
+    destruicaoDescrever: string;
+    necessitouContencaoMecanica: SimNao;
+    observacoesTopografias: string;
 }

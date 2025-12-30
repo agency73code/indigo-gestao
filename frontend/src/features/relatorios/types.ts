@@ -1,9 +1,19 @@
 // IMPORTS: tipos centrais do projeto
-import type { Paciente, Terapeuta } from '../cadastros/types/cadastros.types';
+import type { Terapeuta } from '../cadastros/types/cadastros.types';
 import type { AreaType } from '@/contexts/AreaContext';
 
+
+export interface Paciente {
+  id: string;
+  nome: string;
+  dataNascimento: string | null;
+  avatarUrl: string | null;
+  responsavelNome?: string | null;
+  photoUrl?: string | null;
+}
+
 // Derivar IDs seguros
-export type PatientId = NonNullable<Paciente['id']>;
+export type PatientId = string;
 export type TherapistId = NonNullable<Terapeuta['id']>;
 export type ReportId = string;
 
@@ -222,4 +232,4 @@ export interface ArchiveReportDialogProps {
 }
 
 // Re-export necessários
-export type { Paciente, Terapeuta };
+export type { Terapeuta };

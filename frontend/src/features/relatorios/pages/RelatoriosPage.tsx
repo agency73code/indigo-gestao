@@ -12,13 +12,13 @@ import { getAreaStyle } from '../constants/areaStyles';
 import type {
   SavedReport,
   Paciente,
-  Terapeuta,
   ReportListFilters,
 } from '../types';
 import {
   getAllReports,
   getAllPatients,
-  getAllTherapists,
+  getTherapistsForReports,
+  type TherapistListItem,
 } from '../services/relatorios.service';
 
 // Tipo para controlar estados de expansão (agora com 3 níveis: paciente -> área -> mês)
@@ -45,7 +45,7 @@ export function RelatoriosPage() {
   const [total, setTotal] = useState(0);
   void total; // Silencia warning - será usado na paginação
   const [patients, setPatients] = useState<Paciente[]>([]);
-  const [therapists, setTherapists] = useState<Terapeuta[]>([]);
+  const [therapists, setTherapists] = useState<TherapistListItem[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Estado para controlar accordion de clientes e pastas
@@ -93,7 +93,7 @@ export function RelatoriosPage() {
       const [reportsResponse, patientsData, therapistsData] = await Promise.all([
         getAllReports(filters),
         getAllPatients(),
-        getAllTherapists(),
+        getTherapistsForReports(),
       ]);
       
       // 🔄 Extrai items e total da resposta paginada
@@ -203,10 +203,9 @@ export function RelatoriosPage() {
     if (patient) {
       return {
         nome: patient.nome || 'Paciente',
-        cpf: patient.cpf,
         photoUrl: (patient as any)?.photoUrl,
         dataNascimento: patient.dataNascimento,
-        responsavel: (patient as any)?.guardianName || patient.responsavel?.nome,
+        responsavel: patient.responsavelNome,
       };
     }
 
@@ -214,10 +213,9 @@ export function RelatoriosPage() {
     if (firstReport?.patient) {
       return {
         nome: firstReport.patient.nome || 'Paciente',
-        cpf: firstReport.patient.cpf,
         photoUrl: undefined, // Backend não retorna foto no relatório
         dataNascimento: firstReport.patient.dataNascimento,
-        responsavel: (firstReport.patient as any)?.guardianName || firstReport.patient.responsavel?.nome,
+        responsavel: (firstReport.patient as any)?.guardianName || (firstReport.patient as any)?.responsavelNome,
       };
     }
 
@@ -230,7 +228,6 @@ export function RelatoriosPage() {
         if (possibleName && possibleName.length > 2) {
           return {
             nome: possibleName,
-            cpf: undefined,
             photoUrl: undefined,
             dataNascimento: undefined,
             responsavel: undefined,
@@ -242,7 +239,6 @@ export function RelatoriosPage() {
     // 4º: Fallback final
     return {
       nome: 'Paciente',
-      cpf: undefined,
       photoUrl: undefined,
       dataNascimento: undefined,
       responsavel: undefined,

@@ -2,6 +2,8 @@ import type { NextFunction, Request, Response } from 'express';
 import * as LinkService from '../features/links/old/links.service.js';
 import * as LinkNormalizer from '../features/links/old/links.normalizer.js';
 import * as LinkTypes from '../features/links/old/links.types.js';
+import { clientListSchema, clientOptionsSchema } from '../schemas/queries/client.schema.js';
+import { therapistListQuerySchema, therapistSelectQuerySchema } from '../schemas/queries/therapists.schema.js';
 
 export async function createLink(
     req: Request<unknown, unknown, LinkTypes.CreateLink>,
@@ -104,28 +106,50 @@ export async function transferResponsible(
     }
 }
 
-export async function getAllClients(req: Request, res: Response, next: NextFunction) {
+export async function getClientOptions(req: Request, res: Response, next: NextFunction) {
     try {
-        const { search = '' } = req.query;
+        const { search, limit } = clientOptionsSchema.parse(req.query);
 
-        const data = await LinkService.getAllClients(req.user!.id, search.toString());
-        const normalized = LinkNormalizer.getAllClients(data);
+        const data = await LinkService.getClientOptions(req.user!.id, search, limit);
+        const normalized = LinkNormalizer.normalizeClientOptions(data);
         res.json(normalized);
     } catch (err) {
         next(err);
     }
 }
 
-export async function getAllTherapists(req: Request, res: Response, next: NextFunction) {
+export async function listClients(req: Request, res: Response, next: NextFunction) {
     try {
-        const { search = '', role } = req.query;
-        const data = await LinkService.getAllTherapists(
+        const { search, includeResponsavel = false, limit } = clientListSchema.parse(req.query);
+    
+        const data = await LinkService.listClients(
             req.user!.id,
-            search.toString(),
-            role?.toString(),
+            search,
+            includeResponsavel,
+            limit,
         );
-        const normalized = LinkNormalizer.getAllTherapists(data);
+        const normalized = LinkNormalizer.normalizeClientList(data, includeResponsavel);
         res.json(normalized);
+    } catch (err) {
+        next(err);
+    }
+}
+
+export async function selectTherapists(req: Request, res: Response, next: NextFunction) {
+    try {
+        const query = therapistSelectQuerySchema.parse(req.query);
+        const data = await LinkService.selectTherapists(req.user!.id, query);
+        res.json(data);
+    } catch (err) {
+        next(err);
+    }
+}
+
+export async function listTherapists(req: Request, res: Response, next: NextFunction) {
+    try {
+        const query = therapistListQuerySchema.parse(req.query);
+        const data = await LinkService.listTherapists(req.user!.id, query);
+        res.json(data);
     } catch (err) {
         next(err);
     }

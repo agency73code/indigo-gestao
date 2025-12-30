@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { InputField } from '@/ui/input-field';
+import { SelectField } from '@/ui/select-field';
 import { DateFieldWithLabel } from '@/ui/date-field-with-label';
 import PatientSelector from '@/features/programas/consultar-programas/components/PatientSelector';
 import type { Patient } from '@/features/programas/consultar-programas/types';
 import type { AnamnseeCabecalho } from '../types/anamnese.types';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { 
-    listarTerapeutas,
+    buscarTerapeuta,
     buscarCliente, 
     calcularIdade, 
     formatarData,
@@ -44,34 +45,23 @@ export default function CabecalhoAnamnese({ data, onChange }: CabecalhoAnamneseP
         }
     }, []);
 
-    // Carregar terapeutas e preencher profissional logado
+    // Carregar terapeuta logado e preencher profissional automaticamente
     useEffect(() => {
-        async function loadTerapeutas() {
+        async function loadTerapeutaLogado() {
+            if (!user || data.profissionalId) {
+                return;
+            }
+
             try {
-                const terapeutasData = await listarTerapeutas();
-                
-                // Preencher automaticamente com o terapeuta logado
-                if (user && !data.profissionalId) {
-                    const terapeuta = terapeutasData.find(t => t.id === user.id);
-                    if (terapeuta) {
-                        onChange({
-                            ...data,
-                            dataEntrevista: data.dataEntrevista || getDataHoje(),
-                            profissionalId: terapeuta.id,
-                            profissionalNome: terapeuta.nome,
-                        });
-                    } else {
-                        // Fallback: usar dados básicos do usuário logado
-                        onChange({
-                            ...data,
-                            dataEntrevista: data.dataEntrevista || getDataHoje(),
-                            profissionalId: user.id,
-                            profissionalNome: user.name ?? 'Terapeuta',
-                        });
-                    }
-                }
+                const terapeuta = await buscarTerapeuta(user.id);
+                onChange({
+                    ...data,
+                    dataEntrevista: data.dataEntrevista || getDataHoje(),
+                    profissionalId: terapeuta.id,
+                    profissionalNome: terapeuta.nome,
+                });
             } catch (error) {
-                console.error('Erro ao carregar terapeutas:', error);
+                console.error('Erro ao carregar terapeuta:', error);
                 // Em caso de erro, ainda tenta usar os dados do usuário logado
                 if (user && !data.profissionalId) {
                     onChange({
@@ -83,8 +73,8 @@ export default function CabecalhoAnamnese({ data, onChange }: CabecalhoAnamneseP
                 }
             }
         }
-        loadTerapeutas();
-    }, [user]);
+        loadTerapeutaLogado();
+    }, [user, data.profissionalId, data.dataEntrevista, onChange]);
 
     // Quando seleciona um cliente pelo PatientSelector
     const handlePatientSelect = async (patient: Patient) => {
@@ -92,7 +82,19 @@ export default function CabecalhoAnamnese({ data, onChange }: CabecalhoAnamneseP
         
         try {
             const clienteCompleto = await buscarCliente(patient.id);
-            const cuidadorPrincipal = clienteCompleto.cuidadores?.[0];
+            
+            // Mapear cuidadores do cliente
+            const cuidadoresMapeados = clienteCompleto.cuidadores?.map((c: any) => ({
+                id: c.id || '',
+                nome: c.nome || '',
+                relacao: c.relacao || '',
+                descricaoRelacao: c.descricaoRelacao || '',
+                telefone: c.telefone || '',
+                email: c.email || '',
+                profissao: c.profissao || '',
+                escolaridade: c.escolaridade || '',
+                dataNascimento: c.dataNascimento || '',
+            })) || [];
             
             onChange({
                 ...data,
@@ -100,8 +102,9 @@ export default function CabecalhoAnamnese({ data, onChange }: CabecalhoAnamneseP
                 clienteNome: clienteCompleto.nome || patient.name,
                 dataNascimento: clienteCompleto.dataNascimento || patient.birthDate || '',
                 idade: calcularIdade(clienteCompleto.dataNascimento || patient.birthDate || ''),
-                informante: cuidadorPrincipal?.nome || patient.guardianName || '',
-                parentesco: cuidadorPrincipal?.relacao ? RELACAO_LABELS[cuidadorPrincipal.relacao] || cuidadorPrincipal.relacao : '',
+                informante: '', // Deixar vazio para o terapeuta preencher
+                parentesco: '', // Deixar vazio para o terapeuta selecionar
+                cuidadores: cuidadoresMapeados,
             });
         } catch (error) {
             console.error('Erro ao buscar cliente:', error);
@@ -112,8 +115,9 @@ export default function CabecalhoAnamnese({ data, onChange }: CabecalhoAnamneseP
                 clienteNome: patient.name,
                 dataNascimento: patient.birthDate || '',
                 idade: patient.age ? `${patient.age} anos` : '',
-                informante: patient.guardianName || '',
+                informante: '', // Deixar vazio para o terapeuta preencher
                 parentesco: '',
+                cuidadores: [],
             });
         }
     };
@@ -164,14 +168,33 @@ export default function CabecalhoAnamnese({ data, onChange }: CabecalhoAnamneseP
                                 onChange={(e) => onChange({ ...data, informante: e.target.value })}
                                 placeholder="Nome do informante"
                             />
-                            <InputField
+                            <SelectField
                                 label="Parentesco"
                                 id="parentesco"
                                 value={data.parentesco || ''}
-                                onChange={(e) => onChange({ ...data, parentesco: e.target.value })}
-                                placeholder="Relação com o cliente"
-                            />
+                                onChange={(e) => onChange({ ...data, parentesco: e.target.value, parentescoDescricao: e.target.value !== 'outro' ? '' : data.parentescoDescricao })}
+                            >
+                                <option value="">Selecione o parentesco</option>
+                                <option value="mae">Mãe</option>
+                                <option value="pai">Pai</option>
+                                <option value="avo">Avó/Avô</option>
+                                <option value="tio">Tia/Tio</option>
+                                <option value="responsavel">Responsável legal</option>
+                                <option value="tutor">Tutor(a)</option>
+                                <option value="outro">Outro</option>
+                            </SelectField>
                         </div>
+
+                        {/* Campo de descrição quando Parentesco = Outro */}
+                        {data.parentesco === 'outro' && (
+                            <InputField
+                                label="Especifique o parentesco"
+                                id="parentescoDescricao"
+                                value={data.parentescoDescricao || ''}
+                                onChange={(e) => onChange({ ...data, parentescoDescricao: e.target.value })}
+                                placeholder="Descreva o parentesco"
+                            />
+                        )}
 
                         {/* Linha 4: Quem indicou */}
                         <InputField
@@ -181,6 +204,83 @@ export default function CabecalhoAnamnese({ data, onChange }: CabecalhoAnamneseP
                             onChange={(e) => onChange({ ...data, quemIndicou: e.target.value })}
                             placeholder="Nome ou origem da indicação"
                         />
+
+                        {/* Cuidadores do Cliente */}
+                        {data.cuidadores && data.cuidadores.length > 0 && (
+                            <div className="pt-4 border-t">
+                                <h4 className="text-sm font-medium text-muted-foreground mb-3">Cuidadores</h4>
+                                <div className="space-y-3">
+                                    {data.cuidadores.map((cuidador) => {
+                                        // Calcular idade a partir da data de nascimento
+                                        const calcularIdadeCuidador = (dataNasc?: string) => {
+                                            if (!dataNasc) return null;
+                                            const hoje = new Date();
+                                            const nascimento = new Date(dataNasc);
+                                            let idade = hoje.getFullYear() - nascimento.getFullYear();
+                                            const m = hoje.getMonth() - nascimento.getMonth();
+                                            if (m < 0 || (m === 0 && hoje.getDate() < nascimento.getDate())) {
+                                                idade--;
+                                            }
+                                            return idade;
+                                        };
+                                        const idade = calcularIdadeCuidador(cuidador.dataNascimento);
+                                        
+                                        return (
+                                            <div key={cuidador.id} className="p-4 border rounded-lg bg-muted/30">
+                                                <div className="flex items-center gap-2 mb-3">
+                                                    <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-medium">
+                                                        {cuidador.nome.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()}
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-medium text-sm">{cuidador.nome}</p>
+                                                        <p className="text-xs text-muted-foreground">
+                                                            {cuidador.relacao === 'outro' && cuidador.descricaoRelacao 
+                                                                ? cuidador.descricaoRelacao 
+                                                                : RELACAO_LABELS[cuidador.relacao] || cuidador.relacao}
+                                                            {idade !== null && ` • ${idade} anos`}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                                    <div>
+                                                        <p className="text-xs text-muted-foreground">Data de Nascimento</p>
+                                                        <p className="text-sm">{cuidador.dataNascimento ? formatarData(cuidador.dataNascimento) : 'Não informado'}</p>
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-xs text-muted-foreground">Idade</p>
+                                                        <p className="text-sm">{idade !== null ? `${idade} anos` : 'Não informado'}</p>
+                                                    </div>
+                                                    {cuidador.telefone && (
+                                                        <div>
+                                                            <p className="text-xs text-muted-foreground">Telefone</p>
+                                                            <p className="text-sm">{cuidador.telefone}</p>
+                                                        </div>
+                                                    )}
+                                                    {cuidador.email && (
+                                                        <div>
+                                                            <p className="text-xs text-muted-foreground">E-mail</p>
+                                                            <p className="text-sm">{cuidador.email}</p>
+                                                        </div>
+                                                    )}
+                                                    {cuidador.escolaridade && (
+                                                        <div>
+                                                            <p className="text-xs text-muted-foreground">Escolaridade</p>
+                                                            <p className="text-sm">{cuidador.escolaridade}</p>
+                                                        </div>
+                                                    )}
+                                                    {cuidador.profissao && (
+                                                        <div>
+                                                            <p className="text-xs text-muted-foreground">Profissão</p>
+                                                            <p className="text-sm">{cuidador.profissao}</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
                     </div>
             )}
         </div>

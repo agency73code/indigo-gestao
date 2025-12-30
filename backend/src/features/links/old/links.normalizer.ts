@@ -1,21 +1,5 @@
 import * as LinkTypes from './links.types.js';
 
-const EMPTY_ADDRESS = {
-    cep: '',
-    rua: '',
-    numero: '',
-    complemento: '',
-    bairro: '',
-    cidade: '',
-    estado: '',
-};
-
-function normalizePostgraduateType(type: string | null | undefined): 'lato' | 'stricto' {
-    if (type === 'stricto') return 'stricto';
-    if (type === 'lato') return 'lato';
-    return 'lato';
-}
-
 function normalizeRole(role: string | null | undefined): 'responsible' | 'co' {
     if (role === 'co') return 'co';
     return 'responsible';
@@ -25,6 +9,11 @@ function normalizeStatus(status: string | null | undefined): 'active' | 'ended' 
     if (status === 'ended') return 'ended';
     if (status === 'archived') return 'archived';
     return 'active';
+}
+
+function buildAvatarUrl(fileId: string | null | undefined) {
+    if (!fileId) return null;
+    return `/api/arquivos/${encodeURIComponent(fileId)}/view`;
 }
 
 export function normalizeLink(link: LinkTypes.DBLink) {
@@ -43,42 +32,13 @@ export function normalizeLink(link: LinkTypes.DBLink) {
     };
 }
 
-export function getAllClients(dto: LinkTypes.DBClient[]) {
+export function normalizeClientOptions(dto: LinkTypes.DBClientOption[]): LinkTypes.ClientOptionDTO[] {
     return dto.map((client) => {
-        const primaryCaregiver = client.cuidadores?.[0] ?? null;
-        const primaryAddress = client.enderecos?.[0]?.endereco ?? null;
         const avatarFile = client.arquivos?.[0];
 
         return {
             id: client.id,
             nome: client.nome ?? '',
-            email: client.emailContato ?? '',
-            telefone: primaryCaregiver?.telefone ?? '',
-            dataNascimento: client.dataNascimento
-                ? client.dataNascimento.toISOString().split('T')[0]
-                : '',
-            cpf: client.cpf ?? '',
-            endereco: primaryAddress
-                ? {
-                      cep: primaryAddress.cep ?? '',
-                      rua: primaryAddress.rua ?? '',
-                      numero: primaryAddress.numero ?? '',
-                      complemento: primaryAddress.complemento ?? '',
-                      bairro: primaryAddress.bairro ?? '',
-                      cidade: primaryAddress.cidade ?? '',
-                      estado: primaryAddress.uf ?? '',
-                  }
-                : { ...EMPTY_ADDRESS },
-            responsavel: primaryCaregiver
-                ? {
-                      nome: primaryCaregiver.nome ?? '',
-                      telefone: primaryCaregiver.telefone ?? '',
-                      email: primaryCaregiver.email ?? '',
-                      parentesco:
-                          primaryCaregiver.descricaoRelacao ?? primaryCaregiver.relacao ?? '',
-                  }
-                : undefined,
-            observacoes: '',
             avatarUrl: avatarFile?.arquivo_id
                 ? `/api/arquivos/${encodeURIComponent(avatarFile.arquivo_id)}/view`
                 : null,
@@ -86,108 +46,74 @@ export function getAllClients(dto: LinkTypes.DBClient[]) {
     });
 }
 
-export function getAllTherapists(dto: LinkTypes.DBTherapist[]) {
-    return dto.map((therapist) => {
-        const address = therapist.endereco;
-        
-        const mainTraining = Array.isArray(therapist.formacao)
-            ? (therapist.formacao[0] ?? null)
-            : (therapist.formacao ?? null);
-        
-        const professionalData =
-            therapist.registro_profissional?.map((register) => ({
-                areaAtuacaoId: register.area_atuacao?.id ?? null,
-                areaAtuacao: register.area_atuacao?.nome ?? '',
-                cargoId: register.cargo?.id ?? null,
-                cargo: register.cargo?.nome ?? '',
-                numeroConselho: register.numero_conselho ?? undefined,
-            })) ?? [];
-        
-        const postgraduates =
-            mainTraining?.pos_graduacao?.map((pg: LinkTypes.DBPostgraduate) => ({
-                tipo: normalizePostgraduateType(pg.tipo),
-                curso: pg.curso ?? '',
-                instituicao: pg.instituicao ?? '',
-                conclusao: pg.conclusao ?? '',
-                comprovanteUrl: null,
-            })) ?? [];
+export function normalizeClientList(
+    dto: Array<{
+        id: string;
+        nome: string | null;
+        dataNascimento: Date | null;
+        cuidadores?: Array <{ nome: string | null }> | null;
+        arquivos?: Array<{ arquivo_id: string | null }> | null;
+    }>,
+    includeResponsavel: boolean,
+): LinkTypes.ClientListDTO[] {
+    return dto.map((client) => {
+        const avatarFile = client.arquivos?.[0];
+        const caregiver = includeResponsavel ? client.cuidadores?.[0] ?? null : null;
 
-        const avatarFile = therapist.arquivos?.[0];
+        return {
+            id: client.id,
+            nome: client.nome ?? 'Cliente sem nome',
+            dataNascimento: client.dataNascimento
+                ? client.dataNascimento.toISOString().split('T')[0]
+                : null,
+            avatarUrl: avatarFile?.arquivo_id
+                ? `/api/arquivos/${encodeURIComponent(avatarFile.arquivo_id)}/view`
+                : null,
+            ...(includeResponsavel ? { responsavelNome: caregiver?.nome ?? null }: {}),
+        };
+    });
+}
+
+export function normalizeSelectTherapists(records: LinkTypes.TherapistRecord[]): LinkTypes.TherapistSelectDTO[] {
+    return records.map((therapist) => {
+        const avatarFile = therapist.arquivos?.[0]?.arquivo_id ?? null;
+        const professional = therapist.registro_profissional?.[0];
 
         return {
             id: therapist.id,
             nome: therapist.nome,
-            email: therapist.email,
-            emailIndigo: therapist.email_indigo,
-            telefone: therapist.telefone ?? '',
-            celular: therapist.celular,
-            cpf: therapist.cpf,
-            dataNascimento: therapist.data_nascimento.toISOString().split('T')[0],
-            possuiVeiculo: therapist.possui_veiculo ? 'sim' : 'nao',
-            placaVeiculo: therapist.placa_veiculo ?? undefined,
-            modeloVeiculo: therapist.modelo_veiculo ?? undefined,
-            banco: therapist.banco ?? '',
-            agencia: therapist.agencia ?? '',
-            conta: therapist.conta ?? '',
-            chavePix: therapist.chave_pix ?? '',
-            valorHoraAcordado: therapist.valor_hora != null ? Number(therapist.valor_hora) : null,
-            professorUnindigo: therapist.professor_uni ? 'sim' : 'nao',
-            disciplinaUniindigo: null,
-            endereco: address
-                ? {
-                      cep: address.cep ?? '',
-                      rua: address.rua ?? '',
-                      numero: address.numero ?? '',
-                      complemento: address.complemento ?? undefined,
-                      bairro: address.bairro ?? '',
-                      cidade: address.cidade ?? '',
-                      estado: address.uf ?? '',
-                  }
-                : { ...EMPTY_ADDRESS },
-            dadosProfissionais: professionalData,
-            dataInicio: therapist.data_entrada.toISOString().split('T')[0],
-            dataFim: therapist.data_saida
-                ? therapist.data_saida.toISOString().split('T')[0]
-                : undefined,
-            formacao: mainTraining
-                ? {
-                      graduacao: mainTraining.graduacao ?? '',
-                      instituicaoGraduacao: mainTraining.instituicao_graduacao ?? '',
-                      anoFormatura: mainTraining.ano_formatura
-                          ? String(mainTraining.ano_formatura)
-                          : '',
-                      posGraduacoes: postgraduates,
-                      participacaoCongressosDescricao: mainTraining.participacao_congressos ?? null,
-                      publicacoesLivrosDescricao: mainTraining.publicacoes_descricao ?? null,
-                  }
-                : {
-                      gadruacao: '',
-                      instituicaoGraduacao: '',
-                      anoFormatura: '',
-                      posGraduacoes: postgraduates,
-                  },
-            avatarUrl: avatarFile?.arquivo_id
-                ? `/api/arquivos/${encodeURIComponent(avatarFile.arquivo_id)}/view`
-                : null,
-            cnpj: therapist.pessoa_juridica
-                ? {
-                      numero: therapist.pessoa_juridica.cnpj ?? '',
-                      razaoSocial: therapist.pessoa_juridica.razao_social ?? '',
-                      nomeFantasia: '',
-                      endereco: therapist.pessoa_juridica.endereco
-                          ? {
-                                cep: therapist.pessoa_juridica.endereco.cep ?? '',
-                                rua: therapist.pessoa_juridica.endereco.rua ?? '',
-                                numero: therapist.pessoa_juridica.endereco.numero ?? '',
-                                complemento:
-                                    therapist.pessoa_juridica.endereco.complemento ?? undefined,
-                                bairro: therapist.pessoa_juridica.endereco.bairro ?? '',
-                                cidade: therapist.pessoa_juridica.endereco.cidade ?? '',
-                                estado: therapist.pessoa_juridica.endereco.uf ?? '',
-                            }
-                          : { ...EMPTY_ADDRESS },
-                  }
-                : undefined,
+            avatarUrl: buildAvatarUrl(avatarFile),
+            dadosProfissionais: [
+                {
+                    cargo: professional?.cargo?.nome ?? 'Cargo sem nome',
+                    areaAtuacao: professional?.area_atuacao?.nome ?? 'Area de atuação sem nome',
+                },
+            ],
+        };
+    });
+}
+
+export function normalizeListTherapists(
+    records: LinkTypes.TherapistRecord[],
+    includeNumeroConselho: boolean,
+): LinkTypes.TherapistListDTO[] {
+    return records.map((therapist) => {
+        const avatarFile = therapist.arquivos?.[0]?.arquivo_id ?? null;
+        const professional = therapist.registro_profissional?.[0];
+
+        return {
+            id: therapist.id,
+            nome: therapist.nome,
+            avatarUrl: buildAvatarUrl(avatarFile),
+            dadosProfissionais: [
+                {
+                    cargo: professional?.cargo?.nome ?? 'Cargo sem nome',
+                    areaAtuacao: professional?.area_atuacao?.nome ?? 'Area de atuação sem nome',
+                    ...(includeNumeroConselho
+                        ? { numeroConselho: professional?.numero_conselho ?? null }
+                        : {}),
+                },
+            ],
         };
     });
 }

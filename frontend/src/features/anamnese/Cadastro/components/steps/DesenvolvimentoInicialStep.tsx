@@ -185,7 +185,7 @@ function MarcoFalaField({
                         </svg>
                     )}
                 </div>
-                <span className="text-sm text-muted-foreground">Não</span>
+                <span className="text-sm text-muted-foreground">Não realiza</span>
             </button>
             <button
                 type="button"
@@ -265,6 +265,7 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
                 otitePeriodoMeses: data.falaLinguagem?.otitePeriodoMeses ?? '',
                 otiteFrequencia: data.falaLinguagem?.otiteFrequencia ?? '',
                 fazOuFezUsoTuboVentilacao: data.falaLinguagem?.fazOuFezUsoTuboVentilacao ?? null,
+                tuboVentilacaoObservacao: data.falaLinguagem?.tuboVentilacaoObservacao ?? '',
                 fazOuFezUsoObjetoOral: data.falaLinguagem?.fazOuFezUsoObjetoOral ?? null,
                 objetoOralEspecificar: data.falaLinguagem?.objetoOralEspecificar ?? '',
                 usaMamadeira: data.falaLinguagem?.usaMamadeira ?? null,
@@ -524,6 +525,16 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
                     />
                 )}
 
+                {/* Comunicação Atual - movido para depois de Faz uso de gestos */}
+                <div className="pt-4 border-t">
+                    <AutoExpandTextarea
+                        label="Comunicação atual"
+                        placeholder="Descreva como é a comunicação atual da criança"
+                        value={data.falaLinguagem?.comunicacaoAtual ?? ''}
+                        onChange={(value) => updateFalaLinguagem('comunicacaoAtual', value)}
+                    />
+                </div>
+
                 {/* Audição */}
                 <div className="pt-4 border-t">
                     <h4 className="text-sm font-medium mb-3">Audição (percepção do responsável)</h4>
@@ -582,6 +593,14 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
                         value={data.falaLinguagem?.fazOuFezUsoTuboVentilacao ?? null}
                         onChange={(v) => updateFalaLinguagem('fazOuFezUsoTuboVentilacao', v)}
                     />
+                    {data.falaLinguagem?.fazOuFezUsoTuboVentilacao === 'sim' && (
+                        <InputField
+                            label="Se sim, descreva"
+                            placeholder="Descreva o uso do tubo de ventilação"
+                            value={data.falaLinguagem?.tuboVentilacaoObservacao ?? ''}
+                            onChange={(e) => updateFalaLinguagem('tuboVentilacaoObservacao', e.target.value)}
+                        />
+                    )}
                 </div>
 
                 {/* Hábitos Orais */}
@@ -623,16 +642,6 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
                             />
                         </div>
                     )}
-                </div>
-
-                {/* Comunicação Atual */}
-                <div className="pt-4 border-t">
-                    <AutoExpandTextarea
-                        label="Comunicação atual"
-                        placeholder="Descreva como é a comunicação atual da criança"
-                        value={data.falaLinguagem?.comunicacaoAtual ?? ''}
-                        onChange={(value) => updateFalaLinguagem('comunicacaoAtual', value)}
-                    />
                 </div>
             </div>
         </div>

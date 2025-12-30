@@ -8,8 +8,10 @@ const router: ExpressRouter = Router();
 
 router.use(auth);
 
-router.get('/getAllClients', LinkController.getAllClients);
-router.get('/getAllTherapists', LinkController.getAllTherapists);
+router.get('/clientOptions', LinkController.getClientOptions);
+router.get('/clients', LinkController.listClients);
+router.get('/therapists/select', LinkController.selectTherapists);
+router.get('/therapists/list', LinkController.listTherapists);
 router.get('/getAllLinks', LinkController.getAllLinks);
 router.post('/createLink', LinkController.createLink);
 router.post('/endLink', LinkController.endLink);

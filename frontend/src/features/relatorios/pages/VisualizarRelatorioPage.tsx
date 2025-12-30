@@ -21,12 +21,13 @@ import FisioPerformanceChart from '../../programas/variants/fisioterapia/compone
 // Componentes de Musicoterapia
 import { MusiKpiCards, MusiAttentionActivitiesCard, MusiAutonomyByCategoryChart, MusiParticipacaoChart, MusiSuporteChart, MusiParticipacaoSuporteEvolutionChart } from '../../programas/relatorio-geral/components/musi';
 import type { MusiKpisData } from '../../programas/relatorio-geral/components/musi/MusiKpiCards';
-import type { SavedReport, Paciente, Terapeuta } from '../types';
+import type { SavedReport, Paciente } from '../types';
 import type { KpisRelatorio, SerieLinha } from '../gerar-relatorio/types';
 import { 
   getReportById, 
   getAllPatients, 
-  getAllTherapists
+  getTherapistsForReports,
+  type TherapistListItem,
 } from '../services/relatorios.service';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 import { AREA_LABELS } from '@/contexts/AreaContext';
@@ -39,14 +40,12 @@ export function VisualizarRelatorioPage() {
   const { setPageTitle, setHeaderActions, setOnBackClick } = usePageTitle();
   const [report, setReport] = useState<SavedReport | null>(null);
   const [patient, setPatient] = useState<Paciente | null>(null);
-  const [therapist, setTherapist] = useState<Terapeuta | null>(null);
+  const [therapist, setTherapist] = useState<TherapistListItem | null>(null);
   const [loading, setLoading] = useState(true);
   
   // Estados para nomes dos filtros
   const [programaNome, setProgramaNome] = useState<string | null>(null);
   const [estimuloNome, setEstimuloNome] = useState<string | null>(null);
-
-  console.log('🎯 VisualizarRelatorioPage montado - ID:', id);
 
   useEffect(() => {
     console.log('🔄 useEffect loadReport - ID:', id);
@@ -66,7 +65,7 @@ export function VisualizarRelatorioPage() {
       const [reportData, patientsData, therapistsData] = await Promise.all([
         getReportById(id),
         getAllPatients(),
-        getAllTherapists(),
+        getTherapistsForReports(true),
       ]);
 
       console.log('✅ Dados carregados:', {
@@ -97,7 +96,7 @@ export function VisualizarRelatorioPage() {
             const programa = programas.find((p: any) => String(p.id) === String(reportData.filters.programaId));
             setProgramaNome(programa?.nome || null);
           }
-        } catch (e) {
+        } catch (_e) {
           console.warn('Não foi possível buscar nome do programa');
         }
       }
@@ -111,7 +110,7 @@ export function VisualizarRelatorioPage() {
             const estimulo = estimulos.find((e: any) => String(e.id) === String(reportData.filters.estimuloId));
             setEstimuloNome(estimulo?.nome || null);
           }
-        } catch (e) {
+        } catch (_e) {
           console.warn('Não foi possível buscar nome do estímulo');
         }
       }
@@ -153,8 +152,12 @@ export function VisualizarRelatorioPage() {
       .toUpperCase();
   };
 
-  const calculateAge = (birthDate: string): number => {
+  const calculateAge = (birthDate?: string | null): number | null => {
+    if (!birthDate) return null;
+
     const birth = new Date(birthDate);
+    if (Number.isNaN(birth.getTime())) return null;
+
     const today = new Date();
     let age = today.getFullYear() - birth.getFullYear();
     const monthDiff = today.getMonth() - birth.getMonth();
@@ -241,7 +244,7 @@ export function VisualizarRelatorioPage() {
         therapistInfo={therapist ? {
           nome: therapist.nome,
           areaAtuacao: therapist.dadosProfissionais?.[0]?.areaAtuacao,
-          numeroConselho: therapist.dadosProfissionais?.[0]?.numeroConselho,
+          numeroConselho: therapist.dadosProfissionais?.[0]?.numeroConselho ?? undefined,
         } : undefined}
       >
         <div className="max-w-7xl mx-auto px-4 py-4 space-y-6">
@@ -274,15 +277,15 @@ export function VisualizarRelatorioPage() {
                         {patient.nome}
                       </h2>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        {patient.dataNascimento && (
-                          <span>{calculateAge(patient.dataNascimento)} anos</span>
+                        {patientAge !== null && patientAge !== undefined && (
+                          <span>{patientAge} anos</span>
                         )}
-                        {patient.responsavel?.nome && (
+                        {patient.responsavelNome && (
                           <>
                             <span>•</span>
                             <span className="flex items-center gap-1">
                               <Users className="h-3.5 w-3.5" />
-                              {patient.responsavel.nome}
+                              {patient.responsavelNome}
                             </span>
                           </>
                         )}

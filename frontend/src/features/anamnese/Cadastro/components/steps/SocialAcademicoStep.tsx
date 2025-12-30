@@ -92,6 +92,9 @@ export default function SocialAcademicoStep({ data, onChange }: SocialAcademicoS
                 escolaPossuiEquipeInclusao: data.desenvolvimentoAcademico?.escolaPossuiEquipeInclusao ?? null,
                 haIndicativoDeficienciaIntelectual: data.desenvolvimentoAcademico?.haIndicativoDeficienciaIntelectual ?? null,
                 escolaApresentaQueixaComportamental: data.desenvolvimentoAcademico?.escolaApresentaQueixaComportamental ?? null,
+                adaptacaoEscolar: data.desenvolvimentoAcademico?.adaptacaoEscolar ?? '',
+                dificuldadesEscolares: data.desenvolvimentoAcademico?.dificuldadesEscolares ?? '',
+                relacionamentoComColegas: data.desenvolvimentoAcademico?.relacionamentoComColegas ?? '',
                 observacoes: data.desenvolvimentoAcademico?.observacoes ?? '',
                 ...data.desenvolvimentoAcademico,
                 [field]: value,
@@ -285,6 +288,30 @@ export default function SocialAcademicoStep({ data, onChange }: SocialAcademicoS
                         label="Escola apresenta queixa quanto a questões comportamentais."
                         value={data.desenvolvimentoAcademico?.escolaApresentaQueixaComportamental ?? null}
                         onChange={(v) => updateDesenvolvimentoAcademico('escolaApresentaQueixaComportamental', v)}
+                    />
+                </div>
+
+                {/* Campos descritivos */}
+                <div className="space-y-4 pt-4 border-t">
+                    <AutoExpandTextarea
+                        label="Adaptação Escolar"
+                        placeholder="Descreva como foi/está sendo a adaptação escolar da criança"
+                        value={data.desenvolvimentoAcademico?.adaptacaoEscolar ?? ''}
+                        onChange={(value) => updateDesenvolvimentoAcademico('adaptacaoEscolar', value)}
+                    />
+                    
+                    <AutoExpandTextarea
+                        label="Dificuldades Escolares"
+                        placeholder="Descreva as principais dificuldades escolares observadas"
+                        value={data.desenvolvimentoAcademico?.dificuldadesEscolares ?? ''}
+                        onChange={(value) => updateDesenvolvimentoAcademico('dificuldadesEscolares', value)}
+                    />
+                    
+                    <AutoExpandTextarea
+                        label="Relacionamento com Colegas"
+                        placeholder="Descreva como é o relacionamento da criança com os colegas"
+                        value={data.desenvolvimentoAcademico?.relacionamentoComColegas ?? ''}
+                        onChange={(value) => updateDesenvolvimentoAcademico('relacionamentoComColegas', value)}
                     />
                 </div>
 
