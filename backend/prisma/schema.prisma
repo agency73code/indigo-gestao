@@ -7,6 +7,12 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum AjudaStatus {
+  SIM
+  NAO
+  COM_AJUDA
+}
+
 model area_atuacao {
   id                    Int                     @id @default(autoincrement())
   nome                  String                  @db.VarChar(100)
@@ -44,16 +50,17 @@ model cliente {
   sessao              sessao[]
   terapeuta           terapeuta_cliente[]
   relatorios          relatorio[]
+  anamneses           Anamnese[]
 
   @@index([nome], map: "nome_idx")
 }
 
 model cuidador {
-  id               Int       @id @default(autoincrement())
+  id               Int                @id @default(autoincrement())
   relacao          String?
   descricaoRelacao String?
   nome             String?
-  cpf              String    @db.Char(11)
+  cpf              String             @db.Char(11)
   profissao        String?
   escolaridade     String?
   telefone         String?
@@ -61,8 +68,9 @@ model cuidador {
   clienteId        String
   enderecoId       Int?
   dataNascimento   DateTime?
-  cliente          cliente   @relation(fields: [clienteId], references: [id])
-  endereco         endereco? @relation(fields: [enderecoId], references: [id])
+  cliente          cliente            @relation(fields: [clienteId], references: [id])
+  endereco         endereco?          @relation(fields: [enderecoId], references: [id])
+  anamneses        AnamneseCuidador[]
 
   @@unique([clienteId, cpf], name: "unique_cuidador")
   @@index([enderecoId], map: "cuidador_enderecoId_fkey")
@@ -250,10 +258,365 @@ model terapeuta {
   supervisionados       vinculo_supervisao[]    @relation("SupervisorVinculo")
   disciplina            disciplina[]            @relation("disciplinaToterapeuta")
   relatorios            relatorio[]
+  anamneses             Anamnese[]
 
   @@index([atividade])
   @@index([nome])
   @@index([endereco_id], map: "terapeuta_endereco_id_fkey")
+}
+
+model Anamnese {
+  id                                                           String                            @id @default(uuid())
+  cliente_id                                                   String
+  terapeuta_id                                                 String
+  data_entrevista                                              DateTime                          @db.Date
+  cliente_nome                                                 String
+  cliente_avatar_url                                           String?                           @db.Text
+  data_nascimento                                              DateTime                          @db.Date
+  idade                                                        String
+  informante                                                   String
+  parentesco                                                   String
+  parentesco_descricao                                         String?
+  quem_indicou                                                 String
+  profissional_nome                                            String
+  escola_cliente                                               String?
+  status                                                       String?
+  queixa_principal                                             String                            @db.Text
+  diagnostico_previo                                           String                            @db.Text
+  suspeita_condicao_associada                                  String                            @db.Text
+  cuidadores_principais                                        String?                           @db.Text
+  tempo_tela                                                   String?
+  gestacao_parto_tipo_parto                                    String?
+  gestacao_parto_semanas                                       Int?
+  gestacao_parto_apgar_1min                                    Int?
+  gestacao_parto_apgar_5min                                    Int?
+  gestacao_parto_intercorrencias                               String                            @db.Text
+  neuropsicomotor_sustentou_cabeca_meses                       String?
+  neuropsicomotor_sustentou_cabeca_status                      String?
+  neuropsicomotor_sustentou_cabeca_nao_realiza                 Boolean?
+  neuropsicomotor_sustentou_cabeca_nao_soube_informar          Boolean?
+  neuropsicomotor_sustentou_cabeca_nao                         Boolean?
+  neuropsicomotor_rolou_meses                                  String?
+  neuropsicomotor_rolou_status                                 String?
+  neuropsicomotor_rolou_nao_realiza                            Boolean?
+  neuropsicomotor_rolou_nao_soube_informar                     Boolean?
+  neuropsicomotor_rolou_nao                                    Boolean?
+  neuropsicomotor_sentou_meses                                 String?
+  neuropsicomotor_sentou_status                                String?
+  neuropsicomotor_sentou_nao_realiza                           Boolean?
+  neuropsicomotor_sentou_nao_soube_informar                    Boolean?
+  neuropsicomotor_sentou_nao                                   Boolean?
+  neuropsicomotor_engatinhou_meses                             String?
+  neuropsicomotor_engatinhou_status                            String?
+  neuropsicomotor_engatinhou_nao_realiza                       Boolean?
+  neuropsicomotor_engatinhou_nao_soube_informar                Boolean?
+  neuropsicomotor_engatinhou_nao                               Boolean?
+  neuropsicomotor_andou_com_apoio_meses                        String?
+  neuropsicomotor_andou_com_apoio_status                       String?
+  neuropsicomotor_andou_com_apoio_nao_realiza                  Boolean?
+  neuropsicomotor_andou_com_apoio_nao_soube_informar           Boolean?
+  neuropsicomotor_andou_com_apoio_nao                          Boolean?
+  neuropsicomotor_andou_sem_apoio_meses                        String?
+  neuropsicomotor_andou_sem_apoio_status                       String?
+  neuropsicomotor_andou_sem_apoio_nao_realiza                  Boolean?
+  neuropsicomotor_andou_sem_apoio_nao_soube_informar           Boolean?
+  neuropsicomotor_andou_sem_apoio_nao                          Boolean?
+  neuropsicomotor_correu_meses                                 String?
+  neuropsicomotor_correu_status                                String?
+  neuropsicomotor_correu_nao_realiza                           Boolean?
+  neuropsicomotor_correu_nao_soube_informar                    Boolean?
+  neuropsicomotor_correu_nao                                   Boolean?
+  neuropsicomotor_andou_de_motoca_meses                        String?
+  neuropsicomotor_andou_de_motoca_status                       String?
+  neuropsicomotor_andou_de_motoca_nao_realiza                  Boolean?
+  neuropsicomotor_andou_de_motoca_nao_soube_informar           Boolean?
+  neuropsicomotor_andou_de_motoca_nao                          Boolean?
+  neuropsicomotor_andou_de_bicicleta_meses                     String?
+  neuropsicomotor_andou_de_bicicleta_status                    String?
+  neuropsicomotor_andou_de_bicicleta_nao_realiza               Boolean?
+  neuropsicomotor_andou_de_bicicleta_nao_soube_informar        Boolean?
+  neuropsicomotor_andou_de_bicicleta_nao                       Boolean?
+  neuropsicomotor_subiu_escadas_sozinho_meses                  String?
+  neuropsicomotor_subiu_escadas_sozinho_status                 String?
+  neuropsicomotor_subiu_escadas_sozinho_nao_realiza            Boolean?
+  neuropsicomotor_subiu_escadas_sozinho_nao_soube_informar     Boolean?
+  neuropsicomotor_subiu_escadas_sozinho_nao                    Boolean?
+  neuropsicomotor_motricidade_fina                             String                            @db.Text
+  fala_linguagem_balbuciou_meses                               String?
+  fala_linguagem_balbuciou_status                              String?
+  fala_linguagem_balbuciou_nao_realiza                         Boolean?
+  fala_linguagem_balbuciou_nao_soube_informar                  Boolean?
+  fala_linguagem_balbuciou_nao                                 Boolean?
+  fala_linguagem_primeiras_palavras_meses                      String?
+  fala_linguagem_primeiras_palavras_status                     String?
+  fala_linguagem_primeiras_palavras_nao_realiza                Boolean?
+  fala_linguagem_primeiras_palavras_nao_soube_informar         Boolean?
+  fala_linguagem_primeiras_palavras_nao                        Boolean?
+  fala_linguagem_primeiras_frases_meses                        String?
+  fala_linguagem_primeiras_frases_status                       String?
+  fala_linguagem_primeiras_frases_nao_realiza                  Boolean?
+  fala_linguagem_primeiras_frases_nao_soube_informar           Boolean?
+  fala_linguagem_primeiras_frases_nao                          Boolean?
+  fala_linguagem_apontou_para_fazer_pedidos_meses              String?
+  fala_linguagem_apontou_para_fazer_pedidos_status             String?
+  fala_linguagem_apontou_para_fazer_pedidos_nao_realiza        Boolean?
+  fala_linguagem_apontou_para_fazer_pedidos_nao_soube_informar Boolean?
+  fala_linguagem_apontou_para_fazer_pedidos_nao                Boolean?
+  fala_linguagem_faz_uso_de_gestos                             Boolean?
+  fala_linguagem_faz_uso_de_gestos_quais                       String                            @db.Text
+  fala_linguagem_audicao                                       String?
+  fala_linguagem_teve_otite_de_repeticao                       Boolean?
+  fala_linguagem_otite_vezes                                   Int?
+  fala_linguagem_otite_periodo_meses                           Int?
+  fala_linguagem_otite_frequencia                              String?
+  fala_linguagem_otite_detalhes                                String?                           @db.Text
+  fala_linguagem_faz_ou_fez_uso_tubo_ventilacao                Boolean?
+  fala_linguagem_tubo_ventilacao_observacao                    String                            @db.Text
+  fala_linguagem_faz_ou_fez_uso_objeto_oral                    Boolean?
+  fala_linguagem_objeto_oral_especificar                       String                            @db.Text
+  fala_linguagem_usa_mamadeira                                 Boolean?
+  fala_linguagem_mamadeira_ha                                  String?
+  fala_linguagem_mamadeira_vezes_ao_dia                        Int?
+  fala_linguagem_mamadeira_detalhes                            String?                           @db.Text
+  fala_linguagem_comunicacao_atual                             String                            @db.Text
+  desfralde_diurno_urina_anos                                  String
+  desfralde_diurno_urina_meses                                 String
+  desfralde_diurno_urina_utiliza_fralda                        Boolean
+  desfralde_noturno_urina_anos                                 String
+  desfralde_noturno_urina_meses                                String
+  desfralde_noturno_urina_utiliza_fralda                       Boolean
+  desfralde_fezes_anos                                         String
+  desfralde_fezes_meses                                        String
+  desfralde_fezes_utiliza_fralda                               Boolean
+  desfralde_se_limpa_sozinho_urinar                            Boolean?
+  desfralde_se_limpa_sozinho_defecar                           Boolean?
+  desfralde_lava_as_maos_apos_uso_banheiro                     Boolean?
+  desfralde_apresenta_alteracao_habito_intestinal              Boolean?
+  desfralde_observacoes                                        String                            @db.Text
+  sono_dormem_media_horas_noite                                String
+  sono_dormem_media_horas_dia                                  String
+  sono_periodo_sono_dia                                        String?
+  sono_tem_dificuldade_iniciar_sono                            Boolean?
+  sono_acorda_de_madrugada                                     Boolean?
+  sono_dorme_na_propria_cama                                   Boolean?
+  sono_dorme_no_proprio_quarto                                 Boolean?
+  sono_apresenta_sono_agitado                                  Boolean?
+  sono_e_sonambulo                                             Boolean?
+  sono_observacoes                                             String                            @db.Text
+  habitos_higiene_toma_banho_lava_corpo_todo                   AjudaStatus?
+  habitos_higiene_seca_corpo_todo                              AjudaStatus?
+  habitos_higiene_retira_todas_pecas_roupa                     AjudaStatus?
+  habitos_higiene_coloca_todas_pecas_roupa                     AjudaStatus?
+  habitos_higiene_poe_calcados_sem_cadarco                     AjudaStatus?
+  habitos_higiene_poe_calcados_com_cadarco                     AjudaStatus?
+  habitos_higiene_escova_os_dentes                             AjudaStatus?
+  habitos_higiene_penteia_o_cabelo                             AjudaStatus?
+  habitos_higiene_observacoes                                  String                            @db.Text
+  alimentacao_apresenta_queixa_alimentacao                     Boolean?
+  alimentacao_se_alimenta_sozinho                              Boolean?
+  alimentacao_e_seletivo_quanto_alimentos                      Boolean?
+  alimentacao_passa_dia_inteiro_sem_comer                      Boolean?
+  alimentacao_apresenta_rituais_para_alimentar                 Boolean?
+  alimentacao_esta_abaixo_ou_acima_peso                        Boolean?
+  alimentacao_esta_abaixo_ou_acima_peso_descricao              String                            @db.Text
+  alimentacao_tem_historico_anemia                             Boolean?
+  alimentacao_tem_historico_anemia_descricao                   String                            @db.Text
+  alimentacao_rotina_alimentar_e_problema_familia              Boolean?
+  alimentacao_rotina_alimentar_e_problema_familia_descricao    String                            @db.Text
+  alimentacao_observacoes                                      String                            @db.Text
+  desenvolvimento_social_possui_amigos_mesma_idade_escola      Boolean?
+  desenvolvimento_social_possui_amigos_mesma_idade_fora_escola Boolean?
+  desenvolvimento_social_faz_uso_funcional_brinquedos          Boolean?
+  desenvolvimento_social_brinca_proximo_aos_colegas            Boolean?
+  desenvolvimento_social_brinca_conjunta_com_colegas           Boolean?
+  desenvolvimento_social_procura_colegas_espontaneamente       Boolean?
+  desenvolvimento_social_se_verbal_inicia_conversa             Boolean?
+  desenvolvimento_social_se_verbal_responde_perguntas_simples  Boolean?
+  desenvolvimento_social_faz_pedidos_quando_necessario         Boolean?
+  desenvolvimento_social_estabelece_contato_visual_adultos     Boolean?
+  desenvolvimento_social_estabelece_contato_visual_criancas    Boolean?
+  desenvolvimento_social_observacoes                           String                            @db.Text
+  desenvolvimento_social_brinca_com_outras_criancas            Boolean?
+  desenvolvimento_social_tipo_brincadeira                      String?                           @db.Text
+  desenvolvimento_social_mantem_contato_visual                 Boolean?
+  desenvolvimento_social_responde_ao_chamar                    Boolean?
+  desenvolvimento_social_compartilha_interesses                Boolean?
+  desenvolvimento_social_compreende_sentimentos                Boolean?
+  desenvolvimento_academico_escola                             String
+  desenvolvimento_academico_ano                                String?
+  desenvolvimento_academico_periodo                            String
+  desenvolvimento_academico_direcao                            String
+  desenvolvimento_academico_coordenacao                        String
+  desenvolvimento_academico_professora_principal               String
+  desenvolvimento_academico_professora_assistente              String
+  desenvolvimento_academico_frequenta_escola_regular           Boolean?
+  desenvolvimento_academico_frequenta_escola_especial          Boolean?
+  desenvolvimento_academico_demandas_pedagogicas               Boolean?
+  desenvolvimento_academico_segue_regras_rotina_sala_aula      Boolean?
+  desenvolvimento_academico_necessita_apoio_at                 Boolean?
+  desenvolvimento_academico_necessita_adaptacao_materiais      Boolean?
+  desenvolvimento_academico_necessita_adaptacao_curricular     Boolean?
+  desenvolvimento_academico_houve_reprovacao_retencao          Boolean?
+  desenvolvimento_academico_escola_possui_equipe_inclusao      Boolean?
+  desenvolvimento_academico_deficiencia_intelectual            Boolean?
+  desenvolvimento_academico_queixa_comportamental              Boolean?
+  desenvolvimento_academico_adaptacao_escolar                  String                            @db.Text
+  desenvolvimento_academico_dificuldades_escolares             String                            @db.Text
+  desenvolvimento_academico_relacionamento_com_colegas         String                            @db.Text
+  desenvolvimento_academico_observacoes                        String                            @db.Text
+  estereotipias_rituais_balanca_maos_lado_corpo_ou_frente      Boolean?
+  estereotipias_rituais_balanca_corpo_frente_para_tras         Boolean?
+  estereotipias_rituais_pula_ou_gira_em_torno_de_si            Boolean?
+  estereotipias_rituais_repete_sons_sem_funcao_comunicativa    Boolean?
+  estereotipias_rituais_repete_movimentos_continuos            Boolean?
+  estereotipias_rituais_explora_ambiente_lambendo_tocando      Boolean?
+  estereotipias_rituais_procura_observar_objetos_canto_olho    Boolean?
+  estereotipias_rituais_organiza_objetos_lado_a_lado           Boolean?
+  estereotipias_rituais_realiza_tarefas_sempre_mesma_ordem     Boolean?
+  estereotipias_rituais_apresenta_rituais_diarios              Boolean?
+  estereotipias_rituais_observacoes_topografias                String                            @db.Text
+  problemas_comportamento_auto_lesivos                         Boolean?
+  problemas_comportamento_auto_lesivos_quais                   String                            @db.Text
+  problemas_comportamento_heteroagressivos                     Boolean?
+  problemas_comportamento_heteroagressivos_quais               String                            @db.Text
+  problemas_comportamento_apresenta_destruicao_propriedade     Boolean?
+  problemas_comportamento_destruicao_descrever                 String                            @db.Text
+  problemas_comportamento_necessitou_contencao_mecanica        Boolean?
+  problemas_comportamento_observacoes_topografias              String                            @db.Text
+  finalizacao_outras_informacoes_relevantes                    String?                           @db.Text
+  finalizacao_informacoes_adicionais                           String?                           @db.Text
+  finalizacao_observacoes_impressoes_terapeuta                 String?                           @db.Text
+  finalizacao_observacoes_finais                               String?                           @db.Text
+  finalizacao_expectativas_familia                             String                            @db.Text
+  criado_em                                                    DateTime                          @default(now())
+  atualizado_em                                                DateTime                          @updatedAt
+  cliente                                                      cliente                           @relation(fields: [cliente_id], references: [id])
+  terapeuta                                                    terapeuta                         @relation(fields: [terapeuta_id], references: [id])
+  especialidadesConsultadas                                    AnamneseEspecialidadeConsultada[]
+  medicamentosEmUso                                            AnamneseMedicamentoEmUso[]
+  examesPrevios                                                AnamneseExamePrevio[]
+  terapiasPrevias                                              AnamneseTerapiaPrevia[]
+  historicosFamiliares                                         AnamneseHistoricoFamiliar[]
+  atividadesRotina                                             AnamneseAtividadeRotina[]
+  cuidadores                                                   AnamneseCuidador[]
+
+  @@index([cliente_id])
+  @@index([terapeuta_id])
+  @@map("anamnese")
+}
+
+model AnamneseEspecialidadeConsultada {
+  id            Int      @id @default(autoincrement())
+  anamnese_id   String
+  external_id   String?
+  especialidade String
+  nome          String
+  data          DateTime @db.Date
+  observacao    String?  @db.Text
+  ativo         Boolean
+  anamnese      Anamnese @relation(fields: [anamnese_id], references: [id], onDelete: Cascade)
+
+  @@index([anamnese_id], map: "anamnese_especialidade_consultada_anamnese_id_fkey")
+  @@map("anamnese_especialidade_consultada")
+}
+
+model AnamneseMedicamentoEmUso {
+  id          Int      @id @default(autoincrement())
+  anamnese_id String
+  external_id String?
+  nome        String
+  dosagem     String
+  data_inicio DateTime @db.Date
+  motivo      String   @db.Text
+  anamnese    Anamnese @relation(fields: [anamnese_id], references: [id], onDelete: Cascade)
+
+  @@index([anamnese_id], map: "anamnese_medicamento_em_uso_anamnese_id_fkey")
+  @@map("anamnese_medicamento_em_uso")
+}
+
+model AnamneseExamePrevio {
+  id          Int                    @id @default(autoincrement())
+  anamnese_id String
+  external_id String?
+  nome        String
+  data        DateTime               @db.Date
+  resultado   String                 @db.Text
+  anamnese    Anamnese               @relation(fields: [anamnese_id], references: [id], onDelete: Cascade)
+  arquivos    AnamneseExameArquivo[]
+
+  @@index([anamnese_id], map: "anamnese_exame_previo_anamnese_id_fkey")
+  @@map("anamnese_exame_previo")
+}
+
+model AnamneseExameArquivo {
+  id              Int                 @id @default(autoincrement())
+  exame_previo_id Int
+  external_id     String?
+  nome            String
+  tipo            String
+  tamanho         Int
+  url             String?             @db.Text
+  file            Json?
+  examePrevio     AnamneseExamePrevio @relation(fields: [exame_previo_id], references: [id], onDelete: Cascade)
+
+  @@index([exame_previo_id], map: "anamnese_exame_arquivo_exame_previo_id_fkey")
+  @@map("anamnese_exame_arquivo")
+}
+
+model AnamneseTerapiaPrevia {
+  id                      Int      @id @default(autoincrement())
+  anamnese_id             String
+  external_id             String?
+  profissional            String
+  especialidade_abordagem String
+  tempo_intervencao       String
+  observacao              String?  @db.Text
+  ativo                   Boolean
+  anamnese                Anamnese @relation(fields: [anamnese_id], references: [id], onDelete: Cascade)
+
+  @@index([anamnese_id], map: "anamnese_terapia_previa_anamnese_id_fkey")
+  @@map("anamnese_terapia_previa")
+}
+
+model AnamneseHistoricoFamiliar {
+  id                   Int      @id @default(autoincrement())
+  anamnese_id          String
+  external_id          String?
+  condicao_diagnostico String?  @db.Text
+  condicao             String?  @db.Text
+  parentesco           String
+  observacao           String?  @db.Text
+  anamnese             Anamnese @relation(fields: [anamnese_id], references: [id], onDelete: Cascade)
+
+  @@index([anamnese_id], map: "anamnese_historico_familiar_anamnese_id_fkey")
+  @@map("anamnese_historico_familiar")
+}
+
+model AnamneseAtividadeRotina {
+  id          Int      @id @default(autoincrement())
+  anamnese_id String
+  external_id String?
+  atividade   String
+  horario     String
+  responsavel String?
+  frequencia  String?
+  observacao  String?  @db.Text
+  anamnese    Anamnese @relation(fields: [anamnese_id], references: [id], onDelete: Cascade)
+
+  @@index([anamnese_id], map: "anamnese_atividade_rotina_anamnese_id_fkey")
+  @@map("anamnese_atividade_rotina")
+}
+
+model AnamneseCuidador {
+  id          Int      @id @default(autoincrement())
+  anamnese_id String
+  cuidador_id Int
+  anamnese    Anamnese @relation(fields: [anamnese_id], references: [id], onDelete: Cascade)
+  cuidador    cuidador @relation(fields: [cuidador_id], references: [id], onDelete: Cascade)
+
+  @@unique([anamnese_id, cuidador_id], name: "unique_anamnese_cuidador")
+  @@index([cuidador_id], map: "anamnese_cuidador_cuidador_id_fkey")
+  @@map("anamnese_cuidador")
 }
 
 model formacao {
