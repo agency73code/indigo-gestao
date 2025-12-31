@@ -1,8 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/ui/button';
-import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 import VerticalStepSidebar from '@/features/cadastros/components/VerticalStepSidebar';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
+import { UnsavedChangesDialog } from '@/components/dialogs/UnsavedChangesDialog';
 import { CabecalhoAnamnese } from '../components';
 import { 
     QueixaDiagnosticoStep, 
@@ -21,8 +25,14 @@ import type {
     AnamneseAtividadesVidaDiaria,
     AnamneseSocialAcademico,
     AnamneseComportamento,
-    AnamneseFinalizacao
+    AnamneseFinalizacao,
+    Anamnese
 } from '../types/anamnese.types';
+import { 
+    criarAnamnese,
+    validarAnamneseMinima,
+    getValidationErrorMessages
+} from '../services/anamnese-cadastro.service';
 import { 
     User, 
     Baby, 
@@ -93,9 +103,9 @@ const initialContextoFamiliarRotina: Partial<AnamneseContextoFamiliarRotina> = {
 const initialDesenvolvimentoInicial: Partial<AnamneseDesenvolvimentoInicial> = {
     gestacaoParto: {
         tipoParto: null,
-        semanas: '',
-        apgar1min: '',
-        apgar5min: '',
+        semanas: null,
+        apgar1min: null,
+        apgar5min: null,
         intercorrencias: '',
     },
     neuropsicomotor: {
@@ -120,8 +130,8 @@ const initialDesenvolvimentoInicial: Partial<AnamneseDesenvolvimentoInicial> = {
         fazUsoDeGestosQuais: '',
         audicao: null,
         teveOtiteDeRepeticao: null,
-        otiteVezes: '',
-        otitePeriodoMeses: '',
+        otiteVezes: null,
+        otitePeriodoMeses: null,
         otiteFrequencia: '',
         fazOuFezUsoTuboVentilacao: null,
         tuboVentilacaoObservacao: '',
@@ -129,7 +139,7 @@ const initialDesenvolvimentoInicial: Partial<AnamneseDesenvolvimentoInicial> = {
         objetoOralEspecificar: '',
         usaMamadeira: null,
         mamadeiraHa: '',
-        mamadeiraVezesAoDia: '',
+        mamadeiraVezesAoDia: null,
         comunicacaoAtual: '',
     },
 };
@@ -203,7 +213,7 @@ const initialSocialAcademico: Partial<AnamneseSocialAcademico> = {
     },
     desenvolvimentoAcademico: {
         escola: '',
-        ano: '',
+        ano: null,
         periodo: '',
         direcao: '',
         coordenacao: '',
@@ -263,6 +273,7 @@ const initialFinalizacao: Partial<AnamneseFinalizacao> = {
 export default function AnamnesePage() {
     // Configurar título da página
     const { setPageTitle, setNoMainContainer, setShowBackButton } = usePageTitle();
+    const navigate = useNavigate();
     
     useEffect(() => {
         setPageTitle('Anamnese');
@@ -277,6 +288,7 @@ export default function AnamnesePage() {
     
     const [currentStep, setCurrentStep] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
+    const [validationErrors, setValidationErrors] = useState<string[]>([]);
     
     // Estado do cabeçalho
     const [cabecalho, setCabecalho] = useState<AnamnseeCabecalho>(initialCabecalho);
@@ -302,23 +314,113 @@ export default function AnamnesePage() {
     // Estado de Finalização
     const [finalizacao, setFinalizacao] = useState<Partial<AnamneseFinalizacao>>(initialFinalizacao);
 
+    // Detectar se o formulário tem alterações não salvas
+    const isDirty = useMemo(() => {
+        // Verificar se o cabeçalho tem dados preenchidos (clienteId é o principal)
+        const hasClienteSelected = !!cabecalho.clienteId;
+        
+        // Verificar se há queixa preenchida
+        const hasQueixa = !!queixaDiagnostico.queixaPrincipal;
+        
+        // Considera "dirty" se tiver cliente selecionado ou queixa preenchida
+        return hasClienteSelected || hasQueixa;
+    }, [cabecalho.clienteId, queixaDiagnostico.queixaPrincipal]);
+
+    // Hook de alterações não salvas
+    const { isBlocked, proceed, reset } = useUnsavedChanges({
+        isDirty,
+        message: 'Você tem uma anamnese em andamento. Deseja realmente sair?',
+    });
+
+    // Montar objeto completo da anamnese
+    const getAnamneseData = useCallback((): Anamnese => {
+        return {
+            cabecalho: {
+                ...cabecalho,
+                clienteNome: cabecalho.clienteNome || '',
+                dataNascimento: cabecalho.dataNascimento || '',
+                idade: cabecalho.idade || '',
+            },
+            queixaDiagnostico: {
+                queixaPrincipal: queixaDiagnostico.queixaPrincipal || '',
+                diagnosticoPrevio: queixaDiagnostico.diagnosticoPrevio || '',
+                suspeitaCondicaoAssociada: queixaDiagnostico.suspeitaCondicaoAssociada || '',
+                especialidadesConsultadas: queixaDiagnostico.especialidadesConsultadas || [],
+                medicamentosEmUso: queixaDiagnostico.medicamentosEmUso || [],
+                examesPrevios: queixaDiagnostico.examesPrevios || [],
+                terapiasPrevias: queixaDiagnostico.terapiasPrevias || [],
+            },
+            contextoFamiliarRotina: {
+                historicosFamiliares: contextoFamiliarRotina.historicosFamiliares || [],
+                atividadesRotina: contextoFamiliarRotina.atividadesRotina || [],
+            },
+            desenvolvimentoInicial: desenvolvimentoInicial as AnamneseDesenvolvimentoInicial,
+            atividadesVidaDiaria: atividadesVidaDiaria as AnamneseAtividadesVidaDiaria,
+            socialAcademico: socialAcademico as AnamneseSocialAcademico,
+            comportamento: comportamento as AnamneseComportamento,
+            finalizacao: {
+                outrasInformacoesRelevantes: finalizacao.outrasInformacoesRelevantes || '',
+                observacoesImpressoesTerapeuta: finalizacao.observacoesImpressoesTerapeuta || '',
+                expectativasFamilia: finalizacao.expectativasFamilia || '',
+            },
+        };
+    }, [
+        cabecalho, 
+        queixaDiagnostico, 
+        contextoFamiliarRotina, 
+        desenvolvimentoInicial, 
+        atividadesVidaDiaria, 
+        socialAcademico, 
+        comportamento, 
+        finalizacao
+    ]);
+
     const prevStep = () => {
         if (currentStep > 1) {
             setCurrentStep(currentStep - 1);
+            setValidationErrors([]);
         }
     };
 
     const nextStep = () => {
         if (currentStep < STEPS.length) {
             setCurrentStep(currentStep + 1);
+            setValidationErrors([]);
         }
     };
 
     const handleSubmit = async () => {
         setIsLoading(true);
+        setValidationErrors([]);
+        
         try {
-            // TODO: Implementar lógica de salvamento
-            console.log('Salvando anamnese...');
+            const anamneseData = getAnamneseData();
+            
+            // Validar dados mínimos antes de enviar
+            const validation = validarAnamneseMinima(anamneseData);
+            if (!validation.success) {
+                const errorMessages = getValidationErrorMessages(validation.errors);
+                setValidationErrors(errorMessages);
+                toast.error('Preencha os campos obrigatórios antes de finalizar.');
+                return;
+            }
+            
+            // Enviar para o service
+            const response = await criarAnamnese(anamneseData, true); // Skip full validation
+            
+            if (response.success) {
+                toast.success('Anamnese cadastrada com sucesso!');
+                navigate('/anamnese');
+            } else {
+                if (response.errors && response.errors.length > 0) {
+                    const errorMessages = getValidationErrorMessages(response.errors);
+                    setValidationErrors(errorMessages);
+                }
+                toast.error(response.message || 'Erro ao salvar anamnese.');
+            }
+        } catch (error) {
+            console.error('Erro ao salvar anamnese:', error);
+            toast.error('Erro inesperado ao salvar anamnese.');
         } finally {
             setIsLoading(false);
         }
@@ -366,6 +468,7 @@ export default function AnamnesePage() {
                     <SocialAcademicoStep
                         data={socialAcademico}
                         onChange={setSocialAcademico}
+                        escolaCliente={cabecalho.escolaCliente}
                     />
                 );
             case 7:
@@ -411,6 +514,25 @@ export default function AnamnesePage() {
                     borderRadius: '16px'
                 }}
             >
+                {/* Erros de validação */}
+                {validationErrors.length > 0 && (
+                    <div className="mb-4 p-4 bg-destructive/10 border border-destructive/30 rounded-lg">
+                        <div className="flex items-start gap-2">
+                            <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+                            <div className="space-y-1">
+                                <p className="text-sm font-medium text-destructive">
+                                    Corrija os seguintes erros:
+                                </p>
+                                <ul className="text-sm text-destructive/80 list-disc list-inside space-y-0.5">
+                                    {validationErrors.map((error, index) => (
+                                        <li key={index}>{error}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Form Content */}
                 <div className="flex-1 overflow-auto px-1 pb-4">
                     {renderCurrentStep()}
@@ -449,6 +571,15 @@ export default function AnamnesePage() {
                     )}
                 </div>
             </div>
+
+            {/* Dialog de confirmação para sair com alterações não salvas */}
+            <UnsavedChangesDialog
+                open={isBlocked}
+                onConfirm={() => proceed?.()}
+                onCancel={() => reset?.()}
+                title="Anamnese em andamento"
+                description="Você tem uma anamnese em andamento que não foi salva. Se sair agora, todos os dados preenchidos serão perdidos. Deseja continuar?"
+            />
         </div>
     );
 }

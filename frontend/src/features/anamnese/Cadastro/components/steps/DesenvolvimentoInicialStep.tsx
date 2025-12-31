@@ -217,9 +217,9 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
             gestacaoParto: {
                 ...data.gestacaoParto,
                 tipoParto: data.gestacaoParto?.tipoParto ?? null,
-                semanas: data.gestacaoParto?.semanas ?? '',
-                apgar1min: data.gestacaoParto?.apgar1min ?? '',
-                apgar5min: data.gestacaoParto?.apgar5min ?? '',
+                semanas: data.gestacaoParto?.semanas ?? null,
+                apgar1min: data.gestacaoParto?.apgar1min ?? null,
+                apgar5min: data.gestacaoParto?.apgar5min ?? null,
                 intercorrencias: data.gestacaoParto?.intercorrencias ?? '',
                 [field]: value,
             },
@@ -261,8 +261,8 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
                 fazUsoDeGestosQuais: data.falaLinguagem?.fazUsoDeGestosQuais ?? '',
                 audicao: data.falaLinguagem?.audicao ?? null,
                 teveOtiteDeRepeticao: data.falaLinguagem?.teveOtiteDeRepeticao ?? null,
-                otiteVezes: data.falaLinguagem?.otiteVezes ?? '',
-                otitePeriodoMeses: data.falaLinguagem?.otitePeriodoMeses ?? '',
+                otiteVezes: data.falaLinguagem?.otiteVezes ?? null,
+                otitePeriodoMeses: data.falaLinguagem?.otitePeriodoMeses ?? null,
                 otiteFrequencia: data.falaLinguagem?.otiteFrequencia ?? '',
                 fazOuFezUsoTuboVentilacao: data.falaLinguagem?.fazOuFezUsoTuboVentilacao ?? null,
                 tuboVentilacaoObservacao: data.falaLinguagem?.tuboVentilacaoObservacao ?? '',
@@ -270,7 +270,7 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
                 objetoOralEspecificar: data.falaLinguagem?.objetoOralEspecificar ?? '',
                 usaMamadeira: data.falaLinguagem?.usaMamadeira ?? null,
                 mamadeiraHa: data.falaLinguagem?.mamadeiraHa ?? '',
-                mamadeiraVezesAoDia: data.falaLinguagem?.mamadeiraVezesAoDia ?? '',
+                mamadeiraVezesAoDia: data.falaLinguagem?.mamadeiraVezesAoDia ?? null,
                 comunicacaoAtual: data.falaLinguagem?.comunicacaoAtual ?? '',
                 ...data.falaLinguagem,
                 [field]: value,
@@ -349,20 +349,23 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
                     <InputField
                         label="Semanas *"
                         placeholder="Ex: 38"
+                        type="number"
                         value={data.gestacaoParto?.semanas ?? ''}
-                        onChange={(e) => updateGestacaoParto('semanas', e.target.value)}
+                        onChange={(e) => updateGestacaoParto('semanas', e.target.value ? Number(e.target.value) : null)}
                     />
                     <InputField
                         label="Apgar 1º minuto *"
                         placeholder="Ex: 9"
+                        type="number"
                         value={data.gestacaoParto?.apgar1min ?? ''}
-                        onChange={(e) => updateGestacaoParto('apgar1min', e.target.value)}
+                        onChange={(e) => updateGestacaoParto('apgar1min', e.target.value ? Number(e.target.value) : null)}
                     />
                     <InputField
                         label="Apgar 5º minuto *"
                         placeholder="Ex: 10"
+                        type="number"
                         value={data.gestacaoParto?.apgar5min ?? ''}
-                        onChange={(e) => updateGestacaoParto('apgar5min', e.target.value)}
+                        onChange={(e) => updateGestacaoParto('apgar5min', e.target.value ? Number(e.target.value) : null)}
                     />
                 </div>
 
@@ -571,14 +574,16 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
                             <InputField
                                 label="Quantas vezes?"
                                 placeholder="Ex: 5"
+                                type="number"
                                 value={data.falaLinguagem?.otiteVezes ?? ''}
-                                onChange={(e) => updateFalaLinguagem('otiteVezes', e.target.value)}
+                                onChange={(e) => updateFalaLinguagem('otiteVezes', e.target.value ? Number(e.target.value) : null)}
                             />
                             <InputField
                                 label="Por um período de quantos meses?"
                                 placeholder="Ex: 12"
+                                type="number"
                                 value={data.falaLinguagem?.otitePeriodoMeses ?? ''}
-                                onChange={(e) => updateFalaLinguagem('otitePeriodoMeses', e.target.value)}
+                                onChange={(e) => updateFalaLinguagem('otitePeriodoMeses', e.target.value ? Number(e.target.value) : null)}
                             />
                             <InputField
                                 label="Frequência"
@@ -637,8 +642,9 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
                             <InputField
                                 label="Quantas vezes ao dia?"
                                 placeholder="Ex: 3"
+                                type="number"
                                 value={data.falaLinguagem?.mamadeiraVezesAoDia ?? ''}
-                                onChange={(e) => updateFalaLinguagem('mamadeiraVezesAoDia', e.target.value)}
+                                onChange={(e) => updateFalaLinguagem('mamadeiraVezesAoDia', e.target.value ? Number(e.target.value) : null)}
                             />
                         </div>
                     )}

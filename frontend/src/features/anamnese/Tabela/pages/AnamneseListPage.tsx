@@ -135,11 +135,6 @@ export default function AnamneseListPage() {
         setSelectedAnamnese(null);
     }, []);
 
-    const handleEdit = useCallback(() => {
-        // TODO: Implementar navegação para edição
-        console.log('Editar anamnese:', selectedAnamnese?.id);
-    }, [selectedAnamnese]);
-
     // Calcular páginas para paginação
     const totalPages = Math.ceil(pagination.total / pagination.pageSize);
     const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
@@ -309,7 +304,6 @@ export default function AnamneseListPage() {
                         anamnese={selectedAnamnese}
                         open={drawerOpen}
                         onClose={handleCloseDrawer}
-                        onEdit={handleEdit}
                     />
                 </Suspense>
             )}

@@ -12,8 +12,8 @@ export { default as AnamneseTable } from './components/AnamneseTable';
 // Services
 export * from './services/anamnese-table.service';
 
-// Types
-export * from './types/anamnese-table.types';
+// Types - apenas os que não conflitam
+export type { AnamneseListItem, PaginationState, SortState } from './types/anamnese-table.types';
 
 // Mocks (para desenvolvimento)
 export * from './mocks/anamnese.mock';
