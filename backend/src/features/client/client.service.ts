@@ -78,7 +78,7 @@ export async function create(dto: ClientType.Client) {
                     escolaridade: c.escolaridade ?? null,
                     telefone: c.telefone,
                     email: c.email,
-                    dataNascimento: c.dataNascimento ? new Date(c.dataNascimento) : null,
+                    dataNascimento: c.dataNascimento!,
 
                     endereco: {
                         connectOrCreate: {
@@ -220,6 +220,7 @@ export async function getById(clientId: string) {
                     escolaridade: true,
                     telefone: true,
                     email: true,
+                    dataNascimento: true,
                     endereco: {
                         select: {
                             cep: true,
@@ -430,7 +431,7 @@ async function UpdateCaregiver(
                         escolaridade: c.escolaridade ?? null,
                         telefone: c.telefone ?? null,
                         email: c.email ?? null,
-                        dataNascimento: c.dataNascimento ? new Date(c.dataNascimento) : null,
+                        dataNascimento: c.dataNascimento!,
                         endereco: {
                             connectOrCreate: {
                                 where: {

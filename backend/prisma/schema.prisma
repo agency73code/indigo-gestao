@@ -67,7 +67,7 @@ model cuidador {
   email            String?
   clienteId        String
   enderecoId       Int?
-  dataNascimento   DateTime?
+  dataNascimento   DateTime           @db.Date
   cliente          cliente            @relation(fields: [clienteId], references: [id])
   endereco         endereco?          @relation(fields: [enderecoId], references: [id])
   anamneses        AnamneseCuidador[]

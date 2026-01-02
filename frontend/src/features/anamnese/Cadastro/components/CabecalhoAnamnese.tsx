@@ -12,6 +12,7 @@ import {
     calcularIdade, 
     formatarData,
 } from '../services/anamnese-cadastro.service';
+import { correctFormatDate } from '@/lib/api';
 
 // Mapa de relações para exibição
 const RELACAO_LABELS: Record<string, string> = {
@@ -74,7 +75,7 @@ export default function CabecalhoAnamnese({ data, onChange }: CabecalhoAnamneseP
             }
         }
         loadTerapeutaLogado();
-    }, [user, data.profissionalId, data.dataEntrevista, onChange]);
+    }, [user, data, onChange]);
 
     // Quando seleciona um cliente pelo PatientSelector
     const handlePatientSelect = async (patient: Patient) => {
@@ -245,7 +246,7 @@ export default function CabecalhoAnamnese({ data, onChange }: CabecalhoAnamneseP
                                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                                                     <div>
                                                         <p className="text-xs text-muted-foreground">Data de Nascimento</p>
-                                                        <p className="text-sm">{cuidador.dataNascimento ? formatarData(cuidador.dataNascimento) : 'Não informado'}</p>
+                                                        <p className="text-sm">{cuidador.dataNascimento ? correctFormatDate(cuidador.dataNascimento) : 'Não informado'}</p>
                                                     </div>
                                                     <div>
                                                         <p className="text-xs text-muted-foreground">Idade</p>
