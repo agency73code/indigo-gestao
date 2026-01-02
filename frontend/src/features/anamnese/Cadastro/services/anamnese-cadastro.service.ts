@@ -106,7 +106,7 @@ export function formatarData(dataISO: string): string {
  * Flag para usar mock ou API real
  * Alterar para false quando backend estiver pronto
  */
-const USE_MOCK = true;
+const USE_MOCK = false;
 
 /**
  * Endpoint base para anamnese
@@ -289,11 +289,10 @@ async function mockExcluirAnamnese(id: string): Promise<AnamneseResponse> {
 
 async function apiCriarAnamnese(data: Anamnese): Promise<AnamneseResponse> {
     try {
-        const backendData = transformToBackendFormat(data);
         const res = await authFetch(`/api${ENDPOINT}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(backendData),
+            body: JSON.stringify(data),
         });
         
         const text = await res.text();
