@@ -18,7 +18,7 @@ export class R2UploadService {
         const { buffer, contentType, filename, programId, patientId } = params;
 
         const safeName = filename.replace(/\s+/g, '_');
-        const key = `to_session/${programId}/${patientId}/${safeName}`;
+        const key = `sessions/${programId}/${patientId}/${safeName}`;
 
         try {
             await s3.send(

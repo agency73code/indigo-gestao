@@ -1,11 +1,7 @@
-import type { Prisma, AjudaStatus } from '@prisma/client';
 import { prisma } from '../../config/database.js';
-import type { AnamnesePayload, marcoDesenvolvimentoSchema } from '../../schemas/anamnese.schema.js';
-import type z from 'zod';
+import type { AnamnesePayload } from '../../schemas/anamnese.schema.js';
 
 type SimNao = 'sim' | 'nao' | null | undefined;
-type SimNaoComAjuda = 'sim' | 'nao' | 'com_ajuda' | null | undefined;
-type MarcoDesenvolvimentoPayload = z.infer<typeof marcoDesenvolvimentoSchema>;
 
 function mapSimNao(value: SimNao): boolean | null {
     if (value === 'sim') return true;
@@ -13,450 +9,411 @@ function mapSimNao(value: SimNao): boolean | null {
     return null;
 }
 
-function mapAjudaStatus(value: SimNaoComAjuda): AjudaStatus | null {
-    if (value === 'sim') return 'SIM';
-    if (value === 'nao') return 'NAO';
-    if (value === 'com_ajuda') return 'COM_AJUDA';
-    return null;
-}
-
-function mapDate(value?: string | null) {
-    if (!value) return null;
-    const parsed = new Date(value);
-    return Number.isNaN(parsed.getTime()) ? null : parsed;
-}
-
-function mapMarco(prefix: string, marco?: MarcoDesenvolvimentoPayload): Partial<Prisma.AnamneseCreateInput> {
+function mapMarco(marco?: {
+    meses?: string | undefined;
+    naoRealiza?: boolean | undefined;
+    naoSoubeInformar?: boolean | undefined;
+}) {
     return {
-        [`${prefix}_meses`]: marco?.meses ?? null,
-        [`${prefix}_status`]: marco?.status ?? null,
-        [`${prefix}_nao_realiza`]: marco?.naoRealiza ?? null,
-        [`${prefix}_nao_soube_informar`]: marco?.naoSoubeInformar ?? null,
-        [`${prefix}_nao`]: marco?.nao ?? null,
-    } as Partial<Prisma.AnamneseCreateInput>;
+        months: marco?.meses ?? null,
+        notPerform: marco?.naoRealiza ?? false,
+        didntKnow: marco?.naoSoubeInformar ?? false,
+    }
 }
 
 export async function create(payload: AnamnesePayload) {
-    const cabecalho = payload.cabecalho ?? {};
-    const queixa = payload.queixaDiagnostico ?? {};
-    const contexto = payload.contextoFamiliarRotina ?? {};
-    const desenvolvimento = payload.desenvolvimentoInicial ?? {};
-    const neuro = desenvolvimento.neuropsicomotor ?? {};
-    const fala = desenvolvimento.falaLinguagem ?? {};
-    const gestacao = desenvolvimento.gestacaoParto ?? {};
-    const atividades = payload.atividadesVidaDiaria ?? {};
-    const desfralde = atividades.desfralde ?? {};
-    const sono = atividades.sono ?? {};
-    const higiene = atividades.habitosHigiene ?? {};
-    const alimentacao = atividades.alimentacao ?? {};
-    const social =
-        payload.socialAcademico?.desenvolvimentoSocial ??
-        payload.socialAcademico?.interacaoSocial ??
-        {};
-    const academico =
-        payload.socialAcademico?.desenvolvimentoAcademico ??
-        payload.socialAcademico?.vidaEscolar ??
-        {};
-    const comportamento = payload.comportamento ?? {};
-    const estereotipias = comportamento.estereotipiasRituais ?? {};
-    const problemas = comportamento.problemasComportamento ?? {};
-    const finalizacao = payload.finalizacao ?? {};
+    const header = payload.cabecalho;
+    const complaintDiagnosis = payload.queixaDiagnostico;
+    const familyContextRoutine = payload.contextoFamiliarRotina;
+    const initialDevelopment = payload.desenvolvimentoInicial;
+    const daily = payload.atividadesVidaDiaria;
+    const socialAcademic = payload.socialAcademico;
+    const behavior = payload.comportamento;
+    const finishing = payload.finalizacao;
 
-    const especialidadesConsultadas = (queixa.especialidadesConsultadas ?? []).map((esp) => ({
-        external_id: esp.id ?? null,
-        especialidade: esp.especialidade ?? '',
-        nome: esp.nome ?? '',
-        data: mapDate(esp.data) ?? new Date(),
-        observacao: esp.observacao ?? null,
-        ativo: Boolean(esp.ativo),
-    }));
+    // neuropsicomotor
+    const headHeld = mapMarco(initialDevelopment.neuropsicomotor.sustentouCabeca);
+    const rolled = mapMarco(initialDevelopment.neuropsicomotor.rolou);
+    const sat = mapMarco(initialDevelopment.neuropsicomotor.sentou);
+    const crawled = mapMarco(initialDevelopment.neuropsicomotor.engatinhou);
+    const walkedWithSupport = mapMarco(initialDevelopment.neuropsicomotor.andouComApoio);
+    const walkedWithoutSupport = mapMarco(initialDevelopment.neuropsicomotor.andouSemApoio);
+    const ran = mapMarco(initialDevelopment.neuropsicomotor.correu);
+    const scooter = mapMarco(initialDevelopment.neuropsicomotor.andouDeMotoca);
+    const bicycle = mapMarco(initialDevelopment.neuropsicomotor.andouDeBicicleta);
+    const stairs = mapMarco(initialDevelopment.neuropsicomotor.subiuEscadasSozinho);
 
-    const medicamentosEmUso = (queixa.medicamentosEmUso ?? []).map((med) => ({
-        external_id: med.id ?? null,
-        nome: med.nome ?? '',
-        dosagem: med.dosagem ?? '',
-        data_inicio: mapDate(med.dataInicio) ?? new Date(),
-        motivo: med.motivo ?? '',
-    }));
-
-    const examesPrevios = (queixa.examesPrevios ?? []).map((exame) => ({
-        external_id: exame.id ?? null,
-        nome: exame.nome ?? '',
-        data: mapDate(exame.data) ?? new Date(),
-        resultado: exame.resultado ?? '',
-        arquivos: {
-            create: (exame.arquivos ?? []).map((arquivo) => ({
-                external_id: arquivo.id ?? null,
-                nome: arquivo.nome ?? '',
-                tipo: arquivo.tipo ?? '',
-                tamanho: arquivo.tamanho ?? 0,
-                url: arquivo.url ?? null,
-                file: arquivo.file ?? null,
-            })),
-        },
-    }));
-
-    const terapiasPrevias = (queixa.terapiasPrevias ?? []).map((terapia) => ({
-        external_id: terapia.id ?? null,
-        profissional: terapia.profissional ?? '',
-        especialidade_abordagem: terapia.especialidadeAbordagem ?? '',
-        tempo_intervencao: terapia.tempoIntervencao ?? '',
-        observacao: terapia.observacao ?? null,
-        ativo: Boolean(terapia.ativo),
-    }));
-
-    const historicosFamiliares = (
-        contexto.historicosFamiliares ?? contexto.historicoFamiliar ?? []
-    ).map((hist) => ({
-        external_id: hist.id ?? null,
-        condicao_diagnostico: hist.condicaoDiagnostico ?? hist.condicao ?? null,
-        condicao: hist.condicao ?? null,
-        parentesco: hist.parentesco ?? '',
-        observacao: hist.observacao ?? null,
-    }));
-
-    const atividadesRotina = (contexto.atividadesRotina ?? contexto.rotinaDiaria ?? []).map(
-        (rotina) => ({
-            external_id: rotina.id ?? null,
-            atividade: rotina.atividade ?? '',
-            horario: rotina.horario ?? '',
-            responsavel: rotina.responsavel ?? null,
-            frequencia: rotina.frequencia ?? null,
-            observacao: rotina.observacao ?? null,
-        }),
-    );
-
-    const cuidadoresIds = Array.from(
-        new Set(
-            (cabecalho.cuidadores ?? [])
-                .map((cuidador) => Number(cuidador.id))
-                .filter((id) => Number.isInteger(id) && id > 0),
-        ),
-    );
-
-    const data = {
-        cliente_id: cabecalho.clienteId ?? '',
-        terapeuta_id: cabecalho.profissionalId ?? '',
-        data_entrevista: mapDate(cabecalho.dataEntrevista) ?? new Date(),
-        cliente_nome: cabecalho.clienteNome ?? '',
-        cliente_avatar_url: cabecalho.clienteAvatarUrl ?? null,
-        data_nascimento: mapDate(cabecalho.dataNascimento) ?? new Date(),
-        idade: cabecalho.idade ?? '',
-        informante: cabecalho.informante ?? '',
-        parentesco: cabecalho.parentesco ?? '',
-        parentesco_descricao: cabecalho.parentescoDescricao ?? null,
-        quem_indicou: cabecalho.quemIndicou ?? '',
-        profissional_nome: cabecalho.profissionalNome ?? '',
-        escola_cliente: cabecalho.escolaCliente ?? null,
-        status: payload.status ?? null,
-        queixa_principal: queixa.queixaPrincipal ?? '',
-        diagnostico_previo: queixa.diagnosticoPrevio ?? '',
-        suspeita_condicao_associada: queixa.suspeitaCondicaoAssociada ?? '',
-        cuidadores_principais: contexto.cuidadoresPrincipais ?? null,
-        tempo_tela: contexto.tempoTela ?? null,
-        gestacao_parto_tipo_parto: gestacao.tipoParto ?? null,
-        gestacao_parto_semanas: gestacao.semanas ?? null,
-        gestacao_parto_apgar_1min: gestacao.apgar1min ?? null,
-        gestacao_parto_apgar_5min: gestacao.apgar5min ?? null,
-        gestacao_parto_intercorrencias: gestacao.intercorrencias ?? '',
-        ...mapMarco('neuropsicomotor_sustentou_cabeca', neuro.sustentouCabeca),
-        ...mapMarco('neuropsicomotor_rolou', neuro.rolou),
-        ...mapMarco('neuropsicomotor_sentou', neuro.sentou),
-        ...mapMarco('neuropsicomotor_engatinhou', neuro.engatinhou),
-        ...mapMarco('neuropsicomotor_andou_com_apoio', neuro.andouComApoio),
-        ...mapMarco('neuropsicomotor_andou_sem_apoio', neuro.andouSemApoio),
-        ...mapMarco('neuropsicomotor_correu', neuro.correu),
-        ...mapMarco('neuropsicomotor_andou_de_motoca', neuro.andouDeMotoca),
-        ...mapMarco('neuropsicomotor_andou_de_bicicleta', neuro.andouDeBicicleta),
-        ...mapMarco(
-            'neuropsicomotor_subiu_escadas_sozinho',
-            neuro.subiuEscadasSozinho,
-        ),
-        neuropsicomotor_motricidade_fina: neuro.motricidadeFina ?? '',
-        ...mapMarco('fala_linguagem_balbuciou', fala.balbuciou),
-        ...mapMarco('fala_linguagem_primeiras_palavras', fala.primeirasPalavras),
-        ...mapMarco('fala_linguagem_primeiras_frases', fala.primeirasFrases),
-        ...mapMarco(
-            'fala_linguagem_apontou_para_fazer_pedidos',
-            fala.apontouParaFazerPedidos,
-        ),
-        fala_linguagem_faz_uso_de_gestos: mapSimNao(fala.fazUsoDeGestos),
-        fala_linguagem_faz_uso_de_gestos_quais: fala.fazUsoDeGestosQuais ?? '',
-        fala_linguagem_audicao: fala.audicao ?? null,
-        fala_linguagem_teve_otite_de_repeticao: mapSimNao(fala.teveOtiteDeRepeticao),
-        fala_linguagem_otite_vezes: fala.otiteVezes ?? null,
-        fala_linguagem_otite_periodo_meses: fala.otitePeriodoMeses ?? null,
-        fala_linguagem_otite_frequencia: fala.otiteFrequencia ?? null,
-        fala_linguagem_otite_detalhes: fala.otiteDetalhes ?? null,
-        fala_linguagem_faz_ou_fez_uso_tubo_ventilacao: mapSimNao(
-            fala.fazOuFezUsoTuboVentilacao,
-        ),
-        fala_linguagem_tubo_ventilacao_observacao: fala.tuboVentilacaoObservacao ?? '',
-        fala_linguagem_faz_ou_fez_uso_objeto_oral: mapSimNao(
-            fala.fazOuFezUsoObjetoOral,
-        ),
-        fala_linguagem_objeto_oral_especificar: fala.objetoOralEspecificar ?? '',
-        fala_linguagem_usa_mamadeira: mapSimNao(fala.usaMamadeira),
-        fala_linguagem_mamadeira_ha: fala.mamadeiraHa ?? null,
-        fala_linguagem_mamadeira_vezes_ao_dia: fala.mamadeiraVezesAoDia ?? null,
-        fala_linguagem_mamadeira_detalhes: fala.mamadeiraDetalhes ?? null,
-        fala_linguagem_comunicacao_atual: fala.comunicacaoAtual ?? '',
-        desfralde_diurno_urina_anos: desfralde.desfraldeDiurnoUrina?.anos ?? '',
-        desfralde_diurno_urina_meses: desfralde.desfraldeDiurnoUrina?.meses ?? '',
-        desfralde_diurno_urina_utiliza_fralda:
-            desfralde.desfraldeDiurnoUrina?.utilizaFralda ?? false,
-        desfralde_noturno_urina_anos: desfralde.desfraldeNoturnoUrina?.anos ?? '',
-        desfralde_noturno_urina_meses: desfralde.desfraldeNoturnoUrina?.meses ?? '',
-        desfralde_noturno_urina_utiliza_fralda:
-            desfralde.desfraldeNoturnoUrina?.utilizaFralda ?? false,
-        desfralde_fezes_anos: desfralde.desfraldeFezes?.anos ?? '',
-        desfralde_fezes_meses: desfralde.desfraldeFezes?.meses ?? '',
-        desfralde_fezes_utiliza_fralda: desfralde.desfraldeFezes?.utilizaFralda ?? false,
-        desfralde_se_limpa_sozinho_urinar: mapSimNao(desfralde.seLimpaSozinhoUrinar),
-        desfralde_se_limpa_sozinho_defecar: mapSimNao(desfralde.seLimpaSozinhoDefecar),
-        desfralde_lava_as_maos_apos_uso_banheiro: mapSimNao(
-            desfralde.lavaAsMaosAposUsoBanheiro,
-        ),
-        desfralde_apresenta_alteracao_habito_intestinal: mapSimNao(
-            desfralde.apresentaAlteracaoHabitoIntestinal,
-        ),
-        desfralde_observacoes: desfralde.observacoes ?? '',
-        sono_dormem_media_horas_noite: sono.dormemMediaHorasNoite ?? '',
-        sono_dormem_media_horas_dia: sono.dormemMediaHorasDia ?? '',
-        sono_periodo_sono_dia: sono.periodoSonoDia ?? null,
-        sono_tem_dificuldade_iniciar_sono: mapSimNao(sono.temDificuldadeIniciarSono),
-        sono_acorda_de_madrugada: mapSimNao(sono.acordaDeMadrugada),
-        sono_dorme_na_propria_cama: mapSimNao(sono.dormeNaPropriaCama),
-        sono_dorme_no_proprio_quarto: mapSimNao(sono.dormeNoProprioQuarto),
-        sono_apresenta_sono_agitado: mapSimNao(sono.apresentaSonoAgitado),
-        sono_e_sonambulo: mapSimNao(sono.eSonambulo),
-        sono_observacoes: sono.observacoes ?? '',
-        habitos_higiene_toma_banho_lava_corpo_todo: mapAjudaStatus(
-            higiene.tomaBanhoLavaCorpoTodo,
-        ),
-        habitos_higiene_seca_corpo_todo: mapAjudaStatus(higiene.secaCorpoTodo),
-        habitos_higiene_retira_todas_pecas_roupa: mapAjudaStatus(
-            higiene.retiraTodasPecasRoupa,
-        ),
-        habitos_higiene_coloca_todas_pecas_roupa: mapAjudaStatus(
-            higiene.colocaTodasPecasRoupa,
-        ),
-        habitos_higiene_poe_calcados_sem_cadarco: mapAjudaStatus(
-            higiene.poeCalcadosSemCadarco,
-        ),
-        habitos_higiene_poe_calcados_com_cadarco: mapAjudaStatus(
-            higiene.poeCalcadosComCadarco,
-        ),
-        habitos_higiene_escova_os_dentes: mapAjudaStatus(higiene.escovaOsDentes),
-        habitos_higiene_penteia_o_cabelo: mapAjudaStatus(higiene.penteiaOCabelo),
-        habitos_higiene_observacoes: higiene.observacoes ?? '',
-        alimentacao_apresenta_queixa_alimentacao: mapSimNao(
-            alimentacao.apresentaQueixaAlimentacao,
-        ),
-        alimentacao_se_alimenta_sozinho: mapSimNao(alimentacao.seAlimentaSozinho),
-        alimentacao_e_seletivo_quanto_alimentos: mapSimNao(
-            alimentacao.eSeletivoQuantoAlimentos,
-        ),
-        alimentacao_passa_dia_inteiro_sem_comer: mapSimNao(
-            alimentacao.passaDiaInteiroSemComer,
-        ),
-        alimentacao_apresenta_rituais_para_alimentar: mapSimNao(
-            alimentacao.apresentaRituaisParaAlimentar,
-        ),
-        alimentacao_esta_abaixo_ou_acima_peso: mapSimNao(
-            alimentacao.estaAbaixoOuAcimaPeso,
-        ),
-        alimentacao_esta_abaixo_ou_acima_peso_descricao:
-            alimentacao.estaAbaixoOuAcimaPesoDescricao ?? '',
-        alimentacao_tem_historico_anemia: mapSimNao(alimentacao.temHistoricoAnemia),
-        alimentacao_tem_historico_anemia_descricao:
-            alimentacao.temHistoricoAnemiaDescricao ?? '',
-        alimentacao_rotina_alimentar_e_problema_familia: mapSimNao(
-            alimentacao.rotinaAlimentarEProblemaFamilia,
-        ),
-        alimentacao_rotina_alimentar_e_problema_familia_descricao:
-            alimentacao.rotinaAlimentarEProblemaFamiliaDescricao ?? '',
-        alimentacao_observacoes: alimentacao.observacoes ?? '',
-        desenvolvimento_social_possui_amigos_mesma_idade_escola: mapSimNao(
-            social.possuiAmigosMesmaIdadeEscola,
-        ),
-        desenvolvimento_social_possui_amigos_mesma_idade_fora_escola: mapSimNao(
-            social.possuiAmigosMesmaIdadeForaEscola,
-        ),
-        desenvolvimento_social_faz_uso_funcional_brinquedos: mapSimNao(
-            social.fazUsoFuncionalBrinquedos,
-        ),
-        desenvolvimento_social_brinca_proximo_aos_colegas: mapSimNao(
-            social.brincaProximoAosColegas,
-        ),
-        desenvolvimento_social_brinca_conjunta_com_colegas: mapSimNao(
-            social.brincaConjuntaComColegas,
-        ),
-        desenvolvimento_social_procura_colegas_espontaneamente: mapSimNao(
-            social.procuraColegasEspontaneamente,
-        ),
-        desenvolvimento_social_se_verbal_inicia_conversa: mapSimNao(
-            social.seVerbalIniciaConversa,
-        ),
-        desenvolvimento_social_se_verbal_responde_perguntas_simples: mapSimNao(
-            social.seVerbalRespondePerguntasSimples,
-        ),
-        desenvolvimento_social_faz_pedidos_quando_necessario: mapSimNao(
-            social.fazPedidosQuandoNecessario,
-        ),
-        desenvolvimento_social_estabelece_contato_visual_adultos: mapSimNao(
-            social.estabeleceContatoVisualAdultos,
-        ),
-        desenvolvimento_social_estabelece_contato_visual_criancas: mapSimNao(
-            social.estabeleceContatoVisualCriancas,
-        ),
-        desenvolvimento_social_observacoes: social.observacoes ?? '',
-        desenvolvimento_social_brinca_com_outras_criancas: mapSimNao(
-            social.brincaComOutrasCriancas,
-        ),
-        desenvolvimento_social_tipo_brincadeira: social.tipoBrincadeira ?? null,
-        desenvolvimento_social_mantem_contato_visual: mapSimNao(social.mantemContatoVisual),
-        desenvolvimento_social_responde_ao_chamar: mapSimNao(social.respondeAoChamar),
-        desenvolvimento_social_compartilha_interesses: mapSimNao(
-            social.compartilhaInteresses,
-        ),
-        desenvolvimento_social_compreende_sentimentos: mapSimNao(
-            social.compreendeSentimentos,
-        ),
-        desenvolvimento_academico_escola: academico.escola ?? '',
-        desenvolvimento_academico_ano:
-            academico.ano !== undefined && academico.ano !== null
-                ? String(academico.ano)
-                : null,
-        desenvolvimento_academico_periodo: academico.periodo ?? '',
-        desenvolvimento_academico_direcao: academico.direcao ?? '',
-        desenvolvimento_academico_coordenacao: academico.coordenacao ?? '',
-        desenvolvimento_academico_professora_principal: academico.professoraPrincipal ?? '',
-        desenvolvimento_academico_professora_assistente:
-            academico.professoraAssistente ?? '',
-        desenvolvimento_academico_frequenta_escola_regular: mapSimNao(
-            academico.frequentaEscolaRegular,
-        ),
-        desenvolvimento_academico_frequenta_escola_especial: mapSimNao(
-            academico.frequentaEscolaEspecial,
-        ),
-        desenvolvimento_academico_demandas_pedagogicas: mapSimNao(
-            academico.acompanhaTurmaDemandasPedagogicas,
-        ),
-        desenvolvimento_academico_segue_regras_rotina_sala_aula: mapSimNao(
-            academico.segueRegrasRotinaSalaAula,
-        ),
-        desenvolvimento_academico_necessita_apoio_at: mapSimNao(
-            academico.necessitaApoioAT,
-        ),
-        desenvolvimento_academico_necessita_adaptacao_materiais: mapSimNao(
-            academico.necessitaAdaptacaoMateriais,
-        ),
-        desenvolvimento_academico_necessita_adaptacao_curricular: mapSimNao(
-            academico.necessitaAdaptacaoCurricular,
-        ),
-        desenvolvimento_academico_houve_reprovacao_retencao: mapSimNao(
-            academico.houveReprovacaoRetencao,
-        ),
-        desenvolvimento_academico_escola_possui_equipe_inclusao: mapSimNao(
-            academico.escolaPossuiEquipeInclusao,
-        ),
-        desenvolvimento_academico_deficiencia_intelectual: mapSimNao(
-            academico.haIndicativoDeficienciaIntelectual,
-        ),
-        desenvolvimento_academico_queixa_comportamental: mapSimNao(
-            academico.escolaApresentaQueixaComportamental,
-        ),
-        desenvolvimento_academico_adaptacao_escolar: academico.adaptacaoEscolar ?? '',
-        desenvolvimento_academico_dificuldades_escolares:
-            academico.dificuldadesEscolares ?? '',
-        desenvolvimento_academico_relacionamento_com_colegas:
-            academico.relacionamentoComColegas ?? '',
-        desenvolvimento_academico_observacoes: academico.observacoes ?? '',
-        estereotipias_rituais_balanca_maos_lado_corpo_ou_frente: mapSimNao(
-            estereotipias.balancaMaosLadoCorpoOuFrente,
-        ),
-        estereotipias_rituais_balanca_corpo_frente_para_tras: mapSimNao(
-            estereotipias.balancaCorpoFrenteParaTras,
-        ),
-        estereotipias_rituais_pula_ou_gira_em_torno_de_si: mapSimNao(
-            estereotipias.pulaOuGiraEmTornoDeSi,
-        ),
-        estereotipias_rituais_repete_sons_sem_funcao_comunicativa: mapSimNao(
-            estereotipias.repeteSonsSemFuncaoComunicativa,
-        ),
-        estereotipias_rituais_repete_movimentos_continuos: mapSimNao(
-            estereotipias.repeteMovimentosContinuos,
-        ),
-        estereotipias_rituais_explora_ambiente_lambendo_tocando: mapSimNao(
-            estereotipias.exploraAmbienteLambendoTocando,
-        ),
-        estereotipias_rituais_procura_observar_objetos_canto_olho: mapSimNao(
-            estereotipias.procuraObservarObjetosCantoOlho,
-        ),
-        estereotipias_rituais_organiza_objetos_lado_a_lado: mapSimNao(
-            estereotipias.organizaObjetosLadoALado,
-        ),
-        estereotipias_rituais_realiza_tarefas_sempre_mesma_ordem: mapSimNao(
-            estereotipias.realizaTarefasSempreMesmaOrdem,
-        ),
-        estereotipias_rituais_apresenta_rituais_diarios: mapSimNao(
-            estereotipias.apresentaRituaisDiarios,
-        ),
-        estereotipias_rituais_observacoes_topografias:
-            estereotipias.observacoesTopografias ?? '',
-        problemas_comportamento_auto_lesivos: mapSimNao(
-            problemas.apresentaComportamentosAutoLesivos,
-        ),
-        problemas_comportamento_auto_lesivos_quais: problemas.autoLesivosQuais ?? '',
-        problemas_comportamento_heteroagressivos: mapSimNao(
-            problemas.apresentaComportamentosHeteroagressivos,
-        ),
-        problemas_comportamento_heteroagressivos_quais: problemas.heteroagressivosQuais ?? '',
-        problemas_comportamento_apresenta_destruicao_propriedade: mapSimNao(
-            problemas.apresentaDestruicaoPropriedade,
-        ),
-        problemas_comportamento_destruicao_descrever: problemas.destruicaoDescrever ?? '',
-        problemas_comportamento_necessitou_contencao_mecanica: mapSimNao(
-            problemas.necessitouContencaoMecanica,
-        ),
-        problemas_comportamento_observacoes_topografias:
-            problemas.observacoesTopografias ?? '',
-        finalizacao_outras_informacoes_relevantes:
-            finalizacao.outrasInformacoesRelevantes ?? null,
-        finalizacao_informacoes_adicionais: finalizacao.informacoesAdicionais ?? null,
-        finalizacao_observacoes_impressoes_terapeuta:
-            finalizacao.observacoesImpressoesTerapeuta ?? null,
-        finalizacao_observacoes_finais: finalizacao.observacoesFinais ?? null,
-        finalizacao_expectativas_familia: finalizacao.expectativasFamilia ?? '',
-        ...(especialidadesConsultadas.length > 0 && {
-            especialidadesConsultadas: { create: especialidadesConsultadas },
-        }),
-        ...(medicamentosEmUso.length > 0 && {
-            medicamentosEmUso: { create: medicamentosEmUso },
-        }),
-        ...(examesPrevios.length > 0 && {
-            examesPrevios: { create: examesPrevios },
-        }),
-        ...(terapiasPrevias.length > 0 && {
-            terapiasPrevias: { create: terapiasPrevias },
-        }),
-        ...(historicosFamiliares.length > 0 && {
-            historicosFamiliares: { create: historicosFamiliares },
-        }),
-        ...(atividadesRotina.length > 0 && {
-            atividadesRotina: { create: atividadesRotina },
-        }),
-        ...(cuidadoresIds.length > 0 && {
-            cuidadores: {
-                create: cuidadoresIds.map((id) => ({
-                    cuidador: { connect: { id } },
-                })),
-            },
-        }),
-    };
+    // linguagem
+    const babbled = mapMarco(initialDevelopment.falaLinguagem.balbuciou);
+    const firstWords = mapMarco(initialDevelopment.falaLinguagem.primeirasPalavras);
+    const firstSentences = mapMarco(initialDevelopment.falaLinguagem.primeirasFrases);
+    const pointing = mapMarco(initialDevelopment.falaLinguagem.apontouParaFazerPedidos);
 
     return prisma.anamnese.create({
-        data: data as Prisma.AnamneseUncheckedCreateInput,
-    });
+        data: {
+            cliente_id: header.clienteId,
+            terapeuta_id: header.profissionalId,
+
+            // cabeçalho
+            data_entrevista: new Date(header.dataEntrevista),
+            informante: header.informante,
+            parentesco: header.parentesco,
+            parentesco_descricao: header.parentescoDescricao ?? null,
+            quem_indicou: header.quemIndicou ?? null,
+
+            queixa_diagnostico: {
+                create: {
+                    queixa_principal: complaintDiagnosis.queixaPrincipal,
+                    diagnostico_previo: complaintDiagnosis.diagnosticoPrevio ?? null,
+                    suspeita_condicao_associada: complaintDiagnosis.suspeitaCondicaoAssociada ?? null,
+
+                    // ESPECIALIDADES CONSULTADAS (array)
+                    ...(complaintDiagnosis.especialidadesConsultadas &&
+                        complaintDiagnosis.especialidadesConsultadas.length > 0 && {
+                            especialidades_consultada: {
+                                create: complaintDiagnosis.especialidadesConsultadas.map((e) => ({
+                                    especialidade: e.especialidade ?? null,
+                                    nome: e.nome ?? null,
+                                    data: e.data ?? null,
+                                    observacao: e.observacao ?? null,
+                                    ativo: e.ativo ?? null,
+                                })),
+                            },
+                        }
+                    ),
+
+                    // MEDICAMENTOS EM USO (array)
+                    ...(complaintDiagnosis.medicamentosEmUso &&
+                        complaintDiagnosis.medicamentosEmUso.length > 0 && {
+                            medicamentos_em_uso: {
+                                create: complaintDiagnosis.medicamentosEmUso.map((m) => ({
+                                    nome: m.nome ?? null,
+                                    dosagem: m.dosagem ?? null,
+                                    data_inicio: m.dataInicio ?? null,
+                                    motivo: m.motivo ?? null,
+                                })),
+                            },
+                        }
+                    ),
+
+                    // EXAMES PRÉVIOS (array + arquivos)
+                    ...(complaintDiagnosis.examesPrevios &&
+                        complaintDiagnosis.examesPrevios.length > 0 && {
+                            exames_previos: {
+                                create: complaintDiagnosis.examesPrevios.map((exame) => ({
+                                    nome: exame.nome ?? null,
+                                    data: exame.data ?? null,
+                                    resultado: exame.resultado ?? null,
+                                    
+                                    ...(exame.arquivos &&
+                                        exame.arquivos.length > 0 && {
+                                            arquivos: {
+                                                create: exame.arquivos.map((arq) => ({
+                                                    nome: arq.nome ?? null,
+                                                    tipo: arq.tipo ?? null,
+                                                    tamanho: arq.tamanho ?? null,
+                                                    // caminho tem que implementar a logica de upload primeiro
+                                                    caminho: null,
+                                                })),
+                                            },
+                                        }
+                                    ),
+                                })),
+                            },
+                        }
+                    ),
+
+                    // TERAPIAS PRÉVIAS (array)
+                    ...(complaintDiagnosis.terapiasPrevias &&
+                        complaintDiagnosis.terapiasPrevias.length > 0 && {
+                            terapias_previas: {
+                                create: complaintDiagnosis.terapiasPrevias.map((t) => ({
+                                    profissional: t.profissional ?? null,
+                                    especialidade_abordagem: t.especialidadeAbordagem ?? null,
+                                    tempo_intervencao: t.tempoIntervencao ?? null,
+                                    observacao: t.observacao ?? null,
+                                    ativo: t.ativo ?? null,
+                                })),
+                            },
+                        }
+                    ),
+                },
+            },
+
+            contexto_familiar_rotina: {
+                create: {
+                    ...(familyContextRoutine.historicosFamiliares &&
+                        familyContextRoutine.historicosFamiliares.length > 0 && {
+                            historicos_familiares: {
+                                create: familyContextRoutine.historicosFamiliares.map((h) => ({
+                                    condicao_diagnostico: h.condicaoDiagnostico ?? null,
+                                    parentesco: h.parentesco ?? null,
+                                    observacao: h.observacao ?? null,
+                                })),
+                            },
+                        }
+                    ),
+
+                    ...(familyContextRoutine.atividadesRotina &&
+                        familyContextRoutine.atividadesRotina.length > 0 && {
+                            atividades_rotina: {
+                                create: familyContextRoutine.atividadesRotina.map((a) => ({
+                                    atividade: a.atividade ?? null,
+                                    horario: a.horario ?? null,
+                                    responsavel: a.responsavel ?? null,
+                                    frequencia: a.frequencia ?? null,
+                                    observacao: a.observacao ?? null,
+                                })),
+                            },
+                        }
+                    ),
+                },
+            },
+
+            desenvolvimento_inicial: {
+                create: {
+                    // gestação / parto
+                    tipo_parto: initialDevelopment.gestacaoParto.tipoParto,
+                    semanas: initialDevelopment.gestacaoParto.semanas,
+                    apgar_1_min: initialDevelopment.gestacaoParto.apgar1min,
+                    apgar_5_min: initialDevelopment.gestacaoParto.apgar5min,
+                    intercorrencias: initialDevelopment.gestacaoParto.intercorrencias ?? null,
+    
+                    // neuropsicomotor
+                    sustentou_cabeca_meses: headHeld.months,
+                    sustentou_cabeca_nao_realiza: headHeld.notPerform,
+                    sustentou_cabeca_nao_soube_informar: headHeld.didntKnow,
+    
+                    rolou_meses: rolled.months,
+                    rolou_nao_realiza: rolled.notPerform,
+                    rolou_nao_soube_informar: rolled.didntKnow,
+    
+                    sentou_meses: sat.months,
+                    sentou_nao_realiza: sat.notPerform,
+                    sentou_nao_soube_informar: sat.didntKnow,
+
+                    engatinhou_meses: crawled.months,
+                    engatinhou_nao_realiza: crawled.notPerform,
+                    engatinhou_nao_soube_informar: crawled.didntKnow,
+
+                    andou_com_apoio_meses: walkedWithSupport.months,
+                    andou_com_apoio_nao_realiza: walkedWithSupport.notPerform,
+                    andou_com_apoio_nao_soube_informar: walkedWithSupport.didntKnow,
+
+                    andou_sem_apoio_meses: walkedWithoutSupport.months,
+                    andou_sem_apoio_nao_realiza: walkedWithoutSupport.notPerform,
+                    andou_sem_apoio_nao_soube_informar: walkedWithoutSupport.didntKnow,
+
+                    correu_meses: ran.months,
+                    correu_nao_realiza: ran.notPerform,
+                    correu_nao_soube_informar: ran.didntKnow,
+
+                    andou_de_motoca_meses: scooter.months,
+                    andou_de_motoca_nao_realiza: scooter.notPerform,
+                    andou_de_motoca_nao_soube_informar: scooter.didntKnow,
+
+                    andou_de_bicicleta_meses: bicycle.months,
+                    andou_de_bicicleta_nao_realiza: bicycle.notPerform,
+                    andou_de_bicicleta_nao_soube_informar: bicycle.didntKnow,
+
+                    subiu_escadas_sozinho_meses: stairs.months,
+                    subiu_escadas_sozinho_nao_realiza: stairs.notPerform,
+                    subiu_escadas_sozinho_nao_soube_informar: stairs.didntKnow,
+    
+                    motricidade_fina: initialDevelopment.neuropsicomotor.motricidadeFina ?? null,
+    
+                    // fala / linguagem - marcos (meses + flags)
+                    balbuciou_meses: babbled.months,
+                    balbuciou_nao: babbled.notPerform,
+                    balbuciou_nao_soube_informar: babbled.didntKnow,
+
+                    primeiras_palavras_meses: firstWords.months,
+                    primeiras_palavras_nao: firstWords.notPerform,
+                    primeiras_palavras_nao_soube_informar: firstWords.didntKnow,
+
+                    primeiras_frases_meses: firstSentences.months,
+                    primeiras_frases_nao: firstSentences.notPerform,
+                    primeiras_frases_nao_soube_informar: firstSentences.didntKnow,
+
+                    apontou_para_fazer_pedidos_meses: pointing.months,
+                    apontou_para_fazer_pedidos_nao: pointing.notPerform,
+                    apontou_para_fazer_pedidos_nao_soube_informar: pointing.didntKnow,
+    
+                    // demais campos de fala/linguagem
+                    faz_uso_de_gestos: mapSimNao(initialDevelopment.falaLinguagem.fazUsoDeGestos),
+                    faz_uso_de_gestos_quais: initialDevelopment.falaLinguagem.fazUsoDeGestosQuais ?? null,
+    
+                    audicao: initialDevelopment.falaLinguagem.audicao ?? null,
+    
+                    teve_otite_de_repeticao: mapSimNao(initialDevelopment.falaLinguagem.teveOtiteDeRepeticao),
+                    otite_vezes: initialDevelopment.falaLinguagem.otiteVezes ?? null,
+                    otite_periodo_meses: initialDevelopment.falaLinguagem.otitePeriodoMeses ?? null,
+                    otite_frequencia: initialDevelopment.falaLinguagem.otiteFrequencia ?? null,
+    
+                    faz_ou_fez_uso_tubo_ventilacao: mapSimNao(initialDevelopment.falaLinguagem.fazOuFezUsoTuboVentilacao),
+                    tubo_ventilacao_observacao: initialDevelopment.falaLinguagem.tuboVentilacaoObservacao ?? null,
+    
+                    faz_ou_fez_uso_objeto_oral: mapSimNao(initialDevelopment.falaLinguagem.fazOuFezUsoObjetoOral),
+                    objeto_oral_especificar: initialDevelopment.falaLinguagem.objetoOralEspecificar ?? null,
+    
+                    usa_mamadeira: mapSimNao(initialDevelopment.falaLinguagem.usaMamadeira),
+                    mamadeira_ha: initialDevelopment.falaLinguagem.mamadeiraHa ?? null,
+                    mamadeira_vezes_ao_dia: initialDevelopment.falaLinguagem.mamadeiraVezesAoDia ?? null,
+    
+                    comunicacao_atual: initialDevelopment.falaLinguagem.comunicacaoAtual ?? null,
+                },
+            },
+
+            atividades_vida_diaria: {
+                create: {
+                    // desfralde
+                    desfralde_diurno_urina_anos: daily.desfralde?.desfraldeDiurnoUrina?.anos ?? null,
+                    desfralde_diurno_urina_meses: daily.desfralde?.desfraldeDiurnoUrina?.meses ?? null,
+                    desfralde_diurno_urina_utiliza_fralda: daily.desfralde?.desfraldeDiurnoUrina?.utilizaFralda ?? null,
+
+                    desfralde_noturno_urina_anos: daily.desfralde?.desfraldeNoturnoUrina?.anos ?? null,
+                    desfralde_noturno_urina_meses: daily.desfralde?.desfraldeNoturnoUrina?.meses ?? null,
+                    desfralde_noturno_urina_utiliza_fralda: daily.desfralde?.desfraldeNoturnoUrina?.utilizaFralda ?? null,
+
+                    desfralde_fezes_anos: daily.desfralde?.desfraldeFezes?.anos ?? null,
+                    desfralde_fezes_meses: daily.desfralde?.desfraldeFezes?.meses ?? null,
+                    desfralde_fezes_utiliza_fralda: daily.desfralde?.desfraldeFezes?.utilizaFralda ?? null,
+
+                    se_limpa_sozinho_urinar: mapSimNao(daily.desfralde?.seLimpaSozinhoUrinar),
+                    se_limpa_sozinho_defecar: mapSimNao(daily.desfralde?.seLimpaSozinhoDefecar),
+                    lava_as_maos_apos_uso_banheiro: mapSimNao(daily.desfralde?.lavaAsMaosAposUsoBanheiro),
+                    apresenta_alteracao_habito_intestinal: mapSimNao(daily.desfralde?.apresentaAlteracaoHabitoIntestinal),
+                    desfralde_observacoes: daily.desfralde?.observacoes ?? null,
+
+                    // sono
+                    dormem_media_horas_noite: daily.sono?.dormemMediaHorasNoite ?? null,
+                    dormem_media_horas_dia: daily.sono?.dormemMediaHorasDia ?? null,
+                    periodo_sono_dia: daily.sono?.periodoSonoDia ?? null,
+
+                    tem_dificuldade_iniciar_sono: mapSimNao(daily.sono?.temDificuldadeIniciarSono),
+                    acorda_de_madrugada: mapSimNao(daily.sono?.acordaDeMadrugada),
+                    dorme_na_propria_cama: mapSimNao(daily.sono?.dormeNaPropriaCama),
+                    dorme_no_proprio_quarto: mapSimNao(daily.sono?.dormeNoProprioQuarto),
+                    apresenta_sono_agitado: mapSimNao(daily.sono?.apresentaSonoAgitado),
+                    e_sonambulo: mapSimNao(daily.sono?.eSonambulo),
+
+                    sono_observacoes: daily.sono?.observacoes ?? null,
+
+                    // habitos de higiene
+                    toma_banho_lava_corpo_todo: daily.habitosHigiene?.tomaBanhoLavaCorpoTodo ?? null,
+                    seca_corpo_todo: daily.habitosHigiene?.secaCorpoTodo ?? null,
+                    retira_todas_pecas_roupa: daily.habitosHigiene?.retiraTodasPecasRoupa ?? null,
+                    coloca_todas_pecas_roupa: daily.habitosHigiene?.colocaTodasPecasRoupa ?? null,
+                    poe_calcados_sem_cadarco: daily.habitosHigiene?.poeCalcadosSemCadarco ?? null,
+                    poe_calcados_com_cadarco: daily.habitosHigiene?.poeCalcadosComCadarco ?? null,
+                    escova_os_dentes: daily.habitosHigiene?.escovaOsDentes ?? null,
+                    penteia_o_cabelo: daily.habitosHigiene?.penteiaOCabelo ?? null,
+
+                    habitos_higiene_observacoes: daily.habitosHigiene?.observacoes ?? null,
+
+                    // alimentacao
+                    apresenta_queixa_alimentacao: mapSimNao(daily.alimentacao?.apresentaQueixaAlimentacao),
+                    se_alimenta_sozinho: mapSimNao(daily.alimentacao?.seAlimentaSozinho),
+                    e_seletivo_quanto_alimentos: mapSimNao(daily.alimentacao?.eSeletivoQuantoAlimentos),
+                    passa_dia_inteiro_sem_comer: mapSimNao(daily.alimentacao?.passaDiaInteiroSemComer),
+                    apresenta_rituais_para_alimentar: mapSimNao(daily.alimentacao?.apresentaRituaisParaAlimentar),
+                    esta_abaixo_ou_acima_peso: mapSimNao(daily.alimentacao?.estaAbaixoOuAcimaPeso),
+
+                    esta_abaixo_ou_acima_peso_descricao: daily.alimentacao?.estaAbaixoOuAcimaPesoDescricao ?? null,
+
+                    tem_historico_anemia: mapSimNao(daily.alimentacao?.temHistoricoAnemia),
+                    tem_historico_anemia_descricao: daily.alimentacao?.temHistoricoAnemiaDescricao ?? null,
+
+                    rotina_alimentar_problema_familia: mapSimNao(daily.alimentacao?.rotinaAlimentarEProblemaFamilia),
+                    rotina_alimentar_problema_familia_desc: daily.alimentacao?.rotinaAlimentarEProblemaFamiliaDescricao ?? null,
+
+                    alimentacao_observacoes: daily.alimentacao?.observacoes ?? null,
+                },
+            },
+
+            social_academico: {
+                create: {
+                    // desenvolvimento social
+                    possui_amigos_mesma_idade_escola: mapSimNao(socialAcademic.desenvolvimentoSocial.possuiAmigosMesmaIdadeEscola),
+                    possui_amigos_mesma_idade_fora_escola: mapSimNao(socialAcademic.desenvolvimentoSocial.possuiAmigosMesmaIdadeForaEscola),
+                    faz_uso_funcional_brinquedos: mapSimNao(socialAcademic.desenvolvimentoSocial.fazUsoFuncionalBrinquedos),
+                    brinca_proximo_aos_colegas: mapSimNao(socialAcademic.desenvolvimentoSocial.brincaProximoAosColegas),
+                    brinca_conjunta_com_colegas: mapSimNao(socialAcademic.desenvolvimentoSocial.brincaConjuntaComColegas),
+                    procura_colegas_espontaneamente: mapSimNao(socialAcademic.desenvolvimentoSocial.procuraColegasEspontaneamente),
+                    se_verbal_inicia_conversa: mapSimNao(socialAcademic.desenvolvimentoSocial.seVerbalIniciaConversa),
+                    se_verbal_responde_perguntas_simples: mapSimNao(socialAcademic.desenvolvimentoSocial.seVerbalRespondePerguntasSimples),
+                    faz_pedidos_quando_necessario: mapSimNao(socialAcademic.desenvolvimentoSocial.fazPedidosQuandoNecessario),
+                    estabelece_contato_visual_adultos: mapSimNao(socialAcademic.desenvolvimentoSocial.estabeleceContatoVisualAdultos),
+                    estabelece_contato_visual_criancas: mapSimNao(socialAcademic.desenvolvimentoSocial.estabeleceContatoVisualCriancas),
+
+                    desenvolvimento_social_observacoes: socialAcademic.desenvolvimentoSocial.observacoes ?? null,
+
+                    // DESENVOLVIMENTO ACADÊMICO
+                    ano: socialAcademic.desenvolvimentoAcademico.ano ?? null,
+                    periodo: socialAcademic.desenvolvimentoAcademico.periodo ?? null,
+                    direcao: socialAcademic.desenvolvimentoAcademico.direcao ?? null,
+                    coordenacao: socialAcademic.desenvolvimentoAcademico.coordenacao ?? null,
+                    professora_principal: socialAcademic.desenvolvimentoAcademico.professoraPrincipal ?? null,
+                    professora_assistente: socialAcademic.desenvolvimentoAcademico.professoraAssistente ?? null,
+
+                    frequenta_escola_regular: mapSimNao(socialAcademic.desenvolvimentoAcademico.frequentaEscolaRegular),
+                    frequenta_escola_especial: mapSimNao(socialAcademic.desenvolvimentoAcademico.frequentaEscolaEspecial),
+                    acompanha_turma_demandas_pedagogicas: mapSimNao(socialAcademic.desenvolvimentoAcademico.acompanhaTurmaDemandasPedagogicas),
+                    segue_regras_rotina_sala_aula: mapSimNao(socialAcademic.desenvolvimentoAcademico.segueRegrasRotinaSalaAula),
+                    necessita_apoio_at: mapSimNao(socialAcademic.desenvolvimentoAcademico.necessitaApoioAT),
+                    necessita_adaptacao_materiais: mapSimNao(socialAcademic.desenvolvimentoAcademico.necessitaAdaptacaoMateriais),
+                    necessita_adaptacao_curricular: mapSimNao(socialAcademic.desenvolvimentoAcademico.necessitaAdaptacaoCurricular),
+                    houve_reprovacao_retencao: mapSimNao(socialAcademic.desenvolvimentoAcademico.houveReprovacaoRetencao),
+                    escola_possui_equipe_inclusao: mapSimNao(socialAcademic.desenvolvimentoAcademico.escolaPossuiEquipeInclusao),
+                    ha_indicativo_deficiencia_intelectual: mapSimNao(socialAcademic.desenvolvimentoAcademico.haIndicativoDeficienciaIntelectual),
+                    escola_apresenta_queixa_comportamental: mapSimNao(socialAcademic.desenvolvimentoAcademico.escolaApresentaQueixaComportamental),
+
+                    adaptacao_escolar: socialAcademic.desenvolvimentoAcademico.adaptacaoEscolar ?? null,
+                    dificuldades_escolares: socialAcademic.desenvolvimentoAcademico.dificuldadesEscolares ?? null,
+                    relacionamento_com_colegas: socialAcademic.desenvolvimentoAcademico.relacionamentoComColegas ?? null,
+                    desenvolvimento_academico_observacoes: socialAcademic.desenvolvimentoAcademico.observacoes ?? null,
+                },
+            },
+
+            comportamento: {
+                create: {
+                    // estereotipias / rituais
+                    balanca_maos_lado_corpo_ou_frente: mapSimNao(behavior.estereotipiasRituais.balancaMaosLadoCorpoOuFrente),
+                    balanca_corpo_frente_para_tras: mapSimNao(behavior.estereotipiasRituais.balancaCorpoFrenteParaTras),
+                    pula_ou_gira_em_torno_de_si: mapSimNao(behavior.estereotipiasRituais.pulaOuGiraEmTornoDeSi),
+                    repete_sons_sem_funcao_comunicativa: mapSimNao(behavior.estereotipiasRituais.repeteSonsSemFuncaoComunicativa),
+                    repete_movimentos_continuos: mapSimNao(behavior.estereotipiasRituais.repeteMovimentosContinuos),
+                    explora_ambiente_lambendo_tocando: mapSimNao(behavior.estereotipiasRituais.exploraAmbienteLambendoTocando),
+                    procura_observar_objetos_canto_olho: mapSimNao(behavior.estereotipiasRituais.procuraObservarObjetosCantoOlho),
+                    organiza_objetos_lado_a_lado: mapSimNao(behavior.estereotipiasRituais.organizaObjetosLadoALado),
+                    realiza_tarefas_sempre_mesma_ordem: mapSimNao(behavior.estereotipiasRituais.realizaTarefasSempreMesmaOrdem),
+                    apresenta_rituais_diarios: mapSimNao(behavior.estereotipiasRituais.apresentaRituaisDiarios),
+
+                    estereotipias_rituais_observacoes_topografias: behavior.estereotipiasRituais.observacoesTopografias ?? null,
+
+                    // PROBLEMAS DE COMPORTAMENTO
+                    apresenta_comportamentos_auto_lesivos: mapSimNao(behavior.problemasComportamento.apresentaComportamentosAutoLesivos),
+                    auto_lesivos_quais: behavior.problemasComportamento.autoLesivosQuais ?? null,
+
+                    apresenta_comportamentos_heteroagressivos: mapSimNao(behavior.problemasComportamento.apresentaComportamentosHeteroagressivos),
+                    heteroagressivos_quais: behavior.problemasComportamento.heteroagressivosQuais ?? null,
+
+                    apresenta_destruicao_propriedade: mapSimNao(behavior.problemasComportamento.apresentaDestruicaoPropriedade),
+                    destruicao_descrever: behavior.problemasComportamento.destruicaoDescrever ?? null,
+
+                    necessitou_contencao_mecanica: mapSimNao(behavior.problemasComportamento.necessitouContencaoMecanica),
+
+                    problemas_comportamento_observacoes_topografias: behavior.problemasComportamento.observacoesTopografias ?? null,
+                },
+            },
+
+            finalizacao: {
+                create: {
+                    outras_informacoes_relevantes: finishing.outrasInformacoesRelevantes ?? null,
+                    observacoes_impressoes_terapeuta: finishing.observacoesImpressoesTerapeuta ?? null,
+                    expectativas_familia: finishing.expectativasFamilia ?? null,
+                },
+            },
+        }
+    })
 }

@@ -44,7 +44,7 @@ export default function CabecalhoAnamnese({ data, onChange }: CabecalhoAnamneseP
         if (!data.dataEntrevista) {
             onChange({ ...data, dataEntrevista: getDataHoje() });
         }
-    }, []);
+    }, [data, onChange]);
 
     // Carregar terapeuta logado e preencher profissional automaticamente
     useEffect(() => {

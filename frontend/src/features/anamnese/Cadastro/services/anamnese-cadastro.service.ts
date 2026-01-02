@@ -294,6 +294,8 @@ async function apiCriarAnamnese(data: Anamnese): Promise<AnamneseResponse> {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
         });
+
+        console.log(data)
         
         const text = await res.text();
         const responseData = text ? JSON.parse(text) : null;
