@@ -2,16 +2,6 @@
 import * as React from 'react';
 import {
     Frame,
-    LayoutDashboard,
-    LifeBuoy,
-    Send,
-    Settings2,
-    UserPlus,
-    UserRoundSearchIcon,
-    Activity,
-    ReceiptText,
-    FileText,
-    ClipboardList,
 } from 'lucide-react';
 import { NavMain } from '@/components/sidebar/nav-main';
 import { NavProjects } from '@/components/sidebar/nav-projects';
@@ -24,9 +14,13 @@ import {
     SidebarSeparator,
 } from '@/components/ui/sidebar';
 import type { Actions, Subjects } from '@/features/auth/abilities/ability';
-import type { LucideIcon } from 'lucide-react';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useProgramAreas } from '@/features/programas/core/hooks/useProgramConfig';
+import {
+    AnimatedIcons,
+    type AnimatedIconComponent,
+} from '@/components/sidebar/animated-icons';
+import type { LucideIcon } from 'lucide-react';
 
 interface SidebarSubItem {
   title: string;
@@ -35,10 +29,13 @@ interface SidebarSubItem {
   status?: 'em-breve' | 'quase-pronto';
 }
 
+// Tipo que aceita tanto LucideIcon quanto AnimatedIconComponent
+type SidebarIconType = LucideIcon | AnimatedIconComponent;
+
 interface SidebarItem {
   title: string;
   url: string;
-  icon: LucideIcon;
+  icon: SidebarIconType;
   isActive?: boolean;
   ability?: { action: Actions; subject: Subjects };
   items?: SidebarSubItem[];
@@ -47,7 +44,7 @@ interface SidebarItem {
 const data: {
     user: { name: string; email: string; avatar: string };
     navMain: SidebarItem[];
-    navSecondary: { title: string; url: string; icon: LucideIcon }[];
+    navSecondary: { title: string; url: string; icon: SidebarIconType }[];
     projects: { name: string; url: string; icon: LucideIcon; target?: string }[];
 } = {
     user: {
@@ -59,33 +56,38 @@ const data: {
         {
             title: 'Dashboard',
             url: '/app',
-            icon: LayoutDashboard,
+            icon: AnimatedIcons.Dashboard,
         },
         {
             title: 'Cliente',
             url: '/app/consultar/pacientes',
-            icon: UserRoundSearchIcon,
+            icon: AnimatedIcons.UserRoundSearch,
         },
         {
             title: 'Terapeuta',
             url: '/app/consultar/terapeutas',
-            icon: UserPlus,
+            icon: AnimatedIcons.UserPlus,
             ability: { action: 'read', subject: 'Consultar' },
         },
         {
             title: 'Anamnese',
             url: '/app/anamnese/lista',
-            icon: ClipboardList,
+            icon: AnimatedIcons.Clipboard,
+        },
+        {
+            title: 'Atas de Reunião',
+            url: '/app/atas',
+            icon: AnimatedIcons.BookOpen,
         },
         {
             title: 'Relatórios',
             url: '/app/relatorios/lista',
-            icon: FileText,
+            icon: AnimatedIcons.BookOpenText,
         },
         {
             title: 'Faturamento',
             url: '/app/faturamento',
-            icon: ReceiptText,
+            icon: AnimatedIcons.Wallet,
             items: [
                 { title: 'Registrar Lançamento', url: '/app/faturamento/registrar-lancamento' },
                 { title: 'Minhas Horas', url: '/app/faturamento/minhas-horas' },
@@ -96,12 +98,12 @@ const data: {
         {
             title: 'Configuração',
             url: '/app/configuracoes',
-            icon: Settings2,
+            icon: AnimatedIcons.Settings,
         },
     ],
     navSecondary: [
-        { title: 'Suporte', url: '#', icon: LifeBuoy },
-        { title: 'Feedback', url: '#', icon: Send },
+        { title: 'Suporte', url: '#', icon: AnimatedIcons.Headset },
+        { title: 'Feedback', url: '#', icon: AnimatedIcons.Send },
     ],
     projects: [
         {
@@ -134,7 +136,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     {
         title: 'Programas & Objetivos',
         url: '/app/programas',
-        icon: Activity,
+        icon: AnimatedIcons.Activity,
         items: programItems,
     },
 

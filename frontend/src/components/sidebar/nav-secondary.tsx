@@ -8,6 +8,10 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import type { AnimatedIconComponent } from "@/components/sidebar/animated-icons"
+
+// Tipo que aceita tanto LucideIcon quanto AnimatedIconComponent
+type SidebarIconType = LucideIcon | AnimatedIconComponent;
 
 export function NavSecondary({
   items,
@@ -16,7 +20,7 @@ export function NavSecondary({
   items: {
     title: string
     url: string
-    icon: LucideIcon
+    icon: SidebarIconType
   }[]
 } & React.ComponentPropsWithoutRef<typeof SidebarGroup>) {
   return (
@@ -26,8 +30,8 @@ export function NavSecondary({
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton asChild size="sm">
-                <a href={item.url}>
-                  <item.icon />
+                <a href={item.url} className="[&_svg]:h-4 [&_svg]:w-4">
+                  <item.icon size={16} />
                   <span>{item.title}</span>
                 </a>
               </SidebarMenuButton>

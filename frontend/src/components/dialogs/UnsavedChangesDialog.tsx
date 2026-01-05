@@ -25,23 +25,30 @@ export function UnsavedChangesDialog({
     open,
     onConfirm,
     onCancel,
-    title = 'Alterações não salvas',
-    description = 'Você tem alterações que não foram salvas. Se sair agora, essas alterações serão perdidas. Deseja continuar?',
+    title = 'Anamnese em andamento',
+    description = 'Você tem uma anamnese em andamento que não foi salva. Se sair agora, todos os dados preenchidos serão perdidos. Deseja continuar?',
 }: UnsavedChangesDialogProps) {
     return (
         <AlertDialog open={open}>
-            <AlertDialogContent>
+            <AlertDialogContent className="max-w-md">
                 <AlertDialogHeader>
-                    <AlertDialogTitle>{title}</AlertDialogTitle>
-                    <AlertDialogDescription>{description}</AlertDialogDescription>
+                    <AlertDialogTitle className="font-sora font-normal text-lg text-foreground">
+                        {title}
+                    </AlertDialogTitle>
+                    <AlertDialogDescription className="text-sm text-muted-foreground">
+                        {description}
+                    </AlertDialogDescription>
                 </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel onClick={onCancel}>
+                <AlertDialogFooter className="gap-3 sm:gap-3">
+                    <AlertDialogCancel 
+                        onClick={onCancel}
+                        className="border border-input bg-background hover:bg-accent"
+                    >
                         Continuar editando
                     </AlertDialogCancel>
                     <AlertDialogAction 
                         onClick={onConfirm}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        className="bg-primary text-primary-foreground font-medium hover:bg-primary/90"
                     >
                         Sair sem salvar
                     </AlertDialogAction>

@@ -33,6 +33,7 @@ import { HubFaturamentoPage } from '../../features/faturamento';
 import RegistrarLancamentoPage from '../../features/faturamento/registrar-lancamento/pages/RegistrarLancamentoPage';
 import { AnamnesePage } from '../../features/anamnese/Cadastro';
 import { AnamneseListPage } from '../../features/anamnese/Tabela';
+import { AtasHubPage, NovaAtaPage, VisualizarAtaPage } from '../../features/atas-reuniao';
 import MinhasHorasPage from '../../features/faturamento/minhas-horas/pages/MinhasHorasPage';
 import GestaoHorasPage from '../../features/faturamento/gestao/pages/GestaoHorasPage';
 import NotAccessPage from '@/features/shell/pages/NotAccessPage';
@@ -239,6 +240,47 @@ export const router = createBrowserRouter([
                                     <RequireAbility action="read" subject="Consultar">
                                         <Suspense fallback={suspenseFallback}>
                                             <AnamneseListPage />
+                                        </Suspense>
+                                    </RequireAbility>
+                                ),
+                            },
+                            // ========== ROTAS DE ATAS DE REUNIÃO ==========
+                            {
+                                path: 'atas',
+                                element: (
+                                    <RequireAbility action="read" subject="Consultar">
+                                        <Suspense fallback={suspenseFallback}>
+                                            <AtasHubPage />
+                                        </Suspense>
+                                    </RequireAbility>
+                                ),
+                            },
+                            {
+                                path: 'atas/nova',
+                                element: (
+                                    <RequireAbility action="create" subject="Cadastro">
+                                        <Suspense fallback={suspenseFallback}>
+                                            <NovaAtaPage />
+                                        </Suspense>
+                                    </RequireAbility>
+                                ),
+                            },
+                            {
+                                path: 'atas/:id',
+                                element: (
+                                    <RequireAbility action="read" subject="Consultar">
+                                        <Suspense fallback={suspenseFallback}>
+                                            <VisualizarAtaPage />
+                                        </Suspense>
+                                    </RequireAbility>
+                                ),
+                            },
+                            {
+                                path: 'atas/:id/editar',
+                                element: (
+                                    <RequireAbility action="update" subject="Consultar">
+                                        <Suspense fallback={suspenseFallback}>
+                                            <NovaAtaPage />
                                         </Suspense>
                                     </RequireAbility>
                                 ),
