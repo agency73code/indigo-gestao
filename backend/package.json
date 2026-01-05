@@ -11,8 +11,7 @@
         "test": "vitest",
         "test:ui": "vitest --ui",
         "seed": "prisma db seed",
-        "seed:test": "tsx prisma/seed1.ts",
-        "seed:terapeuta-cliente": "tsx prisma/seed-terapeuta-cliente.ts",
+        "seed:all": "pnpm tsx prisma/seed-client.ts && pnpm tsx prisma/seed-therapist.ts && pnpm tsx prisma/seed-therapist-client.ts",
         "studio": "prisma studio --schema=./prisma/schema.prisma --port 5556"
     },
     "keywords": [],

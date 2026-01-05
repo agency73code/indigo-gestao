@@ -7,6 +7,22 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum PeriodoSonoDia {
+  manha
+  tarde
+}
+
+enum SimNaoComAjuda {
+  sim
+  com_ajuda
+  nao
+}
+
+enum BoaRuimAudicao {
+  boa
+  ruim
+}
+
 model area_atuacao {
   id                    Int                     @id @default(autoincrement())
   nome                  String                  @db.VarChar(100)
@@ -44,6 +60,7 @@ model cliente {
   sessao              sessao[]
   terapeuta           terapeuta_cliente[]
   relatorios          relatorio[]
+  anamneses           anamnese[]
 
   @@index([nome], map: "nome_idx")
 }
@@ -53,13 +70,14 @@ model cuidador {
   relacao          String?
   descricaoRelacao String?
   nome             String?
-  cpf              String    @unique @db.Char(11)
+  cpf              String    @db.Char(11)
   profissao        String?
   escolaridade     String?
   telefone         String?
   email            String?
   clienteId        String
   enderecoId       Int?
+  dataNascimento   DateTime? @db.Date
   cliente          cliente   @relation(fields: [clienteId], references: [id])
   endereco         endereco? @relation(fields: [enderecoId], references: [id])
 
@@ -249,10 +267,426 @@ model terapeuta {
   supervisionados       vinculo_supervisao[]    @relation("SupervisorVinculo")
   disciplina            disciplina[]            @relation("disciplinaToterapeuta")
   relatorios            relatorio[]
+  anamneses             anamnese[]
 
   @@index([atividade])
   @@index([nome])
   @@index([endereco_id], map: "terapeuta_endereco_id_fkey")
+}
+
+model anamnese {
+  id Int @id @default(autoincrement())
+
+  // relações
+  cliente_id String
+  cliente    cliente @relation(fields: [cliente_id], references: [id])
+
+  terapeuta_id String
+  terapeuta    terapeuta @relation(fields: [terapeuta_id], references: [id])
+
+  // cabeçalho
+  data_entrevista      DateTime
+  informante           String
+  parentesco           String
+  parentesco_descricao String?
+  quem_indicou         String?
+
+  // relações 1-1 com blocos maiores
+  queixa_diagnostico       anamnese_queixa_diagnostico?       @relation("anamnese_queixa_diagnostico")
+  contexto_familiar_rotina anamnese_contexto_familiar_rotina? @relation("anamnese_contexto_familiar_rotina")
+  desenvolvimento_inicial  anamnese_desenvolvimento_inicial?  @relation("anamnese_desenvolvimento_inicial")
+  atividades_vida_diaria   anamnese_atividades_vida_diaria?   @relation("anamnese_atividades_vida_diaria")
+  social_academico         anamnese_social_academico?         @relation("anamnese_social_academico")
+  comportamento            anamnese_comportamento?            @relation("anamnese_comportamento")
+  finalizacao              anamnese_finalizacao?              @relation("anamnese_finalizacao")
+
+  criado_em     DateTime @default(now())
+  atualizado_em DateTime @updatedAt
+}
+
+model anamnese_queixa_diagnostico {
+  anamnese_id Int      @id
+  anamnese    anamnese @relation("anamnese_queixa_diagnostico", fields: [anamnese_id], references: [id], onDelete: Cascade)
+
+  queixa_principal            String
+  diagnostico_previo          String?
+  suspeita_condicao_associada String?
+
+  especialidades_consultada anamnese_especialidade_consultada[]
+  medicamentos_em_uso       anamnese_medicamento_em_uso[]
+  exames_previos            anamnese_exame_previo[]
+  terapias_previas          anamnese_terapia_previa[]
+
+  @@index([anamnese_id])
+}
+
+model anamnese_especialidade_consultada {
+  id Int @id @default(autoincrement())
+
+  anamnese_id Int
+  anamnese    anamnese_queixa_diagnostico @relation(fields: [anamnese_id], references: [anamnese_id], onDelete: Cascade)
+
+  especialidade String?
+  nome          String?
+  data          String?
+  observacao    String?
+  ativo         Boolean? @default(true)
+
+  @@index([anamnese_id])
+}
+
+model anamnese_medicamento_em_uso {
+  id          Int                         @id @default(autoincrement())
+  anamnese_id Int
+  anamnese    anamnese_queixa_diagnostico @relation(fields: [anamnese_id], references: [anamnese_id], onDelete: Cascade)
+
+  nome        String?
+  dosagem     String?
+  data_inicio String?
+  motivo      String?
+
+  @@index([anamnese_id])
+}
+
+model anamnese_exame_previo {
+  id          Int                         @id @default(autoincrement())
+  anamnese_id Int
+  anamnese    anamnese_queixa_diagnostico @relation(fields: [anamnese_id], references: [anamnese_id], onDelete: Cascade)
+
+  nome      String?
+  data      String?
+  resultado String?
+
+  arquivos anamnese_arquivo_exame_previo[]
+
+  @@index([anamnese_id])
+}
+
+model anamnese_arquivo_exame_previo {
+  id       Int                   @id @default(autoincrement())
+  exame_id Int
+  exame    anamnese_exame_previo @relation(fields: [exame_id], references: [id], onDelete: Cascade)
+
+  nome    String?
+  caminho String?
+  tipo    String?
+  tamanho Int?
+
+  @@index([exame_id])
+}
+
+model anamnese_terapia_previa {
+  id          Int                         @id @default(autoincrement())
+  anamnese_id Int
+  anamnese    anamnese_queixa_diagnostico @relation(fields: [anamnese_id], references: [anamnese_id], onDelete: Cascade)
+
+  profissional            String?
+  especialidade_abordagem String?
+  tempo_intervencao       String?
+  observacao              String?
+  ativo                   Boolean? @default(true)
+
+  @@index([anamnese_id])
+  @@index([profissional])
+  @@index([especialidade_abordagem])
+}
+
+model anamnese_contexto_familiar_rotina {
+  anamnese_id Int      @id
+  anamnese    anamnese @relation("anamnese_contexto_familiar_rotina", fields: [anamnese_id], references: [id], onDelete: Cascade)
+
+  historicos_familiares anamnese_historico_familiar[]
+  atividades_rotina     anamnese_atividade_rotina[]
+
+  @@index([anamnese_id])
+}
+
+model anamnese_historico_familiar {
+  id          Int                               @id @default(autoincrement())
+  contexto_id Int
+  contexto    anamnese_contexto_familiar_rotina @relation(fields: [contexto_id], references: [anamnese_id], onDelete: Cascade)
+
+  condicao_diagnostico String?
+  parentesco           String?
+  observacao           String?
+
+  @@index([contexto_id])
+}
+
+model anamnese_atividade_rotina {
+  id          Int                               @id @default(autoincrement())
+  contexto_id Int
+  contexto    anamnese_contexto_familiar_rotina @relation(fields: [contexto_id], references: [anamnese_id], onDelete: Cascade)
+
+  atividade   String?
+  horario     String?
+  responsavel String?
+  frequencia  String?
+  observacao  String?
+
+  @@index([contexto_id])
+}
+
+model anamnese_desenvolvimento_inicial {
+  anamnese_id Int      @id
+  anamnese    anamnese @relation("anamnese_desenvolvimento_inicial", fields: [anamnese_id], references: [id], onDelete: Cascade)
+
+  // gestação / parto
+  tipo_parto      String // "natural" | "cesarea"
+  semanas         Int
+  apgar_1_min     Int
+  apgar_5_min     Int
+  intercorrencias String?
+
+  // neuropsicomotor - marcos (meses + flags)
+  sustentou_cabeca_meses              String?
+  sustentou_cabeca_nao_realiza        Boolean?
+  sustentou_cabeca_nao_soube_informar Boolean?
+
+  rolou_meses              String?
+  rolou_nao_realiza        Boolean?
+  rolou_nao_soube_informar Boolean?
+
+  sentou_meses              String?
+  sentou_nao_realiza        Boolean?
+  sentou_nao_soube_informar Boolean?
+
+  engatinhou_meses              String?
+  engatinhou_nao_realiza        Boolean?
+  engatinhou_nao_soube_informar Boolean?
+
+  andou_com_apoio_meses              String?
+  andou_com_apoio_nao_realiza        Boolean?
+  andou_com_apoio_nao_soube_informar Boolean?
+
+  andou_sem_apoio_meses              String?
+  andou_sem_apoio_nao_realiza        Boolean?
+  andou_sem_apoio_nao_soube_informar Boolean?
+
+  correu_meses              String?
+  correu_nao_realiza        Boolean?
+  correu_nao_soube_informar Boolean?
+
+  andou_de_motoca_meses              String?
+  andou_de_motoca_nao_realiza        Boolean?
+  andou_de_motoca_nao_soube_informar Boolean?
+
+  andou_de_bicicleta_meses              String?
+  andou_de_bicicleta_nao_realiza        Boolean?
+  andou_de_bicicleta_nao_soube_informar Boolean?
+
+  subiu_escadas_sozinho_meses              String?
+  subiu_escadas_sozinho_nao_realiza        Boolean?
+  subiu_escadas_sozinho_nao_soube_informar Boolean?
+
+  motricidade_fina String?
+
+  // fala / linguagem - marcos (meses + flags)
+  balbuciou_meses              String?
+  balbuciou_nao                Boolean?
+  balbuciou_nao_soube_informar Boolean?
+
+  primeiras_palavras_meses              String?
+  primeiras_palavras_nao                Boolean?
+  primeiras_palavras_nao_soube_informar Boolean?
+
+  primeiras_frases_meses              String?
+  primeiras_frases_nao                Boolean?
+  primeiras_frases_nao_soube_informar Boolean?
+
+  apontou_para_fazer_pedidos_meses              String?
+  apontou_para_fazer_pedidos_nao                Boolean?
+  apontou_para_fazer_pedidos_nao_soube_informar Boolean?
+
+  // demais campos de fala/linguagem
+  faz_uso_de_gestos       Boolean?
+  faz_uso_de_gestos_quais String?
+
+  audicao BoaRuimAudicao? // "boa" | "ruim"
+
+  teve_otite_de_repeticao Boolean?
+  otite_vezes             Int?
+  otite_periodo_meses     Int?
+  otite_frequencia        String?
+
+  faz_ou_fez_uso_tubo_ventilacao Boolean?
+  tubo_ventilacao_observacao     String?
+
+  faz_ou_fez_uso_objeto_oral Boolean?
+  objeto_oral_especificar    String?
+
+  usa_mamadeira          Boolean?
+  mamadeira_ha           String?
+  mamadeira_vezes_ao_dia Int?
+
+  comunicacao_atual String?
+
+  @@index([anamnese_id])
+}
+
+model anamnese_atividades_vida_diaria {
+  anamnese_id Int      @id
+  anamnese    anamnese @relation("anamnese_atividades_vida_diaria", fields: [anamnese_id], references: [id], onDelete: Cascade)
+
+  // desfralde
+  desfralde_diurno_urina_anos           String?
+  desfralde_diurno_urina_meses          String?
+  desfralde_diurno_urina_utiliza_fralda Boolean?
+
+  desfralde_noturno_urina_anos           String?
+  desfralde_noturno_urina_meses          String?
+  desfralde_noturno_urina_utiliza_fralda Boolean?
+
+  desfralde_fezes_anos           String?
+  desfralde_fezes_meses          String?
+  desfralde_fezes_utiliza_fralda Boolean?
+
+  se_limpa_sozinho_urinar               Boolean?
+  se_limpa_sozinho_defecar              Boolean?
+  lava_as_maos_apos_uso_banheiro        Boolean?
+  apresenta_alteracao_habito_intestinal Boolean?
+
+  desfralde_observacoes String?
+
+  // SONO
+  dormem_media_horas_noite String?
+  dormem_media_horas_dia   String?
+
+  periodo_sono_dia PeriodoSonoDia?
+
+  tem_dificuldade_iniciar_sono Boolean?
+  acorda_de_madrugada          Boolean?
+  dorme_na_propria_cama        Boolean?
+  dorme_no_proprio_quarto      Boolean?
+  apresenta_sono_agitado       Boolean?
+  e_sonambulo                  Boolean?
+
+  sono_observacoes String?
+
+  // HÁBITOS DE HIGIENE
+  toma_banho_lava_corpo_todo SimNaoComAjuda?
+  seca_corpo_todo            SimNaoComAjuda?
+  retira_todas_pecas_roupa   SimNaoComAjuda?
+  coloca_todas_pecas_roupa   SimNaoComAjuda?
+  poe_calcados_sem_cadarco   SimNaoComAjuda?
+  poe_calcados_com_cadarco   SimNaoComAjuda?
+  escova_os_dentes           SimNaoComAjuda?
+  penteia_o_cabelo           SimNaoComAjuda?
+
+  habitos_higiene_observacoes String?
+
+  // ALIMENTAÇÃO
+  apresenta_queixa_alimentacao     Boolean?
+  se_alimenta_sozinho              Boolean?
+  e_seletivo_quanto_alimentos      Boolean?
+  passa_dia_inteiro_sem_comer      Boolean?
+  apresenta_rituais_para_alimentar Boolean?
+
+  esta_abaixo_ou_acima_peso           Boolean?
+  esta_abaixo_ou_acima_peso_descricao String?
+
+  tem_historico_anemia           Boolean?
+  tem_historico_anemia_descricao String?
+
+  rotina_alimentar_problema_familia      Boolean?
+  rotina_alimentar_problema_familia_desc String?
+
+  alimentacao_observacoes String?
+
+  @@index([anamnese_id])
+}
+
+model anamnese_social_academico {
+  anamnese_id Int      @id
+  anamnese    anamnese @relation("anamnese_social_academico", fields: [anamnese_id], references: [id], onDelete: Cascade)
+
+  // DESENVOLVIMENTO SOCIAL
+  possui_amigos_mesma_idade_escola      Boolean?
+  possui_amigos_mesma_idade_fora_escola Boolean?
+  faz_uso_funcional_brinquedos          Boolean?
+  brinca_proximo_aos_colegas            Boolean?
+  brinca_conjunta_com_colegas           Boolean?
+  procura_colegas_espontaneamente       Boolean?
+  se_verbal_inicia_conversa             Boolean?
+  se_verbal_responde_perguntas_simples  Boolean?
+  faz_pedidos_quando_necessario         Boolean?
+  estabelece_contato_visual_adultos     Boolean?
+  estabelece_contato_visual_criancas    Boolean?
+
+  desenvolvimento_social_observacoes String?
+
+  // DESENVOLVIMENTO ACADÊMICO
+  ano                   Int?
+  periodo               String?
+  direcao               String?
+  coordenacao           String?
+  professora_principal  String?
+  professora_assistente String?
+
+  frequenta_escola_regular               Boolean?
+  frequenta_escola_especial              Boolean?
+  acompanha_turma_demandas_pedagogicas   Boolean?
+  segue_regras_rotina_sala_aula          Boolean?
+  necessita_apoio_at                     Boolean?
+  necessita_adaptacao_materiais          Boolean?
+  necessita_adaptacao_curricular         Boolean?
+  houve_reprovacao_retencao              Boolean?
+  escola_possui_equipe_inclusao          Boolean?
+  ha_indicativo_deficiencia_intelectual  Boolean?
+  escola_apresenta_queixa_comportamental Boolean?
+
+  adaptacao_escolar                     String?
+  dificuldades_escolares                String?
+  relacionamento_com_colegas            String?
+  desenvolvimento_academico_observacoes String?
+
+  @@index([anamnese_id])
+}
+
+model anamnese_comportamento {
+  anamnese_id Int      @id
+  anamnese    anamnese @relation("anamnese_comportamento", fields: [anamnese_id], references: [id], onDelete: Cascade)
+
+  // ESTEREOTIPIAS / RITUAIS
+  balanca_maos_lado_corpo_ou_frente   Boolean?
+  balanca_corpo_frente_para_tras      Boolean?
+  pula_ou_gira_em_torno_de_si         Boolean?
+  repete_sons_sem_funcao_comunicativa Boolean?
+  repete_movimentos_continuos         Boolean?
+  explora_ambiente_lambendo_tocando   Boolean?
+  procura_observar_objetos_canto_olho Boolean?
+  organiza_objetos_lado_a_lado        Boolean?
+  realiza_tarefas_sempre_mesma_ordem  Boolean?
+  apresenta_rituais_diarios           Boolean?
+
+  estereotipias_rituais_observacoes_topografias String?
+
+  // PROBLEMAS DE COMPORTAMENTO
+  apresenta_comportamentos_auto_lesivos Boolean?
+  auto_lesivos_quais                    String?
+
+  apresenta_comportamentos_heteroagressivos Boolean?
+  heteroagressivos_quais                    String?
+
+  apresenta_destruicao_propriedade Boolean?
+  destruicao_descrever             String?
+
+  necessitou_contencao_mecanica Boolean?
+
+  problemas_comportamento_observacoes_topografias String?
+
+  @@index([anamnese_id])
+}
+
+model anamnese_finalizacao {
+  anamnese_id Int      @id
+  anamnese    anamnese @relation("anamnese_finalizacao", fields: [anamnese_id], references: [id], onDelete: Cascade)
+
+  outras_informacoes_relevantes    String?
+  observacoes_impressoes_terapeuta String?
+  expectativas_familia             String?
+
+  @@index([anamnese_id])
 }
 
 model formacao {
@@ -332,7 +766,7 @@ model sessao_trial {
 
   // Musicoterapia
   participacao Int?
-  suporte Int?
+  suporte      Int?
 
   estimulosOcp estimulo_ocp @relation(fields: [estimulos_ocp_id], references: [id], onDelete: Cascade)
   sessao       sessao       @relation(fields: [sessao_id], references: [id], onDelete: Cascade)
@@ -372,17 +806,17 @@ model estimulo {
 }
 
 model estimulo_ocp {
-  id          Int            @id @default(autoincrement())
-  id_estimulo Int
-  id_ocp      Int
-  nome        String?
-  descricao   String?        @db.Text
-  metodos     String?        @db.Text
-  tecnicas_procedimentos String? @db.Text
-  status      Boolean
-  estimulo    estimulo       @relation(fields: [id_estimulo], references: [id], onDelete: Cascade)
-  ocp         ocp            @relation(fields: [id_ocp], references: [id], onDelete: Cascade)
-  trials      sessao_trial[]
+  id                     Int            @id @default(autoincrement())
+  id_estimulo            Int
+  id_ocp                 Int
+  nome                   String?
+  descricao              String?        @db.Text
+  metodos                String?        @db.Text
+  tecnicas_procedimentos String?        @db.Text
+  status                 Boolean
+  estimulo               estimulo       @relation(fields: [id_estimulo], references: [id], onDelete: Cascade)
+  ocp                    ocp            @relation(fields: [id_ocp], references: [id], onDelete: Cascade)
+  trials                 sessao_trial[]
 
   @@unique([id_estimulo, id_ocp])
   @@index([id_ocp], map: "estimulo_ocp_id_ocp_fkey")

@@ -1,0 +1,30 @@
+# Role: Senior Frontend Architect & UX Specialist
+
+## Contexto do Projeto
+- Stack: React, Vite, Tailwind CSS, TypeScript.
+- UI: Radix UI, Shadcn/ui, Lucide React, Framer Motion.
+- Forms/Validation: React Hook Form + Zod.
+- Data: TanStack Table (listagens), CASL (permissões).
+- Domínio: ERP Clínico (Dados sensíveis de saúde).
+
+## Diretrizes de Arquitetura (Feature-Based)
+Sempre que criar ou editar uma funcionalidade dentro de `src/features/`, siga esta estrutura rígida:
+1. `types/`: Interfaces centrais da feature (index.ts). Nunca duplique types entre sub-pastas.
+2. `services/`: Lógica de API (Axios/Http). Um serviço por entidade.
+3. `components/`: Componentes específicos da feature.
+4. `pages/`: Componentes de rota que orquestram a lógica.
+5. `hooks/`: Lógica de estado ou efeitos reutilizáveis da feature.
+
+## Regras de Código (Zero Tolerance)
+- **Typing**: Proibido usar `any`. Use `unknown` se necessário, mas prefira interfaces fortes.
+- **UI Components**: Antes de criar um componente de input, verifique `src/components/ui/` e `src/ui/`. SEMPRE use componentes existentes para manter a consistência visual.
+- **Formulários**: Todo formulário deve ter um schema Zod. A validação deve ocorrer no `onSubmit` e `onChange` (se necessário).
+- **Segurança**: Nunca exiba dados sensíveis (CPF, diagnósticos) sem garantir que o componente trata estados de loading e permissões (CASL).
+- **Nomenclatura**: Use Inglês para código (pastas, variáveis, funções) e Português APENAS para textos de interface (Labels, Toasts).
+
+## Checklist de "Definição de Pronto" (DoD)
+Sempre que me pedir para finalizar uma tarefa, verifique se:
+- [ ] O componente trata estado de Erro (API 400, 500) e Loading (Skeleton).
+- [ ] O formulário limpa os dados após o sucesso ou preserva em rascunho se for longo.
+- [ ] A tabela possui paginação e estado vazio (Empty State).
+- [ ] O design é responsivo e segue o padrão de espaçamento do Tailwind.

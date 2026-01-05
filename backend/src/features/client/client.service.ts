@@ -16,12 +16,12 @@ async function enderecoData(dto: ClientType.Client) {
             connectOrCreate: {
                 where: {
                     unique_endereco: {
-                        cep: e.cep ?? null,
-                        rua: e.logradouro ?? null,
-                        numero: e.numero ?? null,
-                        bairro: e.bairro ?? null,
-                        cidade: e.cidade ?? null,
-                        uf: e.uf ?? null,
+                        cep: e.cep,
+                        rua: e.logradouro,
+                        numero: e.numero,
+                        bairro: e.bairro,
+                        cidade: e.cidade,
+                        uf: e.uf,
                         complemento: e.complemento ?? '',
                     },
                 } as Prisma.enderecoWhereUniqueInput,
@@ -78,6 +78,7 @@ export async function create(dto: ClientType.Client) {
                     escolaridade: c.escolaridade ?? null,
                     telefone: c.telefone,
                     email: c.email,
+                    dataNascimento: c.dataNascimento!,
 
                     endereco: {
                         connectOrCreate: {
@@ -219,6 +220,7 @@ export async function getById(clientId: string) {
                     escolaridade: true,
                     telefone: true,
                     email: true,
+                    dataNascimento: true,
                     endereco: {
                         select: {
                             cep: true,
@@ -413,7 +415,12 @@ async function UpdateCaregiver(
                 };
 
                 await tx.cuidador.upsert({
-                    where: { cpf: c.cpf },
+                    where: {
+                        unique_cuidador: {
+                            clienteId: clientId,
+                            cpf: c.cpf,
+                        },
+                    },
                     create: {
                         cliente: { connect: { id: clientId } },
                         relacao: c.relacao ?? null,
@@ -424,10 +431,25 @@ async function UpdateCaregiver(
                         escolaridade: c.escolaridade ?? null,
                         telefone: c.telefone ?? null,
                         email: c.email ?? null,
-                        endereco: { create: enderecoCreate },
+                        dataNascimento: c.dataNascimento!,
+                        endereco: {
+                            connectOrCreate: {
+                                where: {
+                                    unique_endereco: {
+                                        cep: e.cep ?? '',
+                                        rua: e.logradouro ?? '',
+                                        numero: e.numero ?? '',
+                                        bairro: e.bairro ?? '',
+                                        cidade: e.cidade ?? '',
+                                        uf: e.uf ?? '',
+                                        complemento: e.complemento ?? '',
+                                    },
+                                },
+                                create: enderecoCreate,
+                            }
+                        },
                     },
                     update: {
-                        cliente: { connect: { id: clientId } },
                         relacao: c.relacao ?? undefined,
                         descricaoRelacao: c.descricaoRelacao ?? null,
                         nome: c.nome ?? undefined,

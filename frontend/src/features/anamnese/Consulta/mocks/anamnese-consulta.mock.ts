@@ -111,9 +111,9 @@ export const mockAnamneseDetalhe: Record<string, AnamneseDetalhe> = {
         desenvolvimentoInicial: {
             gestacaoParto: {
                 tipoParto: 'Cesárea',
-                semanas: '38',
-                apgar1min: '8',
-                apgar5min: '9',
+                semanas: 38,
+                apgar1min: 8,
+                apgar5min: 9,
                 intercorrencias: 'Nenhuma intercorrência durante gestação ou parto',
             },
             neuropsicomotor: {
@@ -199,6 +199,20 @@ export const mockAnamneseDetalhe: Record<string, AnamneseDetalhe> = {
         },
         socialAcademico: {
             interacaoSocial: {
+                // Campos originais do DesenvolvimentoSocial
+                possuiAmigosMesmaIdadeEscola: 'sim',
+                possuiAmigosMesmaIdadeForaEscola: 'nao',
+                fazUsoFuncionalBrinquedos: 'sim',
+                brincaProximoAosColegas: 'sim',
+                brincaConjuntaComColegas: 'nao',
+                procuraColegasEspontaneamente: 'nao',
+                seVerbalIniciaConversa: 'nao',
+                seVerbalRespondePerguntasSimples: 'sim',
+                fazPedidosQuandoNecessario: 'sim',
+                estabeleceContatoVisualAdultos: 'sim',
+                estabeleceContatoVisualCriancas: 'nao',
+                observacoes: 'Prefere brincadeiras paralelas, pouca interação direta',
+                // Campos extras para compatibilidade
                 brincaComOutrasCriancas: 'sim',
                 tipoBrincadeira: 'Prefere brincadeiras paralelas, pouca interação direta',
                 mantemContatoVisual: 'sim',

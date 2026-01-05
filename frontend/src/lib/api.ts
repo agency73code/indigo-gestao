@@ -371,6 +371,19 @@ export function ageCalculation(isoDateString: string): number {
   return idade;
 }
 
+// Ajusta a data do backend dataNascimento: 1987-07-08T00:00:00.000Z para não perder 1 dia por conta do fuso horario
+export function correctFormatDate(value?: string | Date | null): string {
+  if (!value) return 'Não informado';
+
+  const d = value instanceof Date ? value : new Date(value);
+
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const year = d.getUTCFullYear();
+
+  return `${day}/${month}/${year}`;
+}
+
 export async function fetchOwnerAvatar(ownerId: string, ownerType: 'cliente' | 'terapeuta'): Promise<string | null> {
   try {
     const response = await fetch(`/api/arquivos/getAvatar?ownerId=${ownerId}&ownerType=${ownerType}`, { 

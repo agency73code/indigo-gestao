@@ -9,6 +9,7 @@ export interface Caregiver {
     escolaridade?: string | null;
     telefone: string;
     email: string;
+    dataNascimento?: Date | null;
     endereco: {
         cep: string;
         logradouro: string;
@@ -195,6 +196,7 @@ export interface UpdateCaregiver {
     escolaridade: string;
     telefone: string;
     email: string;
+    dataNascimento?: Date | null;
     endereco: UpdateAddress;
 }
 

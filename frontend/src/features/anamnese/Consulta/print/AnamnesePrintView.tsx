@@ -309,7 +309,7 @@ export const AnamnesePrintView = forwardRef<HTMLDivElement, AnamnesePrintViewPro
                 <Section title="Contexto Familiar e Rotina">
                     <ListSection
                         title="8. Histórico Familiar"
-                        items={cf.historicoFamiliar}
+                        items={cf.historicoFamiliar || []}
                         renderItem={(item) => (
                             <div className="grid grid-cols-2 gap-2">
                                 <span><strong>Parentesco:</strong> {item.parentesco}</span>
@@ -321,7 +321,7 @@ export const AnamnesePrintView = forwardRef<HTMLDivElement, AnamnesePrintViewPro
 
                     <ListSection
                         title="9. Rotina Diária"
-                        items={cf.rotinaDiaria}
+                        items={cf.rotinaDiaria || []}
                         renderItem={(item) => (
                             <div className="grid grid-cols-2 gap-2">
                                 <span><strong>Horário:</strong> {item.horario}</span>
@@ -340,8 +340,8 @@ export const AnamnesePrintView = forwardRef<HTMLDivElement, AnamnesePrintViewPro
                         <FieldGrid>
                             <Field label="Tipo de Parto" value={dev.gestacaoParto.tipoParto} />
                             <Field label="Semanas" value={dev.gestacaoParto.semanas ? `${dev.gestacaoParto.semanas} semanas` : undefined} />
-                            <Field label="APGAR 1º min" value={dev.gestacaoParto.apgar1min} />
-                            <Field label="APGAR 5º min" value={dev.gestacaoParto.apgar5min} />
+                            <Field label="APGAR 1º min" value={dev.gestacaoParto.apgar1min?.toString() ?? undefined} />
+                            <Field label="APGAR 5º min" value={dev.gestacaoParto.apgar5min?.toString() ?? undefined} />
                         </FieldGrid>
                         <TextBlock label="Intercorrências" value={dev.gestacaoParto.intercorrencias} />
                     </SubSection>
@@ -481,54 +481,54 @@ export const AnamnesePrintView = forwardRef<HTMLDivElement, AnamnesePrintViewPro
                 {/* ===== 6. SOCIAL E ACADÊMICO ===== */}
                 <Section title="Social e Acadêmico">
                     <SubSection title="17. Interação Social">
-                        <Field label="Brinca com outras crianças" value={formatSimNao(sa.interacaoSocial.brincaComOutrasCriancas)} />
-                        <Field label="Tipo de brincadeira" value={sa.interacaoSocial.tipoBrincadeira} />
+                        <Field label="Brinca com outras crianças" value={formatSimNao(sa.interacaoSocial?.brincaComOutrasCriancas)} />
+                        <Field label="Tipo de brincadeira" value={sa.interacaoSocial?.tipoBrincadeira} />
                         <FieldGrid>
-                            <Field label="Mantém contato visual" value={formatSimNao(sa.interacaoSocial.mantemContatoVisual)} />
-                            <Field label="Responde ao chamar pelo nome" value={formatSimNao(sa.interacaoSocial.respondeAoChamar)} />
-                            <Field label="Compartilha interesses" value={formatSimNao(sa.interacaoSocial.compartilhaInteresses)} />
-                            <Field label="Compreende sentimentos" value={formatSimNao(sa.interacaoSocial.compreendeSentimentos)} />
+                            <Field label="Mantém contato visual" value={formatSimNao(sa.interacaoSocial?.mantemContatoVisual)} />
+                            <Field label="Responde ao chamar pelo nome" value={formatSimNao(sa.interacaoSocial?.respondeAoChamar)} />
+                            <Field label="Compartilha interesses" value={formatSimNao(sa.interacaoSocial?.compartilhaInteresses)} />
+                            <Field label="Compreende sentimentos" value={formatSimNao(sa.interacaoSocial?.compreendeSentimentos)} />
                         </FieldGrid>
                     </SubSection>
 
                     <SubSection title="18. Desenvolvimento Acadêmico">
                         {/* Dados da escola */}
-                        <Field label="Escola" value={sa.vidaEscolar.escola} />
-                        <Field label="Ano/Série" value={sa.vidaEscolar.ano} />
-                        <Field label="Período" value={sa.vidaEscolar.periodo} />
-                        <Field label="Direção" value={sa.vidaEscolar.direcao} />
-                        <Field label="Coordenação" value={sa.vidaEscolar.coordenacao} />
+                        <Field label="Escola" value={sa.vidaEscolar?.escola} />
+                        <Field label="Ano/Série" value={sa.vidaEscolar?.ano?.toString()} />
+                        <Field label="Período" value={sa.vidaEscolar?.periodo} />
+                        <Field label="Direção" value={sa.vidaEscolar?.direcao} />
+                        <Field label="Coordenação" value={sa.vidaEscolar?.coordenacao} />
                         <FieldGrid>
-                            <Field label="Professora Principal" value={sa.vidaEscolar.professoraPrincipal} />
-                            <Field label="Professora Assistente" value={sa.vidaEscolar.professoraAssistente} />
+                            <Field label="Professora Principal" value={sa.vidaEscolar?.professoraPrincipal} />
+                            <Field label="Professora Assistente" value={sa.vidaEscolar?.professoraAssistente} />
                         </FieldGrid>
 
                         {/* Campos Sim/Não */}
                         <FieldGrid>
-                            <Field label="Frequenta escola regular" value={formatSimNao(sa.vidaEscolar.frequentaEscolaRegular)} />
-                            <Field label="Frequenta escola especial" value={formatSimNao(sa.vidaEscolar.frequentaEscolaEspecial)} />
-                            <Field label="Acompanha a turma (demandas pedagógicas)" value={formatSimNao(sa.vidaEscolar.acompanhaTurmaDemandasPedagogicas)} />
-                            <Field label="Segue regras e rotinas de sala" value={formatSimNao(sa.vidaEscolar.segueRegrasRotinaSalaAula)} />
-                            <Field label="Necessita apoio de AT" value={formatSimNao(sa.vidaEscolar.necessitaApoioAT)} />
-                            <Field label="Necessita adaptação de materiais" value={formatSimNao(sa.vidaEscolar.necessitaAdaptacaoMateriais)} />
-                            <Field label="Necessita adaptação curricular" value={formatSimNao(sa.vidaEscolar.necessitaAdaptacaoCurricular)} />
-                            <Field label="Houve reprovação/retenção" value={formatSimNao(sa.vidaEscolar.houveReprovacaoRetencao)} />
-                            <Field label="Escola possui equipe de inclusão" value={formatSimNao(sa.vidaEscolar.escolaPossuiEquipeInclusao)} />
-                            <Field label="Indicativo de deficiência intelectual" value={formatSimNao(sa.vidaEscolar.haIndicativoDeficienciaIntelectual)} />
-                            <Field label="Escola apresenta queixa comportamental" value={formatSimNao(sa.vidaEscolar.escolaApresentaQueixaComportamental)} />
+                            <Field label="Frequenta escola regular" value={formatSimNao(sa.vidaEscolar?.frequentaEscolaRegular)} />
+                            <Field label="Frequenta escola especial" value={formatSimNao(sa.vidaEscolar?.frequentaEscolaEspecial)} />
+                            <Field label="Acompanha a turma (demandas pedagógicas)" value={formatSimNao(sa.vidaEscolar?.acompanhaTurmaDemandasPedagogicas)} />
+                            <Field label="Segue regras e rotinas de sala" value={formatSimNao(sa.vidaEscolar?.segueRegrasRotinaSalaAula)} />
+                            <Field label="Necessita apoio de AT" value={formatSimNao(sa.vidaEscolar?.necessitaApoioAT)} />
+                            <Field label="Necessita adaptação de materiais" value={formatSimNao(sa.vidaEscolar?.necessitaAdaptacaoMateriais)} />
+                            <Field label="Necessita adaptação curricular" value={formatSimNao(sa.vidaEscolar?.necessitaAdaptacaoCurricular)} />
+                            <Field label="Houve reprovação/retenção" value={formatSimNao(sa.vidaEscolar?.houveReprovacaoRetencao)} />
+                            <Field label="Escola possui equipe de inclusão" value={formatSimNao(sa.vidaEscolar?.escolaPossuiEquipeInclusao)} />
+                            <Field label="Indicativo de deficiência intelectual" value={formatSimNao(sa.vidaEscolar?.haIndicativoDeficienciaIntelectual)} />
+                            <Field label="Escola apresenta queixa comportamental" value={formatSimNao(sa.vidaEscolar?.escolaApresentaQueixaComportamental)} />
                         </FieldGrid>
 
                         {/* Campos descritivos */}
-                        {sa.vidaEscolar.adaptacaoEscolar && (
+                        {sa.vidaEscolar?.adaptacaoEscolar && (
                             <TextBlock label="Adaptação Escolar" value={sa.vidaEscolar.adaptacaoEscolar} />
                         )}
-                        {sa.vidaEscolar.dificuldadesEscolares && (
+                        {sa.vidaEscolar?.dificuldadesEscolares && (
                             <TextBlock label="Dificuldades Escolares" value={sa.vidaEscolar.dificuldadesEscolares} />
                         )}
-                        {sa.vidaEscolar.relacionamentoComColegas && (
+                        {sa.vidaEscolar?.relacionamentoComColegas && (
                             <TextBlock label="Relacionamento com Colegas" value={sa.vidaEscolar.relacionamentoComColegas} />
                         )}
-                        {sa.vidaEscolar.observacoes && (
+                        {sa.vidaEscolar?.observacoes && (
                             <TextBlock label="Observações" value={sa.vidaEscolar.observacoes} />
                         )}
                     </SubSection>
@@ -615,7 +615,7 @@ export const AnamnesePrintView = forwardRef<HTMLDivElement, AnamnesePrintViewPro
                 </div>
 
                 {/* ===== RODAPÉ ===== */}
-                <footer className="border-t-1 border-primary pt-4 mt-8 text-center text-xs text-gray-600">
+                <footer className="border-t-2 border-primary pt-4 mt-8 text-center text-xs text-gray-600">
                     <p className="font-semibold text-sm mb-1" style={{ fontFamily: 'Sora, sans-serif' }}>
                         {CLINIC_INFO.name}
                     </p>

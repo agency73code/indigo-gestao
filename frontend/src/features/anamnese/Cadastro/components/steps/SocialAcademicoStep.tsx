@@ -1,10 +1,12 @@
 import { InputField } from '@/ui/input-field';
 import AutoExpandTextarea from '../../ui/AutoExpandTextarea';
 import type { AnamneseSocialAcademico, SimNao } from '../../types/anamnese.types';
+import { useEffect } from 'react';
 
 interface SocialAcademicoStepProps {
     data: Partial<AnamneseSocialAcademico>;
     onChange: (data: Partial<AnamneseSocialAcademico>) => void;
+    escolaCliente?: string | null;
 }
 
 // Componente auxiliar para campo Sim/Não
@@ -46,7 +48,40 @@ function SimNaoField({
     );
 }
 
-export default function SocialAcademicoStep({ data, onChange }: SocialAcademicoStepProps) {
+export default function SocialAcademicoStep({ data, onChange, escolaCliente }: SocialAcademicoStepProps) {
+    // Preencher escola automaticamente com dados do cadastro do cliente
+    useEffect(() => {
+        if (escolaCliente && !data.desenvolvimentoAcademico?.escola) {
+            onChange({
+                ...data,
+                desenvolvimentoAcademico: {
+                    escola: escolaCliente,
+                    ano: data.desenvolvimentoAcademico?.ano ?? null,
+                    periodo: data.desenvolvimentoAcademico?.periodo ?? '',
+                    direcao: data.desenvolvimentoAcademico?.direcao ?? '',
+                    coordenacao: data.desenvolvimentoAcademico?.coordenacao ?? '',
+                    professoraPrincipal: data.desenvolvimentoAcademico?.professoraPrincipal ?? '',
+                    professoraAssistente: data.desenvolvimentoAcademico?.professoraAssistente ?? '',
+                    frequentaEscolaRegular: data.desenvolvimentoAcademico?.frequentaEscolaRegular ?? null,
+                    frequentaEscolaEspecial: data.desenvolvimentoAcademico?.frequentaEscolaEspecial ?? null,
+                    acompanhaTurmaDemandasPedagogicas: data.desenvolvimentoAcademico?.acompanhaTurmaDemandasPedagogicas ?? null,
+                    segueRegrasRotinaSalaAula: data.desenvolvimentoAcademico?.segueRegrasRotinaSalaAula ?? null,
+                    necessitaApoioAT: data.desenvolvimentoAcademico?.necessitaApoioAT ?? null,
+                    necessitaAdaptacaoMateriais: data.desenvolvimentoAcademico?.necessitaAdaptacaoMateriais ?? null,
+                    necessitaAdaptacaoCurricular: data.desenvolvimentoAcademico?.necessitaAdaptacaoCurricular ?? null,
+                    houveReprovacaoRetencao: data.desenvolvimentoAcademico?.houveReprovacaoRetencao ?? null,
+                    escolaPossuiEquipeInclusao: data.desenvolvimentoAcademico?.escolaPossuiEquipeInclusao ?? null,
+                    haIndicativoDeficienciaIntelectual: data.desenvolvimentoAcademico?.haIndicativoDeficienciaIntelectual ?? null,
+                    escolaApresentaQueixaComportamental: data.desenvolvimentoAcademico?.escolaApresentaQueixaComportamental ?? null,
+                    adaptacaoEscolar: data.desenvolvimentoAcademico?.adaptacaoEscolar ?? '',
+                    dificuldadesEscolares: data.desenvolvimentoAcademico?.dificuldadesEscolares ?? '',
+                    relacionamentoComColegas: data.desenvolvimentoAcademico?.relacionamentoComColegas ?? '',
+                    observacoes: data.desenvolvimentoAcademico?.observacoes ?? '',
+                },
+            });
+        }
+    }, [escolaCliente]);
+
     // Helpers para atualizar dados aninhados
     const updateDesenvolvimentoSocial = (field: string, value: unknown) => {
         onChange({
@@ -75,7 +110,7 @@ export default function SocialAcademicoStep({ data, onChange }: SocialAcademicoS
             ...data,
             desenvolvimentoAcademico: {
                 escola: data.desenvolvimentoAcademico?.escola ?? '',
-                ano: data.desenvolvimentoAcademico?.ano ?? '',
+                ano: data.desenvolvimentoAcademico?.ano ?? null,
                 periodo: data.desenvolvimentoAcademico?.periodo ?? '',
                 direcao: data.desenvolvimentoAcademico?.direcao ?? '',
                 coordenacao: data.desenvolvimentoAcademico?.coordenacao ?? '',
@@ -192,8 +227,9 @@ export default function SocialAcademicoStep({ data, onChange }: SocialAcademicoS
                         <InputField
                             label="Ano"
                             placeholder="Ex: 2024"
+                            type="number"
                             value={data.desenvolvimentoAcademico?.ano ?? ''}
-                            onChange={(e) => updateDesenvolvimentoAcademico('ano', e.target.value)}
+                            onChange={(e) => updateDesenvolvimentoAcademico('ano', e.target.value ? Number(e.target.value) : null)}
                         />
                         <InputField
                             label="Período"
