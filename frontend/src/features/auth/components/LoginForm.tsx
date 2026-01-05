@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from 'react-router-dom';
 import { motion, type Variants } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
-import { useState, useRef, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import {
     Card,
     CardHeader,

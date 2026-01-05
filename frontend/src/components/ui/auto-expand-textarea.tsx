@@ -9,6 +9,7 @@ interface AutoExpandTextareaProps {
     onChange: (value: string) => void;
     required?: boolean;
     className?: string;
+    error?: string;
 }
 
 export default function AutoExpandTextarea({
@@ -19,6 +20,7 @@ export default function AutoExpandTextarea({
     onChange,
     required = false,
     className,
+    error,
 }: AutoExpandTextareaProps) {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -64,13 +66,19 @@ export default function AutoExpandTextarea({
                 rows={1}
                 className={cn(
                     'w-full resize-none overflow-hidden',
-                    'bg-transparent border-0 border-b-2 border-muted-foreground/30',
+                    'bg-transparent border-0 border-b-2',
+                    error ? 'border-destructive' : 'border-muted-foreground/30',
                     'py-2 px-0 text-sm text-foreground',
                     'placeholder:text-muted-foreground/50',
                     'focus:outline-none focus:border-primary',
                     'transition-colors duration-200'
                 )}
             />
+            
+            {/* Mensagem de erro */}
+            {error && (
+                <p className="text-xs text-destructive mt-1">{error}</p>
+            )}
         </div>
     );
 }

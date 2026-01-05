@@ -59,8 +59,6 @@ const DashboardIcon = forwardRef<DashboardIconHandle, DashboardIconProps>(
    [controls, onMouseLeave],
   );
 
-  const smoothEase: [number, number, number, number] = [0.22, 1, 0.36, 1];
-
   const iconVariants: Variants = {
    normal: { scale: 1, rotate: 0 },
    animate: {
