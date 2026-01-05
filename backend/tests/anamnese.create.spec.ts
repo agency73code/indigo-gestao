@@ -4,11 +4,13 @@ import app from '../src/server';
 import { prisma } from '../src/config/database.js';
 import { env } from '../src/config/env';
 import jwt from 'jsonwebtoken';
+import { ensureTestClientAndTherapist } from './helpers/ensureTestActors.js';
 
 const ENDPOINT = '/api/anamneses';
 
 describe(`POST ${ENDPOINT}`, () => {
     it('deve criar uma anamnese com payload completo', async () => {
+        const { cliente, terapeuta } = await ensureTestClientAndTherapist();
 
         // 1) Gerar um token válido para o seu middleware
         const fakeUserId = 'test-user-id-123';
@@ -24,14 +26,14 @@ describe(`POST ${ENDPOINT}`, () => {
         const payload = {
             cabecalho: {
                 dataEntrevista: '2026-01-04',
-                clienteId: '9f21bd89-f06f-49a5-9cdd-761c1fd329c4',
+                clienteId: cliente.id,
                 clienteNome: 'Alexandre Moraes',
                 dataNascimento: '2021-04-03T16:02:26.786Z',
                 idade: '4 anos e 9 meses',
                 informante: 'Gabriel Xavier',
                 parentesco: 'pai',
                 quemIndicou: 'Kaio',
-                profissionalId: '47492c4d-6713-442b-9b1a-bec82e694393',
+                profissionalId: terapeuta.id,
                 profissionalNome: 'Marcela Moreira',
                 cuidadores: [
                     {
