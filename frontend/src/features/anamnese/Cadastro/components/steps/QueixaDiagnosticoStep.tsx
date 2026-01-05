@@ -18,9 +18,10 @@ interface ExameCardProps {
     onRemove: (id: string) => void;
     onAddArquivo: (exameId: string, file: File, nomePersonalizado: string) => void;
     onRemoveArquivo: (exameId: string, arquivoId: string) => void;
+    fieldErrors?: Record<string, string>;
 }
 
-function ExameCard({ exame, index, onUpdate, onRemove, onAddArquivo, onRemoveArquivo }: ExameCardProps) {
+function ExameCard({ exame, index, onUpdate, onRemove, onAddArquivo, onRemoveArquivo, fieldErrors = {} }: ExameCardProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [nomeArquivo, setNomeArquivo] = useState('');
@@ -91,11 +92,13 @@ function ExameCard({ exame, index, onUpdate, onRemove, onAddArquivo, onRemoveArq
                     placeholder="Ex: Audiometria, EEG..."
                     value={exame.nome}
                     onChange={(e) => onUpdate(exame.id, 'nome', e.target.value)}
+                    error={fieldErrors[`examesPrevios.${index}.nome`]}
                 />
                 <DateFieldWithLabel
-                    label="Data do Exame"
+                    label="Data do Exame *"
                     value={exame.data || ''}
                     onChange={(iso) => onUpdate(exame.id, 'data', iso)}
+                    error={fieldErrors[`examesPrevios.${index}.data`]}
                 />
             </div>
 
@@ -221,9 +224,10 @@ function ExameCard({ exame, index, onUpdate, onRemove, onAddArquivo, onRemoveArq
 interface QueixaDiagnosticoStepProps {
     data: Partial<AnamneseQueixaDiagnostico>;
     onChange: (data: Partial<AnamneseQueixaDiagnostico>) => void;
+    fieldErrors?: Record<string, string>;
 }
 
-export default function QueixaDiagnosticoStep({ data, onChange }: QueixaDiagnosticoStepProps) {
+export default function QueixaDiagnosticoStep({ data, onChange, fieldErrors = {} }: QueixaDiagnosticoStepProps) {
     // Gerar ID único para novos itens
     const generateId = () => crypto.randomUUID();
 
@@ -382,6 +386,7 @@ export default function QueixaDiagnosticoStep({ data, onChange }: QueixaDiagnost
                     value={data.queixaPrincipal || ''}
                     onChange={(value) => onChange({ ...data, queixaPrincipal: value })}
                     required
+                    error={fieldErrors.queixaPrincipal}
                 />
             </div>
 
@@ -394,6 +399,7 @@ export default function QueixaDiagnosticoStep({ data, onChange }: QueixaDiagnost
                     value={data.diagnosticoPrevio || ''}
                     onChange={(value) => onChange({ ...data, diagnosticoPrevio: value })}
                     required
+                    error={fieldErrors.diagnosticoPrevio}
                 />
             </div>
 
@@ -405,6 +411,7 @@ export default function QueixaDiagnosticoStep({ data, onChange }: QueixaDiagnost
                     value={data.suspeitaCondicaoAssociada || ''}
                     onChange={(value) => onChange({ ...data, suspeitaCondicaoAssociada: value })}
                     required
+                    error={fieldErrors.suspeitaCondicaoAssociada}
                 />
             </div>
 
@@ -471,6 +478,7 @@ export default function QueixaDiagnosticoStep({ data, onChange }: QueixaDiagnost
                                     label="Especialidade *"
                                     value={esp.especialidade}
                                     onChange={(e) => handleUpdateEspecialidade(esp.id, 'especialidade', e.target.value as EspecialidadeMedica)}
+                                    error={fieldErrors[`especialidadesConsultadas.${index}.especialidade`]}
                                 >
                                     {ESPECIALIDADES_MEDICAS.map((especialidade) => (
                                         <option key={especialidade} value={especialidade}>
@@ -484,6 +492,7 @@ export default function QueixaDiagnosticoStep({ data, onChange }: QueixaDiagnost
                                     value={esp.data}
                                     onChange={(e) => handleUpdateEspecialidade(esp.id, 'data', formatMesAno(e.target.value))}
                                     maxLength={7}
+                                    error={fieldErrors[`especialidadesConsultadas.${index}.data`]}
                                 />
                                 <InputField
                                     label="Nome do Profissional"
@@ -565,13 +574,15 @@ export default function QueixaDiagnosticoStep({ data, onChange }: QueixaDiagnost
                                         placeholder="Nome do medicamento"
                                         value={med.nome}
                                         onChange={(e) => handleUpdateMedicamento(med.id, 'nome', e.target.value)}
+                                        error={fieldErrors[`medicamentosEmUso.${index}.nome`]}
                                     />
                                 </div>
                                 <InputField
-                                    label="Dosagem"
+                                    label="Dosagem *"
                                     placeholder="Ex: 10mg"
                                     value={med.dosagem}
                                     onChange={(e) => handleUpdateMedicamento(med.id, 'dosagem', e.target.value)}
+                                    error={fieldErrors[`medicamentosEmUso.${index}.dosagem`]}
                                 />
                                 <DateFieldWithLabel
                                     label="Início do uso"
@@ -633,6 +644,7 @@ export default function QueixaDiagnosticoStep({ data, onChange }: QueixaDiagnost
                             onRemove={handleRemoveExame}
                             onAddArquivo={handleAddArquivoExame}
                             onRemoveArquivo={handleRemoveArquivoExame}
+                            fieldErrors={fieldErrors}
                         />
                     ))}
 
@@ -705,12 +717,14 @@ export default function QueixaDiagnosticoStep({ data, onChange }: QueixaDiagnost
                                     placeholder="Nome do profissional"
                                     value={terapia.profissional}
                                     onChange={(e) => handleUpdateTerapia(terapia.id, 'profissional', e.target.value)}
+                                    error={fieldErrors[`terapiasPrevias.${index}.profissional`]}
                                 />
                                 <InputField
                                     label="Especialidade/Abordagem *"
                                     placeholder="Ex: TO, Fono, ABA..."
                                     value={terapia.especialidadeAbordagem}
                                     onChange={(e) => handleUpdateTerapia(terapia.id, 'especialidadeAbordagem', e.target.value)}
+                                    error={fieldErrors[`terapiasPrevias.${index}.especialidadeAbordagem`]}
                                 />
                                 <InputField
                                     label="Tempo de Intervenção"

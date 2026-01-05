@@ -6,6 +6,7 @@ import type { AnamneseDesenvolvimentoInicial, SimNao } from '../../types/anamnes
 interface DesenvolvimentoInicialStepProps {
     data: Partial<AnamneseDesenvolvimentoInicial>;
     onChange: (data: Partial<AnamneseDesenvolvimentoInicial>) => void;
+    fieldErrors?: Record<string, string>;
 }
 
 // Componente auxiliar para campo Sim/Não
@@ -55,6 +56,7 @@ function MarcoMotorField({
     naoSoubeInformar,
     onMesesChange,
     onOptionChange,
+    error,
 }: {
     label: string;
     meses: string;
@@ -62,6 +64,7 @@ function MarcoMotorField({
     naoSoubeInformar: boolean;
     onMesesChange: (value: string) => void;
     onOptionChange: (naoRealiza: boolean, naoSoubeInformar: boolean) => void;
+    error?: string;
 }) {
     const handleNaoRealizaClick = () => {
         const newValue = !naoRealiza;
@@ -74,56 +77,56 @@ function MarcoMotorField({
     };
 
     return (
-        <div className="flex items-center gap-4 py-2 border-b border-gray-100 last:border-0">
-            <span className="text-sm text-foreground flex-1">{label} <span className="text-red-500">*</span></span>
-            <NumberSpinner
-                value={meses}
-                onChange={(v) => {
-                    onMesesChange(v);
-                    onOptionChange(false, false);
-                }}
-                disabled={naoRealiza || naoSoubeInformar}
-                placeholder="0"
-                suffix="meses."
-                min={0}
-                max={120}
-            />
-            <button
-                type="button"
-                onClick={handleNaoRealizaClick}
-                className="flex items-center gap-2 cursor-pointer whitespace-nowrap"
-            >
-                <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
-                    naoRealiza 
-                        ? 'bg-primary border-primary' 
-                        : 'border-gray-300 hover:border-gray-400'
-                }`}>
-                    {naoRealiza && (
-                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                    )}
-                </div>
-                <span className="text-sm text-muted-foreground">Não realiza</span>
-            </button>
-            <button
-                type="button"
-                onClick={handleNaoSoubeInformarClick}
-                className="flex items-center gap-2 cursor-pointer whitespace-nowrap"
-            >
-                <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
-                    naoSoubeInformar 
-                        ? 'bg-primary border-primary' 
-                        : 'border-gray-300 hover:border-gray-400'
-                }`}>
-                    {naoSoubeInformar && (
-                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                    )}
-                </div>
-                <span className="text-sm text-muted-foreground">Não soube informar</span>
-            </button>
+        <div className="space-y-1">
+            <div className={`flex items-center gap-4 py-2 border-b last:border-0 ${error ? 'border-destructive' : 'border-gray-100'}`}>
+                <span className="text-sm text-foreground flex-1">{label} <span className="text-red-500">*</span></span>
+                <NumberSpinner
+                    value={meses}
+                    onChange={onMesesChange}
+                    disabled={naoRealiza || naoSoubeInformar}
+                    placeholder="0"
+                    suffix="meses."
+                    min={0}
+                    max={120}
+                />
+                <button
+                    type="button"
+                    onClick={handleNaoRealizaClick}
+                    className="flex items-center gap-2 cursor-pointer whitespace-nowrap"
+                >
+                    <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
+                        naoRealiza 
+                            ? 'bg-primary border-primary' 
+                            : 'border-gray-300 hover:border-gray-400'
+                    }`}>
+                        {naoRealiza && (
+                            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                        )}
+                    </div>
+                    <span className="text-sm text-muted-foreground">Não realiza</span>
+                </button>
+                <button
+                    type="button"
+                    onClick={handleNaoSoubeInformarClick}
+                    className="flex items-center gap-2 cursor-pointer whitespace-nowrap"
+                >
+                    <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
+                        naoSoubeInformar 
+                            ? 'bg-primary border-primary' 
+                            : 'border-gray-300 hover:border-gray-400'
+                    }`}>
+                        {naoSoubeInformar && (
+                            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                        )}
+                    </div>
+                    <span className="text-sm text-muted-foreground">Não soube informar</span>
+                </button>
+            </div>
+            {error && <p className="text-xs text-destructive">{error}</p>}
         </div>
     );
 }
@@ -136,6 +139,7 @@ function MarcoFalaField({
     naoSoubeInformar,
     onMesesChange,
     onOptionChange,
+    error,
 }: {
     label: string;
     meses: string;
@@ -143,6 +147,7 @@ function MarcoFalaField({
     naoSoubeInformar: boolean;
     onMesesChange: (value: string) => void;
     onOptionChange: (nao: boolean, naoSoubeInformar: boolean) => void;
+    error?: string;
 }) {
     const handleNaoClick = () => {
         const newValue = !nao;
@@ -155,61 +160,61 @@ function MarcoFalaField({
     };
 
     return (
-        <div className="flex items-center gap-4 py-2 border-b border-gray-100 last:border-0">
-            <span className="text-sm text-foreground flex-1">{label} <span className="text-red-500">*</span></span>
-            <NumberSpinner
-                value={meses}
-                onChange={(v) => {
-                    onMesesChange(v);
-                    onOptionChange(false, false);
-                }}
-                disabled={nao || naoSoubeInformar}
-                placeholder="0"
-                suffix="meses."
-                min={0}
-                max={120}
-            />
-            <button
-                type="button"
-                onClick={handleNaoClick}
-                className="flex items-center gap-2 cursor-pointer whitespace-nowrap"
-            >
-                <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
-                    nao 
-                        ? 'bg-primary border-primary' 
-                        : 'border-gray-300 hover:border-gray-400'
-                }`}>
-                    {nao && (
-                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                    )}
-                </div>
-                <span className="text-sm text-muted-foreground">Não realiza</span>
-            </button>
-            <button
-                type="button"
-                onClick={handleNaoSoubeInformarClick}
-                className="flex items-center gap-2 cursor-pointer whitespace-nowrap"
-            >
-                <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
-                    naoSoubeInformar 
-                        ? 'bg-primary border-primary' 
-                        : 'border-gray-300 hover:border-gray-400'
-                }`}>
-                    {naoSoubeInformar && (
-                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                    )}
-                </div>
-                <span className="text-sm text-muted-foreground">Não soube informar</span>
-            </button>
+        <div className="space-y-1">
+            <div className={`flex items-center gap-4 py-2 border-b last:border-0 ${error ? 'border-destructive' : 'border-gray-100'}`}>
+                <span className="text-sm text-foreground flex-1">{label} <span className="text-red-500">*</span></span>
+                <NumberSpinner
+                    value={meses}
+                    onChange={onMesesChange}
+                    disabled={nao || naoSoubeInformar}
+                    placeholder="0"
+                    suffix="meses."
+                    min={0}
+                    max={120}
+                />
+                <button
+                    type="button"
+                    onClick={handleNaoClick}
+                    className="flex items-center gap-2 cursor-pointer whitespace-nowrap"
+                >
+                    <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
+                        nao 
+                            ? 'bg-primary border-primary' 
+                            : 'border-gray-300 hover:border-gray-400'
+                    }`}>
+                        {nao && (
+                            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                        )}
+                    </div>
+                    <span className="text-sm text-muted-foreground">Não realiza</span>
+                </button>
+                <button
+                    type="button"
+                    onClick={handleNaoSoubeInformarClick}
+                    className="flex items-center gap-2 cursor-pointer whitespace-nowrap"
+                >
+                    <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
+                        naoSoubeInformar 
+                            ? 'bg-primary border-primary' 
+                            : 'border-gray-300 hover:border-gray-400'
+                    }`}>
+                        {naoSoubeInformar && (
+                            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                        )}
+                    </div>
+                    <span className="text-sm text-muted-foreground">Não soube informar</span>
+                </button>
+            </div>
+            {error && <p className="text-xs text-destructive">{error}</p>}
         </div>
     );
 }
 
-export default function DesenvolvimentoInicialStep({ data, onChange }: DesenvolvimentoInicialStepProps) {
+export default function DesenvolvimentoInicialStep({ data, onChange, fieldErrors = {} }: DesenvolvimentoInicialStepProps) {
     // Helpers para atualizar dados aninhados
     const updateGestacaoParto = (field: string, value: unknown) => {
         onChange({
@@ -321,27 +326,32 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
                 <h3 className="text-sm font-medium">10. Gestação e Parto <span className="text-red-500">*</span></h3>
                 
                 {/* Tipo de Parto */}
-                <div className="flex items-center gap-6">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                            type="radio"
-                            name="tipoParto"
-                            checked={data.gestacaoParto?.tipoParto === 'cesarea'}
-                            onChange={() => updateGestacaoParto('tipoParto', 'cesarea')}
-                            className="w-4 h-4"
-                        />
-                        <span className="text-sm">Parto Cesárea</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                            type="radio"
-                            name="tipoParto"
-                            checked={data.gestacaoParto?.tipoParto === 'natural'}
-                            onChange={() => updateGestacaoParto('tipoParto', 'natural')}
-                            className="w-4 h-4"
-                        />
-                        <span className="text-sm">Parto Natural</span>
-                    </label>
+                <div className="space-y-1">
+                    <div className="flex items-center gap-6">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="radio"
+                                name="tipoParto"
+                                checked={data.gestacaoParto?.tipoParto === 'cesarea'}
+                                onChange={() => updateGestacaoParto('tipoParto', 'cesarea')}
+                                className="w-4 h-4"
+                            />
+                            <span className="text-sm">Parto Cesárea</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="radio"
+                                name="tipoParto"
+                                checked={data.gestacaoParto?.tipoParto === 'natural'}
+                                onChange={() => updateGestacaoParto('tipoParto', 'natural')}
+                                className="w-4 h-4"
+                            />
+                            <span className="text-sm">Parto Natural</span>
+                        </label>
+                    </div>
+                    {fieldErrors['gestacaoParto.tipoParto'] && (
+                        <p className="text-xs text-destructive">{fieldErrors['gestacaoParto.tipoParto']}</p>
+                    )}
                 </div>
 
                 {/* Semanas e Apgar */}
@@ -352,6 +362,7 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
                         type="number"
                         value={data.gestacaoParto?.semanas ?? ''}
                         onChange={(e) => updateGestacaoParto('semanas', e.target.value ? Number(e.target.value) : null)}
+                        error={fieldErrors['gestacaoParto.semanas']}
                     />
                     <InputField
                         label="Apgar 1º minuto *"
@@ -359,6 +370,7 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
                         type="number"
                         value={data.gestacaoParto?.apgar1min ?? ''}
                         onChange={(e) => updateGestacaoParto('apgar1min', e.target.value ? Number(e.target.value) : null)}
+                        error={fieldErrors['gestacaoParto.apgar1min']}
                     />
                     <InputField
                         label="Apgar 5º minuto *"
@@ -366,6 +378,7 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
                         type="number"
                         value={data.gestacaoParto?.apgar5min ?? ''}
                         onChange={(e) => updateGestacaoParto('apgar5min', e.target.value ? Number(e.target.value) : null)}
+                        error={fieldErrors['gestacaoParto.apgar5min']}
                     />
                 </div>
 
@@ -391,6 +404,7 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
                         naoSoubeInformar={data.neuropsicomotor?.sustentouCabeca?.naoSoubeInformar ?? false}
                         onMesesChange={(v) => updateMarcoNeuropsicomotor('sustentouCabeca', v)}
                         onOptionChange={(nr, nsi) => updateMarcoNeuropsicomotorOptions('sustentouCabeca', nr, nsi)}
+                        error={fieldErrors['neuropsicomotor.sustentouCabeca']}
                     />
                     <MarcoMotorField
                         label="Rolou com aproximadamente"
@@ -399,6 +413,7 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
                         naoSoubeInformar={data.neuropsicomotor?.rolou?.naoSoubeInformar ?? false}
                         onMesesChange={(v) => updateMarcoNeuropsicomotor('rolou', v)}
                         onOptionChange={(nr, nsi) => updateMarcoNeuropsicomotorOptions('rolou', nr, nsi)}
+                        error={fieldErrors['neuropsicomotor.rolou']}
                     />
                     <MarcoMotorField
                         label="Sentou com aproximadamente"
@@ -407,6 +422,7 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
                         naoSoubeInformar={data.neuropsicomotor?.sentou?.naoSoubeInformar ?? false}
                         onMesesChange={(v) => updateMarcoNeuropsicomotor('sentou', v)}
                         onOptionChange={(nr, nsi) => updateMarcoNeuropsicomotorOptions('sentou', nr, nsi)}
+                        error={fieldErrors['neuropsicomotor.sentou']}
                     />
                     <MarcoMotorField
                         label="Engatinhou com aproximadamente"
@@ -415,6 +431,7 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
                         naoSoubeInformar={data.neuropsicomotor?.engatinhou?.naoSoubeInformar ?? false}
                         onMesesChange={(v) => updateMarcoNeuropsicomotor('engatinhou', v)}
                         onOptionChange={(nr, nsi) => updateMarcoNeuropsicomotorOptions('engatinhou', nr, nsi)}
+                        error={fieldErrors['neuropsicomotor.engatinhou']}
                     />
                     <MarcoMotorField
                         label="Andou com apoio com aproximadamente"
@@ -423,6 +440,7 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
                         naoSoubeInformar={data.neuropsicomotor?.andouComApoio?.naoSoubeInformar ?? false}
                         onMesesChange={(v) => updateMarcoNeuropsicomotor('andouComApoio', v)}
                         onOptionChange={(nr, nsi) => updateMarcoNeuropsicomotorOptions('andouComApoio', nr, nsi)}
+                        error={fieldErrors['neuropsicomotor.andouComApoio']}
                     />
                     <MarcoMotorField
                         label="Andou sem apoio com aproximadamente"
@@ -431,6 +449,7 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
                         naoSoubeInformar={data.neuropsicomotor?.andouSemApoio?.naoSoubeInformar ?? false}
                         onMesesChange={(v) => updateMarcoNeuropsicomotor('andouSemApoio', v)}
                         onOptionChange={(nr, nsi) => updateMarcoNeuropsicomotorOptions('andouSemApoio', nr, nsi)}
+                        error={fieldErrors['neuropsicomotor.andouSemApoio']}
                     />
                     <MarcoMotorField
                         label="Correu com aproximadamente"
@@ -439,6 +458,7 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
                         naoSoubeInformar={data.neuropsicomotor?.correu?.naoSoubeInformar ?? false}
                         onMesesChange={(v) => updateMarcoNeuropsicomotor('correu', v)}
                         onOptionChange={(nr, nsi) => updateMarcoNeuropsicomotorOptions('correu', nr, nsi)}
+                        error={fieldErrors['neuropsicomotor.correu']}
                     />
                     <MarcoMotorField
                         label="Andou de motoca com aproximadamente"
@@ -447,6 +467,7 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
                         naoSoubeInformar={data.neuropsicomotor?.andouDeMotoca?.naoSoubeInformar ?? false}
                         onMesesChange={(v) => updateMarcoNeuropsicomotor('andouDeMotoca', v)}
                         onOptionChange={(nr, nsi) => updateMarcoNeuropsicomotorOptions('andouDeMotoca', nr, nsi)}
+                        error={fieldErrors['neuropsicomotor.andouDeMotoca']}
                     />
                     <MarcoMotorField
                         label="Andou de bicicleta com aproximadamente"
@@ -455,6 +476,7 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
                         naoSoubeInformar={data.neuropsicomotor?.andouDeBicicleta?.naoSoubeInformar ?? false}
                         onMesesChange={(v) => updateMarcoNeuropsicomotor('andouDeBicicleta', v)}
                         onOptionChange={(nr, nsi) => updateMarcoNeuropsicomotorOptions('andouDeBicicleta', nr, nsi)}
+                        error={fieldErrors['neuropsicomotor.andouDeBicicleta']}
                     />
                     <MarcoMotorField
                         label="Subiu escadas sozinho com aproximadamente"
@@ -463,6 +485,7 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
                         naoSoubeInformar={data.neuropsicomotor?.subiuEscadasSozinho?.naoSoubeInformar ?? false}
                         onMesesChange={(v) => updateMarcoNeuropsicomotor('subiuEscadasSozinho', v)}
                         onOptionChange={(nr, nsi) => updateMarcoNeuropsicomotorOptions('subiuEscadasSozinho', nr, nsi)}
+                        error={fieldErrors['neuropsicomotor.subiuEscadasSozinho']}
                     />
                 </div>
 
@@ -487,6 +510,7 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
                         naoSoubeInformar={data.falaLinguagem?.balbuciou?.naoSoubeInformar ?? false}
                         onMesesChange={(v) => updateMarcoFala('balbuciou', v)}
                         onOptionChange={(n, nsi) => updateMarcoFalaOptions('balbuciou', n, nsi)}
+                        error={fieldErrors['falaLinguagem.balbuciou']}
                     />
                     <MarcoFalaField
                         label="Primeiras palavras com aproximadamente"
@@ -495,6 +519,7 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
                         naoSoubeInformar={data.falaLinguagem?.primeirasPalavras?.naoSoubeInformar ?? false}
                         onMesesChange={(v) => updateMarcoFala('primeirasPalavras', v)}
                         onOptionChange={(n, nsi) => updateMarcoFalaOptions('primeirasPalavras', n, nsi)}
+                        error={fieldErrors['falaLinguagem.primeirasPalavras']}
                     />
                     <MarcoFalaField
                         label="Primeiras frases com aproximadamente"
@@ -503,6 +528,7 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
                         naoSoubeInformar={data.falaLinguagem?.primeirasFrases?.naoSoubeInformar ?? false}
                         onMesesChange={(v) => updateMarcoFala('primeirasFrases', v)}
                         onOptionChange={(n, nsi) => updateMarcoFalaOptions('primeirasFrases', n, nsi)}
+                        error={fieldErrors['falaLinguagem.primeirasFrases']}
                     />
                     <MarcoFalaField
                         label="Apontou para fazer pedidos com aproximadamente"
@@ -511,6 +537,7 @@ export default function DesenvolvimentoInicialStep({ data, onChange }: Desenvolv
                         naoSoubeInformar={data.falaLinguagem?.apontouParaFazerPedidos?.naoSoubeInformar ?? false}
                         onMesesChange={(v) => updateMarcoFala('apontouParaFazerPedidos', v)}
                         onOptionChange={(n, nsi) => updateMarcoFalaOptions('apontouParaFazerPedidos', n, nsi)}
+                        error={fieldErrors['falaLinguagem.apontouParaFazerPedidos']}
                     />
                 </div>
 

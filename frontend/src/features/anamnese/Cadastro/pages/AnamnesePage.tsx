@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/ui/button';
-import { ArrowLeft, ArrowRight, Check, AlertCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, AlertCircle, CheckCircle, X } from 'lucide-react';
 import { toast } from 'sonner';
 import VerticalStepSidebar from '@/features/cadastros/components/VerticalStepSidebar';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
@@ -33,6 +32,7 @@ import {
     validarAnamneseMinima,
     getValidationErrorMessages
 } from '../services/anamnese-cadastro.service';
+import { validateStep, type StepValidationResult } from '../services/anamnese-cadastro.validation';
 import { 
     User, 
     Baby, 
@@ -273,7 +273,6 @@ const initialFinalizacao: Partial<AnamneseFinalizacao> = {
 export default function AnamnesePage() {
     // Configurar título da página
     const { setPageTitle, setNoMainContainer, setShowBackButton } = usePageTitle();
-    const navigate = useNavigate();
     
     useEffect(() => {
         setPageTitle('Anamnese');
@@ -289,6 +288,7 @@ export default function AnamnesePage() {
     const [currentStep, setCurrentStep] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
     const [validationErrors, setValidationErrors] = useState<string[]>([]);
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
     
     // Estado do cabeçalho
     const [cabecalho, setCabecalho] = useState<AnamnseeCabecalho>(initialCabecalho);
@@ -313,6 +313,343 @@ export default function AnamnesePage() {
 
     // Estado de Finalização
     const [finalizacao, setFinalizacao] = useState<Partial<AnamneseFinalizacao>>(initialFinalizacao);
+
+    // Handlers que limpam erros quando os dados mudam
+    const handleCabecalhoChange = useCallback((newData: AnamnseeCabecalho) => {
+        setCabecalho(prevData => {
+            // Identificar quais campos mudaram e limpar seus erros
+            const changedFields: string[] = [];
+            if (newData.clienteId !== prevData.clienteId) changedFields.push('clienteId');
+            if (newData.dataEntrevista !== prevData.dataEntrevista) changedFields.push('dataEntrevista');
+            if (newData.informante !== prevData.informante) changedFields.push('informante');
+            if (newData.parentesco !== prevData.parentesco) changedFields.push('parentesco');
+            if (newData.profissionalId !== prevData.profissionalId) changedFields.push('profissionalId');
+            
+            if (changedFields.length > 0) {
+                setFieldErrors(prev => {
+                    const updated = { ...prev };
+                    changedFields.forEach(field => delete updated[field]);
+                    // Se não há mais erros, limpar o banner também
+                    if (Object.keys(updated).length === 0) {
+                        setValidationErrors([]);
+                    }
+                    return updated;
+                });
+            }
+            
+            return newData;
+        });
+    }, []);
+
+    const handleQueixaDiagnosticoChange = useCallback((newData: Partial<AnamneseQueixaDiagnostico>) => {
+        setQueixaDiagnostico(prevData => {
+            const fieldsToCheck = [
+                'queixaPrincipal',
+                'diagnosticoPrevio', 
+                'suspeitaCondicaoAssociada'
+            ];
+            
+            const changedFields: string[] = [];
+            
+            // Verificar campos de texto
+            fieldsToCheck.forEach(field => {
+                if (newData[field as keyof AnamneseQueixaDiagnostico] !== prevData[field as keyof AnamneseQueixaDiagnostico]) {
+                    changedFields.push(field);
+                }
+            });
+            
+            // Verificar arrays e limpar erros relacionados quando itens são atualizados
+            const arrays = ['especialidadesConsultadas', 'medicamentosEmUso', 'examesPrevios', 'terapiasPrevias'] as const;
+            arrays.forEach(arrayField => {
+                const newArr = newData[arrayField] as unknown[];
+                const prevArr = prevData[arrayField] as unknown[];
+                if (JSON.stringify(newArr) !== JSON.stringify(prevArr)) {
+                    // Limpar todos os erros que começam com este prefixo
+                    setFieldErrors(prev => {
+                        const updated = { ...prev };
+                        Object.keys(updated).forEach(key => {
+                            if (key.startsWith(arrayField)) {
+                                delete updated[key];
+                            }
+                        });
+                        // Limpar banner se não há mais erros
+                        if (Object.keys(updated).length === 0) {
+                            setValidationErrors([]);
+                        }
+                        return updated;
+                    });
+                }
+            });
+            
+            // Limpar erros dos campos de texto que mudaram
+            if (changedFields.length > 0) {
+                setFieldErrors(prev => {
+                    const updated = { ...prev };
+                    changedFields.forEach(field => delete updated[field]);
+                    // Limpar banner se não há mais erros
+                    if (Object.keys(updated).length === 0) {
+                        setValidationErrors([]);
+                    }
+                    return updated;
+                });
+            }
+            
+            return newData;
+        });
+    }, []);
+
+    const handleContextoFamiliarChange = useCallback((newData: Partial<AnamneseContextoFamiliarRotina>) => {
+        setContextoFamiliarRotina(prevData => {
+            // Verificar arrays e limpar erros relacionados quando itens são atualizados
+            const arrays = ['historicosFamiliares', 'atividadesRotina'] as const;
+            arrays.forEach(arrayField => {
+                const newArr = newData[arrayField] as unknown[];
+                const prevArr = prevData[arrayField] as unknown[];
+                if (JSON.stringify(newArr) !== JSON.stringify(prevArr)) {
+                    setFieldErrors(prev => {
+                        const updated = { ...prev };
+                        Object.keys(updated).forEach(key => {
+                            if (key.startsWith(arrayField)) {
+                                delete updated[key];
+                            }
+                        });
+                        if (Object.keys(updated).length === 0) {
+                            setValidationErrors([]);
+                        }
+                        return updated;
+                    });
+                }
+            });
+            
+            return newData;
+        });
+    }, []);
+
+    const handleDesenvolvimentoInicialChange = useCallback((newData: Partial<AnamneseDesenvolvimentoInicial>) => {
+        setDesenvolvimentoInicial(prevData => {
+            // Verificar se gestacaoParto mudou
+            if (JSON.stringify(newData.gestacaoParto) !== JSON.stringify(prevData.gestacaoParto)) {
+                setFieldErrors(prev => {
+                    const updated = { ...prev };
+                    Object.keys(updated).forEach(key => {
+                        if (key.startsWith('gestacaoParto.')) {
+                            delete updated[key];
+                        }
+                    });
+                    if (Object.keys(updated).length === 0) {
+                        setValidationErrors([]);
+                    }
+                    return updated;
+                });
+            }
+            
+            // Verificar se neuropsicomotor mudou
+            if (JSON.stringify(newData.neuropsicomotor) !== JSON.stringify(prevData.neuropsicomotor)) {
+                setFieldErrors(prev => {
+                    const updated = { ...prev };
+                    Object.keys(updated).forEach(key => {
+                        if (key.startsWith('neuropsicomotor.')) {
+                            delete updated[key];
+                        }
+                    });
+                    if (Object.keys(updated).length === 0) {
+                        setValidationErrors([]);
+                    }
+                    return updated;
+                });
+            }
+            
+            // Verificar se falaLinguagem mudou
+            if (JSON.stringify(newData.falaLinguagem) !== JSON.stringify(prevData.falaLinguagem)) {
+                setFieldErrors(prev => {
+                    const updated = { ...prev };
+                    Object.keys(updated).forEach(key => {
+                        if (key.startsWith('falaLinguagem.')) {
+                            delete updated[key];
+                        }
+                    });
+                    if (Object.keys(updated).length === 0) {
+                        setValidationErrors([]);
+                    }
+                    return updated;
+                });
+            }
+            
+            return newData;
+        });
+    }, []);
+
+    const handleAtividadesVidaDiariaChange = useCallback((newData: Partial<AnamneseAtividadesVidaDiaria>) => {
+        setAtividadesVidaDiaria(prevData => {
+            // Verificar mudanças em desfralde
+            if (JSON.stringify(newData.desfralde) !== JSON.stringify(prevData.desfralde)) {
+                setFieldErrors(prev => {
+                    const updated = { ...prev };
+                    Object.keys(updated).forEach(key => {
+                        if (key.startsWith('desfralde.')) {
+                            delete updated[key];
+                        }
+                    });
+                    if (Object.keys(updated).length === 0) {
+                        setValidationErrors([]);
+                    }
+                    return updated;
+                });
+            }
+            
+            // Verificar mudanças em sono
+            if (JSON.stringify(newData.sono) !== JSON.stringify(prevData.sono)) {
+                setFieldErrors(prev => {
+                    const updated = { ...prev };
+                    Object.keys(updated).forEach(key => {
+                        if (key.startsWith('sono.')) {
+                            delete updated[key];
+                        }
+                    });
+                    if (Object.keys(updated).length === 0) {
+                        setValidationErrors([]);
+                    }
+                    return updated;
+                });
+            }
+            
+            // Verificar mudanças em habitosHigiene
+            if (JSON.stringify(newData.habitosHigiene) !== JSON.stringify(prevData.habitosHigiene)) {
+                setFieldErrors(prev => {
+                    const updated = { ...prev };
+                    Object.keys(updated).forEach(key => {
+                        if (key.startsWith('habitosHigiene.')) {
+                            delete updated[key];
+                        }
+                    });
+                    if (Object.keys(updated).length === 0) {
+                        setValidationErrors([]);
+                    }
+                    return updated;
+                });
+            }
+            
+            // Verificar mudanças em alimentacao
+            if (JSON.stringify(newData.alimentacao) !== JSON.stringify(prevData.alimentacao)) {
+                setFieldErrors(prev => {
+                    const updated = { ...prev };
+                    Object.keys(updated).forEach(key => {
+                        if (key.startsWith('alimentacao.')) {
+                            delete updated[key];
+                        }
+                    });
+                    if (Object.keys(updated).length === 0) {
+                        setValidationErrors([]);
+                    }
+                    return updated;
+                });
+            }
+            
+            return newData;
+        });
+    }, []);
+
+    const handleSocialAcademicoChange = useCallback((newData: Partial<AnamneseSocialAcademico>) => {
+        setSocialAcademico(prevData => {
+            // Verificar mudanças em desenvolvimentoSocial
+            if (JSON.stringify(newData.desenvolvimentoSocial) !== JSON.stringify(prevData.desenvolvimentoSocial)) {
+                setFieldErrors(prev => {
+                    const updated = { ...prev };
+                    Object.keys(updated).forEach(key => {
+                        if (key.startsWith('desenvolvimentoSocial.')) {
+                            delete updated[key];
+                        }
+                    });
+                    if (Object.keys(updated).length === 0) {
+                        setValidationErrors([]);
+                    }
+                    return updated;
+                });
+            }
+            
+            // Verificar mudanças em desenvolvimentoAcademico
+            if (JSON.stringify(newData.desenvolvimentoAcademico) !== JSON.stringify(prevData.desenvolvimentoAcademico)) {
+                setFieldErrors(prev => {
+                    const updated = { ...prev };
+                    Object.keys(updated).forEach(key => {
+                        if (key.startsWith('desenvolvimentoAcademico.')) {
+                            delete updated[key];
+                        }
+                    });
+                    if (Object.keys(updated).length === 0) {
+                        setValidationErrors([]);
+                    }
+                    return updated;
+                });
+            }
+            
+            return newData;
+        });
+    }, []);
+
+    const handleComportamentoChange = useCallback((newData: Partial<AnamneseComportamento>) => {
+        setComportamento(prevData => {
+            // Verificar mudanças em estereotipiasRituais
+            if (JSON.stringify(newData.estereotipiasRituais) !== JSON.stringify(prevData.estereotipiasRituais)) {
+                setFieldErrors(prev => {
+                    const updated = { ...prev };
+                    Object.keys(updated).forEach(key => {
+                        if (key.startsWith('estereotipiasRituais.')) {
+                            delete updated[key];
+                        }
+                    });
+                    if (Object.keys(updated).length === 0) {
+                        setValidationErrors([]);
+                    }
+                    return updated;
+                });
+            }
+            
+            // Verificar mudanças em problemasComportamento
+            if (JSON.stringify(newData.problemasComportamento) !== JSON.stringify(prevData.problemasComportamento)) {
+                setFieldErrors(prev => {
+                    const updated = { ...prev };
+                    Object.keys(updated).forEach(key => {
+                        if (key.startsWith('problemasComportamento.')) {
+                            delete updated[key];
+                        }
+                    });
+                    if (Object.keys(updated).length === 0) {
+                        setValidationErrors([]);
+                    }
+                    return updated;
+                });
+            }
+            
+            return newData;
+        });
+    }, []);
+
+    const handleFinalizacaoChange = useCallback((newData: Partial<AnamneseFinalizacao>) => {
+        setFinalizacao(prevData => {
+            const fieldsToCheck = ['outrasInformacoesRelevantes', 'observacoesImpressoesTerapeuta', 'expectativasFamilia'] as const;
+            
+            const changedFields: string[] = [];
+            fieldsToCheck.forEach(field => {
+                if (newData[field] !== prevData[field]) {
+                    changedFields.push(field);
+                }
+            });
+            
+            if (changedFields.length > 0) {
+                setFieldErrors(prev => {
+                    const updated = { ...prev };
+                    changedFields.forEach(field => delete updated[field]);
+                    if (Object.keys(updated).length === 0) {
+                        setValidationErrors([]);
+                    }
+                    return updated;
+                });
+            }
+            
+            return newData;
+        });
+    }, []);
 
     // Detectar se o formulário tem alterações não salvas
     const isDirty = useMemo(() => {
@@ -379,17 +716,112 @@ export default function AnamnesePage() {
         if (currentStep > 1) {
             setCurrentStep(currentStep - 1);
             setValidationErrors([]);
+            setFieldErrors({});
         }
     };
 
+    // Obter dados do step atual para validação
+    const getStepData = useCallback((step: number): Record<string, unknown> => {
+        switch (step) {
+            case 1:
+                return cabecalho as unknown as Record<string, unknown>;
+            case 2:
+                return queixaDiagnostico as unknown as Record<string, unknown>;
+            case 3:
+                return contextoFamiliarRotina as unknown as Record<string, unknown>;
+            case 4:
+                return desenvolvimentoInicial as unknown as Record<string, unknown>;
+            case 5:
+                return atividadesVidaDiaria as unknown as Record<string, unknown>;
+            case 6:
+                return socialAcademico as unknown as Record<string, unknown>;
+            case 7:
+                return comportamento as unknown as Record<string, unknown>;
+            case 8:
+                return finalizacao as unknown as Record<string, unknown>;
+            default:
+                return {};
+        }
+    }, [cabecalho, queixaDiagnostico, contextoFamiliarRotina, desenvolvimentoInicial, atividadesVidaDiaria, socialAcademico, comportamento, finalizacao]);
+
     const nextStep = () => {
+        // Validar step atual antes de avançar
+        const stepData = getStepData(currentStep);
+        const validation: StepValidationResult = validateStep(currentStep, stepData);
+        
+        if (!validation.isValid) {
+            // Converter erros para fieldErrors
+            const newFieldErrors: Record<string, string> = {};
+            validation.errors.forEach((err) => {
+                newFieldErrors[err.field] = err.message;
+            });
+            
+            setFieldErrors(newFieldErrors);
+            setValidationErrors(validation.errorMessages);
+            toast.error('Preencha os campos obrigatórios antes de avançar.');
+            return;
+        }
+        
         if (currentStep < STEPS.length) {
             setCurrentStep(currentStep + 1);
             setValidationErrors([]);
+            setFieldErrors({});
         }
     };
 
+    // Handler para clique direto no step da sidebar
+    const handleStepClick = (step: number) => {
+        // Se está tentando voltar, permite sem validação
+        if (step < currentStep) {
+            setCurrentStep(step);
+            setValidationErrors([]);
+            setFieldErrors({});
+            return;
+        }
+        
+        // Se está tentando avançar, valida todos os steps anteriores
+        for (let i = currentStep; i < step; i++) {
+            const stepData = getStepData(i);
+            const validation = validateStep(i, stepData);
+            
+            if (!validation.isValid) {
+                // Ir para o step com erro
+                setCurrentStep(i);
+                setValidationErrors(validation.errorMessages);
+                const newFieldErrors: Record<string, string> = {};
+                validation.errors.forEach((err) => {
+                    newFieldErrors[err.field] = err.message;
+                });
+                setFieldErrors(newFieldErrors);
+                toast.error(`Complete a etapa "${STEPS[i - 1]}" antes de avançar.`);
+                return;
+            }
+        }
+        
+        // Todos os steps anteriores são válidos
+        setCurrentStep(step);
+        setValidationErrors([]);
+        setFieldErrors({});
+    };
+
     const handleSubmit = async () => {
+        // Primeiro, validar o step atual (8 - Finalização)
+        const stepData = getStepData(currentStep);
+        const stepValidation: StepValidationResult = validateStep(currentStep, stepData);
+        
+        if (!stepValidation.isValid) {
+            // Converter erros para fieldErrors
+            const newFieldErrors: Record<string, string> = {};
+            stepValidation.errors.forEach((err) => {
+                newFieldErrors[err.field] = err.message;
+            });
+            
+            setFieldErrors(newFieldErrors);
+            setValidationErrors(stepValidation.errorMessages);
+            toast.error('Preencha os campos obrigatórios antes de finalizar.');
+            return;
+        }
+        
         setIsLoading(true);
         setValidationErrors([]);
         
@@ -409,8 +841,21 @@ export default function AnamnesePage() {
             const response = await criarAnamnese(anamneseData, true); // Skip full validation
             
             if (response.success) {
-                toast.success('Anamnese cadastrada com sucesso!');
-                navigate('/anamnese');
+                toast.success('Anamnese cadastrada com sucesso!', {
+                    description: 'O cadastro foi realizado e a anamnese foi adicionada ao sistema.',
+                    duration: 3000,
+                    icon: <CheckCircle className="h-4 w-4" />,
+                    action: {
+                        label: <X className="h-4 w-4" />,
+                        onClick: () => {},
+                    },
+                    cancel: {
+                        label: 'Fechar',
+                        onClick: () => {},
+                    },
+                });
+                // Usar window.location para evitar o blocker do react-router
+                window.location.href = '/app/anamnese/lista';
             } else {
                 if (response.errors && response.errors.length > 0) {
                     const errorMessages = getValidationErrorMessages(response.errors);
@@ -432,57 +877,65 @@ export default function AnamnesePage() {
                 return (
                     <CabecalhoAnamnese 
                         data={cabecalho} 
-                        onChange={setCabecalho} 
+                        onChange={handleCabecalhoChange}
+                        fieldErrors={fieldErrors}
                     />
                 );
             case 2:
                 return (
                     <QueixaDiagnosticoStep
                         data={queixaDiagnostico}
-                        onChange={setQueixaDiagnostico}
+                        onChange={handleQueixaDiagnosticoChange}
+                        fieldErrors={fieldErrors}
                     />
                 );
             case 3:
                 return (
                     <ContextoFamiliarRotinaStep
                         data={contextoFamiliarRotina}
-                        onChange={setContextoFamiliarRotina}
+                        onChange={handleContextoFamiliarChange}
+                        fieldErrors={fieldErrors}
                     />
                 );
             case 4:
                 return (
                     <DesenvolvimentoInicialStep
                         data={desenvolvimentoInicial}
-                        onChange={setDesenvolvimentoInicial}
+                        onChange={handleDesenvolvimentoInicialChange}
+                        fieldErrors={fieldErrors}
                     />
                 );
             case 5:
                 return (
                     <AtividadesVidaDiariaStep
                         data={atividadesVidaDiaria}
-                        onChange={setAtividadesVidaDiaria}
+                        onChange={handleAtividadesVidaDiariaChange}
+                        fieldErrors={fieldErrors}
                     />
                 );
             case 6:
                 return (
                     <SocialAcademicoStep
                         data={socialAcademico}
-                        onChange={setSocialAcademico}
+                        onChange={handleSocialAcademicoChange}
                         escolaCliente={cabecalho.escolaCliente}
+                        fieldErrors={fieldErrors}
                     />
                 );
             case 7:
                 return (
                     <ComportamentoStep
                         data={comportamento}
-                        onChange={setComportamento}
+                        onChange={handleComportamentoChange}
+                        fieldErrors={fieldErrors}
                     />
                 );
             case 8:
                 return (
                     <FinalizacaoStep
                         data={finalizacao}
-                        onChange={setFinalizacao}
+                        onChange={handleFinalizacaoChange}
+                        fieldErrors={fieldErrors}
                     />
                 );
             default:
@@ -502,7 +955,7 @@ export default function AnamnesePage() {
                     totalSteps={STEPS.length}
                     steps={STEPS}
                     stepIcons={STEP_ICONS}
-                    onStepClick={(step) => setCurrentStep(step)}
+                    onStepClick={handleStepClick}
                 />
             </div>
 

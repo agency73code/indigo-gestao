@@ -74,7 +74,7 @@ interface AnamneseTableProps {
 const EmptyState = () => (
     <div className="flex flex-col items-center justify-center py-12 text-center">
         <FileText className="w-12 h-12 text-muted-foreground mb-4" />
-        <h3 className="text-lg font-semibold text-foreground mb-2">Nenhuma anamnese encontrada</h3>
+        <h3 className="text-lg font-normal text-foreground mb-2" style={{fontFamily: "Sora"}}>Nenhuma anamnese encontrada</h3>
         <p className="text-sm text-muted-foreground">
             Tente ajustar os filtros de busca ou cadastre uma nova anamnese.
         </p>

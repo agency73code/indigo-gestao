@@ -7,48 +7,54 @@ interface SocialAcademicoStepProps {
     data: Partial<AnamneseSocialAcademico>;
     onChange: (data: Partial<AnamneseSocialAcademico>) => void;
     escolaCliente?: string | null;
+    fieldErrors?: Record<string, string>;
 }
 
 // Componente auxiliar para campo Sim/Não
 function SimNaoField({ 
     label, 
     value, 
-    onChange 
+    onChange,
+    error,
 }: { 
     label: string; 
     value: SimNao; 
     onChange: (value: SimNao) => void;
+    error?: string;
 }) {
     return (
-        <div className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-            <span className="text-sm text-foreground flex-1">{label} <span className="text-red-500">*</span></span>
-            <div className="flex items-center gap-4">
-                <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                        type="radio"
-                        name={label}
-                        checked={value === 'sim'}
-                        onChange={() => onChange('sim')}
-                        className="w-4 h-4 text-primary"
-                    />
-                    <span className="text-sm">Sim</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                        type="radio"
-                        name={label}
-                        checked={value === 'nao'}
-                        onChange={() => onChange('nao')}
-                        className="w-4 h-4 text-primary"
-                    />
-                    <span className="text-sm">Não</span>
-                </label>
+        <div className="space-y-1">
+            <div className={`flex items-center justify-between py-2 border-b last:border-0 ${error ? 'border-destructive' : 'border-gray-100'}`}>
+                <span className="text-sm text-foreground flex-1">{label} <span className="text-red-500">*</span></span>
+                <div className="flex items-center gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                            type="radio"
+                            name={label}
+                            checked={value === 'sim'}
+                            onChange={() => onChange('sim')}
+                            className="w-4 h-4 text-primary"
+                        />
+                        <span className="text-sm">Sim</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                            type="radio"
+                            name={label}
+                            checked={value === 'nao'}
+                            onChange={() => onChange('nao')}
+                            className="w-4 h-4 text-primary"
+                        />
+                        <span className="text-sm">Não</span>
+                    </label>
+                </div>
             </div>
+            {error && <p className="text-xs text-destructive">{error}</p>}
         </div>
     );
 }
 
-export default function SocialAcademicoStep({ data, onChange, escolaCliente }: SocialAcademicoStepProps) {
+export default function SocialAcademicoStep({ data, onChange, escolaCliente, fieldErrors = {} }: SocialAcademicoStepProps) {
     // Preencher escola automaticamente com dados do cadastro do cliente
     useEffect(() => {
         if (escolaCliente && !data.desenvolvimentoAcademico?.escola) {
@@ -148,56 +154,67 @@ export default function SocialAcademicoStep({ data, onChange, escolaCliente }: S
                         label="Possui amigos da mesma idade no ambiente escolar, quando aplicável."
                         value={data.desenvolvimentoSocial?.possuiAmigosMesmaIdadeEscola ?? null}
                         onChange={(v) => updateDesenvolvimentoSocial('possuiAmigosMesmaIdadeEscola', v)}
+                        error={fieldErrors['desenvolvimentoSocial.possuiAmigosMesmaIdadeEscola']}
                     />
                     <SimNaoField
                         label="Possui amigos da mesma idade fora do ambiente escolar."
                         value={data.desenvolvimentoSocial?.possuiAmigosMesmaIdadeForaEscola ?? null}
                         onChange={(v) => updateDesenvolvimentoSocial('possuiAmigosMesmaIdadeForaEscola', v)}
+                        error={fieldErrors['desenvolvimentoSocial.possuiAmigosMesmaIdadeForaEscola']}
                     />
                     <SimNaoField
                         label="Faz uso funcional de brinquedos."
                         value={data.desenvolvimentoSocial?.fazUsoFuncionalBrinquedos ?? null}
                         onChange={(v) => updateDesenvolvimentoSocial('fazUsoFuncionalBrinquedos', v)}
+                        error={fieldErrors['desenvolvimentoSocial.fazUsoFuncionalBrinquedos']}
                     />
                     <SimNaoField
                         label="Brinca próximo aos colegas em ambiente compartilhado."
                         value={data.desenvolvimentoSocial?.brincaProximoAosColegas ?? null}
                         onChange={(v) => updateDesenvolvimentoSocial('brincaProximoAosColegas', v)}
+                        error={fieldErrors['desenvolvimentoSocial.brincaProximoAosColegas']}
                     />
                     <SimNaoField
                         label="Brinca de maneira conjunta com os colegas, faz trocas de turno."
                         value={data.desenvolvimentoSocial?.brincaConjuntaComColegas ?? null}
                         onChange={(v) => updateDesenvolvimentoSocial('brincaConjuntaComColegas', v)}
+                        error={fieldErrors['desenvolvimentoSocial.brincaConjuntaComColegas']}
                     />
                     <SimNaoField
                         label="Procura os colegas espontaneamente, para iniciar interação."
                         value={data.desenvolvimentoSocial?.procuraColegasEspontaneamente ?? null}
                         onChange={(v) => updateDesenvolvimentoSocial('procuraColegasEspontaneamente', v)}
+                        error={fieldErrors['desenvolvimentoSocial.procuraColegasEspontaneamente']}
                     />
                     <SimNaoField
                         label="Se verbal/vocal inicia conversação?"
                         value={data.desenvolvimentoSocial?.seVerbalIniciaConversa ?? null}
                         onChange={(v) => updateDesenvolvimentoSocial('seVerbalIniciaConversa', v)}
+                        error={fieldErrors['desenvolvimentoSocial.seVerbalIniciaConversa']}
                     />
                     <SimNaoField
                         label="Se verbal/vocal, responde perguntas simples?"
                         value={data.desenvolvimentoSocial?.seVerbalRespondePerguntasSimples ?? null}
                         onChange={(v) => updateDesenvolvimentoSocial('seVerbalRespondePerguntasSimples', v)}
+                        error={fieldErrors['desenvolvimentoSocial.seVerbalRespondePerguntasSimples']}
                     />
                     <SimNaoField
                         label="Faz pedidos aos colegas ou adultos, quando necessário."
                         value={data.desenvolvimentoSocial?.fazPedidosQuandoNecessario ?? null}
                         onChange={(v) => updateDesenvolvimentoSocial('fazPedidosQuandoNecessario', v)}
+                        error={fieldErrors['desenvolvimentoSocial.fazPedidosQuandoNecessario']}
                     />
                     <SimNaoField
                         label="Estabelece contato visual com os adultos, durante interação."
                         value={data.desenvolvimentoSocial?.estabeleceContatoVisualAdultos ?? null}
                         onChange={(v) => updateDesenvolvimentoSocial('estabeleceContatoVisualAdultos', v)}
+                        error={fieldErrors['desenvolvimentoSocial.estabeleceContatoVisualAdultos']}
                     />
                     <SimNaoField
                         label="Estabelece contato visual com as crianças, durante interação."
                         value={data.desenvolvimentoSocial?.estabeleceContatoVisualCriancas ?? null}
                         onChange={(v) => updateDesenvolvimentoSocial('estabeleceContatoVisualCriancas', v)}
+                        error={fieldErrors['desenvolvimentoSocial.estabeleceContatoVisualCriancas']}
                     />
                 </div>
 
@@ -274,56 +291,67 @@ export default function SocialAcademicoStep({ data, onChange, escolaCliente }: S
                         label="Frequenta escola regular."
                         value={data.desenvolvimentoAcademico?.frequentaEscolaRegular ?? null}
                         onChange={(v) => updateDesenvolvimentoAcademico('frequentaEscolaRegular', v)}
+                        error={fieldErrors['desenvolvimentoAcademico.frequentaEscolaRegular']}
                     />
                     <SimNaoField
                         label="Frequenta escola especial (seja no contraturno ou não)."
                         value={data.desenvolvimentoAcademico?.frequentaEscolaEspecial ?? null}
                         onChange={(v) => updateDesenvolvimentoAcademico('frequentaEscolaEspecial', v)}
+                        error={fieldErrors['desenvolvimentoAcademico.frequentaEscolaEspecial']}
                     />
                     <SimNaoField
                         label="Acompanha a turma em relação as demandas pedagógicas."
                         value={data.desenvolvimentoAcademico?.acompanhaTurmaDemandasPedagogicas ?? null}
                         onChange={(v) => updateDesenvolvimentoAcademico('acompanhaTurmaDemandasPedagogicas', v)}
+                        error={fieldErrors['desenvolvimentoAcademico.acompanhaTurmaDemandasPedagogicas']}
                     />
                     <SimNaoField
                         label="Segue regras e rotinas de sala de aula."
                         value={data.desenvolvimentoAcademico?.segueRegrasRotinaSalaAula ?? null}
                         onChange={(v) => updateDesenvolvimentoAcademico('segueRegrasRotinaSalaAula', v)}
+                        error={fieldErrors['desenvolvimentoAcademico.segueRegrasRotinaSalaAula']}
                     />
                     <SimNaoField
                         label="Necessita de apoio de AT no período escolar."
                         value={data.desenvolvimentoAcademico?.necessitaApoioAT ?? null}
                         onChange={(v) => updateDesenvolvimentoAcademico('necessitaApoioAT', v)}
+                        error={fieldErrors['desenvolvimentoAcademico.necessitaApoioAT']}
                     />
                     <SimNaoField
                         label="Necessita de adaptação de materiais."
                         value={data.desenvolvimentoAcademico?.necessitaAdaptacaoMateriais ?? null}
                         onChange={(v) => updateDesenvolvimentoAcademico('necessitaAdaptacaoMateriais', v)}
+                        error={fieldErrors['desenvolvimentoAcademico.necessitaAdaptacaoMateriais']}
                     />
                     <SimNaoField
                         label="Necessita de adaptação curricular."
                         value={data.desenvolvimentoAcademico?.necessitaAdaptacaoCurricular ?? null}
                         onChange={(v) => updateDesenvolvimentoAcademico('necessitaAdaptacaoCurricular', v)}
+                        error={fieldErrors['desenvolvimentoAcademico.necessitaAdaptacaoCurricular']}
                     />
                     <SimNaoField
                         label="Houve reprovação/retenção em algum ano até o momento."
                         value={data.desenvolvimentoAcademico?.houveReprovacaoRetencao ?? null}
                         onChange={(v) => updateDesenvolvimentoAcademico('houveReprovacaoRetencao', v)}
+                        error={fieldErrors['desenvolvimentoAcademico.houveReprovacaoRetencao']}
                     />
                     <SimNaoField
                         label="A escola possui equipe especializada sobre inclusão."
                         value={data.desenvolvimentoAcademico?.escolaPossuiEquipeInclusao ?? null}
                         onChange={(v) => updateDesenvolvimentoAcademico('escolaPossuiEquipeInclusao', v)}
+                        error={fieldErrors['desenvolvimentoAcademico.escolaPossuiEquipeInclusao']}
                     />
                     <SimNaoField
                         label="Há indicativo de deficiência intelectual associada (previamente avaliada)."
                         value={data.desenvolvimentoAcademico?.haIndicativoDeficienciaIntelectual ?? null}
                         onChange={(v) => updateDesenvolvimentoAcademico('haIndicativoDeficienciaIntelectual', v)}
+                        error={fieldErrors['desenvolvimentoAcademico.haIndicativoDeficienciaIntelectual']}
                     />
                     <SimNaoField
                         label="Escola apresenta queixa quanto a questões comportamentais."
                         value={data.desenvolvimentoAcademico?.escolaApresentaQueixaComportamental ?? null}
                         onChange={(v) => updateDesenvolvimentoAcademico('escolaApresentaQueixaComportamental', v)}
+                        error={fieldErrors['desenvolvimentoAcademico.escolaApresentaQueixaComportamental']}
                     />
                 </div>
 

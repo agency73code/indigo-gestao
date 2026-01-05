@@ -4,48 +4,54 @@ import type { AnamneseComportamento, SimNao } from '../../types/anamnese.types';
 interface ComportamentoStepProps {
     data: Partial<AnamneseComportamento>;
     onChange: (data: Partial<AnamneseComportamento>) => void;
+    fieldErrors?: Record<string, string>;
 }
 
 // Componente auxiliar para campo Sim/Não
 function SimNaoField({ 
     label, 
     value, 
-    onChange 
+    onChange,
+    error,
 }: { 
     label: string; 
     value: SimNao; 
     onChange: (value: SimNao) => void;
+    error?: string;
 }) {
     return (
-        <div className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-            <span className="text-sm text-foreground flex-1">{label} <span className="text-red-500">*</span></span>
-            <div className="flex items-center gap-4">
-                <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                        type="radio"
-                        name={label}
-                        checked={value === 'sim'}
-                        onChange={() => onChange('sim')}
-                        className="w-4 h-4 text-primary"
-                    />
-                    <span className="text-sm">Sim</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                        type="radio"
-                        name={label}
-                        checked={value === 'nao'}
-                        onChange={() => onChange('nao')}
-                        className="w-4 h-4 text-primary"
-                    />
-                    <span className="text-sm">Não</span>
-                </label>
+        <div className="space-y-1">
+            <div className={`flex items-center justify-between py-2 border-b last:border-0 ${error ? 'border-destructive' : 'border-gray-100'}`}>
+                <span className="text-sm text-foreground flex-1">{label} <span className="text-red-500">*</span></span>
+                <div className="flex items-center gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                            type="radio"
+                            name={label}
+                            checked={value === 'sim'}
+                            onChange={() => onChange('sim')}
+                            className="w-4 h-4 text-primary"
+                        />
+                        <span className="text-sm">Sim</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                            type="radio"
+                            name={label}
+                            checked={value === 'nao'}
+                            onChange={() => onChange('nao')}
+                            className="w-4 h-4 text-primary"
+                        />
+                        <span className="text-sm">Não</span>
+                    </label>
+                </div>
             </div>
+            {error && <p className="text-xs text-destructive">{error}</p>}
         </div>
     );
 }
 
-export default function ComportamentoStep({ data, onChange }: ComportamentoStepProps) {
+export default function ComportamentoStep({ data, onChange, fieldErrors = {} }: ComportamentoStepProps) {
     // Helpers para atualizar dados aninhados
     const updateEstereotipiasRituais = (field: string, value: unknown) => {
         onChange({
@@ -97,51 +103,61 @@ export default function ComportamentoStep({ data, onChange }: ComportamentoStepP
                         label="Balança as mãos ao lado do corpo ou na frente ao rosto."
                         value={data.estereotipiasRituais?.balancaMaosLadoCorpoOuFrente ?? null}
                         onChange={(v) => updateEstereotipiasRituais('balancaMaosLadoCorpoOuFrente', v)}
+                        error={fieldErrors['estereotipiasRituais.balancaMaosLadoCorpoOuFrente']}
                     />
                     <SimNaoField
                         label="Balança o corpo para frente e para trás."
                         value={data.estereotipiasRituais?.balancaCorpoFrenteParaTras ?? null}
                         onChange={(v) => updateEstereotipiasRituais('balancaCorpoFrenteParaTras', v)}
+                        error={fieldErrors['estereotipiasRituais.balancaCorpoFrenteParaTras']}
                     />
                     <SimNaoField
                         label="Pula ou gira em torno de si."
                         value={data.estereotipiasRituais?.pulaOuGiraEmTornoDeSi ?? null}
                         onChange={(v) => updateEstereotipiasRituais('pulaOuGiraEmTornoDeSi', v)}
+                        error={fieldErrors['estereotipiasRituais.pulaOuGiraEmTornoDeSi']}
                     />
                     <SimNaoField
                         label="Repete sons sem função comunicativa."
                         value={data.estereotipiasRituais?.repeteSonsSemFuncaoComunicativa ?? null}
                         onChange={(v) => updateEstereotipiasRituais('repeteSonsSemFuncaoComunicativa', v)}
+                        error={fieldErrors['estereotipiasRituais.repeteSonsSemFuncaoComunicativa']}
                     />
                     <SimNaoField
                         label="Repete movimentos de modo contínuo, quando excitado ou ocioso."
                         value={data.estereotipiasRituais?.repeteMovimentosContinuos ?? null}
                         onChange={(v) => updateEstereotipiasRituais('repeteMovimentosContinuos', v)}
+                        error={fieldErrors['estereotipiasRituais.repeteMovimentosContinuos']}
                     />
                     <SimNaoField
                         label="Explora o ambiente lambendo, tocando de modo excessivo."
                         value={data.estereotipiasRituais?.exploraAmbienteLambendoTocando ?? null}
                         onChange={(v) => updateEstereotipiasRituais('exploraAmbienteLambendoTocando', v)}
+                        error={fieldErrors['estereotipiasRituais.exploraAmbienteLambendoTocando']}
                     />
                     <SimNaoField
                         label="Procura observar objetos com o canto do olho, pisca em excesso."
                         value={data.estereotipiasRituais?.procuraObservarObjetosCantoOlho ?? null}
                         onChange={(v) => updateEstereotipiasRituais('procuraObservarObjetosCantoOlho', v)}
+                        error={fieldErrors['estereotipiasRituais.procuraObservarObjetosCantoOlho']}
                     />
                     <SimNaoField
                         label="Organiza objetos lado a lado ou empilha itens."
                         value={data.estereotipiasRituais?.organizaObjetosLadoALado ?? null}
                         onChange={(v) => updateEstereotipiasRituais('organizaObjetosLadoALado', v)}
+                        error={fieldErrors['estereotipiasRituais.organizaObjetosLadoALado']}
                     />
                     <SimNaoField
                         label="Realiza tarefas sempre na mesma ordem."
                         value={data.estereotipiasRituais?.realizaTarefasSempreMesmaOrdem ?? null}
                         onChange={(v) => updateEstereotipiasRituais('realizaTarefasSempreMesmaOrdem', v)}
+                        error={fieldErrors['estereotipiasRituais.realizaTarefasSempreMesmaOrdem']}
                     />
                     <SimNaoField
                         label="Apresenta rituais diários para cumprir tarefas."
                         value={data.estereotipiasRituais?.apresentaRituaisDiarios ?? null}
                         onChange={(v) => updateEstereotipiasRituais('apresentaRituaisDiarios', v)}
+                        error={fieldErrors['estereotipiasRituais.apresentaRituaisDiarios']}
                     />
                 </div>
 
@@ -163,6 +179,7 @@ export default function ComportamentoStep({ data, onChange }: ComportamentoStepP
                         label="Apresenta comportamentos auto lesivos (ex: bate a cabeça, fere a pele ou outra parte do corpo gerando ferimentos fechados ou abertos)."
                         value={data.problemasComportamento?.apresentaComportamentosAutoLesivos ?? null}
                         onChange={(v) => updateProblemasComportamento('apresentaComportamentosAutoLesivos', v)}
+                        error={fieldErrors['problemasComportamento.apresentaComportamentosAutoLesivos']}
                     />
                     {data.problemasComportamento?.apresentaComportamentosAutoLesivos === 'sim' && (
                         <AutoExpandTextarea
@@ -180,6 +197,7 @@ export default function ComportamentoStep({ data, onChange }: ComportamentoStepP
                         label="Apresenta comportamentos heteroagressivos (ex: bater no outro com tapas, socos, chutes, beliscar, dar cabeçada)."
                         value={data.problemasComportamento?.apresentaComportamentosHeteroagressivos ?? null}
                         onChange={(v) => updateProblemasComportamento('apresentaComportamentosHeteroagressivos', v)}
+                        error={fieldErrors['problemasComportamento.apresentaComportamentosHeteroagressivos']}
                     />
                     {data.problemasComportamento?.apresentaComportamentosHeteroagressivos === 'sim' && (
                         <AutoExpandTextarea
@@ -197,6 +215,7 @@ export default function ComportamentoStep({ data, onChange }: ComportamentoStepP
                         label="Apresenta destruição de propriedade (quebra objetos da casa, dos colegas ou dele próprio)?"
                         value={data.problemasComportamento?.apresentaDestruicaoPropriedade ?? null}
                         onChange={(v) => updateProblemasComportamento('apresentaDestruicaoPropriedade', v)}
+                        error={fieldErrors['problemasComportamento.apresentaDestruicaoPropriedade']}
                     />
                     {data.problemasComportamento?.apresentaDestruicaoPropriedade === 'sim' && (
                         <AutoExpandTextarea
@@ -213,6 +232,7 @@ export default function ComportamentoStep({ data, onChange }: ComportamentoStepP
                     label="Necessita ou já necessitou de contenção física."
                     value={data.problemasComportamento?.necessitouContencaoMecanica ?? null}
                     onChange={(v) => updateProblemasComportamento('necessitouContencaoMecanica', v)}
+                    error={fieldErrors['problemasComportamento.necessitouContencaoMecanica']}
                 />
 
                 <AutoExpandTextarea

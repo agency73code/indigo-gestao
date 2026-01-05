@@ -7,44 +7,50 @@ import type { AnamneseAtividadesVidaDiaria, SimNao, SimNaoComAjuda } from '../..
 interface AtividadesVidaDiariaStepProps {
     data: Partial<AnamneseAtividadesVidaDiaria>;
     onChange: (data: Partial<AnamneseAtividadesVidaDiaria>) => void;
+    fieldErrors?: Record<string, string>;
 }
 
 function SimNaoField({ 
     label, 
     value, 
     onChange,
-    required = true 
+    required = true,
+    error,
 }: { 
     label: string; 
     value: SimNao; 
     onChange: (value: SimNao) => void;
     required?: boolean;
+    error?: string;
 }) {
     return (
-        <div className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-            <span className="text-sm text-foreground flex-1">{label} {required && <span className="text-red-500">*</span>}</span>
-            <div className="flex items-center gap-4">
-                <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                        type="radio"
-                        name={label}
-                        checked={value === 'sim'}
-                        onChange={() => onChange('sim')}
-                        className="w-4 h-4 text-primary"
-                    />
-                    <span className="text-sm">Sim</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                        type="radio"
-                        name={label}
-                        checked={value === 'nao'}
-                        onChange={() => onChange('nao')}
-                        className="w-4 h-4 text-primary"
-                    />
-                    <span className="text-sm">Não</span>
-                </label>
+        <div className="space-y-1">
+            <div className={`flex items-center justify-between py-2 border-b last:border-0 ${error ? 'border-destructive' : 'border-gray-100'}`}>
+                <span className="text-sm text-foreground flex-1">{label} {required && <span className="text-red-500">*</span>}</span>
+                <div className="flex items-center gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                            type="radio"
+                            name={label}
+                            checked={value === 'sim'}
+                            onChange={() => onChange('sim')}
+                            className="w-4 h-4 text-primary"
+                        />
+                        <span className="text-sm">Sim</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                            type="radio"
+                            name={label}
+                            checked={value === 'nao'}
+                            onChange={() => onChange('nao')}
+                            className="w-4 h-4 text-primary"
+                        />
+                        <span className="text-sm">Não</span>
+                    </label>
+                </div>
             </div>
+            {error && <p className="text-xs text-destructive">{error}</p>}
         </div>
     );
 }
@@ -52,47 +58,52 @@ function SimNaoField({
 function SimNaoComAjudaField({ 
     label, 
     value, 
-    onChange 
+    onChange,
+    error,
 }: { 
     label: string; 
     value: SimNaoComAjuda; 
     onChange: (value: SimNaoComAjuda) => void;
+    error?: string;
 }) {
     return (
-        <div className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-            <span className="text-sm text-foreground flex-1">{label} <span className="text-red-500">*</span></span>
-            <div className="flex items-center gap-4">
-                <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                        type="radio"
-                        name={label}
-                        checked={value === 'sim'}
-                        onChange={() => onChange('sim')}
-                        className="w-4 h-4 text-primary"
-                    />
-                    <span className="text-sm">Sim</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                        type="radio"
-                        name={label}
-                        checked={value === 'com_ajuda'}
-                        onChange={() => onChange('com_ajuda')}
-                        className="w-4 h-4 text-primary"
-                    />
-                    <span className="text-sm">Com ajuda</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                        type="radio"
-                        name={label}
-                        checked={value === 'nao'}
-                        onChange={() => onChange('nao')}
-                        className="w-4 h-4 text-primary"
-                    />
-                    <span className="text-sm">Não</span>
-                </label>
+        <div className="space-y-1">
+            <div className={`flex items-center justify-between py-2 border-b last:border-0 ${error ? 'border-destructive' : 'border-gray-100'}`}>
+                <span className="text-sm text-foreground flex-1">{label} <span className="text-red-500">*</span></span>
+                <div className="flex items-center gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                            type="radio"
+                            name={label}
+                            checked={value === 'sim'}
+                            onChange={() => onChange('sim')}
+                            className="w-4 h-4 text-primary"
+                        />
+                        <span className="text-sm">Sim</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                            type="radio"
+                            name={label}
+                            checked={value === 'com_ajuda'}
+                            onChange={() => onChange('com_ajuda')}
+                            className="w-4 h-4 text-primary"
+                        />
+                        <span className="text-sm">Com ajuda</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                            type="radio"
+                            name={label}
+                            checked={value === 'nao'}
+                            onChange={() => onChange('nao')}
+                            className="w-4 h-4 text-primary"
+                        />
+                        <span className="text-sm">Não</span>
+                    </label>
+                </div>
             </div>
+            {error && <p className="text-xs text-destructive">{error}</p>}
         </div>
     );
 }
@@ -106,6 +117,7 @@ function DesfraldeField({
     onAnosChange,
     onMesesChange,
     onUtilizaFraldaChange,
+    error,
 }: {
     label: string;
     anos: string;
@@ -114,42 +126,46 @@ function DesfraldeField({
     onAnosChange: (value: string) => void;
     onMesesChange: (value: string) => void;
     onUtilizaFraldaChange: (value: boolean) => void;
+    error?: string;
 }) {
     return (
-        <div className="flex items-center gap-4 py-2 border-b border-gray-100 last:border-0">
-            <span className="text-sm text-foreground flex-1">{label} <span className="text-red-500">*</span></span>
-            <div className="flex items-center gap-2 shrink-0">
-                <NumberSpinner
-                    value={anos}
-                    onChange={onAnosChange}
-                    disabled={utilizaFralda}
-                    placeholder="0"
-                    suffix="anos"
-                    min={0}
-                    max={18}
-                />
-                <NumberSpinner
-                    value={meses}
-                    onChange={onMesesChange}
-                    disabled={utilizaFralda}
-                    placeholder="0"
-                    suffix="meses."
-                    min={0}
-                    max={11}
-                />
+        <div className="space-y-1">
+            <div className={`flex items-center gap-4 py-2 border-b last:border-0 ${error ? 'border-destructive' : 'border-gray-100'}`}>
+                <span className="text-sm text-foreground flex-1">{label} <span className="text-red-500">*</span></span>
+                <div className="flex items-center gap-2 shrink-0">
+                    <NumberSpinner
+                        value={anos}
+                        onChange={onAnosChange}
+                        disabled={utilizaFralda}
+                        placeholder="0"
+                        suffix="anos"
+                        min={0}
+                        max={18}
+                    />
+                    <NumberSpinner
+                        value={meses}
+                        onChange={onMesesChange}
+                        disabled={utilizaFralda}
+                        placeholder="0"
+                        suffix="meses."
+                        min={0}
+                        max={11}
+                    />
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap shrink-0">
+                    <Checkbox
+                        checked={utilizaFralda}
+                        onCheckedChange={(checked) => onUtilizaFraldaChange(checked === true)}
+                    />
+                    <span className="text-sm text-muted-foreground">Utiliza fralda</span>
+                </label>
             </div>
-            <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap shrink-0">
-                <Checkbox
-                    checked={utilizaFralda}
-                    onCheckedChange={(checked) => onUtilizaFraldaChange(checked === true)}
-                />
-                <span className="text-sm text-muted-foreground">Utiliza fralda</span>
-            </label>
+            {error && <p className="text-xs text-destructive">{error}</p>}
         </div>
     );
 }
 
-export default function AtividadesVidaDiariaStep({ data, onChange }: AtividadesVidaDiariaStepProps) {
+export default function AtividadesVidaDiariaStep({ data, onChange, fieldErrors = {} }: AtividadesVidaDiariaStepProps) {
     // Helpers para atualizar dados aninhados
     const updateDesfralde = (field: string, value: unknown) => {
         const defaultDesfralde = { anos: '', meses: '', utilizaFralda: false };
@@ -256,6 +272,7 @@ export default function AtividadesVidaDiariaStep({ data, onChange }: AtividadesV
                         onAnosChange={(v) => updateDesfraldeItem('desfraldeDiurnoUrina', 'anos', v)}
                         onMesesChange={(v) => updateDesfraldeItem('desfraldeDiurnoUrina', 'meses', v)}
                         onUtilizaFraldaChange={(v) => updateDesfraldeItem('desfraldeDiurnoUrina', 'utilizaFralda', v)}
+                        error={fieldErrors['desfralde.desfraldeDiurnoUrina']}
                     />
                     <DesfraldeField
                         label="Desfralde para urina (noturno) realizado com"
@@ -265,6 +282,7 @@ export default function AtividadesVidaDiariaStep({ data, onChange }: AtividadesV
                         onAnosChange={(v) => updateDesfraldeItem('desfraldeNoturnoUrina', 'anos', v)}
                         onMesesChange={(v) => updateDesfraldeItem('desfraldeNoturnoUrina', 'meses', v)}
                         onUtilizaFraldaChange={(v) => updateDesfraldeItem('desfraldeNoturnoUrina', 'utilizaFralda', v)}
+                        error={fieldErrors['desfralde.desfraldeNoturnoUrina']}
                     />
                     <DesfraldeField
                         label="Desfralde para fezes realizado com"
@@ -274,6 +292,7 @@ export default function AtividadesVidaDiariaStep({ data, onChange }: AtividadesV
                         onAnosChange={(v) => updateDesfraldeItem('desfraldeFezes', 'anos', v)}
                         onMesesChange={(v) => updateDesfraldeItem('desfraldeFezes', 'meses', v)}
                         onUtilizaFraldaChange={(v) => updateDesfraldeItem('desfraldeFezes', 'utilizaFralda', v)}
+                        error={fieldErrors['desfralde.desfraldeFezes']}
                     />
                 </div>
 
@@ -282,21 +301,25 @@ export default function AtividadesVidaDiariaStep({ data, onChange }: AtividadesV
                         label="Se limpa sozinho quando usa o vaso para urinar."
                         value={data.desfralde?.seLimpaSozinhoUrinar ?? null}
                         onChange={(v) => updateDesfralde('seLimpaSozinhoUrinar', v)}
+                        error={fieldErrors['desfralde.seLimpaSozinhoUrinar']}
                     />
                     <SimNaoField
                         label="Se limpa sozinho quando usa o vaso para defecar."
                         value={data.desfralde?.seLimpaSozinhoDefecar ?? null}
                         onChange={(v) => updateDesfralde('seLimpaSozinhoDefecar', v)}
+                        error={fieldErrors['desfralde.seLimpaSozinhoDefecar']}
                     />
                     <SimNaoField
                         label="Lava as mãos após o uso do banheiro."
                         value={data.desfralde?.lavaAsMaosAposUsoBanheiro ?? null}
                         onChange={(v) => updateDesfralde('lavaAsMaosAposUsoBanheiro', v)}
+                        error={fieldErrors['desfralde.lavaAsMaosAposUsoBanheiro']}
                     />
                     <SimNaoField
                         label="Apresenta alguma alteração no hábito intestinal (diarreia, constipação, etc)."
                         value={data.desfralde?.apresentaAlteracaoHabitoIntestinal ?? null}
                         onChange={(v) => updateDesfralde('apresentaAlteracaoHabitoIntestinal', v)}
+                        error={fieldErrors['desfralde.apresentaAlteracaoHabitoIntestinal']}
                     />
                 </div>
 
@@ -313,16 +336,21 @@ export default function AtividadesVidaDiariaStep({ data, onChange }: AtividadesV
                 <h3 className="text-sm font-medium">14. Sono <span className="text-red-500">*</span></h3>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm whitespace-nowrap">Dorme em média <span className="text-red-500">*</span></span>
-                        <NumberSpinner
-                            value={data.sono?.dormemMediaHorasNoite ?? ''}
-                            onChange={(v) => updateSono('dormemMediaHorasNoite', v)}
-                            placeholder="0"
-                            suffix="horas por noite."
-                            min={0}
-                            max={24}
-                        />
+                    <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm whitespace-nowrap">Dorme em média <span className="text-red-500">*</span></span>
+                            <NumberSpinner
+                                value={data.sono?.dormemMediaHorasNoite ?? ''}
+                                onChange={(v) => updateSono('dormemMediaHorasNoite', v)}
+                                placeholder="0"
+                                suffix="horas por noite."
+                                min={0}
+                                max={24}
+                            />
+                        </div>
+                        {fieldErrors['sono.dormemMediaHorasNoite'] && (
+                            <p className="text-xs text-destructive">{fieldErrors['sono.dormemMediaHorasNoite']}</p>
+                        )}
                     </div>
                     <div className="flex items-center gap-2">
                         <span className="text-sm whitespace-nowrap">Dorme em média</span>
@@ -337,28 +365,33 @@ export default function AtividadesVidaDiariaStep({ data, onChange }: AtividadesV
                     </div>
                 </div>
 
-                <div className="flex items-center gap-4">
-                    <span className="text-sm">Período: <span className="text-red-500">*</span></span>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                            type="radio"
-                            name="periodoSonoDia"
-                            checked={data.sono?.periodoSonoDia === 'manha'}
-                            onChange={() => updateSono('periodoSonoDia', 'manha')}
-                            className="w-4 h-4"
-                        />
-                        <span className="text-sm">Manhã</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                        <input
-                            type="radio"
-                            name="periodoSonoDia"
-                            checked={data.sono?.periodoSonoDia === 'tarde'}
-                            onChange={() => updateSono('periodoSonoDia', 'tarde')}
-                            className="w-4 h-4"
-                        />
-                        <span className="text-sm">Tarde</span>
-                    </label>
+                <div className="space-y-1">
+                    <div className="flex items-center gap-4">
+                        <span className="text-sm">Período: <span className="text-red-500">*</span></span>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="radio"
+                                name="periodoSonoDia"
+                                checked={data.sono?.periodoSonoDia === 'manha'}
+                                onChange={() => updateSono('periodoSonoDia', 'manha')}
+                                className="w-4 h-4"
+                            />
+                            <span className="text-sm">Manhã</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                                type="radio"
+                                name="periodoSonoDia"
+                                checked={data.sono?.periodoSonoDia === 'tarde'}
+                                onChange={() => updateSono('periodoSonoDia', 'tarde')}
+                                className="w-4 h-4"
+                            />
+                            <span className="text-sm">Tarde</span>
+                        </label>
+                    </div>
+                    {fieldErrors['sono.periodoSonoDia'] && (
+                        <p className="text-xs text-destructive">{fieldErrors['sono.periodoSonoDia']}</p>
+                    )}
                 </div>
 
                 <div className="space-y-1">
@@ -366,31 +399,37 @@ export default function AtividadesVidaDiariaStep({ data, onChange }: AtividadesV
                         label="Tem dificuldade para iniciar o sono."
                         value={data.sono?.temDificuldadeIniciarSono ?? null}
                         onChange={(v) => updateSono('temDificuldadeIniciarSono', v)}
+                        error={fieldErrors['sono.temDificuldadeIniciarSono']}
                     />
                     <SimNaoField
                         label="Acorda de madrugada."
                         value={data.sono?.acordaDeMadrugada ?? null}
                         onChange={(v) => updateSono('acordaDeMadrugada', v)}
+                        error={fieldErrors['sono.acordaDeMadrugada']}
                     />
                     <SimNaoField
                         label="Dorme na própria cama."
                         value={data.sono?.dormeNaPropriaCama ?? null}
                         onChange={(v) => updateSono('dormeNaPropriaCama', v)}
+                        error={fieldErrors['sono.dormeNaPropriaCama']}
                     />
                     <SimNaoField
                         label="Dorme no próprio quarto."
                         value={data.sono?.dormeNoProprioQuarto ?? null}
                         onChange={(v) => updateSono('dormeNoProprioQuarto', v)}
+                        error={fieldErrors['sono.dormeNoProprioQuarto']}
                     />
                     <SimNaoField
                         label="Apresenta sono agitado, se move muito na cama."
                         value={data.sono?.apresentaSonoAgitado ?? null}
                         onChange={(v) => updateSono('apresentaSonoAgitado', v)}
+                        error={fieldErrors['sono.apresentaSonoAgitado']}
                     />
                     <SimNaoField
                         label="É sonâmbulo."
                         value={data.sono?.eSonambulo ?? null}
                         onChange={(v) => updateSono('eSonambulo', v)}
+                        error={fieldErrors['sono.eSonambulo']}
                     />
                 </div>
 
@@ -411,41 +450,49 @@ export default function AtividadesVidaDiariaStep({ data, onChange }: AtividadesV
                         label="Toma banho e lava o corpo todo."
                         value={data.habitosHigiene?.tomaBanhoLavaCorpoTodo ?? null}
                         onChange={(v) => updateHabitosHigiene('tomaBanhoLavaCorpoTodo', v)}
+                        error={fieldErrors['habitosHigiene.tomaBanhoLavaCorpoTodo']}
                     />
                     <SimNaoComAjudaField
                         label="Seca o corpo todo."
                         value={data.habitosHigiene?.secaCorpoTodo ?? null}
                         onChange={(v) => updateHabitosHigiene('secaCorpoTodo', v)}
+                        error={fieldErrors['habitosHigiene.secaCorpoTodo']}
                     />
                     <SimNaoComAjudaField
                         label="Retira todas as peças de roupa."
                         value={data.habitosHigiene?.retiraTodasPecasRoupa ?? null}
                         onChange={(v) => updateHabitosHigiene('retiraTodasPecasRoupa', v)}
+                        error={fieldErrors['habitosHigiene.retiraTodasPecasRoupa']}
                     />
                     <SimNaoComAjudaField
                         label="Coloca todas as peças de roupa."
                         value={data.habitosHigiene?.colocaTodasPecasRoupa ?? null}
                         onChange={(v) => updateHabitosHigiene('colocaTodasPecasRoupa', v)}
+                        error={fieldErrors['habitosHigiene.colocaTodasPecasRoupa']}
                     />
                     <SimNaoComAjudaField
                         label="Põe calçados sem cadarço."
                         value={data.habitosHigiene?.poeCalcadosSemCadarco ?? null}
                         onChange={(v) => updateHabitosHigiene('poeCalcadosSemCadarco', v)}
+                        error={fieldErrors['habitosHigiene.poeCalcadosSemCadarco']}
                     />
                     <SimNaoComAjudaField
                         label="Põe calçados com cadarço."
                         value={data.habitosHigiene?.poeCalcadosComCadarco ?? null}
                         onChange={(v) => updateHabitosHigiene('poeCalcadosComCadarco', v)}
+                        error={fieldErrors['habitosHigiene.poeCalcadosComCadarco']}
                     />
                     <SimNaoComAjudaField
                         label="Escova os dentes."
                         value={data.habitosHigiene?.escovaOsDentes ?? null}
                         onChange={(v) => updateHabitosHigiene('escovaOsDentes', v)}
+                        error={fieldErrors['habitosHigiene.escovaOsDentes']}
                     />
                     <SimNaoComAjudaField
                         label="Penteia o cabelo."
                         value={data.habitosHigiene?.penteiaOCabelo ?? null}
                         onChange={(v) => updateHabitosHigiene('penteiaOCabelo', v)}
+                        error={fieldErrors['habitosHigiene.penteiaOCabelo']}
                     />
                 </div>
 
@@ -466,31 +513,37 @@ export default function AtividadesVidaDiariaStep({ data, onChange }: AtividadesV
                         label="Apresenta alguma queixa quanto a alimentação?"
                         value={data.alimentacao?.apresentaQueixaAlimentacao ?? null}
                         onChange={(v) => updateAlimentacao('apresentaQueixaAlimentacao', v)}
+                        error={fieldErrors['alimentacao.apresentaQueixaAlimentacao']}
                     />
                     <SimNaoField
                         label="Se alimenta sozinho."
                         value={data.alimentacao?.seAlimentaSozinho ?? null}
                         onChange={(v) => updateAlimentacao('seAlimentaSozinho', v)}
+                        error={fieldErrors['alimentacao.seAlimentaSozinho']}
                     />
                     <SimNaoField
                         label="É seletivo quanto aos alimentos ingeridos."
                         value={data.alimentacao?.eSeletivoQuantoAlimentos ?? null}
                         onChange={(v) => updateAlimentacao('eSeletivoQuantoAlimentos', v)}
+                        error={fieldErrors['alimentacao.eSeletivoQuantoAlimentos']}
                     />
                     <SimNaoField
                         label="Passa um dia inteiro ou longos períodos sem comer."
                         value={data.alimentacao?.passaDiaInteiroSemComer ?? null}
                         onChange={(v) => updateAlimentacao('passaDiaInteiroSemComer', v)}
+                        error={fieldErrors['alimentacao.passaDiaInteiroSemComer']}
                     />
                     <SimNaoField
                         label="Apresenta rituais para se alimentar."
                         value={data.alimentacao?.apresentaRituaisParaAlimentar ?? null}
                         onChange={(v) => updateAlimentacao('apresentaRituaisParaAlimentar', v)}
+                        error={fieldErrors['alimentacao.apresentaRituaisParaAlimentar']}
                     />
                     <SimNaoField
                         label="Está abaixo ou acima do peso indicado para a idade."
                         value={data.alimentacao?.estaAbaixoOuAcimaPeso ?? null}
                         onChange={(v) => updateAlimentacao('estaAbaixoOuAcimaPeso', v)}
+                        error={fieldErrors['alimentacao.estaAbaixoOuAcimaPeso']}
                     />
                     {data.alimentacao?.estaAbaixoOuAcimaPeso === 'sim' && (
                         <InputField
@@ -504,6 +557,7 @@ export default function AtividadesVidaDiariaStep({ data, onChange }: AtividadesV
                         label="Tem histórico de anemia."
                         value={data.alimentacao?.temHistoricoAnemia ?? null}
                         onChange={(v) => updateAlimentacao('temHistoricoAnemia', v)}
+                        error={fieldErrors['alimentacao.temHistoricoAnemia']}
                     />
                     {data.alimentacao?.temHistoricoAnemia === 'sim' && (
                         <InputField
@@ -517,6 +571,7 @@ export default function AtividadesVidaDiariaStep({ data, onChange }: AtividadesV
                         label="A rotina alimentar atual é um problema para a família."
                         value={data.alimentacao?.rotinaAlimentarEProblemaFamilia ?? null}
                         onChange={(v) => updateAlimentacao('rotinaAlimentarEProblemaFamilia', v)}
+                        error={fieldErrors['alimentacao.rotinaAlimentarEProblemaFamilia']}
                     />
                     {data.alimentacao?.rotinaAlimentarEProblemaFamilia === 'sim' && (
                         <InputField

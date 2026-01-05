@@ -33,9 +33,10 @@ function getDataHoje(): string {
 interface CabecalhoAnamneseProps {
     data: AnamnseeCabecalho;
     onChange: (data: AnamnseeCabecalho) => void;
+    fieldErrors?: Record<string, string>;
 }
 
-export default function CabecalhoAnamnese({ data, onChange }: CabecalhoAnamneseProps) {
+export default function CabecalhoAnamnese({ data, onChange, fieldErrors = {} }: CabecalhoAnamneseProps) {
     const { user } = useAuth();
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
 
@@ -128,10 +129,15 @@ export default function CabecalhoAnamnese({ data, onChange }: CabecalhoAnamneseP
         <div className="space-y-6">
             
             {/* Seletor de Cliente */}
-            <PatientSelector
-                selected={selectedPatient}
-                onSelect={handlePatientSelect}
-            />
+            <div>
+                <PatientSelector
+                    selected={selectedPatient}
+                    onSelect={handlePatientSelect}
+                />
+                {fieldErrors.clienteId && !data.clienteId && (
+                    <p className="text-sm text-destructive mt-1">{fieldErrors.clienteId}</p>
+                )}
+            </div>
 
             {/* Card do Cabeçalho - só aparece depois de selecionar cliente */}
             {data.clienteId && (
@@ -142,6 +148,7 @@ export default function CabecalhoAnamnese({ data, onChange }: CabecalhoAnamneseP
                                 label="Data da Entrevista *"
                                 value={data.dataEntrevista || ''}
                                 onChange={(iso) => onChange({ ...data, dataEntrevista: iso })}
+                                error={fieldErrors.dataEntrevista}
                             />
                             <InputField
                                 label="Data de Nascimento"
@@ -164,17 +171,19 @@ export default function CabecalhoAnamnese({ data, onChange }: CabecalhoAnamneseP
                         {/* Linha 2: Informante e Parentesco */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <InputField
-                                label="Informante"
+                                label="Informante *"
                                 id="informante"
                                 value={data.informante || ''}
                                 onChange={(e) => onChange({ ...data, informante: e.target.value })}
                                 placeholder="Nome do informante"
+                                error={fieldErrors.informante}
                             />
                             <SelectField
-                                label="Parentesco"
+                                label="Parentesco *"
                                 id="parentesco"
                                 value={data.parentesco || ''}
                                 onChange={(e) => onChange({ ...data, parentesco: e.target.value, parentescoDescricao: e.target.value !== 'outro' ? '' : data.parentescoDescricao })}
+                                error={fieldErrors.parentesco}
                             >
                                 <option value="">Selecione o parentesco</option>
                                 <option value="mae">Mãe</option>

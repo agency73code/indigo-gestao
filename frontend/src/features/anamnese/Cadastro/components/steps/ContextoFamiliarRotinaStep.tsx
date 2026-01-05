@@ -7,9 +7,10 @@ import type { AnamneseContextoFamiliarRotina, HistoricoFamiliar, AtividadeRotina
 interface ContextoFamiliarRotinaStepProps {
     data: Partial<AnamneseContextoFamiliarRotina>;
     onChange: (data: Partial<AnamneseContextoFamiliarRotina>) => void;
+    fieldErrors?: Record<string, string>;
 }
 
-export default function ContextoFamiliarRotinaStep({ data, onChange }: ContextoFamiliarRotinaStepProps) {
+export default function ContextoFamiliarRotinaStep({ data, onChange, fieldErrors = {} }: ContextoFamiliarRotinaStepProps) {
     // Gerar ID único para novos itens
     const generateId = () => crypto.randomUUID();
 
@@ -120,6 +121,7 @@ export default function ContextoFamiliarRotinaStep({ data, onChange }: ContextoF
                                         placeholder="Ex: TEA, TDAH, Depressão..."
                                         value={hist.condicaoDiagnostico}
                                         onChange={(e) => handleUpdateHistorico(hist.id, 'condicaoDiagnostico', e.target.value)}
+                                        error={fieldErrors[`historicosFamiliares.${index}.condicaoDiagnostico`]}
                                     />
                                 </div>
                                 <InputField
@@ -127,6 +129,7 @@ export default function ContextoFamiliarRotinaStep({ data, onChange }: ContextoF
                                     placeholder="Ex: Pai, Tio, Avó..."
                                     value={hist.parentesco}
                                     onChange={(e) => handleUpdateHistorico(hist.id, 'parentesco', e.target.value)}
+                                    error={fieldErrors[`historicosFamiliares.${index}.parentesco`]}
                                 />
                             </div>
 
@@ -203,6 +206,7 @@ export default function ContextoFamiliarRotinaStep({ data, onChange }: ContextoF
                                         placeholder="Ex: Natação, Piano, Futebol..."
                                         value={ativ.atividade}
                                         onChange={(e) => handleUpdateAtividade(ativ.id, 'atividade', e.target.value)}
+                                        error={fieldErrors[`atividadesRotina.${index}.atividade`]}
                                     />
                                 </div>
                                 <InputField
@@ -210,6 +214,7 @@ export default function ContextoFamiliarRotinaStep({ data, onChange }: ContextoF
                                     placeholder="Ex: 14:00 - 15:00"
                                     value={ativ.horario}
                                     onChange={(e) => handleUpdateAtividade(ativ.id, 'horario', e.target.value)}
+                                    error={fieldErrors[`atividadesRotina.${index}.horario`]}
                                 />
                                 <InputField
                                     label="Responsável"

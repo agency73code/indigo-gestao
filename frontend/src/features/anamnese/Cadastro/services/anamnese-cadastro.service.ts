@@ -189,8 +189,23 @@ async function apiCriarAnamnese(data: Anamnese): Promise<AnamneseResponse> {
         const responseData = text ? JSON.parse(text) : null;
         
         if (!res.ok) {
+            // Log detalhado para debug
+            console.error('[API] Resposta de erro do servidor:', responseData);
+            
+            // Se houver erros de validação do Zod, retornar de forma estruturada
+            if (responseData?.errors && Array.isArray(responseData.errors)) {
+                return {
+                    success: false,
+                    errors: responseData.errors,
+                    message: responseData.message || 'Erro de validação no servidor.',
+                };
+            }
+            
             const msg = responseData?.message ?? responseData?.error ?? `Falha (${res.status})`;
-            throw new Error(msg);
+            return {
+                success: false,
+                message: msg,
+            };
         }
         
         return {
@@ -200,7 +215,10 @@ async function apiCriarAnamnese(data: Anamnese): Promise<AnamneseResponse> {
         };
     } catch (error) {
         console.error('[API] Erro ao criar anamnese:', error);
-        throw error;
+        return {
+            success: false,
+            message: error instanceof Error ? error.message : 'Erro desconhecido',
+        };
     }
 }
 
