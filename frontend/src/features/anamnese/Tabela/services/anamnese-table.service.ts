@@ -1,9 +1,10 @@
 import { authFetch } from '@/lib/http';
 import type { AnamneseListItem } from '../types/anamnese-table.types';
 import { mockAnamneses } from '../mocks/anamnese.mock';
+import { buildApiUrl } from '@/lib/api';
 
 // Flag para usar dados mock (desabilitar quando API estiver pronta)
-const USE_MOCK = true;
+const USE_MOCK = false;
 
 /**
  * Parâmetros de filtragem para listagem de anamneses
@@ -93,20 +94,25 @@ export async function listAnamneses(
     }
     // ===================================================================
 
-    // Construir URL com query params
-    const url = new URL('/api/anamneses', window.location.origin);
-    
-    url.searchParams.set('page', String(page));
-    url.searchParams.set('pageSize', String(pageSize));
-    url.searchParams.set('sort', sort);
+    const query = buildApiUrl('/api/anamneses', {
+        page,
+        pageSize,
+        sort,
+        q: q || undefined,
+    });
 
-    if (q) {
-        url.searchParams.set('q', q);
-    }
-
-    const res = await authFetch(url.pathname + url.search, { method: 'GET' });
+    const res = await authFetch(query, { method: 'GET' });
     const text = await res.text();
-    const response = text ? JSON.parse(text) : null;
+    const contentType = res.headers.get('content-type') ?? '';
+    let response: any = null;
+
+    if (text && (contentType.includes('application/json') || text.trim().startsWith('{'))) {
+        try {
+            response = JSON.parse(text);
+        } catch {
+            response = null;
+        }
+    }
 
     if (!res.ok) {
         const msg = response?.message ?? response?.error ?? `Falha ao listar anamneses (${res.status})`;
@@ -126,7 +132,7 @@ export async function listAnamneses(
             totalPages: payload.totalPages ?? Math.ceil((payload.total ?? 0) / (payload.pageSize ?? pageSize)),
         };
     }
-
+    console.log('teste')
     return {
         items: [],
         total: 0,
