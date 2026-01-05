@@ -113,116 +113,6 @@ const USE_MOCK = false;
  */
 const ENDPOINT = '/anamneses';
 
-
-
-// ============================================
-// TRANSFORMAÇÃO DE DADOS
-// ============================================
-
-/**
- * Transforma dados do frontend para o formato esperado pelo backend
- * Aqui fazemos qualquer conversão necessária antes de enviar
- */
-export function transformToBackendFormat(data: Anamnese): Record<string, unknown> {
-    return {
-        // Identificação
-        clienteId: data.cabecalho.clienteId,
-        profissionalId: data.cabecalho.profissionalId,
-        dataEntrevista: data.cabecalho.dataEntrevista,
-        informante: data.cabecalho.informante,
-        parentesco: data.cabecalho.parentesco,
-        parentescoDescricao: data.cabecalho.parentescoDescricao || null,
-        quemIndicou: data.cabecalho.quemIndicou || null,
-        
-        // Queixa e Diagnóstico
-        queixaPrincipal: data.queixaDiagnostico.queixaPrincipal,
-        diagnosticoPrevio: data.queixaDiagnostico.diagnosticoPrevio || null,
-        suspeitaCondicaoAssociada: data.queixaDiagnostico.suspeitaCondicaoAssociada || null,
-        especialidadesConsultadas: data.queixaDiagnostico.especialidadesConsultadas.map(esp => ({
-            especialidade: esp.especialidade,
-            nome: esp.nome,
-            data: esp.data || null,
-            observacao: esp.observacao || null,
-            ativo: esp.ativo,
-        })),
-        medicamentosEmUso: data.queixaDiagnostico.medicamentosEmUso.map(med => ({
-            nome: med.nome,
-            dosagem: med.dosagem || null,
-            dataInicio: med.dataInicio || null,
-            motivo: med.motivo || null,
-        })),
-        examesPrevios: data.queixaDiagnostico.examesPrevios.map(exame => ({
-            nome: exame.nome,
-            data: exame.data || null,
-            resultado: exame.resultado || null,
-            // Arquivos são enviados separadamente via upload
-        })),
-        terapiasPrevias: data.queixaDiagnostico.terapiasPrevias.map(ter => ({
-            profissional: ter.profissional,
-            especialidadeAbordagem: ter.especialidadeAbordagem || null,
-            tempoIntervencao: ter.tempoIntervencao || null,
-            observacao: ter.observacao || null,
-            ativo: ter.ativo,
-        })),
-        
-        // Contexto Familiar
-        historicosFamiliares: (data.contextoFamiliarRotina.historicosFamiliares || []).map(hist => ({
-            condicaoDiagnostico: hist.condicaoDiagnostico,
-            parentesco: hist.parentesco,
-            observacao: hist.observacao || null,
-        })),
-        atividadesRotina: (data.contextoFamiliarRotina.atividadesRotina || []).map(rot => ({
-            atividade: rot.atividade,
-            horario: rot.horario,
-            responsavel: rot.responsavel || null,
-            frequencia: rot.frequencia || null,
-            observacao: rot.observacao || null,
-        })),
-        
-        // Desenvolvimento Inicial
-        desenvolvimentoInicial: {
-            gestacaoParto: data.desenvolvimentoInicial.gestacaoParto,
-            neuropsicomotor: data.desenvolvimentoInicial.neuropsicomotor,
-            falaLinguagem: data.desenvolvimentoInicial.falaLinguagem,
-        },
-        
-        // Atividades de Vida Diária
-        atividadesVidaDiaria: {
-            desfralde: data.atividadesVidaDiaria.desfralde,
-            sono: data.atividadesVidaDiaria.sono,
-            habitosHigiene: data.atividadesVidaDiaria.habitosHigiene,
-            alimentacao: data.atividadesVidaDiaria.alimentacao,
-        },
-        
-        // Social e Acadêmico
-        socialAcademico: {
-            desenvolvimentoSocial: data.socialAcademico.desenvolvimentoSocial,
-            desenvolvimentoAcademico: data.socialAcademico.desenvolvimentoAcademico,
-        },
-        
-        // Comportamento
-        comportamento: {
-            estereotipiasRituais: data.comportamento.estereotipiasRituais,
-            problemasComportamento: data.comportamento.problemasComportamento,
-        },
-        
-        // Finalização
-        finalizacao: {
-            outrasInformacoesRelevantes: data.finalizacao.outrasInformacoesRelevantes || null,
-            observacoesImpressoesTerapeuta: data.finalizacao.observacoesImpressoesTerapeuta || null,
-            expectativasFamilia: data.finalizacao.expectativasFamilia || null,
-        },
-    };
-}
-
-/**
- * Transforma dados do backend para o formato do frontend
- */
-export function transformFromBackendFormat(backendData: Record<string, unknown>): Anamnese {
-    // TODO: Implementar transformação inversa quando backend definir formato
-    return backendData as unknown as Anamnese;
-}
-
 // ============================================
 // MOCK SERVICE
 // ============================================
@@ -294,8 +184,6 @@ async function apiCriarAnamnese(data: Anamnese): Promise<AnamneseResponse> {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
         });
-
-        console.log(data)
         
         const text = await res.text();
         const responseData = text ? JSON.parse(text) : null;

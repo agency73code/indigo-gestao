@@ -6,5 +6,6 @@ import * as AnamneseController from '../controllers/anamnese.controller.js';
 const router: ExpressRouter = Router();
 
 router.post('/', auth, AnamneseController.create);
+router.get('/', auth, AnamneseController.list);
 
 export default router;

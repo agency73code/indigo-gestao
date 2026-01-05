@@ -306,7 +306,7 @@ model anamnese {
 
 model anamnese_queixa_diagnostico {
   anamnese_id Int      @id
-  anamnese    anamnese @relation("anamnese_queixa_diagnostico", fields: [anamnese_id], references: [id])
+  anamnese    anamnese @relation("anamnese_queixa_diagnostico", fields: [anamnese_id], references: [id], onDelete: Cascade)
 
   queixa_principal            String
   diagnostico_previo          String?
@@ -393,7 +393,7 @@ model anamnese_terapia_previa {
 
 model anamnese_contexto_familiar_rotina {
   anamnese_id Int      @id
-  anamnese    anamnese @relation("anamnese_contexto_familiar_rotina", fields: [anamnese_id], references: [id])
+  anamnese    anamnese @relation("anamnese_contexto_familiar_rotina", fields: [anamnese_id], references: [id], onDelete: Cascade)
 
   historicos_familiares anamnese_historico_familiar[]
   atividades_rotina     anamnese_atividade_rotina[]
@@ -429,7 +429,7 @@ model anamnese_atividade_rotina {
 
 model anamnese_desenvolvimento_inicial {
   anamnese_id Int      @id
-  anamnese    anamnese @relation("anamnese_desenvolvimento_inicial", fields: [anamnese_id], references: [id])
+  anamnese    anamnese @relation("anamnese_desenvolvimento_inicial", fields: [anamnese_id], references: [id], onDelete: Cascade)
 
   // gestação / parto
   tipo_parto      String // "natural" | "cesarea"
@@ -526,7 +526,7 @@ model anamnese_desenvolvimento_inicial {
 
 model anamnese_atividades_vida_diaria {
   anamnese_id Int      @id
-  anamnese    anamnese @relation("anamnese_atividades_vida_diaria", fields: [anamnese_id], references: [id])
+  anamnese    anamnese @relation("anamnese_atividades_vida_diaria", fields: [anamnese_id], references: [id], onDelete: Cascade)
 
   // desfralde
   desfralde_diurno_urina_anos           String?
@@ -598,7 +598,7 @@ model anamnese_atividades_vida_diaria {
 
 model anamnese_social_academico {
   anamnese_id Int      @id
-  anamnese    anamnese @relation("anamnese_social_academico", fields: [anamnese_id], references: [id])
+  anamnese    anamnese @relation("anamnese_social_academico", fields: [anamnese_id], references: [id], onDelete: Cascade)
 
   // DESENVOLVIMENTO SOCIAL
   possui_amigos_mesma_idade_escola      Boolean?
@@ -645,7 +645,7 @@ model anamnese_social_academico {
 
 model anamnese_comportamento {
   anamnese_id Int      @id
-  anamnese    anamnese @relation("anamnese_comportamento", fields: [anamnese_id], references: [id])
+  anamnese    anamnese @relation("anamnese_comportamento", fields: [anamnese_id], references: [id], onDelete: Cascade)
 
   // ESTEREOTIPIAS / RITUAIS
   balanca_maos_lado_corpo_ou_frente   Boolean?
@@ -680,7 +680,7 @@ model anamnese_comportamento {
 
 model anamnese_finalizacao {
   anamnese_id Int      @id
-  anamnese    anamnese @relation("anamnese_finalizacao", fields: [anamnese_id], references: [id])
+  anamnese    anamnese @relation("anamnese_finalizacao", fields: [anamnese_id], references: [id], onDelete: Cascade)
 
   outras_informacoes_relevantes    String?
   observacoes_impressoes_terapeuta String?

@@ -1,7 +1,14 @@
+import type { Prisma } from '@prisma/client';
 import { prisma } from '../../config/database.js';
 import type { AnamnesePayload } from '../../schemas/anamnese.schema.js';
+import { ACCESS_LEVELS } from '../../utils/accessLevels.js';
+import { getVisibilityScope } from '../../utils/visibilityFilter.js';
+import type { AnamneseListFilters, AnamneseListItem, AnamneseListResult } from './anamnese.types.js';
+import { AppError } from '../../errors/AppError.js';
 
 type SimNao = 'sim' | 'nao' | null | undefined;
+
+const MANAGER_LEVEL = ACCESS_LEVELS['gerente'] ?? 5;
 
 function mapSimNao(value: SimNao): boolean | null {
     if (value === 'sim') return true;
@@ -416,4 +423,164 @@ export async function create(payload: AnamnesePayload) {
             },
         }
     })
+}
+
+function buildAnamneseWhere(
+    filters: AnamneseListFilters,
+    visibility: Awaited<ReturnType<typeof getVisibilityScope>>,
+): Prisma.anamneseWhereInput {
+    const where: Prisma.anamneseWhereInput = {};
+
+    if (filters.q) {
+        where.OR = [
+            { cliente: { nome: { contains: filters.q } } },
+            { cliente: { cpf: { contains: filters.q } } },
+            {
+                cliente: {
+                    cuidadores: {
+                        some: {
+                            OR: [
+                                { nome: { contains: filters.q } },
+                                { telefone: { contains: filters.q } },
+                                { cpf: { contains: filters.q } },
+                            ],
+                        },
+                    },
+                },
+            },
+            { terapeuta: { nome: { contains: filters.q } } },
+        ];
+    }
+
+    if (visibility.scope === 'partial') {
+        where.terapeuta_id = { in: visibility.therapistIds };
+    }
+
+    if (visibility.maxAccessLevel < MANAGER_LEVEL) {
+        where.cliente = {
+            status: 'ativo',
+        } as Prisma.clienteWhereInput;
+    }
+
+    return where;
+}
+
+export async function list(
+    therapistId: string,
+    filters: AnamneseListFilters = {},
+): Promise<AnamneseListResult> {
+    if (!therapistId) {
+        throw new AppError('REQUIRED_THERAPIST_ID', 'ID do terapeuta é obrigatório.', 400);
+    }
+
+    const visibility = await getVisibilityScope(therapistId);
+
+    const page = Math.max(filters.page ?? 1, 1);
+    const pageSize = Math.max(filters.pageSize ?? 10, 1);
+    const [sortField = 'clienteNome', sortDirection = 'asc'] = (
+        filters.sort ?? 'clienteNome_asc'
+    ).split('_') as [string, 'asc' | 'desc'];
+
+    if (visibility.scope === 'none') {
+        return {
+            items: [],
+            total: 0,
+            page,
+            pageSize,
+            totalPages: 0
+        };
+    }
+
+    const sortOrder = sortDirection === 'desc' ? 'desc' : 'asc';
+    let orderBy: Prisma.anamneseOrderByWithRelationInput;
+
+    switch (sortField) {
+        case 'dataEntrevista':
+            orderBy = { data_entrevista: sortOrder };
+            break;
+        case 'profissionalNome':
+            orderBy = { terapeuta: { nome: sortOrder } };
+            break;
+        case 'status':
+            orderBy = { cliente: { status: sortOrder } };
+            break;
+        case 'clienteNome':
+        default:
+            orderBy = { cliente: { nome: sortOrder } };
+            break;
+    }
+
+    const where = buildAnamneseWhere(filters, visibility);
+
+    const [total, records] = await prisma.$transaction([
+        prisma.anamnese.count({ where }),
+        prisma.anamnese.findMany({
+            where,
+            orderBy,
+            skip: (page - 1) * pageSize,
+            take: pageSize,
+            select: {
+                id: true,
+                data_entrevista: true,
+                cliente: {
+                    select: {
+                        id: true,
+                        nome: true,
+                        status: true,
+                        dataNascimento: true,
+                        cuidadores: {
+                            select: {
+                                nome: true,
+                                telefone: true,
+                            },
+                            take: 1,
+                        },
+                        arquivos: {
+                            select: {
+                                tipo: true,
+                                arquivo_id: true,
+                            },
+                        },
+                    },
+                },
+                terapeuta: {
+                    select: {
+                        nome: true,
+                    },
+                },
+            },
+        }),
+    ]);
+
+    const items = records.map((record) => {
+        const avatar = record.cliente.arquivos.find((file) => file.tipo === 'fotoPerfil');
+        const cuidador = record.cliente.cuidadores[0];
+        const status: AnamneseListItem['status'] =
+            record.cliente.status?.toLowerCase() === 'ativo' ? 'ATIVO' : 'INATIVO';
+
+        return {
+            id: String(record.id),
+            clienteId: record.cliente.id,
+            clienteNome: record.cliente.nome ?? '',
+            clienteAvatarUrl: avatar?.arquivo_id
+                ? `/api/arquivos/${encodeURIComponent(avatar.arquivo_id)}/view`
+                : undefined,
+            telefone: cuidador?.telefone ?? undefined,
+            dataNascimento: record.cliente.dataNascimento
+                ? record.cliente.dataNascimento.toISOString()
+                : undefined,
+            responsavel: cuidador?.nome ?? undefined,
+            dataEntrevista: record.data_entrevista.toISOString(),
+            profissionalNome: record.terapeuta.nome ?? '',
+            status,
+        };
+    });
+
+    return {
+        items,
+        total,
+        page,
+        pageSize,
+        totalPages: Math.ceil(total / pageSize),
+    };
 }
