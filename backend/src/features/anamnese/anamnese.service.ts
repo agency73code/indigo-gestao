@@ -17,9 +17,9 @@ function mapSimNao(value: SimNao): boolean | null {
 }
 
 function mapMarco(marco?: {
-    meses?: string | undefined;
-    naoRealiza?: boolean | undefined;
-    naoSoubeInformar?: boolean | undefined;
+    meses?: string | null | undefined;
+    naoRealiza?: boolean | null | undefined;
+    naoSoubeInformar?: boolean | null | undefined;
 }) {
     return {
         months: marco?.meses ?? null,
@@ -55,6 +55,19 @@ export async function create(payload: AnamnesePayload) {
     const firstWords = mapMarco(initialDevelopment.falaLinguagem.primeirasPalavras);
     const firstSentences = mapMarco(initialDevelopment.falaLinguagem.primeirasFrases);
     const pointing = mapMarco(initialDevelopment.falaLinguagem.apontouParaFazerPedidos);
+
+    const existingAnamnesesCount = await prisma.anamnese.count({
+        where: {
+            cliente_id: header.clienteId
+        }
+    })
+
+    if (existingAnamnesesCount > 0) {
+        throw new AppError(
+            'ANAMNESE_ALREADY_EXISTS',
+            'Já existe uma anamnese cadastrada para este cliente com este terapeuta.'
+        );
+    }
 
     return prisma.anamnese.create({
         data: {

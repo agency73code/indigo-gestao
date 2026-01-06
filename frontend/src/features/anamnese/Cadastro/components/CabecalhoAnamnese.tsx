@@ -6,13 +6,14 @@ import PatientSelector from '@/features/programas/consultar-programas/components
 import type { Patient } from '@/features/programas/consultar-programas/types';
 import type { AnamnseeCabecalho } from '../types/anamnese.types';
 import { useAuth } from '@/features/auth/hooks/useAuth';
-import { 
-    buscarTerapeuta,
+import {
     buscarCliente, 
     calcularIdade, 
     formatarData,
 } from '../services/anamnese-cadastro.service';
-import { correctFormatDate } from '@/lib/api';
+import { buscarTerapeutaPorId, correctFormatDate } from '@/lib/api';
+import { listAnamneses } from '../../Tabela';
+import { toast } from 'sonner';
 
 // Mapa de relações para exibição
 const RELACAO_LABELS: Record<string, string> = {
@@ -55,11 +56,11 @@ export default function CabecalhoAnamnese({ data, onChange, fieldErrors = {} }: 
             }
 
             try {
-                const terapeuta = await buscarTerapeuta(user.id);
+                const terapeuta = await buscarTerapeutaPorId(user.id);
                 onChange({
                     ...data,
                     dataEntrevista: data.dataEntrevista || getDataHoje(),
-                    profissionalId: terapeuta.id,
+                    profissionalId: terapeuta.id!,
                     profissionalNome: terapeuta.nome,
                 });
             } catch (error) {
@@ -80,6 +81,25 @@ export default function CabecalhoAnamnese({ data, onChange, fieldErrors = {} }: 
 
     // Quando seleciona um cliente pelo PatientSelector
     const handlePatientSelect = async (patient: Patient) => {
+        try {
+            const response = await listAnamneses({
+                q: patient.name,
+                page: 1,
+                pageSize: 100,
+            });
+
+            const jaPossuiAnamnese = response.items.some(
+                (anamnese) => anamnese.clienteId === patient.id
+            );
+
+            if (jaPossuiAnamnese) {
+                toast.error('Cliente já possui uma anamnese. Não é possível criar uma nova.');
+                return;
+            }
+        } catch (error) {
+            console.error('Erro ao verificar anamnese existente:', error);
+        }
+
         setSelectedPatient(patient);
         
         try {

@@ -132,7 +132,7 @@ export async function listAnamneses(
             totalPages: payload.totalPages ?? Math.ceil((payload.total ?? 0) / (payload.pageSize ?? pageSize)),
         };
     }
-    console.log('teste')
+
     return {
         items: [],
         total: 0,
