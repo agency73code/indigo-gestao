@@ -82,19 +82,7 @@ export default function HubProgramasPage() {
                                                     <IconComponent className={`h-5 w-5 md:h-7 md:w-7 ${iconColors[index]}`} />
                                                 </div>
                                             )}
-                                            {isInProgress && (
-                                                <span 
-                                                    className="text-[10px] md:text-[14px] font-normal inline-block px-2 py-0.5 md:px-3 md:py-1" 
-                                                    style={{ 
-                                                        fontFamily: 'Inter, sans-serif', 
-                                                        backgroundColor: '#E3F2FD', 
-                                                        color: '#4A6A8F',
-                                                        borderRadius: '24px'
-                                                    }}
-                                                >
-                                                    Quase pronto
-                                                </span>
-                                            )}
+                                            
                                             {isDisabled && (
                                                 <span 
                                                     className="text-[10px] md:text-[14px] font-normal inline-block px-2 py-0.5 md:px-3 md:py-1" 

@@ -1,5 +1,5 @@
 import { buildApiUrl } from '@/lib/api';
-import type { Sessao, ResumoSessao, ProgramDetail } from './types';
+import type { Sessao, ResumoSessao, ProgramDetail, DateRange } from './types';
 import type { AreaType } from '@/contexts/AreaContext';
 
 /**
@@ -9,7 +9,7 @@ export interface SessionListFilters {
   /** Termo de busca */
   q?: string;
   /** Período: 'all' | 'last7' | 'last30' | 'year' */
-  dateRange?: string;
+  dateRange?: DateRange;
   /** Área do programa (fonoaudiologia, terapia-ocupacional, etc.) */
   area?: AreaType;
   /** ID do programa */
@@ -74,10 +74,11 @@ export async function listSessionsByPatient(
     programId,
     therapistId,
     sort,
+    page,
+    pageSize,
     stimulusId,
     periodStart,
     periodEnd,
-    pageSize,
   });
 
   const res = await fetch(url, {
@@ -87,17 +88,16 @@ export async function listSessionsByPatient(
   });
 
   if (!res.ok) throw new Error(`Erro ao carregar sessões: ${res.status}`);
-  const response = await res.json();
   
-  // Extrair array do campo 'data' se existir
-  const data = response?.data ?? response;
-
+  const response = await res.json();
+  const { items, total, totalPages } = response;
+  
   return {
-    items: data,
-    total: data.length,
+    items,
+    total,
     page,
     pageSize,
-    totalPages: 0,
+    totalPages,
   };
 }
 

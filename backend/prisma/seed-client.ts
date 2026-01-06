@@ -209,6 +209,7 @@ async function seedCliente(i: number, senha: string) {
                         escolaridade,
                         telefone: responsible.phone,
                         email: responsible.email,
+                        dataNascimento: responsible.birthDate,
 
                         endereco: {
                             connect: { id: endereco.id },

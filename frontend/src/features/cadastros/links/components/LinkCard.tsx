@@ -65,8 +65,12 @@ function getTherapistRole(therapist: any): string | null {
 }
 
 // Helper para calcular idade a partir da data de nascimento
-function calculateAge(birthDate: string): number {
+function calculateAge(birthDate?: string | null): number | null {
+    if (!birthDate) return null;
+
     const birth = new Date(birthDate);
+    if (Number.isNaN(birth.getTime())) return null;
+
     const today = new Date();
     let age = today.getFullYear() - birth.getFullYear();
     const monthDiff = today.getMonth() - birth.getMonth();
@@ -175,14 +179,35 @@ function renderPatientCard(
     const hasEndedLinks = endedLinks.length > 0;
     const hasArchivedLinks = archivedLinks.length > 0;
 
-    const responsibleLink = activeLinks.find((link) => link.role === 'responsible');
+    const responsibleLinks = activeLinks.filter(
+        (link) => link.role === 'responsible'
+    );
     const coTherapistLinks = activeLinks.filter((link) => link.role === 'co');
 
     // Data de início do vínculo responsável ou mais antigo
-    const startDate =
-        responsibleLink?.startDate ||
-        links.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())[0]
-            ?.startDate;
+    const startDate = (() => {
+        const sortedResponsible = responsibleLinks
+            .filter((l) => l.startDate)
+            .sort(
+                (a, b) =>
+                    new Date(a.startDate!).getTime() -
+                    new Date(b.startDate!).getTime(),
+            );
+
+        if (sortedResponsible.length > 0) {
+            return sortedResponsible[0].startDate;
+        }
+
+        const sortedAll = [...links]
+            .filter((l) => l.startDate)
+            .sort(
+                (a, b) =>
+                    new Date(a.startDate!).getTime() -
+                    new Date(b.startDate!).getTime(),
+            );
+
+        return sortedAll[0]?.startDate;
+    })();
 
     // Status geral do paciente
     const overallStatus = hasActiveLinks
@@ -221,7 +246,9 @@ function renderPatientCard(
                             <CardTitleHub className="text-base truncate">
                                 {patient.nome}
                             </CardTitleHub>
-                            <p className="text-sm text-muted-foreground">{age} anos</p>
+                            {age !== null && (
+                                <p className="text-sm text-muted-foreground">{age} anos</p>
+                            )}
                         </div>
                     </div>
 
@@ -305,15 +332,16 @@ function renderPatientCard(
                                 Terapeuta(s) Ativo(s):
                             </CardTitleHub>
                             <div className="space-y-2">
-                                {responsibleLink && (
+                                {responsibleLinks.map((link) => (
                                     <TherapistChip
-                                        link={responsibleLink}
+                                        key={link.id}
+                                        link={link}
                                         therapists={therapists}
                                         onEndLink={onEndLink}
                                         onArchive={onArchive}
                                         onReactivate={onReactivate}
                                     />
-                                )}
+                                ))}
 
                                 {coTherapistLinks.map((link) => (
                                     <TherapistChip
@@ -578,7 +606,7 @@ function renderTherapistCard(
                                 {therapist.nome}
                             </CardTitleHub>
                             <p className="text-sm text-muted-foreground">
-                                {therapist.especialidade || 'Terapeuta'}
+                                {therapist.dadosProfissionais?.[0]?.areaAtuacao || 'Terapeuta'}
                             </p>
                         </div>
                     </div>

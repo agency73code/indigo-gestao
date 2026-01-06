@@ -6,6 +6,6 @@ export const ACCESS_LEVELS: Record<string, number> = {
     'coordenador aba': 3,
     'terapeuta supervisor': 4,
     'supervisor aba': 4,
-    gerente: 5,
+    'gerente': 5,
     'coordenador executivo': 6,
 };

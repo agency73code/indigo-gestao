@@ -35,14 +35,30 @@ interface MusiPerformanceChartProps {
     className?: string;
 }
 
+/**
+ * ATENÇÃO — MAPEAMENTO LEGADO CONSCIENTE
+ *
+ * O backend fornece:
+ * - ajuda = percentual de "Desempenhou com ajuda"
+ *
+ * Este gráfico legado utiliza o campo `independencia` para representar
+ * "Desempenhou com ajuda". Por esse motivo, o valor de `ajuda` é
+ * propositalmente atribuído a `independencia` aqui.
+ *
+ * Isso NÃO representa independência clínica.
+ * NÃO alterar este mapeamento sem revisar todos os gráficos dependentes.
+ *
+ * Este ajuste é intencional para manter compatibilidade visual com o frontend atual.
+ */
 const addErrorData = (data: SerieLinha[]) => {
     if (!Array.isArray(data)) return [];
     return data.map((item) => {
-        const totalDesempenho = (item.acerto ?? 0) + (item.independencia ?? 0);
-        const erro = Math.max(0, 100 - totalDesempenho);
+        const ajuda = item.ajuda ?? 0;
+        const erro = item.erro ?? 0;
 
         return {
             ...item,
+            independencia: ajuda,
             erro,
         };
     });

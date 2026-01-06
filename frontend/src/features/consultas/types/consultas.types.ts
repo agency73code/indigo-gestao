@@ -56,6 +56,8 @@ export interface Patient {
     responsavel?: string;
     status: 'ATIVO' | 'INATIVO';
     avatarUrl?: string;
+    /** Áreas de atendimento do cliente (derivadas dos vínculos com terapeutas) */
+    areasAtendimento?: string[];
     pessoa: {
         cpf?: string;
         dataNascimento?: string;
@@ -131,6 +133,7 @@ export type CaregiverForm = {
     descricaoRelacao: string;
     nome: string;
     cpf: string;
+    dataNascimento?: string;
     profissao: string;
     escolaridade: string;
     telefone: string;

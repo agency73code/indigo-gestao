@@ -11,6 +11,7 @@ import metadataRoutes from './metadata.routes.js';
 import genericsRoutes from './generics.routes.js';
 import reportsRoutes from './reports.routes.js';
 import aiRoutes from '../features/ai/ai.routes.js';
+import anamneseRoutes from './anamnese.routes.js';
 
 const router: ExpressRouter = Router();
 
@@ -25,5 +26,6 @@ router.use('/links', linksRoutes);
 router.use('/metadata', metadataRoutes);
 router.use('/relatorios', reportsRoutes);
 router.use('/ai', aiRoutes);
+router.use('/anamneses', anamneseRoutes);
 
 export default router;

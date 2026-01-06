@@ -36,7 +36,7 @@ const addErrorData = (data: SerieLinha[]) => {
     if (!Array.isArray(data)) return [];
     return data.map((item) => ({
         ...item,
-        erro: 100 - item.acerto, // Erro = 100% - Acerto%
+        erro: item.erro ?? 0,
     }));
 };
 

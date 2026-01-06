@@ -1,4 +1,4 @@
-import { ChevronRight, type LucideIcon } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 
@@ -16,6 +16,11 @@ import {
 import type { Actions, Subjects } from '@/features/auth/abilities/ability';
 import { RequireAbility } from '@/features/auth/abilities/RequireAbility';
 import { useArea } from '@/contexts/AreaContext';
+import type { AnimatedIconComponent } from '@/components/sidebar/animated-icons';
+import type { LucideIcon } from 'lucide-react';
+
+// Tipo que aceita tanto LucideIcon quanto AnimatedIconComponent
+type SidebarIconType = LucideIcon | AnimatedIconComponent;
 
 export function NavMain({
     items,
@@ -23,7 +28,7 @@ export function NavMain({
     items: {
         title: string;
         url: string;
-        icon: LucideIcon;
+        icon: SidebarIconType;
         isActive?: boolean;
         ability?: { action: Actions; subject: Subjects };
         items?: {
@@ -176,8 +181,8 @@ export function NavMain({
                                                 }
                                             }}
                                         >
-                                            <div className="flex items-center justify-center h-8 w-8 rounded-full bg-primary shrink-0">
-                                                <item.icon className="h-4 w-4 text-background" />
+                                            <div className="flex items-center justify-center h-8 w-8 rounded-full bg-primary shrink-0 [&_svg]:text-background [&_svg]:h-4 [&_svg]:w-4">
+                                                <item.icon size={16} className="text-background" />
                                             </div>
                                             <span style={{ fontFamily: 'Sora, sans-serif', fontWeight: 300 }}>
                                                 {item.title}

@@ -25,6 +25,7 @@ router.patch('/programs/:programId', OlpController.updateProgram);
 
 // TO
 router.post('/to/programs/:programId/sessions', upload.any(), OlpController.createAreaSession);
+router.post('/to/sessions/calculateOccupationalKpis', OlpController.occupationalKpis);
 
 // Physiotherapy
 router.post('/physiotherapy/programs/:programId/sessions', upload.any(), OlpController.createAreaSession);

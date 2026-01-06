@@ -64,6 +64,20 @@ export type SessaoFiltersState = {
   sort: 'date-desc' | 'date-asc' | 'accuracy-desc' | 'accuracy-asc';
 };
 
+/* 
+  Se for adicionar mais um tipo de DateRange favor avisar, pq a query do back vai tratar somente esses até eu fazer adição manual,
+  se certificar de que a nova adição é realmente necessária, por exemplo: last30 e 30d são dados redundantes, não removi um ou outro,
+  pela quantidade de arquivos que pede ambos.
+*/
+export type DateRange =
+  | 'custom'
+  | '30d'
+  | '90d'
+  | 'all'
+  | 'year'
+  | 'last30'
+  | 'last7';
+
 // Reuse existing shared types
 export type { Patient } from '@/features/programas/consultar-programas/types';
 export type { ProgramDetail } from '@/features/programas/detalhe-ocp/types';

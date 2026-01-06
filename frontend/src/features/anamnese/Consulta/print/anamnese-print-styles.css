@@ -1,0 +1,245 @@
+/**
+ * Estilos de impressão para Anamnese
+ * Otimizado para exportação em PDF com layout limpo estilo Google Forms
+ * IMPORTANTE: Estes estilos só se aplicam quando existe #anamnese-print-container na página
+ */
+
+@media print {
+    /* Reset geral para impressão - APENAS quando anamnese está presente */
+    body:has(#anamnese-print-container) {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        overflow: visible !important;
+        font-size: 12px;
+        background: white !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* Esconder elementos da tela APENAS quando anamnese está presente */
+    body:has(#anamnese-print-container) > *:not(#anamnese-print-container) {
+        display: none !important;
+        visibility: hidden !important;
+    }
+
+    /* Mostrar APENAS o container de impressão da anamnese */
+    #anamnese-print-container,
+    body > #anamnese-print-container {
+        display: block !important;
+        visibility: visible !important;
+        position: static !important;
+        left: auto !important;
+        top: auto !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0.5in !important;
+        background: white !important;
+        z-index: 999999 !important;
+    }
+
+    /* Garantir que TODOS os elementos filhos apareçam */
+    #anamnese-print-container *,
+    [data-anamnese-print-root] * {
+        visibility: visible !important;
+    }
+
+    /* Preservar flex layouts */
+    #anamnese-print-container .flex,
+    [data-anamnese-print-root] .flex {
+        display: flex !important;
+    }
+
+    /* Preservar grid layouts */
+    #anamnese-print-container .grid,
+    [data-anamnese-print-root] .grid {
+        display: grid !important;
+    }
+
+    /* Header específico */
+    #anamnese-print-container header,
+    #anamnese-print-container [data-print-header],
+    [data-anamnese-print-root] header,
+    [data-anamnese-print-root] [data-print-header] {
+        display: block !important;
+        visibility: visible !important;
+        margin-bottom: 24px !important;
+        page-break-after: avoid !important;
+        break-after: avoid !important;
+    }
+
+    /* Garantir que imagens apareçam */
+    #anamnese-print-container img,
+    [data-anamnese-print-root] img {
+        display: inline-block !important;
+        visibility: visible !important;
+        max-width: 100px !important;
+        height: auto !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    /* Esconder elementos de tela */
+    .no-print,
+    [data-screen-only] {
+        display: none !important;
+    }
+
+    /* Evitar quebra de página dentro de seções */
+    .page-break-inside-avoid {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+
+    /* Forçar quebra de página antes de seção */
+    .page-break-before {
+        page-break-before: always;
+        break-before: page;
+    }
+
+    /* Headers de seção */
+    [data-anamnese-print-root] h2 {
+        font-size: 14px !important;
+        color: #395482 !important;
+        border-bottom: 1px solid #395482  !important;
+        padding-bottom: 4px !important;
+        margin-bottom: 12px !important;
+    }
+
+    [data-anamnese-print-root] h3 {
+        font-size: 12px !important;
+        color: #374151 !important;
+    }
+
+    /* Campos de texto */
+    [data-anamnese-print-root] .text-sm {
+        font-size: 11px !important;
+    }
+
+    [data-anamnese-print-root] .text-xs {
+        font-size: 10px !important;
+    }
+
+    /* Background de campos */
+    [data-anamnese-print-root] .bg-gray-50 {
+        background-color: #f9fafb !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* Bordas */
+    [data-anamnese-print-root] .border {
+        border: 1px solid #e5e7eb !important;
+    }
+
+    [data-anamnese-print-root] .border-t {
+        border-top: 1px solid #e5e7eb !important;
+    }
+
+    [data-anamnese-print-root] .border-b {
+        border-bottom: 1px solid #e5e7eb !important;
+    }
+
+    [data-anamnese-print-root] .border-l-2 {
+        border-left: 1px solid #e5e7eb !important;
+    }
+
+    /* Rodapé */
+    [data-anamnese-print-root] footer {
+        page-break-inside: avoid;
+        break-inside: avoid;
+        margin-top: auto;
+    }
+
+    /* Grid de campos */
+    [data-anamnese-print-root] .grid {
+        display: grid !important;
+    }
+
+    [data-anamnese-print-root] .grid-cols-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    /* Logo */
+    [data-anamnese-print-root] img {
+        display: block !important;
+        visibility: visible !important;
+        max-width: 120px !important;
+        min-width: 80px !important;
+        height: auto !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    /* Cores primárias */
+    [data-anamnese-print-root] .text-primary {
+        color: #395482 !important;
+    }
+
+    [data-anamnese-print-root] .border-primary {
+        border-color: #395482 !important;
+    }
+
+    /* Espaçamentos compactos para impressão */
+    [data-anamnese-print-root] .mb-6 {
+        margin-bottom: 16px !important;
+    }
+
+    [data-anamnese-print-root] .mb-4 {
+        margin-bottom: 12px !important;
+    }
+
+    [data-anamnese-print-root] .py-2 {
+        padding-top: 4px !important;
+        padding-bottom: 4px !important;
+    }
+
+    [data-anamnese-print-root] .p-3 {
+        padding: 8px !important;
+    }
+
+    /* Remover max-width para ocupar largura total */
+    [data-anamnese-print-root] .max-w-4xl {
+        max-width: 100% !important;
+    }
+
+    /* Garantir que flexbox funcione */
+    [data-anamnese-print-root] .flex {
+        display: flex !important;
+    }
+
+    /* Garantir espaçamento */
+    [data-anamnese-print-root] .space-y-2 > * + * {
+        margin-top: 0.5rem !important;
+    }
+
+    [data-anamnese-print-root] .space-y-3 > * + * {
+        margin-top: 0.75rem !important;
+    }
+
+    [data-anamnese-print-root] .space-y-6 > * + * {
+        margin-top: 1.5rem !important;
+    }
+
+    [data-anamnese-print-root] .gap-2 {
+        gap: 0.5rem !important;
+    }
+
+    [data-anamnese-print-root] .gap-3 {
+        gap: 0.75rem !important;
+    }
+
+    [data-anamnese-print-root] .gap-4 {
+        gap: 1rem !important;
+    }
+}
+
+/* Estilos de visualização na tela */
+@media screen {
+    #anamnese-print-container {
+        position: fixed;
+        left: -9999px;
+        top: 0;
+        z-index: -1;
+    }
+}

@@ -31,6 +31,9 @@ export interface DBClient {
     status: string | null;
     cuidadores: DBCarregiver[];
     enderecos: DBClientAddress[];
+    arquivos?: {
+        arquivo_id: string | null;
+    }[];
 }
 
 export interface DBAreaAtuacao {
@@ -96,6 +99,9 @@ export interface DBTherapist {
     registro_profissional: DBProfessionalRegistration[];
     formacao: DBFormation | null;
     pessoa_juridica: DBLegalPerson | null;
+    arquivos?: {
+        arquivo_id: string | null;
+    }[];
 }
 
 export interface DBLink {
@@ -184,3 +190,54 @@ export type LinkFilters = {
     orderBy?: 'recent' | 'oldest';
     q?: string;
 };
+
+export interface DBClientOption {
+    id: string;
+    nome: string | null;
+    arquivos?: Array<{ arquivo_id: string | null }> | null;
+}
+
+export interface ClientOptionDTO {
+    id: string;
+    nome: string;
+    avatarUrl: string | null;
+}
+
+export interface ClientListDTO {
+    id: string;
+    nome: string;
+    avatarUrl: string | null;
+    dataNascimento: string | null | undefined;
+    responsavelNome?: string | null;
+}
+
+export type TherapistRecord = {
+    id: string;
+    nome: string;
+    arquivos: Array<{ arquivo_id:  string | null }>;
+    registro_profissional: Array<{
+        cargo: { nome: string | null } | null;
+        area_atuacao: { nome: string | null } | null;
+        numero_conselho: string | null;
+    }>
+};
+
+export interface TherapistProfessionalData {
+    cargo: string;
+    areaAtuacao: string;
+    numeroConselho?: string | null;
+}
+
+export interface TherapistSelectDTO {
+    id: string;
+    nome: string;
+    avatarUrl: string | null;
+    dadosProfissionais: [Pick<TherapistProfessionalData, 'cargo' | 'areaAtuacao'>];
+}
+
+export interface TherapistListDTO {
+    id: string;
+    nome: string;
+    avatarUrl: string | null;
+    dadosProfissionais: [TherapistProfessionalData];
+}

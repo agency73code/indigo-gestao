@@ -12,6 +12,7 @@ import { ACCESS_LEVELS } from '../../utils/accessLevels.js';
 
 const MANAGER_LEVEL = ACCESS_LEVELS['gerente'] ?? 5;
 const DAY = 1000 * 60 * 60 * 24;
+const DAYS = (n: number) => n * DAY;
 
 export async function createProgram(data: OcpType.CreateProgramPayload) {
     return await program(data);
@@ -242,11 +243,12 @@ export async function listProgramsByClientId(
     page = 1,
     pageSize = 10,
     area: string,
-    status: 'active' | 'archived',
+    status: 'all' | 'active' | 'archived',
     q?: string,
     sort: 'recent' | 'alphabetic' = 'recent',
 ) {
-    const translateResult = status ? status === 'active' ? 'ativado' : 'archived' : null;
+    const translateResult = status === 'all' ? null : status === 'active' ? 'ativado' : 'arquivado';
+
     // cria o objeto base
     const where: Prisma.ocpWhereInput = {
         cliente_id: clientId,
@@ -263,8 +265,8 @@ export async function listProgramsByClientId(
             { objetivo_descricao: { contains: q } },
         ];
     }
-
-    return await prisma.ocp.findMany({
+    
+    const result = await prisma.ocp.findMany({
         where,
         select: {
             id: true,
@@ -282,22 +284,26 @@ export async function listProgramsByClientId(
         skip: (page - 1) * pageSize,
         take: pageSize,
     });
+
+    return result;
 }
 
 export async function listSessionsByClient(filters: OcpType.ListSessionsFilters) {
     const {
         clientId,
         area,
+        periodMode,
+        sort,
+        page,
+        pageSize,
+        q,
         programId,
         therapistId,
-        sort,
         stimulusId,
-        periodMode,
         periodStart,
         periodEnd,
-        pageSize,
     } = filters;
-
+    console.log(area)
     const where: Prisma.sessaoWhereInput = {};
     const order = sort === 'date-asc' ? 'asc' : 'desc';
 
@@ -316,107 +322,129 @@ export async function listSessionsByClient(filters: OcpType.ListSessionsFilters)
         };
     }
 
-    if (periodMode) {
-        if (periodMode === '30d') {
-            where.data_criacao = { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) };
-        } else if (periodMode === '90d') {
-            where.data_criacao = { gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) };
-        } else if (periodMode === 'custom' && periodStart && periodEnd) {
-            const startDate = parseISO(periodStart);
-            const endDate = parseISO(periodEnd);
+    if (periodMode === 'all') {
+        // Nenhum filtro de data
+    } else if (periodMode === 'last7') {
+        where.data_criacao = { gte: new Date(Date.now() - DAYS(7)) }
+    } else if (periodMode === '30d' || periodMode === 'last30') {
+        where.data_criacao = { gte: new Date(Date.now() - DAYS(30)) };
+    } else if (periodMode === '90d') {
+        where.data_criacao = { gte: new Date(Date.now() - DAYS(90)) };
+    } else if (periodMode === 'year') {
+        where.data_criacao = { gte: new Date(Date.now() - DAYS(365)) };
+    } else if (periodMode === 'custom' && periodStart && periodEnd) {
+        const startDate = parseISO(periodStart);
+        const endDate = parseISO(periodEnd);
 
-            if (!Number.isNaN(startDate.getTime()) && !Number.isNaN(endDate.getTime())) {
-                where.data_criacao = {
-                    gte: startOfDay(startDate),
-                    lte: endOfDay(endDate),
-                };
-            }
+        if (!Number.isNaN(startDate.getTime()) && !Number.isNaN(endDate.getTime())) {
+            where.data_criacao = {
+                gte: startOfDay(startDate),
+                lte: endOfDay(endDate),
+            };
         }
     }
 
-    const sessions = await prisma.sessao.findMany({
-        where,
-        select: {
-            id: true,
-            cliente_id: true,
-            terapeuta_id: true,
-            data_criacao: true,
-            observacoes_sessao: true,
-            area: true,
-            ocp: {
-                select: {
-                    id: true,
-                    nome_programa: true,
-                    objetivo_programa: true,
-                    criado_em: true,
-                },
-            },
-            trials: {
-                select: {
-                    id: true,
-                    ordem: true,
-                    resultado: true,
-                    duracao_minutos: true,
-                    teve_desconforto: true,
-                    descricao_desconforto: true,
-                    teve_compensacao: true,
-                    descricao_compensacao: true,
-                    utilizou_carga: true,
-                    valor_carga: true,
-                    participacao: true,
-                    suporte: true,
-                    estimulosOcp: {
-                        select: {
-                            id: true,
-                            id_estimulo: true,
-                            nome: true,
-                        },
+    if (q) {
+        where.OR = [
+            { ocp: { objetivo_programa: { contains: q } } },
+            { ocp: { nome_programa: { contains: q } } },
+            { terapeuta: { nome: { contains: q } } },
+        ];
+    }
+
+    const [sessions, total] = await Promise.all([
+        prisma.sessao.findMany({
+            where,
+            select: {
+                id: true,
+                cliente_id: true,
+                terapeuta_id: true,
+                data_criacao: true,
+                observacoes_sessao: true,
+                area: true,
+                ocp: {
+                    select: {
+                        id: true,
+                        nome_programa: true,
+                        objetivo_programa: true,
+                        criado_em: true,
                     },
                 },
-                orderBy: { ordem: 'asc' },
-            },
-            arquivos: {
-                select: {
-                    id: true,
-                    nome: true,
-                    caminho: true,
-                    tamanho: true,
+                trials: {
+                    select: {
+                        id: true,
+                        ordem: true,
+                        resultado: true,
+                        duracao_minutos: true,
+                        teve_desconforto: true,
+                        descricao_desconforto: true,
+                        teve_compensacao: true,
+                        descricao_compensacao: true,
+                        utilizou_carga: true,
+                        valor_carga: true,
+                        participacao: true,
+                        suporte: true,
+                        estimulosOcp: {
+                            select: {
+                                id: true,
+                                id_estimulo: true,
+                                nome: true,
+                            },
+                        },
+                    },
+                    orderBy: { ordem: 'asc' },
+                },
+                arquivos: {
+                    select: {
+                        id: true,
+                        nome: true,
+                        caminho: true,
+                        tamanho: true,
+                    },
                 },
             },
-        },
-        take: pageSize ? Number(pageSize) : 10,
-        orderBy: { data_criacao: order },
-    });
+            skip: (page - 1) * pageSize,
+            take: pageSize,
+            orderBy: { data_criacao: order },
+        }),
+        prisma.sessao.count({ where }),   
+    ]);
 
     if (stimulusId) {
         sessions.forEach((session) => {
             session.trials = session.trials.filter(
-                (t) => t.estimulosOcp.id === Number(stimulusId),
+                (t) => t.estimulosOcp?.id === Number(stimulusId),
             );
         });
     }
 
-    if (sort === 'date-asc' || sort === 'date-desc') return sessions;
+    const sortedSessions =
+        sort === 'date-asc' || sort === 'date-desc'
+            ? sessions
+            : [...sessions].sort((a, b) => {
+                const accuracyA = calculateSessionIndependency(a);
+                const accuracyB = calculateSessionIndependency(b);
 
-    const direction = sort === 'accuracy-asc' ? 'asc' : 'desc';
+                if (accuracyA === null && accuracyB === null) {
+                    return b.data_criacao.getTime() - a.data_criacao.getTime();
+                }
 
-    return [...sessions].sort((a, b) => {
-        const accuracyA = calculateSessionIndependency(a);
-        const accuracyB = calculateSessionIndependency(b);
+                if (accuracyA === null) return 1;
+                if (accuracyB === null) return -1;
 
-        if (accuracyA === null && accuracyB === null) {
-            return b.data_criacao.getTime() - a.data_criacao.getTime();
-        }
+                if (accuracyA === accuracyB) {
+                    return b.data_criacao.getTime() - a.data_criacao.getTime();
+                }
 
-        if (accuracyA === null) return 1;
-        if (accuracyB === null) return -1;
+                return sort === 'accuracy-asc'
+                    ? accuracyA - accuracyB 
+                    : accuracyB - accuracyA;
+            });
 
-        if (accuracyA === accuracyB) {
-            return b.data_criacao.getTime() - a.data_criacao.getTime();
-        }
-
-        return direction === 'asc' ? accuracyA - accuracyB : accuracyB - accuracyA;
-    });
+    return {
+        items: sortedSessions,
+        total,
+    }
 }
 
 export async function getKpis(filtros: OcpType.KpisFilters) {
@@ -433,7 +461,7 @@ export async function getKpis(filtros: OcpType.KpisFilters) {
     const stimulusId = filtros.estimuloId ? Number(filtros.estimuloId) : undefined;
 
     if (stimulusId) {
-        where.trials = { some: { estimulos_ocp_id: stimulusId } };
+        where.trials = { some: { estimulosOcp: { id_estimulo: stimulusId } } };
     }
 
     // Períodos
@@ -460,7 +488,7 @@ export async function getKpis(filtros: OcpType.KpisFilters) {
     const sessions = await prisma.sessao.findMany({
         where,
         include: {
-            trials: stimulusId ? { where: { estimulos_ocp_id: stimulusId } } : true,
+            trials: stimulusId ? { where: { estimulosOcp: { id_estimulo: stimulusId } } } : true,
         },
     });
 

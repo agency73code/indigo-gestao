@@ -19,12 +19,11 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { Combobox } from '@/ui/combobox';
 import type { TerapeutaAvatar, TransferResponsibleDialogProps, TransferResponsibleInput } from '../types';
-import type { Terapeuta } from '../../types/cadastros.types';
 import { searchTherapists } from '../services/links.service';
 
 type ComboboxOption = { value: string; label: string };
 
-function buildActuationOptions(therapist: Terapeuta | null | undefined): ComboboxOption[] {
+function buildActuationOptions(therapist: TerapeutaAvatar | null | undefined): ComboboxOption[] {
     if (!therapist?.dadosProfissionais?.length) {
         return [];
     }
@@ -237,7 +236,7 @@ export default function TransferResponsibleDialog({
         onConfirm(transferData);
     };
 
-    const handleTherapistSelect = (newTherapist: Terapeuta) => {
+    const handleTherapistSelect = (newTherapist: TerapeutaAvatar) => {
         setSelectedTherapist(newTherapist);
         setToTherapistId(newTherapist.id || '');
         setTherapistSearch(newTherapist.nome);

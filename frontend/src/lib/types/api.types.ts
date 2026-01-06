@@ -18,3 +18,18 @@ type SessionFile = {
     name: string;
     preview?: string;
 };
+
+export type PaginatedListResult<T> = {
+    items: T[];
+    total?: number;
+    page?: number;
+    pageSize?: number;
+    totalPages?: number;
+};
+
+export type ListQueryParams = {
+    q?: string;
+    sort?: string;
+    page?: number;
+    pageSize?: number;
+};

@@ -3,6 +3,10 @@ import { prisma } from '../../../config/database.js';
 import { AppError } from '../../../errors/AppError.js';
 import * as LinkTypes from './links.types.js';
 import * as list from './actions/list.js';
+import * as clients from './actions/clients.js';
+import * as therapists from './actions/therapist.js';
+import type { TherapistListQuery, TherapistSelectQuery } from '../../../schemas/queries/therapists.schema.js';
+import { normalizeListTherapists, normalizeSelectTherapists } from './links.normalizer.js';
 
 const LINK_SELECT = {
     id: true,
@@ -131,14 +135,29 @@ export async function createLink(payload: LinkTypes.CreateLink) {
     return created;
 }
 
-export async function getAllClients(userId: string, search?: string) {
-    const clients = await list.getAllClients(userId, search);
-    return clients;
+export async function getClientOptions(userId: string, search?: string, limit?: number) {
+    const clientOptions = await clients.findClientOptions(userId, search, limit);
+    return clientOptions;
 }
 
-export async function getAllTherapists(userId: string, search?: string, _role?: string) {
-    const therapists = await list.getAllTherapists(userId, search);
-    return therapists;
+export async function listClients(
+    userId: string,
+    search?: string,
+    includeResponsavel?: boolean,
+    limit?: number,
+) {
+    const clientList = await clients.findClientList(userId, search, includeResponsavel, limit);
+    return clientList;
+}
+
+export async function selectTherapists(userId: string, query: TherapistSelectQuery) {
+    const records = await therapists.selectTherapists(userId, query);
+    return normalizeSelectTherapists(records);
+}
+
+export async function listTherapists(userId: string, query: TherapistListQuery) {
+    const records = await therapists.listTherapists(userId, query);
+    return normalizeListTherapists(records, query.includeNumeroConselho ?? false);
 }
 
 export async function getAllLinks(userId: string, filters?: LinkTypes.LinkFilters) {

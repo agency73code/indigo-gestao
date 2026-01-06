@@ -2,8 +2,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link } from 'react-router-dom';
 import { motion, type Variants } from 'framer-motion';
-import { ArrowRight, Eye, EyeOff } from 'lucide-react';
-import { useState } from 'react';
+import { ArrowRight } from 'lucide-react';
+import { useState, useCallback } from 'react';
 import {
     Card,
     CardHeader,
@@ -16,6 +16,8 @@ import { Label } from '../../../shared/components/ui/label';
 import { Button } from '../../../shared/components/ui/button';
 import { loginSchema } from '../../../shared/lib/validations';
 import type { LoginCredentials } from '../types/auth.types';
+import { EyeIcon } from '@/components/EyeIcon';
+import { EyeOffIcon } from '@/components/EyeOffIcon';
 
 interface LoginFormProps {
     onSubmit: (data: LoginCredentials) => void;
@@ -78,6 +80,11 @@ const buttonVariants: Variants = {
 
 export default function LoginForm({ onSubmit, isLoading = false, error }: LoginFormProps) {
     const [showPassword, setShowPassword] = useState(false);
+    
+    const handleTogglePassword = useCallback(() => {
+        setShowPassword(!showPassword);
+    }, [showPassword]);
+    
     const {
         register,
         handleSubmit,
@@ -155,14 +162,14 @@ export default function LoginForm({ onSubmit, isLoading = false, error }: LoginF
                                 />
                                 <button
                                     type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                    onClick={handleTogglePassword}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center"
                                     aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
                                 >
                                     {showPassword ? (
-                                        <EyeOff className="h-4 w-4" />
+                                        <EyeOffIcon size={18} />
                                     ) : (
-                                        <Eye className="h-4 w-4" />
+                                        <EyeIcon size={18} />
                                     )}
                                 </button>
                             </div>

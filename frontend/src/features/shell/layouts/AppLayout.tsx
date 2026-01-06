@@ -109,7 +109,9 @@ export default function AppLayout() {
         '/app/programas/sessoes/nova',
         '/app/relatorios/novo',
         '/app/relatorios/',
-        '/app/cadastros/vinculos'
+        '/app/cadastros/vinculos',
+        '/app/atas/nova',
+        '/app/atas/'
     ], []);
 
     // Verifica se a rota atual deve ter o botão de voltar

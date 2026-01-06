@@ -236,10 +236,22 @@ export default function RegistrarSessaoToPage() {
             });
 
             // Redirecionar para o hub da área atual ao invés de página específica de fisioterapia
+            // const areaHubRoutes: Record<string, string> = {
+            //     'fisioterapia': `/app/programas/fisioterapia/programa/${sessionState.programId}`,
+            //     'psicomotricidade': `/app/programas/psicomotricidade/programa/${sessionState.programId}`,
+            //     'educacao-fisica': `/app/programas/educacao-fisica/programa/${sessionState.programId}`,
+            // };
+
+            /*
+                O codigo comentado acima faria as sessoes depois de registradas irem para a consulta de programas de cada area,
+                atualmente todas elas levam para o mesmo caminho '/app/programas/fisioterapia/programa/idPrograma'
+                por esse motivo o codigo duplicado com todos indo pro mesmo lugar, quando corrigir apaga o de baixo e só deixa o de cima rodando
+            */
+           
             const areaHubRoutes: Record<string, string> = {
-                'fisioterapia': '/app/programas/fisioterapia',
-                'psicomotricidade': '/app/programas/psicomotricidade',
-                'educacao-fisica': '/app/programas/educacao-fisica',
+                'fisioterapia': `/app/programas/fisioterapia/programa/${sessionState.programId}`,
+                'psicomotricidade': `/app/programas/fisioterapia/programa/${sessionState.programId}`,
+                'educacao-fisica': `/app/programas/fisioterapia/programa/${sessionState.programId}`,
             };
             navigate(areaHubRoutes[area] || '/app/programas/fisioterapia');
         } catch (err: any) {

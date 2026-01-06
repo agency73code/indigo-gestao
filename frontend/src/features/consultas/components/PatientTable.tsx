@@ -2,6 +2,7 @@ import { useState, memo } from 'react';
 import { ArrowUpRight, Users } from 'lucide-react';
 import { Button } from '@/ui/button';
 import type { Patient, SortState } from '../types/consultas.types';
+import { SpecialtyBadgeStack } from './SpecialtyBadgeStack';
 
 interface AvatarWithSkeletonProps {
     src?: string | null;
@@ -164,6 +165,9 @@ const PatientTable = memo(function PatientTable({
                                 Telefone
                             </th>
                             <th className="text-left p-3 font-medium text-sm" style={{ color: 'var(--table-text-secondary)' }}>
+                                Especialidades
+                            </th>
+                            <th className="text-left p-3 font-medium text-sm" style={{ color: 'var(--table-text-secondary)' }}>
                                 Responsável
                             </th>
                             <th className="text-left p-3 font-medium text-sm" style={{ color: 'var(--table-text-secondary)' }}>
@@ -174,18 +178,19 @@ const PatientTable = memo(function PatientTable({
                             </th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y" style={{ borderColor: 'var(--table-border)' }}>
-                        {patients.map((patient) => {
+                    <tbody>
+                        {patients.map((patient, index) => {
                             const age = calculateAge(patient.pessoa?.dataNascimento);
+                            const rowBg = index % 2 === 0 ? 'var(--table-bg)' : 'var(--table-row-alt)';
                             return (
                                 <tr
                                     key={patient.id}
                                     className="transition-colors"
                                     style={{ 
-                                        backgroundColor: 'var(--table-bg)',
+                                        backgroundColor: rowBg,
                                     }}
                                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--table-row-hover)'}
-                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--table-bg)'}
+                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = rowBg}
                                 >
                                     <td className="p-3">
                                         <div className="flex items-center gap-3">
@@ -217,6 +222,11 @@ const PatientTable = memo(function PatientTable({
                                         </span>
                                     </td>
                                     <td className="p-3">
+                                        <SpecialtyBadgeStack 
+                                            especialidades={patient.areasAtendimento || []} 
+                                        />
+                                    </td>
+                                    <td className="p-3">
                                         <span className="text-[14px] font-normal inline-block px-3 py-0.5 truncate" style={{ fontFamily: 'Inter, sans-serif', color: 'var(--table-text)' }}>
                                             {patient.responsavel || '-'}
                                         </span>
@@ -244,11 +254,12 @@ const PatientTable = memo(function PatientTable({
             </div>
 
             {/* Versão Mobile */}
-            <div className="md:hidden overflow-auto divide-y divide-gray-100">
-                {patients.map((patient) => {
+            <div className="md:hidden overflow-auto">
+                {patients.map((patient, index) => {
                     const age = calculateAge(patient.pessoa?.dataNascimento);
+                    const rowBg = index % 2 === 0 ? 'var(--table-bg)' : 'var(--table-row-alt)';
                     return (
-                        <div key={patient.id} className="p-4 space-y-3 hover:bg-gray-50">
+                        <div key={patient.id} className="p-4 space-y-3 hover:bg-gray-50" style={{ backgroundColor: rowBg }}>
                             <div className="flex items-start justify-between gap-3">
                                 <div className="flex items-center gap-3">
                                     <AvatarWithSkeleton
@@ -282,6 +293,16 @@ const PatientTable = memo(function PatientTable({
                                     <span className="block text-[14px] font-normal text-[#1F2937]" style={{ fontFamily: 'Inter, sans-serif' }}>
                                         {patient.telefone || '-'}
                                     </span>
+                                </div>
+                                <div>
+                                    <span className="font-semibold text-[#374151] block text-xs mb-1">
+                                        Especialidades
+                                    </span>
+                                    <div className="mt-1">
+                                        <SpecialtyBadgeStack 
+                                            especialidades={patient.areasAtendimento || []} 
+                                        />
+                                    </div>
                                 </div>
                                 <div>
                                     <span className="font-semibold text-[#374151] block text-xs mb-1">
