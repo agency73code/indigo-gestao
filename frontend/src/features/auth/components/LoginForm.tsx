@@ -90,7 +90,8 @@ export default function LoginForm({ onSubmit, isLoading = false, error }: LoginF
         handleSubmit,
         formState: { errors },
     } = useForm<LoginCredentials>({
-        resolver: zodResolver(loginSchema),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        resolver: zodResolver(loginSchema as any),
     });
 
     return (

@@ -84,7 +84,8 @@ export interface Participante {
 /** Dados do formulário da ata */
 export interface AtaFormData {
     data: string; // ISO date string YYYY-MM-DD
-    horario: string; // HH:mm
+    horarioInicio: string; // HH:mm
+    horarioFim: string; // HH:mm
     finalidade: FinalidadeReuniao;
     finalidadeOutros?: string; // Obrigatório se finalidade === 'outros'
     modalidade: ModalidadeReuniao;
@@ -172,7 +173,8 @@ export const participanteSchema = z.object({
 
 export const ataFormSchema = z.object({
     data: z.string().min(1, 'Data é obrigatória'),
-    horario: z.string().min(1, 'Horário é obrigatório'),
+    horarioInicio: z.string().min(1, 'Horário de início é obrigatório'),
+    horarioFim: z.string().min(1, 'Horário de término é obrigatório'),
     finalidade: z.enum([
         FINALIDADE_REUNIAO.ORIENTACAO_PARENTAL,
         FINALIDADE_REUNIAO.REUNIAO_EQUIPE,

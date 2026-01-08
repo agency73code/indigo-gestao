@@ -60,7 +60,8 @@ export function NovaAtaPage() {
     const initialData: AtaFormData | undefined = ata
         ? {
               data: ata.data,
-              horario: ata.horario,
+              horarioInicio: ata.horarioInicio,
+              horarioFim: ata.horarioFim,
               finalidade: ata.finalidade,
               finalidadeOutros: ata.finalidadeOutros,
               modalidade: ata.modalidade,

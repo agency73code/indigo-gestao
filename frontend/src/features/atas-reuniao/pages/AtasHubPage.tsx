@@ -1,9 +1,10 @@
 /**
  * Página Hub de Atas de Reunião
  * 
- * Layout igual à página de Relatórios:
- * - Título dinâmico no header (via usePageTitle)
- * - Espaçamentos consistentes
+ * Layout profissional com:
+ * - Cards de estatísticas
+ * - Lista de atas com preview em painel lateral
+ * - Filtros e busca
  */
 
 import { useEffect } from 'react';
@@ -19,8 +20,7 @@ export function AtasHubPage() {
 
     return (
         <div className="min-h-screen bg-background">
-            {/* Conteúdo principal */}
-            <div className="px-1 lg:px-4 py-4 space-y-4">
+            <div className="px-2 lg:px-6 py-6">
                 <AtaTable />
             </div>
         </div>

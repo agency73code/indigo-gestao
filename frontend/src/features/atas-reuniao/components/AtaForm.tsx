@@ -71,7 +71,8 @@ interface AtaFormProps {
 // Valor inicial do formulário
 const getInitialFormData = (): AtaFormData => ({
     data: format(new Date(), 'yyyy-MM-dd'),
-    horario: format(new Date(), 'HH:mm'),
+    horarioInicio: format(new Date(), 'HH:mm'),
+    horarioFim: format(new Date(Date.now() + 60 * 60 * 1000), 'HH:mm'), // +1 hora
     finalidade: FINALIDADE_REUNIAO.ORIENTACAO_PARENTAL,
     modalidade: MODALIDADE_REUNIAO.PRESENCIAL,
     participantes: [],
@@ -305,7 +306,7 @@ export function AtaForm({ ataId, initialData, onSuccess }: AtaFormProps) {
                 <CardTitle className="text-lg font-medium">Dados da Reunião</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-                {/* Data (1/6), Horário (1/6), Modalidade (1/6), Cliente (3/6) */}
+                {/* Data (1/6), Horário Início (1/6), Horário Fim (1/6), Modalidade (1/6), Cliente (2/6) */}
                 <div className="grid grid-cols-6 gap-4">
                     <div className="col-span-1">
                         <DateFieldWithLabel
@@ -317,11 +318,20 @@ export function AtaForm({ ataId, initialData, onSuccess }: AtaFormProps) {
                     </div>
                     <div className="col-span-1">
                         <InputField
-                            label="Horário*"
+                            label="Início*"
                             type="time"
-                            value={formData.horario}
-                            onChange={(e) => updateField('horario', e.target.value)}
-                            error={errors['horario']}
+                            value={formData.horarioInicio}
+                            onChange={(e) => updateField('horarioInicio', e.target.value)}
+                            error={errors['horarioInicio']}
+                        />
+                    </div>
+                    <div className="col-span-1">
+                        <InputField
+                            label="Término*"
+                            type="time"
+                            value={formData.horarioFim}
+                            onChange={(e) => updateField('horarioFim', e.target.value)}
+                            error={errors['horarioFim']}
                         />
                     </div>
                     <div className="col-span-1">
@@ -338,7 +348,7 @@ export function AtaForm({ ataId, initialData, onSuccess }: AtaFormProps) {
                             ))}
                         </SelectFieldRadix>
                     </div>
-                    <div className="col-span-3">
+                    <div className="col-span-2">
                         {loadingClientes ? (
                             <Skeleton className="h-[60px] w-full rounded-lg" />
                         ) : (
