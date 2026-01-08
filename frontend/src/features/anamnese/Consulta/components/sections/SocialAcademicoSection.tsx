@@ -8,7 +8,7 @@ interface SocialAcademicoSectionProps {
 
 export function SocialAcademicoSection({ data }: SocialAcademicoSectionProps) {
     const social = data.socialAcademico;
-    const interacao = social.interacaoSocial;
+    const desenvolvimentoSocial = social.desenvolvimentoSocial;
     const escola = social.vidaEscolar;
 
     return (
@@ -16,14 +16,23 @@ export function SocialAcademicoSection({ data }: SocialAcademicoSectionProps) {
             <div>
                 <h4 className="text-sm font-medium text-muted-foreground mb-3">17. Desenvolvimento Social (Relações Interpessoais e Brincar)</h4>
                 <div className="grid grid-cols-2 gap-3">
-                    <ReadOnlyField label="Brinca com outras crianças" value={formatSimNao(interacao?.brincaComOutrasCriancas)} />
-                    <ReadOnlyField label="Mantém contato visual" value={formatSimNao(interacao?.mantemContatoVisual)} />
-                    <ReadOnlyField label="Responde ao chamar" value={formatSimNao(interacao?.respondeAoChamar)} />
-                    <ReadOnlyField label="Compartilha interesses" value={formatSimNao(interacao?.compartilhaInteresses)} />
+                    <ReadOnlyField label="Possui amigos da mesma idade no ambiente escolar" value={formatSimNao(desenvolvimentoSocial?.possuiAmigosMesmaIdadeEscola)} />
+                    <ReadOnlyField label="Possui amigos da mesma idade fora do ambiente escolar" value={formatSimNao(desenvolvimentoSocial?.possuiAmigosMesmaIdadeForaEscola)} />
+                    <ReadOnlyField label="Faz uso funcional de brinquedos" value={formatSimNao(desenvolvimentoSocial?.fazUsoFuncionalBrinquedos)} />
+                    <ReadOnlyField label="Brinca próximo aos colegas em ambiente compartilhado" value={formatSimNao(desenvolvimentoSocial?.brincaProximoAosColegas)} />
+                    <ReadOnlyField label="Brinca de maneira conjunta com os colegas, faz trocas de turno" value={formatSimNao(desenvolvimentoSocial?.brincaConjuntaComColegas)} />
+                    <ReadOnlyField label="Procura os colegas espontaneamente, para iniciar interação" value={formatSimNao(desenvolvimentoSocial?.procuraColegasEspontaneamente)} />
+                    <ReadOnlyField label="Se verbal/vocal inicia conversação" value={formatSimNao(desenvolvimentoSocial?.seVerbalIniciaConversa)} />
+                    <ReadOnlyField label="Se verbal/vocal, responde perguntas simples" value={formatSimNao(desenvolvimentoSocial?.seVerbalRespondePerguntasSimples)} />
+                    <ReadOnlyField label="Faz pedidos aos colegas ou adultos, quando necessário" value={formatSimNao(desenvolvimentoSocial?.fazPedidosQuandoNecessario)} />
+                    <ReadOnlyField label="Estabelece contato visual com os adultos, durante interação" value={formatSimNao(desenvolvimentoSocial?.estabeleceContatoVisualAdultos)} />
+                    <ReadOnlyField label="Estabelece contato visual com as crianças, durante interação" value={formatSimNao(desenvolvimentoSocial?.estabeleceContatoVisualCriancas)} />
                 </div>
-                <div className="mt-3">
-                    <ReadOnlyField label="Tipo de brincadeira" value={interacao?.tipoBrincadeira} />
-                </div>
+                {desenvolvimentoSocial?.observacoes && (
+                    <div className="mt-3">
+                        <ReadOnlyField label="Observações" value={desenvolvimentoSocial.observacoes} />
+                    </div>
+                )}
             </div>
 
             <div>

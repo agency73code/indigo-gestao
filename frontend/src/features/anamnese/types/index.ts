@@ -319,13 +319,6 @@ export interface DesenvolvimentoSocial {
     estabeleceContatoVisualAdultos: SimNao;
     estabeleceContatoVisualCriancas: SimNao;
     observacoes: string;
-    // Campos extras para compatibilidade
-    brincaComOutrasCriancas?: SimNao;
-    tipoBrincadeira?: string;
-    mantemContatoVisual?: SimNao;
-    respondeAoChamar?: SimNao;
-    compartilhaInteresses?: SimNao;
-    compreendeSentimentos?: SimNao;
 }
 
 export interface DesenvolvimentoAcademico {
@@ -355,9 +348,7 @@ export interface DesenvolvimentoAcademico {
 
 export interface AnamneseSocialAcademico {
     desenvolvimentoSocial?: DesenvolvimentoSocial;
-    interacaoSocial?: DesenvolvimentoSocial; // alias para compatibilidade
     desenvolvimentoAcademico?: DesenvolvimentoAcademico;
-    vidaEscolar?: DesenvolvimentoAcademico; // alias para compatibilidade
 }
 
 // ============================================
@@ -400,9 +391,7 @@ export interface AnamneseComportamento {
 
 export interface AnamneseFinalizacao {
     outrasInformacoesRelevantes?: string;
-    informacoesAdicionais?: string; // alias
     observacoesImpressoesTerapeuta?: string;
-    observacoesFinais?: string; // alias
     expectativasFamilia: string;
 }
 

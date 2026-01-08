@@ -88,8 +88,8 @@ const queixaDiagnosticoUpdateSchema = z.object({
 // Schema para atualização de Finalização
 const finalizacaoUpdateSchema = z.object({
     expectativasFamilia: z.string(),
-    informacoesAdicionais: z.string(),
-    observacoesFinais: z.string(),
+    outrasInformacoesRelevantes: z.string(),
+    observacoesImpressoesTerapeuta: z.string(),
 });
 
 // Schema para atualização parcial de Anamnese

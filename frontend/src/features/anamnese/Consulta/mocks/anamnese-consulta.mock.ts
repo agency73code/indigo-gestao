@@ -198,8 +198,8 @@ export const mockAnamneseDetalhe: Record<string, AnamneseDetalhe> = {
             },
         },
         socialAcademico: {
-            interacaoSocial: {
-                // Campos originais do DesenvolvimentoSocial
+            desenvolvimentoSocial: {
+                // Campos do DesenvolvimentoSocial
                 possuiAmigosMesmaIdadeEscola: 'sim',
                 possuiAmigosMesmaIdadeForaEscola: 'nao',
                 fazUsoFuncionalBrinquedos: 'sim',
@@ -212,15 +212,8 @@ export const mockAnamneseDetalhe: Record<string, AnamneseDetalhe> = {
                 estabeleceContatoVisualAdultos: 'sim',
                 estabeleceContatoVisualCriancas: 'nao',
                 observacoes: 'Prefere brincadeiras paralelas, pouca interação direta',
-                // Campos extras para compatibilidade
-                brincaComOutrasCriancas: 'sim',
-                tipoBrincadeira: 'Prefere brincadeiras paralelas, pouca interação direta',
-                mantemContatoVisual: 'sim',
-                respondeAoChamar: 'sim',
-                compartilhaInteresses: 'nao',
-                compreendeSentimentos: 'nao',
             },
-            vidaEscolar: {
+            desenvolvimentoAcademico: {
                 // Dados da escola
                 escola: 'Escola Montessori Alegria',
                 ano: '1º ano do Ensino Fundamental',
@@ -275,8 +268,8 @@ export const mockAnamneseDetalhe: Record<string, AnamneseDetalhe> = {
         },
         finalizacao: {
             expectativasFamilia: 'Melhora na comunicação e interação social. Maior independência nas AVDs. Inclusão escolar bem sucedida.',
-            informacoesAdicionais: 'Família muito engajada no tratamento. Irmã mais velha auxilia bastante nas atividades.',
-            observacoesFinais: 'Criança com bom prognóstico considerando suporte familiar e acesso a terapias especializadas.',
+            outrasInformacoesRelevantes: 'Família muito engajada no tratamento. Irmã mais velha auxilia bastante nas atividades.',
+            observacoesImpressoesTerapeuta: 'Criança com bom prognóstico considerando suporte familiar e acesso a terapias especializadas.',
         },
         status: 'ATIVO',
         createdAt: '2025-11-20T10:00:00Z',

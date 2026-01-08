@@ -480,56 +480,64 @@ export const AnamnesePrintView = forwardRef<HTMLDivElement, AnamnesePrintViewPro
 
                 {/* ===== 6. SOCIAL E ACADÊMICO ===== */}
                 <Section title="Social e Acadêmico">
-                    <SubSection title="17. Interação Social">
-                        <Field label="Brinca com outras crianças" value={formatSimNao(sa.interacaoSocial?.brincaComOutrasCriancas)} />
-                        <Field label="Tipo de brincadeira" value={sa.interacaoSocial?.tipoBrincadeira} />
+                    <SubSection title="17. Desenvolvimento Social (Relações Interpessoais e Brincar)">
                         <FieldGrid>
-                            <Field label="Mantém contato visual" value={formatSimNao(sa.interacaoSocial?.mantemContatoVisual)} />
-                            <Field label="Responde ao chamar pelo nome" value={formatSimNao(sa.interacaoSocial?.respondeAoChamar)} />
-                            <Field label="Compartilha interesses" value={formatSimNao(sa.interacaoSocial?.compartilhaInteresses)} />
-                            <Field label="Compreende sentimentos" value={formatSimNao(sa.interacaoSocial?.compreendeSentimentos)} />
+                            <Field label="Possui amigos da mesma idade no ambiente escolar" value={formatSimNao(sa.desenvolvimentoSocial?.possuiAmigosMesmaIdadeEscola)} />
+                            <Field label="Possui amigos da mesma idade fora do ambiente escolar" value={formatSimNao(sa.desenvolvimentoSocial?.possuiAmigosMesmaIdadeForaEscola)} />
+                            <Field label="Faz uso funcional de brinquedos" value={formatSimNao(sa.desenvolvimentoSocial?.fazUsoFuncionalBrinquedos)} />
+                            <Field label="Brinca próximo aos colegas em ambiente compartilhado" value={formatSimNao(sa.desenvolvimentoSocial?.brincaProximoAosColegas)} />
+                            <Field label="Brinca de maneira conjunta com os colegas" value={formatSimNao(sa.desenvolvimentoSocial?.brincaConjuntaComColegas)} />
+                            <Field label="Procura os colegas espontaneamente" value={formatSimNao(sa.desenvolvimentoSocial?.procuraColegasEspontaneamente)} />
+                            <Field label="Se verbal/vocal inicia conversação" value={formatSimNao(sa.desenvolvimentoSocial?.seVerbalIniciaConversa)} />
+                            <Field label="Se verbal/vocal, responde perguntas simples" value={formatSimNao(sa.desenvolvimentoSocial?.seVerbalRespondePerguntasSimples)} />
+                            <Field label="Faz pedidos quando necessário" value={formatSimNao(sa.desenvolvimentoSocial?.fazPedidosQuandoNecessario)} />
+                            <Field label="Estabelece contato visual com adultos" value={formatSimNao(sa.desenvolvimentoSocial?.estabeleceContatoVisualAdultos)} />
+                            <Field label="Estabelece contato visual com crianças" value={formatSimNao(sa.desenvolvimentoSocial?.estabeleceContatoVisualCriancas)} />
                         </FieldGrid>
+                        {sa.desenvolvimentoSocial?.observacoes && (
+                            <TextBlock label="Observações" value={sa.desenvolvimentoSocial.observacoes} />
+                        )}
                     </SubSection>
 
                     <SubSection title="18. Desenvolvimento Acadêmico">
                         {/* Dados da escola */}
-                        <Field label="Escola" value={sa.vidaEscolar?.escola} />
-                        <Field label="Ano/Série" value={sa.vidaEscolar?.ano?.toString()} />
-                        <Field label="Período" value={sa.vidaEscolar?.periodo} />
-                        <Field label="Direção" value={sa.vidaEscolar?.direcao} />
-                        <Field label="Coordenação" value={sa.vidaEscolar?.coordenacao} />
+                        <Field label="Escola" value={sa.desenvolvimentoAcademico?.escola} />
+                        <Field label="Ano/Série" value={sa.desenvolvimentoAcademico?.ano?.toString()} />
+                        <Field label="Período" value={sa.desenvolvimentoAcademico?.periodo} />
+                        <Field label="Direção" value={sa.desenvolvimentoAcademico?.direcao} />
+                        <Field label="Coordenação" value={sa.desenvolvimentoAcademico?.coordenacao} />
                         <FieldGrid>
-                            <Field label="Professora Principal" value={sa.vidaEscolar?.professoraPrincipal} />
-                            <Field label="Professora Assistente" value={sa.vidaEscolar?.professoraAssistente} />
+                            <Field label="Professora Principal" value={sa.desenvolvimentoAcademico?.professoraPrincipal} />
+                            <Field label="Professora Assistente" value={sa.desenvolvimentoAcademico?.professoraAssistente} />
                         </FieldGrid>
 
                         {/* Campos Sim/Não */}
                         <FieldGrid>
-                            <Field label="Frequenta escola regular" value={formatSimNao(sa.vidaEscolar?.frequentaEscolaRegular)} />
-                            <Field label="Frequenta escola especial" value={formatSimNao(sa.vidaEscolar?.frequentaEscolaEspecial)} />
-                            <Field label="Acompanha a turma (demandas pedagógicas)" value={formatSimNao(sa.vidaEscolar?.acompanhaTurmaDemandasPedagogicas)} />
-                            <Field label="Segue regras e rotinas de sala" value={formatSimNao(sa.vidaEscolar?.segueRegrasRotinaSalaAula)} />
-                            <Field label="Necessita apoio de AT" value={formatSimNao(sa.vidaEscolar?.necessitaApoioAT)} />
-                            <Field label="Necessita adaptação de materiais" value={formatSimNao(sa.vidaEscolar?.necessitaAdaptacaoMateriais)} />
-                            <Field label="Necessita adaptação curricular" value={formatSimNao(sa.vidaEscolar?.necessitaAdaptacaoCurricular)} />
-                            <Field label="Houve reprovação/retenção" value={formatSimNao(sa.vidaEscolar?.houveReprovacaoRetencao)} />
-                            <Field label="Escola possui equipe de inclusão" value={formatSimNao(sa.vidaEscolar?.escolaPossuiEquipeInclusao)} />
-                            <Field label="Indicativo de deficiência intelectual" value={formatSimNao(sa.vidaEscolar?.haIndicativoDeficienciaIntelectual)} />
-                            <Field label="Escola apresenta queixa comportamental" value={formatSimNao(sa.vidaEscolar?.escolaApresentaQueixaComportamental)} />
+                            <Field label="Frequenta escola regular" value={formatSimNao(sa.desenvolvimentoAcademico?.frequentaEscolaRegular)} />
+                            <Field label="Frequenta escola especial" value={formatSimNao(sa.desenvolvimentoAcademico?.frequentaEscolaEspecial)} />
+                            <Field label="Acompanha a turma (demandas pedagógicas)" value={formatSimNao(sa.desenvolvimentoAcademico?.acompanhaTurmaDemandasPedagogicas)} />
+                            <Field label="Segue regras e rotinas de sala" value={formatSimNao(sa.desenvolvimentoAcademico?.segueRegrasRotinaSalaAula)} />
+                            <Field label="Necessita apoio de AT" value={formatSimNao(sa.desenvolvimentoAcademico?.necessitaApoioAT)} />
+                            <Field label="Necessita adaptação de materiais" value={formatSimNao(sa.desenvolvimentoAcademico?.necessitaAdaptacaoMateriais)} />
+                            <Field label="Necessita adaptação curricular" value={formatSimNao(sa.desenvolvimentoAcademico?.necessitaAdaptacaoCurricular)} />
+                            <Field label="Houve reprovação/retenção" value={formatSimNao(sa.desenvolvimentoAcademico?.houveReprovacaoRetencao)} />
+                            <Field label="Escola possui equipe de inclusão" value={formatSimNao(sa.desenvolvimentoAcademico?.escolaPossuiEquipeInclusao)} />
+                            <Field label="Indicativo de deficiência intelectual" value={formatSimNao(sa.desenvolvimentoAcademico?.haIndicativoDeficienciaIntelectual)} />
+                            <Field label="Escola apresenta queixa comportamental" value={formatSimNao(sa.desenvolvimentoAcademico?.escolaApresentaQueixaComportamental)} />
                         </FieldGrid>
 
                         {/* Campos descritivos */}
-                        {sa.vidaEscolar?.adaptacaoEscolar && (
-                            <TextBlock label="Adaptação Escolar" value={sa.vidaEscolar.adaptacaoEscolar} />
+                        {sa.desenvolvimentoAcademico?.adaptacaoEscolar && (
+                            <TextBlock label="Adaptação Escolar" value={sa.desenvolvimentoAcademico.adaptacaoEscolar} />
                         )}
-                        {sa.vidaEscolar?.dificuldadesEscolares && (
-                            <TextBlock label="Dificuldades Escolares" value={sa.vidaEscolar.dificuldadesEscolares} />
+                        {sa.desenvolvimentoAcademico?.dificuldadesEscolares && (
+                            <TextBlock label="Dificuldades Escolares" value={sa.desenvolvimentoAcademico.dificuldadesEscolares} />
                         )}
-                        {sa.vidaEscolar?.relacionamentoComColegas && (
-                            <TextBlock label="Relacionamento com Colegas" value={sa.vidaEscolar.relacionamentoComColegas} />
+                        {sa.desenvolvimentoAcademico?.relacionamentoComColegas && (
+                            <TextBlock label="Relacionamento com Colegas" value={sa.desenvolvimentoAcademico.relacionamentoComColegas} />
                         )}
-                        {sa.vidaEscolar?.observacoes && (
-                            <TextBlock label="Observações" value={sa.vidaEscolar.observacoes} />
+                        {sa.desenvolvimentoAcademico?.observacoes && (
+                            <TextBlock label="Observações" value={sa.desenvolvimentoAcademico.observacoes} />
                         )}
                     </SubSection>
                 </Section>
@@ -582,9 +590,9 @@ export const AnamnesePrintView = forwardRef<HTMLDivElement, AnamnesePrintViewPro
 
                 {/* ===== 8. FINALIZAÇÃO ===== */}
                 <Section title="Finalização">
-                    <TextBlock label="21. Expectativas da Família" value={fin.expectativasFamilia} />
-                    <TextBlock label="22. Informações Adicionais do Informante" value={fin.informacoesAdicionais} />
-                    <TextBlock label="23. Observações Finais do Profissional" value={fin.observacoesFinais} />
+                    <TextBlock label="21. Outras informações que o informante julgue relevantes" value={fin.outrasInformacoesRelevantes} />
+                    <TextBlock label="22. Observações e/ou impressões do terapeuta" value={fin.observacoesImpressoesTerapeuta} />
+                    <TextBlock label="23. Expectativas da Família" value={fin.expectativasFamilia} />
                 </Section>
 
                 {/* ===== CAMPO DE ASSINATURA ===== */}

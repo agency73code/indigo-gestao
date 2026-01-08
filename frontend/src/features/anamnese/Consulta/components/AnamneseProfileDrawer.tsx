@@ -246,8 +246,8 @@ export default function AnamneseProfileDrawer({
 
         // Social e Acadêmico
         setEditSocialAcademico({
-            desenvolvimentoSocial: data.socialAcademico.interacaoSocial as any,
-            desenvolvimentoAcademico: data.socialAcademico.vidaEscolar as any,
+            desenvolvimentoSocial: data.socialAcademico.desenvolvimentoSocial as any,
+            desenvolvimentoAcademico: data.socialAcademico.desenvolvimentoAcademico as any,
         });
 
         // Comportamento
@@ -258,8 +258,8 @@ export default function AnamneseProfileDrawer({
 
         // Finalização
         setEditFinalizacao({
-            outrasInformacoesRelevantes: data.finalizacao.informacoesAdicionais,
-            observacoesImpressoesTerapeuta: data.finalizacao.observacoesFinais,
+            outrasInformacoesRelevantes: data.finalizacao.outrasInformacoesRelevantes,
+            observacoesImpressoesTerapeuta: data.finalizacao.observacoesImpressoesTerapeuta,
             expectativasFamilia: data.finalizacao.expectativasFamilia,
         });
     }, []);
