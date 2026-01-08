@@ -19,5 +19,5 @@ export function calculateAge(dateOfBirth: Date | null, referenceDate = new Date(
         }
     }
 
-    return `${years} years ${months} months`;
+    return `${years} anos ${months} meses`;
 }

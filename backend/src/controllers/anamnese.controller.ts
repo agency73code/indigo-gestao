@@ -121,7 +121,11 @@ export async function getAnamneseById(req: Request, res: Response, next: NextFun
         
         const result = await anamneseService.getAnamneseById(parsed.id);
 
-        console.log(result)
+        if (!result) {
+            return res.status(404).json({ success: false, message: 'Anamnese não encontrada' });
+        }
+
+        return res.json(result);
     } catch (err) {
         return next(err)
     }
