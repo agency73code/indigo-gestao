@@ -9,6 +9,11 @@ router.get('/', FileController.listFiles);
 router.get('/:storageId/view', FileController.viewFile);
 router.get('/:storageId/download', FileController.downloadFile);
 router.get('/getAvatar', FileController.getAvatar);
+
+// nova rota (genérica)
+router.post('/r2', upload.any(), FileController.uploadGenericToR2);
+
+// legado
 router.post('/', upload.any(), FileController.uploadFile);
 router.delete('/:id', FileController.deleteFile);
 

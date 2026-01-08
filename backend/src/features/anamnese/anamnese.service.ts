@@ -132,8 +132,7 @@ export async function create(payload: AnamnesePayload) {
                                                     nome: arq.nome ?? null,
                                                     tipo: arq.tipo ?? null,
                                                     tamanho: arq.tamanho ?? null,
-                                                    // caminho tem que implementar a logica de upload primeiro
-                                                    caminho: null,
+                                                    caminho: arq.caminho ?? null,
                                                 })),
                                             },
                                         }

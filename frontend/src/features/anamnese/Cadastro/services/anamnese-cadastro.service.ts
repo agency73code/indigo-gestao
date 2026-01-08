@@ -179,10 +179,24 @@ async function mockExcluirAnamnese(id: string): Promise<AnamneseResponse> {
 
 async function apiCriarAnamnese(data: Anamnese): Promise<AnamneseResponse> {
     try {
+        const fd = new FormData();
+
+        // JSON do payload
+        fd.append('payload', JSON.stringify(data));
+
+        const exames = data?.queixaDiagnostico?.examesPrevios ?? [];
+        for (const exame of exames) {
+            const arquivos = exame?.arquivos ?? [];
+            for (const arq of arquivos) {
+                if (arq?.id && arq?.file instanceof File) {
+                    fd.append(`files[${arq.id}]`, arq.file, arq.file.name);
+                }
+            }
+        }
+
         const res = await authFetch(`/api${ENDPOINT}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data),
+            body: fd,
         });
         
         const text = await res.text();

@@ -12,9 +12,11 @@ const optionalNumberFromString = z.preprocess(
 );
 
 const ArquivoAnexoSchema = z.object({
+  id: z.string().optional().nullable(),
   nome: z.string().optional().nullable(),
   tipo: z.string().optional().nullable(),
   tamanho: z.number().optional().nullable(),
+  caminho: z.string().optional().nullable(),
   file: z.unknown().optional().nullable(),
 });
 
