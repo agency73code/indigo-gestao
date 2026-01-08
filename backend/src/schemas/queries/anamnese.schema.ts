@@ -6,3 +6,10 @@ export const anamneseListSchema = z.object({
     page: z.coerce.number().int().positive().optional(),
     pageSize: z.coerce.number().int().positive().max(100).optional(),
 });
+
+export const anamneseIdSchema = z.object({
+    id: z
+        .string()
+        .regex(/^\d+$/, 'ID deve ser numérico')
+        .transform((val) => Number(val)),
+});

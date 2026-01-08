@@ -5,6 +5,8 @@ import { ACCESS_LEVELS } from '../../utils/accessLevels.js';
 import { getVisibilityScope } from '../../utils/visibilityFilter.js';
 import type { AnamneseListFilters, AnamneseListItem, AnamneseListResult } from './anamnese.types.js';
 import { AppError } from '../../errors/AppError.js';
+import { toDateOnly } from '../../utils/toDateOnly.js';
+import { calculateAge } from '../../utils/calculateAge.js';
 
 type SimNao = 'sim' | 'nao' | null | undefined;
 
@@ -594,5 +596,147 @@ export async function list(
         page,
         pageSize,
         totalPages: Math.ceil(total / pageSize),
+    };
+}
+
+export async function getAnamneseById(anamneseId: number) {
+    const anamnese = await prisma.anamnese.findUnique({
+        where: { id: anamneseId },
+        select: {
+            id: true,
+            data_entrevista: true,
+            cliente_id: true,
+            cliente: {
+                select: {
+                    nome: true,
+                    dataNascimento: true,
+                    status: true,
+                    dadosEscola: {
+                        select: {
+                            nome: true,
+                        },
+                    },
+                    cuidadores: {
+                        select: {
+                            id: true,
+                            nome: true,
+                            relacao: true,
+                            descricaoRelacao: true,
+                            cpf: true,
+                            telefone: true,
+                            email: true,
+                            profissao: true,
+                            escolaridade: true,
+                            dataNascimento: true,
+                        },
+                    },
+                    arquivos: {
+                        select: {
+                            tipo: true,
+                            arquivo_id: true,
+                        },
+                    },
+                },
+            },
+            informante: true,
+            parentesco: true,
+            parentesco_descricao: true,
+            quem_indicou: true,
+            terapeuta_id: true,
+            terapeuta: {
+                select: {
+                    nome: true,
+                },
+            },
+            queixa_diagnostico: {
+                select: {
+                    queixa_principal: true,
+                    diagnostico_previo: true,
+                    suspeita_condicao_associada: true,
+                    especialidades_consultada: {
+                        select: {
+                            id: true,
+                            especialidade: true,
+                            nome: true,
+                            data: true,
+                            observacao: true,
+                            ativo: true,
+                        }
+                    }
+                }
+            },
+            criado_em: true,
+            atualizado_em: true,
+        }
+    });
+
+    if (!anamnese) return null;
+    
+    const avatar = anamnese.cliente.arquivos.find((file) => file.tipo === 'fotoPerfil');
+
+    const cuidadores = (anamnese.cliente.cuidadores ?? []).map((c) => ({
+        id: c.id,
+        nome: c.nome,
+        relacao: c.relacao,
+        descricaoRelacao: c.descricaoRelacao ?? null,
+        cpf: c.cpf ?? null,
+        telefone: c.telefone ?? null,
+        email: c.email ?? null,
+        profissao: c.profissao ?? null,
+        escolaridade: c.escolaridade ?? null,
+        dataNascimento: toDateOnly(c.dataNascimento),
+    }));
+
+    const cabecalho = {
+        dataEntrevista: toDateOnly(anamnese.data_entrevista),
+        clienteId: anamnese.cliente_id,
+        clienteNome: anamnese.cliente.nome,
+        clienteAvatarUrl: avatar?.arquivo_id
+            ? `/api/arquivos/${encodeURIComponent(avatar.arquivo_id)}/view`
+            : undefined,
+        dataNascimento: anamnese.cliente.dataNascimento,
+        idade: calculateAge(anamnese.cliente.dataNascimento),
+        informante: anamnese.informante,
+        parentesco: anamnese.parentesco,
+        parentescoDescricao: anamnese.parentesco_descricao,
+        quemIndicou: anamnese.quem_indicou,
+        profissionalId: anamnese.terapeuta_id,
+        profissionalNome: anamnese.terapeuta.nome,
+        cuidadores,
+        escolaCliente: anamnese.cliente.dadosEscola?.nome ?? null,
+    };
+
+    const especialidadesConsultadas = (anamnese.queixa_diagnostico?.especialidades_consultada ?? []).map((e) => ({
+        id: e.id,
+        especialidade: e.especialidade,
+        nome: e.nome,
+        data: e.data,
+        observacao: e.observacao ?? null,
+        ativo: e.ativo,
+    }));
+
+    const queixaDiagnostico = {
+        queixaPrincipal: anamnese.queixa_diagnostico?.queixa_principal,
+        diagnosticoPrevio: anamnese.queixa_diagnostico?.diagnostico_previo,
+        suspeitaCondicaoAssociada: anamnese.queixa_diagnostico?.suspeita_condicao_associada,
+        especialidadesConsultadas,
+        medicamentosEmUso: MedicamentoEmUso[];
+        examesPrevios: ExamePrevio[];
+        terapiasPrevias: TerapiaPrevia[];
+    };
+
+    return {
+        id: anamnese.id,
+        cabecalho,
+        queixaDiagnostico,
+        contextoFamiliarRotina: AnamneseContextoFamiliarRotina;
+        desenvolvimentoInicial: AnamneseDesenvolvimentoInicial;
+        atividadesVidaDiaria: AnamneseAtividadesVidaDiaria;
+        socialAcademico: AnamneseSocialAcademico;
+        comportamento: AnamneseComportamento;
+        finalizacao: AnamneseFinalizacao;
+        status: anamnese.cliente.status,
+        createdAt: anamnese.criado_em,
+        updatedAt: anamnese.atualizado_em,
     };
 }

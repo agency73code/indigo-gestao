@@ -5,8 +5,10 @@ import * as AnamneseController from '../controllers/anamnese.controller.js';
 import { upload } from '../config/multer.js';
 
 const router: ExpressRouter = Router();
+router.use(auth);
 
-router.post('/', auth, upload.any(), AnamneseController.create);
-router.get('/', auth, AnamneseController.list);
+router.post('/', upload.any(), AnamneseController.create);
+router.get('/', AnamneseController.list);
+router.get('/:id', AnamneseController.getAnamneseById);
 
 export default router;

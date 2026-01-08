@@ -11,7 +11,7 @@ import { prepareDataForBackend, sanitizeObject } from './anamnese-consulta.valid
  * Flag para usar dados mock
  * Alterar para false quando API estiver pronta
  */
-const USE_MOCK = true;
+const USE_MOCK = false;
 
 // ============================================
 // FUNÇÕES DO SERVICE

@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import * as anamneseService from '../features/anamnese/anamnese.service.js';
 import { AnamneseSchema } from '../schemas/anamnese.schema.js';
-import { anamneseListSchema } from '../schemas/queries/anamnese.schema.js';
+import { anamneseIdSchema, anamneseListSchema } from '../schemas/queries/anamnese.schema.js';
 import type { AnamneseListFilters } from '../features/anamnese/anamnese.types.js';
 import { R2GenericUploadService } from '../features/file/r2/r2-upload-generic.js';
 
@@ -112,5 +112,17 @@ export async function list(req: Request, res: Response, next: NextFunction) {
         });
     } catch (err) {
         next(err);
+    }
+}
+
+export async function getAnamneseById(req: Request, res: Response, next: NextFunction) {
+    try {
+        const parsed = anamneseIdSchema.parse(req.params);
+        
+        const result = await anamneseService.getAnamneseById(parsed.id);
+
+        console.log(result)
+    } catch (err) {
+        return next(err)
     }
 }
