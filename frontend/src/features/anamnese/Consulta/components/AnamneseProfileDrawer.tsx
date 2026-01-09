@@ -15,7 +15,7 @@ import { exportToWord } from '../print/word-export.service';
 import '../print/anamnese-print-styles.css';
 import type { AnamneseDetalhe } from '../types/anamnese-consulta.types';
 import type { AnamneseListItem } from '../../Tabela/types/anamnese-table.types';
-import { getAnamneseById } from '../services/anamnese-consulta.service';
+import { getAnamneseById, updateAnamnese } from '../services/anamnese-consulta.service';
 import type { LucideIcon } from 'lucide-react';
 
 // Seções de visualização
@@ -337,7 +337,7 @@ export default function AnamneseProfileDrawer({
         } finally {
             setExportingWord(false);
         }
-    }, [anamneseDetalhe]);
+    }, [editData]);
 
     const handleEdit = useCallback(() => {
         // Criar cópia dos dados para edição
@@ -355,25 +355,73 @@ export default function AnamneseProfileDrawer({
         setEditData(null); // Descartar alterações
     }, []);
 
+    useEffect(() => {
+        if (!isEditMode) return;
+
+        setEditData(prev => {
+            if (!prev) return prev;
+
+            return {
+                ...prev,
+                queixaDiagnostico: {
+                    ...prev.queixaDiagnostico,
+                    ...editQueixaDiagnostico,
+                },
+                contextoFamiliarRotina: {
+                    ...prev.contextoFamiliarRotina,
+                    ...editContextoFamiliar,
+                    historicoFamiliar: editContextoFamiliar.historicosFamiliares ?? prev.contextoFamiliarRotina.historicoFamiliar,
+                    rotinaDiaria: editContextoFamiliar.atividadesRotina ?? prev.contextoFamiliarRotina.rotinaDiaria,
+                    historicosFamiliares: editContextoFamiliar.historicosFamiliares ?? prev.contextoFamiliarRotina.historicosFamiliares,
+                    atividadesRotina: editContextoFamiliar.atividadesRotina ?? prev.contextoFamiliarRotina.atividadesRotina,
+                },
+                desenvolvimentoInicial: {
+                    ...prev.desenvolvimentoInicial,
+                    ...editDesenvolvimento,
+                },
+                atividadesVidaDiaria: {
+                    ...prev.atividadesVidaDiaria,
+                    ...editVidaDiaria,
+                },
+                socialAcademico: {
+                    ...prev.socialAcademico,
+                    ...editSocialAcademico,
+                },
+                comportamento: {
+                    ...prev.comportamento,
+                    ...editComportamento,
+                },
+                finalizacao: {
+                    ...prev.finalizacao,
+                    ...editFinalizacao,
+                },
+            };
+        });
+    }, [
+        editQueixaDiagnostico,
+        editContextoFamiliar,
+        editDesenvolvimento,
+        editVidaDiaria,
+        editSocialAcademico,
+        editComportamento,
+        editFinalizacao,
+        isEditMode,
+    ]);
+
     const handleSave = useCallback(async () => {
         if (!editData) return;
         
         setIsSaving(true);
         setSaveError(null);
         try {
-            // TODO: Implementar chamada de API para salvar
-            console.log('Salvando alterações da anamnese:', editData);
-            
-            // Simular delay
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
+            await updateAnamnese(editData.id!, editData)
             setIsEditMode(false);
         } catch (err) {
             setSaveError(err instanceof Error ? err.message : 'Erro ao salvar');
         } finally {
             setIsSaving(false);
         }
-    }, [anamneseDetalhe]);
+    }, [editData]);
 
     const getStatusBadge = (status?: string) => {
         const isActive = status?.toUpperCase() === 'ATIVO';

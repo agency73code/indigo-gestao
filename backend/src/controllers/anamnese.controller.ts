@@ -133,6 +133,7 @@ export async function getAnamneseById(req: Request, res: Response, next: NextFun
 
 export async function updateAnamneseById(req: Request, res: Response, next: NextFunction) {
     try {
+        console.log(req.body)
         res.status(201).json({ success: true, message: 'deu certo' })
     } catch (err) {
         next(err);
