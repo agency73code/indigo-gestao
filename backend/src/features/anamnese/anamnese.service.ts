@@ -969,7 +969,7 @@ export async function getAnamneseById(anamneseId: number) {
             },
             criado_em: true,
             atualizado_em: true,
-        }
+        },
     });
 
     if (!anamnese) return null;

@@ -1,7 +1,7 @@
 import { authFetch } from '@/lib/http';
 import type { AnamneseDetalhe } from '../types/anamnese-consulta.types';
 import { getMockAnamneseById } from '../mocks/anamnese-consulta.mock';
-import { prepareDataForBackend, sanitizeObject } from './anamnese-consulta.validation';
+import { sanitizeObject } from './anamnese-consulta.validation';
 
 // ============================================
 // CONFIGURAÇÃO
@@ -68,13 +68,6 @@ export async function updateAnamnese(id: string, data: Partial<AnamneseDetalhe>)
         throw new Error('ID da anamnese é obrigatório');
     }
 
-    // Preparar dados (valida e sanitiza)
-    const prepared = prepareDataForBackend(data as Record<string, unknown>);
-    if (!prepared.valid || !prepared.data) {
-        const errorMessages = prepared.errors.map(e => `${e.field}: ${e.message}`).join(', ');
-        throw new Error(`Dados inválidos: ${errorMessages || 'Erro de validação'}`);
-    }
-
     // ========== MOCK: Simular atualização ==========
     if (USE_MOCK) {
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -91,7 +84,7 @@ export async function updateAnamnese(id: string, data: Partial<AnamneseDetalhe>)
     const res = await authFetch(`/api/anamneses/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(prepared.data),
+        body: JSON.stringify(data),
     });
 
     const text = await res.text();
