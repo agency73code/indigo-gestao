@@ -1226,6 +1226,123 @@ export async function getAnamneseById(anamneseId: number) {
     };
 }
 
-export async function updateAnamneseById(_payload: AnamnesePayload) {
-    // aaaaaaaaaaaaaaaaa
+function buildReplaceList<T>(items?: Prisma.Enumerable<T>): { deleteMany: object; create?: Prisma.Enumerable<T> } {
+    const result: { deleteMany: object; create?: Prisma.Enumerable<T> } = {
+        deleteMany: {},
+    };
+
+    if (items === undefined) {
+        return result;
+    }
+
+    if (Array.isArray(items) && items.length === 0) {
+        return result;
+    }
+
+    result.create = items;
+    return result;
+}
+
+export async function updateAnamneseById(anamneseId: number, payload: AnamnesePayload) {
+    const existing = await prisma.anamnese.findUnique({
+        where: { id: anamneseId },
+        select: { id: true },
+    });
+
+    if (!existing) {
+        return null;
+    }
+
+    const header = buildHeader(payload.cabecalho);
+    const complaintCreate = buildComplaintDiagnosis(payload.queixaDiagnostico).queixa_diagnostico?.create;
+    const familyCreate = buildFamilyContextRoutine(payload.contextoFamiliarRotina).contexto_familiar_rotina?.create;
+    const initialCreate = buildInitialDevelopment(payload.desenvolvimentoInicial).desenvolvimento_inicial?.create;
+    const dailyCreate = buildDaily(payload.atividadesVidaDiaria).atividades_vida_diaria?.create;
+    const socialCreate = buildSocialAcademic(payload.socialAcademico).social_academico?.create;
+    const behaviorCreate = buildBehavior(payload.comportamento).comportamento?.create;
+    const finishingCreate = buildFinishing(payload.finalizacao).finalizacao?.create;
+
+    if (
+        !complaintCreate || !familyCreate ||
+        !initialCreate || !dailyCreate ||
+        !socialCreate || !behaviorCreate ||
+        !finishingCreate
+    ) {
+        throw new AppError('INVALID_PAYLOAD', 'Payload de anamnese inválido.', 400);
+    }
+
+    const {
+        especialidades_consultada,
+        medicamentos_em_uso,
+        exames_previos,
+        terapias_previas,
+        ...complaintFields
+    } = complaintCreate;
+
+    const {
+        historicos_familiares,
+        atividades_rotina,
+        ...familyFields
+    } = familyCreate;
+
+    await prisma.anamnese.update({
+        where: { id: anamneseId },
+        data: {
+            ...header,
+            queixa_diagnostico: {
+                upsert: {
+                    create: complaintCreate,
+                    update: {
+                        ...complaintFields,
+                        especialidades_consultada: buildReplaceList(especialidades_consultada?.create),
+                        medicamentos_em_uso: buildReplaceList(medicamentos_em_uso?.create),
+                        exames_previos: buildReplaceList(exames_previos?.create),
+                        terapias_previas: buildReplaceList(terapias_previas?.create),
+                    },
+                },
+            },
+            contexto_familiar_rotina: {
+                upsert: {
+                    create: familyCreate,
+                    update: {
+                        ...familyFields,
+                        historicos_familiares: buildReplaceList(historicos_familiares?.create),
+                        atividades_rotina: buildReplaceList(atividades_rotina?.create),
+                    },
+                },
+            },
+            desenvolvimento_inicial: {
+                upsert: {
+                    create: initialCreate,
+                    update: initialCreate,
+                },
+            },
+            atividades_vida_diaria: {
+                upsert: {
+                    create: dailyCreate,
+                    update: dailyCreate,
+                },
+            },
+            social_academico: {
+                upsert: {
+                    create: socialCreate,
+                    update: socialCreate,
+                },
+            },
+            comportamento: {
+                upsert: {
+                    create: behaviorCreate,
+                    update: behaviorCreate,
+                },
+            },
+            finalizacao: {
+                upsert: {
+                    create: finishingCreate,
+                    update: finishingCreate,
+                },
+            },
+        },
+    });
+
+    return getAnamneseById(anamneseId);
 }

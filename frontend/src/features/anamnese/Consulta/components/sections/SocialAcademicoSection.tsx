@@ -9,7 +9,7 @@ interface SocialAcademicoSectionProps {
 export function SocialAcademicoSection({ data }: SocialAcademicoSectionProps) {
     const social = data.socialAcademico;
     const desenvolvimentoSocial = social.desenvolvimentoSocial;
-    const escola = social.vidaEscolar;
+    const escola = social.desenvolvimentoAcademico;
 
     return (
         <div className="space-y-6">

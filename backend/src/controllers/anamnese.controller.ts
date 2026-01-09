@@ -130,10 +130,34 @@ export async function getAnamneseById(req: Request, res: Response, next: NextFun
 
 export async function updateAnamneseById(req: Request, res: Response, next: NextFunction) {
     try {
-        return res.status(200).json({
-            success: true,
-            message: 'teste.',
-        });
+        const parsed = anamneseIdSchema.parse(req.params);
+        const rawPayload = req.body?.payload ?? req.body;
+
+        if (!rawPayload) {
+            return res.status(400).json({
+                success: false,
+                message: 'Campo "payload" é obrigatório.',
+            });
+        }
+
+        const parsedPayload =
+            typeof rawPayload === 'string' ? JSON.parse(rawPayload) : rawPayload;
+        const payload = AnamneseSchema.parse(parsedPayload);
+
+        if (!payload?.cabecalho?.clienteId || !payload?.cabecalho?.profissionalId) {
+            return res.status(400).json({
+                success: false,
+                message: 'clienteId e profissionalId são obrigatórios.',
+            });
+        }
+
+        const updated = await anamneseService.updateAnamneseById(parsed.id, payload);
+
+        if (!updated) {
+            return res.status(404).json({ success: false, message: 'Anamnese não encontrada' });
+        }
+
+        return res.status(200).json(updated);
     } catch (err) {
         next(err);
     }

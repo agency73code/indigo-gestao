@@ -80,7 +80,7 @@ export async function updateAnamnese(id: string, data: Partial<AnamneseDetalhe>)
         return { ...existing, ...sanitizedData, updatedAt: new Date().toISOString() } as AnamneseDetalhe;
     }
     // ================================================
-
+    console.log(data.desenvolvimentoInicial?.falaLinguagem)
     const res = await authFetch(`/api/anamneses/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },

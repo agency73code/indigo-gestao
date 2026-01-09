@@ -1186,7 +1186,7 @@ export function validateStep8Finalizacao(data: Record<string, unknown>): StepVal
  * ⚠️ TEMPORARIAMENTE DESABILITADO PARA TESTES ⚠️
  * TODO: Remover este bypass após corrigir campos do backend
  */
-export function validateStep(step: number, data: Record<string, unknown>): StepValidationResult {
+export function validateStep(step: number, _data: Record<string, unknown>): StepValidationResult {
     // BYPASS TEMPORÁRIO - Desabilita todas as validações para testes
     // Remover este bloco após ajustar os campos com o backend
     console.warn(`[VALIDAÇÃO DESABILITADA] Step ${step} - validação ignorada para testes`);

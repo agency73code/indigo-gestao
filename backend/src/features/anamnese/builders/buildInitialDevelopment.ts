@@ -58,7 +58,7 @@ export function buildInitialDevelopment(
         initialDevelopment.neuropsicomotor,
     );
     const speechMarcos = buildSpeechMarcos(initialDevelopment.falaLinguagem);
-
+    console.log(speechMarcos.pointing);
     return {
         desenvolvimento_inicial: {
             create: {

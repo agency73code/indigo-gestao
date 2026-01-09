@@ -414,7 +414,8 @@ export default function AnamneseProfileDrawer({
         setIsSaving(true);
         setSaveError(null);
         try {
-            await updateAnamnese(editData.id!, editData)
+            const updated = await updateAnamnese(editData.id!, editData);
+            setAnamneseDetalhe(updated);
             setIsEditMode(false);
         } catch (err) {
             setSaveError(err instanceof Error ? err.message : 'Erro ao salvar');

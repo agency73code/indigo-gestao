@@ -3,6 +3,7 @@ type SimNao = 'sim' | 'nao' | null | undefined;
 type MarcoPayload = {
     meses?: string | null | undefined;
     naoRealiza?: boolean | null | undefined;
+    nao?: boolean | null | undefined;
     naoSoubeInformar?: boolean | null | undefined;
 };
 
@@ -21,7 +22,7 @@ export function mapSimNao(value: SimNao): boolean | null {
 export function mapMarco(marco?: MarcoPayload): MarcoMapped {
     return {
         months: marco?.meses ?? null,
-        notPerform: marco?.naoRealiza ?? false,
+        notPerform: marco?.naoRealiza ?? marco?.nao ?? false,
         didntKnow: marco?.naoSoubeInformar ?? false,
     };
 }
