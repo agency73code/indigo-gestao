@@ -80,11 +80,23 @@ export async function updateAnamnese(id: string, data: Partial<AnamneseDetalhe>)
         return { ...existing, ...sanitizedData, updatedAt: new Date().toISOString() } as AnamneseDetalhe;
     }
     // ================================================
-    console.log(data.desenvolvimentoInicial?.falaLinguagem)
+
+    const fd = new FormData();
+    fd.append('payload', JSON.stringify(data));
+
+    const exames = data?.queixaDiagnostico?.examesPrevios ?? [];
+    for (const exame of exames) {
+        const arquivos = exame?.arquivos ?? [];
+        for (const arq of arquivos) {
+            if (arq?.id && arq?.file instanceof File) {
+                fd.append(`files[${arq.id}]`, arq.file, arq.file.name);
+            }
+        }
+    }
+
     const res = await authFetch(`/api/anamneses/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: fd,
     });
 
     const text = await res.text();

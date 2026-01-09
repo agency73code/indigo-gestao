@@ -151,6 +151,52 @@ export async function updateAnamneseById(req: Request, res: Response, next: Next
             });
         }
 
+        const files = (Array.isArray(req.files) ? req.files : []) as Express.Multer.File[];
+        const idToKey = new Map<string, string>();
+
+        for (const f of files) {
+            const fileId = extractFileId(f.fieldname);
+            if (!fileId) continue;
+
+            const [uploaded] = await R2GenericUploadService.uploadMany({
+                prefix: `anamneses/exames-previos/${payload.cabecalho.clienteId}`,
+                files: [
+                    {
+                        buffer: f.buffer,
+                        mimetype: f.mimetype,
+                        originalname: f.originalname,
+                        size: f.size,
+                    },
+                ],
+            });
+
+            if (uploaded) {
+                idToKey.set(fileId, uploaded.key);
+            }
+        }
+
+        const exames = payload.queixaDiagnostico?.examesPrevios ?? [];
+        for (const exame of exames) {
+            const arquivos = exame?.arquivos ?? [];
+            for (const arq of arquivos) {
+                if (!arq) continue;
+                const fileId = arq?.id as string | null | undefined;
+                const key = fileId ? idToKey.get(fileId) : undefined;
+
+                if (key) {
+                    arq.caminho = key;
+                    continue;
+                }
+
+                const existingPath = (arq as { caminho?: string | null; url?: string | null }).caminho
+                    ?? (arq as { url?: string | null }).url
+                    ?? null;
+                if (!arq.caminho) {
+                    arq.caminho = existingPath;
+                }
+            }
+        }
+
         const updated = await anamneseService.updateAnamneseById(parsed.id, payload);
 
         if (!updated) {

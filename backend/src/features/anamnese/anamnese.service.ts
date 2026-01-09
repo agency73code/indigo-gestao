@@ -1,5 +1,6 @@
 import type { Prisma } from '@prisma/client';
 import { prisma } from '../../config/database.js';
+import { deleteFromR2 } from '../file/files.service.js';
 import type { AnamnesePayload } from '../../schemas/anamnese.schema.js';
 import { ACCESS_LEVELS } from '../../utils/accessLevels.js';
 import { getVisibilityScope } from '../../utils/visibilityFilter.js';
@@ -1246,12 +1247,36 @@ function buildReplaceList<T>(items?: Prisma.Enumerable<T>): { deleteMany: object
 export async function updateAnamneseById(anamneseId: number, payload: AnamnesePayload) {
     const existing = await prisma.anamnese.findUnique({
         where: { id: anamneseId },
-        select: { id: true },
+        select: {
+            id: true,
+            queixa_diagnostico: {
+                select: {
+                    exames_previos: {
+                        select: {
+                            arquivos: { select: { caminho: true } },
+                        },
+                    },
+                },
+            },
+        },
     });
 
     if (!existing) {
         return null;
     }
+
+    const existingFileKeys = (existing.queixa_diagnostico?.exames_previos ?? []).flatMap((exame) =>
+        (exame.arquivos ?? [])
+            .map((arquivo) => arquivo.caminho ?? '')
+            .filter((caminho) => caminho.length > 0),
+    );
+
+    const incomingFileKeys = (payload.queixaDiagnostico?.examesPrevios ?? []).flatMap((exame) =>
+        (exame.arquivos ?? [])
+            .map((arquivo) => arquivo?.caminho ?? '')
+            .filter((caminho) => caminho.length > 0),
+    );
+    const incomingKeySet = new Set(incomingFileKeys);
 
     const header = buildHeader(payload.cabecalho);
     const complaintCreate = buildComplaintDiagnosis(payload.queixaDiagnostico).queixa_diagnostico?.create;
@@ -1343,6 +1368,11 @@ export async function updateAnamneseById(anamneseId: number, payload: AnamnesePa
             },
         },
     });
+
+    const keysToDelete = existingFileKeys.filter((key) => !incomingKeySet.has(key));
+    if (keysToDelete.length > 0) {
+        await Promise.all(keysToDelete.map((key) => deleteFromR2(key)));
+    }
 
     return getAnamneseById(anamneseId);
 }

@@ -10,6 +10,6 @@ router.use(auth);
 router.post('/', upload.any(), AnamneseController.create);
 router.get('/', AnamneseController.list);
 router.get('/:id', AnamneseController.getAnamneseById);
-router.patch('/:id', AnamneseController.updateAnamneseById);
+router.patch('/:id', upload.any(), AnamneseController.updateAnamneseById);
 
 export default router;
