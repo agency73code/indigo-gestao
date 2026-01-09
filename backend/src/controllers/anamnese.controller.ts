@@ -69,9 +69,6 @@ export async function create(req: Request, res: Response, next: NextFunction) {
             }
         }
 
-        console.log(payload.queixaDiagnostico)
-        console.log(exames)
-
         // chama o service já com caminho preenchido
         const created = await anamneseService.create(payload);
 
@@ -133,8 +130,10 @@ export async function getAnamneseById(req: Request, res: Response, next: NextFun
 
 export async function updateAnamneseById(req: Request, res: Response, next: NextFunction) {
     try {
-        console.log(req.body)
-        res.status(201).json({ success: true, message: 'deu certo' })
+        return res.status(200).json({
+            success: true,
+            message: 'teste.',
+        });
     } catch (err) {
         next(err);
     }

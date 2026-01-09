@@ -337,7 +337,7 @@ export default function AnamneseProfileDrawer({
         } finally {
             setExportingWord(false);
         }
-    }, [editData]);
+    }, [anamneseDetalhe]);
 
     const handleEdit = useCallback(() => {
         // Criar cópia dos dados para edição
