@@ -179,9 +179,9 @@ function ExameCard({ exame, index, onUpdate, onRemove, onAddArquivo, onRemoveArq
                 )}
 
                 {/* Lista de arquivos anexados */}
-                {(exame.arquivos || []).length > 0 && (
+                {((exame.arquivos || []).filter((arquivo) => !arquivo.removed)).length > 0 && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {exame.arquivos?.map((arquivo) => (
+                        {exame.arquivos?.filter((arquivo) => !arquivo.removed).map((arquivo) => (
                             <div
                                 key={arquivo.id}
                                 className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg border"
@@ -211,7 +211,7 @@ function ExameCard({ exame, index, onUpdate, onRemove, onAddArquivo, onRemoveArq
                     </div>
                 )}
 
-                {(exame.arquivos || []).length === 0 && !selectedFile && (
+                {((exame.arquivos || []).filter((arquivo) => !arquivo.removed)).length === 0 && !selectedFile && (
                     <div className="text-center py-4 text-xs text-muted-foreground border-2 border-dashed rounded-lg">
                         Nenhum arquivo anexado
                     </div>
@@ -327,6 +327,7 @@ export default function QueixaDiagnosticoStep({ data, onChange, fieldErrors = {}
             tipo: file.type,
             tamanho: file.size,
             file: file,
+            removed: false,
         };
         const exame = data.examesPrevios?.find(e => e.id === exameId);
         if (exame) {
@@ -337,7 +338,10 @@ export default function QueixaDiagnosticoStep({ data, onChange, fieldErrors = {}
     const handleRemoveArquivoExame = (exameId: string, arquivoId: string) => {
         const exame = data.examesPrevios?.find(e => e.id === exameId);
         if (exame) {
-            handleUpdateExame(exameId, 'arquivos', (exame.arquivos || []).filter(a => a.id !== arquivoId));
+            const arquivosAtualizados = (exame.arquivos || []).map((arquivo) =>
+                arquivo.id === arquivoId ? { ...arquivo, removed: true } : arquivo,
+            );
+            handleUpdateExame(exameId, 'arquivos', arquivosAtualizados);
         }
     };
 

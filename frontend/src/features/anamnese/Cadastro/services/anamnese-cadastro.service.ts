@@ -188,7 +188,7 @@ async function apiCriarAnamnese(data: Anamnese): Promise<AnamneseResponse> {
         for (const exame of exames) {
             const arquivos = exame?.arquivos ?? [];
             for (const arq of arquivos) {
-                if (arq?.id && arq?.file instanceof File) {
+                if (arq?.id && arq?.file instanceof File && !arq.removed) {
                     fd.append(`files[${arq.id}]`, arq.file, arq.file.name);
                 }
             }

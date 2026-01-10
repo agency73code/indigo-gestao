@@ -28,12 +28,15 @@ export function buildComplaintDiagnosis(
     }));
 
     const examesPrevios = maybeCreateList(complaintDiagnosis.examesPrevios, (exame) => {
-        const arquivos = maybeCreateList(exame.arquivos, (arquivo) => ({
-            nome: arquivo.nome ?? null,
-            tipo: arquivo.tipo ?? null,
-            tamanho: arquivo.tamanho ?? null,
-            caminho: arquivo.caminho ?? null,
-        }));
+        const arquivos = maybeCreateList(
+            exame.arquivos?.filter((arquivo) => !arquivo.removed),
+            (arquivo) => ({
+                nome: arquivo.nome ?? null,
+                tipo: arquivo.tipo ?? null,
+                tamanho: arquivo.tamanho ?? null,
+                caminho: arquivo.caminho ?? null,
+            }),
+        );
 
         return {
             nome: exame.nome ?? null,

@@ -17,6 +17,7 @@ const ArquivoAnexoSchema = z.object({
   tipo: z.string().optional().nullable(),
   tamanho: z.number().optional().nullable(),
   caminho: z.string().optional().nullable(),
+  removed: z.boolean().optional().nullable(),
   file: z.unknown().optional().nullable(),
 });
 

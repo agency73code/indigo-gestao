@@ -1249,15 +1249,6 @@ export async function updateAnamneseById(anamneseId: number, payload: AnamnesePa
         where: { id: anamneseId },
         select: {
             id: true,
-            queixa_diagnostico: {
-                select: {
-                    exames_previos: {
-                        select: {
-                            arquivos: { select: { caminho: true } },
-                        },
-                    },
-                },
-            },
         },
     });
 
@@ -1265,18 +1256,12 @@ export async function updateAnamneseById(anamneseId: number, payload: AnamnesePa
         return null;
     }
 
-    const existingFileKeys = (existing.queixa_diagnostico?.exames_previos ?? []).flatMap((exame) =>
+    const removedFilePaths = (payload.queixaDiagnostico?.examesPrevios ?? []).flatMap((exame) =>
         (exame.arquivos ?? [])
-            .map((arquivo) => arquivo.caminho ?? '')
-            .filter((caminho) => caminho.length > 0),
-    );
-
-    const incomingFileKeys = (payload.queixaDiagnostico?.examesPrevios ?? []).flatMap((exame) =>
-        (exame.arquivos ?? [])
+            .filter((arquivo) => arquivo?.removed === true)
             .map((arquivo) => arquivo?.caminho ?? '')
             .filter((caminho) => caminho.length > 0),
     );
-    const incomingKeySet = new Set(incomingFileKeys);
 
     const header = buildHeader(payload.cabecalho);
     const complaintCreate = buildComplaintDiagnosis(payload.queixaDiagnostico).queixa_diagnostico?.create;
@@ -1369,9 +1354,36 @@ export async function updateAnamneseById(anamneseId: number, payload: AnamnesePa
         },
     });
 
-    const keysToDelete = existingFileKeys.filter((key) => !incomingKeySet.has(key));
-    if (keysToDelete.length > 0) {
-        await Promise.all(keysToDelete.map((key) => deleteFromR2(key)));
+    const normalizeStorageKey = (caminho: string): string => {
+        if (!caminho) {
+            return '';
+        }
+
+        try {
+            const parsed = new URL(caminho);
+            return decodeURIComponent(parsed.pathname).replace(/^\/+/, '');
+        } catch {
+            return caminho.replace(/^\/+/, '');
+        }
+    };
+
+    const removedKeys = removedFilePaths
+        .map((path) => normalizeStorageKey(path))
+        .filter((path) => path.length > 0);
+    const deleteKeySet = new Set(removedKeys);
+    const deletePathSet = new Set([...removedFilePaths, ...removedKeys].filter((path) => path.length > 0));
+
+    if (deletePathSet.size > 0) {
+        await prisma.anamnese_arquivo_exame_previo.deleteMany({
+            where: {
+                caminho: { in: Array.from(deletePathSet) },
+                exame: { anamnese_id: anamneseId },
+            },
+        });
+    }
+
+    if (deleteKeySet.size > 0) {
+        await Promise.all(Array.from(deleteKeySet).map((key) => deleteFromR2(key)));
     }
 
     return getAnamneseById(anamneseId);

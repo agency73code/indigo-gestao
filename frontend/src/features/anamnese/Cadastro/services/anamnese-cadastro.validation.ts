@@ -68,6 +68,8 @@ const arquivoAnexoSchema = z.object({
     tipo: z.string(),
     tamanho: z.number(),
     url: z.string().optional(),
+    caminho: z.string().optional(),
+    removed: z.boolean().optional(),
 });
 
 // Schema para Exame Prévio

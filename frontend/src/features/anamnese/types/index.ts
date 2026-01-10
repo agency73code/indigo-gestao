@@ -110,6 +110,8 @@ export interface ArquivoAnexo {
     tipo: string;
     tamanho: number;
     url?: string;
+    caminho?: string;
+    removed?: boolean;
     file?: File;
 }
 

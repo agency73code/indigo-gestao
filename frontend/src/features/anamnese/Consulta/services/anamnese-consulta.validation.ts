@@ -73,6 +73,8 @@ const queixaDiagnosticoUpdateSchema = z.object({
             tipo: z.string(),
             tamanho: z.number(),
             url: z.string().optional(),
+            caminho: z.string().optional(),
+            removed: z.boolean().optional(),
         })).optional(),
     })),
     terapiasPrevias: z.array(z.object({
