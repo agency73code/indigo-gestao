@@ -33,9 +33,13 @@ import {
     LayoutList,
     CheckCircle2,
     FileEdit,
+    MessageCircle,
+    Copy,
+    Check,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { CloseButton } from '@/components/layout/CloseButton';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -52,6 +56,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -84,11 +89,12 @@ import {
     listTerapeutas,
     deleteAta,
     generateSummary,
+    generateWhatsAppSummary,
 } from '../services/atas.service';
 
 import { DateRangePickerField, type DateRangeValue } from '@/ui/date-range-picker-field';
 import { cn } from '@/lib/utils';
-import { calcularTotaisHoras, formatarHorasFaturadas } from '../utils/calcularHorasFaturadas';
+import { calcularTotaisHoras, formatarHorasFaturadas, calcularDuracaoMinutos } from '../utils/calcularHorasFaturadas';
 
 // Tipo estendido para filtros internos
 type InternalFilters = Partial<AtaListFilters> & { 
@@ -97,18 +103,8 @@ type InternalFilters = Partial<AtaListFilters> & {
     terapeutaId?: string;
 };
 
-// ============================================
-// FUNÇÃO PARA CALCULAR DURAÇÃO
-// ============================================
-
-function calcularDuracaoMinutos(horarioInicio: string, horarioFim: string): number {
-    const [horaInicio, minInicio] = horarioInicio.split(':').map(Number);
-    const [horaFim, minFim] = horarioFim.split(':').map(Number);
-    
-    const inicioMinutos = horaInicio * 60 + minInicio;
-    const fimMinutos = horaFim * 60 + minFim;
-    
-    return fimMinutos - inicioMinutos;
+function getDuracaoMinutos(ata: AtaReuniao): number {
+    return ata.duracaoMinutos ?? calcularDuracaoMinutos(ata.horarioInicio, ata.horarioFim);
 }
 
 function formatarHoras(minutosTotais: number): string {
@@ -236,7 +232,7 @@ function EmptyState({ hasFilters, onClearFilters }: { hasFilters: boolean; onCle
             <div className="p-4 bg-muted rounded-full mb-4">
                 <FileText className="h-8 w-8 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-semibold mb-2">
+            <h3 className="text-lg font-normal mb-2">
                 {hasFilters ? 'Nenhuma ata encontrada' : 'Nenhuma ata registrada'}
             </h3>
             <p className="text-sm text-muted-foreground mb-4 max-w-sm">
@@ -308,18 +304,16 @@ function DetailPanel({
                             {String(currentIndex + 1).padStart(2, '0')} de {String(totalCount).padStart(2, '0')}
                         </span>
                     </div>
-                    <Button variant="ghost" size="icon" onClick={onClose}>
-                        <X className="h-4 w-4" />
-                    </Button>
+                    <CloseButton onClick={onClose} />
                 </div>
 
                 {/* Conteúdo */}
                 <div className="flex-1 overflow-y-auto">
-                    <div className="p-6 space-y-6">
+                    <div className="p-6 pt-0 space-y-6">
                         {/* Título e Status */}
                         <div>
                             <div className="flex items-start justify-between gap-4 mb-4">
-                                <h2 className="text-xl font-semibold leading-tight">
+                                <h2 className="text-xl leading-tight font-sora font-light">
                                     {finalidadeLabel}
                                 </h2>
                                 <Badge 
@@ -511,6 +505,11 @@ export function AtaTable() {
     const [ataForSummary, setAtaForSummary] = useState<AtaReuniao | null>(null);
     const [generatingSummary, setGeneratingSummary] = useState(false);
     const [generatedSummary, setGeneratedSummary] = useState('');
+    
+    // Estados para WhatsApp
+    const [whatsappSummary, setWhatsappSummary] = useState<string | null>(null);
+    const [generatingWhatsapp, setGeneratingWhatsapp] = useState(false);
+    const [copied, setCopied] = useState(false);
 
     // Filtro de status
     const [statusFilter, setStatusFilter] = useState<'all' | 'finalizada' | 'rascunho'>('all');
@@ -802,6 +801,8 @@ export function AtaTable() {
         if (selectedAta) {
             setAtaForSummary(selectedAta);
             setGeneratedSummary(selectedAta.resumoIA ?? '');
+            setWhatsappSummary(null);
+            setCopied(false);
             setSummaryDialogOpen(true);
         }
     }, [selectedAta]);
@@ -811,7 +812,7 @@ export function AtaTable() {
 
         setGeneratingSummary(true);
         try {
-            const summary = await generateSummary(ataForSummary.id);
+            const summary = await generateSummary(ataForSummary);
             setGeneratedSummary(summary);
             toast.success('Resumo gerado com sucesso!');
             loadData();
@@ -822,6 +823,35 @@ export function AtaTable() {
             setGeneratingSummary(false);
         }
     }, [ataForSummary, loadData]);
+
+    const handleGenerateWhatsAppSummary = useCallback(async () => {
+        if (!ataForSummary) return;
+
+        setGeneratingWhatsapp(true);
+        try {
+            const summary = await generateWhatsAppSummary(ataForSummary);
+            setWhatsappSummary(summary);
+            toast.success('Mensagem para WhatsApp gerada!');
+        } catch (error) {
+            console.error('Erro ao gerar resumo WhatsApp:', error);
+            toast.error('Erro ao gerar mensagem para WhatsApp');
+        } finally {
+            setGeneratingWhatsapp(false);
+        }
+    }, [ataForSummary]);
+
+    const handleCopyWhatsApp = useCallback(async () => {
+        if (!whatsappSummary) return;
+        
+        try {
+            await navigator.clipboard.writeText(whatsappSummary);
+            setCopied(true);
+            toast.success('Copiado para a área de transferência!');
+            setTimeout(() => setCopied(false), 2000);
+        } catch {
+            toast.error('Erro ao copiar');
+        }
+    }, [whatsappSummary]);
 
     // ============================================
     // RENDERIZAÇÃO
@@ -990,7 +1020,7 @@ export function AtaTable() {
                             <p className="text-sm text-muted-foreground">
                                 {filteredAtas.length} {filteredAtas.length === 1 ? 'ata' : 'atas'} • {formatarHoras(
                                     filteredAtas.reduce((acc, ata) => {
-                                        const duracao = calcularDuracaoMinutos(ata.horarioInicio, ata.horarioFim);
+                                        const duracao = getDuracaoMinutos(ata);
                                         return acc + (duracao > 0 ? duracao : 0);
                                     }, 0)
                                 )}
@@ -1078,9 +1108,8 @@ export function AtaTable() {
                     {groupedByClient.map(({ clienteId, clienteNome, atas: clientAtas }) => {
                         const totalClientAtas = clientAtas.length;
                         
-                        // Calcula horas do cliente
                         const minutosCliente = clientAtas.reduce((acc, ata) => {
-                            const duracao = calcularDuracaoMinutos(ata.horarioInicio, ata.horarioFim);
+                            const duracao = getDuracaoMinutos(ata);
                             return acc + (duracao > 0 ? duracao : 0);
                         }, 0);
                         
@@ -1168,49 +1197,129 @@ export function AtaTable() {
             </AlertDialog>
 
             {/* Dialog de resumo IA */}
-            <Dialog open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen}>
-                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <Dialog open={summaryDialogOpen} onOpenChange={(open) => {
+                setSummaryDialogOpen(open);
+                if (!open) {
+                    setWhatsappSummary(null);
+                    setCopied(false);
+                }
+            }}>
+                <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <Sparkles className="h-5 w-5 text-primary" />
                             Resumo com IA
                         </DialogTitle>
                         <DialogDescription>
-                            Gere um resumo automático dos principais pontos discutidos na reunião.
+                            Gere resumos automáticos da reunião.
                         </DialogDescription>
                     </DialogHeader>
 
-                    <div className="space-y-4 py-4">
-                        {generatedSummary ? (
-                            <div className="prose prose-sm max-w-none p-4 bg-muted/50 rounded-lg whitespace-pre-wrap">
-                                {generatedSummary}
-                            </div>
-                        ) : (
-                            <div className="text-center py-8 text-muted-foreground">
-                                <Sparkles className="h-8 w-8 mx-auto mb-3 opacity-50" />
-                                <p>Clique no botão abaixo para gerar um resumo automático.</p>
-                            </div>
-                        )}
-                    </div>
+                    <Tabs defaultValue="whatsapp" className="w-full">
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="completo" className="gap-2">
+                                <FileText className="h-4 w-4" />
+                                Resumo Completo
+                            </TabsTrigger>
+                            <TabsTrigger value="whatsapp" className="gap-2">
+                                <MessageCircle className="h-4 w-4" />
+                                WhatsApp
+                            </TabsTrigger>
+                        </TabsList>
 
-                    <div className="flex justify-end gap-3">
-                        <Button variant="outline" onClick={() => setSummaryDialogOpen(false)}>
-                            Fechar
-                        </Button>
-                        <Button onClick={handleGenerateSummary} disabled={generatingSummary}>
-                            {generatingSummary ? (
-                                <>
-                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                    Gerando...
-                                </>
-                            ) : (
-                                <>
-                                    <Sparkles className="h-4 w-4 mr-2" />
-                                    {generatedSummary ? 'Gerar Novamente' : 'Gerar Resumo'}
-                                </>
-                            )}
-                        </Button>
-                    </div>
+                        {/* Aba: Resumo Completo */}
+                        <TabsContent value="completo" className="mt-4">
+                            <div className="space-y-4">
+                                {generatedSummary ? (
+                                    <div className="space-y-2">
+                                        <p className="text-xs text-muted-foreground">Você pode editar o texto abaixo:</p>
+                                        <textarea
+                                            value={generatedSummary}
+                                            onChange={(e) => setGeneratedSummary(e.target.value)}
+                                            className="w-full p-4 bg-muted/50 rounded-lg text-sm min-h-[200px] resize-y focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-8 text-muted-foreground">
+                                        <Sparkles className="h-8 w-8 mx-auto mb-3 opacity-50" />
+                                        <p>Clique no botão abaixo para gerar um resumo automático.</p>
+                                    </div>
+                                )}
+
+                                <div className="flex justify-end">
+                                    <Button onClick={handleGenerateSummary} disabled={generatingSummary}>
+                                        {generatingSummary ? (
+                                            <>
+                                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                                Gerando...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Sparkles className="h-4 w-4 mr-2" />
+                                                {generatedSummary ? 'Gerar Novamente' : 'Gerar Resumo'}
+                                            </>
+                                        )}
+                                    </Button>
+                                </div>
+                            </div>
+                        </TabsContent>
+
+                        {/* Aba: WhatsApp */}
+                        <TabsContent value="whatsapp" className="mt-4">
+                            <div className="space-y-4">
+                                <p className="text-sm text-muted-foreground">
+                                    Gere uma mensagem estruturada para enviar aos pais via WhatsApp.
+                                </p>
+
+                                {whatsappSummary ? (
+                                    <div className="space-y-2">
+                                        <p className="text-xs text-muted-foreground">Você pode editar o texto abaixo antes de copiar:</p>
+                                        <textarea
+                                            value={whatsappSummary}
+                                            onChange={(e) => setWhatsappSummary(e.target.value)}
+                                            className="w-full p-4 bg-emerald-50 border border-emerald-200 rounded-lg text-sm min-h-[280px] resize-y focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
+                                        <MessageCircle className="h-8 w-8 mx-auto mb-3 opacity-50" />
+                                        <p>Clique no botão abaixo para gerar.</p>
+                                    </div>
+                                )}
+
+                                <div className="flex justify-end gap-3">
+                                    {whatsappSummary && (
+                                        <Button variant="outline" onClick={handleCopyWhatsApp}>
+                                            {copied ? (
+                                                <>
+                                                    <Check className="h-4 w-4 mr-2 text-emerald-600" />
+                                                    Copiado!
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Copy className="h-4 w-4 mr-2" />
+                                                    Copiar Mensagem
+                                                </>
+                                            )}
+                                        </Button>
+                                    )}
+                                    <Button onClick={handleGenerateWhatsAppSummary} disabled={generatingWhatsapp}>
+                                        {generatingWhatsapp ? (
+                                            <>
+                                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                                Gerando...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <MessageCircle className="h-4 w-4 mr-2" />
+                                                {whatsappSummary ? 'Gerar Novamente' : 'Gerar para WhatsApp'}
+                                            </>
+                                        )}
+                                    </Button>
+                                </div>
+                            </div>
+                        </TabsContent>
+                    </Tabs>
                 </DialogContent>
             </Dialog>
         </div>

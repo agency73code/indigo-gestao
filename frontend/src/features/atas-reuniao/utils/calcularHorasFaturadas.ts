@@ -66,7 +66,7 @@ export function calcularTotaisHoras(
 /**
  * Calcula a duração em minutos entre dois horários no formato HH:MM
  */
-function calcularDuracaoMinutos(horarioInicio: string, horarioFim: string): number {
+export function calcularDuracaoMinutos(horarioInicio: string, horarioFim: string): number {
     const [horaInicio, minInicio] = horarioInicio.split(':').map(Number);
     const [horaFim, minFim] = horarioFim.split(':').map(Number);
     
@@ -84,3 +84,28 @@ function calcularDuracaoMinutos(horarioInicio: string, horarioFim: string): numb
 export function formatarHorasFaturadas(horas: number): string {
     return `${horas}h`;
 }
+
+/**
+ * Formata duração em minutos para exibição
+ * @param minutos - Duração em minutos
+ * @returns String formatada (ex: "1h 30min" ou "45min")
+ */
+export function formatarDuracao(minutos: number): string {
+    if (minutos <= 0) return '0min';
+    
+    const horas = Math.floor(minutos / 60);
+    const mins = minutos % 60;
+    
+    if (horas === 0) {
+        return `${mins}min`;
+    }
+    
+    if (mins === 0) {
+        return `${horas}h`;
+    }
+    
+    return `${horas}h ${mins}min`;
+}
+
+// Alias para compatibilidade
+export const calcularHorasFaturadas = calcularHorasFaturadasPorReuniao;

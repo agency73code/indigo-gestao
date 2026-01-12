@@ -56,53 +56,63 @@ export const TIPO_PARTICIPANTE_LABELS: Record<TipoParticipante, string> = {
 // INTERFACES E TIPOS
 // ============================================
 
-/** Informações do cabeçalho (read-only, vem do sistema) */
+/** Cabeçalho da ata - apenas terapeutaId é salvo, restante derivado */
 export interface CabecalhoAta {
     terapeutaId: string;
     terapeutaNome: string;
     conselhoNumero?: string;
-    conselhoTipo?: string; // CRP, CRM, CREFITO, etc
+    conselhoTipo?: string;
     profissao?: string;
     cargo?: string;
 }
 
-/** Participante da reunião */
+/** Salvos: id, tipo, nome, descricao, terapeutaId | Derivados: especialidade, cargo */
 export interface Participante {
     id: string;
     tipo: TipoParticipante;
     nome: string;
-    /** Para família: relação com cliente (mãe, pai, avó). Para externo: área de atuação */
     descricao?: string;
-    /** ID do terapeuta, se for profissional da clínica */
     terapeutaId?: string;
-    /** Especialidade/área do profissional da clínica */
     especialidade?: string;
-    /** Cargo do profissional da clínica */
     cargo?: string;
 }
 
-/** Dados do formulário da ata */
+/** Dados do formulário - clienteNome é derivado, restante salvo */
 export interface AtaFormData {
-    data: string; // ISO date string YYYY-MM-DD
+    data: string; // YYYY-MM-DD
     horarioInicio: string; // HH:mm
     horarioFim: string; // HH:mm
     finalidade: FinalidadeReuniao;
-    finalidadeOutros?: string; // Obrigatório se finalidade === 'outros'
+    finalidadeOutros?: string;
     modalidade: ModalidadeReuniao;
     participantes: Participante[];
-    conteudo: string; // HTML do RichTextEditor
+    conteudo: string;
     clienteId?: string;
     clienteNome?: string;
 }
 
-/** Ata de reunião completa (incluindo cabeçalho e metadados) */
+/** Anexo - url é derivado */
+export interface Anexo {
+    id: string;
+    name: string;
+    size: number;
+    type: string;
+    url?: string;
+    arquivoId?: string;
+}
+
 export interface AtaReuniao extends AtaFormData {
     id: string;
     cabecalho: CabecalhoAta;
     status: 'rascunho' | 'finalizada';
-    criadoEm: string; // ISO datetime
-    atualizadoEm: string; // ISO datetime
-    resumoIA?: string; // Resumo gerado por IA
+    criadoEm: string;
+    atualizadoEm: string;
+    resumoIA?: string;
+    anexos?: Anexo[];
+    /** Calculado pelo backend */
+    duracaoMinutos?: number;
+    /** Calculado pelo backend */
+    horasFaturadas?: number;
 }
 
 /** Filtros para listagem de atas */
@@ -126,7 +136,6 @@ export interface AtaListResponse {
     totalPages: number;
 }
 
-/** Input para criação de ata */
 export interface CreateAtaInput {
     formData: AtaFormData;
     cabecalho: CabecalhoAta;
@@ -137,7 +146,6 @@ export interface UpdateAtaInput {
     formData: Partial<AtaFormData>;
 }
 
-/** Terapeuta simplificado para seleção */
 export interface TerapeutaOption {
     id: string;
     nome: string;
@@ -147,7 +155,6 @@ export interface TerapeutaOption {
     registroConselho?: string;
 }
 
-/** Cliente simplificado para seleção */
 export interface ClienteOption {
     id: string;
     nome: string;

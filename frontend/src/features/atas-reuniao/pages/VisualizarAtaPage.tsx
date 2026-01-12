@@ -1,5 +1,8 @@
 /**
  * Página de visualização de Ata de Reunião
+ * Layout de 2 colunas similar ao cadastro:
+ * - Sidebar esquerda: Properties (como steps)
+ * - Área direita: Conteúdo principal
  */
 
 import { useEffect, useState, useCallback } from 'react';
@@ -12,18 +15,20 @@ import {
     Clock,
     Video,
     MapPin,
-    Users,
     Pencil,
     Sparkles,
     Loader2,
     User,
-    Building2,
     CheckCircle,
     AlertCircle,
+    Download,
+    Target,
+    MessageCircle,
+    Copy,
+    Check,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
     Dialog,
@@ -32,6 +37,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 
 import {
@@ -40,8 +46,10 @@ import {
     MODALIDADE_LABELS,
     TIPO_PARTICIPANTE,
 } from '../types';
-import { getAtaById, generateSummary, finalizarAta } from '../services/atas.service';
+import { getAtaById, generateSummary, generateWhatsAppSummary, finalizarAta } from '../services/atas.service';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
+import { calcularHorasFaturadas, formatarDuracao, calcularDuracaoMinutos } from '../utils/calcularHorasFaturadas';
+
 
 export function VisualizarAtaPage() {
     const { id } = useParams<{ id: string }>();
@@ -55,6 +63,9 @@ export function VisualizarAtaPage() {
     // Estados para IA
     const [summaryDialogOpen, setSummaryDialogOpen] = useState(false);
     const [generatingSummary, setGeneratingSummary] = useState(false);
+    const [whatsappSummary, setWhatsappSummary] = useState<string | null>(null);
+    const [generatingWhatsapp, setGeneratingWhatsapp] = useState(false);
+    const [copied, setCopied] = useState(false);
 
     // Estado para finalizar
     const [finalizando, setFinalizando] = useState(false);
@@ -65,10 +76,9 @@ export function VisualizarAtaPage() {
 
         setGeneratingSummary(true);
         try {
-            const summary = await generateSummary(ata.id);
+            const summary = await generateSummary(ata);
             setAta((prev) => (prev ? { ...prev, resumoIA: summary } : null));
             toast.success('Resumo gerado com sucesso!');
-            setSummaryDialogOpen(false);
         } catch (error) {
             console.error('Erro ao gerar resumo:', error);
             toast.error('Erro ao gerar resumo');
@@ -76,6 +86,35 @@ export function VisualizarAtaPage() {
             setGeneratingSummary(false);
         }
     }, [ata]);
+
+    const handleGenerateWhatsAppSummary = useCallback(async () => {
+        if (!ata) return;
+
+        setGeneratingWhatsapp(true);
+        try {
+            const summary = await generateWhatsAppSummary(ata);
+            setWhatsappSummary(summary);
+            toast.success('Resumo para WhatsApp gerado!');
+        } catch (error) {
+            console.error('Erro ao gerar resumo WhatsApp:', error);
+            toast.error('Erro ao gerar resumo para WhatsApp');
+        } finally {
+            setGeneratingWhatsapp(false);
+        }
+    }, [ata]);
+
+    const handleCopyWhatsApp = useCallback(async () => {
+        if (!whatsappSummary) return;
+        
+        try {
+            await navigator.clipboard.writeText(whatsappSummary);
+            setCopied(true);
+            toast.success('Copiado para a área de transferência!');
+            setTimeout(() => setCopied(false), 2000);
+        } catch {
+            toast.error('Erro ao copiar');
+        }
+    }, [whatsappSummary]);
 
     const handleFinalizar = useCallback(async () => {
         if (!ata) return;
@@ -191,25 +230,20 @@ export function VisualizarAtaPage() {
     if (loading) {
         return (
             <div className="flex h-[calc(100vh-4rem)]">
-                {/* Área principal */}
-                <div className="flex-1 p-6 space-y-6 overflow-y-auto">
+                {/* Sidebar esquerda */}
+                <div className="w-72 border-r bg-muted/30 p-6 space-y-6">
+                    <Skeleton className="h-24 w-full rounded-xl" />
+                    <Skeleton className="h-16 w-full rounded-lg" />
+                    <Skeleton className="h-16 w-full rounded-lg" />
+                    <Skeleton className="h-16 w-full rounded-lg" />
+                </div>
+                {/* Conteúdo */}
+                <div className="flex-1 p-8 space-y-6 overflow-y-auto">
                     <div className="flex items-center gap-3">
                         <Skeleton className="h-6 w-24 rounded-full" />
                         <Skeleton className="h-5 w-48" />
                     </div>
-                    <Skeleton className="h-8 w-2/3" />
-                    <div className="flex items-center gap-4">
-                        <Skeleton className="h-4 w-24" />
-                        <Skeleton className="h-4 w-24" />
-                        <Skeleton className="h-4 w-24" />
-                    </div>
                     <Skeleton className="h-64 w-full rounded-xl" />
-                </div>
-                {/* Sidebar */}
-                <div className="w-80 border-l bg-muted/20 p-6 space-y-6">
-                    <Skeleton className="h-20 w-full rounded-lg" />
-                    <Skeleton className="h-32 w-full rounded-lg" />
-                    <Skeleton className="h-16 w-full rounded-lg" />
                 </div>
             </div>
         );
@@ -242,68 +276,256 @@ export function VisualizarAtaPage() {
     const participantesClinica = ata.participantes.filter((p) => p.tipo === TIPO_PARTICIPANTE.PROFISSIONAL_CLINICA);
     const totalParticipantes = ata.participantes.length;
 
+    // Usar valores do backend (fallback: cálculo local)
+    const duracaoMinutos = ata.duracaoMinutos ?? calcularDuracaoMinutos(ata.horarioInicio, ata.horarioFim);
+    const horasFaturadasNum = ata.horasFaturadas ?? calcularHorasFaturadas(duracaoMinutos);
+    const duracaoFormatada = formatarDuracao(duracaoMinutos);
+    const horasFaturadasFormatada = formatarDuracao(horasFaturadasNum * 60);
+
     return (
-        <div className="flex h-[calc(100vh-4rem)]">
-            {/* Área principal - Conteúdo */}
-            <div className="flex-1 overflow-y-auto">
-                <div className="max-w-4xl mx-auto py-6 px-6 lg:px-8">
-                    {/* Header com status e cliente */}
-                    <div className="flex flex-wrap items-center gap-3 mb-4">
-                        <Badge 
-                            variant="outline"
-                            className={ata.status === 'finalizada' 
-                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 gap-1.5' 
-                                : 'bg-amber-50 text-amber-700 border-amber-200 gap-1.5'
-                            }
-                        >
-                            {ata.status === 'finalizada' ? (
-                                <>
-                                    <CheckCircle className="h-3.5 w-3.5" />
-                                    Finalizada
-                                </>
-                            ) : (
-                                <>
-                                    <AlertCircle className="h-3.5 w-3.5" />
-                                    Rascunho
-                                </>
-                            )}
-                        </Badge>
-                        {ata.clienteNome && (
-                            <span className="text-sm text-muted-foreground">
-                                Cliente: <span className="text-foreground font-medium">{ata.clienteNome}</span>
-                            </span>
-                        )}
+        <div className="flex h-full gap-1">
+            {/* ========================================== */}
+            {/* SIDEBAR ESQUERDA - Properties (como steps) */}
+            {/* ========================================== */}
+            <aside 
+                className="w-96 shrink-0 overflow-y-auto"
+                style={{ 
+                    backgroundColor: 'var(--header-bg)',
+                    borderRadius: '16px'
+                }}
+            >
+                <div className="p-5 space-y-6">
+                    {/* Cards de Tempo e Faturável lado a lado */}
+                    <div className="grid grid-cols-2 gap-3">
+                        {/* Card de Tempo - Destaque Principal */}
+                        <div className="bg-primary rounded-xl p-4 text-primary-foreground">
+                            <span className="text-xs font-medium opacity-90">Tempo da Reunião</span>
+                            <div className="text-2xl font-normal tracking-tight mt-1">
+                                {duracaoFormatada}
+                            </div>
+                            <p className="text-xs opacity-75 mt-1">
+                                Duração realizada
+                            </p>
+                        </div>
+
+                        {/* Card Horas Faturáveis */}
+                        <div className="bg-card rounded-xl border p-4">
+                            <span className="text-xs font-medium text-emerald-600">Faturável</span>
+                            <div className="text-2xl font-normal tracking-tight text-foreground mt-1">
+                                {horasFaturadasFormatada}
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">
+                                Horas para cobrança
+                            </p>
+                        </div>
                     </div>
 
-                    {/* Metadados em linha */}
-                    <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground mb-8">
-                        <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4" />
-                            <span>{dataFormatadaCurta}</span>
+                    {/* Divisor visual */}
+                    <div className="border-t" />
+
+                    {/* Seção: Properties */}
+                    <div className="space-y-4">
+                        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            Propriedades
+                        </h3>
+
+                        {/* Finalidade */}
+                        <div className="space-y-1">
+                            <label className="text-xs text-muted-foreground">Finalidade</label>
+                            <div className="flex items-center gap-2 px-3 py-2.5 bg-background rounded-lg border text-sm">
+                                <Target className="h-4 w-4 text-muted-foreground shrink-0" />
+                                <span className="truncate">
+                                    {ata.finalidade === 'outros' ? ata.finalidadeOutros : FINALIDADE_LABELS[ata.finalidade]}
+                                </span>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <Clock className="h-4 w-4" />
-                            <span>{ata.horarioInicio} - {ata.horarioFim}</span>
+
+                        {/* Data e Horário na mesma linha */}
+                        <div className="grid grid-cols-2 gap-3">
+                            {/* Data */}
+                            <div className="space-y-1">
+                                <label className="text-xs text-muted-foreground">Data</label>
+                                <div className="flex items-center gap-2 px-3 py-2.5 bg-background rounded-lg border text-sm">
+                                    <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
+                                    <span>{dataFormatadaCurta}</span>
+                                </div>
+                            </div>
+
+                            {/* Horário */}
+                            <div className="space-y-1">
+                                <label className="text-xs text-muted-foreground">Horário</label>
+                                <div className="flex items-center gap-2 px-3 py-2.5 bg-background rounded-lg border text-sm">
+                                    <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
+                                    <span>{ata.horarioInicio} - {ata.horarioFim}</span>
+                                </div>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                            {ata.modalidade === 'online' ? (
-                                <Video className="h-4 w-4" />
-                            ) : (
-                                <MapPin className="h-4 w-4" />
-                            )}
-                            <span>{MODALIDADE_LABELS[ata.modalidade]}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Users className="h-4 w-4" />
-                            <span>{totalParticipantes} participante{totalParticipantes !== 1 ? 's' : ''}</span>
+
+                        {/* Modalidade e Status na mesma linha */}
+                        <div className="grid grid-cols-2 gap-3">
+                            {/* Modalidade */}
+                            <div className="space-y-1">
+                                <label className="text-xs text-muted-foreground">Modalidade</label>
+                                <div className="flex items-center gap-2 px-3 py-2.5 bg-background rounded-lg border text-sm">
+                                    {ata.modalidade === 'online' ? (
+                                        <Video className="h-4 w-4 text-muted-foreground shrink-0" />
+                                    ) : (
+                                        <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
+                                    )}
+                                    <span>{MODALIDADE_LABELS[ata.modalidade]}</span>
+                                </div>
+                            </div>
+
+                            {/* Status */}
+                            <div className="space-y-1">
+                                <label className="text-xs text-muted-foreground">Status</label>
+                                <div className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm ${
+                                    ata.status === 'finalizada' 
+                                        ? 'bg-emerald-50 border-emerald-200 text-emerald-700' 
+                                        : 'bg-amber-50 border-amber-200 text-amber-700'
+                                }`}>
+                                    {ata.status === 'finalizada' ? (
+                                        <CheckCircle className="h-4 w-4 shrink-0" />
+                                    ) : (
+                                        <AlertCircle className="h-4 w-4 shrink-0" />
+                                    )}
+                                    <span className="capitalize">{ata.status}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
+
+                    {/* Divisor visual */}
+                    <div className="border-t" />
+
+                    {/* Seção: Histórico */}
+                    <div className="space-y-3">
+                        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            Histórico
+                        </h3>
+                        <div className="space-y-2 text-sm">
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">Criado em</span>
+                                <span className="font-medium">{format(parseISO(ata.criadoEm), "dd/MM/yy HH:mm")}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-muted-foreground">Atualizado</span>
+                                <span className="font-medium">{format(parseISO(ata.atualizadoEm), "dd/MM/yy HH:mm")}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            {/* ========================================== */}
+            {/* ÁREA PRINCIPAL - Conteúdo */}
+            {/* ========================================== */}
+            <div 
+                className="flex-1 overflow-y-auto"
+                style={{ 
+                    backgroundColor: 'var(--header-bg)',
+                    borderRadius: '16px'
+                }}
+            >
+                <div className="py-6 px-6">
+                    {/* Header: Cliente/Responsável e Participantes */}
+                    <div className="bg-card rounded-xl border p-4 mb-6">
+                        <div className="flex flex-col lg:flex-row lg:items-start gap-5">
+                            {/* Lado esquerdo: Cliente + Responsável empilhados */}
+                            <div className="space-y-3 lg:min-w-60">
+                                {/* Cliente */}
+                                {ata.clienteNome && (
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                            <span className="text-xs font-semibold text-primary">
+                                                {ata.clienteNome.split(' ').map(n => n[0]).slice(0, 2).join('')}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Cliente</p>
+                                            <p className="font-medium text-sm">{ata.clienteNome}</p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Responsável */}
+                                <div className="flex items-center gap-2.5">
+                                    <div className="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+                                        <User className="h-4 w-4 text-emerald-600" />
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Responsável</p>
+                                        <p className="font-medium text-sm">{ata.cabecalho.terapeutaNome}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            {ata.cabecalho.profissao}
+                                            {ata.cabecalho.conselhoNumero && ` • ${ata.cabecalho.conselhoTipo} ${ata.cabecalho.conselhoNumero}`}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Divider vertical */}
+                            {totalParticipantes > 0 && <div className="hidden lg:block w-px bg-border self-stretch" />}
+
+                            {/* Lado direito: Participantes */}
+                            {totalParticipantes > 0 && (
+                                <div className="flex-1">
+                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-2">
+                                        Participantes ({totalParticipantes})
+                                    </p>
+                                    <div className="space-y-1.5">
+                                        {/* Família */}
+                                        {participantesFamilia.map((p) => (
+                                            <div key={p.id} className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 rounded-md text-xs border border-blue-100 mr-1.5">
+                                                <span className="font-medium text-blue-900">{p.nome}</span>
+                                                {p.descricao && <span className="text-blue-600">({p.descricao})</span>}
+                                            </div>
+                                        ))}
+                                        {/* Externos */}
+                                        {participantesExterno.map((p) => (
+                                            <div key={p.id} className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-purple-50 rounded-md text-xs border border-purple-100 mr-1.5">
+                                                <span className="font-medium text-purple-900">{p.nome}</span>
+                                                {p.descricao && <span className="text-purple-600">({p.descricao})</span>}
+                                            </div>
+                                        ))}
+                                        {/* Clínica */}
+                                        {participantesClinica.map((p) => (
+                                            <div key={p.id} className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-50 rounded-md text-xs border border-emerald-100 mr-1.5">
+                                                <div className="h-5 w-5 rounded-full bg-emerald-200 flex items-center justify-center shrink-0">
+                                                    <span className="text-[10px] font-medium text-emerald-700">{p.nome.charAt(0)}</span>
+                                                </div>
+                                                <span className="font-medium text-emerald-900">{p.nome}</span>
+                                                {(p.especialidade || p.cargo) && (
+                                                    <span className="text-emerald-600">({[p.especialidade, p.cargo].filter(Boolean).join(' • ')})</span>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Resumo IA */}
+                    {ata.resumoIA && (
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                                <Sparkles className="h-5 w-5 text-primary" />
+                                <h2 className="text-lg font-normal" style={{fontFamily: "Sora"}}>Resumo IA</h2>
+                            </div>
+                            <div className="bg-linear-to-br from-primary/5 to-primary/10 rounded-xl border border-primary/20 p-6">
+                                <div className="whitespace-pre-wrap text-sm text-foreground/90 leading-relaxed">
+                                    {ata.resumoIA}
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Conteúdo da Ata */}
-                    <section className="mb-8">
-                        <div className="flex items-center gap-2 mb-4">
+                    <div className="space-y-6">
+                        <div className="flex items-center gap-2">   
                             <FileText className="h-5 w-5 text-primary" />
-                            <h2 className="text-lg font-semibold">Tópicos e Condutas</h2>
+                            <h2 className="text-lg font-normal" style={{fontFamily: "Sora"}}>Tópicos e Condutas</h2>
                         </div>
                         <div className="bg-card rounded-xl border p-6">
                             <div
@@ -318,195 +540,176 @@ export function VisualizarAtaPage() {
                                 dangerouslySetInnerHTML={{ __html: ata.conteudo }}
                             />
                         </div>
-                    </section>
+                    </div>
 
-                    {/* Resumo IA */}
-                    {ata.resumoIA && (
-                        <section className="mb-8">
-                            <div className="flex items-center gap-2 mb-4">
-                                <Sparkles className="h-5 w-5 text-primary" />
-                                <h2 className="text-lg font-semibold">Resumo Gerado por IA</h2>
+                    {/* Anexos */}
+                    {ata.anexos && ata.anexos.length > 0 && (
+                        <div className="mt-8 space-y-4">
+                            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                                Anexos ({ata.anexos.length})
+                            </h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                {ata.anexos.map((anexo) => {
+                                    const ext = anexo.name.split('.').pop()?.toLowerCase();
+                                    const isPdf = ext === 'pdf';
+                                    const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext || '');
+                                    const isVideo = ['mp4', 'avi', 'mov', 'mkv'].includes(ext || '');
+                                    
+                                    let bgColor = 'bg-gray-100';
+                                    let iconColor = 'text-gray-600';
+                                    if (isPdf) { bgColor = 'bg-red-50'; iconColor = 'text-red-600'; }
+                                    else if (isImage) { bgColor = 'bg-green-50'; iconColor = 'text-green-600'; }
+                                    else if (isVideo) { bgColor = 'bg-purple-50'; iconColor = 'text-purple-600'; }
+
+                                    return (
+                                        <div
+                                            key={anexo.id}
+                                            className="flex items-center gap-3 px-4 py-3 bg-card rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer group"
+                                            onClick={() => anexo.url && window.open(anexo.url, '_blank')}
+                                        >
+                                            <div className={`w-10 h-10 rounded-lg ${bgColor} flex items-center justify-center shrink-0`}>
+                                                <FileText className={`h-5 w-5 ${iconColor}`} />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-medium truncate">{anexo.name}</p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    {(anexo.size / 1024 / 1024).toFixed(1)} MB
+                                                </p>
+                                            </div>
+                                            <Download className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        </div>
+                                    );
+                                })}
                             </div>
-                            <div className="bg-linear-to-br from-primary/5 to-primary/10 rounded-xl border border-primary/20 p-6">
-                                <div className="whitespace-pre-wrap text-sm text-foreground/90 leading-relaxed">
-                                    {ata.resumoIA}
-                                </div>
-                            </div>
-                        </section>
+                        </div>
                     )}
                 </div>
             </div>
 
-            {/* Sidebar fixa à direita */}
-            <aside className="w-80 border-l bg-muted/20 shrink-0 overflow-y-auto">
-                <div className="p-5 space-y-6">
-                    {/* Profissional Responsável */}
-                    <div>
-                        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-                            Responsável
-                        </h3>
-                        <div className="flex items-start gap-3">
-                            <div className="h-11 w-11 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                                <User className="h-5 w-5 text-primary" />
-                            </div>
-                            <div className="min-w-0 pt-0.5">
-                                <p className="font-medium text-sm">{ata.cabecalho.terapeutaNome}</p>
-                                {ata.cabecalho.profissao && (
-                                    <p className="text-xs text-muted-foreground">{ata.cabecalho.profissao}</p>
-                                )}
-                                {ata.cabecalho.conselhoNumero && (
-                                    <p className="text-xs text-muted-foreground">
-                                        {ata.cabecalho.conselhoTipo} {ata.cabecalho.conselhoNumero}
-                                    </p>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Divisor */}
-                    <div className="border-t" />
-
-                    {/* Participantes */}
-                    <div>
-                        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-                            Participantes
-                        </h3>
-                        <div className="space-y-4">
-                            {/* Família */}
-                            {participantesFamilia.length > 0 && (
-                                <div>
-                                    <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1.5">
-                                        <Users className="h-3.5 w-3.5" />
-                                        Família/Responsáveis
-                                    </p>
-                                    <div className="space-y-1.5">
-                                        {participantesFamilia.map((p) => (
-                                            <div key={p.id} className="text-sm">
-                                                <span className="font-medium">{p.nome}</span>
-                                                {p.descricao && (
-                                                    <span className="text-muted-foreground text-xs ml-1.5">
-                                                        • {p.descricao}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Profissionais da Clínica */}
-                            {participantesClinica.length > 0 && (
-                                <div>
-                                    <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1.5">
-                                        <User className="h-3.5 w-3.5" />
-                                        Profissionais da Clínica
-                                    </p>
-                                    <div className="space-y-1.5">
-                                        {participantesClinica.map((p) => (
-                                            <div key={p.id} className="text-sm">
-                                                <span className="font-medium">{p.nome}</span>
-                                                {p.especialidade && (
-                                                    <span className="text-muted-foreground text-xs ml-1.5">
-                                                        • {p.especialidade}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Profissionais Externos */}
-                            {participantesExterno.length > 0 && (
-                                <div>
-                                    <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1.5">
-                                        <Building2 className="h-3.5 w-3.5" />
-                                        Profissionais Externos
-                                    </p>
-                                    <div className="space-y-1.5">
-                                        {participantesExterno.map((p) => (
-                                            <div key={p.id} className="text-sm">
-                                                <span className="font-medium">{p.nome}</span>
-                                                {p.descricao && (
-                                                    <span className="text-muted-foreground text-xs ml-1.5">
-                                                        • {p.descricao}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {totalParticipantes === 0 && (
-                                <p className="text-sm text-muted-foreground italic">
-                                    Nenhum participante registrado
-                                </p>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Divisor */}
-                    <div className="border-t" />
-
-                    {/* Histórico */}
-                    <div className="space-y-2">
-                        <div className="flex items-center justify-between text-xs">
-                            <span className="text-muted-foreground">Criado em</span>
-                            <span className="font-medium">{format(parseISO(ata.criadoEm), "dd/MM/yyyy HH:mm", { locale: ptBR })}</span>
-                        </div>
-                        <div className="flex items-center justify-between text-xs">
-                            <span className="text-muted-foreground">Atualizado em</span>
-                            <span className="font-medium">{format(parseISO(ata.atualizadoEm), "dd/MM/yyyy HH:mm", { locale: ptBR })}</span>
-                        </div>
-                    </div>
-                </div>
-            </aside>
-
             {/* Dialog de resumo IA */}
-            <Dialog open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen}>
+            <Dialog open={summaryDialogOpen} onOpenChange={(open) => {
+                setSummaryDialogOpen(open);
+                if (!open) {
+                    setWhatsappSummary(null);
+                    setCopied(false);
+                }
+            }}>
                 <DialogContent className="max-w-2xl">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <Sparkles className="h-5 w-5 text-primary" />
-                            Gerar Resumo com IA
+                            Resumo com IA
                         </DialogTitle>
                         <DialogDescription>
-                            Gere um resumo automático dos principais pontos discutidos na reunião.
+                            Gere resumos automáticos da reunião.
                         </DialogDescription>
                     </DialogHeader>
 
-                    <div className="py-4">
-                        {ata.resumoIA ? (
-                            <div className="prose prose-sm max-w-none p-4 bg-muted/50 rounded-lg whitespace-pre-wrap">
-                                {ata.resumoIA}
-                            </div>
-                        ) : (
-                            <div className="text-center py-8 text-muted-foreground">
-                                <Sparkles className="h-8 w-8 mx-auto mb-3 opacity-50" />
-                                <p>Clique no botão abaixo para gerar um resumo automático.</p>
-                            </div>
-                        )}
-                    </div>
+                    <Tabs defaultValue="whatsapp" className="w-full">
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="completo" className="gap-2">
+                                <FileText className="h-4 w-4" />
+                                Resumo Completo
+                            </TabsTrigger>
+                            <TabsTrigger value="whatsapp" className="gap-2">
+                                <MessageCircle className="h-4 w-4" />
+                                WhatsApp
+                            </TabsTrigger>
+                        </TabsList>
 
-                    <div className="flex justify-end gap-3">
-                        <Button variant="outline" onClick={() => setSummaryDialogOpen(false)}>
-                            Fechar
-                        </Button>
-                        <Button onClick={handleGenerateSummary} disabled={generatingSummary}>
-                            {generatingSummary ? (
-                                <>
-                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                    Gerando...
-                                </>
-                            ) : (
-                                <>
-                                    <Sparkles className="h-4 w-4 mr-2" />
-                                    {ata.resumoIA ? 'Gerar Novamente' : 'Gerar Resumo'}
-                                </>
-                            )}
-                        </Button>
-                    </div>
+                        {/* Aba: Resumo Completo */}
+                        <TabsContent value="completo" className="mt-4">
+                            <div className="space-y-4">
+                                {ata.resumoIA ? (
+                                    <div className="space-y-2">
+                                        <p className="text-xs text-muted-foreground">Você pode editar o texto abaixo:</p>
+                                        <textarea
+                                            value={ata.resumoIA}
+                                            onChange={(e) => setAta({ ...ata, resumoIA: e.target.value })}
+                                            className="w-full p-4 bg-muted/50 rounded-lg text-sm min-h-[260px] resize-y focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-8 text-muted-foreground">
+                                        <Sparkles className="h-8 w-8 mx-auto mb-3 opacity-50" />
+                                        <p>Clique no botão abaixo para gerar um resumo automático.</p>
+                                    </div>
+                                )}
+
+                                <div className="flex justify-end">
+                                    <Button onClick={handleGenerateSummary} disabled={generatingSummary}>
+                                        {generatingSummary ? (
+                                            <>
+                                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                                Gerando...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Sparkles className="h-4 w-4 mr-2" />
+                                                {ata.resumoIA ? 'Gerar Novamente' : 'Gerar Resumo'}
+                                            </>
+                                        )}
+                                    </Button>
+                                </div>
+                            </div>
+                        </TabsContent>
+
+                        {/* Aba: WhatsApp */}
+                        <TabsContent value="whatsapp" className="mt-4">
+                            <div className="space-y-4">
+                                <p className="text-sm text-muted-foreground">
+                                    Gere um resumo curto e acolhedor para enviar aos pais via WhatsApp.
+                                </p>
+
+                                {whatsappSummary ? (
+                                    <div className="space-y-2">
+                                        <p className="text-xs text-muted-foreground">Você pode editar o texto abaixo antes de copiar:</p>
+                                        <textarea
+                                            value={whatsappSummary}
+                                            onChange={(e) => setWhatsappSummary(e.target.value)}
+                                            className="w-full p-4 bg-emerald-50 border border-emerald-200 rounded-lg text-sm min-h-[280px] resize-y focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
+                                        <MessageCircle className="h-8 w-8 mx-auto mb-3 opacity-50" />
+                                        <p>Clique no botão abaixo para gerar.</p>
+                                    </div>
+                                )}
+
+                                <div className="flex justify-end gap-3">
+                                    {whatsappSummary && (
+                                        <Button variant="outline" onClick={handleCopyWhatsApp}>
+                                            {copied ? (
+                                                <>
+                                                    <Check className="h-4 w-4 mr-2 text-emerald-600" />
+                                                    Copiado!
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Copy className="h-4 w-4 mr-2" />
+                                                    Copiar Mensagem
+                                                </>
+                                            )}
+                                        </Button>
+                                    )}
+                                    <Button onClick={handleGenerateWhatsAppSummary} disabled={generatingWhatsapp}>
+                                        {generatingWhatsapp ? (
+                                            <>
+                                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                                Gerando...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <MessageCircle className="h-4 w-4 mr-2" />
+                                                {whatsappSummary ? 'Gerar Novamente' : 'Gerar para WhatsApp'}
+                                            </>
+                                        )}
+                                    </Button>
+                                </div>
+                            </div>
+                        </TabsContent>
+                    </Tabs>
                 </DialogContent>
             </Dialog>
         </div>

@@ -199,6 +199,29 @@ let mockAtas: AtaReuniao[] = [
         status: 'finalizada',
         criadoEm: subDays(new Date(), 2).toISOString(),
         atualizadoEm: subDays(new Date(), 2).toISOString(),
+        anexos: [
+            {
+                id: 'anexo-001',
+                name: 'Relatório de Evolução.pdf',
+                size: 524288, // 512 KB
+                type: 'application/pdf',
+                url: '#',
+            },
+            {
+                id: 'anexo-002',
+                name: 'Foto Atividade Terapêutica.jpg',
+                size: 1048576, // 1 MB
+                type: 'image/jpeg',
+                url: '#',
+            },
+            {
+                id: 'anexo-003',
+                name: 'Vídeo Sessão.mp4',
+                size: 15728640, // 15 MB
+                type: 'video/mp4',
+                url: '#',
+            },
+        ],
     },
     {
         id: 'ata-002',
@@ -1317,6 +1340,47 @@ Encaminhamentos:
     }
 
     return resumo;
+}
+
+// ============================================
+// MOCK - GERAR RESUMO PARA WHATSAPP
+// ============================================
+
+export async function generateWhatsAppSummaryMock(id: string): Promise<string> {
+    await delay(1200);
+
+    const ata = mockAtas.find((a) => a.id === id);
+    if (!ata) throw new Error('Ata não encontrada');
+
+    const finalidadeTexto = ata.finalidade === 'outros' 
+        ? ata.finalidadeOutros 
+        : {
+            orientacao_parental: 'orientação parental',
+            reuniao_equipe: 'reunião de equipe',
+            reuniao_escola: 'reunião com a escola',
+            supervisao_terapeuta: 'supervisão',
+            planejamento_terapeutico: 'planejamento terapêutico',
+            devolutiva: 'devolutiva',
+            outros: 'reunião',
+        }[ata.finalidade] || 'reunião';
+
+    const dataFormatada = format(new Date(ata.data), 'dd/MM');
+    
+    // Mensagem curta e acolhedora para WhatsApp (máx ~400 caracteres)
+    const mensagem = `Olá! 👋
+
+Segue o resumo da ${finalidadeTexto} do dia ${dataFormatada}${ata.clienteNome ? ` sobre ${ata.clienteNome.split(' ')[0]}` : ''}:
+
+✅ Pontos principais discutidos
+✅ Orientações para aplicar em casa
+✅ Próximos passos definidos
+
+Qualquer dúvida, estamos à disposição! 💙
+
+Att, ${ata.cabecalho.terapeutaNome.split(' ').slice(0, 2).join(' ')}
+${ata.cabecalho.profissao}`;
+
+    return mensagem;
 }
 
 // ============================================
