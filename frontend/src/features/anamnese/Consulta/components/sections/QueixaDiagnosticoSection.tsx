@@ -88,9 +88,8 @@ export default function QueixaDiagnosticoSection({ data }: QueixaDiagnosticoSect
                                             {exame.arquivos.map(arquivo => (
                                                 <a
                                                     key={arquivo.id}
-                                                    href={arquivo.url || '#'}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
+                                                    href={arquivo.url ? `${import.meta.env.VITE_API_URL}/arquivos/${encodeURIComponent(arquivo.url)}/download` : '#'}
+                                                    download
                                                     className="flex items-center gap-2 p-2 bg-white rounded-lg border border-blue-200 hover:border-blue-400 hover:shadow-md transition-all group"
                                                 >
                                                     <div className={`p-1.5 rounded-md ${arquivo.tipo.startsWith('image/') ? 'bg-purple-100' : 'bg-orange-100'}`}>
@@ -137,6 +136,7 @@ export default function QueixaDiagnosticoSection({ data }: QueixaDiagnosticoSect
                                     </span>
                                 </div>
                                 <p className="text-xs mt-1">Tempo: {ter.tempoIntervencao}</p>
+                                {ter.observacao && <p className="text-xs mt-1 text-muted-foreground">{ter.observacao}</p>}
                             </div>
                         ))}
                     </div>

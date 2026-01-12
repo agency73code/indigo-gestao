@@ -838,7 +838,7 @@ export default function AnamnesePage() {
             }
             
             // Enviar para o service
-            const response = await criarAnamnese(anamneseData, true); // Skip full validation
+            const response = await criarAnamnese(anamneseData);
             
             if (response.success) {
                 toast.success('Anamnese cadastrada com sucesso!', {

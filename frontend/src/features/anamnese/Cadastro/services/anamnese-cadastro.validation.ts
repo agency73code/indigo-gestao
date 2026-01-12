@@ -1184,17 +1184,8 @@ export function validateStep8Finalizacao(data: Record<string, unknown>): StepVal
 
 /**
  * Valida um step específico
- * 
- * ⚠️ TEMPORARIAMENTE DESABILITADO PARA TESTES ⚠️
- * TODO: Remover este bypass após corrigir campos do backend
  */
-export function validateStep(step: number, _data: Record<string, unknown>): StepValidationResult {
-    // BYPASS TEMPORÁRIO - Desabilita todas as validações para testes
-    // Remover este bloco após ajustar os campos com o backend
-    console.warn(`[VALIDAÇÃO DESABILITADA] Step ${step} - validação ignorada para testes`);
-    return { isValid: true, errors: [], errorMessages: [] };
-    
-    /* VALIDAÇÃO ORIGINAL - Descomentar após correções
+export function validateStep(step: number, data: Record<string, unknown>): StepValidationResult {
     switch (step) {
         case 1:
             return validateStep1Cabecalho(data);
@@ -1215,7 +1206,6 @@ export function validateStep(step: number, _data: Record<string, unknown>): Step
         default:
             return { isValid: true, errors: [], errorMessages: [] };
     }
-    */
 }
 
 /**
