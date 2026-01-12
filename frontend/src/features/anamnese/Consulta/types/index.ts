@@ -54,8 +54,8 @@ export type DesfraldeDetalhe = Desfralde;
 export type SonoDetalhe = Sono;
 export type HabitosHigieneDetalhe = HabitosHigiene;
 export type AlimentacaoDetalhe = Alimentacao;
-export type InteracaoSocialDetalhe = DesenvolvimentoSocial;
-export type VidaEscolarDetalhe = DesenvolvimentoAcademico;
+export type DesenvolvimentoSocialDetalhe = DesenvolvimentoSocial;
+export type DesenvolvimentoAcademicoDetalhe = DesenvolvimentoAcademico;
 export type EstereotipiasRituaisDetalhe = EstereotipiasRituais;
 export type ProblemasComportamentoDetalhe = ProblemasComportamento;
 

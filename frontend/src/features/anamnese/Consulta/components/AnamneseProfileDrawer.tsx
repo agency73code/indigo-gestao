@@ -15,7 +15,7 @@ import { exportToWord } from '../print/word-export.service';
 import '../print/anamnese-print-styles.css';
 import type { AnamneseDetalhe } from '../types/anamnese-consulta.types';
 import type { AnamneseListItem } from '../../Tabela/types/anamnese-table.types';
-import { getAnamneseById } from '../services/anamnese-consulta.service';
+import { getAnamneseById, updateAnamnese } from '../services/anamnese-consulta.service';
 import type { LucideIcon } from 'lucide-react';
 
 // Seções de visualização
@@ -185,6 +185,8 @@ export default function AnamneseProfileDrawer({
                     tipo: arq.tipo,
                     tamanho: arq.tamanho || 0,
                     url: arq.url,
+                    caminho: arq.caminho ?? arq.url,
+                    removed: arq.removed ?? false,
                 })) || [],
             })),
             terapiasPrevias: data.queixaDiagnostico.terapiasPrevias.map(ter => ({
@@ -246,8 +248,8 @@ export default function AnamneseProfileDrawer({
 
         // Social e Acadêmico
         setEditSocialAcademico({
-            desenvolvimentoSocial: data.socialAcademico.interacaoSocial as any,
-            desenvolvimentoAcademico: data.socialAcademico.vidaEscolar as any,
+            desenvolvimentoSocial: data.socialAcademico.desenvolvimentoSocial as any,
+            desenvolvimentoAcademico: data.socialAcademico.desenvolvimentoAcademico as any,
         });
 
         // Comportamento
@@ -258,8 +260,8 @@ export default function AnamneseProfileDrawer({
 
         // Finalização
         setEditFinalizacao({
-            outrasInformacoesRelevantes: data.finalizacao.informacoesAdicionais,
-            observacoesImpressoesTerapeuta: data.finalizacao.observacoesFinais,
+            outrasInformacoesRelevantes: data.finalizacao.outrasInformacoesRelevantes,
+            observacoesImpressoesTerapeuta: data.finalizacao.observacoesImpressoesTerapeuta,
             expectativasFamilia: data.finalizacao.expectativasFamilia,
         });
     }, []);
@@ -355,25 +357,74 @@ export default function AnamneseProfileDrawer({
         setEditData(null); // Descartar alterações
     }, []);
 
+    useEffect(() => {
+        if (!isEditMode) return;
+
+        setEditData(prev => {
+            if (!prev) return prev;
+
+            return {
+                ...prev,
+                queixaDiagnostico: {
+                    ...prev.queixaDiagnostico,
+                    ...editQueixaDiagnostico,
+                },
+                contextoFamiliarRotina: {
+                    ...prev.contextoFamiliarRotina,
+                    ...editContextoFamiliar,
+                    historicoFamiliar: editContextoFamiliar.historicosFamiliares ?? prev.contextoFamiliarRotina.historicoFamiliar,
+                    rotinaDiaria: editContextoFamiliar.atividadesRotina ?? prev.contextoFamiliarRotina.rotinaDiaria,
+                    historicosFamiliares: editContextoFamiliar.historicosFamiliares ?? prev.contextoFamiliarRotina.historicosFamiliares,
+                    atividadesRotina: editContextoFamiliar.atividadesRotina ?? prev.contextoFamiliarRotina.atividadesRotina,
+                },
+                desenvolvimentoInicial: {
+                    ...prev.desenvolvimentoInicial,
+                    ...editDesenvolvimento,
+                },
+                atividadesVidaDiaria: {
+                    ...prev.atividadesVidaDiaria,
+                    ...editVidaDiaria,
+                },
+                socialAcademico: {
+                    ...prev.socialAcademico,
+                    ...editSocialAcademico,
+                },
+                comportamento: {
+                    ...prev.comportamento,
+                    ...editComportamento,
+                },
+                finalizacao: {
+                    ...prev.finalizacao,
+                    ...editFinalizacao,
+                },
+            };
+        });
+    }, [
+        editQueixaDiagnostico,
+        editContextoFamiliar,
+        editDesenvolvimento,
+        editVidaDiaria,
+        editSocialAcademico,
+        editComportamento,
+        editFinalizacao,
+        isEditMode,
+    ]);
+
     const handleSave = useCallback(async () => {
         if (!editData) return;
         
         setIsSaving(true);
         setSaveError(null);
         try {
-            // TODO: Implementar chamada de API para salvar
-            console.log('Salvando alterações da anamnese:', editData);
-            
-            // Simular delay
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
+            const updated = await updateAnamnese(editData.id!, editData);
+            setAnamneseDetalhe(updated);
             setIsEditMode(false);
         } catch (err) {
             setSaveError(err instanceof Error ? err.message : 'Erro ao salvar');
         } finally {
             setIsSaving(false);
         }
-    }, [anamneseDetalhe]);
+    }, [editData]);
 
     const getStatusBadge = (status?: string) => {
         const isActive = status?.toUpperCase() === 'ATIVO';

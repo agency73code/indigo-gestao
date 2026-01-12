@@ -23,4 +23,6 @@ export interface ArquivoUpload {
     tamanho: number;
     file: File;
     url?: string;
+    caminho?: string;
+    removed?: boolean;
 }

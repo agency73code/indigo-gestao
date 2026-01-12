@@ -73,6 +73,8 @@ const queixaDiagnosticoUpdateSchema = z.object({
             tipo: z.string(),
             tamanho: z.number(),
             url: z.string().optional(),
+            caminho: z.string().optional(),
+            removed: z.boolean().optional(),
         })).optional(),
     })),
     terapiasPrevias: z.array(z.object({
@@ -88,8 +90,8 @@ const queixaDiagnosticoUpdateSchema = z.object({
 // Schema para atualização de Finalização
 const finalizacaoUpdateSchema = z.object({
     expectativasFamilia: z.string(),
-    informacoesAdicionais: z.string(),
-    observacoesFinais: z.string(),
+    outrasInformacoesRelevantes: z.string(),
+    observacoesImpressoesTerapeuta: z.string(),
 });
 
 // Schema para atualização parcial de Anamnese

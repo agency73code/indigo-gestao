@@ -4,132 +4,136 @@ const simNaoSchema = z.enum(['sim', 'nao']);
 const simNaoComAjudaSchema = z.enum(["sim", "com_ajuda", "nao"]);
 
 const optionalNumberFromString = z.preprocess(
-  (v) => {
-    if (v === "" || v === null || v === undefined) return undefined;
-    return Number(v);
-  },
-  z.number().optional()
+    (v) => {
+        if (v === "" || v === null || v === undefined) return undefined;
+        return Number(v);
+    },
+    z.number().optional()
 );
 
 const ArquivoAnexoSchema = z.object({
-  nome: z.string().optional(),
-  tipo: z.string().optional(),
-  tamanho: z.number().optional(),
-  file: z.unknown().optional(),
+    id: z.string().optional().nullable(),
+    nome: z.string().optional().nullable(),
+    tipo: z.string().optional().nullable(),
+    tamanho: z.number().optional().nullable(),
+    caminho: z.string().optional().nullable(),
+    removed: z.boolean().optional().nullable(),
+    file: z.unknown().optional().nullable(),
 });
 
 const ExamePrevioSchema = z.object({
-  nome: z.string().optional(),
-  data: z.string().optional(),
-  resultado: z.string().optional(),
-  arquivos: z.array(ArquivoAnexoSchema).optional(),
+    id: z.string().optional().nullable(),
+    nome: z.string().optional().nullable(),
+    data: z.string().optional().nullable(),
+    resultado: z.string().optional().nullable(),
+    arquivos: z.array(ArquivoAnexoSchema).optional().nullable(),
 });
 
 const MedicamentoEmUsoSchema = z.object({
-  nome: z.string().optional(),
-  dosagem: z.string().optional(),
-  dataInicio: z.string().optional(),
-  motivo: z.string().optional(),
+    nome: z.string().optional().nullable(),
+    dosagem: z.string().optional().nullable(),
+    dataInicio: z.string().optional().nullable(),
+    motivo: z.string().optional().nullable(),
 });
 
 const TerapiaPreviaSchema = z.object({
-  profissional: z.string().optional(),
-  especialidadeAbordagem: z.string().optional(),
-  tempoIntervencao: z.string().optional(),
-  observacao: z.string().optional(),
-  ativo: z.boolean().optional(),
+    profissional: z.string().optional().nullable(),
+    especialidadeAbordagem: z.string().optional().nullable(),
+    tempoIntervencao: z.string().optional().nullable(),
+    observacao: z.string().optional().nullable(),
+    ativo: z.boolean().optional().nullable(),
 });
 
 const EspecialidadeConsultadaSchema = z.object({
-  especialidade: z.string().optional(),
-  nome: z.string().optional(),
-  data: z.string().optional(),
-  observacao: z.string().optional(),
-  ativo: z.boolean().optional(),
+    especialidade: z.string().optional().nullable(),
+    nome: z.string().optional().nullable(),
+    data: z.string().optional().nullable(),
+    observacao: z.string().optional().nullable(),
+    ativo: z.boolean().optional().nullable(),
 });
 
 const HistoricoFamiliarSchema = z.object({
-  condicaoDiagnostico: z.string().optional(),
-  parentesco: z.string().optional(),
-  observacao: z.string().optional(),
+    condicaoDiagnostico: z.string().optional().nullable(),
+    parentesco: z.string().optional().nullable(),
+    observacao: z.string().optional().nullable(),
 });
 
 const AtividadeRotinaSchema = z.object({
-  atividade: z.string().optional(),
-  horario: z.string().optional(),
-  responsavel: z.string().optional(),
-  frequencia: z.string().optional(),
-  observacao: z.string().optional(),
+    atividade: z.string().optional().nullable(),
+    horario: z.string().optional().nullable(),
+    responsavel: z.string().optional().nullable(),
+    frequencia: z.string().optional().nullable(),
+    observacao: z.string().optional().nullable(),
 });
 
 const MarcoDesenvolvimentoSchema = z.object({
-  meses: z.string().optional(),
-  naoRealiza: z.boolean().optional(),
-  naoSoubeInformar: z.boolean().optional(),
+    meses: z.string().optional().nullable(),
+    naoRealiza: z.boolean().optional().nullable(),
+    naoSoubeInformar: z.boolean().optional().nullable(),
 });
 
 const MarcoFalaSchema = z.object({
-  meses: z.string().optional(),
-  nao: z.boolean().optional(),
-  naoSoubeInformar: z.boolean().optional(),
+    meses: z.string().optional().nullable(),
+    nao: z.boolean().optional().nullable(),
+    naoSoubeInformar: z.boolean().optional().nullable(),
 });
 
 const GestacaoPartoSchema = z.object({
-  tipoParto: z
-    .enum(["natural", "cesarea"], "Tipo de parto é obrigatório."),
-  semanas: z.number("Número de semanas da gestação é obrigatório."),
-  apgar1min: z.number("Apgar de 1 minuto é obrigatório."),
-  apgar5min: z.number("Apgar de 5 minutos é obrigatório."),
-  intercorrencias: z.string().optional(),
+    tipoParto: z
+        .enum(["natural", "cesarea"], "Tipo de parto é obrigatório."),
+    semanas: z.number("Número de semanas da gestação é obrigatório."),
+    apgar1min: z.number("Apgar de 1 minuto é obrigatório."),
+    apgar5min: z.number("Apgar de 5 minutos é obrigatório."),
+    intercorrencias: z.string().optional().nullable(),
 });
 
 const NeuropsicomotorSchema = z.object({
-  sustentouCabeca: MarcoDesenvolvimentoSchema,
-  rolou: MarcoDesenvolvimentoSchema,
-  sentou: MarcoDesenvolvimentoSchema,
-  engatinhou: MarcoDesenvolvimentoSchema,
-  andouComApoio: MarcoDesenvolvimentoSchema,
-  andouSemApoio: MarcoDesenvolvimentoSchema,
-  correu: MarcoDesenvolvimentoSchema,
-  andouDeMotoca: MarcoDesenvolvimentoSchema,
-  andouDeBicicleta: MarcoDesenvolvimentoSchema,
-  subiuEscadasSozinho: MarcoDesenvolvimentoSchema,
-  motricidadeFina: z.string().optional(),
+    sustentouCabeca: MarcoDesenvolvimentoSchema,
+    rolou: MarcoDesenvolvimentoSchema,
+    sentou: MarcoDesenvolvimentoSchema,
+    engatinhou: MarcoDesenvolvimentoSchema,
+    andouComApoio: MarcoDesenvolvimentoSchema,
+    andouSemApoio: MarcoDesenvolvimentoSchema,
+    correu: MarcoDesenvolvimentoSchema,
+    andouDeMotoca: MarcoDesenvolvimentoSchema,
+    andouDeBicicleta: MarcoDesenvolvimentoSchema,
+    subiuEscadasSozinho: MarcoDesenvolvimentoSchema,
+    motricidadeFina: z.string().optional().nullable(),
 });
 
 const FalaLinguagemSchema = z.object({
-  balbuciou: MarcoFalaSchema,
-  primeirasPalavras: MarcoFalaSchema,
-  primeirasFrases: MarcoFalaSchema,
-  apontouParaFazerPedidos: MarcoFalaSchema,
+    balbuciou: MarcoFalaSchema,
+    primeirasPalavras: MarcoFalaSchema,
+    primeirasFrases: MarcoFalaSchema,
+    apontouParaFazerPedidos: MarcoFalaSchema,
 
-  fazUsoDeGestos: simNaoSchema.optional(),
-  fazUsoDeGestosQuais: z.string().optional(),
-  
-  comunicacaoAtual: z.string().optional(),
+    fazUsoDeGestos: simNaoSchema.optional().nullable(),
+    fazUsoDeGestosQuais: z.string().optional().nullable(),
+    
+    comunicacaoAtual: z.string().optional().nullable(),
 
-  audicao: z.enum(["boa", "ruim"]).optional(),
+    audicao: z.enum(["boa", "ruim"]).optional().nullable(),
 
-  teveOtiteDeRepeticao: simNaoSchema.optional(),
-  otiteVezes: optionalNumberFromString,
-  otitePeriodoMeses: optionalNumberFromString,
-  otiteFrequencia: z.string().optional(),
+    teveOtiteDeRepeticao: simNaoSchema.optional().nullable(),
+    otiteVezes: optionalNumberFromString,
+    otitePeriodoMeses: optionalNumberFromString,
+    otiteFrequencia: z.string().optional().nullable(),
 
-  fazOuFezUsoTuboVentilacao: simNaoSchema.optional(),
-  tuboVentilacaoObservacao: z.string().optional(),
+    fazOuFezUsoTuboVentilacao: simNaoSchema.optional().nullable(),
+    tuboVentilacaoObservacao: z.string().optional().nullable(),
 
-  fazOuFezUsoObjetoOral: simNaoSchema.optional(),
-  objetoOralEspecificar: z.string().optional(),
+    fazOuFezUsoObjetoOral: simNaoSchema.optional().nullable(),
+    objetoOralEspecificar: z.string().optional().nullable(),
 
-  usaMamadeira: simNaoSchema.optional(),
-  mamadeiraHa: z.string().optional(),
-  mamadeiraVezesAoDia: optionalNumberFromString,
+    usaMamadeira: simNaoSchema.optional().nullable(),
+    mamadeiraHa: z.string().optional().nullable(),
+    mamadeiraVezesAoDia: optionalNumberFromString,
 });
 
 const DesfraldeItemSchema = z.object({
-    anos: z.string().optional(),
-    meses: z.string().optional(),
-    utilizaFralda: z.boolean().optional(),
+    anos: z.string().optional().nullable(),
+    meses: z.string().optional().nullable(),
+    utilizaFralda: z.boolean().optional().nullable(),
 });
 
 const DesfraldeSchema = z.object({
@@ -137,131 +141,131 @@ const DesfraldeSchema = z.object({
     desfraldeNoturnoUrina: DesfraldeItemSchema,
     desfraldeFezes: DesfraldeItemSchema,
 
-    seLimpaSozinhoUrinar: simNaoSchema.optional(),
-    seLimpaSozinhoDefecar: simNaoSchema.optional(),
-    lavaAsMaosAposUsoBanheiro: simNaoSchema.optional(),
-    apresentaAlteracaoHabitoIntestinal: simNaoSchema.optional(),
+    seLimpaSozinhoUrinar: simNaoSchema.optional().nullable(),
+    seLimpaSozinhoDefecar: simNaoSchema.optional().nullable(),
+    lavaAsMaosAposUsoBanheiro: simNaoSchema.optional().nullable(),
+    apresentaAlteracaoHabitoIntestinal: simNaoSchema.optional().nullable(),
 
-    observacoes: z.string().optional(),
+    observacoes: z.string().optional().nullable(),
 });
 
 const SonoSchema = z.object({
-    dormemMediaHorasNoite: z.string().optional(),
-    dormemMediaHorasDia: z.string().optional(),
+    dormemMediaHorasNoite: z.string().optional().nullable(),
+    dormemMediaHorasDia: z.string().optional().nullable(),
 
-    periodoSonoDia: z.enum(["manha", "tarde"]).optional(),
+    periodoSonoDia: z.enum(["manha", "tarde"]).optional().nullable(),
 
-    temDificuldadeIniciarSono: simNaoSchema.optional(),
-    acordaDeMadrugada: simNaoSchema.optional(),
-    dormeNaPropriaCama: simNaoSchema.optional(),
-    dormeNoProprioQuarto: simNaoSchema.optional(),
-    apresentaSonoAgitado: simNaoSchema.optional(),
-    eSonambulo: simNaoSchema.optional(),
+    temDificuldadeIniciarSono: simNaoSchema.optional().nullable(),
+    acordaDeMadrugada: simNaoSchema.optional().nullable(),
+    dormeNaPropriaCama: simNaoSchema.optional().nullable(),
+    dormeNoProprioQuarto: simNaoSchema.optional().nullable(),
+    apresentaSonoAgitado: simNaoSchema.optional().nullable(),
+    eSonambulo: simNaoSchema.optional().nullable(),
 
-    observacoes: z.string().optional(),
+    observacoes: z.string().optional().nullable(),
 });
 
 const HabitosHigieneSchema = z.object({
-    tomaBanhoLavaCorpoTodo: simNaoComAjudaSchema.optional(),
-    secaCorpoTodo: simNaoComAjudaSchema.optional(),
-    retiraTodasPecasRoupa: simNaoComAjudaSchema.optional(),
-    colocaTodasPecasRoupa: simNaoComAjudaSchema.optional(),
-    poeCalcadosSemCadarco: simNaoComAjudaSchema.optional(),
-    poeCalcadosComCadarco: simNaoComAjudaSchema.optional(),
-    escovaOsDentes: simNaoComAjudaSchema.optional(),
-    penteiaOCabelo: simNaoComAjudaSchema.optional(),
+    tomaBanhoLavaCorpoTodo: simNaoComAjudaSchema.optional().nullable(),
+    secaCorpoTodo: simNaoComAjudaSchema.optional().nullable(),
+    retiraTodasPecasRoupa: simNaoComAjudaSchema.optional().nullable(),
+    colocaTodasPecasRoupa: simNaoComAjudaSchema.optional().nullable(),
+    poeCalcadosSemCadarco: simNaoComAjudaSchema.optional().nullable(),
+    poeCalcadosComCadarco: simNaoComAjudaSchema.optional().nullable(),
+    escovaOsDentes: simNaoComAjudaSchema.optional().nullable(),
+    penteiaOCabelo: simNaoComAjudaSchema.optional().nullable(),
 
-    observacoes: z.string().optional(),
+    observacoes: z.string().optional().nullable(),
 });
 
 const AlimentacaoSchema = z.object({
-    apresentaQueixaAlimentacao: simNaoSchema.optional(),
-    seAlimentaSozinho: simNaoSchema.optional(),
-    eSeletivoQuantoAlimentos: simNaoSchema.optional(),
-    passaDiaInteiroSemComer: simNaoSchema.optional(),
-    apresentaRituaisParaAlimentar: simNaoSchema.optional(),
-    estaAbaixoOuAcimaPeso: simNaoSchema.optional(),
+    apresentaQueixaAlimentacao: simNaoSchema.optional().nullable(),
+    seAlimentaSozinho: simNaoSchema.optional().nullable(),
+    eSeletivoQuantoAlimentos: simNaoSchema.optional().nullable(),
+    passaDiaInteiroSemComer: simNaoSchema.optional().nullable(),
+    apresentaRituaisParaAlimentar: simNaoSchema.optional().nullable(),
+    estaAbaixoOuAcimaPeso: simNaoSchema.optional().nullable(),
 
-    estaAbaixoOuAcimaPesoDescricao: z.string().optional(),
+    estaAbaixoOuAcimaPesoDescricao: z.string().optional().nullable(),
 
-    temHistoricoAnemia: simNaoSchema.optional(),
-    temHistoricoAnemiaDescricao: z.string().optional(),
+    temHistoricoAnemia: simNaoSchema.optional().nullable(),
+    temHistoricoAnemiaDescricao: z.string().optional().nullable(),
 
-    rotinaAlimentarEProblemaFamilia: simNaoSchema.optional(),
-    rotinaAlimentarEProblemaFamiliaDescricao: z.string().optional(),
+    rotinaAlimentarEProblemaFamilia: simNaoSchema.optional().nullable(),
+    rotinaAlimentarEProblemaFamiliaDescricao: z.string().optional().nullable(),
 
-    observacoes: z.string().optional(),
+    observacoes: z.string().optional().nullable(),
 });
 
 const DesenvolvimentoSocialSchema = z.object({
-    possuiAmigosMesmaIdadeEscola: simNaoSchema.optional(),
-    possuiAmigosMesmaIdadeForaEscola: simNaoSchema.optional(),
-    fazUsoFuncionalBrinquedos: simNaoSchema.optional(),
-    brincaProximoAosColegas: simNaoSchema.optional(),
-    brincaConjuntaComColegas: simNaoSchema.optional(),
-    procuraColegasEspontaneamente: simNaoSchema.optional(),
-    seVerbalIniciaConversa: simNaoSchema.optional(),
-    seVerbalRespondePerguntasSimples: simNaoSchema.optional(),
-    fazPedidosQuandoNecessario: simNaoSchema.optional(),
-    estabeleceContatoVisualAdultos: simNaoSchema.optional(),
-    estabeleceContatoVisualCriancas: simNaoSchema.optional(),
-    observacoes: z.string().optional(),
+    possuiAmigosMesmaIdadeEscola: simNaoSchema.optional().nullable(),
+    possuiAmigosMesmaIdadeForaEscola: simNaoSchema.optional().nullable(),
+    fazUsoFuncionalBrinquedos: simNaoSchema.optional().nullable(),
+    brincaProximoAosColegas: simNaoSchema.optional().nullable(),
+    brincaConjuntaComColegas: simNaoSchema.optional().nullable(),
+    procuraColegasEspontaneamente: simNaoSchema.optional().nullable(),
+    seVerbalIniciaConversa: simNaoSchema.optional().nullable(),
+    seVerbalRespondePerguntasSimples: simNaoSchema.optional().nullable(),
+    fazPedidosQuandoNecessario: simNaoSchema.optional().nullable(),
+    estabeleceContatoVisualAdultos: simNaoSchema.optional().nullable(),
+    estabeleceContatoVisualCriancas: simNaoSchema.optional().nullable(),
+    observacoes: z.string().optional().nullable(),
 });
 
 const DesenvolvimentoAcademicoSchema = z.object({
-    ano: z.number().optional(),
-    periodo: z.string().optional(),
-    direcao: z.string().optional(),
-    coordenacao: z.string().optional(),
-    professoraPrincipal: z.string().optional(),
-    professoraAssistente: z.string().optional(),
+    ano: z.number().optional().nullable(),
+    periodo: z.string().optional().nullable(),
+    direcao: z.string().optional().nullable(),
+    coordenacao: z.string().optional().nullable(),
+    professoraPrincipal: z.string().optional().nullable(),
+    professoraAssistente: z.string().optional().nullable(),
 
-    frequentaEscolaRegular: simNaoSchema.optional(),
-    frequentaEscolaEspecial: simNaoSchema.optional(),
-    acompanhaTurmaDemandasPedagogicas: simNaoSchema.optional(),
-    segueRegrasRotinaSalaAula: simNaoSchema.optional(),
-    necessitaApoioAT: simNaoSchema.optional(),
-    necessitaAdaptacaoMateriais: simNaoSchema.optional(),
-    necessitaAdaptacaoCurricular: simNaoSchema.optional(),
-    houveReprovacaoRetencao: simNaoSchema.optional(),
-    escolaPossuiEquipeInclusao: simNaoSchema.optional(),
-    haIndicativoDeficienciaIntelectual: simNaoSchema.optional(),
-    escolaApresentaQueixaComportamental: simNaoSchema.optional(),
+    frequentaEscolaRegular: simNaoSchema.optional().nullable(),
+    frequentaEscolaEspecial: simNaoSchema.optional().nullable(),
+    acompanhaTurmaDemandasPedagogicas: simNaoSchema.optional().nullable(),
+    segueRegrasRotinaSalaAula: simNaoSchema.optional().nullable(),
+    necessitaApoioAT: simNaoSchema.optional().nullable(),
+    necessitaAdaptacaoMateriais: simNaoSchema.optional().nullable(),
+    necessitaAdaptacaoCurricular: simNaoSchema.optional().nullable(),
+    houveReprovacaoRetencao: simNaoSchema.optional().nullable(),
+    escolaPossuiEquipeInclusao: simNaoSchema.optional().nullable(),
+    haIndicativoDeficienciaIntelectual: simNaoSchema.optional().nullable(),
+    escolaApresentaQueixaComportamental: simNaoSchema.optional().nullable(),
 
-    adaptacaoEscolar: z.string().optional(),
-    dificuldadesEscolares: z.string().optional(),
-    relacionamentoComColegas: z.string().optional(),
-    observacoes: z.string().optional(),
+    adaptacaoEscolar: z.string().optional().nullable(),
+    dificuldadesEscolares: z.string().optional().nullable(),
+    relacionamentoComColegas: z.string().optional().nullable(),
+    observacoes: z.string().optional().nullable(),
 });
 
 const EstereotipiasRituaisSchema = z.object({
-    balancaMaosLadoCorpoOuFrente: simNaoSchema.optional(),
-    balancaCorpoFrenteParaTras: simNaoSchema.optional(),
-    pulaOuGiraEmTornoDeSi: simNaoSchema.optional(),
-    repeteSonsSemFuncaoComunicativa: simNaoSchema.optional(),
-    repeteMovimentosContinuos: simNaoSchema.optional(),
-    exploraAmbienteLambendoTocando: simNaoSchema.optional(),
-    procuraObservarObjetosCantoOlho: simNaoSchema.optional(),
-    organizaObjetosLadoALado: simNaoSchema.optional(),
-    realizaTarefasSempreMesmaOrdem: simNaoSchema.optional(),
-    apresentaRituaisDiarios: simNaoSchema.optional(),
+    balancaMaosLadoCorpoOuFrente: simNaoSchema.optional().nullable(),
+    balancaCorpoFrenteParaTras: simNaoSchema.optional().nullable(),
+    pulaOuGiraEmTornoDeSi: simNaoSchema.optional().nullable(),
+    repeteSonsSemFuncaoComunicativa: simNaoSchema.optional().nullable(),
+    repeteMovimentosContinuos: simNaoSchema.optional().nullable(),
+    exploraAmbienteLambendoTocando: simNaoSchema.optional().nullable(),
+    procuraObservarObjetosCantoOlho: simNaoSchema.optional().nullable(),
+    organizaObjetosLadoALado: simNaoSchema.optional().nullable(),
+    realizaTarefasSempreMesmaOrdem: simNaoSchema.optional().nullable(),
+    apresentaRituaisDiarios: simNaoSchema.optional().nullable(),
 
-    observacoesTopografias: z.string().optional(),
+    observacoesTopografias: z.string().optional().nullable(),
 });
 
 const ProblemasComportamentoSchema = z.object({
-    apresentaComportamentosAutoLesivos: simNaoSchema.optional(),
-    autoLesivosQuais: z.string().optional(),
+    apresentaComportamentosAutoLesivos: simNaoSchema.optional().nullable(),
+    autoLesivosQuais: z.string().optional().nullable(),
 
-    apresentaComportamentosHeteroagressivos: simNaoSchema.optional(),
-    heteroagressivosQuais: z.string().optional(),
+    apresentaComportamentosHeteroagressivos: simNaoSchema.optional().nullable(),
+    heteroagressivosQuais: z.string().optional().nullable(),
 
-    apresentaDestruicaoPropriedade: simNaoSchema.optional(),
-    destruicaoDescrever: z.string().optional(),
+    apresentaDestruicaoPropriedade: simNaoSchema.optional().nullable(),
+    destruicaoDescrever: z.string().optional().nullable(),
 
-    necessitouContencaoMecanica: simNaoSchema.optional(),
+    necessitouContencaoMecanica: simNaoSchema.optional().nullable(),
 
-    observacoesTopografias: z.string().optional(),
+    observacoesTopografias: z.string().optional().nullable(),
 });
 
 // SCHEMAS
@@ -278,35 +282,35 @@ export const CabecalhoSchema = z.object({
     parentesco: z
         .string()
         .min(1, "Parentesco é obrigatório."),
-    quemIndicou: z.string().optional(),
+    quemIndicou: z.string().optional().nullable(),
     profissionalId: z
         .uuid("ID de profissional inválido."),
-    parentescoDescricao: z.string().optional(),
+    parentescoDescricao: z.string().optional().nullable(),
 });
 
 export const QueixaDiagnosticoSchema = z.object({
     queixaPrincipal: z
         .string()
         .min(1, "Queixa principal é obrigatória."),
-    diagnosticoPrevio: z.string().optional(),
-    suspeitaCondicaoAssociada: z.string().optional(),
+    diagnosticoPrevio: z.string().optional().nullable(),
+    suspeitaCondicaoAssociada: z.string().optional().nullable(),
     especialidadesConsultadas: z
         .array(EspecialidadeConsultadaSchema)
-        .optional(),
+        .optional().nullable(),
     medicamentosEmUso: z
         .array(MedicamentoEmUsoSchema)
-        .optional(),
+        .optional().nullable(),
     examesPrevios: z
         .array(ExamePrevioSchema)
-        .optional(),
+        .optional().nullable(),
     terapiasPrevias: z
         .array(TerapiaPreviaSchema)
-        .optional(),
+        .optional().nullable(),
 });
 
 export const ContextoFamiliarRotinaSchema = z.object({
-    historicosFamiliares: z.array(HistoricoFamiliarSchema).optional(),
-    atividadesRotina: z.array(AtividadeRotinaSchema).optional(),
+    historicosFamiliares: z.array(HistoricoFamiliarSchema).optional().nullable(),
+    atividadesRotina: z.array(AtividadeRotinaSchema).optional().nullable(),
 });
 
 export const DesenvolvimentoInicialSchema = z.object({
@@ -316,10 +320,10 @@ export const DesenvolvimentoInicialSchema = z.object({
 });
 
 export const AtividadesVidaDiariaSchema = z.object({
-    desfralde: DesfraldeSchema.optional(),
-    sono: SonoSchema.optional(),
-    habitosHigiene: HabitosHigieneSchema.optional(),
-    alimentacao: AlimentacaoSchema.optional(),
+    desfralde: DesfraldeSchema.optional().nullable(),
+    sono: SonoSchema.optional().nullable(),
+    habitosHigiene: HabitosHigieneSchema.optional().nullable(),
+    alimentacao: AlimentacaoSchema.optional().nullable(),
 });
 
 export const SocialAcademicoSchema = z.object({
@@ -333,9 +337,9 @@ export const ComportamentoSchema = z.object({
 });
 
 export const FinalizacaoSchema = z.object({
-    outrasInformacoesRelevantes: z.string().optional(),
-    observacoesImpressoesTerapeuta: z.string().optional(),
-    expectativasFamilia: z.string().optional(),
+    outrasInformacoesRelevantes: z.string().optional().nullable(),
+    observacoesImpressoesTerapeuta: z.string().optional().nullable(),
+    expectativasFamilia: z.string().optional().nullable(),
 });
 
 export const AnamneseSchema = z.object({

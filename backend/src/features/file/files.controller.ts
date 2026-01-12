@@ -1,9 +1,10 @@
-import type { Request, Response } from 'express';
+import type { NextFunction, Request, Response } from 'express';
 import * as FilesService from './files.service.js';
 import { collectIncomingFiles } from './utils/collectIncomingFiles.js';
 import { getFileStreamFromR2 } from './r2/getFileStream.js';
 import { createFolder } from './r2/createFolder.js';
 import { normalizedBirthDate } from './types/files.normalizer.js';
+import { R2GenericUploadService } from './r2/r2-upload-generic.js';
 
 /**
  * Controller responsável pelos uploads de arquivos.
@@ -230,5 +231,33 @@ export async function getAvatar(req: Request, res: Response) {
     } catch (error) {
         console.error('Erro ao obter avatar:', error);
         return res.status(500).json({ error: 'Falha ao carregar foto de perfil.' });
+    }
+}
+
+export async function uploadGenericToR2(req: Request, res: Response, next: NextFunction) {
+    try {
+        const prefix = typeof req.body?.prefix === 'string' ? req.body.prefix : undefined;
+
+        const files = Array.isArray(req.files) ? req.files : [];
+        if (!files.length) {
+            return res.status(400).json({
+                code: 'FILES_REQUIRED',
+                message: 'Envie ao menos 1 arquivo.',
+            });
+        }
+
+        const uploaded = await R2GenericUploadService.uploadMany({
+            prefix,
+            files: files.map((f) => ({
+                buffer: f.buffer,
+                mimetype: f.mimetype,
+                originalname: f.originalname,
+                size: f.size,
+            })),
+        });
+
+        return res.status(201).json({ files: uploaded });
+    } catch (err) {
+        return next(err)
     }
 }

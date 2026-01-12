@@ -27,6 +27,8 @@ export function formatDate(value?: string | null): string {
  */
 export function formatMesAno(value?: string | null): string {
     if (!value) return 'Não informado';
+    if (value.includes('/')) return value;
+
     const [year, month] = value.split('T')[0].split('-');
     return `${month}/${year}`;
 }
