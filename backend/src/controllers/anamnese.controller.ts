@@ -151,6 +151,9 @@ export async function updateAnamneseById(req: Request, res: Response, next: Next
             });
         }
 
+        console.log(JSON.stringify(payload.queixaDiagnostico?.examesPrevios))
+        console.log('======================================')
+
         const files = (Array.isArray(req.files) ? req.files : []) as Express.Multer.File[];
         const idToKey = new Map<string, string>();
 

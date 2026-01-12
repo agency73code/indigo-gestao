@@ -1249,6 +1249,21 @@ export async function updateAnamneseById(anamneseId: number, payload: AnamnesePa
         where: { id: anamneseId },
         select: {
             id: true,
+            queixa_diagnostico: {
+                select: {
+                    exames_previos: {
+                        select: {
+                            id: true,
+                            arquivos: {
+                                select: {
+                                    id: true,
+                                    caminho: true,
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         },
     });
 
@@ -1256,12 +1271,115 @@ export async function updateAnamneseById(anamneseId: number, payload: AnamnesePa
         return null;
     }
 
-    const removedFilePaths = (payload.queixaDiagnostico?.examesPrevios ?? []).flatMap((exame) =>
-        (exame.arquivos ?? [])
-            .filter((arquivo) => arquivo?.removed === true)
-            .map((arquivo) => arquivo?.caminho ?? '')
-            .filter((caminho) => caminho.length > 0),
+    const normalizeId = (id?: string | number | null): string | null => {
+        if (id === null || id === undefined) {
+            return null;
+        }
+
+        const value = String(id).trim();
+        return value.length > 0 ? value : null;
+    };
+
+    const normalizeStorageKey = (path: string): string => {
+        if (!path) {
+            return '';
+        }
+
+        try {
+            const parsed = new URL(path);
+            return decodeURIComponent(parsed.pathname).replace(/^\/+/, '');
+        } catch {
+            return path.replace(/^\/+/, '');
+        }
+    };
+
+    const existingExams = existing.queixa_diagnostico?.exames_previos ?? [];
+    const existingExamIds = new Set(existingExams.map((exam) => String(exam.id)));
+    const existingFileEntries = existingExams.flatMap((exam) =>
+        exam.arquivos.map((arq) => ({
+            id: String(arq.id),
+            caminho: arq.caminho ?? '',
+        })),
     );
+
+    const incomingExamIds = new Set<string>();
+    const incomingFileIds = new Set<string>();
+
+    for (const exam of payload.queixaDiagnostico?.examesPrevios ?? []) {
+        const examId = normalizeId(exam.id);
+        if (examId) {
+            incomingExamIds.add(examId);
+        }
+
+        for (const arq of exam.arquivos ?? []) {
+            if (!arq || arq.removed) {
+                continue;
+            }
+
+            const fileId = normalizeId(arq.id);
+            if (fileId) {
+                incomingFileIds.add(fileId);
+            }
+        }
+    }
+
+    const removedExamIds = Array.from(existingExamIds).filter((id) => !incomingExamIds.has(id));
+    const removedExamIdSet = new Set(removedExamIds);
+    const removedFileIds = new Set<string>();
+
+    for (const exam of existingExams) {
+        const examId = String(exam.id);
+        const examRemoved = removedExamIdSet.has(examId);
+
+        for (const arq of exam.arquivos) {
+            const fileId = String(arq.id);
+            if (examRemoved || !incomingExamIds.has(fileId)) {
+                removedFileIds.add(fileId);
+            }
+        }
+    }
+
+    const removedPaths = Array.from(
+        new Set(
+            existingFileEntries
+                .filter((entry) => removedFileIds.has(entry.id))
+                .map((entry) => entry.caminho)
+                .filter((path) => path.length > 0)
+        )
+    );
+
+    const debugPrefix = '[anamneses:update]';
+
+    console.debug(`${debugPrefix} existing exams/files`, {
+        exams: existingExams.length,
+        files: existingFileEntries.length,
+    });
+    console.debug(`${debugPrefix} incoming exams/files (with id)`, {
+        exams: incomingExamIds.size,
+        files: incomingFileIds.size,
+    });
+    console.debug(`${debugPrefix} removed exams/files/paths`, {
+        removedExamIds,
+        removedFileIds: Array.from(removedFileIds),
+        removedPaths,
+    });
+
+    const removedKeys = new Set(
+        removedPaths
+            .map((path) => normalizeStorageKey(path))
+            .filter((path) => path.length > 0),
+    );
+
+    for (const key of removedKeys) {
+        try {
+            await deleteFromR2(key);
+        } catch (error) {
+            console.error(`${debugPrefix} falha ao deletar arquivo no R2`, {
+                key,
+                error,
+            });
+        }
+    }
 
     const header = buildHeader(payload.cabecalho);
     const complaintCreate = buildComplaintDiagnosis(payload.queixaDiagnostico).queixa_diagnostico?.create;
@@ -1354,24 +1472,9 @@ export async function updateAnamneseById(anamneseId: number, payload: AnamnesePa
         },
     });
 
-    const normalizeStorageKey = (caminho: string): string => {
-        if (!caminho) {
-            return '';
-        }
-
-        try {
-            const parsed = new URL(caminho);
-            return decodeURIComponent(parsed.pathname).replace(/^\/+/, '');
-        } catch {
-            return caminho.replace(/^\/+/, '');
-        }
-    };
-
-    const removedKeys = removedFilePaths
-        .map((path) => normalizeStorageKey(path))
-        .filter((path) => path.length > 0);
-    const deleteKeySet = new Set(removedKeys);
-    const deletePathSet = new Set([...removedFilePaths, ...removedKeys].filter((path) => path.length > 0));
+    const deletePathSet = new Set(
+        [...removedPaths, ...Array.from(removedKeys)].filter((path) => path.length > 0),
+    );
 
     if (deletePathSet.size > 0) {
         await prisma.anamnese_arquivo_exame_previo.deleteMany({
@@ -1380,10 +1483,6 @@ export async function updateAnamneseById(anamneseId: number, payload: AnamnesePa
                 exame: { anamnese_id: anamneseId },
             },
         });
-    }
-
-    if (deleteKeySet.size > 0) {
-        await Promise.all(Array.from(deleteKeySet).map((key) => deleteFromR2(key)));
     }
 
     return getAnamneseById(anamneseId);

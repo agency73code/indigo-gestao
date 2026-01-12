@@ -186,7 +186,7 @@ export default function AnamneseProfileDrawer({
                     tamanho: arq.tamanho || 0,
                     url: arq.url,
                     caminho: arq.caminho ?? arq.url,
-                    removed: arq.removed,
+                    removed: arq.removed ?? false,
                 })) || [],
             })),
             terapiasPrevias: data.queixaDiagnostico.terapiasPrevias.map(ter => ({

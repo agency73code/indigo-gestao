@@ -1,17 +1,5 @@
 import { authFetch } from '@/lib/http';
 import type { AnamneseDetalhe } from '../types/anamnese-consulta.types';
-import { getMockAnamneseById } from '../mocks/anamnese-consulta.mock';
-import { sanitizeObject } from './anamnese-consulta.validation';
-
-// ============================================
-// CONFIGURAÇÃO
-// ============================================
-
-/**
- * Flag para usar dados mock
- * Alterar para false quando API estiver pronta
- */
-const USE_MOCK = false;
 
 // ============================================
 // FUNÇÕES DO SERVICE
@@ -29,14 +17,6 @@ export async function getAnamneseById(id: string): Promise<AnamneseDetalhe | nul
     if (!id || typeof id !== 'string') {
         throw new Error('ID da anamnese é obrigatório');
     }
-
-    // ========== MOCK: Usar dados locais para desenvolvimento ==========
-    if (USE_MOCK) {
-        // Simular delay de rede
-        await new Promise(resolve => setTimeout(resolve, 500));
-        return getMockAnamneseById(id);
-    }
-    // ===================================================================
 
     const res = await authFetch(`/api/anamneses/${id}`, { method: 'GET' });
     const text = await res.text();
@@ -68,27 +48,15 @@ export async function updateAnamnese(id: string, data: Partial<AnamneseDetalhe>)
         throw new Error('ID da anamnese é obrigatório');
     }
 
-    // ========== MOCK: Simular atualização ==========
-    if (USE_MOCK) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const existing = getMockAnamneseById(id);
-        if (!existing) {
-            throw new Error('Anamnese não encontrada');
-        }
-        // Sanitizar dados antes de retornar
-        const sanitizedData = sanitizeObject(data as Record<string, unknown>);
-        return { ...existing, ...sanitizedData, updatedAt: new Date().toISOString() } as AnamneseDetalhe;
-    }
-    // ================================================
-
     const fd = new FormData();
     fd.append('payload', JSON.stringify(data));
 
     const exames = data?.queixaDiagnostico?.examesPrevios ?? [];
+
     for (const exame of exames) {
         const arquivos = exame?.arquivos ?? [];
         for (const arq of arquivos) {
-            if (arq?.id && arq?.file instanceof File && !arq.removed) {
+            if (arq?.id && arq?.file instanceof File && arq.removed === false) {
                 fd.append(`files[${arq.id}]`, arq.file, arq.file.name);
             }
         }
@@ -117,14 +85,6 @@ export async function updateAnamnese(id: string, data: Partial<AnamneseDetalhe>)
  * @returns Blob do PDF
  */
 export async function exportAnamnese(id: string): Promise<Blob> {
-    // ========== MOCK: Simular exportação ==========
-    if (USE_MOCK) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        // Retornar um blob vazio simulando PDF
-        return new Blob(['PDF mock content'], { type: 'application/pdf' });
-    }
-    // ================================================
-
     const res = await authFetch(`/api/anamneses/${id}/export`, { method: 'GET' });
 
     if (!res.ok) {
