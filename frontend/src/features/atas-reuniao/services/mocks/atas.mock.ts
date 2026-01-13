@@ -79,7 +79,7 @@ export const mockClientes: ClienteOption[] = [
 // MOCK DATA - ATAS
 // ============================================
 
-let mockAtas: AtaReuniao[] = [
+const mockAtas: AtaReuniao[] = [
     {
         id: 'ata-001',
         cabecalho: {
@@ -220,6 +220,18 @@ let mockAtas: AtaReuniao[] = [
                 size: 15728640, // 15 MB
                 type: 'video/mp4',
                 url: '#',
+            },
+        ],
+        links: [
+            {
+                id: 'link-001',
+                titulo: 'Brinquedo Sensorial - Bola Cravo',
+                url: 'https://www.amazon.com.br/bola-sensorial-cravo',
+            },
+            {
+                id: 'link-002',
+                titulo: 'Livro "Brincando de Falar"',
+                url: 'https://www.amazon.com.br/brincando-de-falar',
             },
         ],
     },
@@ -1358,9 +1370,14 @@ export async function generateWhatsAppSummaryMock(id: string): Promise<string> {
             orientacao_parental: 'orientação parental',
             reuniao_equipe: 'reunião de equipe',
             reuniao_escola: 'reunião com a escola',
+            reuniao_outro_especialista: 'reunião com especialista',
             supervisao_terapeuta: 'supervisão',
+            supervisao_at: 'supervisão AT',
             planejamento_terapeutico: 'planejamento terapêutico',
             devolutiva: 'devolutiva',
+            devolutiva_avaliacao: 'devolutiva de avaliação',
+            discussao_caso: 'discussão de caso',
+            supervisao: 'supervisão',
             outros: 'reunião',
         }[ata.finalidade] || 'reunião';
 

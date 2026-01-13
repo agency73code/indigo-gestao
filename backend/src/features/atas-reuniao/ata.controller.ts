@@ -4,6 +4,7 @@
  */
 
 import type { Request, Response, NextFunction } from 'express';
+import '../../types/express.d.js';
 import { AppError } from '../../errors/AppError.js';
 import { AIServiceError } from '../ai/ai.errors.js';
 import { gerarResumoSchema } from './ata.schema.js';

@@ -69,8 +69,12 @@ export function NovaAtaPage() {
               conteudo: ata.conteudo,
               clienteId: ata.clienteId,
               clienteNome: ata.clienteNome,
+              links: ata.links,
           }
         : undefined;
+
+    // Anexos existentes (para exibição, não upload)
+    const existingAnexos = ata?.anexos ?? [];
 
     // Loading state
     if (loading) {
@@ -117,6 +121,7 @@ export function NovaAtaPage() {
                 <AtaForm
                     ataId={id}
                     initialData={initialData}
+                    existingAnexos={existingAnexos}
                     onSuccess={() => navigate('/app/atas')}
                 />
             </div>

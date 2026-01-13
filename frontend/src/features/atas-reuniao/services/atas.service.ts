@@ -1,10 +1,3 @@
-/**
- * Serviço de Atas de Reunião
- *
- * Toggle USE_MOCK para alternar entre mock e API real.
- * Quando o backend estiver pronto, mude USE_MOCK para false.
- */
-
 import { authFetch } from '@/lib/http';
 import type {
     AtaReuniao,
@@ -13,10 +6,12 @@ import type {
     CreateAtaInput,
     UpdateAtaInput,
     TerapeutaOption,
-    ClienteOption,
     CabecalhoAta,
 } from '../types';
 
+import { atasConfig } from './atas.config';
+
+// Funções mock - serão removidas quando backend estiver pronto
 import {
     listAtasMock,
     getAtaByIdMock,
@@ -27,22 +22,11 @@ import {
     generateSummaryMock,
     generateWhatsAppSummaryMock,
     listTerapeutasMock,
-    listClientesMock,
     getTerapeutaLogadoMock,
 } from './mocks/atas.mock';
 
 // ============================================
-// CONFIGURAÇÃO
-// ============================================
-
-const API_BASE = import.meta.env.VITE_API_URL;
-
-// Toggle: true = mock, false = API real
-const USE_MOCK = true;          // CRUD (ainda não tem backend)
-const USE_MOCK_IA = false;      // IA - Resumos (backend já implementado)
-
-// ============================================
-// HELPERS
+// HELPERS - MAPEAMENTO API ↔ FRONTEND
 // ============================================
 
 /** Converte resposta do backend (snake_case) para frontend (camelCase) */
@@ -67,6 +51,11 @@ function mapAtaFromApi(data: any): AtaReuniao {
             especialidade: p.terapeuta?.especialidade,
             cargo: p.terapeuta?.cargo,
         })),
+        links: (data.links || []).map((l: any) => ({
+            id: String(l.id),
+            titulo: l.titulo,
+            url: l.url,
+        })),
         cabecalho: {
             terapeutaId: data.terapeuta_id,
             terapeutaNome: data.terapeuta?.nome || '',
@@ -87,14 +76,14 @@ function mapAtaFromApi(data: any): AtaReuniao {
             size: a.tamanho,
             type: a.mime_type,
             arquivoId: a.arquivo_id,
-            url: a.arquivo_id ? `${API_BASE}/arquivos/${a.arquivo_id}/view` : undefined,
+            url: a.arquivo_id ? `${atasConfig.apiBase}/arquivos/${a.arquivo_id}/view` : undefined,
         })),
     };
 }
 
 /** Converte input do frontend para formato do backend (CREATE) */
 function mapCreateAtaToApi(input: CreateAtaInput): Record<string, unknown> {
-    const { formData, cabecalho } = input;
+    const { formData, cabecalho, status } = input;
 
     return {
         terapeuta_id: cabecalho.terapeutaId,
@@ -106,19 +95,27 @@ function mapCreateAtaToApi(input: CreateAtaInput): Record<string, unknown> {
         finalidade_outros: formData.finalidadeOutros || null,
         modalidade: formData.modalidade,
         conteudo: formData.conteudo,
+        status: status || 'rascunho',
         participantes: formData.participantes.map((p) => ({
             tipo: p.tipo,
             nome: p.nome,
             descricao: p.descricao || null,
             terapeuta_id: p.terapeutaId || null,
         })),
+        links: formData.links?.map((l) => ({
+            titulo: l.titulo,
+            url: l.url,
+        })) || [],
     };
 }
 
 /** Converte input do frontend para formato do backend (UPDATE) */
 function mapUpdateAtaToApi(input: UpdateAtaInput): Record<string, unknown> {
-    const { formData } = input;
+    const { formData, status } = input;
     const payload: Record<string, unknown> = {};
+
+    // Status sempre é enviado se definido
+    if (status) payload.status = status;
 
     // Só envia campos que existem no Partial
     if (formData.data !== undefined) payload.data = formData.data;
@@ -135,6 +132,12 @@ function mapUpdateAtaToApi(input: UpdateAtaInput): Record<string, unknown> {
             nome: p.nome,
             descricao: p.descricao || null,
             terapeuta_id: p.terapeutaId || null,
+        }));
+    }
+    if (formData.links !== undefined) {
+        payload.links = formData.links.map((l) => ({
+            titulo: l.titulo,
+            url: l.url,
         }));
     }
 
@@ -165,9 +168,9 @@ function buildQueryString(filters?: AtaListFilters): string {
 // ============================================
 
 export async function listAtas(filters?: AtaListFilters): Promise<AtaListResponse> {
-    if (USE_MOCK) return listAtasMock(filters);
+    if (atasConfig.useMockCrud) return listAtasMock(filters);
 
-    const res = await authFetch(`${API_BASE}/atas-reuniao${buildQueryString(filters)}`);
+    const res = await authFetch(`${atasConfig.apiBase}/atas-reuniao${buildQueryString(filters)}`);
     if (!res.ok) throw new Error('Falha ao carregar atas de reunião');
     
     const data = await res.json();
@@ -181,9 +184,9 @@ export async function listAtas(filters?: AtaListFilters): Promise<AtaListRespons
 }
 
 export async function getAtaById(id: string): Promise<AtaReuniao | null> {
-    if (USE_MOCK) return getAtaByIdMock(id);
+    if (atasConfig.useMockCrud) return getAtaByIdMock(id);
 
-    const res = await authFetch(`${API_BASE}/atas-reuniao/${id}`);
+    const res = await authFetch(`${atasConfig.apiBase}/atas-reuniao/${id}`);
     if (res.status === 404) return null;
     if (!res.ok) throw new Error('Falha ao carregar ata');
     
@@ -192,12 +195,26 @@ export async function getAtaById(id: string): Promise<AtaReuniao | null> {
 }
 
 export async function createAta(input: CreateAtaInput): Promise<AtaReuniao> {
-    if (USE_MOCK) return createAtaMock(input);
+    if (atasConfig.useMockCrud) return createAtaMock(input);
 
-    const res = await authFetch(`${API_BASE}/atas-reuniao`, {
+    const fd = new FormData();
+
+    // JSON do payload (sem os arquivos)
+    fd.append('payload', JSON.stringify(mapCreateAtaToApi(input)));
+
+    // Adiciona os arquivos com seus IDs e nomes personalizados
+    const anexos = input.anexos ?? [];
+    for (const anexo of anexos) {
+        if (anexo.file instanceof File) {
+            // Formato: files[id] = arquivo, nome enviado separadamente
+            fd.append(`files[${anexo.id}]`, anexo.file, anexo.file.name);
+            fd.append(`fileNames[${anexo.id}]`, anexo.nome);
+        }
+    }
+
+    const res = await authFetch(`${atasConfig.apiBase}/atas-reuniao`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(mapCreateAtaToApi(input)),
+        body: fd,
     });
     
     if (!res.ok) {
@@ -210,12 +227,25 @@ export async function createAta(input: CreateAtaInput): Promise<AtaReuniao> {
 }
 
 export async function updateAta(id: string, input: UpdateAtaInput): Promise<AtaReuniao | null> {
-    if (USE_MOCK) return updateAtaMock(id, input);
+    if (atasConfig.useMockCrud) return updateAtaMock(id, input);
 
-    const res = await authFetch(`${API_BASE}/atas-reuniao/${id}`, {
+    const fd = new FormData();
+
+    // JSON do payload (sem os arquivos)
+    fd.append('payload', JSON.stringify(mapUpdateAtaToApi(input)));
+
+    // Adiciona os arquivos com seus IDs e nomes personalizados
+    const anexos = input.anexos ?? [];
+    for (const anexo of anexos) {
+        if (anexo.file instanceof File) {
+            fd.append(`files[${anexo.id}]`, anexo.file, anexo.file.name);
+            fd.append(`fileNames[${anexo.id}]`, anexo.nome);
+        }
+    }
+
+    const res = await authFetch(`${atasConfig.apiBase}/atas-reuniao/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(mapUpdateAtaToApi(input)),
+        body: fd,
     });
     
     if (res.status === 404) return null;
@@ -229,16 +259,16 @@ export async function updateAta(id: string, input: UpdateAtaInput): Promise<AtaR
 }
 
 export async function deleteAta(id: string): Promise<boolean> {
-    if (USE_MOCK) return deleteAtaMock(id);
+    if (atasConfig.useMockCrud) return deleteAtaMock(id);
 
-    const res = await authFetch(`${API_BASE}/atas-reuniao/${id}`, { method: 'DELETE' });
+    const res = await authFetch(`${atasConfig.apiBase}/atas-reuniao/${id}`, { method: 'DELETE' });
     return res.ok;
 }
 
 export async function finalizarAta(id: string): Promise<AtaReuniao | null> {
-    if (USE_MOCK) return finalizarAtaMock(id);
+    if (atasConfig.useMockCrud) return finalizarAtaMock(id);
 
-    const res = await authFetch(`${API_BASE}/atas-reuniao/${id}/finalizar`, { method: 'POST' });
+    const res = await authFetch(`${atasConfig.apiBase}/atas-reuniao/${id}/finalizar`, { method: 'POST' });
     if (res.status === 404) return null;
     if (!res.ok) throw new Error('Falha ao finalizar ata');
     
@@ -263,6 +293,8 @@ interface GerarResumoParams {
     horarioFim?: string;
     duracao?: string;
     conselho?: string;
+    // Links de recomendação
+    links?: Array<{ titulo: string; url: string }>;
 }
 
 /** Formata duração em minutos para texto legível */
@@ -305,14 +337,16 @@ function buildResumoPayload(ata: AtaReuniao): GerarResumoParams {
         horarioFim: ata.horarioFim,
         duracao: formatarDuracaoTexto(ata.horarioInicio, ata.horarioFim),
         conselho: conselhoParts.length > 0 ? conselhoParts.join(' ') : undefined,
+        // Links de recomendação
+        links: ata.links?.map(l => ({ titulo: l.titulo, url: l.url })),
     };
 }
 
 export async function generateSummary(ata: AtaReuniao): Promise<string> {
-    if (USE_MOCK_IA) return generateSummaryMock(ata.id);
+    if (atasConfig.useMockIA) return generateSummaryMock(ata.id);
 
     const payload = buildResumoPayload(ata);
-    const res = await authFetch(`${API_BASE}/atas-reuniao/ai/summary`, {
+    const res = await authFetch(`${atasConfig.apiBase}/atas-reuniao/ai/summary`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -324,10 +358,10 @@ export async function generateSummary(ata: AtaReuniao): Promise<string> {
 }
 
 export async function generateWhatsAppSummary(ata: AtaReuniao): Promise<string> {
-    if (USE_MOCK_IA) return generateWhatsAppSummaryMock(ata.id);
+    if (atasConfig.useMockIA) return generateWhatsAppSummaryMock(ata.id);
 
     const payload = buildResumoPayload(ata);
-    const res = await authFetch(`${API_BASE}/atas-reuniao/ai/whatsapp-summary`, {
+    const res = await authFetch(`${atasConfig.apiBase}/atas-reuniao/ai/whatsapp-summary`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -343,9 +377,9 @@ export async function generateWhatsAppSummary(ata: AtaReuniao): Promise<string> 
 // ============================================
 
 export async function listTerapeutas(): Promise<TerapeutaOption[]> {
-    if (USE_MOCK) return listTerapeutasMock();
+    if (atasConfig.useMockCrud) return listTerapeutasMock();
 
-    const res = await authFetch(`${API_BASE}/terapeutas?atividade=true`);
+    const res = await authFetch(`${atasConfig.apiBase}/terapeutas?atividade=true`);
     if (!res.ok) throw new Error('Falha ao carregar terapeutas');
     
     const data = await res.json();
@@ -359,23 +393,10 @@ export async function listTerapeutas(): Promise<TerapeutaOption[]> {
     }));
 }
 
-export async function listClientes(): Promise<ClienteOption[]> {
-    if (USE_MOCK) return listClientesMock();
-
-    const res = await authFetch(`${API_BASE}/clientes?status=ativo`);
-    if (!res.ok) throw new Error('Falha ao carregar clientes');
-    
-    const data = await res.json();
-    return data.map((c: any) => ({
-        id: c.id,
-        nome: c.nome,
-    }));
-}
-
 export async function getTerapeutaLogado(userId: string): Promise<CabecalhoAta> {
-    if (USE_MOCK) return getTerapeutaLogadoMock(userId);
+    if (atasConfig.useMockCrud) return getTerapeutaLogadoMock(userId);
 
-    const res = await authFetch(`${API_BASE}/terapeutas/${userId}`);
+    const res = await authFetch(`${atasConfig.apiBase}/terapeutas/${userId}`);
     if (!res.ok) throw new Error('Falha ao carregar dados do terapeuta');
     
     const t = await res.json();

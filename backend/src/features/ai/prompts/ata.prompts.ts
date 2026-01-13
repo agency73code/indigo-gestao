@@ -64,6 +64,8 @@ FORMATO OBRIGATÓRIO (use exatamente esta estrutura):
 
 (Liste aqui 2-4 orientações ou próximos passos acordados, usando bullet points com •)
 
+{secao_links}
+
 ━━━━━━━━━━━━━━━━━━━━
 
 Qualquer dúvida, estou à disposição! 💙
@@ -78,9 +80,13 @@ REGRAS:
 3. NÃO inclua diagnósticos ou informações sensíveis
 4. Mantenha o formato com os emojis e separadores
 5. Se não houver encaminhamentos claros, escreva "Seguiremos com o plano terapêutico atual."
+6. Se houver LINKS DE RECOMENDAÇÃO abaixo, inclua a seção de links EXATAMENTE como indicado no placeholder {secao_links}. Se não houver links, remova o placeholder.
 
 CONTEÚDO DA REUNIÃO:
 {conteudo}
+
+LINKS DE RECOMENDAÇÃO (se houver, inclua na mensagem):
+{links}
 `,
 } as const;
 

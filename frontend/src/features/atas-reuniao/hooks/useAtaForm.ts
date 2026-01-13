@@ -1,14 +1,3 @@
-/**
- * Hook para gerenciar o estado e lógica do formulário de Ata de Reunião
- *
- * Responsabilidades:
- * - Gerenciar estado do formulário com auto-save
- * - Carregar dados auxiliares (terapeutas, clientes, cabeçalho)
- * - Validação com Zod
- * - CRUD de participantes
- * - Submit (criar/atualizar)
- */
-
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -23,7 +12,8 @@ import {
     type CabecalhoAta,
     type Participante,
     type TerapeutaOption,
-    type ClienteOption,
+    type AnexoUpload,
+    type LinkRecomendacao,
     FINALIDADE_REUNIAO,
     MODALIDADE_REUNIAO,
     TIPO_PARTICIPANTE,
@@ -33,7 +23,6 @@ import {
 import {
     getTerapeutaLogado,
     listTerapeutas,
-    listClientes,
     createAta,
     updateAta,
 } from '../services/atas.service';
@@ -59,9 +48,7 @@ export interface UseAtaFormReturn {
 
     // Dados auxiliares
     terapeutas: TerapeutaOption[];
-    clientes: ClienteOption[];
     loadingTerapeutas: boolean;
-    loadingClientes: boolean;
 
     // Estado de submit
     submitting: boolean;
@@ -75,7 +62,7 @@ export interface UseAtaFormReturn {
 
     // Handlers do formulário
     updateField: <K extends keyof AtaFormData>(field: K, value: AtaFormData[K]) => void;
-    handleClienteChange: (clienteId: string) => void;
+    handleClienteChange: (clienteId: string, clienteNome?: string) => void;
 
     // Handlers de participantes
     addParticipante: (tipo: keyof typeof TIPO_PARTICIPANTE) => void;
@@ -84,7 +71,7 @@ export interface UseAtaFormReturn {
     selectTerapeutaParticipante: (participanteId: string, terapeutaId: string) => void;
 
     // Ações
-    handleSubmit: () => Promise<void>;
+    handleSubmit: (anexos?: AnexoUpload[], links?: LinkRecomendacao[], finalizar?: boolean) => Promise<void>;
     clearDraft: () => void;
 }
 
@@ -120,9 +107,7 @@ export function useAtaForm({
     // Estados
     const [cabecalho, setCabecalho] = useState<CabecalhoAta | null>(null);
     const [terapeutas, setTerapeutas] = useState<TerapeutaOption[]>([]);
-    const [clientes, setClientes] = useState<ClienteOption[]>([]);
     const [loadingTerapeutas, setLoadingTerapeutas] = useState(true);
-    const [loadingClientes, setLoadingClientes] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -153,6 +138,13 @@ export function useAtaForm({
     // ============================================
     // EFEITOS - CARREGAR DADOS
     // ============================================
+
+    // Sincronizar initialData quando chega (edição async)
+    useEffect(() => {
+        if (initialData && !hasDraft) {
+            setFormData(initialData);
+        }
+    }, [initialData, hasDraft, setFormData]);
 
     useEffect(() => {
         async function loadCabecalho() {
@@ -188,21 +180,6 @@ export function useAtaForm({
         loadTerapeutas();
     }, []);
 
-    useEffect(() => {
-        async function loadClientes() {
-            try {
-                const data = await listClientes();
-                setClientes(data);
-            } catch (error) {
-                console.error('Erro ao carregar clientes:', error);
-                toast.error('Erro ao carregar lista de clientes');
-            } finally {
-                setLoadingClientes(false);
-            }
-        }
-        loadClientes();
-    }, []);
-
     // ============================================
     // HANDLERS - FORMULÁRIO
     // ============================================
@@ -222,15 +199,14 @@ export function useAtaForm({
     );
 
     const handleClienteChange = useCallback(
-        (clienteId: string) => {
-            const cliente = clientes.find((c) => c.id === clienteId);
+        (clienteId: string, clienteNome?: string) => {
             setFormData((prev) => ({
                 ...prev,
                 clienteId,
-                clienteNome: cliente?.nome ?? '',
+                clienteNome: clienteNome ?? prev.clienteNome,
             }));
         },
-        [clientes, setFormData]
+        [setFormData]
     );
 
     // ============================================
@@ -310,11 +286,29 @@ export function useAtaForm({
             return false;
         }
 
+        // Validar horário fim > início
+        if (formData.horarioInicio && formData.horarioFim) {
+            const [horaInicio, minInicio] = formData.horarioInicio.split(':').map(Number);
+            const [horaFim, minFim] = formData.horarioFim.split(':').map(Number);
+            const inicioMin = horaInicio * 60 + minInicio;
+            const fimMin = horaFim * 60 + minFim;
+            
+            if (fimMin <= inicioMin) {
+                setErrors({ horarioFim: 'Horário de término deve ser maior que o início' });
+                toast.error('Horário de término deve ser maior que o início');
+                return false;
+            }
+        }
+
         setErrors({});
         return true;
     }, [formData]);
 
-    const handleSubmit = useCallback(async () => {
+    const handleSubmit = useCallback(async (
+        anexos?: AnexoUpload[], 
+        links?: LinkRecomendacao[],
+        finalizar?: boolean
+    ) => {
         if (!validateForm()) return;
         if (!cabecalho) {
             toast.error('Dados do terapeuta não carregados');
@@ -323,13 +317,17 @@ export function useAtaForm({
 
         setSubmitting(true);
 
+        // Inclui links no formData
+        const formDataComLinks = { ...formData, links };
+        const status = finalizar ? 'finalizada' : 'rascunho';
+
         try {
             if (ataId) {
-                await updateAta(ataId, { formData });
-                toast.success('Ata atualizada com sucesso!');
+                await updateAta(ataId, { formData: formDataComLinks, anexos, status });
+                toast.success(finalizar ? 'Ata finalizada com sucesso!' : 'Ata atualizada com sucesso!');
             } else {
-                await createAta({ formData, cabecalho });
-                toast.success('Ata criada com sucesso!');
+                await createAta({ formData: formDataComLinks, cabecalho, anexos, status });
+                toast.success(finalizar ? 'Ata criada e finalizada!' : 'Rascunho salvo com sucesso!');
             }
 
             clearDraft();
@@ -337,7 +335,16 @@ export function useAtaForm({
             navigate('/app/atas');
         } catch (error) {
             console.error('Erro ao salvar ata:', error);
-            toast.error('Erro ao salvar ata. Tente novamente.');
+            const message = error instanceof Error ? error.message : 'Erro desconhecido';
+            if (message.includes('rede') || message.includes('network')) {
+                toast.error('Erro de conexão. Verifique sua internet.');
+            } else if (message.includes('permissão') || message.includes('403')) {
+                toast.error('Você não tem permissão para esta ação.');
+            } else if (message.includes('validação') || message.includes('400')) {
+                toast.error('Dados inválidos. Revise o formulário.');
+            } else {
+                toast.error('Erro ao salvar ata. Tente novamente.');
+            }
         } finally {
             setSubmitting(false);
         }
@@ -355,9 +362,7 @@ export function useAtaForm({
 
         // Dados auxiliares
         terapeutas,
-        clientes,
         loadingTerapeutas,
-        loadingClientes,
 
         // Estado de submit
         submitting,

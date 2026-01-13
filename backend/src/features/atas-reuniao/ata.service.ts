@@ -74,6 +74,19 @@ export async function gerarResumoWhatsApp(params: GerarResumoInput): Promise<str
         ? `${params.horarioInicio} - ${params.horarioFim}`
         : 'Não informado';
     
+    // Monta seção de links
+    const linksFormatados = params.links && params.links.length > 0
+        ? params.links.map(l => `• ${l.titulo}: ${l.url}`).join('\n')
+        : '';
+    
+    // Seção de links para incluir na mensagem (vazia se não houver links)
+    const secaoLinks = params.links && params.links.length > 0
+        ? `━━━━━━━━━━━━━━━━━━━━
+🔗 *LINKS RECOMENDADOS*
+
+${params.links.map(l => `• ${l.titulo}\n  ${l.url}`).join('\n\n')}`
+        : '';
+    
     const prompt = buildAtaPrompt(PROMPTS_ATA.RESUMO_WHATSAPP, {
         terapeuta: params.terapeuta,
         profissao: params.profissao,
@@ -84,6 +97,8 @@ export async function gerarResumoWhatsApp(params: GerarResumoInput): Promise<str
         duracao: params.duracao || 'Não informada',
         cliente: params.cliente || 'Não informado',
         conteudo: stripHtml(params.conteudo),
+        links: linksFormatados,
+        secao_links: secaoLinks,
     });
     
     const completion = await openai.chat.completions.create({

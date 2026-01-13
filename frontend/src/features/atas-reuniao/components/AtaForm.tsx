@@ -1,22 +1,11 @@
-/**
- * Formulário de Ata de Reunião
- *
- * Features:
- * - Cabeçalho read-only (dados do terapeuta logado)
- * - Seleção de participantes (família, externo, clínica)
- * - Campo condicional para finalidade "Outros"
- * - RichTextEditor para conteúdo
- * - Auto-save com useFormDraft
- * - Bloqueio de navegação com alterações não salvas
- */
-
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Trash2, User, Building2, Users, Loader2, Save, CheckCircle, Paperclip } from 'lucide-react';
+import { Plus, Trash2, User, Building2, Users, Loader2, Save, CheckCircle, Paperclip, Upload, X, FileText, Image as ImageIcon, Link2 } from 'lucide-react';
 
 import { UnsavedChangesDialog } from '@/components/dialogs/UnsavedChangesDialog';
-import { FileUploadModal } from '@/components/upload/FileUploadModal';
-import { FileAttachmentList, filesToAttachments, type FileAttachment } from '@/components/upload/FileAttachmentList';
+import { Input } from '@/components/ui/input';
+import PatientSelector from '@/features/programas/consultar-programas/components/PatientSelector';
+import type { Patient } from '@/features/programas/consultar-programas/types';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,6 +22,8 @@ import {
     type Participante,
     type FinalidadeReuniao,
     type ModalidadeReuniao,
+    type LinkRecomendacao,
+    type Anexo,
     FINALIDADE_REUNIAO,
     FINALIDADE_LABELS,
     MODALIDADE_LABELS,
@@ -48,6 +39,7 @@ import { useAtaForm } from '../hooks/useAtaForm';
 interface AtaFormProps {
     ataId?: string;
     initialData?: AtaFormData;
+    existingAnexos?: Anexo[];
     onSuccess?: () => void;
 }
 
@@ -55,7 +47,7 @@ interface AtaFormProps {
 // COMPONENTE PRINCIPAL
 // ============================================
 
-export function AtaForm({ ataId, initialData, onSuccess }: AtaFormProps) {
+export function AtaForm({ ataId, initialData, existingAnexos = [], onSuccess }: AtaFormProps) {
     const navigate = useNavigate();
 
     // Hook que gerencia toda a lógica do formulário
@@ -63,9 +55,7 @@ export function AtaForm({ ataId, initialData, onSuccess }: AtaFormProps) {
         formData,
         errors,
         terapeutas,
-        clientes,
         loadingTerapeutas,
-        loadingClientes,
         submitting,
         isBlocked,
         proceedNavigation,
@@ -79,105 +69,131 @@ export function AtaForm({ ataId, initialData, onSuccess }: AtaFormProps) {
         handleSubmit,
     } = useAtaForm({ ataId, initialData, onSuccess });
 
-    // Estados locais para anexos (não gerenciados pelo hook pois são arquivos)
-    const [uploadModalOpen, setUploadModalOpen] = useState(false);
-    const [anexos, setAnexos] = useState<File[]>([]);
+    // Estados locais para anexos com nome personalizado
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [anexos, setAnexos] = useState<Array<{ id: string; file: File; nome: string }>>([]);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [nomeArquivo, setNomeArquivo] = useState('');
+    
+    // Estados para links de recomendação
+    const [links, setLinks] = useState<LinkRecomendacao[]>(initialData?.links ?? []);
+    const [novoLinkTitulo, setNovoLinkTitulo] = useState('');
+    const [novoLinkUrl, setNovoLinkUrl] = useState('');
+    const [linkUrlError, setLinkUrlError] = useState('');
+    
+    // Estado para PatientSelector
+    const [selectedPatient, setSelectedPatient] = useState<Patient | null>(
+        formData.clienteId && formData.clienteNome 
+            ? { id: formData.clienteId, name: formData.clienteNome } as Patient
+            : null
+    );
+    
+    // Handler para seleção de cliente via PatientSelector
+    const handlePatientSelect = useCallback((patient: Patient) => {
+        setSelectedPatient(patient);
+        handleClienteChange(patient.id, patient.name);
+    }, [handleClienteChange]);
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                if (!submitting) handleSubmit(anexos, links, false);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [submitting, anexos, links, handleSubmit]);
 
     // ============================================
     // RENDERIZAÇÃO - DADOS DA REUNIÃO
     // ============================================
 
     const renderDadosReuniao = () => (
-        <Card>
-            <CardHeader className="pb-4">
-                <CardTitle className="text-lg font-medium">Dados da Reunião</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-                <div className="grid grid-cols-6 gap-4">
-                    <div className="col-span-1">
-                        <DateFieldWithLabel
-                            label="Data*"
-                            value={formData.data}
-                            onChange={(iso) => updateField('data', iso)}
-                            error={errors['data']}
-                        />
+        <div className="space-y-6">
+            {/* Seleção de Cliente */}
+            <PatientSelector
+                selected={selectedPatient}
+                onSelect={handlePatientSelect}
+                autoOpenIfEmpty={false}
+            />
+            
+            {/* Dados da Reunião */}
+            <Card>
+                <CardHeader className="pb-4">
+                    <CardTitle className="text-lg font-medium">Dados da Reunião</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="grid grid-cols-4 gap-4">
+                        <div className="col-span-1">
+                            <DateFieldWithLabel
+                                label="Data*"
+                                value={formData.data}
+                                onChange={(iso) => updateField('data', iso)}
+                                error={errors['data']}
+                            />
+                        </div>
+                        <div className="col-span-1">
+                            <InputField
+                                label="Início*"
+                                type="time"
+                                value={formData.horarioInicio}
+                                onChange={(e) => updateField('horarioInicio', e.target.value)}
+                                error={errors['horarioInicio']}
+                            />
+                        </div>
+                        <div className="col-span-1">
+                            <InputField
+                                label="Término*"
+                                type="time"
+                                value={formData.horarioFim}
+                                onChange={(e) => updateField('horarioFim', e.target.value)}
+                                error={errors['horarioFim']}
+                            />
+                        </div>
+                        <div className="col-span-1">
+                            <SelectFieldRadix
+                                label="Modalidade*"
+                                value={formData.modalidade}
+                                onValueChange={(v) => updateField('modalidade', v as ModalidadeReuniao)}
+                                error={errors['modalidade']}
+                            >
+                                {Object.entries(MODALIDADE_LABELS).map(([value, label]) => (
+                                    <SelectItem key={value} value={value}>
+                                        {label}
+                                    </SelectItem>
+                                ))}
+                            </SelectFieldRadix>
+                        </div>
                     </div>
-                    <div className="col-span-1">
-                        <InputField
-                            label="Início*"
-                            type="time"
-                            value={formData.horarioInicio}
-                            onChange={(e) => updateField('horarioInicio', e.target.value)}
-                            error={errors['horarioInicio']}
-                        />
-                    </div>
-                    <div className="col-span-1">
-                        <InputField
-                            label="Término*"
-                            type="time"
-                            value={formData.horarioFim}
-                            onChange={(e) => updateField('horarioFim', e.target.value)}
-                            error={errors['horarioFim']}
-                        />
-                    </div>
-                    <div className="col-span-1">
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <SelectFieldRadix
-                            label="Modalidade*"
-                            value={formData.modalidade}
-                            onValueChange={(v) => updateField('modalidade', v as ModalidadeReuniao)}
-                            error={errors['modalidade']}
+                            label="Finalidade da Reunião*"
+                            value={formData.finalidade}
+                            onValueChange={(v) => updateField('finalidade', v as FinalidadeReuniao)}
+                            error={errors['finalidade']}
                         >
-                            {Object.entries(MODALIDADE_LABELS).map(([value, label]) => (
+                            {Object.entries(FINALIDADE_LABELS).map(([value, label]) => (
                                 <SelectItem key={value} value={value}>
                                     {label}
                                 </SelectItem>
                             ))}
                         </SelectFieldRadix>
-                    </div>
-                    <div className="col-span-2">
-                        {loadingClientes ? (
-                            <Skeleton className="h-[60px] w-full rounded-lg" />
-                        ) : (
-                            <ComboboxField
-                                label="Cliente/Paciente"
-                                options={clientes.map((c) => ({ value: c.id, label: c.nome }))}
-                                value={formData.clienteId}
-                                onValueChange={handleClienteChange}
-                                placeholder="Selecione o cliente..."
-                                searchPlaceholder="Buscar cliente..."
-                                emptyMessage="Nenhum cliente encontrado"
-                                error={errors['clienteId']}
+
+                        {formData.finalidade === FINALIDADE_REUNIAO.OUTROS && (
+                            <InputField
+                                label="Descreva a finalidade*"
+                                value={formData.finalidadeOutros ?? ''}
+                                onChange={(e) => updateField('finalidadeOutros', e.target.value)}
+                                placeholder="Ex: Reunião com plano de saúde"
+                                error={errors['finalidadeOutros']}
                             />
                         )}
                     </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <SelectFieldRadix
-                        label="Finalidade da Reunião*"
-                        value={formData.finalidade}
-                        onValueChange={(v) => updateField('finalidade', v as FinalidadeReuniao)}
-                        error={errors['finalidade']}
-                    >
-                        {Object.entries(FINALIDADE_LABELS).map(([value, label]) => (
-                            <SelectItem key={value} value={value}>
-                                {label}
-                            </SelectItem>
-                        ))}
-                    </SelectFieldRadix>
-
-                    {formData.finalidade === FINALIDADE_REUNIAO.OUTROS && (
-                        <InputField
-                            label="Descreva a finalidade*"
-                            value={formData.finalidadeOutros ?? ''}
-                            onChange={(e) => updateField('finalidadeOutros', e.target.value)}
-                            placeholder="Ex: Reunião com plano de saúde"
-                            error={errors['finalidadeOutros']}
-                        />
-                    )}
-                </div>
-            </CardContent>
-        </Card>
+                </CardContent>
+            </Card>
+        </div>
     );
 
     // ============================================
@@ -350,14 +366,203 @@ export function AtaForm({ ataId, initialData, onSuccess }: AtaFormProps) {
     // RENDERIZAÇÃO - ANEXOS
     // ============================================
 
+    const formatFileSize = (bytes: number): string => {
+        if (bytes < 1024) return `${bytes} B`;
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+    };
+
+    const isImageFile = (tipo: string): boolean => {
+        return tipo.startsWith('image/');
+    };
+
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setSelectedFile(file);
+            // Sugerir o nome do arquivo (sem extensão) como nome inicial
+            const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
+            setNomeArquivo(nameWithoutExt);
+        }
+    };
+
+    const handleAddFile = () => {
+        if (!selectedFile || !nomeArquivo.trim()) return;
+        
+        const novoAnexo = {
+            id: crypto.randomUUID(),
+            file: selectedFile,
+            nome: nomeArquivo.trim(),
+        };
+        
+        setAnexos((prev) => [...prev, novoAnexo]);
+        
+        // Limpar campos
+        setSelectedFile(null);
+        setNomeArquivo('');
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
+
+    const handleCancelFile = () => {
+        setSelectedFile(null);
+        setNomeArquivo('');
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
+
     const handleRemoveAnexo = useCallback((id: string) => {
-        const index = parseInt(id.split('-')[1]);
-        setAnexos((prev) => prev.filter((_, idx) => idx !== index));
+        setAnexos((prev) => prev.filter((anexo) => anexo.id !== id));
     }, []);
 
-    const renderAnexos = () => {
-        const attachments: FileAttachment[] = filesToAttachments(anexos);
+    // ============================================
+    // HANDLERS - LINKS
+    // ============================================
 
+    const isValidUrl = (urlString: string): boolean => {
+        try {
+            new URL(urlString);
+            return true;
+        } catch {
+            return false;
+        }
+    };
+
+    const handleAddLink = useCallback(() => {
+        if (!novoLinkTitulo.trim() || !novoLinkUrl.trim()) return;
+        
+        let url = novoLinkUrl.trim();
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+            url = 'https://' + url;
+        }
+        
+        if (!isValidUrl(url)) {
+            setLinkUrlError('URL inválida');
+            return;
+        }
+        
+        const novoLink: LinkRecomendacao = {
+            id: crypto.randomUUID(),
+            titulo: novoLinkTitulo.trim(),
+            url,
+        };
+        
+        setLinks((prev) => [...prev, novoLink]);
+        setNovoLinkTitulo('');
+        setNovoLinkUrl('');
+        setLinkUrlError('');
+    }, [novoLinkTitulo, novoLinkUrl]);
+
+    const handleRemoveLink = useCallback((id: string) => {
+        setLinks((prev) => prev.filter((link) => link.id !== id));
+    }, []);
+
+    const renderLinks = () => {
+        return (
+            <Card>
+                <CardHeader className="pb-4">
+                    <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg font-medium flex items-center gap-2">
+                            <Link2 className="h-5 w-5" />
+                            Links de Recomendação
+                            {links.length > 0 && (
+                                <span className="text-sm font-normal text-muted-foreground">
+                                    ({links.length} {links.length === 1 ? 'link' : 'links'})
+                                </span>
+                            )}
+                        </CardTitle>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-sm text-muted-foreground mb-4">
+                        Adicione links de brinquedos, materiais ou recursos que deseja recomendar para a família.
+                    </p>
+                    
+                    {/* Formulário para adicionar novo link */}
+                    <div className="flex flex-col sm:flex-row gap-2 mb-4">
+                        <Input
+                            placeholder="Nome do item (ex: Brinquedo sensorial)"
+                            value={novoLinkTitulo}
+                            onChange={(e) => setNovoLinkTitulo(e.target.value)}
+                            className="flex-1"
+                        />
+                        <div className="flex-1">
+                            <Input
+                                placeholder="URL (ex: amazon.com.br/...)"
+                                value={novoLinkUrl}
+                                onChange={(e) => {
+                                    setNovoLinkUrl(e.target.value);
+                                    if (linkUrlError) setLinkUrlError('');
+                                }}
+                                className={linkUrlError ? 'border-red-500' : ''}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        handleAddLink();
+                                    }
+                                }}
+                            />
+                            {linkUrlError && (
+                                <p className="text-xs text-red-500 mt-1">{linkUrlError}</p>
+                            )}
+                        </div>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleAddLink}
+                            disabled={!novoLinkTitulo.trim() || !novoLinkUrl.trim()}
+                        >
+                            <Plus className="h-4 w-4 mr-1" />
+                            Adicionar
+                        </Button>
+                    </div>
+
+                    {/* Lista de links adicionados */}
+                    {links.length > 0 ? (
+                        <div className="space-y-2">
+                            {links.map((link) => (
+                                <div
+                                    key={link.id}
+                                    className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg border"
+                                >
+                                    <Link2 className="h-4 w-4 text-blue-500 shrink-0" />
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium truncate">{link.titulo}</p>
+                                        <a 
+                                            href={link.url} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="text-xs text-blue-600 hover:underline truncate block"
+                                        >
+                                            {link.url}
+                                        </a>
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleRemoveLink(link.id)}
+                                        className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-6 text-sm text-muted-foreground border-2 border-dashed rounded-lg">
+                            Nenhum link adicionado
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
+        );
+    };
+
+    const renderAnexos = () => {
+        const totalAnexos = anexos.length + existingAnexos.length;
         return (
             <Card>
                 <CardHeader className="pb-4">
@@ -365,27 +570,147 @@ export function AtaForm({ ataId, initialData, onSuccess }: AtaFormProps) {
                         <CardTitle className="text-lg font-medium flex items-center gap-2">
                             <Paperclip className="h-5 w-5" />
                             Anexos
-                            {anexos.length > 0 && (
+                            {totalAnexos > 0 && (
                                 <span className="text-sm font-normal text-muted-foreground">
-                                    ({anexos.length} {anexos.length === 1 ? 'arquivo' : 'arquivos'})
+                                    ({totalAnexos} {totalAnexos === 1 ? 'arquivo' : 'arquivos'})
                                 </span>
                             )}
                         </CardTitle>
-                        <Button type="button" variant="outline" size="sm" onClick={() => setUploadModalOpen(true)} className="gap-2">
-                            <Plus className="h-4 w-4" />
-                            Adicionar Arquivos
-                        </Button>
                     </div>
                 </CardHeader>
                 <CardContent>
                     <p className="text-sm text-muted-foreground mb-4">
                         Anexe documentos, fotos ou vídeos relevantes para a reunião (laudos, relatórios, etc).
                     </p>
-                    <FileAttachmentList
-                        files={attachments}
-                        onRemove={handleRemoveAnexo}
-                        emptyMessage="Clique em 'Adicionar Arquivos' para anexar documentos"
+                    
+                    {/* Input de arquivo oculto */}
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
+                        onChange={handleFileSelect}
+                        className="hidden"
                     />
+
+                    {/* Formulário de upload quando arquivo selecionado */}
+                    {selectedFile ? (
+                        <div className="p-4 bg-muted/30 rounded-lg border space-y-3 mb-4">
+                            <div className="flex items-center gap-2 text-sm">
+                                {isImageFile(selectedFile.type) ? (
+                                    <ImageIcon className="h-4 w-4 text-blue-500" />
+                                ) : (
+                                    <FileText className="h-4 w-4 text-orange-500" />
+                                )}
+                                <span className="text-muted-foreground truncate">
+                                    {selectedFile.name} ({formatFileSize(selectedFile.size)})
+                                </span>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-medium">Nome do arquivo *</label>
+                                <Input
+                                    placeholder="Digite o nome do arquivo"
+                                    value={nomeArquivo}
+                                    onChange={(e) => setNomeArquivo(e.target.value)}
+                                    className="h-9"
+                                />
+                            </div>
+                            <div className="flex gap-2">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleCancelFile}
+                                    className="flex-1"
+                                >
+                                    Cancelar
+                                </Button>
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    onClick={handleAddFile}
+                                    disabled={!nomeArquivo.trim()}
+                                    className="flex-1"
+                                >
+                                    Adicionar
+                                </Button>
+                            </div>
+                        </div>
+                    ) : (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="gap-2 w-full mb-4"
+                        >
+                            <Upload className="h-4 w-4" />
+                            Selecionar arquivo
+                        </Button>
+                    )}
+
+                    {/* Lista de anexos existentes (edição) */}
+                    {existingAnexos.length > 0 && (
+                        <div className="mb-4">
+                            <p className="text-xs font-medium text-muted-foreground mb-2">Anexos existentes:</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {existingAnexos.map((anexo) => (
+                                    <div
+                                        key={anexo.id}
+                                        className="flex items-center gap-2 p-3 bg-muted/30 rounded-lg border"
+                                    >
+                                        {anexo.type?.startsWith('image') ? (
+                                            <ImageIcon className="h-4 w-4 text-blue-500 shrink-0" />
+                                        ) : (
+                                            <FileText className="h-4 w-4 text-orange-500 shrink-0" />
+                                        )}
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-medium truncate">{anexo.name}</p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {formatFileSize(anexo.size)}
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Lista de novos arquivos anexados */}
+                    {anexos.length > 0 ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {anexos.map((anexo) => (
+                                <div
+                                    key={anexo.id}
+                                    className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg border"
+                                >
+                                    {isImageFile(anexo.file.type) ? (
+                                        <ImageIcon className="h-4 w-4 text-blue-500 shrink-0" />
+                                    ) : (
+                                        <FileText className="h-4 w-4 text-orange-500 shrink-0" />
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium truncate">{anexo.nome}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            {formatFileSize(anexo.file.size)}
+                                        </p>
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => handleRemoveAnexo(anexo.id)}
+                                        className="h-7 w-7 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            ))}
+                        </div>
+                    ) : !selectedFile && existingAnexos.length === 0 && (
+                        <div className="text-center py-6 text-sm text-muted-foreground border-2 border-dashed rounded-lg">
+                            Nenhum arquivo anexado
+                        </div>
+                    )}
                 </CardContent>
             </Card>
         );
@@ -397,16 +722,16 @@ export function AtaForm({ ataId, initialData, onSuccess }: AtaFormProps) {
 
     const renderActions = () => (
         <div className="flex items-center justify-between pt-4">
-            <Button variant="outline" onClick={() => navigate('/app/atas')} disabled={submitting}>
+            <Button variant="outline" onClick={() => navigate('/app/atas')} disabled={submitting} aria-label="Cancelar e voltar">
                 Cancelar
             </Button>
             <div className="flex gap-3">
-                <Button variant="outline" onClick={() => handleSubmit()} disabled={submitting}>
-                    {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                <Button variant="outline" onClick={() => handleSubmit(anexos, links, false)} disabled={submitting} aria-label="Salvar como rascunho (Ctrl+S)">
+                    {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" aria-hidden="true" /> : <Save className="h-4 w-4 mr-2" aria-hidden="true" />}
                     Salvar Rascunho
                 </Button>
-                <Button onClick={() => handleSubmit()} disabled={submitting}>
-                    {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CheckCircle className="h-4 w-4 mr-2" />}
+                <Button onClick={() => handleSubmit(anexos, links, true)} disabled={submitting} aria-label="Finalizar ata">
+                    {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" aria-hidden="true" /> : <CheckCircle className="h-4 w-4 mr-2" aria-hidden="true" />}
                     Finalizar Ata
                 </Button>
             </div>
@@ -423,18 +748,10 @@ export function AtaForm({ ataId, initialData, onSuccess }: AtaFormProps) {
                 {renderDadosReuniao()}
                 {renderParticipantes()}
                 {renderConteudo()}
+                {renderLinks()}
                 {renderAnexos()}
                 {renderActions()}
             </div>
-
-            <FileUploadModal
-                open={uploadModalOpen}
-                onOpenChange={setUploadModalOpen}
-                files={anexos}
-                onFilesChange={setAnexos}
-                maxFiles={10}
-                formatDescription="PDF, DOC, DOCX, XLS, XLSX, TXT, PNG, JPG, GIF, MP4, AVI"
-            />
 
             <UnsavedChangesDialog
                 open={isBlocked}

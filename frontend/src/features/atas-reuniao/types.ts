@@ -77,6 +77,13 @@ export interface Participante {
     cargo?: string;
 }
 
+/** Link de recomendação (brinquedos, materiais, etc.) */
+export interface LinkRecomendacao {
+    id: string;
+    titulo: string;
+    url: string;
+}
+
 /** Dados do formulário - clienteNome é derivado, restante salvo */
 export interface AtaFormData {
     data: string; // YYYY-MM-DD
@@ -89,6 +96,7 @@ export interface AtaFormData {
     conteudo: string;
     clienteId?: string;
     clienteNome?: string;
+    links?: LinkRecomendacao[];
 }
 
 /** Anexo - url é derivado */
@@ -136,14 +144,24 @@ export interface AtaListResponse {
     totalPages: number;
 }
 
+/** Anexo com arquivo para upload */
+export interface AnexoUpload {
+    id: string;
+    file: File;
+    nome: string;
+}
+
 export interface CreateAtaInput {
     formData: AtaFormData;
     cabecalho: CabecalhoAta;
+    anexos?: AnexoUpload[];
+    status?: 'rascunho' | 'finalizada';
 }
 
-/** Input para atualização de ata */
 export interface UpdateAtaInput {
     formData: Partial<AtaFormData>;
+    anexos?: AnexoUpload[];
+    status?: 'rascunho' | 'finalizada';
 }
 
 export interface TerapeutaOption {

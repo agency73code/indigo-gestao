@@ -1,10 +1,3 @@
-/**
- * Página de visualização de Ata de Reunião
- * Layout de 2 colunas similar ao cadastro:
- * - Sidebar esquerda: Properties (como steps)
- * - Área direita: Conteúdo principal
- */
-
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
@@ -26,6 +19,8 @@ import {
     MessageCircle,
     Copy,
     Check,
+    Link2,
+    ExternalLink,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -81,7 +76,14 @@ export function VisualizarAtaPage() {
             toast.success('Resumo gerado com sucesso!');
         } catch (error) {
             console.error('Erro ao gerar resumo:', error);
-            toast.error('Erro ao gerar resumo');
+            const msg = error instanceof Error ? error.message : '';
+            if (msg.includes('429') || msg.includes('quota')) {
+                toast.error('Limite de requisições atingido. Tente novamente em alguns minutos.');
+            } else if (msg.includes('timeout')) {
+                toast.error('Tempo esgotado. Tente novamente.');
+            } else {
+                toast.error('Erro ao gerar resumo. Tente novamente.');
+            }
         } finally {
             setGeneratingSummary(false);
         }
@@ -97,7 +99,14 @@ export function VisualizarAtaPage() {
             toast.success('Resumo para WhatsApp gerado!');
         } catch (error) {
             console.error('Erro ao gerar resumo WhatsApp:', error);
-            toast.error('Erro ao gerar resumo para WhatsApp');
+            const msg = error instanceof Error ? error.message : '';
+            if (msg.includes('429') || msg.includes('quota')) {
+                toast.error('Limite de requisições atingido. Aguarde alguns minutos.');
+            } else if (msg.includes('timeout')) {
+                toast.error('Tempo esgotado. Tente novamente.');
+            } else {
+                toast.error('Erro ao gerar resumo para WhatsApp.');
+            }
         } finally {
             setGeneratingWhatsapp(false);
         }
@@ -414,6 +423,73 @@ export function VisualizarAtaPage() {
                             </div>
                         </div>
                     </div>
+
+                    {/* Seção: Links de Recomendação */}
+                    {ata.links && ata.links.length > 0 && (
+                        <>
+                            <div className="border-t" />
+                            <div className="space-y-3">
+                                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                    Links ({ata.links.length})
+                                </h3>
+                                <div className="space-y-2">
+                                    {ata.links.map((link) => (
+                                        <a
+                                            key={link.id}
+                                            href={link.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-2 px-3 py-2 bg-background rounded-lg border hover:bg-blue-50/50 hover:border-blue-200 transition-colors group text-sm"
+                                        >
+                                            <Link2 className="h-4 w-4 text-blue-500 shrink-0" />
+                                            <span className="truncate flex-1">{link.titulo}</span>
+                                            <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                                        </a>
+                                    ))}
+                                </div>
+                            </div>
+                        </>
+                    )}
+
+                    {/* Seção: Anexos */}
+                    {ata.anexos && ata.anexos.length > 0 && (
+                        <>
+                            <div className="border-t" />
+                            <div className="space-y-3">
+                                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                    Anexos ({ata.anexos.length})
+                                </h3>
+                                <div className="space-y-2">
+                                    {ata.anexos.map((anexo) => {
+                                        const ext = anexo.name.split('.').pop()?.toLowerCase();
+                                        const isPdf = ext === 'pdf';
+                                        const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext || '');
+                                        
+                                        let iconColor = 'text-gray-500';
+                                        if (isPdf) iconColor = 'text-red-500';
+                                        else if (isImage) iconColor = 'text-green-500';
+
+                                        return (
+                                            <div
+                                                key={anexo.id}
+                                                className="flex items-center gap-2 px-3 py-2 bg-background rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer group text-sm"
+                                                onClick={() => anexo.url && window.open(anexo.url, '_blank')}
+                                            >
+                                                <FileText className={`h-4 w-4 ${iconColor} shrink-0`} />
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="truncate text-sm">{anexo.name}</p>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {(anexo.size / 1024 / 1024).toFixed(1)} MB
+                                                    </p>
+                                                </div>
+                                                <Download className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </div>
             </aside>
 
@@ -541,48 +617,6 @@ export function VisualizarAtaPage() {
                             />
                         </div>
                     </div>
-
-                    {/* Anexos */}
-                    {ata.anexos && ata.anexos.length > 0 && (
-                        <div className="mt-8 space-y-4">
-                            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                                Anexos ({ata.anexos.length})
-                            </h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                {ata.anexos.map((anexo) => {
-                                    const ext = anexo.name.split('.').pop()?.toLowerCase();
-                                    const isPdf = ext === 'pdf';
-                                    const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext || '');
-                                    const isVideo = ['mp4', 'avi', 'mov', 'mkv'].includes(ext || '');
-                                    
-                                    let bgColor = 'bg-gray-100';
-                                    let iconColor = 'text-gray-600';
-                                    if (isPdf) { bgColor = 'bg-red-50'; iconColor = 'text-red-600'; }
-                                    else if (isImage) { bgColor = 'bg-green-50'; iconColor = 'text-green-600'; }
-                                    else if (isVideo) { bgColor = 'bg-purple-50'; iconColor = 'text-purple-600'; }
-
-                                    return (
-                                        <div
-                                            key={anexo.id}
-                                            className="flex items-center gap-3 px-4 py-3 bg-card rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer group"
-                                            onClick={() => anexo.url && window.open(anexo.url, '_blank')}
-                                        >
-                                            <div className={`w-10 h-10 rounded-lg ${bgColor} flex items-center justify-center shrink-0`}>
-                                                <FileText className={`h-5 w-5 ${iconColor}`} />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-medium truncate">{anexo.name}</p>
-                                                <p className="text-xs text-muted-foreground">
-                                                    {(anexo.size / 1024 / 1024).toFixed(1)} MB
-                                                </p>
-                                            </div>
-                                            <Download className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    )}
                 </div>
             </div>
 

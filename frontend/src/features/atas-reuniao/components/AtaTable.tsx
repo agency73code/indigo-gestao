@@ -1,13 +1,3 @@
-/**
- * Listagem de Atas de Reunião - Layout Profissional
- * 
- * Inspirado em design de task management moderno:
- * - Cards de estatísticas no topo
- * - Lista compacta de atas
- * - Painel lateral de detalhes (Sheet)
- * - Transições suaves e UX profissional
- */
-
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
@@ -669,7 +659,8 @@ export function AtaTable() {
         } finally {
             setLoading(false);
         }
-    }, [searchParams.toString()]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [filters.q, filters.finalidade, filters.dataInicio, filters.dataFim, filters.orderBy]);
 
     useEffect(() => {
         loadData();
@@ -727,6 +718,7 @@ export function AtaTable() {
             }
         }, 300);
         return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchValue]);
 
     // ============================================
@@ -818,7 +810,14 @@ export function AtaTable() {
             loadData();
         } catch (error) {
             console.error('Erro ao gerar resumo:', error);
-            toast.error('Erro ao gerar resumo');
+            const msg = error instanceof Error ? error.message : '';
+            if (msg.includes('429') || msg.includes('quota')) {
+                toast.error('Limite de requisições atingido. Aguarde alguns minutos.');
+            } else if (msg.includes('timeout')) {
+                toast.error('Tempo esgotado. Tente novamente.');
+            } else {
+                toast.error('Erro ao gerar resumo. Tente novamente.');
+            }
         } finally {
             setGeneratingSummary(false);
         }
@@ -834,7 +833,14 @@ export function AtaTable() {
             toast.success('Mensagem para WhatsApp gerada!');
         } catch (error) {
             console.error('Erro ao gerar resumo WhatsApp:', error);
-            toast.error('Erro ao gerar mensagem para WhatsApp');
+            const msg = error instanceof Error ? error.message : '';
+            if (msg.includes('429') || msg.includes('quota')) {
+                toast.error('Limite de requisições atingido. Aguarde alguns minutos.');
+            } else if (msg.includes('timeout')) {
+                toast.error('Tempo esgotado. Tente novamente.');
+            } else {
+                toast.error('Erro ao gerar mensagem para WhatsApp.');
+            }
         } finally {
             setGeneratingWhatsapp(false);
         }
@@ -956,7 +962,7 @@ export function AtaTable() {
                         value={dateRangeValue}
                         onChange={handleDateRangeChange}
                         placeholder="Período"
-                        triggerClassName="w-[220px] h-9"
+                        triggerClassName="min-w-[240px] h-9"
                         showClear={true}
                     />
 

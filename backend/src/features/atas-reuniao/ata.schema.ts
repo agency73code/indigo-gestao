@@ -25,6 +25,11 @@ export const gerarResumoSchema = z.object({
     horarioFim: z.string().optional(),
     duracao: z.string().optional(),
     conselho: z.string().optional(),
+    // Links de recomendação
+    links: z.array(z.object({
+        titulo: z.string(),
+        url: z.string(),
+    })).optional(),
 });
 
 export type GerarResumoInput = z.infer<typeof gerarResumoSchema>;
