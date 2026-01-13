@@ -1487,3 +1487,52 @@ export async function updateAnamneseById(anamneseId: number, payload: AnamnesePa
 
     return getAnamneseById(anamneseId);
 }
+
+export async function getExamePrevioArquivoForDownload(
+    anamneseId: number,
+    arquivoId: number,
+    therapistId: string,
+) {
+    if (!therapistId) {
+        throw new AppError('REQUIRED_THERAPIST_ID', 'ID do terapeuta é obrigatório.', 400);
+    }
+
+    const visibility = await getVisibilityScope(therapistId);
+
+    if (visibility.scope === 'none') {
+        return null;
+    }
+
+    const anamnese = await prisma.anamnese.findFirst({
+        where: {
+            id: anamneseId,
+            ...(visibility.scope === 'partial' ? { terapeuta_id: { in: visibility.therapistIds } } : {}),
+            ...(visibility.maxAccessLevel < MANAGER_LEVEL
+                ? { cliente: { status: 'ativo' } }
+                : {}),
+        },
+        select: {
+            id: true,
+        },
+    });
+
+    if (!anamnese) {
+        return null;
+    }
+
+    return prisma.anamnese_arquivo_exame_previo.findFirst({
+        where: {
+            id: arquivoId,
+            exame: {
+                anamnese_id: anamneseId,
+            },
+        },
+        select: {
+            id: true,
+            nome: true,
+            caminho: true,
+            tipo: true,
+            tamanho: true,
+        },
+    });
+}
