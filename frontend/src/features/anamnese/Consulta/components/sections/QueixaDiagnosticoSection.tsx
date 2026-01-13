@@ -88,7 +88,11 @@ export default function QueixaDiagnosticoSection({ data }: QueixaDiagnosticoSect
                                             {exame.arquivos.map(arquivo => (
                                                 <a
                                                     key={arquivo.id}
-                                                    href={arquivo.url ? `${import.meta.env.VITE_API_URL}/arquivos/${encodeURIComponent(arquivo.url)}/download` : '#'}
+                                                    href={
+                                                        data.id && arquivo.id
+                                                            ? `/api/anamneses/${encodeURIComponent(String(data.id))}/exames-previos/${encodeURIComponent(String(arquivo.id))}/download`
+                                                            : '#'
+                                                    }
                                                     download
                                                     className="flex items-center gap-2 p-2 bg-white rounded-lg border border-blue-200 hover:border-blue-400 hover:shadow-md transition-all group"
                                                 >

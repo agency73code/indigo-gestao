@@ -1,9 +1,15 @@
 import type { Request, Response, NextFunction } from 'express';
 import * as anamneseService from '../features/anamnese/anamnese.service.js';
 import { AnamneseSchema } from '../schemas/anamnese.schema.js';
-import { anamneseIdSchema, anamneseListSchema } from '../schemas/queries/anamnese.schema.js';
+import {
+    anamneseArquivoIdSchema,
+    anamneseIdSchema,
+    anamneseListSchema,
+} from '../schemas/queries/anamnese.schema.js';
 import type { AnamneseListFilters } from '../features/anamnese/anamnese.types.js';
 import { R2GenericUploadService } from '../features/file/r2/r2-upload-generic.js';
+import * as FilesService from '../features/file/files.service.js';
+import { getFileStreamFromR2 } from '../features/file/r2/getFileStream.js';
 
 function extractFileId(fieldname: string): string | null {
     // espera "files[<id>]"
@@ -151,9 +157,6 @@ export async function updateAnamneseById(req: Request, res: Response, next: Next
             });
         }
 
-        console.log(JSON.stringify(payload.queixaDiagnostico?.examesPrevios))
-        console.log('======================================')
-
         const files = (Array.isArray(req.files) ? req.files : []) as Express.Multer.File[];
         const idToKey = new Map<string, string>();
 
@@ -209,5 +212,58 @@ export async function updateAnamneseById(req: Request, res: Response, next: Next
         return res.status(200).json(updated);
     } catch (err) {
         next(err);
+    }
+}
+
+export async function downloadExamePrevioArquivo(
+    req: Request,
+    res: Response,
+    next: NextFunction,
+) {
+    try {
+        if (!req.user) {
+            return res.status(401).json({ success: false, message: 'Não autenticado' });
+        }
+
+        const parsed = anamneseArquivoIdSchema.parse(req.params);
+        const arquivo = await anamneseService.getExamePrevioArquivoForDownload(
+            parsed.id,
+            parsed.arquivoId,
+            req.user.id,
+        );
+
+        if (!arquivo) {
+            return res.status(404).json({ success: false, message: 'Arquivo não encontrado' });
+        }
+
+        if (!arquivo.caminho) {
+            return res.status(404).json({ success: false, message: 'Arquivo sem caminho válido' });
+        }
+
+        const { metadata, stream } = await getFileStreamFromR2(arquivo.caminho);
+
+        if (!stream) {
+            return res.status(500).json({ success: false, message: 'Falha ao obter arquivo' });
+        }
+
+        const dbArquivo = arquivo.caminho ? await FilesService.findFileByStorageId(arquivo.caminho) : null;
+        const filename = dbArquivo?.nome ?? metadata.name;
+        const mimeType = dbArquivo?.tipo ?? metadata.mimeType;
+
+        res.setHeader('Content-Type', mimeType);
+        res.setHeader(
+            'Content-Disposition',
+            `attachment; filename="${filename}"; 
+            filename*=UTF-8''${encodeURIComponent(filename)}`,
+        );
+
+        (stream as NodeJS.ReadableStream).on('error', (err) => {
+            console.error('Erro ao baixar arquivo de exame prévio:', err);
+            res.sendStatus(500);
+        });
+
+        return (stream as NodeJS.ReadableStream).pipe(res);
+    } catch (err) {
+        return next(err);
     }
 }
