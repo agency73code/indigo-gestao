@@ -463,6 +463,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                 cuidadores: data.cuidadores.map((c) => ({
                     relacao: c.relacao,
                     descricaoRelacao: emptyToNull(c.descricaoRelacao),
+                    dataNascimento: c.dataNascimento,
                     nome: c.nome,
                     cpf: c.cpf,
                     profissao: emptyToNull(c.profissao),

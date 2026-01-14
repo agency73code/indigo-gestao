@@ -168,8 +168,6 @@ export async function listAtas(filters?: AtaListFilters): Promise<AtaListRespons
 }
 
 export async function getAtaById(id: string): Promise<AtaReuniao | null> {
-    if (atasConfig.useMockCrud) return getAtaByIdMock(id);
-
     const res = await authFetch(`${atasConfig.apiBase}/atas-reuniao/${id}`);
     if (res.status === 404) return null;
     if (!res.ok) throw new Error('Falha ao carregar ata');
@@ -241,15 +239,11 @@ export async function updateAta(id: string, input: UpdateAtaInput): Promise<AtaR
 }
 
 export async function deleteAta(id: string): Promise<boolean> {
-    if (atasConfig.useMockCrud) return deleteAtaMock(id);
-
     const res = await authFetch(`${atasConfig.apiBase}/atas-reuniao/${id}`, { method: 'DELETE' });
     return res.ok;
 }
 
 export async function finalizarAta(id: string): Promise<AtaReuniao | null> {
-    if (atasConfig.useMockCrud) return finalizarAtaMock(id);
-
     const res = await authFetch(`${atasConfig.apiBase}/atas-reuniao/${id}/finalizar`, { method: 'POST' });
     if (res.status === 404) return null;
     if (!res.ok) throw new Error('Falha ao finalizar ata');
@@ -325,8 +319,6 @@ function buildResumoPayload(ata: AtaReuniao): GerarResumoParams {
 }
 
 export async function generateSummary(ata: AtaReuniao): Promise<string> {
-    if (atasConfig.useMockIA) return generateSummaryMock(ata.id);
-
     const payload = buildResumoPayload(ata);
     const res = await authFetch(`${atasConfig.apiBase}/atas-reuniao/ai/summary`, {
         method: 'POST',
@@ -340,8 +332,6 @@ export async function generateSummary(ata: AtaReuniao): Promise<string> {
 }
 
 export async function generateWhatsAppSummary(ata: AtaReuniao): Promise<string> {
-    if (atasConfig.useMockIA) return generateWhatsAppSummaryMock(ata.id);
-
     const payload = buildResumoPayload(ata);
     const res = await authFetch(`${atasConfig.apiBase}/atas-reuniao/ai/whatsapp-summary`, {
         method: 'POST',
@@ -357,8 +347,7 @@ export async function generateWhatsAppSummary(ata: AtaReuniao): Promise<string> 
 // ============================================
 // DADOS AUXILIARES (usa endpoints existentes)
 // ============================================
-// TODO: melhorar os endpoints do backend, falta fazer validações antes de listar os terapeutas.
-// como os terapeutas que o usuario pode ver, se ele não puder ver todos
+
 export async function listTerapeutas(): Promise<TerapeutaOption[]> {
     const res = await authFetch(`${atasConfig.apiBase}/atas-reuniao/terapeutas?atividade=true`);
     if (!res.ok) throw new Error('Falha ao carregar terapeutas');
