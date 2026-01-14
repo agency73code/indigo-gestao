@@ -952,8 +952,7 @@ model ata_reuniao {
   cabecalho_terapeuta_id    String
   cabecalho_terapeuta_nome  String
   cabecalho_conselho_numero String?
-  cabecalho_conselho_tipo   String?
-  cabecalho_profissao       String?
+  cabecalho_area_atuacao    String?
   cabecalho_cargo           String?
 
   duracao_minutos Int?

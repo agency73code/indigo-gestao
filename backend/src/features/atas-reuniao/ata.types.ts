@@ -2,6 +2,9 @@
 // ENUMS / CONSTANTES
 // ============================================
 
+import type { createAtaPayload } from "./ata.schema.js";
+import type { ParsedAtaAnexo } from "./utils/ata.anexos.js";
+
 export const FINALIDADE_REUNIAO = {
     ORIENTACAO_PARENTAL: 'orientacao_parental',
     REUNIAO_EQUIPE: 'reuniao_equipe',
@@ -19,6 +22,11 @@ export const MODALIDADE_REUNIAO = {
 
 export type FinalidadeReuniao = typeof FINALIDADE_REUNIAO[keyof typeof FINALIDADE_REUNIAO];
 export type ModalidadeReuniao = typeof MODALIDADE_REUNIAO[keyof typeof MODALIDADE_REUNIAO];
+
+export type CreateAtaServiceInput = {
+    payload: createAtaPayload;
+    anexos: ParsedAtaAnexo[];
+};
 
 // ============================================
 // TIPOS - GERAÇÃO DE RESUMO IA

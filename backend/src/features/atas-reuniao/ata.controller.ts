@@ -124,7 +124,6 @@ export async function create(req: Request, res: Response, next: NextFunction) {
         const created = await AtaService.create({
             payload,
             anexos,
-            userId: req.user.id,
         });
 
         return res.status(201).json(created)
