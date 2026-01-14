@@ -1,13 +1,3 @@
-/**
- * Service para Cadastro de Anamnese
- * Preparado para integração com backend real
- * 
- * Para conectar ao backend real:
- * 1. Alterar USE_MOCK para false
- * 2. Verificar se o endpoint está correto
- * 3. Deletar pasta mocks/ se não for mais necessária
- */
-
 import { authFetch } from '@/lib/http';
 import { listarClientes as listarClientesApi, listarTerapeutas as listarTerapeutasApi, buscarClientePorId } from '@/lib/api';
 import type { Patient } from '@/features/consultas/types/consultas.types';
@@ -98,80 +88,10 @@ export function formatarData(dataISO: string): string {
     return data.toLocaleDateString('pt-BR');
 }
 
-// ============================================
-// CONFIGURAÇÃO
-// ============================================
-
-/**
- * Flag para usar mock ou API real
- * Alterar para false quando backend estiver pronto
- */
-const USE_MOCK = false;
-
 /**
  * Endpoint base para anamnese
  */
 const ENDPOINT = '/anamneses';
-
-// ============================================
-// MOCK SERVICE
-// ============================================
-
-async function mockCriarAnamnese(data: Anamnese): Promise<AnamneseResponse> {
-    // Simular delay de rede
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    console.log('[MOCK] Criando anamnese:', data);
-    
-    return {
-        success: true,
-        data: {
-            ...data,
-            id: `anamnese-${Date.now()}`,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-        },
-        message: 'Anamnese criada com sucesso',
-    };
-}
-
-async function mockAtualizarAnamnese(id: string, data: Partial<Anamnese>): Promise<AnamneseResponse> {
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    console.log('[MOCK] Atualizando anamnese:', id, data);
-    
-    return {
-        success: true,
-        data: {
-            ...(data as Anamnese),
-            id,
-            updatedAt: new Date().toISOString(),
-        },
-        message: 'Anamnese atualizada com sucesso',
-    };
-}
-
-async function mockBuscarAnamnese(id: string): Promise<AnamneseResponse> {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    console.log('[MOCK] Buscando anamnese:', id);
-    
-    return {
-        success: false,
-        message: 'Anamnese não encontrada (mock)',
-    };
-}
-
-async function mockExcluirAnamnese(id: string): Promise<AnamneseResponse> {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    console.log('[MOCK] Excluindo anamnese:', id);
-    
-    return {
-        success: true,
-        message: 'Anamnese excluída com sucesso',
-    };
-}
 
 // ============================================
 // API SERVICE
@@ -179,10 +99,24 @@ async function mockExcluirAnamnese(id: string): Promise<AnamneseResponse> {
 
 async function apiCriarAnamnese(data: Anamnese): Promise<AnamneseResponse> {
     try {
+        const fd = new FormData();
+
+        // JSON do payload
+        fd.append('payload', JSON.stringify(data));
+
+        const exames = data?.queixaDiagnostico?.examesPrevios ?? [];
+        for (const exame of exames) {
+            const arquivos = exame?.arquivos ?? [];
+            for (const arq of arquivos) {
+                if (arq?.id && arq?.file instanceof File && !arq.removed) {
+                    fd.append(`files[${arq.id}]`, arq.file, arq.file.name);
+                }
+            }
+        }
+
         const res = await authFetch(`/api${ENDPOINT}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data),
+            body: fd,
         });
         
         const text = await res.text();
@@ -222,76 +156,6 @@ async function apiCriarAnamnese(data: Anamnese): Promise<AnamneseResponse> {
     }
 }
 
-async function apiAtualizarAnamnese(id: string, data: Partial<Anamnese>): Promise<AnamneseResponse> {
-    try {
-        const res = await authFetch(`/api${ENDPOINT}/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data),
-        });
-        
-        const text = await res.text();
-        const responseData = text ? JSON.parse(text) : null;
-        
-        if (!res.ok) {
-            const msg = responseData?.message ?? responseData?.error ?? `Falha (${res.status})`;
-            throw new Error(msg);
-        }
-        
-        return {
-            success: true,
-            data: responseData as Anamnese,
-            message: 'Anamnese atualizada com sucesso',
-        };
-    } catch (error) {
-        console.error('[API] Erro ao atualizar anamnese:', error);
-        throw error;
-    }
-}
-
-async function apiBuscarAnamnese(id: string): Promise<AnamneseResponse> {
-    try {
-        const res = await authFetch(`/api${ENDPOINT}/${id}`, { method: 'GET' });
-        
-        const text = await res.text();
-        const responseData = text ? JSON.parse(text) : null;
-        
-        if (!res.ok) {
-            const msg = responseData?.message ?? responseData?.error ?? `Falha (${res.status})`;
-            throw new Error(msg);
-        }
-        
-        return {
-            success: true,
-            data: responseData as Anamnese,
-        };
-    } catch (error) {
-        console.error('[API] Erro ao buscar anamnese:', error);
-        throw error;
-    }
-}
-
-async function apiExcluirAnamnese(id: string): Promise<AnamneseResponse> {
-    try {
-        const res = await authFetch(`/api${ENDPOINT}/${id}`, { method: 'DELETE' });
-        
-        if (!res.ok) {
-            const text = await res.text();
-            const responseData = text ? JSON.parse(text) : null;
-            const msg = responseData?.message ?? responseData?.error ?? `Falha (${res.status})`;
-            throw new Error(msg);
-        }
-        
-        return {
-            success: true,
-            message: 'Anamnese excluída com sucesso',
-        };
-    } catch (error) {
-        console.error('[API] Erro ao excluir anamnese:', error);
-        throw error;
-    }
-}
-
 // ============================================
 // SERVICE PÚBLICO - FUNÇÕES EXPORTADAS
 // ============================================
@@ -318,11 +182,6 @@ export async function criarAnamnese(
         }
     }
     
-    // Usar mock ou API real
-    if (USE_MOCK) {
-        return mockCriarAnamnese(data);
-    }
-    
     return apiCriarAnamnese(data);
 }
 
@@ -339,47 +198,7 @@ export async function salvarRascunhoAnamnese(data: Partial<Anamnese>): Promise<A
         };
     }
     
-    if (USE_MOCK) {
-        return mockCriarAnamnese(data as Anamnese);
-    }
-    
     return apiCriarAnamnese(data as Anamnese);
-}
-
-/**
- * Atualiza uma anamnese existente
- */
-export async function atualizarAnamnese(
-    id: string, 
-    data: Partial<Anamnese>
-): Promise<AnamneseResponse> {
-    if (USE_MOCK) {
-        return mockAtualizarAnamnese(id, data);
-    }
-    
-    return apiAtualizarAnamnese(id, data);
-}
-
-/**
- * Busca uma anamnese por ID
- */
-export async function buscarAnamnese(id: string): Promise<AnamneseResponse> {
-    if (USE_MOCK) {
-        return mockBuscarAnamnese(id);
-    }
-    
-    return apiBuscarAnamnese(id);
-}
-
-/**
- * Exclui uma anamnese
- */
-export async function excluirAnamnese(id: string): Promise<AnamneseResponse> {
-    if (USE_MOCK) {
-        return mockExcluirAnamnese(id);
-    }
-    
-    return apiExcluirAnamnese(id);
 }
 
 /**

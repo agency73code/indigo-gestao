@@ -289,7 +289,7 @@ describe(`POST ${ENDPOINT}`, () => {
         const res = await request(app)
             .post(ENDPOINT)
             .set('Authorization', `Bearer ${token}`)
-            .send(payload);
+            .field('payload', JSON.stringify(payload));
 
         // Status
         expect(res.status).toBe(201);

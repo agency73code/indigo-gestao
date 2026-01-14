@@ -10,8 +10,8 @@ export function FinalizacaoSection({ data }: FinalizacaoSectionProps) {
 
     return (
         <div className="space-y-4">
-            <ReadOnlyField label="21. Outras informações que o informante julgue serem relevantes" value={fin.informacoesAdicionais} />
-            <ReadOnlyField label="22. Observações e/ou impressões do terapeuta" value={fin.observacoesFinais} />
+            <ReadOnlyField label="21. Outras informações que o informante julgue serem relevantes" value={fin.outrasInformacoesRelevantes} />
+            <ReadOnlyField label="22. Observações e/ou impressões do terapeuta" value={fin.observacoesImpressoesTerapeuta} />
             <ReadOnlyField label="23. Expectativas da família com o tratamento" value={fin.expectativasFamilia} />
         </div>
     );

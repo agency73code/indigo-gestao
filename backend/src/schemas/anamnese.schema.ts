@@ -4,126 +4,130 @@ const simNaoSchema = z.enum(['sim', 'nao']);
 const simNaoComAjudaSchema = z.enum(["sim", "com_ajuda", "nao"]);
 
 const optionalNumberFromString = z.preprocess(
-  (v) => {
-    if (v === "" || v === null || v === undefined) return undefined;
-    return Number(v);
-  },
-  z.number().optional()
+    (v) => {
+        if (v === "" || v === null || v === undefined) return undefined;
+        return Number(v);
+    },
+    z.number().optional()
 );
 
 const ArquivoAnexoSchema = z.object({
-  nome: z.string().optional().nullable(),
-  tipo: z.string().optional().nullable(),
-  tamanho: z.number().optional().nullable(),
-  file: z.unknown().optional().nullable(),
+    id: z.string().optional().nullable(),
+    nome: z.string().optional().nullable(),
+    tipo: z.string().optional().nullable(),
+    tamanho: z.number().optional().nullable(),
+    caminho: z.string().optional().nullable(),
+    removed: z.boolean().optional().nullable(),
+    file: z.unknown().optional().nullable(),
 });
 
 const ExamePrevioSchema = z.object({
-  nome: z.string().optional().nullable(),
-  data: z.string().optional().nullable(),
-  resultado: z.string().optional().nullable(),
-  arquivos: z.array(ArquivoAnexoSchema).optional().nullable(),
+    id: z.string().optional().nullable(),
+    nome: z.string().optional().nullable(),
+    data: z.string().optional().nullable(),
+    resultado: z.string().optional().nullable(),
+    arquivos: z.array(ArquivoAnexoSchema).optional().nullable(),
 });
 
 const MedicamentoEmUsoSchema = z.object({
-  nome: z.string().optional().nullable(),
-  dosagem: z.string().optional().nullable(),
-  dataInicio: z.string().optional().nullable(),
-  motivo: z.string().optional().nullable(),
+    nome: z.string().optional().nullable(),
+    dosagem: z.string().optional().nullable(),
+    dataInicio: z.string().optional().nullable(),
+    motivo: z.string().optional().nullable(),
 });
 
 const TerapiaPreviaSchema = z.object({
-  profissional: z.string().optional().nullable(),
-  especialidadeAbordagem: z.string().optional().nullable(),
-  tempoIntervencao: z.string().optional().nullable(),
-  observacao: z.string().optional().nullable(),
-  ativo: z.boolean().optional().nullable(),
+    profissional: z.string().optional().nullable(),
+    especialidadeAbordagem: z.string().optional().nullable(),
+    tempoIntervencao: z.string().optional().nullable(),
+    observacao: z.string().optional().nullable(),
+    ativo: z.boolean().optional().nullable(),
 });
 
 const EspecialidadeConsultadaSchema = z.object({
-  especialidade: z.string().optional().nullable(),
-  nome: z.string().optional().nullable(),
-  data: z.string().optional().nullable(),
-  observacao: z.string().optional().nullable(),
-  ativo: z.boolean().optional().nullable(),
+    especialidade: z.string().optional().nullable(),
+    nome: z.string().optional().nullable(),
+    data: z.string().optional().nullable(),
+    observacao: z.string().optional().nullable(),
+    ativo: z.boolean().optional().nullable(),
 });
 
 const HistoricoFamiliarSchema = z.object({
-  condicaoDiagnostico: z.string().optional().nullable(),
-  parentesco: z.string().optional().nullable(),
-  observacao: z.string().optional().nullable(),
+    condicaoDiagnostico: z.string().optional().nullable(),
+    parentesco: z.string().optional().nullable(),
+    observacao: z.string().optional().nullable(),
 });
 
 const AtividadeRotinaSchema = z.object({
-  atividade: z.string().optional().nullable(),
-  horario: z.string().optional().nullable(),
-  responsavel: z.string().optional().nullable(),
-  frequencia: z.string().optional().nullable(),
-  observacao: z.string().optional().nullable(),
+    atividade: z.string().optional().nullable(),
+    horario: z.string().optional().nullable(),
+    responsavel: z.string().optional().nullable(),
+    frequencia: z.string().optional().nullable(),
+    observacao: z.string().optional().nullable(),
 });
 
 const MarcoDesenvolvimentoSchema = z.object({
-  meses: z.string().optional().nullable(),
-  naoRealiza: z.boolean().optional().nullable(),
-  naoSoubeInformar: z.boolean().optional().nullable(),
+    meses: z.string().optional().nullable(),
+    naoRealiza: z.boolean().optional().nullable(),
+    naoSoubeInformar: z.boolean().optional().nullable(),
 });
 
 const MarcoFalaSchema = z.object({
-  meses: z.string().optional().nullable(),
-  nao: z.boolean().optional().nullable(),
-  naoSoubeInformar: z.boolean().optional().nullable(),
+    meses: z.string().optional().nullable(),
+    nao: z.boolean().optional().nullable(),
+    naoSoubeInformar: z.boolean().optional().nullable(),
 });
 
 const GestacaoPartoSchema = z.object({
-  tipoParto: z
-    .enum(["natural", "cesarea"], "Tipo de parto é obrigatório."),
-  semanas: z.number("Número de semanas da gestação é obrigatório."),
-  apgar1min: z.number("Apgar de 1 minuto é obrigatório."),
-  apgar5min: z.number("Apgar de 5 minutos é obrigatório."),
-  intercorrencias: z.string().optional().nullable(),
+    tipoParto: z
+        .enum(["natural", "cesarea"], "Tipo de parto é obrigatório."),
+    semanas: z.number("Número de semanas da gestação é obrigatório."),
+    apgar1min: z.number("Apgar de 1 minuto é obrigatório."),
+    apgar5min: z.number("Apgar de 5 minutos é obrigatório."),
+    intercorrencias: z.string().optional().nullable(),
 });
 
 const NeuropsicomotorSchema = z.object({
-  sustentouCabeca: MarcoDesenvolvimentoSchema,
-  rolou: MarcoDesenvolvimentoSchema,
-  sentou: MarcoDesenvolvimentoSchema,
-  engatinhou: MarcoDesenvolvimentoSchema,
-  andouComApoio: MarcoDesenvolvimentoSchema,
-  andouSemApoio: MarcoDesenvolvimentoSchema,
-  correu: MarcoDesenvolvimentoSchema,
-  andouDeMotoca: MarcoDesenvolvimentoSchema,
-  andouDeBicicleta: MarcoDesenvolvimentoSchema,
-  subiuEscadasSozinho: MarcoDesenvolvimentoSchema,
-  motricidadeFina: z.string().optional().nullable(),
+    sustentouCabeca: MarcoDesenvolvimentoSchema,
+    rolou: MarcoDesenvolvimentoSchema,
+    sentou: MarcoDesenvolvimentoSchema,
+    engatinhou: MarcoDesenvolvimentoSchema,
+    andouComApoio: MarcoDesenvolvimentoSchema,
+    andouSemApoio: MarcoDesenvolvimentoSchema,
+    correu: MarcoDesenvolvimentoSchema,
+    andouDeMotoca: MarcoDesenvolvimentoSchema,
+    andouDeBicicleta: MarcoDesenvolvimentoSchema,
+    subiuEscadasSozinho: MarcoDesenvolvimentoSchema,
+    motricidadeFina: z.string().optional().nullable(),
 });
 
 const FalaLinguagemSchema = z.object({
-  balbuciou: MarcoFalaSchema,
-  primeirasPalavras: MarcoFalaSchema,
-  primeirasFrases: MarcoFalaSchema,
-  apontouParaFazerPedidos: MarcoFalaSchema,
+    balbuciou: MarcoFalaSchema,
+    primeirasPalavras: MarcoFalaSchema,
+    primeirasFrases: MarcoFalaSchema,
+    apontouParaFazerPedidos: MarcoFalaSchema,
 
-  fazUsoDeGestos: simNaoSchema.optional().nullable(),
-  fazUsoDeGestosQuais: z.string().optional().nullable(),
-  
-  comunicacaoAtual: z.string().optional().nullable(),
+    fazUsoDeGestos: simNaoSchema.optional().nullable(),
+    fazUsoDeGestosQuais: z.string().optional().nullable(),
+    
+    comunicacaoAtual: z.string().optional().nullable(),
 
-  audicao: z.enum(["boa", "ruim"]).optional().nullable(),
+    audicao: z.enum(["boa", "ruim"]).optional().nullable(),
 
-  teveOtiteDeRepeticao: simNaoSchema.optional().nullable(),
-  otiteVezes: optionalNumberFromString,
-  otitePeriodoMeses: optionalNumberFromString,
-  otiteFrequencia: z.string().optional().nullable(),
+    teveOtiteDeRepeticao: simNaoSchema.optional().nullable(),
+    otiteVezes: optionalNumberFromString,
+    otitePeriodoMeses: optionalNumberFromString,
+    otiteFrequencia: z.string().optional().nullable(),
 
-  fazOuFezUsoTuboVentilacao: simNaoSchema.optional().nullable(),
-  tuboVentilacaoObservacao: z.string().optional().nullable(),
+    fazOuFezUsoTuboVentilacao: simNaoSchema.optional().nullable(),
+    tuboVentilacaoObservacao: z.string().optional().nullable(),
 
-  fazOuFezUsoObjetoOral: simNaoSchema.optional().nullable(),
-  objetoOralEspecificar: z.string().optional().nullable(),
+    fazOuFezUsoObjetoOral: simNaoSchema.optional().nullable(),
+    objetoOralEspecificar: z.string().optional().nullable(),
 
-  usaMamadeira: simNaoSchema.optional().nullable(),
-  mamadeiraHa: z.string().optional().nullable(),
-  mamadeiraVezesAoDia: optionalNumberFromString,
+    usaMamadeira: simNaoSchema.optional().nullable(),
+    mamadeiraHa: z.string().optional().nullable(),
+    mamadeiraVezesAoDia: optionalNumberFromString,
 });
 
 const DesfraldeItemSchema = z.object({
