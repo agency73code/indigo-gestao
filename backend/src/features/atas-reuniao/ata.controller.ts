@@ -1,14 +1,10 @@
-/**
- * Controller para Atas de Reunião
- * @module features/atas-reuniao
- */
-
 import type { Request, Response, NextFunction } from 'express';
 import '../../types/express.d.js';
 import { AppError } from '../../errors/AppError.js';
 import { AIServiceError } from '../ai/ai.errors.js';
-import { gerarResumoSchema } from './ata.schema.js';
+import { createAtaPayloadSchema, gerarResumoSchema, listTherapistSchema } from './ata.schema.js';
 import * as AtaService from './ata.service.js';
+import { parseAtaAnexos } from './utils/ata.anexos.js';
 
 /**
  * POST /atas-reuniao/ai/summary
@@ -69,6 +65,71 @@ export async function handleGerarResumoWhatsApp(req: Request, res: Response, nex
             return handleAIError(error, res);
         }
         next(error);
+    }
+}
+
+export async function therapistsList(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { atividade } = listTherapistSchema.parse(req.query);
+        const userId = req.user?.id;
+        if (!userId) return res.status(401).json({ message: 'Não autenticado' });
+        const data = await AtaService.therapistsList(userId, atividade);
+        
+        res.status(200).json(data);
+    } catch(err) {
+        next(err);
+    }
+}
+
+export async function therapistData(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { userId } = req.params;
+        if (!userId) return res.status(401).json({ message: 'Não autenticado' });
+        const data = await AtaService.therapistData(userId);
+        
+        res.status(200).json(data);
+    } catch(err) {
+        next(err);
+    }
+}
+
+export async function create(req: Request, res: Response, next: NextFunction) {
+    try {
+        if (!req.user) {
+            return res.status(401).json({ success: false, message: 'Não autenticado' });
+        }
+
+        // payload: string -> JSON -> Zod
+        const raw = req.body?.payload;
+        if (typeof raw !== 'string' || raw.trim().length === 0) {
+            return res.status(400).json({ success: false, message: 'Campo payload é obrigatório' });
+        }
+
+        let parsed: unknown;
+        try {
+            parsed = JSON.parse(raw) as unknown;
+        } catch {
+            return res.status(400).json({ success: false, message: 'Payload inválido (JSON malformado)' })
+        }
+
+        const payload = createAtaPayloadSchema.parse(parsed);
+
+        // files: multer
+        const files = Array.isArray(req.files) ? req.files: [];
+
+        // anexo names
+        const anexos = parseAtaAnexos(files, req.body);
+
+        // service
+        const created = await AtaService.create({
+            payload,
+            anexos,
+            userId: req.user.id,
+        });
+
+        return res.status(201).json(created)
+    } catch(err) {
+        next(err);
     }
 }
 

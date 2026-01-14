@@ -23,6 +23,32 @@ enum BoaRuimAudicao {
   ruim
 }
 
+enum ata_finalidade_reuniao {
+  orientacao_parental
+  reuniao_equipe
+  reuniao_outro_especialista
+  reuniao_escola
+  supervisao_at
+  supervisao_terapeuta
+  outros
+}
+
+enum ata_modalidade_reuniao {
+  online
+  presencial
+}
+
+enum ata_participante_tipo {
+  familia
+  profissional_externo
+  profissional_clinica
+}
+
+enum ata_status {
+  rascunho
+  finalizada
+}
+
 model area_atuacao {
   id                    Int                     @id @default(autoincrement())
   nome                  String                  @db.VarChar(100)
@@ -931,4 +957,98 @@ model ocp_prontuario {
 
   @@index([cliente_id])
   @@index([terapeuta_id])
+}
+
+model ata_reuniao {
+  id Int @id @default(autoincrement())
+
+  terapeuta_id String
+  cliente_id   String?
+
+  data           DateTime @db.Date
+  horario_inicio String
+  horario_fim    String
+
+  finalidade        ata_finalidade_reuniao
+  finalidade_outros String?
+
+  modalidade ata_modalidade_reuniao
+  conteudo   String                 @db.Text
+  status     ata_status             @default(rascunho)
+
+  // cabeçalho salva as informações para casos de auditoria
+  cabecalho_terapeuta_id    String
+  cabecalho_terapeuta_nome  String
+  cabecalho_conselho_numero String?
+  cabecalho_conselho_tipo   String?
+  cabecalho_profissao       String?
+  cabecalho_cargo           String?
+
+  duracao_minutos Int?
+  horas_faturadas Decimal? @db.Decimal(10, 2)
+
+  resumo_ia String? @db.Text
+
+  criado_em     DateTime @default(now())
+  atualizado_em DateTime @updatedAt
+
+  participantes ata_participante[]
+  links         ata_link_recomendacao[]
+  anexos        ata_anexo[]
+
+  @@index([terapeuta_id])
+  @@index([cliente_id])
+  @@index([data])
+}
+
+model ata_participante {
+  id Int @id @default(autoincrement())
+
+  ata_reuniao_id Int
+  ata_reuniao    ata_reuniao @relation(fields: [ata_reuniao_id], references: [id], onDelete: Cascade)
+
+  tipo         ata_participante_tipo
+  nome         String
+  descricao    String?
+  terapeuta_id String?
+
+  criado_em DateTime @default(now())
+
+  @@index([ata_reuniao_id])
+  @@index([terapeuta_id])
+}
+
+model ata_link_recomendacao {
+  id Int @id @default(autoincrement())
+
+  ata_reuniao_id Int
+  ata_reuniao    ata_reuniao @relation(fields: [ata_reuniao_id], references: [id], onDelete: Cascade)
+
+  titulo String
+  url    String @db.Text
+
+  criado_em DateTime @default(now())
+
+  @@index([ata_reuniao_id])
+}
+
+model ata_anexo {
+  id Int @id @default(autoincrement())
+
+  ata_reuniao_id Int
+  ata_reuniao    ata_reuniao @relation(fields: [ata_reuniao_id], references: [id], onDelete: Cascade)
+
+  external_id String
+  nome        String?
+
+  original_nome String?
+  mime_type     String?
+  tamanho       Int?
+
+  caminho String @db.Text
+
+  criado_em DateTime @default(now())
+
+  @@unique([ata_reuniao_id, external_id])
+  @@index([ata_reuniao_id])
 }

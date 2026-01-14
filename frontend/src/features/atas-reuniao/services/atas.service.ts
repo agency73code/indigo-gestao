@@ -11,20 +11,6 @@ import type {
 
 import { atasConfig } from './atas.config';
 
-// Funções mock - serão removidas quando backend estiver pronto
-import {
-    listAtasMock,
-    getAtaByIdMock,
-    createAtaMock,
-    updateAtaMock,
-    deleteAtaMock,
-    finalizarAtaMock,
-    generateSummaryMock,
-    generateWhatsAppSummaryMock,
-    listTerapeutasMock,
-    getTerapeutaLogadoMock,
-} from './mocks/atas.mock';
-
 // ============================================
 // HELPERS - MAPEAMENTO API ↔ FRONTEND
 // ============================================
@@ -168,8 +154,6 @@ function buildQueryString(filters?: AtaListFilters): string {
 // ============================================
 
 export async function listAtas(filters?: AtaListFilters): Promise<AtaListResponse> {
-    if (atasConfig.useMockCrud) return listAtasMock(filters);
-
     const res = await authFetch(`${atasConfig.apiBase}/atas-reuniao${buildQueryString(filters)}`);
     if (!res.ok) throw new Error('Falha ao carregar atas de reunião');
     
@@ -195,8 +179,6 @@ export async function getAtaById(id: string): Promise<AtaReuniao | null> {
 }
 
 export async function createAta(input: CreateAtaInput): Promise<AtaReuniao> {
-    if (atasConfig.useMockCrud) return createAtaMock(input);
-
     const fd = new FormData();
 
     // JSON do payload (sem os arquivos)
@@ -211,6 +193,8 @@ export async function createAta(input: CreateAtaInput): Promise<AtaReuniao> {
             fd.append(`fileNames[${anexo.id}]`, anexo.nome);
         }
     }
+
+    console.log(Array.from(fd.entries()));
 
     const res = await authFetch(`${atasConfig.apiBase}/atas-reuniao`, {
         method: 'POST',
@@ -227,8 +211,6 @@ export async function createAta(input: CreateAtaInput): Promise<AtaReuniao> {
 }
 
 export async function updateAta(id: string, input: UpdateAtaInput): Promise<AtaReuniao | null> {
-    if (atasConfig.useMockCrud) return updateAtaMock(id, input);
-
     const fd = new FormData();
 
     // JSON do payload (sem os arquivos)
@@ -375,14 +357,14 @@ export async function generateWhatsAppSummary(ata: AtaReuniao): Promise<string> 
 // ============================================
 // DADOS AUXILIARES (usa endpoints existentes)
 // ============================================
-
+// TODO: melhorar os endpoints do backend, falta fazer validações antes de listar os terapeutas.
+// como os terapeutas que o usuario pode ver, se ele não puder ver todos
 export async function listTerapeutas(): Promise<TerapeutaOption[]> {
-    if (atasConfig.useMockCrud) return listTerapeutasMock();
-
-    const res = await authFetch(`${atasConfig.apiBase}/terapeutas?atividade=true`);
+    const res = await authFetch(`${atasConfig.apiBase}/atas-reuniao/terapeutas?atividade=true`);
     if (!res.ok) throw new Error('Falha ao carregar terapeutas');
     
     const data = await res.json();
+
     return data.map((t: any) => ({
         id: t.id,
         nome: t.nome,
@@ -394,9 +376,7 @@ export async function listTerapeutas(): Promise<TerapeutaOption[]> {
 }
 
 export async function getTerapeutaLogado(userId: string): Promise<CabecalhoAta> {
-    if (atasConfig.useMockCrud) return getTerapeutaLogadoMock(userId);
-
-    const res = await authFetch(`${atasConfig.apiBase}/terapeutas/${userId}`);
+    const res = await authFetch(`${atasConfig.apiBase}/atas-reuniao/terapeuta/${userId}`);
     if (!res.ok) throw new Error('Falha ao carregar dados do terapeuta');
     
     const t = await res.json();

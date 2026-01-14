@@ -1,12 +1,8 @@
-/**
- * Serviço de Atas de Reunião - Geração de Resumos via IA
- * @module features/atas-reuniao
- */
-
 import OpenAI from 'openai';
 import { PROMPTS_ATA, buildAtaPrompt } from '../ai/prompts/index.js';
 import { AIServiceError } from '../ai/ai.errors.js';
 import type { GerarResumoInput } from './ata.schema.js';
+import { prisma } from '../../config/database.js';
 
 // Labels para exibição
 const FINALIDADE_LABELS: Record<string, string> = {
@@ -115,6 +111,60 @@ ${params.links.map(l => `• ${l.titulo}\n  ${l.url}`).join('\n\n')}`
     }
     
     return summary.trim();
+}
+
+export async function therapistsList(_userId: string, activity: boolean = true) {
+    const therapists = await prisma.terapeuta.findMany({
+        where: { atividade: activity },
+        select: {
+            id: true,
+            nome: true,
+            registro_profissional: {
+                select: {
+                    numero_conselho: true,
+                    area_atuacao: {
+                        select: {
+                            nome: true,
+                        }
+                    },
+                    cargo: {
+                        select: {
+                            nome: true,
+                        },
+                    },
+                },
+            },
+        },
+    });
+
+    return therapists;
+}
+
+export async function therapistData(_userId: string) {
+    const therapist = await prisma.terapeuta.findUnique({
+        where: { id: _userId },
+        select: {
+            id: true,
+            nome: true,
+            registro_profissional: {
+                select: {
+                    numero_conselho: true,
+                    area_atuacao: {
+                        select: {
+                            nome: true,
+                        }
+                    },
+                    cargo: {
+                        select: {
+                            nome: true,
+                        },
+                    },
+                },
+            },
+        },
+    });
+
+    return therapist;
 }
 
 // ============================================
