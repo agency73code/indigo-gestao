@@ -1,8 +1,3 @@
-/**
- * Tipos para Atas de Reunião
- * @module features/atas-reuniao
- */
-
 // ============================================
 // ENUMS / CONSTANTES
 // ============================================
