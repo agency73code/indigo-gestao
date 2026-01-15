@@ -2,6 +2,7 @@
 // ENUMS / CONSTANTES
 // ============================================
 
+import type { ata_finalidade_reuniao } from "@prisma/client";
 import type { createAtaPayload } from "./ata.schema.js";
 import type { ParsedAtaAnexo } from "./utils/ata.anexos.js";
 
@@ -27,6 +28,25 @@ export type CreateAtaServiceInput = {
     payload: createAtaPayload;
     anexos: ParsedAtaAnexo[];
 };
+
+export interface AtaListFilters {
+    q?: string | undefined;
+    finalidade?: ata_finalidade_reuniao | undefined;
+    dataInicio?: string | undefined;
+    dataFim?: string | undefined;
+    clienteId?: string | undefined;
+    orderBy?: 'recent' | 'oldest' | undefined;
+    page?: number | undefined;
+    pageSize?: number | undefined;
+}
+
+export interface AtaListResult {
+    items: Array<Record<string, unknown>>;
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+}
 
 // ============================================
 // TIPOS - GERAÇÃO DE RESUMO IA

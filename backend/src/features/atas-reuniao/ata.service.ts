@@ -3,7 +3,7 @@ import { PROMPTS_ATA, buildAtaPrompt } from '../ai/prompts/index.js';
 import { AIServiceError } from '../ai/ai.errors.js';
 import type { GerarResumoInput } from './ata.schema.js';
 import { prisma } from '../../config/database.js';
-import type { CreateAtaServiceInput } from './ata.types.js';
+import type { AtaListFilters, AtaListResult, CreateAtaServiceInput } from './ata.types.js';
 import { toDateOnlyLocal } from './utils/toDateOnlyLocal.js';
 import { computeDurationMinutes } from './utils/computeDurationMinutes.js';
 import { ata_finalidade_reuniao, Prisma } from '@prisma/client';
@@ -118,6 +118,202 @@ ${params.links.map(l => `• ${l.titulo}\n  ${l.url}`).join('\n\n')}`
     }
     
     return summary.trim();
+}
+
+export async function list(userId: string, filters: AtaListFilters = {}): Promise<AtaListResult> {
+    if (!userId) {
+        throw new AppError('AUTH_REQUIRED', 'Usuário não autenticado.', 401)
+    }
+
+    const page = Math.max(filters.page ?? 1, 1);
+    const pageSize = Math.max(filters.pageSize ?? 10, 1);
+    const orderBy = filters.orderBy === 'oldest' ? 'asc' : 'desc';
+
+    const where: Prisma.ata_reuniaoWhereInput = {
+        terapeuta_id: userId,
+    };
+
+    if (filters.finalidade) {
+        where.finalidade = filters.finalidade;
+    }
+
+    if (filters.clienteId) {
+        where.cliente_id = filters.clienteId;
+    }
+
+    
+    if (filters.dataInicio || filters.dataFim) {
+        where.data = {
+            ...(filters.dataInicio ? { gte: new Date(filters.dataInicio) } : {}),
+            ...(filters.dataFim ? { lte: new Date(filters.dataFim) } : {}),
+        };
+    }
+
+    if (filters.q) {
+        const q = filters.q;
+        const matchingClients = await prisma.cliente.findMany({
+            where: {
+                nome: { contains: q },
+            },
+            select: { id: true },
+        });
+
+        const clientIds = matchingClients.map((client) => client.id);
+        const orConditions: Prisma.ata_reuniaoWhereInput[] = [
+            {
+                conteudo: {
+                    contains: q,
+                },
+            },
+            {
+                participantes: {
+                    some: {
+                        nome: {
+                            contains: q,
+                        },
+                    },
+                },
+            },
+        ];
+
+        if (clientIds.length > 0) {
+            orConditions.push({
+                cliente_id: { in: clientIds },
+            });
+        }
+
+        where.OR = orConditions;
+    }
+
+    const [total, atas] = await prisma.$transaction([
+        prisma.ata_reuniao.count({ where }),
+        prisma.ata_reuniao.findMany({
+            where,
+            orderBy: { data: orderBy },
+            skip: (page - 1) * pageSize,
+            take: pageSize,
+            select: {
+                id: true,
+                data: true,
+                horario_inicio: true,
+                horario_fim: true,
+                finalidade: true,
+                finalidade_outros: true,
+                modalidade: true,
+                conteudo: true,
+                cliente_id: true,
+                terapeuta_id: true,
+                status: true,
+                criado_em: true,
+                atualizado_em: true,
+                resumo_ia: true,
+                duracao_minutos: true,
+                horas_faturadas: true,
+                cabecalho_terapeuta_id: true,
+                cabecalho_terapeuta_nome: true,
+                cabecalho_conselho_numero: true,
+                cabecalho_area_atuacao: true,
+                cabecalho_cargo: true,
+                participantes: {
+                    select: {
+                        id: true,
+                        tipo: true,
+                        nome: true,
+                        descricao: true,
+                        terapeuta_id: true,
+                    },
+                },
+                links: {
+                    select: {
+                        id: true,
+                        titulo: true,
+                        url: true,
+                    },
+                },
+                anexos: {
+                    select: {
+                        id: true,
+                        nome: true,
+                        mime_type: true,
+                        tamanho: true,
+                        external_id: true,
+                    },
+                },
+            },
+        }),
+    ]);
+
+    const clientIds = Array.from(
+        new Set(atas.map((ata) => ata.cliente_id).filter((id): id is string => Boolean(id))),
+    );
+    const therapistIds = new Set<string>();
+
+    for (const ata of atas) {
+        if (ata.terapeuta_id) therapistIds.add(ata.terapeuta_id);
+        for (const participante of ata.participantes) {
+            if (participante.terapeuta_id) therapistIds.add(participante.terapeuta_id);
+        }
+    }
+
+    const [clientes, terapeutas] = await Promise.all([
+        clientIds.length > 0
+            ? prisma.cliente.findMany({
+                where: { id: { in: clientIds } },
+                select: { id: true, nome: true },
+            })
+            : Promise.resolve([]),
+        therapistIds.size > 0
+            ? prisma.terapeuta.findMany({
+                where: { id: { in: Array.from(therapistIds) } },
+                select: {
+                    id: true,
+                    nome: true,
+                    registro_profissional: {
+                        select: {
+                            numero_conselho: true,
+                            area_atuacao: {
+                                select: { nome: true },
+                            },
+                            cargo: {
+                                select: { nome: true },
+                            },
+                        },
+                    },
+                },
+            })
+            : Promise.resolve([]),
+    ]);
+
+    const clientMap = new Map(clientes.map((cliente) => [cliente.id, cliente]));
+    const therapistMap = new Map(terapeutas.map((terapeuta) => [terapeuta.id, terapeuta]));
+
+    const items = atas.map((ata) => {
+        const therapist = therapistMap.get(ata.terapeuta_id) ?? buildFallbackTherapist(ata);
+
+        return {
+            ...ata,
+            cliente: ata.cliente_id ? clientMap.get(ata.cliente_id) ?? null : null,
+            terapeuta: therapist,
+            participantes: ata.participantes.map((participante) => ({
+                ...participante,
+                terapeuta: participante.terapeuta_id
+                    ? therapistMap.get(participante.terapeuta_id) ?? null
+                    : null,
+            })),
+            anexos: ata.anexos.map((anexo) => ({
+                ...anexo,
+                arquivo_id: anexo.external_id,
+            })),
+        };
+    });
+
+    return {
+        items,
+        total,
+        page,
+        pageSize,
+        totalPages: Math.ceil(total / pageSize),
+    };
 }
 
 export async function therapistsList(_userId: string, activity: boolean = true) {
@@ -341,6 +537,32 @@ export async function create(input: CreateAtaServiceInput) {
 // ============================================
 // HELPERS
 // ============================================
+
+function buildFallbackTherapist(ata: {
+    cabecalho_terapeuta_id: string;
+    cabecalho_terapeuta_nome: string;
+    cabecalho_conselho_numero: string | null;
+    cabecalho_area_atuacao: string | null;
+    cabecalho_cargo: string | null;
+}) {
+    if (!ata.cabecalho_terapeuta_id && !ata.cabecalho_terapeuta_nome) {
+        return null;
+    }
+
+    const areaNome = ata.cabecalho_area_atuacao || null;
+
+    return {
+        id: ata.cabecalho_terapeuta_id,
+        nome: ata.cabecalho_terapeuta_nome,
+        registro_profissional: [
+            {
+                numero_conselho: ata.cabecalho_conselho_numero,
+                area_atuacao: areaNome ? { nome: areaNome } : null,
+                cargo: ata.cabecalho_cargo ? { nome: ata.cabecalho_cargo } : null,
+            },
+        ],
+    };
+}
 
 /**
  * Remove tags HTML do conteúdo

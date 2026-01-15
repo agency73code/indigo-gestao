@@ -24,7 +24,7 @@ router.post('/ai/whatsapp-summary', AtaController.handleGerarResumoWhatsApp);
 
 router.get('/terapeutas', AtaController.therapistsList);
 router.get('/terapeuta/:userId', AtaController.therapistData);
-// router.get('/', auth, AtaController.list);
+router.get('/', AtaController.list);
 // router.get('/:id', auth, AtaController.getById);
 router.post('/', ataUpload.any(), AtaController.create);
 // router.put('/:id', auth, AtaController.update);
