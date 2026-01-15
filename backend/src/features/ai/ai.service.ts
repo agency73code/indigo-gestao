@@ -5,13 +5,24 @@
  */
 
 import OpenAI from 'openai';
-import type { SessionObservation, GenerateSummaryResponse } from './ai.types.js';
+import type { 
+    SessionObservation, 
+    GenerateSummaryResponse,
+    ProntuarioEvolution,
+    GenerateProntuarioSummaryResponse,
+} from './ai.types.js';
 import {
     CLINICAL_SUMMARY_SYSTEM_PROMPT,
     buildUserPrompt,
     formatObservationsForPrompt,
     AI_DISCLAIMER,
 } from './ai.prompts.js';
+import {
+    PROMPTS_PRONTUARIO,
+    buildProntuarioUserPrompt,
+    formatEvolutionsForPrompt,
+    PRONTUARIO_DISCLAIMER,
+} from './prompts/index.js';
 import { AIServiceError } from './ai.errors.js';
 
 // Inicializa cliente OpenAI
@@ -122,5 +133,63 @@ export async function generateClinicalSummary(params: {
         summary,
         disclaimer: AI_DISCLAIMER,
         observationsUsed: observations.length,
+    };
+}
+
+/**
+ * Gera resumo das evoluções de prontuário psicológico
+ */
+export async function generateProntuarioSummary(params: {
+    evolutions: ProntuarioEvolution[];
+    patientName: string;
+    therapistName: string;
+    periodLabel: string;
+}): Promise<GenerateProntuarioSummaryResponse> {
+    if (!process.env.OPENAI_API_KEY) {
+        throw new AIServiceError(
+            'AI_CONFIG_ERROR',
+            'OPENAI_API_KEY não configurada'
+        );
+    }
+
+    const { evolutions, patientName, therapistName, periodLabel } = params;
+
+    // Formata evoluções para o prompt
+    const evolutionsText = formatEvolutionsForPrompt(evolutions);
+
+    // Monta o prompt do usuário
+    const userPrompt = buildProntuarioUserPrompt({
+        patientName,
+        therapistName,
+        totalSessions: evolutions.length,
+        periodLabel,
+        evolutionsText,
+    });
+
+    // Chama a API da OpenAI
+    const completion = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [
+            { role: 'system', content: PROMPTS_PRONTUARIO.SYSTEM },
+            { role: 'user', content: userPrompt },
+        ],
+        max_tokens: 1500, // Maior limite para resumo mais completo
+        temperature: 0.3,
+    });
+
+    const summary = completion.choices[0]?.message?.content || '';
+
+    if (summary.trim().length === 0) {
+        throw new AIServiceError(
+            'AI_EMPTY_RESPONSE',
+            'Resposta vazia do modelo'
+        );
+    }
+
+    return {
+        success: true,
+        summary,
+        disclaimer: PRONTUARIO_DISCLAIMER,
+        sessionsUsed: evolutions.length,
     };
 }

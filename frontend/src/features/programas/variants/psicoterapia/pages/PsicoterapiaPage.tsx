@@ -1,13 +1,7 @@
-import { useEffect } from 'react';
-import { useArea } from '@/contexts/AreaContext';
-import EmConstrucaoPage from '../../pages/EmConstrucaoPage';
+/**
+ * PsicoterapiaPage - Re-exporta PsicoterapiaHubPage
+ * Mantido para compatibilidade com rotas existentes
+ */
 
-export default function PsicoterapiaPage() {
-    const { setCurrentArea } = useArea();
+export { default } from './PsicoterapiaHubPage';
 
-    useEffect(() => {
-        setCurrentArea('psicoterapia');
-    }, [setCurrentArea]);
-
-    return <EmConstrucaoPage areaName="Psicoterapia" pageTitle="Psicoterapia" />;
-}

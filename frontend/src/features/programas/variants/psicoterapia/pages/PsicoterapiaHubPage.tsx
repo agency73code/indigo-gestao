@@ -1,0 +1,130 @@
+/**
+ * Hub Page de Psicoterapia
+ * Página principal com cards de acesso às funcionalidades
+ */
+
+import { useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { Plus, FileText, ClipboardEdit, BarChart3 } from 'lucide-react';
+import { Card, CardHeader, CardTitleHub } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { usePageTitle } from '@/features/shell/layouts/AppLayout';
+import { useArea } from '@/contexts/AreaContext';
+
+export default function PsicoterapiaHubPage() {
+    const { setPageTitle } = usePageTitle();
+    const { setCurrentArea } = useArea();
+
+    useEffect(() => {
+        setCurrentArea('psicoterapia');
+        setPageTitle('Psicoterapia');
+    }, [setPageTitle, setCurrentArea]);
+
+    const mainActions = [
+        {
+            title: 'Novo Prontuário',
+            description: 'Criar um novo prontuário psicológico para o cliente',
+            icon: Plus,
+            href: '/app/programas/psicoterapia/cadastrar',
+            iconColor: 'text-indigo-600',
+            bgColor: 'bg-[#E0E7FF]',
+            available: true,
+        },
+        {
+            title: 'Consultar Prontuários',
+            description: 'Visualizar e gerenciar prontuários existentes',
+            icon: FileText,
+            href: '/app/programas/psicoterapia/consultar',
+            iconColor: 'text-blue-600',
+            bgColor: 'bg-[#DBEAFE]',
+            available: true,
+        },
+        {
+            title: 'Registrar Evolução',
+            description: 'Registrar uma nova evolução terapêutica',
+            icon: ClipboardEdit,
+            href: '/app/programas/psicoterapia/consultar',
+            iconColor: 'text-green-600',
+            bgColor: 'bg-[#D1FAE5]',
+            available: true,
+        },
+        {
+            title: 'Relatórios',
+            description: 'Gerar relatórios e documentos',
+            icon: BarChart3,
+            href: '#',
+            iconColor: 'text-amber-600',
+            bgColor: 'bg-[#FEF3C7]',
+            available: false,
+            badge: 'Em breve',
+        },
+    ];
+
+    return (
+        <div className="flex flex-col min-h-full w-full p-2 md:p-4 lg:p-4 space-y-4">
+            {/* Main Action Cards */}
+            <div className="space-y-5 p-1">
+                {/* Mobile: 2 colunas, Desktop: 4 colunas */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+                    {mainActions.map((action, index) => {
+                        const Icon = action.icon;
+                        const isDisabled = !action.available;
+                        
+                        const cardContent = (
+                            <Card 
+                                padding="hub" 
+                                className={`${isDisabled ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:shadow-md transition-all hover:scale-[1.02]'} border border-border/40 rounded-lg h-full`}
+                                style={{ backgroundColor: 'var(--hub-card-background)' }}
+                            >
+                                <CardHeader className="space-y-2 md:space-y-5 p-0">
+                                    <div className="flex items-start justify-between">
+                                        <div className={`h-10 w-10 md:h-14 md:w-14 rounded-lg ${action.bgColor} flex items-center justify-center`}>
+                                            <Icon className={`h-5 w-5 md:h-7 md:w-7 ${action.iconColor}`} />
+                                        </div>
+                                        {action.badge && (
+                                            <Badge 
+                                                variant="outline" 
+                                                className="bg-amber-50 text-amber-700 border-amber-200 text-[10px] md:text-xs px-1.5 md:px-2"
+                                            >
+                                                {action.badge}
+                                            </Badge>
+                                        )}
+                                    </div>
+                                    <div className="space-y-0.5 md:space-y-1">
+                                        <CardTitleHub className="text-sm md:text-lg leading-tight">
+                                            {action.title}
+                                        </CardTitleHub>
+                                        <p className="hidden md:block text-sm text-muted-foreground">
+                                            {action.description}
+                                        </p>
+                                    </div>
+                                </CardHeader>
+                            </Card>
+                        );
+
+                        if (isDisabled) {
+                            return (
+                                <div key={index} aria-label={`${action.title}: ${action.description} (${action.badge})`}>
+                                    {cardContent}
+                                </div>
+                            );
+                        }
+
+                        return (
+                            <Link
+                                key={index}
+                                to={action.href}
+                                className="block"
+                                aria-label={`${action.title}: ${action.description}`}
+                            >
+                                {cardContent}
+                            </Link>
+                        );
+                    })}
+                </div>
+            </div>
+
+            
+        </div>
+    );
+}

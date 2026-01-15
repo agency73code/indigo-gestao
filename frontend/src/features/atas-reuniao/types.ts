@@ -63,7 +63,7 @@ export interface CabecalhoAta {
     conselhoNumero?: string;
     conselhoTipo?: string;
     profissao?: string;
-    cargo?: string;
+    cargo?: string; 
 }
 
 /** Salvos: id, tipo, nome, descricao, terapeutaId | Derivados: especialidade, cargo */
