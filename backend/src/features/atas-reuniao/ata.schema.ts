@@ -20,6 +20,24 @@ const queryBoolean = z.preprocess((v) => {
   return v;
 }, z.boolean());
 
+const optionalNumberFromString = z.preprocess(
+    (value) => {
+        if (value === '' || value === null || value === undefined) return undefined;
+        const parsed = Number(value);
+        return Number.isNaN(parsed) ? value : parsed;
+    },
+    z.number().int().optional(),
+);
+
+const optionalTrimmedString = z.preprocess(
+    (value) => {
+        if (typeof value !== 'string') return value;
+        const trimmed = value.trim();
+        return trimmed.length > 0 ? trimmed : undefined;
+    },
+    z.string().optional(),
+);
+
 export const gerarResumoSchema = z.object({
     conteudo: z
         .string()
@@ -45,6 +63,17 @@ export const gerarResumoSchema = z.object({
 
 export const listTherapistSchema = z.object({
     atividade: queryBoolean.default(true),
+});
+
+export const listAtaSchema = z.object({
+    q: optionalTrimmedString,
+    finalidade: ataFinalidadeSchema.optional(),
+    data_inicio: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Data início inválida (YYYY-MM-DD)').optional(),
+    data_fim: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Data fim inválida (YYYY-MM-DD)').optional(),
+    cliente_id: z.uuid({ message: 'UUID inválido' }).optional(),
+    order_by: z.enum(['recent', 'oldest']).default('recent'),
+    page: optionalNumberFromString.default(1),
+    page_size: optionalNumberFromString.default(10),
 });
 
 export const ataParticipanteSchema = z

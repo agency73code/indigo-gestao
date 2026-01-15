@@ -2,7 +2,7 @@ import type { Request, Response, NextFunction } from 'express';
 import '../../types/express.d.js';
 import { AppError } from '../../errors/AppError.js';
 import { AIServiceError } from '../ai/ai.errors.js';
-import { createAtaPayloadSchema, gerarResumoSchema, listTherapistSchema } from './ata.schema.js';
+import { createAtaPayloadSchema, gerarResumoSchema, listAtaSchema, listTherapistSchema } from './ata.schema.js';
 import * as AtaService from './ata.service.js';
 import { parseAtaAnexos } from './utils/ata.anexos.js';
 
@@ -77,6 +77,37 @@ export async function therapistsList(req: Request, res: Response, next: NextFunc
         
         res.status(200).json(data);
     } catch(err) {
+        next(err);
+    }
+}
+
+export async function list(req: Request, res: Response, next: NextFunction) {
+    try {
+        if (!req.user) {
+            return res.status(401).json({ success: false, message: 'Não autenticado' });
+        }
+
+        const parsed = listAtaSchema.parse(req.query);
+
+        const result = await AtaService.list(req.user.id, {
+            q: parsed.q,
+            finalidade: parsed.finalidade,
+            dataInicio: parsed.data_inicio,
+            dataFim: parsed.data_fim,
+            clienteId: parsed.cliente_id,
+            orderBy: parsed.order_by,
+            page: parsed.page,
+            pageSize: parsed.page_size,
+        });
+
+        return res.json({
+            items: result.items,
+            total: result.total,
+            page: result.page,
+            page_size: result.pageSize,
+            total_pages: result.totalPages,
+        });
+    } catch (err) {
         next(err);
     }
 }
