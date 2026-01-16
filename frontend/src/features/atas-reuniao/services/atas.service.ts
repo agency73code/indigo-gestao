@@ -250,7 +250,7 @@ export async function finalizarAta(id: string): Promise<AtaReuniao | null> {
     if (!res.ok) throw new Error('Falha ao finalizar ata');
     
     const data = await res.json();
-    return mapAtaFromApi(data);
+    return mapAtaFromApi(data.data);
 }
 
 // ============================================

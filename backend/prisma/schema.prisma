@@ -87,6 +87,7 @@ model cliente {
   terapeuta           terapeuta_cliente[]
   relatorios          relatorio[]
   anamneses           anamnese[]
+  atas_reuniao        ata_reuniao[]
 
   @@index([nome], map: "nome_idx")
 }
@@ -294,6 +295,8 @@ model terapeuta {
   disciplina            disciplina[]            @relation("disciplinaToterapeuta")
   relatorios            relatorio[]
   anamneses             anamnese[]
+  atas_reuniao          ata_reuniao[]
+  atas_participacoes    ata_participante[]
 
   @@index([atividade])
   @@index([nome])
@@ -935,7 +938,9 @@ model ata_reuniao {
   id Int @id @default(autoincrement())
 
   terapeuta_id String
+  terapeuta    terapeuta @relation(fields: [terapeuta_id], references: [id], onDelete: Restrict)
   cliente_id   String?
+  cliente      cliente?  @relation(fields: [cliente_id], references: [id], onDelete: SetNull)
 
   data           DateTime @db.Date
   horario_inicio String
@@ -982,6 +987,7 @@ model ata_participante {
   nome         String
   descricao    String?
   terapeuta_id String?
+  terapeuta    terapeuta?            @relation(fields: [terapeuta_id], references: [id], onDelete: SetNull)
 
   criado_em DateTime @default(now())
 
