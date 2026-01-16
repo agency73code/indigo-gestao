@@ -10,7 +10,9 @@ import AuthProviderLayout from '../../features/shell/layouts/AuthProviderLayout'
 import AppLayout from '../../features/shell/layouts/AppLayout';
 import NotFoundPage from '../../features/shell/pages/NotFoundPage';
 import TokenNotFoundPage from '../../shared/components/pages/TokenNotFoundPage';
-import DashboardPage from '../../features/dashboard/pages/DashboardPage';
+import DashboardHubPage from '../../features/dashboard/pages/DashboardHubPage';
+import DashboardTerapeutaPage from '../../features/dashboard/pages/DashboardTerapeutaPage';
+import DashboardGerentePage from '../../features/dashboard/pages/DashboardGerentePage';
 import TerapeutasListPage from '../../features/consultas/pages/TerapeutasListPage';
 import PacientesListPage from '../../features/consultas/pages/PacientesListPage';
 import ArquivosPage from '../../features/arquivos/pages/ArquivosPage';
@@ -178,7 +180,23 @@ export const router = createBrowserRouter([
                                 index: true,
                                 element: (
                                     <Suspense fallback={suspenseFallback}>
-                                        <DashboardPage />
+                                        <DashboardHubPage />
+                                    </Suspense>
+                                ),
+                            },
+                            {
+                                path: 'dashboard/terapeuta',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <DashboardTerapeutaPage />
+                                    </Suspense>
+                                ),
+                            },
+                            {
+                                path: 'dashboard/gerente',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <DashboardGerentePage />
                                     </Suspense>
                                 ),
                             },
