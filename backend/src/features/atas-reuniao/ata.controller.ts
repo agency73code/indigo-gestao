@@ -169,7 +169,7 @@ export async function getById(req: Request, res: Response, next: NextFunction) {
         const userId = req.user?.id;
         if (!userId) return res.status(404).json({ message: 'Não autenticado' });
 
-        const result = await AtaService.getById(ataId);
+        const result = await AtaService.getById(ataId, userId);
         if (!result) return res.status(401).json({ message: 'Ata não identificada' });
 
         return res.status(200).json({ success: true, data: result});

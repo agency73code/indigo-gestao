@@ -534,64 +534,124 @@ export async function create(input: CreateAtaServiceInput) {
     return created;
 }
 
-export async function getById(id: number) {
-    const result = await prisma.ata_reuniao.findUnique({
-        where: { id },
+export async function getById(id: number, userId?: string) {
+    const result = await prisma.ata_reuniao.findFirst({
+        where: {
+            id,
+            ...(userId ? { terapeuta_id: userId } : {}),
+        },
         select: {
             id: true,
+            data: true,
+            horario_inicio: true,
+            horario_fim: true,
+            finalidade: true,
+            finalidade_outros: true,
+            modalidade: true,
+            conteudo: true,
+            cliente_id: true,
+            terapeuta_id: true,
+            status: true,
+            criado_em: true,
+            atualizado_em: true,
+            resumo_ia: true,
+            duracao_minutos: true,
+            horas_faturadas: true,
             cabecalho_terapeuta_id: true,
             cabecalho_terapeuta_nome: true,
             cabecalho_conselho_numero: true,
             cabecalho_area_atuacao: true,
             cabecalho_cargo: true,
-            status: true,
-            criado_em: true,
-            atualizado_em: true,
-            resumo_ia: true,
-            anexos: {
+            participantes: {
                 select: {
-                    external_id: true,
+                    id: true,
+                    tipo: true,
                     nome: true,
-                    original_nome: true,
-                    tamanho: true,
-                    mime_type: true,
-                    caminho: true,
+                    descricao: true,
+                    terapeuta_id: true,
                 },
             },
-            duracao_minutos: true,
-            horas_faturadas: true,
+            links: {
+                select: {
+                    id: true,
+                    titulo: true,
+                    url: true,
+                },
+            },
+            anexos: {
+                select: {
+                    id: true,
+                    nome: true,
+                    original_nome: true,
+                    mime_type: true,
+                    tamanho: true,
+                    external_id: true,
+                },
+            },
         },
-    })
+    });
 
     if (!result) {
         return null;
     }
 
-    return {
-        id: result.id,
-        cabecalho: {
-            terapeutaId: result.cabecalho_terapeuta_id,
-            terapeutaNome: result.cabecalho_terapeuta_nome,
-            conselhoNumero: result.cabecalho_conselho_numero,
-            conselhoTipo: result.cabecalho_area_atuacao,
-            profissao: result.cabecalho_area_atuacao,
-            cargo: result.cabecalho_cargo,
-        },
-        status: result.status,
-        criadoEm: result.criado_em,
-        atualizadoEm: result.atualizado_em,
-        resumoIA: result.resumo_ia,
-        anexos: result.anexos.map((a) => ({
-            id: a.external_id,
-            name: a.nome ?? a.original_nome,
-            size: a.tamanho,
-            type: a.mime_type,
-            url: a.caminho,
-            arquivoId: a.external_id,
-        })),
-        duracaoMinutos: result.duracao_minutos,
-        horasFaturadas: result.horas_faturadas,
+    const clientIds = result.cliente_id ? [result.cliente_id] : [];
+    const therapistIds = new Set<string>();
+
+    if (result.terapeuta_id) therapistIds.add(result.terapeuta_id);
+    for (const participante of result.participantes) {
+        if (participante.terapeuta_id) therapistIds.add(participante.terapeuta_id);
     }
+
+    const [clientes, terapeutas] = await Promise.all([
+        clientIds.length > 0
+            ? prisma.cliente.findMany({
+                where: { id: { in: clientIds } },
+                select: { id: true, nome: true },
+            })
+            : Promise.resolve([]),
+        therapistIds.size > 0
+            ? prisma.terapeuta.findMany({
+                where: { id: { in: Array.from(therapistIds) } },
+                select: {
+                    id: true,
+                    nome: true,
+                    registro_profissional: {
+                        select: {
+                            numero_conselho: true,
+                            area_atuacao: {
+                                select: { nome: true },
+                            },
+                            cargo: {
+                                select: { nome: true },
+                            },
+                        },
+                    },
+                },
+            })
+            : Promise.resolve([]),
+    ]);
+
+    const clientMap = new Map(clientes.map((cliente) => [cliente.id, cliente]));
+    const therapistMap = new Map(terapeutas.map((terapeuta) => [terapeuta.id, terapeuta]));
+
+    const therapist = therapistMap.get(result.terapeuta_id) ?? buildFallbackTherapist(result);
+
+    return {
+        ...result,
+        cliente: result.cliente_id ? clientMap.get(result.cliente_id) ?? null : null,
+        terapeuta: therapist,
+        participantes: result.participantes.map((participante) => ({
+            ...participante,
+            terapeuta: participante.terapeuta_id
+                ? therapistMap.get(participante.terapeuta_id) ?? null
+                : null,
+        })),
+        anexos: result.anexos.map((anexo) => ({
+            ...anexo,
+            arquivo_id: anexo.external_id,
+        })),
+    };
 }
 
 // ============================================

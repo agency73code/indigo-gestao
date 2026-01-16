@@ -58,7 +58,7 @@ function mapAtaFromApi(data: any): AtaReuniao {
         horasFaturadas: data.horas_faturadas,
         anexos: (data.anexos || []).map((a: any) => ({
             id: String(a.id),
-            name: a.nome,
+            name: a.nome ?? a.original_nome,
             size: a.tamanho,
             type: a.mime_type,
             arquivoId: a.arquivo_id,
@@ -174,7 +174,7 @@ export async function getAtaById(id: string): Promise<AtaReuniao | null> {
     
     const data = await res.json();
 
-    return data.data;
+    return mapAtaFromApi(data.data);
 }
 
 export async function createAta(input: CreateAtaInput): Promise<AtaReuniao> {
