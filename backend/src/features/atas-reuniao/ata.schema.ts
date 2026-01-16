@@ -65,6 +65,13 @@ export const listTherapistSchema = z.object({
     atividade: queryBoolean.default(true),
 });
 
+export const ataIdSchema = z.object({
+    id: z.coerce
+        .number('ID inválido')
+        .int('ID deve ser um número inteiro')
+        .positive('ID deve ser maior que zero')
+});
+
 export const listAtaSchema = z.object({
     q: optionalTrimmedString,
     finalidade: ataFinalidadeSchema.optional(),
