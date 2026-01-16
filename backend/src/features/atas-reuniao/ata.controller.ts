@@ -2,7 +2,7 @@ import type { Request, Response, NextFunction } from 'express';
 import '../../types/express.d.js';
 import { AppError } from '../../errors/AppError.js';
 import { AIServiceError } from '../ai/ai.errors.js';
-import { createAtaPayloadSchema, gerarResumoSchema, listAtaSchema, listTherapistSchema } from './ata.schema.js';
+import { ataIdSchema, createAtaPayloadSchema, gerarResumoSchema, listAtaSchema, listTherapistSchema } from './ata.schema.js';
 import * as AtaService from './ata.service.js';
 import { parseAtaAnexos } from './utils/ata.anexos.js';
 
@@ -160,6 +160,21 @@ export async function create(req: Request, res: Response, next: NextFunction) {
         return res.status(201).json(created)
     } catch(err) {
         next(err);
+    }
+}
+
+export async function getById(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { id: ataId } = ataIdSchema.parse(req.params);
+        const userId = req.user?.id;
+        if (!userId) return res.status(404).json({ message: 'Não autenticado' });
+
+        const result = await AtaService.getById(ataId);
+        if (!result) return res.status(401).json({ message: 'Ata não identificada' });
+
+        return res.status(200).json({ success: true, data: result});
+    } catch (err) {
+        next(err)
     }
 }
 

@@ -534,6 +534,66 @@ export async function create(input: CreateAtaServiceInput) {
     return created;
 }
 
+export async function getById(id: number) {
+    const result = await prisma.ata_reuniao.findUnique({
+        where: { id },
+        select: {
+            id: true,
+            cabecalho_terapeuta_id: true,
+            cabecalho_terapeuta_nome: true,
+            cabecalho_conselho_numero: true,
+            cabecalho_area_atuacao: true,
+            cabecalho_cargo: true,
+            status: true,
+            criado_em: true,
+            atualizado_em: true,
+            resumo_ia: true,
+            anexos: {
+                select: {
+                    external_id: true,
+                    nome: true,
+                    original_nome: true,
+                    tamanho: true,
+                    mime_type: true,
+                    caminho: true,
+                },
+            },
+            duracao_minutos: true,
+            horas_faturadas: true,
+        },
+    })
+
+    if (!result) {
+        return null;
+    }
+
+    return {
+        id: result.id,
+        cabecalho: {
+            terapeutaId: result.cabecalho_terapeuta_id,
+            terapeutaNome: result.cabecalho_terapeuta_nome,
+            conselhoNumero: result.cabecalho_conselho_numero,
+            conselhoTipo: result.cabecalho_area_atuacao,
+            profissao: result.cabecalho_area_atuacao,
+            cargo: result.cabecalho_cargo,
+        },
+        status: result.status,
+        criadoEm: result.criado_em,
+        atualizadoEm: result.atualizado_em,
+        resumoIA: result.resumo_ia,
+        anexos: result.anexos.map((a) => ({
+            id: a.external_id,
+            name: a.nome ?? a.original_nome,
+            size: a.tamanho,
+            type: a.mime_type,
+            url: a.caminho,
+            arquivoId: a.external_id,
+        })),
+        duracaoMinutos: result.duracao_minutos,
+        horasFaturadas: result.horas_faturadas,
+    }
+}
+
 // ============================================
 // HELPERS
 // ============================================

@@ -173,7 +173,8 @@ export async function getAtaById(id: string): Promise<AtaReuniao | null> {
     if (!res.ok) throw new Error('Falha ao carregar ata');
     
     const data = await res.json();
-    return mapAtaFromApi(data);
+
+    return data.data;
 }
 
 export async function createAta(input: CreateAtaInput): Promise<AtaReuniao> {
