@@ -3,7 +3,7 @@
 // ============================================
 
 import type { ata_finalidade_reuniao } from "@prisma/client";
-import type { createAtaPayload } from "./ata.schema.js";
+import type { createAtaPayload, updateAtaPayload } from "./ata.schema.js";
 import type { ParsedAtaAnexo } from "./utils/ata.anexos.js";
 
 export const FINALIDADE_REUNIAO = {
@@ -28,6 +28,13 @@ export type CreateAtaServiceInput = {
     payload: createAtaPayload;
     anexos: ParsedAtaAnexo[];
 };
+
+export type UpdateAtaServiceInput = {
+    id: number;
+    userId: string;
+    payload: updateAtaPayload;
+    anexos: ParsedAtaAnexo[];
+}
 
 export interface AtaListFilters {
     q?: string | undefined;
