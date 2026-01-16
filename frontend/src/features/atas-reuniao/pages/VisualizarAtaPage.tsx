@@ -149,13 +149,18 @@ export function VisualizarAtaPage() {
             if (!id) return;
 
             setLoading(true);
+            setNotFound(false);
+            setAta(null);
+
             try {
                 const data = await getAtaById(id);
-                if (data) {
-                    setAta(data);
-                } else {
+                
+                if (data == null) {
                     setNotFound(true);
+                    return;
                 }
+
+                setAta(data);
             } catch (error) {
                 console.error('Erro ao carregar ata:', error);
                 setNotFound(true);
@@ -163,7 +168,7 @@ export function VisualizarAtaPage() {
                 setLoading(false);
             }
         }
-        loadAta();
+        void loadAta();
     }, [id]);
 
     // Configurar título e botão de voltar
