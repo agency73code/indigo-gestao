@@ -320,7 +320,6 @@ export function useAtaForm({
         // Inclui links no formData
         const formDataComLinks = { ...formData, links };
         const status = finalizar ? 'finalizada' : 'rascunho';
-
         try {
             if (ataId) {
                 await updateAta(ataId, { formData: formDataComLinks, anexos, status });

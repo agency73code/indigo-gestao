@@ -23,16 +23,16 @@ function mapAtaFromApi(data: any): AtaReuniao {
         horarioInicio: data.horario_inicio,
         horarioFim: data.horario_fim,
         finalidade: data.finalidade,
-        finalidadeOutros: data.finalidade_outros,
+        finalidadeOutros: data.finalidade_outros ?? '',
         modalidade: data.modalidade,
         conteudo: data.conteudo,
-        clienteId: data.cliente_id,
-        clienteNome: data.cliente?.nome,
+        clienteId: data.cliente_id ?? '',
+        clienteNome: data.cliente?.nome ?? '',
         participantes: (data.participantes || []).map((p: any) => ({
             id: String(p.id),
             tipo: p.tipo,
             nome: p.nome,
-            descricao: p.descricao,
+            descricao: p.descricao ?? '',
             terapeutaId: p.terapeuta_id,
             especialidade: p.terapeuta?.especialidade,
             cargo: p.terapeuta?.cargo,
@@ -223,7 +223,7 @@ export async function updateAta(id: string, input: UpdateAtaInput): Promise<AtaR
             fd.append(`fileNames[${anexo.id}]`, anexo.nome);
         }
     }
-
+    console.log([...fd.entries()]);
     const res = await authFetch(`${atasConfig.apiBase}/atas-reuniao/${id}`, {
         method: 'PATCH',
         body: fd,

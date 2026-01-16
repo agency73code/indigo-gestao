@@ -2,7 +2,7 @@ import type { Request, Response, NextFunction } from 'express';
 import '../../types/express.d.js';
 import { AppError } from '../../errors/AppError.js';
 import { AIServiceError } from '../ai/ai.errors.js';
-import { ataIdSchema, createAtaPayloadSchema, gerarResumoSchema, listAtaSchema, listTherapistSchema } from './ata.schema.js';
+import { ataIdSchema, createAtaPayloadSchema, gerarResumoSchema, listAtaSchema, listTherapistSchema, updateAtaPayloadSchema } from './ata.schema.js';
 import * as AtaService from './ata.service.js';
 import { parseAtaAnexos } from './utils/ata.anexos.js';
 
@@ -158,6 +158,52 @@ export async function create(req: Request, res: Response, next: NextFunction) {
         });
 
         return res.status(201).json(created)
+    } catch(err) {
+        next(err);
+    }
+}
+
+export async function update(req: Request, res: Response, next: NextFunction) {
+    try {
+        if (!req.user) {
+            return res.status(401).json({ success: false, message: 'Não autenticado' });
+        }
+
+        const { id: ataId } = ataIdSchema.parse(req.params);
+
+        const raw = req.body?.payload;
+        if (typeof raw !== 'string' || raw.trim().length === 0) {
+            return res.status(400).json({ success: false, message: 'Campo payload é obrigatório' });
+        }
+
+        let parsed: unknown;
+        try {
+            parsed = JSON.parse(raw) as unknown;
+        } catch {
+            return res.status(400).json({ success: false, message: 'Payload inválido (JSON malformado)' })
+        }
+
+        const payload = updateAtaPayloadSchema.parse(parsed);
+
+        const files = Array.isArray(req.files) ? req.files: [];
+        const anexos = parseAtaAnexos(files, req.body);
+
+        if (Object.keys(payload).length === 0 && anexos.length === 0) {
+            return res.status(400).json({ success: false, message: 'Nenhuma alteração enviada' });
+        }
+
+        const updated = await AtaService.update({
+            id: ataId,
+            userId: req.user.id,
+            payload,
+            anexos,
+        });
+
+        if (!updated) {
+            return res.status(404).json({ success: false, message: 'Ata não identificada' });
+        }
+
+        return res.status(200).json(updated);
     } catch(err) {
         next(err);
     }

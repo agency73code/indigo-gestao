@@ -131,5 +131,32 @@ export const createAtaPayloadSchema = z
         }
     });
 
+export const updateAtaPayloadSchema = z
+    .object({
+        data: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Data inválida (YYYY-MM-DD)').optional(),
+        horario_inicio: z.string().regex(/^\d{2}:\d{2}$/, 'Horário inválido (HH:mm)').optional(),
+        horario_fim: z.string().regex(/^\d{2}:\d{2}$/, 'Horário inválido (HH:mm)').optional(),
+        finalidade: ataFinalidadeSchema.optional(),
+        finalidade_outros: z.string().optional().nullable(),
+        modalidade: ataModalidadeSchema.optional(),
+        conteudo: z.string().min(1).optional(),
+        status: ataStatusSchema.optional(),
+        cliente_id: z.uuid({ message: 'UUID inválido' }).optional().nullable(),
+        participantes: z.array(ataParticipanteSchema).min(1).optional(),
+        links: z.array(ataLinkSchema).optional().nullable(),
+    })
+    .superRefine((val, ctx) => {
+        if (val.finalidade === ata_finalidade_reuniao.outros) {
+            if (!val.finalidade_outros || val.finalidade_outros.trim().length === 0) {
+                ctx.addIssue({
+                    code: 'custom',
+                    message: 'Descreva a finalidade da reunião',
+                    path: ['finalidade_outros'],
+                });
+            }
+        }
+    });
+
 export type GerarResumoInput = z.infer<typeof gerarResumoSchema>;
 export type createAtaPayload = z.infer<typeof createAtaPayloadSchema>;
+export type updateAtaPayload = z.infer<typeof updateAtaPayloadSchema>;
