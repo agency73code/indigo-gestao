@@ -178,6 +178,21 @@ export async function getById(req: Request, res: Response, next: NextFunction) {
     }
 }
 
+export async function finalizeAtaById(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { id: ataId } = ataIdSchema.parse(req.params);
+        const userId = req.user?.id;
+        if (!userId) return res.status(404).json({ message: 'Não autenticado' });
+
+        const result = await AtaService.finalizeAtaById(ataId, userId);
+        if (!result) return res.status(401).json({ message: 'Ata não identificada' });
+
+        return res.status(200).json({ success: true, data: result});
+    } catch (err) {
+        next(err)
+    }
+}
+
 // ============================================
 // HELPERS
 // ============================================

@@ -27,6 +27,7 @@ router.get('/terapeuta/:userId', AtaController.therapistData);
 router.get('/', AtaController.list);
 router.get('/:id', AtaController.getById);
 router.post('/', ataUpload.any(), AtaController.create);
+router.post('/:id/finalizar', AtaController.finalizeAtaById);
 // router.put('/:id', auth, AtaController.update);
 
 export default router;

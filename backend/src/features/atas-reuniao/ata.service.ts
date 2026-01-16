@@ -6,10 +6,11 @@ import { prisma } from '../../config/database.js';
 import type { AtaListFilters, AtaListResult, CreateAtaServiceInput } from './ata.types.js';
 import { toDateOnlyLocal } from './utils/toDateOnlyLocal.js';
 import { computeDurationMinutes } from './utils/computeDurationMinutes.js';
-import { ata_finalidade_reuniao, Prisma } from '@prisma/client';
+import { ata_finalidade_reuniao, ata_status, Prisma } from '@prisma/client';
 import { R2GenericUploadService } from '../file/r2/r2-upload-generic.js';
 import { AppError } from '../../errors/AppError.js';
 import { calcularHorasFaturadasPorReuniao } from './utils/calcularHorasFaturadasPorReuniao.js';
+import { ataSelectBase, ataSelectList, mapAtaBase, mapAtaListItem } from './ata.selectors.js';
 
 // Labels para exibição
 const FINALIDADE_LABELS: Record<string, string> = {
@@ -131,58 +132,26 @@ export async function list(userId: string, filters: AtaListFilters = {}): Promis
 
     const where: Prisma.ata_reuniaoWhereInput = {
         terapeuta_id: userId,
+        ...(filters.finalidade ? { finalidade: filters.finalidade } : {}),
+        ...(filters.clienteId ? { cliente_id: filters.clienteId } : {}),
+        ...(filters.dataInicio || filters.dataFim
+            ? {
+                data: {
+                    ...(filters.dataInicio ? { gte: new Date(filters.dataInicio) } : {}),
+                    ...(filters.dataFim ? { lte: new Date(filters.dataFim) } : {}),
+                },
+            }
+            : {}),
     };
-
-    if (filters.finalidade) {
-        where.finalidade = filters.finalidade;
-    }
-
-    if (filters.clienteId) {
-        where.cliente_id = filters.clienteId;
-    }
-
-    
-    if (filters.dataInicio || filters.dataFim) {
-        where.data = {
-            ...(filters.dataInicio ? { gte: new Date(filters.dataInicio) } : {}),
-            ...(filters.dataFim ? { lte: new Date(filters.dataFim) } : {}),
-        };
-    }
 
     if (filters.q) {
         const q = filters.q;
-        const matchingClients = await prisma.cliente.findMany({
-            where: {
-                nome: { contains: q },
-            },
-            select: { id: true },
-        });
-
-        const clientIds = matchingClients.map((client) => client.id);
-        const orConditions: Prisma.ata_reuniaoWhereInput[] = [
-            {
-                conteudo: {
-                    contains: q,
-                },
-            },
-            {
-                participantes: {
-                    some: {
-                        nome: {
-                            contains: q,
-                        },
-                    },
-                },
-            },
+        
+        where.OR = [
+            { conteudo: { contains: q } },
+            { participantes: { some: { nome: { contains: q } } } },
+            { cliente: { is: { nome: { contains: q } } } },
         ];
-
-        if (clientIds.length > 0) {
-            orConditions.push({
-                cliente_id: { in: clientIds },
-            });
-        }
-
-        where.OR = orConditions;
     }
 
     const [total, atas] = await prisma.$transaction([
@@ -192,120 +161,11 @@ export async function list(userId: string, filters: AtaListFilters = {}): Promis
             orderBy: { data: orderBy },
             skip: (page - 1) * pageSize,
             take: pageSize,
-            select: {
-                id: true,
-                data: true,
-                horario_inicio: true,
-                horario_fim: true,
-                finalidade: true,
-                finalidade_outros: true,
-                modalidade: true,
-                conteudo: true,
-                cliente_id: true,
-                terapeuta_id: true,
-                status: true,
-                criado_em: true,
-                atualizado_em: true,
-                resumo_ia: true,
-                duracao_minutos: true,
-                horas_faturadas: true,
-                cabecalho_terapeuta_id: true,
-                cabecalho_terapeuta_nome: true,
-                cabecalho_conselho_numero: true,
-                cabecalho_area_atuacao: true,
-                cabecalho_cargo: true,
-                participantes: {
-                    select: {
-                        id: true,
-                        tipo: true,
-                        nome: true,
-                        descricao: true,
-                        terapeuta_id: true,
-                    },
-                },
-                links: {
-                    select: {
-                        id: true,
-                        titulo: true,
-                        url: true,
-                    },
-                },
-                anexos: {
-                    select: {
-                        id: true,
-                        nome: true,
-                        mime_type: true,
-                        tamanho: true,
-                        external_id: true,
-                    },
-                },
-            },
+            select: ataSelectList,
         }),
     ]);
 
-    const clientIds = Array.from(
-        new Set(atas.map((ata) => ata.cliente_id).filter((id): id is string => Boolean(id))),
-    );
-    const therapistIds = new Set<string>();
-
-    for (const ata of atas) {
-        if (ata.terapeuta_id) therapistIds.add(ata.terapeuta_id);
-        for (const participante of ata.participantes) {
-            if (participante.terapeuta_id) therapistIds.add(participante.terapeuta_id);
-        }
-    }
-
-    const [clientes, terapeutas] = await Promise.all([
-        clientIds.length > 0
-            ? prisma.cliente.findMany({
-                where: { id: { in: clientIds } },
-                select: { id: true, nome: true },
-            })
-            : Promise.resolve([]),
-        therapistIds.size > 0
-            ? prisma.terapeuta.findMany({
-                where: { id: { in: Array.from(therapistIds) } },
-                select: {
-                    id: true,
-                    nome: true,
-                    registro_profissional: {
-                        select: {
-                            numero_conselho: true,
-                            area_atuacao: {
-                                select: { nome: true },
-                            },
-                            cargo: {
-                                select: { nome: true },
-                            },
-                        },
-                    },
-                },
-            })
-            : Promise.resolve([]),
-    ]);
-
-    const clientMap = new Map(clientes.map((cliente) => [cliente.id, cliente]));
-    const therapistMap = new Map(terapeutas.map((terapeuta) => [terapeuta.id, terapeuta]));
-
-    const items = atas.map((ata) => {
-        const therapist = therapistMap.get(ata.terapeuta_id) ?? buildFallbackTherapist(ata);
-
-        return {
-            ...ata,
-            cliente: ata.cliente_id ? clientMap.get(ata.cliente_id) ?? null : null,
-            terapeuta: therapist,
-            participantes: ata.participantes.map((participante) => ({
-                ...participante,
-                terapeuta: participante.terapeuta_id
-                    ? therapistMap.get(participante.terapeuta_id) ?? null
-                    : null,
-            })),
-            anexos: ata.anexos.map((anexo) => ({
-                ...anexo,
-                arquivo_id: anexo.external_id,
-            })),
-        };
-    });
+    const items = atas.map(mapAtaListItem);
 
     return {
         items,
@@ -517,11 +377,7 @@ export async function create(input: CreateAtaServiceInput) {
         // retorna ata completa
         const full = await tx.ata_reuniao.findUnique({
             where: { id: ata.id },
-            include: {
-                participantes: true,
-                links: true,
-                anexos: true,
-            },
+            select: ataSelectBase,
         });
 
         return full;
@@ -535,130 +391,44 @@ export async function create(input: CreateAtaServiceInput) {
 }
 
 export async function getById(id: number, userId?: string) {
-    const result = await prisma.ata_reuniao.findFirst({
+    const ata = await prisma.ata_reuniao.findFirst({
         where: {
             id,
             ...(userId ? { terapeuta_id: userId } : {}),
         },
-        select: {
-            id: true,
-            data: true,
-            horario_inicio: true,
-            horario_fim: true,
-            finalidade: true,
-            finalidade_outros: true,
-            modalidade: true,
-            conteudo: true,
-            cliente_id: true,
-            terapeuta_id: true,
-            status: true,
-            criado_em: true,
-            atualizado_em: true,
-            resumo_ia: true,
-            duracao_minutos: true,
-            horas_faturadas: true,
-            cabecalho_terapeuta_id: true,
-            cabecalho_terapeuta_nome: true,
-            cabecalho_conselho_numero: true,
-            cabecalho_area_atuacao: true,
-            cabecalho_cargo: true,
-            participantes: {
-                select: {
-                    id: true,
-                    tipo: true,
-                    nome: true,
-                    descricao: true,
-                    terapeuta_id: true,
-                },
-            },
-            links: {
-                select: {
-                    id: true,
-                    titulo: true,
-                    url: true,
-                },
-            },
-            anexos: {
-                select: {
-                    id: true,
-                    nome: true,
-                    original_nome: true,
-                    mime_type: true,
-                    tamanho: true,
-                    external_id: true,
-                },
-            },
-        },
+        select: ataSelectBase,
     });
 
-    if (!result) {
-        return null;
-    }
+    if (!ata) return null;
 
-    const clientIds = result.cliente_id ? [result.cliente_id] : [];
-    const therapistIds = new Set<string>();
+    return mapAtaBase(ata);
+}
 
-    if (result.terapeuta_id) therapistIds.add(result.terapeuta_id);
-    for (const participante of result.participantes) {
-        if (participante.terapeuta_id) therapistIds.add(participante.terapeuta_id);
-    }
+export async function finalizeAtaById(id: number, userId: string) {
+    await prisma.ata_reuniao.update({
+        where: { 
+            id: id,
+            terapeuta_id: userId,
+            status: { not: ata_status.finalizada }
+        },
+        data: {
+            status: ata_status.finalizada,
+        }
+    });
 
-    const [clientes, terapeutas] = await Promise.all([
-        clientIds.length > 0
-            ? prisma.cliente.findMany({
-                where: { id: { in: clientIds } },
-                select: { id: true, nome: true },
-            })
-            : Promise.resolve([]),
-        therapistIds.size > 0
-            ? prisma.terapeuta.findMany({
-                where: { id: { in: Array.from(therapistIds) } },
-                select: {
-                    id: true,
-                    nome: true,
-                    registro_profissional: {
-                        select: {
-                            numero_conselho: true,
-                            area_atuacao: {
-                                select: { nome: true },
-                            },
-                            cargo: {
-                                select: { nome: true },
-                            },
-                        },
-                    },
-                },
-            })
-            : Promise.resolve([]),
-    ]);
+    const ata = await prisma.ata_reuniao.findUnique({
+        where: { id },
+        select: ataSelectBase,
+    });
 
-    const clientMap = new Map(clientes.map((cliente) => [cliente.id, cliente]));
-    const therapistMap = new Map(terapeutas.map((terapeuta) => [terapeuta.id, terapeuta]));
-
-    const therapist = therapistMap.get(result.terapeuta_id) ?? buildFallbackTherapist(result);
-
-    return {
-        ...result,
-        cliente: result.cliente_id ? clientMap.get(result.cliente_id) ?? null : null,
-        terapeuta: therapist,
-        participantes: result.participantes.map((participante) => ({
-            ...participante,
-            terapeuta: participante.terapeuta_id
-                ? therapistMap.get(participante.terapeuta_id) ?? null
-                : null,
-        })),
-        anexos: result.anexos.map((anexo) => ({
-            ...anexo,
-            arquivo_id: anexo.external_id,
-        })),
-    };
+    return ata ? mapAtaBase(ata) : null;
 }
 
 // ============================================
 // HELPERS
 // ============================================
 
-function buildFallbackTherapist(ata: {
+export function buildFallbackTherapist(ata: {
     cabecalho_terapeuta_id: string;
     cabecalho_terapeuta_nome: string;
     cabecalho_conselho_numero: string | null;
