@@ -1,11 +1,10 @@
-/**
- * Tipos para Atas de Reunião
- * @module features/atas-reuniao
- */
-
 // ============================================
 // ENUMS / CONSTANTES
 // ============================================
+
+import type { ata_finalidade_reuniao } from "@prisma/client";
+import type { createAtaPayload } from "./ata.schema.js";
+import type { ParsedAtaAnexo } from "./utils/ata.anexos.js";
 
 export const FINALIDADE_REUNIAO = {
     ORIENTACAO_PARENTAL: 'orientacao_parental',
@@ -24,6 +23,30 @@ export const MODALIDADE_REUNIAO = {
 
 export type FinalidadeReuniao = typeof FINALIDADE_REUNIAO[keyof typeof FINALIDADE_REUNIAO];
 export type ModalidadeReuniao = typeof MODALIDADE_REUNIAO[keyof typeof MODALIDADE_REUNIAO];
+
+export type CreateAtaServiceInput = {
+    payload: createAtaPayload;
+    anexos: ParsedAtaAnexo[];
+};
+
+export interface AtaListFilters {
+    q?: string | undefined;
+    finalidade?: ata_finalidade_reuniao | undefined;
+    dataInicio?: string | undefined;
+    dataFim?: string | undefined;
+    clienteId?: string | undefined;
+    orderBy?: 'recent' | 'oldest' | undefined;
+    page?: number | undefined;
+    pageSize?: number | undefined;
+}
+
+export interface AtaListResult {
+    items: Array<Record<string, unknown>>;
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+}
 
 // ============================================
 // TIPOS - GERAÇÃO DE RESUMO IA

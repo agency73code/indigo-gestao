@@ -1,13 +1,42 @@
-/**
- * Schema de validação para Atas de Reunião
- * @module features/atas-reuniao
- */
-
 import { z } from 'zod';
-import { FINALIDADE_REUNIAO, MODALIDADE_REUNIAO } from './ata.types.js';
+import { FINALIDADE_REUNIAO } from './ata.types.js';
+import { ata_finalidade_reuniao, ata_modalidade_reuniao, ata_participante_tipo, ata_status } from '@prisma/client';
+
+export const ataStatusSchema = z.enum(ata_status)
+export const ataModalidadeSchema = z.enum(ata_modalidade_reuniao);
+export const ataFinalidadeSchema = z.enum(ata_finalidade_reuniao);
+export const ataParticipanteTipoSchema = z.enum(ata_participante_tipo);
 
 const finalidadeValues = Object.values(FINALIDADE_REUNIAO) as [string, ...string[]];
-const modalidadeValues = Object.values(MODALIDADE_REUNIAO) as [string, ...string[]];
+// const modalidadeValues = Object.values(MODALIDADE_REUNIAO) as [string, ...string[]];
+
+const queryBoolean = z.preprocess((v) => {
+  if (typeof v === 'boolean') return v;
+  if (typeof v === 'string') {
+    const s = v.trim().toLowerCase();
+    if (s === 'true' || s === '1') return true;
+    if (s === 'false' || s === '0') return false;
+  }
+  return v;
+}, z.boolean());
+
+const optionalNumberFromString = z.preprocess(
+    (value) => {
+        if (value === '' || value === null || value === undefined) return undefined;
+        const parsed = Number(value);
+        return Number.isNaN(parsed) ? value : parsed;
+    },
+    z.number().int().optional(),
+);
+
+const optionalTrimmedString = z.preprocess(
+    (value) => {
+        if (typeof value !== 'string') return value;
+        const trimmed = value.trim();
+        return trimmed.length > 0 ? trimmed : undefined;
+    },
+    z.string().optional(),
+);
 
 export const gerarResumoSchema = z.object({
     conteudo: z
@@ -32,4 +61,75 @@ export const gerarResumoSchema = z.object({
     })).optional(),
 });
 
+export const listTherapistSchema = z.object({
+    atividade: queryBoolean.default(true),
+});
+
+export const ataIdSchema = z.object({
+    id: z.coerce
+        .number('ID inválido')
+        .int('ID deve ser um número inteiro')
+        .positive('ID deve ser maior que zero')
+});
+
+export const listAtaSchema = z.object({
+    q: optionalTrimmedString,
+    finalidade: ataFinalidadeSchema.optional(),
+    data_inicio: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Data início inválida (YYYY-MM-DD)').optional(),
+    data_fim: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Data fim inválida (YYYY-MM-DD)').optional(),
+    cliente_id: z.uuid({ message: 'UUID inválido' }).optional(),
+    order_by: z.enum(['recent', 'oldest']).default('recent'),
+    page: optionalNumberFromString.default(1),
+    page_size: optionalNumberFromString.default(10),
+});
+
+export const ataParticipanteSchema = z
+    .object({
+        tipo: ataParticipanteTipoSchema,
+        nome: z.string().min(1),
+        descricao: z.string().optional().nullable(),
+        terapeuta_id: z.uuid({ message: 'UUID inválido' }).optional().nullable(),
+    }).superRefine((p, ctx) => {
+        if (p.tipo === ata_participante_tipo.profissional_clinica && !p.terapeuta_id) {
+            ctx.addIssue({
+                code: 'custom',
+                message: 'terapeuta_id é obrigatório para participante profissional_clinica',
+                path: ['terapeuta_id'],
+            });
+        }
+    });
+
+export const ataLinkSchema = z.object({
+    titulo: z.string().min(1),
+    url: z.string().min(1),
+});
+
+export const createAtaPayloadSchema = z
+    .object({
+        terapeuta_id: z.uuid({ message: 'UUID inválido' }),
+        cliente_id: z.uuid({ message: 'UUID inválido' }).optional().nullable(),
+        data: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Data inválida (YYYY-MM-DD)'),
+        horario_inicio: z.string().regex(/^\d{2}:\d{2}$/, 'Horário inválido (HH:mm)'),
+        horario_fim: z.string().regex(/^\d{2}:\d{2}$/, 'Horário inválido (HH:mm)'),
+        finalidade: ataFinalidadeSchema,
+        finalidade_outros: z.string().optional().nullable(),
+        modalidade: ataModalidadeSchema,
+        conteudo: z.string().min(1),
+        status: ataStatusSchema.default(ata_status.rascunho),
+        participantes: z.array(ataParticipanteSchema).min(1),
+        links: z.array(ataLinkSchema).optional().nullable(),
+    })
+    .superRefine((val, ctx) => {
+        if (val.finalidade === ata_finalidade_reuniao.outros) {
+            if (!val.finalidade_outros || val.finalidade_outros.trim().length === 0) {
+                ctx.addIssue({
+                    code: 'custom',
+                    message: 'Descreva a finalidade da reunião',
+                    path: ['finalidade_outros'],
+                });
+            }
+        }
+    });
+
 export type GerarResumoInput = z.infer<typeof gerarResumoSchema>;
+export type createAtaPayload = z.infer<typeof createAtaPayloadSchema>;

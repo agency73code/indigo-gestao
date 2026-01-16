@@ -1,33 +1,33 @@
-/**
- * Rotas para Atas de Reunião
- * @module features/atas-reuniao
- */
-
 import { Router } from 'express';
 import type { Router as ExpressRouter } from 'express';
 import { auth } from '../../middleware/auth.middleware.js';
 import * as AtaController from './ata.controller.js';
+import { ataUpload } from './ata.multer.js';
 
 const router: ExpressRouter = Router();
+
+router.use(auth);
 
 // ============================================
 // ROTAS DE IA
 // ============================================
 
 /** Gera resumo completo da ata */
-router.post('/ai/summary', auth, AtaController.handleGerarResumo);
+router.post('/ai/summary', AtaController.handleGerarResumo);
 
 /** Gera resumo para WhatsApp */
-router.post('/ai/whatsapp-summary', auth, AtaController.handleGerarResumoWhatsApp);
+router.post('/ai/whatsapp-summary', AtaController.handleGerarResumoWhatsApp);
 
 // ============================================
 // ROTAS CRUD (futuro - quando tiver tabela no banco)
 // ============================================
 
-// router.get('/', auth, AtaController.list);
-// router.get('/:id', auth, AtaController.getById);
-// router.post('/', auth, AtaController.create);
+router.get('/terapeutas', AtaController.therapistsList);
+router.get('/terapeuta/:userId', AtaController.therapistData);
+router.get('/', AtaController.list);
+router.get('/:id', AtaController.getById);
+router.post('/', ataUpload.any(), AtaController.create);
+router.post('/:id/finalizar', AtaController.finalizeAtaById);
 // router.put('/:id', auth, AtaController.update);
-// router.delete('/:id', auth, AtaController.remove);
 
 export default router;

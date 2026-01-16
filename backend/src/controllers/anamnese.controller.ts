@@ -10,6 +10,38 @@ import type { AnamneseListFilters } from '../features/anamnese/anamnese.types.js
 import { R2GenericUploadService } from '../features/file/r2/r2-upload-generic.js';
 import * as FilesService from '../features/file/files.service.js';
 import { getFileStreamFromR2 } from '../features/file/r2/getFileStream.js';
+import { extension as mimeExtension } from 'mime-types';
+import path from 'path';
+
+function resolveDownloadFilename(
+    baseName: string,
+    fallbackPath: string | null | undefined,
+    mimeType?: string | null,
+) {
+    const normalizedBase = baseName.trim() || 'arquivo';
+    const currentExt = path.extname(normalizedBase);
+
+    if (currentExt) {
+        return normalizedBase;
+    }
+
+    const fallbackExt = fallbackPath ? path.extname(fallbackPath) : '';
+    if (fallbackExt) {
+        return `${normalizedBase}${fallbackExt}`;
+    }
+
+    const mimeExt = mimeType ? mimeExtension(mimeType) : false;
+    if (typeof mimeExt === 'string' && mimeExt.length > 0) {
+        return `${normalizedBase}.${mimeExt}`;
+    }
+
+    return normalizedBase;
+}
+
+function sanitizeHeaderFilename(name: string): string {
+    // remove CR/LF e aspas que quebram header
+    return name.replace(/[\r\n"]/g, '_');
+}
 
 function extractFileId(fieldname: string): string | null {
     // espera "files[<id>]"
@@ -247,14 +279,18 @@ export async function downloadExamePrevioArquivo(
         }
 
         const dbArquivo = arquivo.caminho ? await FilesService.findFileByStorageId(arquivo.caminho) : null;
-        const filename = dbArquivo?.nome ?? metadata.name;
         const mimeType = dbArquivo?.tipo ?? metadata.mimeType;
+        const filename = resolveDownloadFilename(
+            dbArquivo?.nome ?? metadata.name,
+            arquivo.caminho ?? metadata.name,
+            mimeType,
+        );
+        const safeFilename = sanitizeHeaderFilename(filename);
 
         res.setHeader('Content-Type', mimeType);
         res.setHeader(
             'Content-Disposition',
-            `attachment; filename="${filename}"; 
-            filename*=UTF-8''${encodeURIComponent(filename)}`,
+            `attachment; filename="${safeFilename}"; filename*=UTF-8''${encodeURIComponent(safeFilename)}`,
         );
 
         (stream as NodeJS.ReadableStream).on('error', (err) => {
