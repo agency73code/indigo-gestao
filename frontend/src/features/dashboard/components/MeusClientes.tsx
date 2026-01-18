@@ -34,7 +34,7 @@ export function MeusClientes({ data }: MeusClientesProps) {
   return (
     <Card padding="none" className="h-full flex flex-col border-0 shadow-none p-4" style={{ backgroundColor: 'var(--hub-card-background)' }}>
       <CardHeader className="">
-        <CardTitle className="text-base font-medium flex items-center gap-2">
+        <CardTitle className="text-sm font-medium text-muted-foreground flex pb-2 items-center gap-2">
           <User className="h-4 w-4 text-muted-foreground" />
           Meus Clientes
           <Badge variant="secondary" className="ml-auto font-normal text-xs">

@@ -7,9 +7,11 @@ import type { DashboardTerapeutaData } from '../types';
 import {
     MetricsGrid,
     SessoesMensaisChart,
+    ClientesSessoesChart,
     AtividadesRecentes,
     MeusClientes,
 } from '../components';
+import { Card } from '@/components/ui/card';
 
 export default function DashboardTerapeutaPage() {
     const { setPageTitle } = usePageTitle();
@@ -59,19 +61,32 @@ export default function DashboardTerapeutaPage() {
                 <MetricsGrid metrics={data.metrics} />
             </div>
 
-            {/* Row 2: Sessões Mensais + Meus Clientes */}
-            <div className="flex-[2] grid grid-cols-12 gap-3 min-h-0">
-                <div className="col-span-12 lg:col-span-5 min-h-0">
-                    <SessoesMensaisChart data={data.sessoesPorMes} />
+            {/* Row 2: Layout principal */}
+            <div className="flex-1 grid grid-cols-12 gap-3 min-h-0">
+                {/* Coluna 1: Sessões por Mês + Atividades Recentes */}
+                <div className="col-span-12 lg:col-span-4 flex flex-col gap-3 min-h-0">
+                    <div className="h-[280px] shrink-0">
+                        <SessoesMensaisChart data={data.sessoesPorMes} />
+                    </div>
+                    <div className="flex-1 min-h-0">
+                        <AtividadesRecentes data={data.atividadesRecentes} />
+                    </div>
                 </div>
-                <div className="col-span-12 lg:col-span-7 min-h-0">
+
+                {/* Coluna 2: Sessões por Cliente + Bloco reservado */}
+                <div className="col-span-12 lg:col-span-4 flex flex-col gap-3 min-h-0">
+                    <div className="h-[240px] shrink-0">
+                        <ClientesSessoesChart data={data.clientesSessoes} />
+                    </div>
+                    <Card className="flex-1 border-0 shadow-none" style={{ backgroundColor: 'var(--hub-card-background)' }}>
+                        {/* Espaço reservado para nova funcionalidade */}
+                    </Card>
+                </div>
+
+                {/* Coluna 3: Meus Clientes (altura total) */}
+                <div className="col-span-12 lg:col-span-4 min-h-0">
                     <MeusClientes data={data.meusClientes} />
                 </div>
-            </div>
-
-            {/* Row 3: Atividades Recentes */}
-            <div className="flex-1 min-h-0">
-                <AtividadesRecentes data={data.atividadesRecentes} />
             </div>
         </div>
     );

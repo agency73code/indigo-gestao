@@ -2,6 +2,7 @@
 export { MetricsGrid } from './MetricsGrid';
 export { AtividadesRecentes } from './AtividadesRecentes';
 export { MeusClientes } from './MeusClientes';
+export { ClientesSessoesChart } from './ClientesSessoesChart';
 
 // Gerente Components
 export { GerenteMetricsGrid } from './MetricsGrid';

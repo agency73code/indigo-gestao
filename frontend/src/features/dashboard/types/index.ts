@@ -30,6 +30,14 @@ export interface TerapeutaMetrics {
   minhasSessoesEstaSemana: number;
   minhasSessoesEsteMes: number;
   meusProgramasAtivos: number;
+  // Métricas expandidas (dados reais do banco)
+  sessoesHoje?: number;
+  mediaAcertosSemana?: number;
+  totalTentativasMes?: number;
+  programasSemRegistro7Dias?: number;
+  pacientesSemSessao7Dias?: number;
+  programasEmManutencao?: number;
+  relatoriosPendentes?: number;
 }
 
 export interface MeuCliente {
@@ -63,11 +71,18 @@ export interface EstimuloAtencao {
   area: string;
 }
 
+export interface ClienteSessoes {
+  id: string;
+  nome: string;
+  totalSessoes: number;
+}
+
 export interface DashboardTerapeutaData {
   metrics: TerapeutaMetrics;
   sessoesPorMes: SessoesPorMes[];
   meusClientes: MeuCliente[];
   atividadesRecentes: AtividadeRecente[];
+  clientesSessoes: ClienteSessoes[];
 }
 
 // -----------------------------------------------------------------------------
@@ -136,4 +151,5 @@ export interface DashboardData {
   evolucaoPerformance: EvolucaoPerformance[];
   atividadesRecentes: AtividadeRecente[];
   estimulosAtencao: EstimuloAtencao[];
+  clientesSessoes: ClienteSessoes[];
 }

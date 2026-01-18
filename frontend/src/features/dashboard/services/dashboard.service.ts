@@ -19,6 +19,7 @@ import type {
   PacienteAtencao,
   DashboardData,
   DashboardMetrics,
+  ClienteSessoes,
 } from '../types';
 
 // -----------------------------------------------------------------------------
@@ -80,6 +81,14 @@ function getMockTerapeutaMetrics(): TerapeutaMetrics {
     minhasSessoesEstaSemana: 12,
     minhasSessoesEsteMes: 47,
     meusProgramasAtivos: 15,
+    // Métricas expandidas
+    sessoesHoje: 3,
+    mediaAcertosSemana: 78,
+    totalTentativasMes: 1250,
+    programasSemRegistro7Dias: 2,
+    pacientesSemSessao7Dias: 1,
+    programasEmManutencao: 4,
+    relatoriosPendentes: 2,
   };
 }
 
@@ -157,6 +166,19 @@ function getMockEstimulosAtencao(): EstimuloAtencao[] {
       totalTentativas: 28,
       area: 'Fisioterapia',
     },
+  ];
+}
+
+function getMockClientesSessoes(): ClienteSessoes[] {
+  return [
+    { id: '1', nome: 'Maria Silva', totalSessoes: 24 },
+    { id: '2', nome: 'Pedro Oliveira', totalSessoes: 18 },
+    { id: '3', nome: 'Lucas Ferreira', totalSessoes: 15 },
+    { id: '4', nome: 'Ana Beatriz', totalSessoes: 12 },
+    { id: '5', nome: 'Gabriel Santos', totalSessoes: 10 },
+    { id: '6', nome: 'Julia Costa', totalSessoes: 8 },
+    { id: '7', nome: 'Rafael Lima', totalSessoes: 6 },
+    { id: '8', nome: 'Isabela Souza', totalSessoes: 5 },
   ];
 }
 
@@ -311,6 +333,7 @@ export async function getDashboardTerapeutaData(): Promise<DashboardTerapeutaDat
     sessoesPorMes: getMockSessoesPorMes(),
     meusClientes,
     atividadesRecentes: getMockAtividadesRecentes(),
+    clientesSessoes: getMockClientesSessoes(),
   };
 }
 
@@ -353,5 +376,6 @@ export async function getDashboardData(): Promise<DashboardData> {
     evolucaoPerformance: [],
     atividadesRecentes: getMockAtividadesRecentes().map((a) => ({ ...a, terapeuta: 'Dr. João Santos' })),
     estimulosAtencao: getMockEstimulosAtencao(),
+    clientesSessoes: getMockClientesSessoes(),
   };
 }

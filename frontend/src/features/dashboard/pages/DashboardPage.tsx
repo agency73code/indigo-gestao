@@ -7,7 +7,7 @@ import type { DashboardData } from '../types';
 import {
     MetricsGrid,
     SessoesMensaisChart,
-    SessoesPorAreaChart,
+    ClientesSessoesChart,
     PerformanceChart,
     AtividadesRecentes,
     EstimulosAtencao,
@@ -76,13 +76,13 @@ export default function DashboardPage() {
             {/* Row 1: Metrics Cards */}
             <MetricsGrid metrics={data.metrics} />
 
-            {/* Row 2: Charts - Sessões por Mês, Sessões por Área, Performance */}
+            {/* Row 2: Charts - Sessões por Mês, Sessões por Cliente, Performance */}
             <div className="flex-1 grid grid-cols-12 gap-3 min-h-0">
                 <div className="col-span-12 lg:col-span-4">
                     <SessoesMensaisChart data={data.sessoesPorMes} />
                 </div>
                 <div className="col-span-12 lg:col-span-4">
-                    <SessoesPorAreaChart data={data.sessoesPorArea} />
+                    <ClientesSessoesChart data={data.clientesSessoes} />
                 </div>
                 <div className="col-span-12 lg:col-span-4">
                     <PerformanceChart data={data.evolucaoPerformance} />

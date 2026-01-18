@@ -1,4 +1,4 @@
-import { FileText, ClipboardList, FileBarChart, FolderKanban } from 'lucide-react';
+import { FileText, ClipboardList, FileBarChart, FolderKanban, FolderSync } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { AtividadeRecente } from '../types';
 
@@ -31,9 +31,13 @@ export function AtividadesRecentes({ data }: AtividadesRecentesProps) {
   const hasData = data.length > 0;
 
   return (
-    <Card className="h-full flex flex-col border-0 shadow-none" style={{ backgroundColor: 'var(--hub-card-background)' }}>
-      <CardHeader className="pb-2 shrink-0">
-        <CardTitle className="text-base font-medium">Atividade Recente</CardTitle>
+    <Card padding="none" className="h-full flex p-4 flex-col border-0 shadow-none" style={{ backgroundColor: 'var(--hub-card-background)' }}>
+      <CardHeader className=" pb-2 shrink-0">
+        <CardTitle className="text-sm font-medium text-muted-foreground flex pb-2 items-center gap-2">
+          <FolderSync className="h-4 w-4 text-muted-foreground" />
+          Atividades Recentes
+          
+        </CardTitle>
       </CardHeader>
       <CardContent className="flex-1 pb-3 overflow-hidden">
         {hasData ? (
@@ -47,7 +51,7 @@ export function AtividadesRecentes({ data }: AtividadesRecentesProps) {
                     <Icon className="h-4 w-4" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{atividade.descricao}</p>
+                    <p className="text-sm font-normal truncate">{atividade.descricao}</p>
                     <p className="text-xs text-muted-foreground truncate">
                       {atividade.paciente}
                     </p>
