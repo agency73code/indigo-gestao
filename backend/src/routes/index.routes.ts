@@ -12,6 +12,7 @@ import genericsRoutes from './generics.routes.js';
 import reportsRoutes from './reports.routes.js';
 import aiRoutes from '../features/ai/ai.routes.js';
 import anamneseRoutes from './anamnese.routes.js';
+import atasReuniaoRoutes from '../features/atas-reuniao/ata.routes.js';
 
 const router: ExpressRouter = Router();
 
@@ -27,5 +28,6 @@ router.use('/metadata', metadataRoutes);
 router.use('/relatorios', reportsRoutes);
 router.use('/ai', aiRoutes);
 router.use('/anamneses', anamneseRoutes);
+router.use('/atas-reuniao', atasReuniaoRoutes);
 
 export default router;
