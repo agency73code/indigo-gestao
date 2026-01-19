@@ -140,6 +140,7 @@ function buildQueryString(filters?: AtaListFilters): string {
     }
     if (filters.dataInicio) params.append('data_inicio', filters.dataInicio);
     if (filters.dataFim) params.append('data_fim', filters.dataFim);
+    if (filters.terapeutaId) params.append('terapeuta_id', filters.terapeutaId);
     if (filters.clienteId) params.append('cliente_id', filters.clienteId);
     if (filters.orderBy) params.append('order_by', filters.orderBy);
     if (filters.page) params.append('page', String(filters.page));

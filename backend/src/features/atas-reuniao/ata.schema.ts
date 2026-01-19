@@ -77,6 +77,7 @@ export const listAtaSchema = z.object({
     finalidade: ataFinalidadeSchema.optional(),
     data_inicio: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Data início inválida (YYYY-MM-DD)').optional(),
     data_fim: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Data fim inválida (YYYY-MM-DD)').optional(),
+    terapeuta_id: z.uuid({ message: 'UUID inválido' }).optional(),
     cliente_id: z.uuid({ message: 'UUID inválido' }).optional(),
     order_by: z.enum(['recent', 'oldest']).default('recent'),
     page: optionalNumberFromString.default(1),

@@ -518,6 +518,7 @@ export function AtaTable() {
         q: searchParams.get('q') ?? undefined,
         dataInicio: dateFrom,
         dataFim: dateTo,
+        terapeutaId: terapeutaIdFilter,
         orderBy,
         page: Number(searchParams.get('page')) || 1,
         pageSize: 100,
@@ -650,13 +651,6 @@ export function AtaTable() {
     const loadData = useCallback(async () => {
         setLoading(true);
 
-        const terapeutaId = searchParams.get('terapeutaId');
-        if (terapeutaId && terapeutaId.trim().length > 0) {
-            console.log(terapeutaId, 'terapeuta selecionado')
-        } else {
-            console.log('terapeuta do sistema')
-        }
-
         try {
             const response = await listAtas(filters);
             setAtas(response.items);
@@ -667,7 +661,7 @@ export function AtaTable() {
             setLoading(false);
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [filters.q, filters.finalidade, filters.dataInicio, filters.dataFim, filters.orderBy]);
+    }, [filters.q, filters.finalidade, filters.dataInicio, filters.dataFim, filters.orderBy, filters.terapeutaId]);
 
     useEffect(() => {
         loadData();

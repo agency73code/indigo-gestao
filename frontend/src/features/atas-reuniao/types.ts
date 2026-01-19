@@ -129,6 +129,7 @@ export interface AtaListFilters {
     finalidade?: FinalidadeReuniao | 'all';
     dataInicio?: string; // ISO date
     dataFim?: string; // ISO date
+    terapeutaId?: string;
     clienteId?: string;
     orderBy?: 'recent' | 'oldest'; // Ordenação
     page?: number;
