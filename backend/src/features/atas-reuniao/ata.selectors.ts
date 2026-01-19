@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { buildFallbackTherapist } from "./ata.service.js";
+import { toDateOnly } from "../../utils/toDateOnly.js";
 
 export const ataSelectBase = Prisma.validator<Prisma.ata_reuniaoSelect>()({
     id: true,
@@ -167,6 +168,7 @@ export type AtaListItem = Prisma.ata_reuniaoGetPayload<{ select: typeof ataSelec
 export function mapAtaBase(ata: AtaBase) {
     return {
         ...ata,
+        data: toDateOnly(ata.data),
         anexos: ata.anexos.map((a) => ({ ...a, arquivo_id: a.external_id })),
     }
 }
