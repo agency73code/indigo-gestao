@@ -190,10 +190,10 @@ export const participanteSchema = z.object({
         TIPO_PARTICIPANTE.PROFISSIONAL_CLINICA,
     ]),
     nome: z.string().min(1, 'Nome é obrigatório'),
-    descricao: z.string().optional(),
-    terapeutaId: z.string().optional(),
-    especialidade: z.string().optional(),
-    cargo: z.string().optional(),
+    descricao: z.string().optional().nullable(),
+    terapeutaId: z.string().optional().nullable(),
+    especialidade: z.string().optional().nullable(),
+    cargo: z.string().optional().nullable(),
 });
 
 export const ataFormSchema = z.object({

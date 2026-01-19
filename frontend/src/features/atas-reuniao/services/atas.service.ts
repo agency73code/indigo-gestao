@@ -223,7 +223,7 @@ export async function updateAta(id: string, input: UpdateAtaInput): Promise<AtaR
             fd.append(`fileNames[${anexo.id}]`, anexo.nome);
         }
     }
-    console.log([...fd.entries()]);
+
     const res = await authFetch(`${atasConfig.apiBase}/atas-reuniao/${id}`, {
         method: 'PATCH',
         body: fd,
