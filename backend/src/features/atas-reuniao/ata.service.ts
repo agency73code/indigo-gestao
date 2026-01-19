@@ -11,6 +11,7 @@ import { R2GenericUploadService } from '../file/r2/r2-upload-generic.js';
 import { AppError } from '../../errors/AppError.js';
 import { calcularHorasFaturadasPorReuniao } from './utils/calcularHorasFaturadasPorReuniao.js';
 import { ataSelectBase, ataSelectList, mapAtaBase, mapAtaListItem } from './ata.selectors.js';
+import { deleteFromR2 } from '../file/files.service.js';
 
 // Labels para exibição
 const FINALIDADE_LABELS: Record<string, string> = {
@@ -574,6 +575,48 @@ export async function update(input: UpdateAtaServiceInput) {
     });
 
     return updated ? mapAtaBase(updated) : null;
+}
+
+export async function deleteAta(id: number, userId: string) {
+    const ata = await prisma.$transaction(async (tx) => {
+        const existing = await tx.ata_reuniao.findFirst({
+            where: { id},
+            select: {
+                id: true,
+                terapeuta_id: true,
+                anexos: { select: { caminho: true } },
+            },
+        });
+
+        if (!existing) return null;
+        if (existing.terapeuta_id !== userId) return 'FORBIDDEN';
+        
+        await tx.ata_reuniao.delete({
+            where: { id },
+        });
+
+        return existing;
+    });
+
+    if (!ata || ata === 'FORBIDDEN') return ata;
+
+    const paths = Array.from(
+        new Set(
+            ata.anexos
+                .map((anexo) => anexo.caminho)
+                .filter((path) => path.length > 0),
+        ),
+    );
+
+    for (const path of paths) {
+        try {
+            await deleteFromR2(path);
+        } catch (error) {
+            console.error('[atas:delete] falha ao deletar arquivo no R2', { path, error });
+        }
+    }
+
+    return true;
 }
 
 // ============================================

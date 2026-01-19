@@ -242,6 +242,12 @@ export async function updateAta(id: string, input: UpdateAtaInput): Promise<AtaR
 
 export async function deleteAta(id: string): Promise<boolean> {
     const res = await authFetch(`${atasConfig.apiBase}/atas-reuniao/${id}`, { method: 'DELETE' });
+
+    if (!res.ok) {
+        const data = await res.json().catch(() => null) as { message?: string } | null;
+        throw new Error(data?.message ?? 'Falha ao apagar ata');
+    }
+
     return res.ok;
 }
 
