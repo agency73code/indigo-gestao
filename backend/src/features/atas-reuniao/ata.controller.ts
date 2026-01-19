@@ -244,6 +244,28 @@ export async function finalizeAtaById(req: Request, res: Response, next: NextFun
     }
 }
 
+export async function deleteArea(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { id: ataId } = ataIdSchema.parse(req.params);
+        const userId = req.user?.id;
+        if (!userId) return res.status(401).json({ message: 'Não autenticado' });
+
+        const result = await AtaService.deleteAta(ataId, userId);
+
+        if (result === 'FORBIDDEN') {
+            return res.status(403).json({ success: false, message: 'Você não tem permissão para apagar esta ata' });
+        }
+
+        if (result === null) {
+            return res.status(404).json({ success: false, message: 'Ata não encontrada' });
+        }
+
+        return res.status(200).json({ success: true });
+    } catch (err) {
+        next(err);
+    }
+}
+
 // ============================================
 // HELPERS
 // ============================================
