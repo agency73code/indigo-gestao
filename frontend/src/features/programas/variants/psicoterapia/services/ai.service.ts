@@ -3,6 +3,9 @@
  * @module features/programas/variants/psicoterapia/services
  */
 
+import { authFetch } from '@/lib/http';
+import { psicoterapiaServiceConfig } from './psicoterapia.config';
+
 export interface ProntuarioEvolutionForAI {
     numeroSessao: number;
     data: string;
@@ -23,28 +26,68 @@ export interface GenerateProntuarioSummaryResponse {
     sessionsUsed: number;
 }
 
+// ============================================
+// MOCK PARA IA
+// ============================================
+
+function generateMockSummary(params: GenerateProntuarioSummaryParams): GenerateProntuarioSummaryResponse {
+    const { evolutions, patientName, periodLabel } = params;
+    
+    return {
+        success: true,
+        summary: `## Resumo do Acompanhamento Psicológico\n\n` +
+            `**Paciente:** ${patientName}\n` +
+            `**Período:** ${periodLabel}\n` +
+            `**Total de Sessões:** ${evolutions.length}\n\n` +
+            `### Evolução Observada\n\n` +
+            `O paciente demonstrou progresso significativo ao longo das sessões, ` +
+            `com melhora na capacidade de expressão emocional e desenvolvimento de ` +
+            `estratégias de enfrentamento mais adaptativas.\n\n` +
+            `### Principais Temas Trabalhados\n\n` +
+            `- Autoconhecimento e regulação emocional\n` +
+            `- Relacionamentos interpessoais\n` +
+            `- Manejo de ansiedade\n\n` +
+            `### Recomendações\n\n` +
+            `Manutenção do acompanhamento com frequência semanal.`,
+        disclaimer: 'Este é um resumo gerado por MOCK para desenvolvimento. ' +
+            'Em produção, será gerado pela API de IA.',
+        sessionsUsed: evolutions.length,
+    };
+}
+
+// ============================================
+// API REAL
+// ============================================
+
 /**
  * Chama a API do backend para gerar um resumo das evoluções com IA
  */
 export async function generateProntuarioSummaryWithAI(
     params: GenerateProntuarioSummaryParams
 ): Promise<GenerateProntuarioSummaryResponse> {
-    const response = await fetch('/api/ai/generate-prontuario-summary', {
+    const { apiBase, useMockIA } = psicoterapiaServiceConfig;
+    
+    // Se mock IA estiver ativo, retorna mock
+    if (useMockIA) {
+        // Simula delay de API
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        return generateMockSummary(params);
+    }
+    
+    const response = await authFetch(`${apiBase}/ai/generate-prontuario-summary`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        credentials: 'include',
         body: JSON.stringify(params),
     });
 
-    const data = await response.json();
-
     if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
         throw new Error(data.error || 'Erro ao gerar resumo com IA');
     }
 
-    return data;
+    return response.json();
 }
 
 /**

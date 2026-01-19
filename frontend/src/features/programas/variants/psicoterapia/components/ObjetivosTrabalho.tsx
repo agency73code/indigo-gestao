@@ -1,6 +1,5 @@
 /**
  * Componente de Objetivos de Trabalho
- * Estilo Google Forms
  */
 
 import { AutoExpandTextarea } from '@/components/ui/auto-expand-textarea';

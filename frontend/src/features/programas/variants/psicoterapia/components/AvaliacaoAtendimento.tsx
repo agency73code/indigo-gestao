@@ -1,6 +1,5 @@
 /**
  * Componente de Avaliação do Atendimento
- * Estilo Google Forms
  */
 
 import { AutoExpandTextarea } from '@/components/ui/auto-expand-textarea';

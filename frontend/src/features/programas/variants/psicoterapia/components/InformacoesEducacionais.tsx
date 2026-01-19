@@ -1,6 +1,5 @@
 /**
  * Componente de Informações Educacionais
- * Estilo Google Forms
  */
 
 import { SelectField } from '@/ui/select-field';

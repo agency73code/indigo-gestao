@@ -1,7 +1,5 @@
 /**
  * Componente de visualização de impressão do Prontuário Psicológico
- * Layout limpo estilo Google Forms para exportação em PDF
- * Segue exatamente o mesmo padrão da AnamnesePrintView
  */
 
 import { forwardRef } from 'react';

@@ -1,7 +1,15 @@
 /**
- * Service para Prontuário Psicológico
+ * Service Principal para Prontuário Psicológico
  * 
- * Gerencia operações de API para prontuários e evoluções
+ * Este arquivo re-exporta as funções do service correto baseado na config.
+ * - Mock: mocks/psicoterapia.mock.ts (desenvolvimento)
+ * - Real: psicoterapia.service.ts (produção)
+ * 
+ * PARA DESABILITAR MOCK CRUD:
+ * Defina VITE_USE_MOCK_PSICOTERAPIA=false no .env
+ * 
+ * PARA HABILITAR MOCK IA:
+ * Defina VITE_USE_MOCK_PSICOTERAPIA_IA=true no .env
  */
 
 import { authFetch } from '@/lib/http';
@@ -9,27 +17,41 @@ import { listarClientes as listarClientesApi, listarTerapeutas as listarTerapeut
 import type { Patient, Therapist } from '@/features/consultas/types/consultas.types';
 import type { Cliente } from '@/features/cadastros/types/cadastros.types';
 import type { 
-    ProntuarioPsicologico,
-    ProntuarioFormData,
-    ProntuarioResponse,
-    ProntuarioListResult,
-    ProntuarioListFilters,
-    EvolucaoTerapeutica,
-    EvolucaoFormData,
-    EvolucaoResponse,
     MembroNucleoFamiliar,
     TerapiaPrevia,
 } from '../types';
 
-// Mocks para desenvolvimento
-import { mockProntuario, mockProntuariosList } from '../mock';
+// Configuração centralizada
+import { psicoterapiaServiceConfig } from './psicoterapia.config';
 
 // ============================================
-// CONFIGURAÇÃO
+// IMPORTAÇÃO CONDICIONAL: MOCK vs API REAL
 // ============================================
 
-const ENDPOINT = '/prontuarios-psicologicos';
-const USE_MOCK = true; // Alterar para false quando backend estiver pronto
+// Importa o service correto baseado na config
+import * as realService from './psicoterapia.service';
+import * as mockService from './mocks/psicoterapia.mock';
+
+const service = psicoterapiaServiceConfig.useMockCrud ? mockService : realService;
+
+// ============================================
+// RE-EXPORT: FUNÇÕES DE PRONTUÁRIO E EVOLUÇÃO
+// ============================================
+
+export const listarProntuarios = service.listarProntuarios;
+export const buscarProntuario = service.buscarProntuario;
+export const buscarProntuarioPorCliente = service.buscarProntuarioPorCliente;
+export const criarProntuario = service.criarProntuario;
+export const atualizarProntuario = service.atualizarProntuario;
+export const criarEvolucao = service.criarEvolucao;
+export const listarEvolucoes = service.listarEvolucoes;
+export const buscarEvolucao = service.buscarEvolucao;
+export const verificarProntuarioExistente = service.verificarProntuarioExistente;
+export const atualizarEvolucao = service.atualizarEvolucao;
+export const deletarEvolucao = service.deletarEvolucao;
+
+// Re-export validação de arquivos
+export { validateFile, MAX_FILE_SIZE, ALLOWED_FILE_TYPES, ALLOWED_EXTENSIONS } from './psicoterapia.api-contract';
 
 // ============================================
 // TIPOS AUXILIARES
@@ -229,6 +251,7 @@ export function formatarEndereco(cliente: ClienteCompleto): string {
 export function mapearNucleoFamiliar(cliente: ClienteCompleto): MembroNucleoFamiliar[] {
     if (!cliente.cuidadores) return [];
     
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return cliente.cuidadores.map((c: any) => ({
         id: String(c.id || ''),
         nome: c.nome || '',
@@ -239,330 +262,8 @@ export function mapearNucleoFamiliar(cliente: ClienteCompleto): MembroNucleoFami
 }
 
 // ============================================
-// API - PRONTUÁRIOS
+// RE-EXPORTS
 // ============================================
 
-/**
- * Listar prontuários
- */
-export async function listarProntuarios(
-    filtros: ProntuarioListFilters = {}
-): Promise<ProntuarioListResult> {
-    if (USE_MOCK) {
-        // Simular delay
-        await new Promise(resolve => setTimeout(resolve, 300));
-        
-        let items = [...mockProntuariosList];
-        
-        // Aplicar filtro de busca
-        if (filtros.q) {
-            const termo = filtros.q.toLowerCase();
-            items = items.filter(p => 
-                p.clienteNome.toLowerCase().includes(termo) ||
-                p.terapeutaNome.toLowerCase().includes(termo)
-            );
-        }
-        
-        // Aplicar filtro de status
-        if (filtros.status && filtros.status !== 'todos') {
-            items = items.filter(p => p.status === filtros.status);
-        }
-        
-        const page = filtros.page || 1;
-        const pageSize = filtros.pageSize || 10;
-        const total = items.length;
-        const totalPages = Math.ceil(total / pageSize);
-        const start = (page - 1) * pageSize;
-        const end = start + pageSize;
-        
-        return {
-            items: items.slice(start, end),
-            total,
-            page,
-            pageSize,
-            totalPages,
-        };
-    }
-    
-    const params = new URLSearchParams();
-    if (filtros.q) params.append('q', filtros.q);
-    if (filtros.status) params.append('status', filtros.status);
-    if (filtros.page) params.append('page', String(filtros.page));
-    if (filtros.pageSize) params.append('pageSize', String(filtros.pageSize));
-    
-    const res = await authFetch(`/api${ENDPOINT}?${params.toString()}`);
-    const json = await res.json();
-    
-    if (!res.ok) {
-        throw new Error(json.message || 'Erro ao listar prontuários');
-    }
-    
-    return json.data;
-}
-
-/**
- * Buscar prontuário por ID
- */
-export async function buscarProntuario(id: string): Promise<ProntuarioPsicologico | null> {
-    if (USE_MOCK) {
-        await new Promise(resolve => setTimeout(resolve, 300));
-        if (id === '1') return mockProntuario;
-        return null;
-    }
-    
-    const res = await authFetch(`/api${ENDPOINT}/${id}`);
-    
-    if (res.status === 404) return null;
-    
-    const json = await res.json();
-    
-    if (!res.ok) {
-        throw new Error(json.message || 'Erro ao buscar prontuário');
-    }
-    
-    return json.data;
-}
-
-/**
- * Buscar prontuário por ID do cliente
- */
-export async function buscarProntuarioPorCliente(clienteId: string): Promise<ProntuarioPsicologico | null> {
-    if (USE_MOCK) {
-        await new Promise(resolve => setTimeout(resolve, 300));
-        if (clienteId === 'client-001') return mockProntuario;
-        return null;
-    }
-    
-    const res = await authFetch(`/api${ENDPOINT}/cliente/${clienteId}`);
-    
-    if (res.status === 404) return null;
-    
-    const json = await res.json();
-    
-    if (!res.ok) {
-        throw new Error(json.message || 'Erro ao buscar prontuário');
-    }
-    
-    return json.data;
-}
-
-/**
- * Criar prontuário
- */
-export async function criarProntuario(data: ProntuarioFormData): Promise<ProntuarioResponse> {
-    if (USE_MOCK) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        console.log('[MOCK] Criando prontuário:', data);
-        return {
-            success: true,
-            data: { ...mockProntuario, id: String(Date.now()) },
-            message: 'Prontuário criado com sucesso',
-        };
-    }
-    
-    try {
-        const res = await authFetch(`/api${ENDPOINT}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data),
-        });
-        
-        const json = await res.json();
-        
-        if (!res.ok) {
-            return {
-                success: false,
-                message: json.message || 'Erro ao criar prontuário',
-                errors: json.errors,
-            };
-        }
-        
-        return {
-            success: true,
-            data: json.data,
-            message: 'Prontuário criado com sucesso',
-        };
-    } catch (error) {
-        console.error('[API] Erro ao criar prontuário:', error);
-        return {
-            success: false,
-            message: 'Erro de conexão ao criar prontuário',
-        };
-    }
-}
-
-/**
- * Atualizar prontuário
- */
-export async function atualizarProntuario(
-    id: string, 
-    data: Partial<ProntuarioFormData>
-): Promise<ProntuarioResponse> {
-    if (USE_MOCK) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        console.log('[MOCK] Atualizando prontuário:', id, data);
-        return {
-            success: true,
-            data: mockProntuario,
-            message: 'Prontuário atualizado com sucesso',
-        };
-    }
-    
-    try {
-        const res = await authFetch(`/api${ENDPOINT}/${id}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data),
-        });
-        
-        const json = await res.json();
-        
-        if (!res.ok) {
-            return {
-                success: false,
-                message: json.message || 'Erro ao atualizar prontuário',
-                errors: json.errors,
-            };
-        }
-        
-        return {
-            success: true,
-            data: json.data,
-            message: 'Prontuário atualizado com sucesso',
-        };
-    } catch (error) {
-        console.error('[API] Erro ao atualizar prontuário:', error);
-        return {
-            success: false,
-            message: 'Erro de conexão ao atualizar prontuário',
-        };
-    }
-}
-
-// ============================================
-// API - EVOLUÇÕES
-// ============================================
-
-/**
- * Criar nova evolução (sessão)
- */
-export async function criarEvolucao(data: EvolucaoFormData): Promise<EvolucaoResponse> {
-    if (USE_MOCK) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        console.log('[MOCK] Criando evolução:', data);
-        
-        const novaEvolucao: EvolucaoTerapeutica = {
-            id: String(Date.now()),
-            numeroSessao: mockProntuario.evolucoes.length + 1,
-            dataEvolucao: data.dataEvolucao,
-            descricaoSessao: data.descricaoSessao,
-            arquivos: data.arquivos.filter(a => !a.removed),
-            criadoEm: new Date().toISOString(),
-        };
-        
-        return {
-            success: true,
-            data: novaEvolucao,
-            message: 'Evolução registrada com sucesso',
-        };
-    }
-    
-    try {
-        const fd = new FormData();
-        fd.append('payload', JSON.stringify({
-            prontuarioId: data.prontuarioId,
-            dataEvolucao: data.dataEvolucao,
-            descricaoSessao: data.descricaoSessao,
-        }));
-        
-        // Adicionar arquivos
-        for (const arquivo of data.arquivos) {
-            if (arquivo.file && !arquivo.removed) {
-                fd.append(`files[${arquivo.id}]`, arquivo.file, arquivo.file.name);
-            }
-        }
-        
-        const res = await authFetch(`/api${ENDPOINT}/${data.prontuarioId}/evolucoes`, {
-            method: 'POST',
-            body: fd,
-        });
-        
-        const json = await res.json();
-        
-        if (!res.ok) {
-            return {
-                success: false,
-                message: json.message || 'Erro ao registrar evolução',
-                errors: json.errors,
-            };
-        }
-        
-        return {
-            success: true,
-            data: json.data,
-            message: 'Evolução registrada com sucesso',
-        };
-    } catch (error) {
-        console.error('[API] Erro ao criar evolução:', error);
-        return {
-            success: false,
-            message: 'Erro de conexão ao registrar evolução',
-        };
-    }
-}
-
-/**
- * Listar evoluções de um prontuário
- */
-export async function listarEvolucoes(prontuarioId: string): Promise<EvolucaoTerapeutica[]> {
-    if (USE_MOCK) {
-        await new Promise(resolve => setTimeout(resolve, 300));
-        return mockProntuario.evolucoes;
-    }
-    
-    const res = await authFetch(`/api${ENDPOINT}/${prontuarioId}/evolucoes`);
-    const json = await res.json();
-    
-    if (!res.ok) {
-        throw new Error(json.message || 'Erro ao listar evoluções');
-    }
-    
-    return json.data;
-}
-
-/**
- * Buscar evolução por ID
- */
-export async function buscarEvolucao(
-    prontuarioId: string, 
-    evolucaoId: string
-): Promise<EvolucaoTerapeutica | null> {
-    if (USE_MOCK) {
-        await new Promise(resolve => setTimeout(resolve, 300));
-        return mockProntuario.evolucoes.find(e => e.id === evolucaoId) || null;
-    }
-    
-    const res = await authFetch(`/api${ENDPOINT}/${prontuarioId}/evolucoes/${evolucaoId}`);
-    
-    if (res.status === 404) return null;
-    
-    const json = await res.json();
-    
-    if (!res.ok) {
-        throw new Error(json.message || 'Erro ao buscar evolução');
-    }
-    
-    return json.data;
-}
-
-// ============================================
-// VERIFICAÇÕES
-// ============================================
-
-/**
- * Verificar se cliente já possui prontuário
- */
-export async function verificarProntuarioExistente(clienteId: string): Promise<boolean> {
-    const prontuario = await buscarProntuarioPorCliente(clienteId);
-    return prontuario !== null;
-}
+export { psicoterapiaServiceConfig } from './psicoterapia.config';
+export * from './ai.service';

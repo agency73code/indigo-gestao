@@ -1,6 +1,5 @@
 /**
  * Componente de Núcleo Familiar
- * Estilo Google Forms (igual Anamnese)
  */
 
 import { useState } from 'react';

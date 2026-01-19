@@ -1,6 +1,5 @@
 /**
  * Hook para impressão de prontuário psicológico
- * Baseado no useAnamnesePrint
  */
 
 import { useCallback, useRef } from 'react';

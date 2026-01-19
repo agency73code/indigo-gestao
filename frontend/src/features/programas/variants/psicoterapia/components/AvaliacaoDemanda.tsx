@@ -1,6 +1,5 @@
 /**
  * Componente de Avaliação da Demanda
- * Estilo Google Forms
  */
 
 import { Plus, Trash2 } from 'lucide-react';

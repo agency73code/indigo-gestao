@@ -86,7 +86,7 @@ export interface AvaliacaoDemanda {
 }
 
 // ============================================
-// ARQUIVO DA EVOLUÇÃO
+// ARQUIVO DA EVOLUÇÃO (padrão similar a Atas)
 // ============================================
 
 export interface ArquivoEvolucao {
@@ -97,8 +97,18 @@ export interface ArquivoEvolucao {
     tamanho: number;
     url?: string;
     caminho?: string;
-    file?: File;
-    removed?: boolean;
+    arquivoId?: string;  // ID do arquivo no storage (para construir URL de download)
+    file?: File;         // Arquivo local (upload)
+    removed?: boolean;   // Flag para remoção em edição
+}
+
+/**
+ * Input para upload de anexo (padrão Atas)
+ */
+export interface AnexoInput {
+    id: string;          // UUID temporário para tracking no form
+    nome: string;        // Nome customizado pelo usuário
+    file: File;          // Arquivo original
 }
 
 // ============================================

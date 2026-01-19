@@ -1,6 +1,5 @@
 /**
  * Página de Detalhe do Prontuário Psicológico
- * Layout profissional com melhor UX/UI
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';

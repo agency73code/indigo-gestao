@@ -1,6 +1,5 @@
 /**
  * Página de Cadastro de Prontuário Psicológico
- * Similar ao layout da Anamnese
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -14,9 +13,9 @@ import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { UnsavedChangesDialog } from '@/components/dialogs/UnsavedChangesDialog';
 import {
     CabecalhoIdentificacao,
-    InformacoesEducacionais,
+    InformacoesEducacionaisSection,
     NucleoFamiliar,
-    AvaliacaoDemanda,
+    AvaliacaoDemandaSection,
     ObjetivosTrabalho,
     AvaliacaoAtendimento,
 } from '../components';
@@ -193,7 +192,7 @@ export default function CadastrarProntuarioPage() {
                 );
             case 2:
                 return (
-                    <InformacoesEducacionais
+                    <InformacoesEducacionaisSection
                         data={formData}
                         onChange={setFormData}
                         fieldErrors={fieldErrors}
@@ -211,7 +210,7 @@ export default function CadastrarProntuarioPage() {
                 );
             case 4:
                 return (
-                    <AvaliacaoDemanda
+                    <AvaliacaoDemandaSection
                         data={formData}
                         onChange={setFormData}
                         fieldErrors={fieldErrors}
