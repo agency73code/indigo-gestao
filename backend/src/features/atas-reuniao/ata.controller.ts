@@ -89,7 +89,8 @@ export async function list(req: Request, res: Response, next: NextFunction) {
 
         const parsed = listAtaSchema.parse(req.query);
 
-        const result = await AtaService.list(req.user.id, {
+        const therapistId = parsed.terapeuta_id ?? req.user.id
+        const result = await AtaService.list(therapistId, {
             q: parsed.q,
             finalidade: parsed.finalidade,
             dataInicio: parsed.data_inicio,
