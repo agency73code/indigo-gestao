@@ -121,8 +121,8 @@ ${params.links.map(l => `• ${l.titulo}\n  ${l.url}`).join('\n\n')}`
     return summary.trim();
 }
 
-export async function list(userId: string, filters: AtaListFilters = {}): Promise<AtaListResult> {
-    if (!userId) {
+export async function list(therapistId: string | null, filters: AtaListFilters = {}): Promise<AtaListResult> {
+    if (therapistId === undefined) {
         throw new AppError('AUTH_REQUIRED', 'Usuário não autenticado.', 401)
     }
 
@@ -131,7 +131,7 @@ export async function list(userId: string, filters: AtaListFilters = {}): Promis
     const orderBy = filters.orderBy === 'oldest' ? 'asc' : 'desc';
 
     const where: Prisma.ata_reuniaoWhereInput = {
-        terapeuta_id: userId,
+        ...(therapistId ? { terapeuta_id: therapistId } : {}),
         ...(filters.finalidade ? { finalidade: filters.finalidade } : {}),
         ...(filters.clienteId ? { cliente_id: filters.clienteId } : {}),
         ...(filters.dataInicio || filters.dataFim

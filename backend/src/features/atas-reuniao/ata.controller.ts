@@ -5,6 +5,7 @@ import { AIServiceError } from '../ai/ai.errors.js';
 import { ataIdSchema, createAtaPayloadSchema, gerarResumoSchema, listAtaSchema, listTherapistSchema, updateAtaPayloadSchema } from './ata.schema.js';
 import * as AtaService from './ata.service.js';
 import { parseAtaAnexos } from './utils/ata.anexos.js';
+import { getAccessLevel } from '../../utils/getAccessLevel.js';
 
 /**
  * POST /atas-reuniao/ai/summary
@@ -88,9 +89,12 @@ export async function list(req: Request, res: Response, next: NextFunction) {
         }
 
         const parsed = listAtaSchema.parse(req.query);
+        const accessLevel = getAccessLevel(req.user.perfil_acesso);
+        const canSeeAllTherapists = accessLevel >= 5;
+        const therapistId = parsed.terapeuta_id ?? req.user.id;
+        const therapistScopeId = parsed.terapeuta_id === undefined && canSeeAllTherapists ? null : therapistId;
 
-        const therapistId = parsed.terapeuta_id ?? req.user.id
-        const result = await AtaService.list(therapistId, {
+        const result = await AtaService.list(therapistScopeId, {
             q: parsed.q,
             finalidade: parsed.finalidade,
             dataInicio: parsed.data_inicio,
