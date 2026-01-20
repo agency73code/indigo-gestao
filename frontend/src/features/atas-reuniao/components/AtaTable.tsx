@@ -55,13 +55,8 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
+import { FiltersPopover } from '@/components/ui/filters-popover';
+import type { DateRangeValue } from '@/ui/date-range-picker-field';
 
 import {
     type AtaReuniao,
@@ -80,7 +75,6 @@ import {
     generateWhatsAppSummary,
 } from '../services/atas.service';
 
-import { DateRangePickerField, type DateRangeValue } from '@/ui/date-range-picker-field';
 import { cn } from '@/lib/utils';
 import { calcularTotaisHoras, formatarHorasFaturadas, calcularDuracaoMinutos } from '../utils/calcularHorasFaturadas';
 import { formatYmdToPtBr } from '@/lib/api';
@@ -298,28 +292,30 @@ function DetailPanel({
 
                 {/* Conteúdo */}
                 <div className="flex-1 overflow-y-auto">
-                    <div className="p-6 pt-0 space-y-6">
+                    <div className="p-6 pt-2 space-y-6">
                         {/* Título e Status */}
-                        <div>
-                            <div className="flex items-start justify-between gap-4 mb-4">
-                                <h2 className="text-xl leading-tight font-sora font-light">
-                                    {finalidadeLabel}
-                                </h2>
-                                <Badge 
-                                    variant={ata.status === 'finalizada' ? 'default' : 'secondary'}
-                                    className="shrink-0"
-                                >
-                                    {ata.status === 'finalizada' ? 'Finalizada' : 'Rascunho'}
-                                </Badge>
-                            </div>
+                        <div className="flex items-start justify-between gap-4">
+                            <h2 className="text-xl leading-tight font-sora font-light">
+                                {finalidadeLabel}
+                            </h2>
+                            <Badge 
+                                variant={ata.status === 'finalizada' ? 'default' : 'secondary'}
+                                className="shrink-0"
+                            >
+                                {ata.status === 'finalizada' ? 'Finalizada' : 'Rascunho'}
+                            </Badge>
                         </div>
 
-                        {/* Informações Principais */}
-                        <div className="space-y-4">
+                        {/* Informações Principais - Grid de propriedades */}
+                        <div className="space-y-5">
                             <DetailRow 
                                 icon={<Users className="h-4 w-4" />} 
                                 label="Responsável"
                                 value={ata.cabecalho.terapeutaNome}
+                                subtitle={[
+                                    ata.cabecalho.profissao,
+                                    ata.cabecalho.conselhoNumero && `${ata.cabecalho.conselhoTipo || 'CRP'} ${ata.cabecalho.conselhoNumero}`
+                                ].filter(Boolean).join(' • ') || undefined}
                             />
                             <DetailRow 
                                 icon={<Calendar className="h-4 w-4" />} 
@@ -349,26 +345,26 @@ function DetailPanel({
 
                         {/* Participantes */}
                         <div>
-                            <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
-                                <Users className="h-4 w-4" />
-                                Participantes
-                                <Badge variant="outline" className="ml-auto">
+                            <div className="flex items-center gap-2 mb-3">
+                                <div className="flex items-center justify-center w-5 h-5 text-muted-foreground">
+                                    <Users className="h-4 w-4" />
+                                </div>
+                                <h3 className="text-sm font-medium">Participantes</h3>
+                                <span className="ml-auto flex items-center justify-center w-6 h-6 text-xs font-medium border rounded-md bg-background">
                                     {ata.participantes.length}
-                                </Badge>
-                            </h3>
-                            <div className="space-y-2">
+                                </span>
+                            </div>
+                            <div className="space-y-2 pl-[28px]">
                                 {ata.participantes.map((p) => (
                                     <div 
                                         key={p.id}
-                                        className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
+                                        className="py-2.5 border-b border-border/50 last:border-b-0"
                                     >
-                                        <div>
-                                            <p className="text-sm font-medium">{p.nome}</p>
-                                            <p className="text-xs text-muted-foreground">
-                                                {TIPO_PARTICIPANTE_LABELS[p.tipo]}
-                                                {p.descricao && ` • ${p.descricao}`}
-                                            </p>
-                                        </div>
+                                        <p className="text-sm font-medium leading-tight">{p.nome}</p>
+                                        <p className="text-xs text-muted-foreground mt-0.5">
+                                            {TIPO_PARTICIPANTE_LABELS[p.tipo]}
+                                            {p.descricao && ` • ${p.descricao}`}
+                                        </p>
                                     </div>
                                 ))}
                             </div>
@@ -379,19 +375,21 @@ function DetailPanel({
                             <>
                                 <Separator />
                                 <div>
-                                    <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
-                                        <FileText className="h-4 w-4" />
-                                        Prévia do Conteúdo
-                                    </h3>
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <div className="flex items-center justify-center w-5 h-5 text-muted-foreground">
+                                            <FileText className="h-4 w-4" />
+                                        </div>
+                                        <h3 className="text-sm font-medium">Prévia do Conteúdo</h3>
+                                    </div>
                                     <div 
-                                        className="text-sm text-muted-foreground line-clamp-6 prose prose-sm max-w-none"
+                                        className="text-sm text-muted-foreground line-clamp-6 prose prose-sm max-w-none pl-[28px]"
                                         dangerouslySetInnerHTML={{ 
                                             __html: ata.conteudo.substring(0, 500) + (ata.conteudo.length > 500 ? '...' : '')
                                         }}
                                     />
                                     <Button 
                                         variant="link" 
-                                        className="px-0 h-auto mt-2 text-primary"
+                                        className="px-0 h-auto mt-2 text-primary ml-[28px]"
                                         onClick={onView}
                                     >
                                         Ver conteúdo completo →
@@ -405,11 +403,13 @@ function DetailPanel({
                             <>
                                 <Separator />
                                 <div>
-                                    <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
-                                        <Sparkles className="h-4 w-4 text-primary" />
-                                        Resumo IA
-                                    </h3>
-                                    <p className="text-sm text-muted-foreground bg-primary/5 p-3 rounded-lg border border-primary/10">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <div className="flex items-center justify-center w-5 h-5 text-primary">
+                                            <Sparkles className="h-4 w-4" />
+                                        </div>
+                                        <h3 className="text-sm font-medium">Resumo IA</h3>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground bg-primary/5 p-3 rounded-lg border border-primary/10 ml-[28px]">
                                         {ata.resumoIA}
                                     </p>
                                 </div>
@@ -453,15 +453,18 @@ function DetailPanel({
     );
 }
 
-function DetailRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+function DetailRow({ icon, label, value, subtitle }: { icon: React.ReactNode; label: string; value: string; subtitle?: string }) {
     return (
-        <div className="flex items-center gap-3">
-            <div className="text-muted-foreground shrink-0">
+        <div className="flex items-start gap-3">
+            <div className="flex items-center justify-center w-5 h-5 mt-0.5 text-muted-foreground shrink-0">
                 {icon}
             </div>
-            <div className="flex-1 min-w-0">
-                <p className="text-xs text-muted-foreground">{label}</p>
-                <p className="text-sm font-medium truncate">{value}</p>
+            <div className="flex-1 min-w-0 space-y-0.5">
+                <p className="text-xs text-muted-foreground leading-none">{label}</p>
+                <p className="text-sm font-medium leading-tight">{value}</p>
+                {subtitle && (
+                    <p className="text-xs text-muted-foreground leading-tight">{subtitle}</p>
+                )}
             </div>
         </div>
     );
@@ -939,47 +942,60 @@ export function AtaTable() {
 
                 {/* Filtros - Lado Direito */}
                 <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap ml-auto">
-                    {/* Filtro de Terapeuta */}
-                    <Select
-                        value={terapeutaIdFilter ?? 'all'}
-                        onValueChange={(value) => updateFilters({ terapeutaId: value === 'all' ? undefined : value })}
-                        disabled={loadingTerapeutas}
-                    >
-                        <SelectTrigger className="w-[200px] h-10">
-                            <SelectValue placeholder="Terapeuta" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">Todos os terapeutas</SelectItem>
-                            {terapeutas.map((terapeuta) => (
-                                <SelectItem key={terapeuta.id} value={terapeuta.id}>
-                                    {terapeuta.nome}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-
-                    {/* Filtro de Período */}
-                    <DateRangePickerField
-                        value={dateRangeValue}
-                        onChange={handleDateRangeChange}
-                        placeholder="Período"
-                        triggerClassName="min-w-[240px] h-9"
-                        showClear={true}
+                    <FiltersPopover
+                        filters={[
+                            {
+                                type: 'select',
+                                key: 'terapeutaId',
+                                label: 'Terapeuta',
+                                placeholder: 'Todos os terapeutas',
+                                loading: loadingTerapeutas,
+                                options: [
+                                    { value: 'all', label: 'Todos os terapeutas' },
+                                    ...terapeutas.map(t => ({ value: t.id, label: t.nome }))
+                                ],
+                            },
+                            {
+                                type: 'date-range',
+                                key: 'periodo',
+                                label: 'Período',
+                                placeholder: 'Selecione o período',
+                            },
+                            {
+                                type: 'select',
+                                key: 'orderBy',
+                                label: 'Ordenar por',
+                                options: [
+                                    { value: 'recent', label: 'Mais recente' },
+                                    { value: 'oldest', label: 'Mais antigo' },
+                                ],
+                            },
+                        ]}
+                        values={{
+                            terapeutaId: terapeutaIdFilter ?? 'all',
+                            periodo: dateRangeValue,
+                            orderBy: orderBy,
+                        }}
+                        onChange={(key, value) => {
+                            if (key === 'terapeutaId') {
+                                updateFilters({ terapeutaId: value === 'all' ? undefined : value as string });
+                            } else if (key === 'periodo') {
+                                handleDateRangeChange(value as DateRangeValue);
+                            } else if (key === 'orderBy') {
+                                updateFilters({ orderBy: value as 'recent' | 'oldest' });
+                            }
+                        }}
+                        onClear={() => {
+                            updateFilters({ 
+                                terapeutaId: undefined, 
+                                orderBy: 'recent',
+                                dateFrom: undefined,
+                                dateTo: undefined,
+                            });
+                        }}
+                        buttonText="Filtros"
+                        showBadge={true}
                     />
-
-                    {/* Ordenação */}
-                    <Select
-                        value={orderBy}
-                        onValueChange={(value) => updateFilters({ orderBy: value as 'recent' | 'oldest' })}
-                    >
-                        <SelectTrigger className="w-[150px] h-10">
-                            <SelectValue placeholder="Ordenar" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="recent">Mais recente</SelectItem>
-                            <SelectItem value="oldest">Mais antigo</SelectItem>
-                        </SelectContent>
-                    </Select>
 
                     <Button onClick={() => navigate('/app/atas/nova')} className="gap-2 shrink-0 h-9 ">
                         <Plus className="h-4 w-4" />
@@ -1050,19 +1066,19 @@ export function AtaTable() {
                                     <div
                                         key={ata.id}
                                         className={cn(
-                                            "p-4 border rounded-lg cursor-pointer transition-all",
-                                            "hover:bg-accent/50 hover:border-accent",
+                                            "p-4 border rounded-xl cursor-pointer transition-all",
+                                            "hover:bg-accent/50 hover:border-accent hover:shadow-sm",
                                             selectedAta?.id === ata.id && detailPanelOpen && "bg-accent border-primary"
                                         )}
                                         onClick={() => handleSelectAta(ata)}
                                     >
-                                        <div className="flex items-start gap-3">
-                                            {/* Icon */}
+                                        <div className="flex items-center gap-3">
+                                            {/* Icon - Centered and aligned */}
                                             <div className={cn(
-                                                "p-2 rounded-lg shrink-0",
+                                                "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
                                                 ata.modalidade === 'online' 
-                                                    ? "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400" 
-                                                    : "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400"
+                                                    ? "bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400 ring-1 ring-blue-200 dark:ring-blue-800" 
+                                                    : "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 ring-1 ring-emerald-200 dark:ring-emerald-800"
                                             )}>
                                                 {ata.modalidade === 'online' ? (
                                                     <Video className="h-4 w-4" />
@@ -1073,28 +1089,26 @@ export function AtaTable() {
 
                                             {/* Content */}
                                             <div className="flex-1 min-w-0">
-                                                <div className="flex items-center justify-between gap-2 mb-1">
-                                                    <h4 className="font-medium text-sm truncate">
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <h4 className="font-medium text-sm truncate leading-tight">
                                                         {finalidadeLabel}
                                                     </h4>
                                                     <Badge 
                                                         variant={ata.status === 'finalizada' ? 'default' : 'secondary'}
-                                                        className="shrink-0 text-xs"
+                                                        className="shrink-0 text-xs h-5"
                                                     >
                                                         {ata.status === 'finalizada' ? 'Finalizada' : 'Rascunho'}
                                                     </Badge>
                                                 </div>
                                                 
-                                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                                    <span className="flex items-center gap-1">
-                                                        <Calendar className="h-3 w-3" />
-                                                        {dataFormatada}
-                                                    </span>
-                                                    <span>•</span>
+                                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+                                                    <Calendar className="h-3 w-3 shrink-0" />
+                                                    <span>{dataFormatada}</span>
+                                                    <span className="text-muted-foreground/50">•</span>
                                                     <span>{ata.horarioInicio} - {ata.horarioFim}</span>
                                                 </div>
                                                 
-                                                <p className="text-xs text-muted-foreground mt-1 truncate">
+                                                <p className="text-xs text-muted-foreground mt-0.5 truncate">
                                                     {ata.cabecalho.terapeutaNome}
                                                 </p>
                                             </div>

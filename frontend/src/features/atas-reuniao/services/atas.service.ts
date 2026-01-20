@@ -15,6 +15,27 @@ import { atasConfig } from './atas.config';
 // HELPERS - MAPEAMENTO API ↔ FRONTEND
 // ============================================
 
+/** Mapeamento de área de atuação para sigla do conselho profissional */
+const AREA_PARA_SIGLA_CONSELHO: Record<string, string> = {
+    'Fisioterapia': 'CREFITO',
+    'Terapia Ocupacional': 'CREFITO',
+    'Fonoaudiologia': 'CRFa',
+    'Psicologia': 'CRP',
+    'Neuropsicologia': 'CRP',
+    'Psicopedagogia': 'CRP',
+    'Terapia ABA': 'CRP',
+    'Musicoterapia': 'CBMT',
+    'Nutrição': 'CRN',
+    'Enfermagem': 'COREN',
+    'Medicina': 'CRM',
+};
+
+/** Obtém a sigla do conselho com base na área de atuação */
+function getSiglaConselho(areaAtuacao: string | undefined): string {
+    if (!areaAtuacao) return 'CRP';
+    return AREA_PARA_SIGLA_CONSELHO[areaAtuacao] || 'CRP';
+}
+
 /** Converte resposta do backend (snake_case) para frontend (camelCase) */
 function mapAtaFromApi(data: any): AtaReuniao {
     return {
@@ -46,7 +67,7 @@ function mapAtaFromApi(data: any): AtaReuniao {
             terapeutaId: data.terapeuta_id,
             terapeutaNome: data.terapeuta?.nome || '',
             conselhoNumero: data.terapeuta?.registro_profissional?.[0]?.numero_conselho,
-            conselhoTipo: data.terapeuta?.registro_profissional?.[0]?.area_atuacao?.nome,
+            conselhoTipo: getSiglaConselho(data.terapeuta?.registro_profissional?.[0]?.area_atuacao?.nome),
             profissao: data.terapeuta?.registro_profissional?.[0]?.area_atuacao?.nome,
             cargo: data.terapeuta?.registro_profissional?.[0]?.cargo?.nome,
         },
@@ -367,7 +388,7 @@ export async function listTerapeutas(): Promise<TerapeutaOption[]> {
         nome: t.nome,
         especialidade: t.registro_profissional?.[0]?.area_atuacao?.nome,
         cargo: t.registro_profissional?.[0]?.cargo?.nome,
-        conselho: t.registro_profissional?.[0]?.area_atuacao?.nome,
+        conselho: getSiglaConselho(t.registro_profissional?.[0]?.area_atuacao?.nome),
         registroConselho: t.registro_profissional?.[0]?.numero_conselho,
     }));
 }
@@ -383,7 +404,7 @@ export async function getTerapeutaLogado(userId: string): Promise<CabecalhoAta> 
         terapeutaId: t.id,
         terapeutaNome: t.nome,
         conselhoNumero: registro?.numero_conselho,
-        conselhoTipo: registro?.area_atuacao?.nome,
+        conselhoTipo: getSiglaConselho(registro?.area_atuacao?.nome),
         profissao: registro?.area_atuacao?.nome,
         cargo: registro?.cargo?.nome,
     };
