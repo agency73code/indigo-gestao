@@ -13,3 +13,14 @@ export const anamneseIdSchema = z.object({
         .regex(/^\d+$/, 'ID deve ser numérico')
         .transform((val) => Number(val)),
 });
+
+export const anamneseArquivoIdSchema = z.object({
+    id: z
+        .string()
+        .regex(/^\d+$/, 'ID deve ser numérico')
+        .transform((val) => Number(val)),
+    arquivoId: z
+        .string()
+        .regex(/^\d+$/, 'ID do arquivo deve ser numérico')
+        .transform((val) => Number(val)),
+});

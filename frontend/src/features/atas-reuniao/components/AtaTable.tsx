@@ -1,7 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { format, parseISO } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import {
     FileText,
@@ -85,6 +83,7 @@ import {
 import { DateRangePickerField, type DateRangeValue } from '@/ui/date-range-picker-field';
 import { cn } from '@/lib/utils';
 import { calcularTotaisHoras, formatarHorasFaturadas, calcularDuracaoMinutos } from '../utils/calcularHorasFaturadas';
+import { formatYmdToPtBr } from '@/lib/api';
 
 // Tipo estendido para filtros internos
 type InternalFilters = Partial<AtaListFilters> & { 
@@ -272,7 +271,7 @@ function DetailPanel({
 }: DetailPanelProps) {
     if (!ata) return null;
 
-    const dataFormatada = format(parseISO(ata.data), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+    const dataFormatada = formatYmdToPtBr(ata.data);
     
     const finalidadeLabel = ata.finalidade === 'outros'
         ? ata.finalidadeOutros
@@ -519,6 +518,7 @@ export function AtaTable() {
         q: searchParams.get('q') ?? undefined,
         dataInicio: dateFrom,
         dataFim: dateTo,
+        terapeutaId: terapeutaIdFilter,
         orderBy,
         page: Number(searchParams.get('page')) || 1,
         pageSize: 100,
@@ -650,6 +650,7 @@ export function AtaTable() {
 
     const loadData = useCallback(async () => {
         setLoading(true);
+
         try {
             const response = await listAtas(filters);
             setAtas(response.items);
@@ -660,7 +661,7 @@ export function AtaTable() {
             setLoading(false);
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [filters.q, filters.finalidade, filters.dataInicio, filters.dataFim, filters.orderBy]);
+    }, [filters.q, filters.finalidade, filters.dataInicio, filters.dataFim, filters.orderBy, filters.terapeutaId]);
 
     useEffect(() => {
         loadData();
@@ -1040,7 +1041,7 @@ export function AtaTable() {
                     ) : (
                         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3">
                             {filteredAtas.map((ata) => {
-                                const dataFormatada = format(parseISO(ata.data), "dd MMM yyyy", { locale: ptBR });
+                                const dataFormatada = formatYmdToPtBr(ata.data);
                                 const finalidadeLabel = ata.finalidade === 'outros'
                                     ? ata.finalidadeOutros
                                     : FINALIDADE_LABELS[ata.finalidade];
