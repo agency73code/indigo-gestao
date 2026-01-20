@@ -3,6 +3,7 @@ import type { Router as ExpressRouter } from 'express';
 import * as OlpController from '../features/olp/olp.controller.js';
 import { auth } from '../middleware/auth.middleware.js';
 import { upload } from '../config/multer.js';
+import * as psychotherapy from '../features/olp/psychotherapy/psychotherapy.controller.js';
 
 const router: ExpressRouter = Router();
 
@@ -34,6 +35,9 @@ router.post('/physiotherapy/sessions/calculatePhysioKpis', OlpController.physioK
 // Musictherapy
 router.post('/musictherapy/programs/:programId/sessions', upload.any(), OlpController.createAreaSession);
 router.post('/musictherapy/sessions/calculateMusicKpis', OlpController.musicKpis);
-router.get('/musictherapy/programs/graficMusicDetails', OlpController.getMusicTherapyEvolutionChart)
+router.get('/musictherapy/programs/graficMusicDetails', OlpController.getMusicTherapyEvolutionChart);
+
+// psychotherapy
+router.post('/prontuarios-psicologicos', psychotherapy.createPsychotherapyRecord)
 
 export default router;

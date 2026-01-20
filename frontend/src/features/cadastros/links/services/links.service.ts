@@ -373,6 +373,7 @@ export async function getAllLinks(filters?: LinkFilters): Promise<PatientTherapi
   }
   
   const json = await res.json();
+  console.log(json)
   return json as PatientTherapistLink[];
 }
 

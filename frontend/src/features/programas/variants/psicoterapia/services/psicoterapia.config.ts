@@ -11,11 +11,11 @@ const API_BASE = import.meta.env.VITE_API_URL || '';
 
 // ✅ Mock CRUD ATIVADO para desenvolvimento
 // Para desabilitar: VITE_USE_MOCK_PSICOTERAPIA=false
-const USE_MOCK_CRUD = import.meta.env.VITE_USE_MOCK_PSICOTERAPIA !== 'false';
+const USE_MOCK_CRUD = false;
 
 // Mock IA DESATIVADO por padrão (requer chamada ao backend)
 // Para ativar mock IA: VITE_USE_MOCK_PSICOTERAPIA_IA=true
-const USE_MOCK_IA = import.meta.env.VITE_USE_MOCK_PSICOTERAPIA_IA === 'true';
+const USE_MOCK_IA = false;
 
 // ============================================
 // EXPORTS
@@ -28,9 +28,9 @@ export const psicoterapiaServiceConfig = {
     /** @deprecated Use useMockCrud */
     get useMock() { return USE_MOCK_CRUD; },
     endpoints: {
-        prontuarios: `${API_BASE}/prontuarios-psicologicos`,
-        evolucoes: (prontuarioId: string) => `${API_BASE}/prontuarios-psicologicos/${prontuarioId}/evolucoes`,
-        porCliente: (clienteId: string) => `${API_BASE}/prontuarios-psicologicos/cliente/${clienteId}`,
+        prontuarios: `${API_BASE}/ocp/prontuarios-psicologicos`,
+        evolucoes: (prontuarioId: string) => `${API_BASE}/ocp/prontuarios-psicologicos/${prontuarioId}/evolucoes`,
+        porCliente: (clienteId: string) => `${API_BASE}/ocp/prontuarios-psicologicos/cliente/${clienteId}`,
         anamneses: `${API_BASE}/anamneses`,
         anamneseDetalhe: (id: string) => `${API_BASE}/anamneses/${id}`,
     },
