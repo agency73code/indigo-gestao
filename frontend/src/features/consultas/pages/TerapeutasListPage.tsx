@@ -1,13 +1,14 @@
-import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense, useMemo } from 'react';
 import { Button } from '@/ui/button';
-import { ChevronLeft, ChevronRight, Plus, Link as LinkIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Link as LinkIcon, Users } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import ToolbarConsulta from '../components/ToolbarConsulta';
-import TherapistTable from '../components/TherapistTable';
+import TherapistTable, { type TherapistColumnFilters, type TherapistColumnFilterOptions } from '../components/TherapistTable';
 import type { Therapist, SortState, PaginationState } from '../types/consultas.types';
 import { listTherapists } from '../services/therapist.service';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 import { useAbility } from '@/features/auth/abilities/useAbility';
+import type { FilterOption } from '@/components/ui/column-header-filter';
 
 // Lazy load do Drawer (só carrega quando necessário)
 const TherapistProfileDrawer = lazy(() => import('../components/TherapistProfileDrawer'));
@@ -50,6 +51,11 @@ export default function TerapeutasListPage() {
     const currentPage = Number(searchParams.get('page')) || 1;
     const sortParam = searchParams.get('sort') || 'nome_asc';
     
+    // Filtros de coluna da URL
+    const statusFilter = searchParams.get('status') || undefined;
+    const especialidadeFilter = searchParams.get('especialidade') || undefined;
+    const cargoFilter = searchParams.get('cargo') || undefined;
+    
     // Parsear sort (formato: "campo_direção")
     const [sortField, sortDirection] = sortParam.split('_') as [string, 'asc' | 'desc'];
     const sortState: SortState = {
@@ -57,38 +63,163 @@ export default function TerapeutasListPage() {
         direction: sortDirection,
     };
 
+    // Estado para armazenar TODOS os dados (para filtragem local)
+    const [allTherapists, setAllTherapists] = useState<Therapist[]>([]);
+
     // ✅ NOVO: Carregar dados quando URL mudar
     useEffect(() => {
         const loadTherapists = async () => {
             setLoading(true);
             setError(null);
             try {
-                // Chamar API com filtros da URL
+                // Buscar TODOS os terapeutas (pageSize alto para cache local)
                 const response = await listTherapists({
                     q: searchTerm || undefined,
-                    page: currentPage,
-                    pageSize: pagination.pageSize,
+                    page: 1,
+                    pageSize: 9999, // Busca todos para filtrar localmente
                     sort: sortParam,
                 });
 
-                // Atualizar estado com dados do backend
-                setTherapists(response.items);
-                setPagination({
-                    page: response.page,
-                    pageSize: response.pageSize,
-                    total: response.total,
-                });
+                // Armazenar TODOS os dados para filtragem local
+                setAllTherapists(response.items);
             } catch (error) {
                 console.error('Erro ao carregar terapeutas:', error);
                 setError(error instanceof Error ? error.message : 'Erro ao carregar terapeutas');
-                setTherapists([]);
+                setAllTherapists([]);
             } finally {
                 setLoading(false);
             }
         };
 
         loadTherapists();
-    }, [searchParams]); // ✅ Reage a mudanças na URL
+    }, [searchTerm, sortParam]); // Recarrega quando busca ou ordenação muda
+
+    // ✅ Aplicar filtros de coluna LOCALMENTE
+    const filteredTherapists = useMemo(() => {
+        let result = allTherapists;
+
+        // Filtro por status
+        if (statusFilter) {
+            result = result.filter(t => t.status === statusFilter);
+        }
+
+        // Filtro por especialidade
+        if (especialidadeFilter) {
+            result = result.filter(t => 
+                t.especialidade === especialidadeFilter ||
+                t.profissional?.especialidades?.includes(especialidadeFilter)
+            );
+        }
+
+        // Filtro por cargo
+        if (cargoFilter) {
+            result = result.filter(t => t.cargo === cargoFilter);
+        }
+
+        return result;
+    }, [allTherapists, statusFilter, especialidadeFilter, cargoFilter]);
+
+    // ✅ Paginar os resultados filtrados
+    const paginatedTherapists = useMemo(() => {
+        const startIndex = (currentPage - 1) * pagination.pageSize;
+        return filteredTherapists.slice(startIndex, startIndex + pagination.pageSize);
+    }, [filteredTherapists, currentPage, pagination.pageSize]);
+
+    // ✅ Atualizar dados exibidos e paginação
+    useEffect(() => {
+        setTherapists(paginatedTherapists);
+        setPagination(prev => ({
+            ...prev,
+            total: filteredTherapists.length,
+            page: currentPage,
+        }));
+    }, [paginatedTherapists, filteredTherapists.length, currentPage]);
+
+    // ✅ Gerar opções de filtros baseadas nos dados
+    const statusOptions = useMemo((): FilterOption[] => {
+        const countMap = new Map<string, number>();
+        for (const therapist of allTherapists) {
+            const status = therapist.status || 'ATIVO';
+            countMap.set(status, (countMap.get(status) || 0) + 1);
+        }
+        return Array.from(countMap.entries())
+            .map(([value, count]) => ({ 
+                value, 
+                label: value === 'ATIVO' ? 'Ativo' : 'Inativo', 
+                count 
+            }))
+            .sort((a, b) => a.label.localeCompare(b.label));
+    }, [allTherapists]);
+
+    const especialidadeOptions = useMemo((): FilterOption[] => {
+        const countMap = new Map<string, number>();
+        for (const therapist of allTherapists) {
+            // Especialidade principal
+            if (therapist.especialidade) {
+                countMap.set(therapist.especialidade, (countMap.get(therapist.especialidade) || 0) + 1);
+            }
+            // Especialidades adicionais
+            for (const esp of therapist.profissional?.especialidades || []) {
+                if (esp !== therapist.especialidade) {
+                    countMap.set(esp, (countMap.get(esp) || 0) + 1);
+                }
+            }
+        }
+        return Array.from(countMap.entries())
+            .map(([value, count]) => ({ value, label: value, count }))
+            .sort((a, b) => a.label.localeCompare(b.label));
+    }, [allTherapists]);
+
+    const cargoOptions = useMemo((): FilterOption[] => {
+        const countMap = new Map<string, number>();
+        for (const therapist of allTherapists) {
+            if (therapist.cargo) {
+                countMap.set(therapist.cargo, (countMap.get(therapist.cargo) || 0) + 1);
+            }
+        }
+        return Array.from(countMap.entries())
+            .map(([value, count]) => ({ value, label: value, count }))
+            .sort((a, b) => a.label.localeCompare(b.label));
+    }, [allTherapists]);
+
+    // ✅ Opções de filtros para a tabela
+    const filterOptions: TherapistColumnFilterOptions = useMemo(() => ({
+        status: statusOptions,
+        especialidade: especialidadeOptions,
+        cargo: cargoOptions,
+    }), [statusOptions, especialidadeOptions, cargoOptions]);
+
+    // ✅ Valores ativos dos filtros
+    const columnFiltersValues: TherapistColumnFilters = useMemo(() => ({
+        status: statusFilter,
+        especialidade: especialidadeFilter,
+        cargo: cargoFilter,
+    }), [statusFilter, especialidadeFilter, cargoFilter]);
+
+    // ✅ Handler para mudança de filtros de coluna
+    const handleColumnFilterChange = useCallback((key: string, value: string | undefined) => {
+        const newParams = new URLSearchParams(searchParams);
+        
+        if (value) {
+            newParams.set(key, value);
+        } else {
+            newParams.delete(key);
+        }
+        
+        // Reset para página 1 ao filtrar
+        newParams.set('page', '1');
+        setSearchParams(newParams);
+    }, [searchParams, setSearchParams]);
+
+    // ✅ Limpar todos os filtros de coluna
+    const clearColumnFilters = useCallback(() => {
+        const newParams = new URLSearchParams(searchParams);
+        newParams.delete('status');
+        newParams.delete('especialidade');
+        newParams.delete('cargo');
+        newParams.set('page', '1');
+        setSearchParams(newParams);
+    }, [searchParams, setSearchParams]);
 
     // ✅ NOVO: Atualizar URL quando buscar
     const handleSearchChange = useCallback((value: string) => {
@@ -161,7 +292,7 @@ export default function TerapeutasListPage() {
                         <ToolbarConsulta
                             searchValue={searchTerm}
                             onSearchChange={handleSearchChange}
-                            placeholder="Buscar por nome, e-mail..."
+                            placeholder="Buscar por nome, cargo ou telefone..."
                             showFilters={false}
                         />
                     </div>
@@ -197,6 +328,9 @@ export default function TerapeutasListPage() {
                         onViewProfile={handleViewProfile}
                         sortState={sortState}
                         onSort={handleSort}
+                        columnFilters={columnFiltersValues}
+                        filterOptions={filterOptions}
+                        onFilterChange={handleColumnFilterChange}
                     />
 
                     {!loading && error && (
@@ -210,9 +344,14 @@ export default function TerapeutasListPage() {
             {!loading && pagination.total > 0 && (
                 <div className="flex-none">
                     <div className="rounded-[40px] px-4 py-2 flex items-center justify-between" style={{ backgroundColor: 'var(--header-bg)', borderColor: 'var(--table-border)' }}>
-                        {/* Dropdown de itens por página */}
+                        {/* Contador de resultados */}
                         <div className="flex items-center gap-2">
-                            
+                            <Users className="h-4 w-4" style={{ color: 'var(--table-text-secondary)' }} />
+                            <span className="text-sm" style={{ color: 'var(--table-text)' }}>
+                                <span className="font-normal">{therapists.length}</span>
+                                <span className="text-muted-foreground mx-1">de</span>
+                                <span className="font-normal">{allTherapists.length}</span>
+                            </span>
                         </div>
 
                         {/* Paginação */}
