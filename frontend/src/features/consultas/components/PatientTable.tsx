@@ -129,7 +129,7 @@ const PatientTable = memo(function PatientTable({
     columnFilters,
     filterOptions,
     onFilterChange,
-    totalCount,
+    // totalCount - disponível para uso futuro
 }: PatientTableProps) {
     const getStatusBadge = (status: string) => {
         const baseClasses = 'px-2 py-1 text-xs font-medium rounded-full';

@@ -255,16 +255,6 @@ export default function PacientesListPage() {
         setSearchParams(newParams);
     }, [searchParams, setSearchParams]);
 
-    // ✅ Limpar todos os filtros de coluna
-    const clearColumnFilters = useCallback(() => {
-        const newParams = new URLSearchParams(searchParams);
-        newParams.delete('status');
-        newParams.delete('especialidade');
-        newParams.delete('idade');
-        newParams.set('page', '1');
-        setSearchParams(newParams);
-    }, [searchParams, setSearchParams]);
-
     // ✅ NOVO: Atualizar URL quando buscar
     const handleSearchChange = useCallback((value: string) => {
         const newParams = new URLSearchParams(searchParams);
