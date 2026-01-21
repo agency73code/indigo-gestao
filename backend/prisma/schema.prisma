@@ -51,6 +51,7 @@ model cliente {
   dataSaida           DateTime?
   emailContato        String?             @unique
   senha_atualizada_em DateTime?
+  nivel_escolaridade String?
   arquivos            arquivos[]
   enderecos           cliente_endereco[]
   cuidadores          cuidador[]
