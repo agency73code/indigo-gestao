@@ -50,6 +50,11 @@ export interface UseAtaFormReturn {
     terapeutas: TerapeutaOption[];
     loadingTerapeutas: boolean;
 
+    // Seleção de área de atuação (quando múltiplas)
+    selectedAreaIndex: number;
+    hasMultipleAreas: boolean;
+    selectArea: (index: number) => void;
+
     // Estado de submit
     submitting: boolean;
     isEditing: boolean;
@@ -78,6 +83,26 @@ export interface UseAtaFormReturn {
 // ============================================
 // HELPERS
 // ============================================
+
+/** Mapeamento de área de atuação para sigla do conselho profissional */
+const AREA_PARA_SIGLA_CONSELHO: Record<string, string> = {
+    'Fisioterapia': 'CREFITO',
+    'Terapia Ocupacional': 'CREFITO',
+    'Fonoaudiologia': 'CRFa',
+    'Psicologia': 'CRP',
+    'Neuropsicologia': 'CRP',
+    'Psicopedagogia': 'CRP',
+    'Terapia ABA': 'CRP',
+    'Musicoterapia': 'CBMT',
+    'Nutrição': 'CRN',
+    'Enfermagem': 'COREN',
+    'Medicina': 'CRM',
+};
+
+function getSiglaConselho(areaAtuacao: string | undefined): string {
+    if (!areaAtuacao) return 'CRP';
+    return AREA_PARA_SIGLA_CONSELHO[areaAtuacao] || 'CRP';
+}
 
 const getInitialFormData = (): AtaFormData => ({
     data: format(new Date(), 'yyyy-MM-dd'),
@@ -110,6 +135,7 @@ export function useAtaForm({
     const [loadingTerapeutas, setLoadingTerapeutas] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
+    const [selectedAreaIndex, setSelectedAreaIndex] = useState(0);
 
     // Auto-save com sessionStorage
     const {
@@ -179,6 +205,34 @@ export function useAtaForm({
         }
         loadTerapeutas();
     }, []);
+
+    // ============================================
+    // SELEÇÃO DE ÁREA DE ATUAÇÃO
+    // ============================================
+
+    const hasMultipleAreas = (cabecalho?.dadosProfissionais?.length ?? 0) > 1;
+
+    const selectArea = useCallback(
+        (index: number) => {
+            if (!cabecalho?.dadosProfissionais?.[index]) return;
+            
+            const selected = cabecalho.dadosProfissionais[index];
+            setSelectedAreaIndex(index);
+            
+            // Atualiza o cabeçalho com a área selecionada
+            setCabecalho((prev) => {
+                if (!prev) return prev;
+                return {
+                    ...prev,
+                    profissao: selected.areaAtuacao,
+                    cargo: selected.cargo,
+                    conselhoNumero: selected.numeroConselho ?? undefined,
+                    conselhoTipo: getSiglaConselho(selected.areaAtuacao),
+                };
+            });
+        },
+        [cabecalho?.dadosProfissionais]
+    );
 
     // ============================================
     // HANDLERS - FORMULÁRIO
@@ -362,6 +416,11 @@ export function useAtaForm({
         // Dados auxiliares
         terapeutas,
         loadingTerapeutas,
+
+        // Seleção de área de atuação
+        selectedAreaIndex,
+        hasMultipleAreas,
+        selectArea,
 
         // Estado de submit
         submitting,

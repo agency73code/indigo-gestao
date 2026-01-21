@@ -53,6 +53,7 @@ export function AtaForm({ ataId, initialData, existingAnexos = [], onSuccess }: 
     // Hook que gerencia toda a lógica do formulário
     const {
         formData,
+        cabecalho,
         errors,
         terapeutas,
         loadingTerapeutas,
@@ -67,6 +68,10 @@ export function AtaForm({ ataId, initialData, existingAnexos = [], onSuccess }: 
         removeParticipante,
         selectTerapeutaParticipante,
         handleSubmit,
+        // Seleção de área de atuação
+        selectedAreaIndex,
+        hasMultipleAreas,
+        selectArea,
     } = useAtaForm({ ataId, initialData, onSuccess });
 
     // Estados locais para anexos com nome personalizado
@@ -117,6 +122,28 @@ export function AtaForm({ ataId, initialData, existingAnexos = [], onSuccess }: 
                 onSelect={handlePatientSelect}
                 autoOpenIfEmpty={false}
             />
+
+            {/* Seleção de Área de Atuação (quando múltiplas) */}
+            {hasMultipleAreas && cabecalho?.dadosProfissionais && (
+                <Card className="border-primary/20 bg-primary/5">
+                    <CardContent className="pt-4">
+                        <SelectFieldRadix
+                            label="Área de Atuação / Registro Profissional"
+                            value={String(selectedAreaIndex)}
+                            onValueChange={(v) => selectArea(Number(v))}
+                        >
+                            {cabecalho.dadosProfissionais.map((dp, idx) => (
+                                <SelectItem key={idx} value={String(idx)}>
+                                    {dp.areaAtuacao}{dp.cargo ? ` - ${dp.cargo}` : ''}{dp.numeroConselho ? ` (${dp.numeroConselho})` : ''}
+                                </SelectItem>
+                            ))}
+                        </SelectFieldRadix>
+                        <p className="text-xs text-muted-foreground mt-2">
+                            Você possui múltiplas áreas de atuação. Selecione qual será usada nesta ata.
+                        </p>
+                    </CardContent>
+                </Card>
+            )}
             
             {/* Dados da Reunião */}
             <Card>

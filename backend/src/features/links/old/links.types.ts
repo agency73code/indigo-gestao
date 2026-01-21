@@ -232,12 +232,12 @@ export interface TherapistSelectDTO {
     id: string;
     nome: string;
     avatarUrl: string | null;
-    dadosProfissionais: [Pick<TherapistProfessionalData, 'cargo' | 'areaAtuacao'>];
+    dadosProfissionais: Array<Pick<TherapistProfessionalData, 'cargo' | 'areaAtuacao'>>;
 }
 
 export interface TherapistListDTO {
     id: string;
     nome: string;
     avatarUrl: string | null;
-    dadosProfissionais: [TherapistProfessionalData];
+    dadosProfissionais: Array<TherapistProfessionalData>;
 }
