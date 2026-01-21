@@ -1,13 +1,14 @@
-import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense, useMemo } from 'react';
 import { Button } from '@/ui/button';
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Users } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import ToolbarConsulta from '../components/ToolbarConsulta';
-import PatientTable from '../components/PatientTable';
+import PatientTable, { type ColumnFilters, type ColumnFilterOptions } from '../components/PatientTable';
 import { listPatients } from '../services/patient.service';
 import { getAllLinks } from '@/features/cadastros/links/services/links.service';
 import type { Patient, SortState, PaginationState } from '../types/consultas.types';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
+import type { FilterOption } from '@/components/ui/column-header-filter';
 
 // Lazy load do Drawer (só carrega quando necessário)
 const PatientProfileDrawer = lazy(() => import('../components/PatientProfileDrawer'));
@@ -47,6 +48,11 @@ export default function PacientesListPage() {
     const currentPage = Number(searchParams.get('page')) || 1;
     const sortParam = searchParams.get('sort') || 'nome_asc';
     
+    // Filtros de coluna da URL
+    const statusFilter = searchParams.get('status') || undefined;
+    const especialidadeFilter = searchParams.get('especialidade') || undefined;
+    const idadeFilter = searchParams.get('idade') || undefined;
+    
     // Parsear sort (formato: "campo_direção")
     const [sortField, sortDirection] = sortParam.split('_') as [string, 'asc' | 'desc'];
     const sortState: SortState = {
@@ -54,18 +60,21 @@ export default function PacientesListPage() {
         direction: sortDirection,
     };
 
+    // Estado para armazenar TODOS os dados (para filtragem local)
+    const [allPatients, setAllPatients] = useState<Patient[]>([]);
+
     // ✅ NOVO: Carregar dados quando URL mudar
     useEffect(() => {
         const loadPatients = async () => {
             setLoading(true);
             setError(null);
             try {
-                // Buscar clientes e vínculos em paralelo
+                // Buscar TODOS os clientes (pageSize alto para cache local)
                 const [response, links] = await Promise.all([
                     listPatients({
                         q: searchTerm || undefined,
-                        page: currentPage,
-                        pageSize: pagination.pageSize,
+                        page: 1,
+                        pageSize: 9999, // Busca todos para filtrar localmente
                         sort: sortParam,
                     }),
                     // Buscar todos os vínculos ativos para obter as áreas de atendimento
@@ -91,24 +100,160 @@ export default function PacientesListPage() {
                         : []
                 }));
 
-                // Atualizar estado com dados do backend
-                setPatients(patientsWithAreas);
-                setPagination({
-                    page: response.page,
-                    pageSize: response.pageSize,
-                    total: response.total,
-                });
+                // Armazenar TODOS os dados para filtragem local
+                setAllPatients(patientsWithAreas);
             } catch (error) {
                 console.error('Erro ao carregar clientes:', error);
                 setError(error instanceof Error ? error.message : 'Erro ao carregar clientes');
-                setPatients([]);
+                setAllPatients([]);
             } finally {
                 setLoading(false);
             }
         };
 
         loadPatients();
-    }, [searchParams]); // ✅ Reage a mudanças na URL
+    }, [searchTerm, sortParam]); // Recarrega quando busca ou ordenação muda
+
+    // ✅ Calcular idade helper
+    const calculateAge = useCallback((birthDate: string | null | undefined): number | null => {
+        if (!birthDate) return null;
+        const today = new Date();
+        const birth = new Date(birthDate);
+        let age = today.getFullYear() - birth.getFullYear();
+        const monthDiff = today.getMonth() - birth.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+            age--;
+        }
+        return age;
+    }, []);
+
+    // ✅ Aplicar filtros de coluna LOCALMENTE
+    const filteredPatients = useMemo(() => {
+        let result = allPatients;
+
+        // Filtro por status
+        if (statusFilter) {
+            result = result.filter(p => p.status === statusFilter);
+        }
+
+        // Filtro por especialidade/área de atendimento
+        if (especialidadeFilter) {
+            result = result.filter(p => 
+                p.areasAtendimento?.includes(especialidadeFilter)
+            );
+        }
+
+        // Filtro por faixa de idade
+        if (idadeFilter) {
+            const [minStr, maxStr] = idadeFilter.split('-');
+            const min = parseInt(minStr);
+            const max = maxStr === '+' ? 200 : parseInt(maxStr);
+            
+            result = result.filter(p => {
+                const age = calculateAge(p.pessoa?.dataNascimento);
+                if (age === null) return false;
+                return age >= min && age <= max;
+            });
+        }
+
+        return result;
+    }, [allPatients, statusFilter, especialidadeFilter, idadeFilter, calculateAge]);
+
+    // ✅ Paginar os resultados filtrados
+    const paginatedPatients = useMemo(() => {
+        const startIndex = (currentPage - 1) * pagination.pageSize;
+        return filteredPatients.slice(startIndex, startIndex + pagination.pageSize);
+    }, [filteredPatients, currentPage, pagination.pageSize]);
+
+    // ✅ Atualizar dados exibidos e paginação
+    useEffect(() => {
+        setPatients(paginatedPatients);
+        setPagination(prev => ({
+            ...prev,
+            total: filteredPatients.length,
+            page: currentPage,
+        }));
+    }, [paginatedPatients, filteredPatients.length, currentPage]);
+
+    // ✅ Gerar opções de filtros baseadas nos dados
+    const statusOptions = useMemo((): FilterOption[] => {
+        const countMap = new Map<string, number>();
+        for (const patient of allPatients) {
+            const status = patient.status || 'ATIVO';
+            countMap.set(status, (countMap.get(status) || 0) + 1);
+        }
+        return Array.from(countMap.entries())
+            .map(([value, count]) => ({ 
+                value, 
+                label: value === 'ATIVO' ? 'Ativo' : 'Inativo', 
+                count 
+            }))
+            .sort((a, b) => a.label.localeCompare(b.label));
+    }, [allPatients]);
+
+    const especialidadeOptions = useMemo((): FilterOption[] => {
+        const countMap = new Map<string, number>();
+        for (const patient of allPatients) {
+            for (const area of patient.areasAtendimento || []) {
+                countMap.set(area, (countMap.get(area) || 0) + 1);
+            }
+        }
+        return Array.from(countMap.entries())
+            .map(([value, count]) => ({ value, label: value, count }))
+            .sort((a, b) => a.label.localeCompare(b.label));
+    }, [allPatients]);
+
+    const idadeOptions = useMemo((): FilterOption[] => {
+        const ranges = [
+            { value: '0-5', label: '0-5 anos', min: 0, max: 5 },
+            { value: '6-12', label: '6-12 anos', min: 6, max: 12 },
+            { value: '13-17', label: '13-17 anos', min: 13, max: 17 },
+            { value: '18-+', label: '18+ anos', min: 18, max: 200 },
+        ];
+        
+        const countMap = new Map<string, number>();
+        for (const patient of allPatients) {
+            const age = calculateAge(patient.pessoa?.dataNascimento);
+            if (age === null) continue;
+            const range = ranges.find(r => age >= r.min && age <= r.max);
+            if (range) {
+                countMap.set(range.value, (countMap.get(range.value) || 0) + 1);
+            }
+        }
+
+        return ranges
+            .filter(r => countMap.has(r.value))
+            .map(r => ({ value: r.value, label: r.label, count: countMap.get(r.value) }));
+    }, [allPatients, calculateAge]);
+
+    // ✅ Opções de filtros para a tabela
+    const filterOptions: ColumnFilterOptions = useMemo(() => ({
+        status: statusOptions,
+        especialidade: especialidadeOptions,
+        idade: idadeOptions,
+    }), [statusOptions, especialidadeOptions, idadeOptions]);
+
+    // ✅ Valores ativos dos filtros
+    const columnFiltersValues: ColumnFilters = useMemo(() => ({
+        status: statusFilter,
+        especialidade: especialidadeFilter,
+        idade: idadeFilter,
+    }), [statusFilter, especialidadeFilter, idadeFilter]);
+
+    // ✅ Handler para mudança de filtros de coluna
+    const handleColumnFilterChange = useCallback((key: string, value: string | undefined) => {
+        const newParams = new URLSearchParams(searchParams);
+        
+        if (value) {
+            newParams.set(key, value);
+        } else {
+            newParams.delete(key);
+        }
+        
+        // Reset para página 1 ao filtrar
+        newParams.set('page', '1');
+        setSearchParams(newParams);
+    }, [searchParams, setSearchParams]);
 
     // ✅ NOVO: Atualizar URL quando buscar
     const handleSearchChange = useCallback((value: string) => {
@@ -181,7 +326,7 @@ export default function PacientesListPage() {
                         <ToolbarConsulta
                             searchValue={searchTerm}
                             onSearchChange={handleSearchChange}
-                            placeholder="Busca..."
+                            placeholder="Buscar por nome, telefone ou responsável..."
                             showFilters={false}
                         />
                     </div>
@@ -207,6 +352,10 @@ export default function PacientesListPage() {
                         onViewProfile={handleViewProfile}
                         sortState={sortState}
                         onSort={handleSort}
+                        columnFilters={columnFiltersValues}
+                        filterOptions={filterOptions}
+                        onFilterChange={handleColumnFilterChange}
+                        totalCount={allPatients.length}
                     />
 
                     {!loading && error && (
@@ -219,10 +368,15 @@ export default function PacientesListPage() {
             {/* Footer com paginação - caixa separada */}
             {!loading && pagination.total > 0 && (
                 <div className="flex-none mt-2">
-                    <div className="rounded-[40px] px-2 py-2 flex items-center justify-between" style={{ backgroundColor: 'var(--header-bg)' }}>
-                        {/* Dropdown de itens por página */}
+                    <div className="rounded-[40px] px-4 py-2 flex items-center justify-between" style={{ backgroundColor: 'var(--header-bg)' }}>
+                        {/* Contador de registros */}
                         <div className="flex items-center gap-2">
-                            
+                            <Users className="h-4 w-4" style={{ color: 'var(--table-text-secondary)' }} />
+                            <span className="text-sm" style={{ color: 'var(--table-text)' }}>
+                                <span className="font-normal">{patients.length}</span>
+                                <span className="text-muted-foreground mx-1">de</span>
+                                <span className="font-normal">{allPatients.length}</span>
+                            </span>
                         </div>
 
                         {/* Paginação */}

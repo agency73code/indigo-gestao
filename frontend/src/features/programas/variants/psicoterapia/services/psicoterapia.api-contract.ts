@@ -97,9 +97,13 @@ export interface ApiProntuarioPsicologico {
 export interface ApiMembroNucleoFamiliar {
     id: string;
     nome: string;
+    cpf?: string;
     parentesco: string;
+    descricao_relacao?: string;
+    data_nascimento?: string;
     idade?: number | string;
     ocupacao?: string;
+    origem_banco?: boolean;
 }
 
 export interface ApiTerapiaPrevia {

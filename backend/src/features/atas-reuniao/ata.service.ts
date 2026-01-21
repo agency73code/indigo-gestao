@@ -1,12 +1,17 @@
-/**
- * Serviço de Atas de Reunião - Geração de Resumos via IA
- * @module features/atas-reuniao
- */
-
 import OpenAI from 'openai';
 import { PROMPTS_ATA, buildAtaPrompt } from '../ai/prompts/index.js';
 import { AIServiceError } from '../ai/ai.errors.js';
 import type { GerarResumoInput } from './ata.schema.js';
+import { prisma } from '../../config/database.js';
+import type { AtaListFilters, AtaListResult, CreateAtaServiceInput, UpdateAtaServiceInput } from './ata.types.js';
+import { toDateOnlyLocal } from './utils/toDateOnlyLocal.js';
+import { computeDurationMinutes } from './utils/computeDurationMinutes.js';
+import { ata_finalidade_reuniao, ata_status, Prisma } from '@prisma/client';
+import { R2GenericUploadService } from '../file/r2/r2-upload-generic.js';
+import { AppError } from '../../errors/AppError.js';
+import { calcularHorasFaturadasPorReuniao } from './utils/calcularHorasFaturadasPorReuniao.js';
+import { ataSelectBase, ataSelectList, mapAtaBase, mapAtaListItem } from './ata.selectors.js';
+import { deleteFromR2 } from '../file/files.service.js';
 
 // Labels para exibição
 const FINALIDADE_LABELS: Record<string, string> = {
@@ -117,9 +122,532 @@ ${params.links.map(l => `• ${l.titulo}\n  ${l.url}`).join('\n\n')}`
     return summary.trim();
 }
 
+export async function list(therapistId: string | null, filters: AtaListFilters = {}): Promise<AtaListResult> {
+    if (therapistId === undefined) {
+        throw new AppError('AUTH_REQUIRED', 'Usuário não autenticado.', 401)
+    }
+
+    const page = Math.max(filters.page ?? 1, 1);
+    const pageSize = Math.max(filters.pageSize ?? 10, 1);
+    const orderBy = filters.orderBy === 'oldest' ? 'asc' : 'desc';
+
+    const where: Prisma.ata_reuniaoWhereInput = {
+        ...(therapistId ? { terapeuta_id: therapistId } : {}),
+        ...(filters.finalidade ? { finalidade: filters.finalidade } : {}),
+        ...(filters.clienteId ? { cliente_id: filters.clienteId } : {}),
+        ...(filters.dataInicio || filters.dataFim
+            ? {
+                data: {
+                    ...(filters.dataInicio ? { gte: new Date(filters.dataInicio) } : {}),
+                    ...(filters.dataFim ? { lte: new Date(filters.dataFim) } : {}),
+                },
+            }
+            : {}),
+    };
+
+    if (filters.q) {
+        const q = filters.q;
+        
+        where.OR = [
+            { conteudo: { contains: q } },
+            { participantes: { some: { nome: { contains: q } } } },
+            { cliente: { is: { nome: { contains: q } } } },
+        ];
+    }
+
+    const [total, atas] = await prisma.$transaction([
+        prisma.ata_reuniao.count({ where }),
+        prisma.ata_reuniao.findMany({
+            where,
+            orderBy: { data: orderBy },
+            skip: (page - 1) * pageSize,
+            take: pageSize,
+            select: ataSelectList,
+        }),
+    ]);
+
+    const items = atas.map(mapAtaListItem);
+
+    return {
+        items,
+        total,
+        page,
+        pageSize,
+        totalPages: Math.ceil(total / pageSize),
+    };
+}
+
+export async function therapistsList(_userId: string, activity: boolean = true) {
+    const therapists = await prisma.terapeuta.findMany({
+        where: { atividade: activity },
+        select: {
+            id: true,
+            nome: true,
+            registro_profissional: {
+                select: {
+                    numero_conselho: true,
+                    area_atuacao: {
+                        select: {
+                            nome: true,
+                        }
+                    },
+                    cargo: {
+                        select: {
+                            nome: true,
+                        },
+                    },
+                },
+            },
+        },
+    });
+
+    return therapists;
+}
+
+export async function therapistData(_userId: string) {
+    const therapist = await prisma.terapeuta.findUnique({
+        where: { id: _userId },
+        select: {
+            id: true,
+            nome: true,
+            registro_profissional: {
+                select: {
+                    numero_conselho: true,
+                    area_atuacao: {
+                        select: {
+                            nome: true,
+                        }
+                    },
+                    cargo: {
+                        select: {
+                            nome: true,
+                        },
+                    },
+                },
+            },
+        },
+    });
+
+    return therapist;
+}
+
+export async function create(input: CreateAtaServiceInput) {
+    const { payload, anexos } = input;
+
+    // normalizações/calculados
+    const dataEntrevista = toDateOnlyLocal(payload.data);
+    const duracao = computeDurationMinutes(payload.horario_inicio, payload.horario_fim);
+
+    // TODO: ajustar regra de faturamento
+    const horasFaturadas =
+        duracao !== null
+            ? new Prisma.Decimal(calcularHorasFaturadasPorReuniao(duracao))
+            : null;
+
+    // transação: cria ata + filhos (participantes/links)
+    const created = await prisma.$transaction(async (tx) => {
+        const terapeuta = await tx.terapeuta.findUnique({
+            where: { id: payload.terapeuta_id },
+            select: {
+                id: true,
+                nome: true,
+                registro_profissional: {
+                    select: {
+                        numero_conselho: true,
+                        area_atuacao: {
+                            select: {
+                                nome: true,
+                            }
+                        },
+                        cargo: {
+                            select: {
+                                nome: true,
+                            },
+                        },
+                    },
+                },
+            }
+        });
+
+        if (!terapeuta) {
+            throw new AppError('TERAPEUTA_NOT_FOUND', 'Terapeuta não encontrado');
+        }
+
+        const cabecalho_terapeuta_id = terapeuta.id;
+        const cabecalho_terapeuta_nome = terapeuta.nome;
+        const registro_principal = terapeuta.registro_profissional[0];
+
+        if (cabecalho_terapeuta_nome.trim().length === 0) {
+            throw new AppError('TERAPEUTA_INVALID', 'Terapeuta sem nome válido');
+        }
+
+        // cria ata + filhos simples
+        const ata = await tx.ata_reuniao.create({
+            data: {
+                terapeuta_id: payload.terapeuta_id,
+                cliente_id: payload.cliente_id ?? null,
+
+                data: dataEntrevista,
+                horario_inicio: payload.horario_inicio,
+                horario_fim: payload.horario_fim,
+
+                finalidade: payload.finalidade,
+                finalidade_outros: payload.finalidade === ata_finalidade_reuniao.outros ? (payload.finalidade_outros ?? null) : null,
+                
+                modalidade: payload.modalidade,
+                conteudo: payload.conteudo,
+                status: payload.status,
+
+                cabecalho_terapeuta_id,
+                cabecalho_terapeuta_nome,
+                cabecalho_conselho_numero: registro_principal?.numero_conselho ?? null,
+                cabecalho_area_atuacao: registro_principal?.area_atuacao?.nome ?? null,
+                cabecalho_cargo: registro_principal?.cargo?.nome ?? null,
+
+                duracao_minutos: duracao ?? null,
+                horas_faturadas: horasFaturadas,
+            },
+        });
+
+        // participantes
+        if (payload.participantes.length > 0) {
+            await tx.ata_participante.createMany({
+                data: payload.participantes.map((p) => ({
+                    ata_reuniao_id: ata.id,
+                    tipo: p.tipo,
+                    nome: p.nome,
+                    descricao: p.descricao ?? null,
+                    terapeuta_id: p.terapeuta_id ?? null,
+                })),
+            });
+        }
+
+        // links
+        const links = payload.links ?? [];
+        if (Array.isArray(links) && links.length > 0) {
+            await tx.ata_link_recomendacao.createMany({
+                data: links.map((l) => ({
+                    ata_reuniao_id: ata.id,
+                    titulo: l.titulo,
+                    url: l.url,
+                })),
+            });
+        }
+
+        // anexos: upload + cria registros
+        if (anexos.length > 0) {
+            const uploaded = await R2GenericUploadService.uploadMany({
+                prefix: `atas/${ata.id}`,
+                files: anexos.map((a) => ({
+                    buffer: a.file.buffer,
+                    mimetype: a.mime_type,
+                    originalname: a.original_nome,
+                    size: a.tamanho,
+                })),
+            });
+
+            for (let i = 0; i < anexos.length; i += 1) {
+                const a = anexos[i];
+                const u = uploaded[i];
+
+                if (!u) {
+                    throw new Error(`Falha ao fazer upload de anexo`);
+                }
+
+                if (!a) {
+                    throw new AppError('INVALID_PAYLOAD', 'arquivo é obrigatório');
+                }
+
+                await tx.ata_anexo.create({
+                    data: {
+                        ata_reuniao_id: ata.id,
+                        external_id: a.external_id,
+
+                        nome: a.nome ?? null,
+
+                        original_nome: a.original_nome,
+                        mime_type: a.mime_type,
+                        tamanho: a.tamanho,
+
+                        caminho: u.key,
+                    },
+                });
+            }
+        }
+        
+        // retorna ata completa
+        const full = await tx.ata_reuniao.findUnique({
+            where: { id: ata.id },
+            select: ataSelectBase,
+        });
+
+        return full;
+    });
+
+    if (!created) {
+        throw new Error('Falha ao criar ata.');
+    }
+
+    return created;
+}
+
+export async function getById(id: number, userId?: string) {
+    const ata = await prisma.ata_reuniao.findFirst({
+        where: {
+            id,
+            ...(userId ? { terapeuta_id: userId } : {}),
+        },
+        select: ataSelectBase,
+    });
+
+    if (!ata) return null;
+
+    return mapAtaBase(ata);
+}
+
+export async function finalizeAtaById(id: number, userId: string) {
+    await prisma.ata_reuniao.update({
+        where: { 
+            id: id,
+            terapeuta_id: userId,
+            status: { not: ata_status.finalizada }
+        },
+        data: {
+            status: ata_status.finalizada,
+        }
+    });
+
+    const ata = await prisma.ata_reuniao.findUnique({
+        where: { id },
+        select: ataSelectBase,
+    });
+
+    return ata ? mapAtaBase(ata) : null;
+}
+
+export async function update(input: UpdateAtaServiceInput) {
+    const { id, userId, payload, anexos } = input;
+
+    const existing = await prisma.ata_reuniao.findFirst({
+        where: { id, terapeuta_id: userId },
+        select: {
+            id: true,
+            data: true,
+            horario_inicio: true,
+            horario_fim: true,
+        },
+    });
+
+    if (!existing) return null;
+
+    const dataToSave: Prisma.ata_reuniaoUncheckedUpdateInput = {};
+
+    if (payload.data !== undefined) {
+        dataToSave.data = toDateOnlyLocal(payload.data);
+    }
+
+    const horarioInicio = 
+        payload.horario_inicio !== undefined ? payload.horario_inicio : existing.horario_inicio;
+    const horarioFim = payload.horario_fim !== undefined ? payload.horario_fim : existing.horario_fim;
+
+    if (payload.horario_inicio !== undefined) {
+        dataToSave.horario_inicio = payload.horario_inicio;
+    }
+
+    if (payload.horario_fim !== undefined) {
+        dataToSave.horario_fim = payload.horario_fim;
+    }
+
+    if (payload.horario_inicio !== undefined || payload.horario_fim !== undefined) {
+        const duracao = computeDurationMinutes(horarioInicio, horarioFim);
+        dataToSave.duracao_minutos = duracao ?? null;
+        dataToSave.horas_faturadas =
+            duracao !== null
+                ? new Prisma.Decimal(calcularHorasFaturadasPorReuniao(duracao))
+                : null;
+    }
+
+    if (payload.finalidade !== undefined) {
+        dataToSave.finalidade = payload.finalidade;
+        dataToSave.finalidade_outros =
+            payload.finalidade === ata_finalidade_reuniao.outros
+                ? payload.finalidade_outros ?? null
+                : null;
+    } else if (payload.finalidade_outros !== undefined) {
+        dataToSave.finalidade_outros = payload.finalidade_outros ?? null;
+    }
+
+    if (payload.modalidade !== undefined) {
+        dataToSave.modalidade = payload.modalidade;
+    }
+
+    if (payload.conteudo !== undefined) {
+        dataToSave.conteudo = payload.conteudo;
+    }
+
+    if (payload.status !== undefined) {
+        dataToSave.status = payload.status;
+    }
+
+    if (payload.cliente_id !== undefined) {
+        dataToSave.cliente_id = payload.cliente_id ?? null;
+    }
+
+    const updated = await prisma.$transaction(async (tx) => {
+        if (Object.keys(dataToSave).length > 0) {
+            await tx.ata_reuniao.update({
+                where: { id, terapeuta_id: userId },
+                data: dataToSave,
+            });
+        }
+
+        if (payload.participantes !== undefined) {
+            await tx.ata_participante.deleteMany({ where: { ata_reuniao_id: id } });
+            if (payload.participantes.length > 0) {
+                await tx.ata_participante.createMany({
+                    data: payload.participantes.map((p) => ({
+                        ata_reuniao_id: id,
+                        tipo: p.tipo,
+                        nome: p.nome,
+                        descricao: p.descricao ?? null,
+                        terapeuta_id: p.terapeuta_id ?? null,
+                    })),
+                });
+            }
+        }
+
+        if (payload.links !== undefined) {
+            await tx.ata_link_recomendacao.deleteMany({ where: { ata_reuniao_id: id } });
+            if (Array.isArray(payload.links) && payload.links.length > 0) {
+                await tx.ata_link_recomendacao.createMany({
+                    data: payload.links.map((l) => ({
+                        ata_reuniao_id: id,
+                        titulo: l.titulo,
+                        url: l.url,
+                    })),
+                });
+            }
+        }
+
+        if (anexos.length > 0) {
+            const uploaded = await R2GenericUploadService.uploadMany({
+                prefix: `atas/${id}`,
+                files: anexos.map((a) => ({
+                    buffer: a.file.buffer,
+                    mimetype: a.mime_type,
+                    originalname: a.original_nome,
+                    size: a.tamanho,
+                })),
+            });
+
+            for (let i = 0; i < anexos.length; i += 1) {
+                const a = anexos[i];
+                const u = uploaded[i];
+
+                if (!u) {
+                    throw new Error(`Falha ao fazer upload de anexo`);
+                }
+
+                if (!a) {
+                    throw new AppError('INVALID_PAYLOAD', 'arquivo é obrigatório');
+                }
+
+                await tx.ata_anexo.create({
+                    data: {
+                        ata_reuniao_id: id,
+                        external_id: a.external_id,
+                        nome: a.nome ?? null,
+                        original_nome: a.original_nome,
+                        mime_type: a.mime_type,
+                        tamanho: a.tamanho,
+                        caminho: u.key,
+                    },
+                });
+            }
+        }
+
+        const full = await tx.ata_reuniao.findUnique({
+            where: { id },
+            select: ataSelectBase,
+        });
+
+        return full;
+    });
+
+    return updated ? mapAtaBase(updated) : null;
+}
+
+export async function deleteAta(id: number, userId: string) {
+    const ata = await prisma.$transaction(async (tx) => {
+        const existing = await tx.ata_reuniao.findFirst({
+            where: { id},
+            select: {
+                id: true,
+                terapeuta_id: true,
+                anexos: { select: { caminho: true } },
+            },
+        });
+
+        if (!existing) return null;
+        if (existing.terapeuta_id !== userId) return 'FORBIDDEN';
+        
+        await tx.ata_reuniao.delete({
+            where: { id },
+        });
+
+        return existing;
+    });
+
+    if (!ata || ata === 'FORBIDDEN') return ata;
+
+    const paths = Array.from(
+        new Set(
+            ata.anexos
+                .map((anexo) => anexo.caminho)
+                .filter((path) => path.length > 0),
+        ),
+    );
+
+    for (const path of paths) {
+        try {
+            await deleteFromR2(path);
+        } catch (error) {
+            console.error('[atas:delete] falha ao deletar arquivo no R2', { path, error });
+        }
+    }
+
+    return true;
+}
+
 // ============================================
 // HELPERS
 // ============================================
+
+export function buildFallbackTherapist(ata: {
+    cabecalho_terapeuta_id: string;
+    cabecalho_terapeuta_nome: string;
+    cabecalho_conselho_numero: string | null;
+    cabecalho_area_atuacao: string | null;
+    cabecalho_cargo: string | null;
+}) {
+    if (!ata.cabecalho_terapeuta_id && !ata.cabecalho_terapeuta_nome) {
+        return null;
+    }
+
+    const areaNome = ata.cabecalho_area_atuacao || null;
+
+    return {
+        id: ata.cabecalho_terapeuta_id,
+        nome: ata.cabecalho_terapeuta_nome,
+        registro_profissional: [
+            {
+                numero_conselho: ata.cabecalho_conselho_numero,
+                area_atuacao: areaNome ? { nome: areaNome } : null,
+                cargo: ata.cabecalho_cargo ? { nome: ata.cabecalho_cargo } : null,
+            },
+        ],
+    };
+}
 
 /**
  * Remove tags HTML do conteúdo

@@ -255,9 +255,12 @@ export function mapearNucleoFamiliar(cliente: ClienteCompleto): MembroNucleoFami
     return cliente.cuidadores.map((c: any) => ({
         id: String(c.id || ''),
         nome: c.nome || '',
+        cpf: c.cpf || '',
         parentesco: c.relacao || c.descricaoRelacao || '',
+        dataNascimento: c.dataNascimento || '',
         idade: c.dataNascimento ? calcularIdade(c.dataNascimento) : undefined,
         ocupacao: c.profissao || '',
+        origemBanco: true, // Membro veio dos cuidadores cadastrados
     }));
 }
 

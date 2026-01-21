@@ -1,14 +1,10 @@
-/**
- * Controller para Atas de Reunião
- * @module features/atas-reuniao
- */
-
 import type { Request, Response, NextFunction } from 'express';
-import '../../types/express.d.js';
 import { AppError } from '../../errors/AppError.js';
 import { AIServiceError } from '../ai/ai.errors.js';
-import { gerarResumoSchema } from './ata.schema.js';
+import { ataIdSchema, createAtaPayloadSchema, gerarResumoSchema, listAtaSchema, listTherapistSchema, updateAtaPayloadSchema } from './ata.schema.js';
 import * as AtaService from './ata.service.js';
+import { parseAtaAnexos } from './utils/ata.anexos.js';
+import { getAccessLevel } from '../../utils/getAccessLevel.js';
 
 /**
  * POST /atas-reuniao/ai/summary
@@ -69,6 +65,203 @@ export async function handleGerarResumoWhatsApp(req: Request, res: Response, nex
             return handleAIError(error, res);
         }
         next(error);
+    }
+}
+
+export async function therapistsList(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { atividade } = listTherapistSchema.parse(req.query);
+        const userId = req.user?.id;
+        if (!userId) return res.status(401).json({ message: 'Não autenticado' });
+        const data = await AtaService.therapistsList(userId, atividade);
+        
+        res.status(200).json(data);
+    } catch(err) {
+        next(err);
+    }
+}
+
+export async function list(req: Request, res: Response, next: NextFunction) {
+    try {
+        if (!req.user) {
+            return res.status(401).json({ success: false, message: 'Não autenticado' });
+        }
+
+        const parsed = listAtaSchema.parse(req.query);
+        const accessLevel = getAccessLevel(req.user.perfil_acesso);
+        const canSeeAllTherapists = accessLevel >= 5;
+        const therapistId = parsed.terapeuta_id ?? req.user.id;
+        const therapistScopeId = parsed.terapeuta_id === undefined && canSeeAllTherapists ? null : therapistId;
+
+        const result = await AtaService.list(therapistScopeId, {
+            q: parsed.q,
+            finalidade: parsed.finalidade,
+            dataInicio: parsed.data_inicio,
+            dataFim: parsed.data_fim,
+            clienteId: parsed.cliente_id,
+            orderBy: parsed.order_by,
+            page: parsed.page,
+            pageSize: parsed.page_size,
+        });
+
+        return res.json({
+            items: result.items,
+            total: result.total,
+            page: result.page,
+            page_size: result.pageSize,
+            total_pages: result.totalPages,
+        });
+    } catch (err) {
+        next(err);
+    }
+}
+
+export async function therapistData(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { userId } = req.params;
+        if (!userId) return res.status(401).json({ message: 'Não autenticado' });
+        const data = await AtaService.therapistData(userId);
+        
+        res.status(200).json(data);
+    } catch(err) {
+        next(err);
+    }
+}
+
+export async function create(req: Request, res: Response, next: NextFunction) {
+    try {
+        if (!req.user) {
+            return res.status(401).json({ success: false, message: 'Não autenticado' });
+        }
+
+        // payload: string -> JSON -> Zod
+        const raw = req.body?.payload;
+        if (typeof raw !== 'string' || raw.trim().length === 0) {
+            return res.status(400).json({ success: false, message: 'Campo payload é obrigatório' });
+        }
+
+        let parsed: unknown;
+        try {
+            parsed = JSON.parse(raw) as unknown;
+        } catch {
+            return res.status(400).json({ success: false, message: 'Payload inválido (JSON malformado)' })
+        }
+
+        const payload = createAtaPayloadSchema.parse(parsed);
+
+        // files: multer
+        const files = Array.isArray(req.files) ? req.files: [];
+
+        // anexo names
+        const anexos = parseAtaAnexos(files, req.body);
+
+        // service
+        const created = await AtaService.create({
+            payload,
+            anexos,
+        });
+
+        return res.status(201).json(created)
+    } catch(err) {
+        next(err);
+    }
+}
+
+export async function update(req: Request, res: Response, next: NextFunction) {
+    try {
+        if (!req.user) {
+            return res.status(401).json({ success: false, message: 'Não autenticado' });
+        }
+
+        const { id: ataId } = ataIdSchema.parse(req.params);
+
+        const raw = req.body?.payload;
+        if (typeof raw !== 'string' || raw.trim().length === 0) {
+            return res.status(400).json({ success: false, message: 'Campo payload é obrigatório' });
+        }
+
+        let parsed: unknown;
+        try {
+            parsed = JSON.parse(raw) as unknown;
+        } catch {
+            return res.status(400).json({ success: false, message: 'Payload inválido (JSON malformado)' })
+        }
+
+        const payload = updateAtaPayloadSchema.parse(parsed);
+
+        const files = Array.isArray(req.files) ? req.files: [];
+        const anexos = parseAtaAnexos(files, req.body);
+
+        if (Object.keys(payload).length === 0 && anexos.length === 0) {
+            return res.status(400).json({ success: false, message: 'Nenhuma alteração enviada' });
+        }
+
+        const updated = await AtaService.update({
+            id: ataId,
+            userId: req.user.id,
+            payload,
+            anexos,
+        });
+
+        if (!updated) {
+            return res.status(404).json({ success: false, message: 'Ata não identificada' });
+        }
+
+        return res.status(200).json(updated);
+    } catch(err) {
+        next(err);
+    }
+}
+
+export async function getById(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { id: ataId } = ataIdSchema.parse(req.params);
+        const userId = req.user?.id;
+        if (!userId) return res.status(404).json({ message: 'Não autenticado' });
+
+        const result = await AtaService.getById(ataId, userId);
+        if (!result) return res.status(401).json({ message: 'Ata não identificada' });
+
+        return res.status(200).json({ success: true, data: result});
+    } catch (err) {
+        next(err)
+    }
+}
+
+export async function finalizeAtaById(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { id: ataId } = ataIdSchema.parse(req.params);
+        const userId = req.user?.id;
+        if (!userId) return res.status(404).json({ message: 'Não autenticado' });
+
+        const result = await AtaService.finalizeAtaById(ataId, userId);
+        if (!result) return res.status(401).json({ message: 'Ata não identificada' });
+
+        return res.status(200).json({ success: true, data: result});
+    } catch (err) {
+        next(err)
+    }
+}
+
+export async function deleteArea(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { id: ataId } = ataIdSchema.parse(req.params);
+        const userId = req.user?.id;
+        if (!userId) return res.status(401).json({ message: 'Não autenticado' });
+
+        const result = await AtaService.deleteAta(ataId, userId);
+
+        if (result === 'FORBIDDEN') {
+            return res.status(403).json({ success: false, message: 'Você não tem permissão para apagar esta ata' });
+        }
+
+        if (result === null) {
+            return res.status(404).json({ success: false, message: 'Ata não encontrada' });
+        }
+
+        return res.status(200).json({ success: true });
+    } catch (err) {
+        next(err);
     }
 }
 

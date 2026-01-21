@@ -4,6 +4,8 @@ import type { Terapeuta, Cliente } from "@/features/cadastros/types/cadastros.ty
 import type { Bank } from '@/common/constants/banks';
 import type { Therapist as TerapeutaConsulta, Patient } from '@/features/consultas/types/consultas.types'
 import type { ListQueryParams, PaginatedListResult, QueryParams, SaveSessionPayload } from "./types/api.types";
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 const AUTH_BYPASS =
   import.meta.env.DEV && import.meta.env.VITE_AUTH_BYPASS === 'true';
@@ -382,6 +384,13 @@ export function correctFormatDate(value?: string | Date | null): string {
   const year = d.getUTCFullYear();
 
   return `${day}/${month}/${year}`;
+}
+
+export function formatYmdToPtBr(date: string): string {
+  const safe = date.includes('T') ? date.split('T')[0] : date;
+  const [y, m, d] = safe.split('-').map(Number);
+  const dt = new Date(y, m - 1, d, 12);
+  return format(dt, "dd MMM yyyy", { locale: ptBR });
 }
 
 export async function fetchOwnerAvatar(ownerId: string, ownerType: 'cliente' | 'terapeuta'): Promise<string | null> {

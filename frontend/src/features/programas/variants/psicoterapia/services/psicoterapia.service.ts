@@ -50,9 +50,13 @@ function mapMembroFamiliarFromApi(api: ApiMembroNucleoFamiliar): MembroNucleoFam
     return {
         id: api.id,
         nome: api.nome,
+        cpf: api.cpf,
         parentesco: api.parentesco,
+        descricaoRelacao: api.descricao_relacao,
+        dataNascimento: api.data_nascimento,
         idade: api.idade,
         ocupacao: api.ocupacao,
+        origemBanco: api.origem_banco,
     };
 }
 
@@ -168,9 +172,13 @@ function mapProntuarioToApi(data: ProntuarioFormData) {
         nucleo_familiar: data.nucleoFamiliar.map(m => ({
             id: m.id,
             nome: m.nome,
+            cpf: m.cpf,
             parentesco: m.parentesco,
+            descricao_relacao: m.descricaoRelacao,
+            data_nascimento: m.dataNascimento,
             idade: m.idade,
             ocupacao: m.ocupacao,
+            origem_banco: m.origemBanco,
         })),
         observacoes_nucleo_familiar: data.observacoesNucleoFamiliar,
         avaliacao_demanda: {

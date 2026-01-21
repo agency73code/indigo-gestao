@@ -3,6 +3,7 @@ import { ArrowUpRight, Users } from 'lucide-react';
 import { Button } from '@/ui/button';
 import type { Patient, SortState } from '../types/consultas.types';
 import { SpecialtyBadgeStack } from './SpecialtyBadgeStack';
+import { ColumnHeaderFilter, type FilterOption } from '@/components/ui/column-header-filter';
 
 interface AvatarWithSkeletonProps {
     src?: string | null;
@@ -63,12 +64,33 @@ const AvatarWithSkeleton = memo(({ src, alt, initials, size = 'md' }: AvatarWith
 
 AvatarWithSkeleton.displayName = 'AvatarWithSkeleton';
 
+// Tipos para filtros de coluna
+export interface ColumnFilters {
+    status?: string;
+    especialidade?: string;
+    idade?: string;
+}
+
+export interface ColumnFilterOptions {
+    status: FilterOption[];
+    especialidade: FilterOption[];
+    idade: FilterOption[];
+}
+
 interface PatientTableProps {
     patients: Patient[];
     loading?: boolean;
     onViewProfile: (patient: Patient) => void;
     sortState: SortState;
     onSort: (field: string) => void;
+    /** Filtros ativos das colunas */
+    columnFilters?: ColumnFilters;
+    /** Opções de filtros para cada coluna */
+    filterOptions?: ColumnFilterOptions;
+    /** Callback quando um filtro muda */
+    onFilterChange?: (key: keyof ColumnFilters, value: string | undefined) => void;
+    /** Contador total (sem filtros) */
+    totalCount?: number;
 }
 
 const EmptyState = () => (
@@ -104,6 +126,10 @@ const PatientTable = memo(function PatientTable({
     patients,
     loading = false,
     onViewProfile,
+    columnFilters,
+    filterOptions,
+    onFilterChange,
+    // totalCount - disponível para uso futuro
 }: PatientTableProps) {
     const getStatusBadge = (status: string) => {
         const baseClasses = 'px-2 py-1 text-xs font-medium rounded-full';
@@ -159,19 +185,46 @@ const PatientTable = memo(function PatientTable({
                                 Nome
                             </th>
                             <th className="text-left p-3 font-medium text-sm" style={{ color: 'var(--table-text-secondary)' }}>
-                                Idade
+                                {filterOptions && onFilterChange ? (
+                                    <ColumnHeaderFilter
+                                        label="Idade"
+                                        options={filterOptions.idade}
+                                        value={columnFilters?.idade}
+                                        onChange={(v) => onFilterChange('idade', v)}
+                                    />
+                                ) : (
+                                    'Idade'
+                                )}
                             </th>
                             <th className="text-left p-3 font-medium text-sm" style={{ color: 'var(--table-text-secondary)' }}>
                                 Telefone
                             </th>
                             <th className="text-left p-3 font-medium text-sm" style={{ color: 'var(--table-text-secondary)' }}>
-                                Especialidades
+                                {filterOptions && onFilterChange ? (
+                                    <ColumnHeaderFilter
+                                        label="Especialidades"
+                                        options={filterOptions.especialidade}
+                                        value={columnFilters?.especialidade}
+                                        onChange={(v) => onFilterChange('especialidade', v)}
+                                    />
+                                ) : (
+                                    'Especialidades'
+                                )}
                             </th>
                             <th className="text-left p-3 font-medium text-sm" style={{ color: 'var(--table-text-secondary)' }}>
                                 Responsável
                             </th>
                             <th className="text-left p-3 font-medium text-sm" style={{ color: 'var(--table-text-secondary)' }}>
-                                Status
+                                {filterOptions && onFilterChange ? (
+                                    <ColumnHeaderFilter
+                                        label="Status"
+                                        options={filterOptions.status}
+                                        value={columnFilters?.status}
+                                        onChange={(v) => onFilterChange('status', v)}
+                                    />
+                                ) : (
+                                    'Status'
+                                )}
                             </th>
                             <th className="text-center p-3 font-medium text-sm last:rounded-tr-lg" style={{ color: 'var(--table-text-secondary)' }}>
                                 Ações
