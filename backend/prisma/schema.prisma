@@ -77,7 +77,7 @@ model cliente {
   dataSaida           DateTime?
   emailContato        String?             @unique
   senha_atualizada_em DateTime?
-  nivel_escolaridade String?
+  nivel_escolaridade  String?
   arquivos            arquivos[]
   enderecos           cliente_endereco[]
   cuidadores          cuidador[]
@@ -941,22 +941,22 @@ model ocp_prontuario {
   id Int @id @default(autoincrement())
 
   cliente_id String
-  clientes cliente @relation(fields: [cliente_id], references: [id], onDelete: Cascade)
+  clientes   cliente @relation(fields: [cliente_id], references: [id], onDelete: Cascade)
 
   terapeuta_id String
-  terapeutas terapeuta @relation(fields: [terapeuta_id], references: [id], onDelete: Cascade)
+  terapeutas   terapeuta @relation(fields: [terapeuta_id], references: [id], onDelete: Cascade)
 
-  profissao_ocupacao String?
+  profissao_ocupacao     String?
   observacao_educacional String? @db.Text
 
   observacoes_nucleo_familiar String? @db.Text
-  
-  encaminhado_por String?
-  motivo_busca_atendimento String
-  atendimentos_anteriores String?
-  observacao_demanda String? @db.Text
 
-  objetivos_trabalho String
+  encaminhado_por          String?
+  motivo_busca_atendimento String
+  atendimentos_anteriores  String?
+  observacao_demanda       String? @db.Text
+
+  objetivos_trabalho    String
   avaliacao_atendimento String?
 
   @@index([cliente_id])

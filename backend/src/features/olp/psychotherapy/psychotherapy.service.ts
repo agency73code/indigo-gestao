@@ -33,7 +33,10 @@ export async function createPsychotherapyRecord(payload: PsychoPayload, userId: 
         const levelSchooling = await tx.cliente.updateMany({
             where: { 
                 id: payload.cliente_id,
-                nivel_escolaridade: { not: payload.informacoes_educacionais.nivel_escolaridade },
+                OR:  [
+                    { nivel_escolaridade: { not: payload.informacoes_educacionais.nivel_escolaridade } },
+                    { nivel_escolaridade: null },
+                ],
             },
             data: { nivel_escolaridade: payload.informacoes_educacionais.nivel_escolaridade },
         });
@@ -53,23 +56,19 @@ export async function createPsychotherapyRecord(payload: PsychoPayload, userId: 
         const previousTherapiesOlds = previousTherapies.filter((therapy) => typeof therapy.id === 'number');
         const previousTherapiesOnDelete = previousTherapiesOlds.map((pt) => pt.id as number);
 
-        const previousTherapiesNewCreate = await tx.anamnese_terapia_previa.createMany({
-            data: previousTherapiesNews.map((pt) => ({
-                anamnese_id: anamnese.id,
-                profissional: pt.profissional,
-                especialidade_abordagem: pt.especialidade_abordagem,
-                tempo_intervencao: pt.tempo_intervencao,
-                observacao: pt.observacao,
-                ativo: pt.ativo,
-            })),
-        });
-
         const previousTherapiesOldsUpdate = await Promise.all(
             previousTherapiesOlds.map((pt) =>
                 tx.anamnese_terapia_previa.updateMany({
                     where: { 
                         id: pt.id as number,
-                        anamnese_id: anamnese.id, 
+                        anamnese_id: anamnese.id,
+                        OR: [
+                            { profissional: {not: pt.profissional } },
+                            { especialidade_abordagem: { not: pt.especialidade_abordagem } },
+                            { tempo_intervencao: { not: pt.tempo_intervencao } },
+                            { observacao: { not: pt.observacao } },
+                            { ativo: { not: pt.ativo } },
+                        ]
                     },
                     data: {
                         profissional: pt.profissional,
@@ -87,6 +86,17 @@ export async function createPsychotherapyRecord(payload: PsychoPayload, userId: 
                 anamnese_id: anamnese.id,
                 id: { notIn: previousTherapiesOnDelete },
             },
+        });
+
+        const previousTherapiesNewCreate = await tx.anamnese_terapia_previa.createMany({
+            data: previousTherapiesNews.map((pt) => ({
+                anamnese_id: anamnese.id,
+                profissional: pt.profissional,
+                especialidade_abordagem: pt.especialidade_abordagem,
+                tempo_intervencao: pt.tempo_intervencao,
+                observacao: pt.observacao,
+                ativo: pt.ativo,
+            })),
         });
 
         return {
