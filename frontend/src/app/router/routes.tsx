@@ -10,7 +10,6 @@ import AuthProviderLayout from '../../features/shell/layouts/AuthProviderLayout'
 import AppLayout from '../../features/shell/layouts/AppLayout';
 import NotFoundPage from '../../features/shell/pages/NotFoundPage';
 import TokenNotFoundPage from '../../shared/components/pages/TokenNotFoundPage';
-import DashboardPage from '../../features/dashboard/pages/DashboardPage';
 import TerapeutasListPage from '../../features/consultas/pages/TerapeutasListPage';
 import PacientesListPage from '../../features/consultas/pages/PacientesListPage';
 import ArquivosPage from '../../features/arquivos/pages/ArquivosPage';
@@ -187,11 +186,7 @@ export const router = createBrowserRouter([
                         children: [
                             {
                                 index: true,
-                                element: (
-                                    <Suspense fallback={suspenseFallback}>
-                                        <DashboardPage />
-                                    </Suspense>
-                                ),
+                                element: <Navigate to="/app/consultar/pacientes" replace />,
                             },
                             {
                                 path: 'cadastros',

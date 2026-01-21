@@ -53,11 +53,12 @@ const data: {
         avatar: '/avatars/shadcn.jpg',
     },
     navMain: [
-        {
-            title: 'Dashboard',
-            url: '/app',
-            icon: AnimatedIcons.Dashboard,
-        },
+        // Dashboard temporariamente desabilitado - funcionalidade incompleta
+        // {
+        //     title: 'Dashboard',
+        //     url: '/app',
+        //     icon: AnimatedIcons.Dashboard,
+        // },
         {
             title: 'Cliente',
             url: '/app/consultar/pacientes',
@@ -84,17 +85,18 @@ const data: {
             url: '/app/relatorios/lista',
             icon: AnimatedIcons.BookOpenText,
         },
-        {
-            title: 'Faturamento',
-            url: '/app/faturamento',
-            icon: AnimatedIcons.Wallet,
-            items: [
-                { title: 'Registrar Lançamento', url: '/app/faturamento/registrar-lancamento' },
-                { title: 'Minhas Horas', url: '/app/faturamento/minhas-horas' },
-                { title: 'Gestão (gerente)', url: '/app/faturamento/gestao' },
-                { title: 'Relatórios/Exportar', url: '/app/faturamento/relatorios' },
-            ],
-        },
+        // Faturamento temporariamente desabilitado - funcionalidade incompleta
+        // {
+        //     title: 'Faturamento',
+        //     url: '/app/faturamento',
+        //     icon: AnimatedIcons.Wallet,
+        //     items: [
+        //         { title: 'Registrar Lançamento', url: '/app/faturamento/registrar-lancamento' },
+        //         { title: 'Minhas Horas', url: '/app/faturamento/minhas-horas' },
+        //         { title: 'Gestão (gerente)', url: '/app/faturamento/gestao' },
+        //         { title: 'Relatórios/Exportar', url: '/app/faturamento/relatorios' },
+        //     ],
+        // },
         {
             title: 'Configuração',
             url: '/app/configuracoes',

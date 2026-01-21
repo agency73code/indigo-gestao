@@ -175,9 +175,9 @@ const PatientTable = memo(function PatientTable({
     }
 
     return (
-        <div className="flex flex-col min-h-0 rounded-lg overflow-hidden" style={{ backgroundColor: 'var(--table-bg)' }}>
+        <div className="flex flex-col min-h-0 rounded-lg" style={{ backgroundColor: 'var(--table-bg)' }}>
             {/* Tabela Desktop */}
-            <div className="hidden md:block overflow-auto scroll-pt-16">    
+            <div className="hidden md:block overflow-x-auto overflow-y-visible scroll-pt-16">    
                 <table className="w-full">
                     <thead className="sticky top-0 z-10 shadow-sm" style={{ backgroundColor: 'var(--table-header-bg)' }}>
                         <tr>

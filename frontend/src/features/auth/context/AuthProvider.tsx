@@ -66,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             try {
                 await signIn(credentials.email, credentials.password);
                 await hydrate();
-                navigate('/app');
+                navigate('/app/consultar/pacientes');
             } catch (e: unknown) {
                 const msg = e instanceof Error ? e.message : 'Erro ao fazer login';
                 setAuthState((prev) => ({ ...prev, isLoading: false, error: msg }));

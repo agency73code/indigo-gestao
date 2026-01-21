@@ -105,10 +105,12 @@ export function SpecialtyBadgeStack({
                 </div>
             </PopoverTrigger>
             <PopoverContent 
-                className="w-auto p-3"
+                className="w-auto p-3 z-50"
                 align="start"
                 side="bottom"
                 sideOffset={8}
+                avoidCollisions={true}
+                collisionPadding={16}
                 onMouseEnter={() => setOpen(true)}
                 onMouseLeave={() => setOpen(false)}
             >
