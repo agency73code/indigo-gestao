@@ -66,11 +66,12 @@ export function NavUser() {
                     <DropdownMenuTrigger asChild>
                         <SidebarMenuButton
                             size="lg"
-                            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground rounded-full px-1"
+                            tooltip={displayName}
+                            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground rounded-full px-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:!w-10 group-data-[collapsible=icon]:!h-10"
                         >
-                            <Avatar className="h-10 w-10 rounded-full" key={avatarUrl}>
+                            <Avatar className="h-10 w-10 rounded-full shrink-0 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8" key={avatarUrl}>
                                 {imageLoading && shouldShowImage && (
-                                    <Skeleton className="h-10 w-10 rounded-full absolute inset-0" />
+                                    <Skeleton className="h-10 w-10 rounded-full absolute inset-0 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8" />
                                 )}
                                 {shouldShowImage && (
                                     <AvatarImage 
@@ -86,11 +87,11 @@ export function NavUser() {
                                 )}
                                 <AvatarFallback className="rounded-full" delayMs={0}>{initials}</AvatarFallback>
                             </Avatar>
-                            <div className="grid flex-1 text-left text-sm leading-tight">
+                            <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
                                 <span className="truncate font-semibold">{displayName}</span>
                                 <span className="truncate text-xs">{displayRole}</span>
                             </div>
-                            <ChevronDown className="ml-auto size-4" />
+                            <ChevronDown className="ml-auto size-4 group-data-[collapsible=icon]:hidden" />
                         </SidebarMenuButton>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
