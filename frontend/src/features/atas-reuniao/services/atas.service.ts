@@ -83,7 +83,7 @@ function mapAtaFromApi(data: any): AtaReuniao {
             size: a.tamanho,
             type: a.mime_type,
             arquivoId: a.arquivo_id,
-            url: a.arquivo_id ? `${atasConfig.apiBase}/arquivos/${a.arquivo_id}/view` : undefined,
+            url: `${atasConfig.apiBase}/atas-reuniao/download/${a.id}`,
         })),
     };
 }

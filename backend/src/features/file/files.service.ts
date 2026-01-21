@@ -179,7 +179,7 @@ export async function findFileByStorageId(storageId: string) {
     return prisma.anamnese_arquivo_exame_previo.findFirst({ where: { caminho: storageId } });
 }
 
-/** Exclui um arquivo do Google R2 */
+/** Exclui um arquivo do R2 */
 export async function deleteFromR2(storageId: string) {
     const bucket = process.env.R2_BUCKET;
     if (!bucket) {

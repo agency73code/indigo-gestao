@@ -78,6 +78,7 @@ export const ataSelectBase = Prisma.validator<Prisma.ata_reuniaoSelect>()({
             original_nome: true,
             mime_type: true,
             tamanho: true,
+            caminho: true,
             external_id: true,
         },
     },
@@ -169,7 +170,11 @@ export function mapAtaBase(ata: AtaBase) {
     return {
         ...ata,
         data: toDateOnly(ata.data),
-        anexos: ata.anexos.map((a) => ({ ...a, arquivo_id: a.external_id })),
+        anexos: ata.anexos.map((a) => ({ 
+            ...a, 
+            arquivo_id: a.external_id,
+            url: a.caminho,
+        })),
     }
 }
 
