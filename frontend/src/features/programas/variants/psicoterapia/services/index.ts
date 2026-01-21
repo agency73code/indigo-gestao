@@ -250,7 +250,7 @@ export function formatarEndereco(cliente: ClienteCompleto): string {
  */
 export function mapearNucleoFamiliar(cliente: ClienteCompleto): MembroNucleoFamiliar[] {
     if (!cliente.cuidadores) return [];
-    
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return cliente.cuidadores.map((c: any) => ({
         id: String(c.id || ''),

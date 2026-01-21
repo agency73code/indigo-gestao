@@ -61,6 +61,7 @@ model cliente {
   terapeuta           terapeuta_cliente[]
   relatorios          relatorio[]
   anamneses           anamnese[]
+  ocp_prontuarios ocp_prontuario[]
 
   @@index([nome], map: "nome_idx")
 }
@@ -268,6 +269,7 @@ model terapeuta {
   disciplina            disciplina[]            @relation("disciplinaToterapeuta")
   relatorios            relatorio[]
   anamneses             anamnese[]
+  ocp_prontuarios ocp_prontuario[]
 
   @@index([atividade])
   @@index([nome])
@@ -903,4 +905,30 @@ model sessao_arquivo {
   sessao sessao @relation(fields: [sessao_id], references: [id], onDelete: Cascade)
 
   @@index([sessao_id])
+}
+
+model ocp_prontuario {
+  id Int @id @default(autoincrement())
+
+  cliente_id String
+  clientes cliente @relation(fields: [cliente_id], references: [id], onDelete: Cascade)
+
+  terapeuta_id String
+  terapeutas terapeuta @relation(fields: [terapeuta_id], references: [id], onDelete: Cascade)
+
+  profissao_ocupacao String?
+  observacao_educacional String? @db.Text
+
+  observacoes_nucleo_familiar String? @db.Text
+  
+  encaminhado_por String?
+  motivo_busca_atendimento String
+  atendimentos_anteriores String?
+  observacao_demanda String? @db.Text
+
+  objetivos_trabalho String
+  avaliacao_atendimento String?
+
+  @@index([cliente_id])
+  @@index([terapeuta_id])
 }

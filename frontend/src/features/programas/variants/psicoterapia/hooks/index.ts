@@ -94,6 +94,7 @@ export function useProntuarioForm(prontuarioId?: string) {
             
             try {
                 const prontuario = await buscarProntuario(prontuarioId);
+
                 if (prontuario) {
                     // Mapear dados do prontuário para o formData
                     setFormData({
@@ -195,7 +196,7 @@ export function useProntuarioForm(prontuarioId?: string) {
             
             // Mapear núcleo familiar dos cuidadores
             const nucleoFamiliar = mapearNucleoFamiliar(clienteCompleto);
-            
+
             // Buscar terapias prévias da anamnese se existir
             const terapiasPrevias = await buscarAnamneseDoCliente(
                 patient.id, 

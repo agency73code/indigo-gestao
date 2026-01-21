@@ -4,7 +4,10 @@ export function createPsychotherapyRecord(req: Request, res: Response, next: Nex
     try {
         ///
         console.log(req.body)
-        res.status(201).json({message: 'teste'});
+        res.status(201).json({
+            success: true,
+            data: [],
+        });
     } catch (error) {
         next(error)
     }

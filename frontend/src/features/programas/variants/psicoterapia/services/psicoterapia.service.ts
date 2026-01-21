@@ -285,7 +285,7 @@ export async function buscarProntuarioPorCliente(clienteId: string): Promise<Pro
 export async function criarProntuario(data: ProntuarioFormData): Promise<ProntuarioResponse> {
     try {
         const payload = mapProntuarioToApi(data);
-        
+
         const res = await authFetch(endpoints.prontuarios, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

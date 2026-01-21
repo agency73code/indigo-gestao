@@ -212,6 +212,7 @@ export async function getById(clientId: string) {
 
             cuidadores: {
                 select: {
+                    id: true,
                     relacao: true,
                     descricaoRelacao: true,
                     nome: true,
