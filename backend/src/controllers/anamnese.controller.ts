@@ -12,6 +12,7 @@ import * as FilesService from '../features/file/files.service.js';
 import { getFileStreamFromR2 } from '../features/file/r2/getFileStream.js';
 import { extension as mimeExtension } from 'mime-types';
 import path from 'path';
+import { asciiFallbackFilename } from '../utils/asciiFallbackFilename.js';
 
 function resolveDownloadFilename(
     baseName: string,
@@ -285,12 +286,13 @@ export async function downloadExamePrevioArquivo(
             arquivo.caminho ?? metadata.name,
             mimeType,
         );
-        const safeFilename = sanitizeHeaderFilename(filename);
+        const filenameUtf8 = sanitizeHeaderFilename(filename);
+        const filenameAscii = asciiFallbackFilename(filenameUtf8);
 
         res.setHeader('Content-Type', mimeType);
         res.setHeader(
             'Content-Disposition',
-            `attachment; filename="${safeFilename}"; filename*=UTF-8''${encodeURIComponent(safeFilename)}`,
+            `attachment; filename="${filenameAscii}"; filename*=UTF-8''${encodeURIComponent(filenameUtf8)}`,
         );
 
         (stream as NodeJS.ReadableStream).on('error', (err) => {

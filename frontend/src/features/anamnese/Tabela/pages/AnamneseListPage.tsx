@@ -175,7 +175,7 @@ export default function AnamneseListPage() {
             </div>
 
             {/* Container da tabela */}
-            <div className="flex-1 overflow-hidden">
+            <div className="flex-1 overflow-hidden rounded-lg">
                 <div className="h-full flex flex-col">
                     <AnamneseTable
                         anamneses={anamneses}
