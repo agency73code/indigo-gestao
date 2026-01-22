@@ -57,9 +57,10 @@ export const psychoQuerySchema = z.object({
     q: z.string().optional(),
     status: z
         .enum(['ativo', 'inativo', 'todos'])
-        .optional(),
-    page: z.coerce.number().int().positive().optional(),
-    page_size: z.coerce.number().int().positive().optional(),
+        .optional()
+        .transform((s) => (s === 'ativo' ? true : s === 'inativo' ? false : undefined)),
+    page: z.coerce.number().int().positive().default(1),
+    page_size: z.coerce.number().int().positive().max(100).default(10),
 });
 
 export type PsychoPayload = z.infer<typeof psychoSchema>;

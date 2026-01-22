@@ -5,6 +5,7 @@ import type { PsychoPayload, queryType } from "./psychotherapy.schema.js";
 import { calculateAge } from "../../../utils/calculateAge.js";
 import { toDateOnly } from "../../../utils/toDateOnly.js";
 import { buildAvatarUrl } from "../../../utils/avatar-url.js";
+import { getVisibilityScope } from "../../../utils/visibilityFilter.js";
 
 export async function createPsychotherapyRecord(payload: PsychoPayload, userId: string) {
     return await prisma.$transaction(async (tx) => {
@@ -330,6 +331,79 @@ export async function searchMedicalRecordByClient(clientId: string) {
     };
 }
 
-export async function listMedicalRecords(query: queryType) {
+export async function listMedicalRecords(query: queryType, userId: string) {
     const { q, status, page, page_size } = query;
+
+    const visibility = await getVisibilityScope(userId);
+    if (visibility.scope === 'none') throw new AppError('FORBIDDEN', 'Acesso negado para consultar prontuários', 403);
+
+    const where: Prisma.ocp_prontuarioWhereInput = {};
+
+    if (q) where.clientes = { nome: { contains: q } };
+    if (status !== undefined) where.status = status;
+    if (visibility.scope === 'partial') where.terapeuta_id = { in: visibility.therapistIds };
+
+    const [total, result] = await prisma.$transaction([
+        prisma.ocp_prontuario.count({ where }),
+        prisma.ocp_prontuario.findMany({
+            where,
+            select: {
+                id: true,
+                cliente_id: true,
+                clientes: {
+                    select: {
+                        nome: true,
+                        dataNascimento: true,
+                    },
+                },
+                terapeuta_id: true,
+                terapeutas: {
+                    select: {
+                        nome: true,
+                        registro_profissional: {
+                            select: {
+                                numero_conselho: true,
+                            },
+                        },
+                    },
+                },
+                status: true,
+                criado_em: true,
+            },
+            take: page_size,
+            skip: (page - 1) * page_size,
+            orderBy: { criado_em: 'desc' },
+        }),
+    ]);
+
+    if (result.length === 0) {
+        return {
+            items: [],
+            total,
+            page,
+            pageSize: page_size,
+            totalPages: Math.ceil(total / page_size),
+        }
+    };
+
+    const items = result.map((r) => ({
+        id: r.id,
+        cliente_id: r.cliente_id,
+        cliente_nome: r.clientes.nome,
+        cliente_idade: calculateAge(r.clientes.dataNascimento),
+        terapeuta_nome: r.terapeutas.nome,
+        terapeuta_crp: r.terapeutas.registro_profissional[0]?.numero_conselho,
+        total_evolucoes: 0, // TODO
+        ultima_evolucao: undefined, // isso é data retornar com toDateOnly
+        status: r.status ? 'ativo' : 'inativo',
+        criado_em: toDateOnly(r.criado_em),
+    }));
+
+    return {
+        items,
+        total,
+        page,
+        pageSize: page_size,
+        totalPages: Math.ceil(total / page_size),
+    }
 }

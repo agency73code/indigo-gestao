@@ -58,7 +58,12 @@ export async function listMedicalRecords(req: Request, res: Response, next: Next
         if (!userId) return res.status(401).json({ success: false, message: 'Não autenticado' });
 
         const query = psychoQuerySchema.parse(req.query);
-        
+        const data = await psychothrapyService.listMedicalRecords(query, userId);
+
+        res.status(201).json({
+            success: true,
+            data,
+        });
     } catch (error) {
         if (error instanceof ZodError) {
             return res.status(400).json({

@@ -226,7 +226,7 @@ function buildQueryString(filtros?: ProntuarioListFilters): string {
 // ============================================
 
 /**
- * Listar prontuários
+ * Listar prontuários [feito]
  */
 export async function listarProntuarios(
     filtros: ProntuarioListFilters = {}

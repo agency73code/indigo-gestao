@@ -1,7 +1,7 @@
 import { getTherapistData } from '../cache/therapistCache.js';
 import { AppError } from '../errors/AppError.js';
 import { ACCESS_LEVELS } from './accessLevels.js';
-import { defineAbilityFor } from '../abilities/defineAbility.js';
+import { defineAbilityForLevel } from '../abilities/defineAbility.js';
 import { prisma } from '../config/database.js';
 
 export type VisibilityScope =
@@ -32,8 +32,7 @@ export async function getVisibilityScope(therapistId: string): Promise<Visibilit
 
     const levels = cargos.map((c) => ACCESS_LEVELS[c] ?? 0);
     const maxLevel = levels.length > 0 ? Math.max(...levels) : 0;
-    const abilityRole = cargos[0] ?? '';
-    const ability = defineAbilityFor(abilityRole);
+    const ability = defineAbilityForLevel(maxLevel);
 
     // --- Sem permissão CASL ---
     if (!ability.can('read', 'Consultar')) {
