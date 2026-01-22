@@ -5,6 +5,10 @@ import { getFileStreamFromR2 } from './r2/getFileStream.js';
 import { createFolder } from './r2/createFolder.js';
 import { normalizedBirthDate } from './types/files.normalizer.js';
 import { R2GenericUploadService } from './r2/r2-upload-generic.js';
+import { z } from 'zod';
+import { AppError } from '../../errors/AppError.js';
+import { sanitizeUtf8Filename } from '../../utils/sanitizeUtf8Filename.js';
+import { asciiFallbackFilename } from '../../utils/asciiFallbackFilename.js';
 
 /**
  * Controller responsável pelos uploads de arquivos.
@@ -137,37 +141,56 @@ export async function viewFile(req: Request, res: Response) {
 }
 
 /**
- * Controller: força o download de um arquivo do Google R2.
+ * download R2.
  */
-export async function downloadFile(req: Request, res: Response) {
-    const storageId = req.params.id ?? req.params.storageId;
 
-    if (!storageId) {
-        return res.status(400).json({ error: 'storageId é obrigatório.' });
-    }
+const arquivoIdParamSchema = z.object({
+  id: z.coerce.number().int().positive(),
+});
 
+export async function downloadFile(req: Request, res: Response, next: NextFunction) {
     try {
-        const { metadata, stream } = await getFileStreamFromR2(storageId);
-
-        if (!stream) {
-            return res.status(500).json({ error: 'Falha ao obter stream do arquivo.' });
+        if (!req.user) {
+            throw new AppError('UNAUTHENTICATED', 'Não autenticado', 401);
         }
 
-        res.setHeader('Content-Type', metadata.mimeType);
+        const { id: fileId } = arquivoIdParamSchema.parse(req.params);
+        
+        // Busca no banco pelo ID lógico (seguro)
+        const dbFile = await FilesService.findByIdForDownload(fileId, req.user.id);
+        if (!dbFile) {
+            throw new AppError('FILE_NOT_FOUND', 'Arquivo não encontrado', 404);
+        }
+
+        if (!dbFile.storage_id) {
+            throw new AppError('FILE_NO_STORAGE', 'Arquivo sem arquivo_id', 409);
+        }
+
+        // Pega stream no R2 pelo storage_id
+        const { metadata, stream } = await getFileStreamFromR2(dbFile.storage_id);
+        if (!stream) {
+            throw new AppError('R2_STREAM_FAILED', 'Falha ao obter stream do arquivo', 502);
+        }
+
+        const mimeType = dbFile.mime_type ?? metadata.mimeType ?? 'application/octet-stream';
+        const desiredName = sanitizeUtf8Filename(dbFile.nome ?? metadata.name ?? 'download');
+        const asciiName = asciiFallbackFilename(desiredName);
+
+        res.setHeader('Content-Type', mimeType);
         res.setHeader(
-            'Content-Disposition',
-            `attachment; filename="${metadata.name}"; filename*=UTF-8''${encodeURIComponent(metadata.name)}`,
+        'Content-Disposition',
+        `attachment; filename="${asciiName}"; filename*=UTF-8''${encodeURIComponent(desiredName)}`
         );
 
-        (stream as NodeJS.ReadableStream).on('error', (err) => {
-            console.error('Erro ao baixar arquivo:', err);
-            res.sendStatus(500);
+        // erro de stream: encerra a resposta sem tentar setar status depois que começou
+        stream.on('error', (err: unknown) => {
+            console.error('[downloadArquivoById] stream error', err);
+            res.destroy(err as Error);
         });
 
-        return (stream as NodeJS.ReadableStream).pipe(res);
-    } catch (error) {
-        console.error('Erro ao baixar arquivo:', error);
-        return res.status(404).json({ error: 'Arquivo não encontrado no R2.' });
+        return stream.pipe(res);
+    } catch (err) {
+        return next(err);
     }
 }
 

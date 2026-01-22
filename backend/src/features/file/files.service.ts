@@ -4,6 +4,9 @@ import { s3 } from '../../config/r2.js';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { DeleteObjectCommand } from '@aws-sdk/client-s3';
 import path from 'path';
+import type { FileForDownload } from './types/files.types.js';
+import { AppError } from '../../errors/AppError.js';
+import { getVisibilityScope } from '../../utils/visibilityFilter.js';
 
 type OwnerType = 'cliente' | 'terapeuta';
 
@@ -201,4 +204,94 @@ export async function deleteFromR2(storageId: string) {
 /** Remove o registro do banco */
 export async function deleteFromDatabase(id: number) {
     await prisma.arquivos.delete({ where: { id } });
+}
+
+export async function findByIdForDownload(
+    fileId: number,
+    userId: string,
+): Promise<FileForDownload | null> {
+    const file = await prisma.arquivos.findUnique({
+        where: { id: fileId },
+        select: {
+            id: true,
+            arquivo_id: true,
+            mime_type: true,
+            descricao_documento: true,
+            clienteId: true,
+            terapeutaId: true,
+        },
+    });
+
+    if (!file) return null;
+
+    if (!file.arquivo_id) {
+        throw new AppError('FILE_NO_STORAGE', 'Arquivo sem referência de storage', 409);
+    }
+
+    const visibility = await getVisibilityScope(userId);
+
+    // arquivo do CLIENTE
+    if (file.clienteId) {
+        if (file.clienteId === userId) {
+            return {
+                id: file.id,
+                storage_id: file.arquivo_id,
+                mime_type: file.mime_type,
+                nome: file.descricao_documento,
+            };
+        }
+
+        if (visibility.scope === 'none') {
+            throw new AppError('FORBIDDEN', 'Sem permissão para baixar este arquivo', 403);
+        }
+
+        const now = new Date();
+
+        const link = await prisma.terapeuta_cliente.findFirst({
+            where: {
+                cliente_id: file.clienteId,
+                status: 'active',
+                data_inicio: { lte: now },
+                OR: [
+                    { data_fim: null }, 
+                    { data_fim: { gt: now } }
+                ],
+                ...(visibility.scope === 'partial'
+                    ? { terapeuta_id: { in: visibility.therapistIds } }
+                    : {}),
+            },
+            select: { id: true },
+        });
+
+        if (!link) {
+            throw new AppError('FORBIDDEN', 'Sem permissão para baixar este arquivo', 403);
+        }
+
+        return {
+            id: file.id,
+            storage_id: file.arquivo_id,
+            mime_type: file.mime_type,
+            nome: file.descricao_documento,
+        };
+    }
+
+    if (file.terapeutaId) {
+        const allowed =
+            visibility.scope === 'all' ||
+            (visibility.scope === 'partial' && visibility.therapistIds.includes(file.terapeutaId));
+
+        if (!allowed) {
+            throw new AppError('FORBIDDEN', 'Sem permissão para baixar este arquivo', 403);
+        }
+
+        return {
+            id: file.id,
+            storage_id: file.arquivo_id,
+            mime_type: file.mime_type,
+            nome: file.descricao_documento,
+        };
+    }
+
+    // Se não tem dono definido, bloqueia (ou trata como inconsistente)
+    throw new AppError('FILE_OWNER_MISSING', 'Arquivo sem clienteId/terapeutaId', 409);
 }

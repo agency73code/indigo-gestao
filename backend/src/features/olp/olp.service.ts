@@ -303,7 +303,6 @@ export async function listSessionsByClient(filters: OcpType.ListSessionsFilters)
         periodStart,
         periodEnd,
     } = filters;
-    console.log(area)
     const where: Prisma.sessaoWhereInput = {};
     const order = sort === 'date-asc' ? 'asc' : 'desc';
 
