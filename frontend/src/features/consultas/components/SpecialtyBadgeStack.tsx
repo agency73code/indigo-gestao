@@ -1,5 +1,10 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { getSpecialtyColors } from '@/utils/specialtyColors';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
 
 interface SpecialtyBadgeStackProps {
     especialidades: string[];
@@ -18,8 +23,7 @@ export function SpecialtyBadgeStack({
     especialidades, 
     especialidadePrincipal 
 }: SpecialtyBadgeStackProps) {
-    const [showTooltip, setShowTooltip] = useState(false);
-    const containerRef = useRef<HTMLDivElement>(null);
+    const [open, setOpen] = useState(false);
 
     // Combinar especialidade principal com o array, removendo duplicatas
     const allSpecialties = especialidadePrincipal 
@@ -61,103 +65,85 @@ export function SpecialtyBadgeStack({
         );
     }
 
-    // Múltiplas especialidades - mostra empilhado com hover
+    // Múltiplas especialidades - mostra empilhado com popover
     return (
-        <div 
-            ref={containerRef}
-            className="relative inline-flex items-center"
-            onMouseEnter={() => setShowTooltip(true)}
-            onMouseLeave={() => setShowTooltip(false)}
-        >
-            {/* Container empilhado */}
-            <div className="flex items-center -space-x-2">
-                {/* Primeira especialidade (badge principal) */}
-                <span 
-                    className="text-[14px] font-normal inline-block px-3 py-1 z-10 ring-2 ring-white dark:ring-gray-900" 
-                    style={{ 
-                        fontFamily: 'Inter, sans-serif', 
-                        backgroundColor: firstColors.bg, 
-                        color: firstColors.text,
-                        borderRadius: '24px'
-                    }}
-                >
-                    {firstSpecialty}
-                </span>
-                
-                {/* Badge "+N" indicando mais especialidades */}
-                <span 
-                    className="text-[12px] font-medium inline-flex items-center justify-center h-6 min-w-6 px-2 z-0 ring-2 ring-white dark:ring-gray-900 cursor-pointer" 
-                    style={{ 
-                        fontFamily: 'Inter, sans-serif', 
-                        backgroundColor: '#F3F4F6',
-                        color: '#6B7280',
-                        borderRadius: '24px'
-                    }}
-                >
-                    +{remainingCount}
-                </span>
-            </div>
-
-            {/* Tooltip com todas as especialidades */}
-            {showTooltip && (
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
                 <div 
-                    className="absolute left-0 top-full mt-2 z-50 min-w-max"
-                    style={{
-                        animation: 'fadeIn 0.15s ease-out'
-                    }}
+                    className="relative inline-flex items-center cursor-pointer"
+                    onMouseEnter={() => setOpen(true)}
+                    onMouseLeave={() => setOpen(false)}
                 >
-                    <div 
-                        className="rounded-lg shadow-lg p-3 space-y-2 border"
-                        style={{ 
-                            backgroundColor: 'var(--popover)',
-                            borderColor: 'var(--border)'
-                        }}
-                    >
-                        <p 
-                            className="text-xs font-medium mb-2 pb-2 border-b"
+                    {/* Container empilhado */}
+                    <div className="flex items-center -space-x-2">
+                        {/* Primeira especialidade (badge principal) */}
+                        <span 
+                            className="text-[14px] font-normal inline-block px-3 py-1 z-10 ring-2 ring-white dark:ring-gray-900" 
                             style={{ 
-                                color: 'var(--muted-foreground)',
-                                borderColor: 'var(--border)'
+                                fontFamily: 'Inter, sans-serif', 
+                                backgroundColor: firstColors.bg, 
+                                color: firstColors.text,
+                                borderRadius: '24px'
                             }}
                         >
-                            Especialidades ({uniqueSpecialties.length})
-                        </p>
-                        <div className="flex flex-col gap-1.5">
-                            {uniqueSpecialties.map((specialty, index) => {
-                                const colors = getSpecialtyColors(specialty);
-                                return (
-                                    <span 
-                                        key={`${specialty}-${index}`}
-                                        className="text-[13px] font-normal inline-block px-3 py-1 w-fit" 
-                                        style={{ 
-                                            fontFamily: 'Inter, sans-serif', 
-                                            backgroundColor: colors.bg, 
-                                            color: colors.text,
-                                            borderRadius: '24px'
-                                        }}
-                                    >
-                                        {specialty}
-                                    </span>
-                                );
-                            })}
-                        </div>
+                            {firstSpecialty}
+                        </span>
+                        
+                        {/* Badge "+N" indicando mais especialidades */}
+                        <span 
+                            className="text-[12px] font-medium inline-flex items-center justify-center h-6 min-w-6 px-2 z-0 ring-2 ring-white dark:ring-gray-900" 
+                            style={{ 
+                                fontFamily: 'Inter, sans-serif', 
+                                backgroundColor: '#F3F4F6',
+                                color: '#6B7280',
+                                borderRadius: '24px'
+                            }}
+                        >
+                            +{remainingCount}
+                        </span>
                     </div>
                 </div>
-            )}
-
-            <style>{`
-                @keyframes fadeIn {
-                    from {
-                        opacity: 0;
-                        transform: translateY(-4px);
-                    }
-                    to {
-                        opacity: 1;
-                        transform: translateY(0);
-                    }
-                }
-            `}</style>
-        </div>
+            </PopoverTrigger>
+            <PopoverContent 
+                className="w-auto p-3 z-50"
+                align="start"
+                side="bottom"
+                sideOffset={8}
+                avoidCollisions={true}
+                collisionPadding={16}
+                onMouseEnter={() => setOpen(true)}
+                onMouseLeave={() => setOpen(false)}
+            >
+                <p 
+                    className="text-xs font-medium mb-2 pb-2 border-b"
+                    style={{ 
+                        color: 'var(--muted-foreground)',
+                        borderColor: 'var(--border)'
+                    }}
+                >
+                    Especialidades ({uniqueSpecialties.length})
+                </p>
+                <div className="flex flex-col gap-1.5">
+                    {uniqueSpecialties.map((specialty, index) => {
+                        const colors = getSpecialtyColors(specialty);
+                        return (
+                            <span 
+                                key={`${specialty}-${index}`}
+                                className="text-[13px] font-normal inline-block px-3 py-1 w-fit" 
+                                style={{ 
+                                    fontFamily: 'Inter, sans-serif', 
+                                    backgroundColor: colors.bg, 
+                                    color: colors.text,
+                                    borderRadius: '24px'
+                                }}
+                            >
+                                {specialty}
+                            </span>
+                        );
+                    })}
+                </div>
+            </PopoverContent>
+        </Popover>
     );
 }
 

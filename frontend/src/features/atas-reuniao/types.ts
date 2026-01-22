@@ -64,6 +64,8 @@ export interface CabecalhoAta {
     conselhoTipo?: string;
     profissao?: string;
     cargo?: string;
+    /** Todos os registros profissionais disponíveis para seleção */
+    dadosProfissionais?: DadoProfissional[];
 }
 
 /** Salvos: id, tipo, nome, descricao, terapeutaId | Derivados: especialidade, cargo */
@@ -165,13 +167,25 @@ export interface UpdateAtaInput {
     status?: 'rascunho' | 'finalizada';
 }
 
+export interface DadoProfissional {
+    cargo: string;
+    areaAtuacao: string;
+    numeroConselho?: string | null;
+}
+
 export interface TerapeutaOption {
     id: string;
     nome: string;
+    /** @deprecated Use dadosProfissionais */
     especialidade?: string;
+    /** @deprecated Use dadosProfissionais */
     cargo?: string;
+    /** @deprecated Use dadosProfissionais */
     conselho?: string;
+    /** @deprecated Use dadosProfissionais */
     registroConselho?: string;
+    /** Múltiplos registros profissionais do terapeuta */
+    dadosProfissionais?: DadoProfissional[];
 }
 
 export interface ClienteOption {

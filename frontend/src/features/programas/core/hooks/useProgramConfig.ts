@@ -36,20 +36,20 @@ const PROGRAM_AREAS: AreaMeta[] = [
         icon: Hand,
         implemented: true
     },
-    // Áreas em planejamento
+    // Psicoterapia - Prontuário Psicológico
     { 
         id: 'psicoterapia', 
         title: 'Psicoterapia', 
         path: '/app/programas/psicoterapia',
         icon: Heart,
-        implemented: false
+        implemented: true
     },
     { 
         id: 'musicoterapia', 
         title: 'Musicoterapia', 
         path: '/app/programas/musicoterapia',
         icon: Music,
-        implemented: 'in-progress'
+        implemented: true
     },
     { 
         id: 'fisioterapia', 

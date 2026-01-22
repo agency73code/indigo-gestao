@@ -3,6 +3,7 @@ import { ChevronUp, ChevronDown, ArrowUpRight, User } from 'lucide-react';
 import { Button } from '@/ui/button';
 import type { Therapist, SortState } from '../types/consultas.types';
 import { SpecialtyBadgeStack } from './SpecialtyBadgeStack';
+import { ColumnHeaderFilter, type FilterOption } from '@/components/ui/column-header-filter';
 
 interface AvatarWithSkeletonProps {
     src?: string | null;
@@ -63,12 +64,31 @@ const AvatarWithSkeleton = memo(({ src, alt, initials, size = 'md' }: AvatarWith
 
 AvatarWithSkeleton.displayName = 'AvatarWithSkeleton';
 
+// Tipos para filtros de coluna
+export interface TherapistColumnFilters {
+    status?: string;
+    especialidade?: string;
+    cargo?: string;
+}
+
+export interface TherapistColumnFilterOptions {
+    status: FilterOption[];
+    especialidade: FilterOption[];
+    cargo: FilterOption[];
+}
+
 interface TherapistTableProps {
     therapists: Therapist[];
     loading?: boolean;
     onViewProfile: (therapist: Therapist) => void;
     sortState: SortState;
     onSort: (field: string) => void;
+    /** Filtros ativos das colunas */
+    columnFilters?: TherapistColumnFilters;
+    /** Opções de filtros para cada coluna */
+    filterOptions?: TherapistColumnFilterOptions;
+    /** Callback quando um filtro muda */
+    onFilterChange?: (key: keyof TherapistColumnFilters, value: string | undefined) => void;
 }
 
 const EmptyState = () => (
@@ -107,6 +127,9 @@ const TherapistTable = memo(function TherapistTable({
     onViewProfile,
     sortState,
     onSort,
+    columnFilters,
+    filterOptions,
+    onFilterChange,
 }: TherapistTableProps) {
     const getSortIcon = (field: string) => {
         if (sortState.field !== field) return null;
@@ -256,12 +279,30 @@ const TherapistTable = memo(function TherapistTable({
                                 onClick={() => onSort('especialidade')}
                             >
                                 <div className="flex items-center gap-2 font-medium text-sm">
-                                    Especialidade
+                                    {filterOptions && onFilterChange ? (
+                                        <ColumnHeaderFilter
+                                            label="Especialidade"
+                                            options={filterOptions.especialidade}
+                                            value={columnFilters?.especialidade}
+                                            onChange={(v) => onFilterChange('especialidade', v)}
+                                        />
+                                    ) : (
+                                        'Especialidade'
+                                    )}
                                     {getSortIcon('especialidade')}
                                 </div>
                             </th>
                             <th className="text-left p-3 font-medium text-sm hidden lg:table-cell" style={{ color: 'var(--table-text-secondary)' }}>
-                                Cargo
+                                {filterOptions && onFilterChange ? (
+                                    <ColumnHeaderFilter
+                                        label="Cargo"
+                                        options={filterOptions.cargo}
+                                        value={columnFilters?.cargo}
+                                        onChange={(v) => onFilterChange('cargo', v)}
+                                    />
+                                ) : (
+                                    'Cargo'
+                                )}
                             </th>
                             <th className="text-left p-3 font-medium text-sm hidden xl:table-cell" style={{ color: 'var(--table-text-secondary)' }}>
                                 Telefone
@@ -272,7 +313,16 @@ const TherapistTable = memo(function TherapistTable({
                                 onClick={() => onSort('status')}
                             >
                                 <div className="flex items-center gap-2 font-medium text-sm">
-                                    Status
+                                    {filterOptions && onFilterChange ? (
+                                        <ColumnHeaderFilter
+                                            label="Status"
+                                            options={filterOptions.status}
+                                            value={columnFilters?.status}
+                                            onChange={(v) => onFilterChange('status', v)}
+                                        />
+                                    ) : (
+                                        'Status'
+                                    )}
                                     {getSortIcon('status')}
                                 </div>
                             </th>

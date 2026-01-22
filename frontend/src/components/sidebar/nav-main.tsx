@@ -180,11 +180,15 @@ export function NavMain({
                                                     closeAllMenus();
                                                 }
                                             }}
+                                            className="group-data-[collapsible=icon]:justify-center"
                                         >
-                                            <div className="flex items-center justify-center h-8 w-8 rounded-full bg-primary shrink-0 [&_svg]:text-background [&_svg]:h-4 [&_svg]:w-4">
+                                            <div className="flex items-center justify-center h-8 w-8 rounded-full bg-primary shrink-0 [&_svg]:text-background [&_svg]:h-4 [&_svg]:w-4 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8">
                                                 <item.icon size={16} className="text-background" />
                                             </div>
-                                            <span style={{ fontFamily: 'Sora, sans-serif', fontWeight: 300 }}>
+                                            <span 
+                                                style={{ fontFamily: 'Sora, sans-serif', fontWeight: 300 }}
+                                                className="group-data-[collapsible=icon]:hidden"
+                                            >
                                                 {item.title}
                                             </span>
                                         </Link>
@@ -192,12 +196,12 @@ export function NavMain({
                                 {item.items?.length ? (
                                     <>
                                         <CollapsibleTrigger asChild>
-                                            <SidebarMenuAction className="data-[state=open]:rotate-90">
+                                            <SidebarMenuAction className="data-[state=open]:rotate-90 group-data-[collapsible=icon]:hidden">
                                                 <ChevronRight />
                                                 <span className="sr-only">Toggle</span>
                                             </SidebarMenuAction>
                                         </CollapsibleTrigger>
-                                        <CollapsibleContent>
+                                        <CollapsibleContent className="group-data-[collapsible=icon]:hidden">
                                             <SidebarMenuSub className="gap-1.5 ml-3.5 border-l pl-3">
                                                 {item.items?.map((subItem) => {
                                                     // Para programas, verifica a área atual

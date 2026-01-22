@@ -154,7 +154,6 @@ export function VisualizarAtaPage() {
 
             try {
                 const data = await getAtaById(id);
-                
                 if (data == null) {
                     setNotFound(true);
                     return;

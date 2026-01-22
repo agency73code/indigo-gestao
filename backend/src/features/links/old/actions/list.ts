@@ -30,7 +30,6 @@ export async function getAllLinks(userId: string, filters?: LinkFilters) {
 
     const links = await prisma.terapeuta_cliente.findMany({
         where: finalWhere,
-        take: 50,
         orderBy,
         include: {
             terapeuta: {

@@ -121,7 +121,6 @@ export async function selectTherapists(userId: string, query: TherapistSelectQue
                     numero_conselho: true,
                 },
                 orderBy: { id: 'asc' },
-                take: 1,
             },
         },
         orderBy: { nome: 'asc' },

@@ -17,5 +17,13 @@ export {
     buildAtaPrompt,
 } from './ata.prompts.js';
 
+// Prontuário Psicológico
+export {
+    PROMPTS_PRONTUARIO,
+    buildProntuarioUserPrompt,
+    formatEvolutionsForPrompt,
+    PRONTUARIO_DISCLAIMER,
+} from './prontuario.prompts.js';
+
 // Compatibilidade com código legado
 export { PROMPTS_RELATORIO as default } from './relatorio.prompts.js';

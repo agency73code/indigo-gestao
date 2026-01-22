@@ -157,7 +157,7 @@ export default function AnamneseListPage() {
                         <ToolbarConsulta
                             searchValue={searchTerm}
                             onSearchChange={handleSearchChange}
-                            placeholder="Busca..."
+                            placeholder="Buscar por cliente ou responsável..."
                             showFilters={false}
                         />
                     </div>

@@ -15,6 +15,27 @@ import { atasConfig } from './atas.config';
 // HELPERS - MAPEAMENTO API ↔ FRONTEND
 // ============================================
 
+/** Mapeamento de área de atuação para sigla do conselho profissional */
+const AREA_PARA_SIGLA_CONSELHO: Record<string, string> = {
+    'Fisioterapia': 'CREFITO',
+    'Terapia Ocupacional': 'CREFITO',
+    'Fonoaudiologia': 'CRFa',
+    'Psicologia': 'CRP',
+    'Neuropsicologia': 'CRP',
+    'Psicopedagogia': 'CRP',
+    'Terapia ABA': 'CRP',
+    'Musicoterapia': 'CBMT',
+    'Nutrição': 'CRN',
+    'Enfermagem': 'COREN',
+    'Medicina': 'CRM',
+};
+
+/** Obtém a sigla do conselho com base na área de atuação */
+function getSiglaConselho(areaAtuacao: string | undefined): string {
+    if (!areaAtuacao) return 'CRP';
+    return AREA_PARA_SIGLA_CONSELHO[areaAtuacao] || 'CRP';
+}
+
 /** Converte resposta do backend (snake_case) para frontend (camelCase) */
 function mapAtaFromApi(data: any): AtaReuniao {
     return {
@@ -46,7 +67,7 @@ function mapAtaFromApi(data: any): AtaReuniao {
             terapeutaId: data.terapeuta_id,
             terapeutaNome: data.terapeuta?.nome || '',
             conselhoNumero: data.terapeuta?.registro_profissional?.[0]?.numero_conselho,
-            conselhoTipo: data.terapeuta?.registro_profissional?.[0]?.area_atuacao?.nome,
+            conselhoTipo: getSiglaConselho(data.terapeuta?.registro_profissional?.[0]?.area_atuacao?.nome),
             profissao: data.terapeuta?.registro_profissional?.[0]?.area_atuacao?.nome,
             cargo: data.terapeuta?.registro_profissional?.[0]?.cargo?.nome,
         },
@@ -62,7 +83,7 @@ function mapAtaFromApi(data: any): AtaReuniao {
             size: a.tamanho,
             type: a.mime_type,
             arquivoId: a.arquivo_id,
-            url: a.arquivo_id ? `${atasConfig.apiBase}/arquivos/${a.arquivo_id}/view` : undefined,
+            url: `${atasConfig.apiBase}/atas-reuniao/download/${a.id}`,
         })),
     };
 }
@@ -362,14 +383,29 @@ export async function listTerapeutas(): Promise<TerapeutaOption[]> {
     
     const data = await res.json();
 
-    return data.map((t: any) => ({
-        id: t.id,
-        nome: t.nome,
-        especialidade: t.registro_profissional?.[0]?.area_atuacao?.nome,
-        cargo: t.registro_profissional?.[0]?.cargo?.nome,
-        conselho: t.registro_profissional?.[0]?.area_atuacao?.nome,
-        registroConselho: t.registro_profissional?.[0]?.numero_conselho,
-    }));
+    return data.map((t: any) => {
+        const registros = t.registro_profissional ?? [];
+        const primeiroRegistro = registros[0];
+        
+        // Mapeia todos os registros profissionais
+        const dadosProfissionais = registros.map((rp: any) => ({
+            cargo: rp.cargo?.nome ?? '',
+            areaAtuacao: rp.area_atuacao?.nome ?? '',
+            numeroConselho: rp.numero_conselho ?? null,
+        }));
+
+        return {
+            id: t.id,
+            nome: t.nome,
+            // Campos legados (compatibilidade) - usam o primeiro registro
+            especialidade: primeiroRegistro?.area_atuacao?.nome,
+            cargo: primeiroRegistro?.cargo?.nome,
+            conselho: getSiglaConselho(primeiroRegistro?.area_atuacao?.nome),
+            registroConselho: primeiroRegistro?.numero_conselho,
+            // Novo: todos os registros profissionais
+            dadosProfissionais,
+        };
+    });
 }
 
 export async function getTerapeutaLogado(userId: string): Promise<CabecalhoAta> {
@@ -377,14 +413,25 @@ export async function getTerapeutaLogado(userId: string): Promise<CabecalhoAta> 
     if (!res.ok) throw new Error('Falha ao carregar dados do terapeuta');
     
     const t = await res.json();
-    const registro = t.registro_profissional?.[0];
+    const registros = t.registro_profissional ?? [];
+    const primeiroRegistro = registros[0];
+    
+    // Mapeia todos os registros profissionais
+    const dadosProfissionais = registros.map((rp: any) => ({
+        cargo: rp.cargo?.nome ?? '',
+        areaAtuacao: rp.area_atuacao?.nome ?? '',
+        numeroConselho: rp.numero_conselho ?? null,
+    }));
     
     return {
         terapeutaId: t.id,
         terapeutaNome: t.nome,
-        conselhoNumero: registro?.numero_conselho,
-        conselhoTipo: registro?.area_atuacao?.nome,
-        profissao: registro?.area_atuacao?.nome,
-        cargo: registro?.cargo?.nome,
+        // Usa primeiro registro como padrão
+        conselhoNumero: primeiroRegistro?.numero_conselho,
+        conselhoTipo: getSiglaConselho(primeiroRegistro?.area_atuacao?.nome),
+        profissao: primeiroRegistro?.area_atuacao?.nome,
+        cargo: primeiroRegistro?.cargo?.nome,
+        // Todos os registros para permitir seleção
+        dadosProfissionais,
     };
 }

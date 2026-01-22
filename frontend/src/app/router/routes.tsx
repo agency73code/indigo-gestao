@@ -10,7 +10,6 @@ import AuthProviderLayout from '../../features/shell/layouts/AuthProviderLayout'
 import AppLayout from '../../features/shell/layouts/AppLayout';
 import NotFoundPage from '../../features/shell/pages/NotFoundPage';
 import TokenNotFoundPage from '../../shared/components/pages/TokenNotFoundPage';
-import DashboardPage from '../../features/dashboard/pages/DashboardPage';
 import TerapeutasListPage from '../../features/consultas/pages/TerapeutasListPage';
 import PacientesListPage from '../../features/consultas/pages/PacientesListPage';
 import ArquivosPage from '../../features/arquivos/pages/ArquivosPage';
@@ -135,10 +134,21 @@ const DetalheSessaoFonoPage = lazy(
     () => import('@/features/programas/variants/fono/pages/DetalheSessaoFonoPage'),
 );
 
-// Novas áreas - páginas em construção
+// Psicoterapia - Prontuário Psicológico
 const PsicoterapiaPage = lazy(
     () => import('@/features/programas/variants/psicoterapia/pages/PsicoterapiaPage'),
 );
+const CadastrarProntuarioPage = lazy(
+    () => import('@/features/programas/variants/psicoterapia/pages/CadastrarProntuarioPage'),
+);
+const ConsultarProntuariosPage = lazy(
+    () => import('@/features/programas/variants/psicoterapia/pages/ConsultarProntuariosPage'),
+);
+const DetalheProntuarioPage = lazy(
+    () => import('@/features/programas/variants/psicoterapia/pages/DetalheProntuarioPage'),
+);
+
+// Outras áreas
 const TerapiaAbaPage = lazy(
     () => import('@/features/programas/variants/terapia-aba/pages/TerapiaAbaPage'),
 );
@@ -176,11 +186,7 @@ export const router = createBrowserRouter([
                         children: [
                             {
                                 index: true,
-                                element: (
-                                    <Suspense fallback={suspenseFallback}>
-                                        <DashboardPage />
-                                    </Suspense>
-                                ),
+                                element: <Navigate to="/app/consultar/pacientes" replace />,
                             },
                             {
                                 path: 'cadastros',
@@ -628,6 +634,7 @@ export const router = createBrowserRouter([
                                 ),
                                 handle: { breadcrumb: 'Detalhe da Sessão', title: 'Detalhe da Sessão - Musicoterapia' },
                             },
+                            // ===== Psicoterapia - Prontuário Psicológico =====
                             {
                                 path: 'programas/psicoterapia',
                                 element: (
@@ -637,6 +644,43 @@ export const router = createBrowserRouter([
                                 ),
                                 handle: { breadcrumb: 'Psicoterapia', title: 'Psicoterapia' },
                             },
+                            {
+                                path: 'programas/psicoterapia/cadastrar',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <CadastrarProntuarioPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Novo Prontuário', title: 'Novo Prontuário Psicológico' },
+                            },
+                            {
+                                path: 'programas/psicoterapia/consultar',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <ConsultarProntuariosPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Consultar Prontuários', title: 'Consultar Prontuários' },
+                            },
+                            {
+                                path: 'programas/psicoterapia/prontuario/:prontuarioId',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <DetalheProntuarioPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Detalhe do Prontuário', title: 'Prontuário Psicológico' },
+                            },
+                            {
+                                path: 'programas/psicoterapia/editar/:prontuarioId',
+                                element: (
+                                    <Suspense fallback={suspenseFallback}>
+                                        <CadastrarProntuarioPage />
+                                    </Suspense>
+                                ),
+                                handle: { breadcrumb: 'Editar Prontuário', title: 'Editar Prontuário' },
+                            },
+                            // ===== Outras Áreas =====
                             {
                                 path: 'programas/terapia-aba',
                                 element: (
