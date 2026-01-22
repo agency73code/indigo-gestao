@@ -1,15 +1,30 @@
 import z from 'zod';
+import { cpfDigits } from '../../../schemas/utils/cpfDigits.js';
+import { dateStringToDate } from '../../../schemas/utils/dateStringToDate.js';
+import { uuidParam } from '../../../schemas/utils/uuid.js';
 
 export const psychoSchema = z.object({
-    cliente_id: z.uuid({ message: 'cliente_id deve ser um UUID válido' }),
+    cliente_id: uuidParam,
 
     informacoes_educacionais: z.object({
         nivel_escolaridade: z.string().nullable().default(null),
-        instituicao_formacao: z.string().trim().min(1),
+        instituicao_formacao: z.string().nullable().default(null),
         profissao_ocupacao: z.string().nullable().default(null),
         observacoes: z.string().nullable().default(null),
     }),
 
+    nucleo_familiar: z.array(
+        z.object({
+            id: z.coerce.number().int().positive(),
+            nome: z.string().trim().min(1),
+            cpf: cpfDigits,
+            parentesco: z.string().trim().min(1),
+            descricao_relacao: z.string().nullable().default(null),
+            data_nascimento: dateStringToDate,
+            ocupacao: z.string().nullable().default(null),
+            origem_banco: z.boolean(),
+        }),
+    ).min(1, { message: 'Informe ao menos 1 parente no núcleo familiar' }),
     observacoes_nucleo_familiar: z.string().nullable().default(null),
 
     avaliacao_demanda: z.object({
@@ -38,4 +53,14 @@ export const psychoSchema = z.object({
     avaliacao_atendimento: z.string().nullable().default(null),
 });
 
+export const psychoQuerySchema = z.object({
+    q: z.string().optional(),
+    status: z
+        .enum(['ativo', 'inativo', 'todos'])
+        .optional(),
+    page: z.coerce.number().int().positive().optional(),
+    page_size: z.coerce.number().int().positive().optional(),
+});
+
 export type PsychoPayload = z.infer<typeof psychoSchema>;
+export type queryType = z.infer<typeof psychoQuerySchema>;

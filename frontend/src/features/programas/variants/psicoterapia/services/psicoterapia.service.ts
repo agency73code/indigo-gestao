@@ -270,7 +270,7 @@ export async function buscarProntuario(id: string): Promise<ProntuarioPsicologic
 }
 
 /**
- * Buscar prontuário por ID do cliente
+ * Buscar prontuário por ID do cliente [feito]
  */
 export async function buscarProntuarioPorCliente(clienteId: string): Promise<ProntuarioPsicologico | null> {
     const res = await authFetch(endpoints.porCliente(clienteId));
@@ -288,7 +288,7 @@ export async function buscarProntuarioPorCliente(clienteId: string): Promise<Pro
 }
 
 /**
- * Criar prontuário
+ * Criar prontuário [feito]
  */
 export async function criarProntuario(data: ProntuarioFormData): Promise<ProntuarioResponse> {
     try {

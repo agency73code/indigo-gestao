@@ -62,34 +62,36 @@ model cargo {
 }
 
 model cliente {
-  id                  String              @id @default(uuid())
+  id                  String    @id @default(uuid())
   nome                String?
   status              String?
   perfil_acesso       String?
   senha               String?
   token_redefinicao   String?
   validade_token      DateTime?
-  criado_em           DateTime            @default(now())
-  atualizado_em       DateTime            @updatedAt
+  criado_em           DateTime  @default(now())
+  atualizado_em       DateTime  @updatedAt
   cpf                 String?
   dataEntrada         DateTime?
   dataNascimento      DateTime?
   dataSaida           DateTime?
-  emailContato        String?             @unique
+  emailContato        String?   @unique
   senha_atualizada_em DateTime?
   nivel_escolaridade  String?
-  arquivos            arquivos[]
-  enderecos           cliente_endereco[]
-  cuidadores          cuidador[]
-  dadosEscola         dados_escola?
-  dadosPagamento      dados_pagamento?
-  ocp                 ocp[]
-  sessao              sessao[]
-  terapeuta           terapeuta_cliente[]
-  relatorios          relatorio[]
-  anamneses           anamnese[]
-  ocp_prontuarios     ocp_prontuario[]
-  atas_reuniao        ata_reuniao[]
+  genero              String?
+
+  arquivos        arquivos[]
+  enderecos       cliente_endereco[]
+  cuidadores      cuidador[]
+  dadosEscola     dados_escola?
+  dadosPagamento  dados_pagamento?
+  ocp             ocp[]
+  sessao          sessao[]
+  terapeuta       terapeuta_cliente[]
+  relatorios      relatorio[]
+  anamneses       anamnese[]
+  ocp_prontuarios ocp_prontuario[]
+  atas_reuniao    ata_reuniao[]
 
   @@index([nome], map: "nome_idx")
 }
@@ -958,6 +960,10 @@ model ocp_prontuario {
 
   objetivos_trabalho    String
   avaliacao_atendimento String?
+  status                Boolean @default(true)
+
+  criado_em     DateTime @default(now())
+  atualizado_em DateTime @updatedAt
 
   @@index([cliente_id])
   @@index([terapeuta_id])

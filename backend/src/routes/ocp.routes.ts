@@ -38,6 +38,7 @@ router.post('/musictherapy/sessions/calculateMusicKpis', OlpController.musicKpis
 router.get('/musictherapy/programs/graficMusicDetails', OlpController.getMusicTherapyEvolutionChart);
 
 // psychotherapy
-router.post('/prontuarios-psicologicos', psychotherapy.createPsychotherapyRecord)
-
+router.post('/prontuarios-psicologicos', psychotherapy.createPsychotherapyRecord);
+router.get('/prontuarios-psicologicos/cliente/:clientId', psychotherapy.searchMedicalRecordByClient);
+router.get('/prontuarios-psicologicos', psychotherapy.listMedicalRecords);
 export default router;

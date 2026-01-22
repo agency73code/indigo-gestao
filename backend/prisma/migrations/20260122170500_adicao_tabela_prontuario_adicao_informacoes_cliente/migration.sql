@@ -1,5 +1,6 @@
 -- AlterTable
-ALTER TABLE `cliente` ADD COLUMN `nivel_escolaridade` VARCHAR(191) NULL;
+ALTER TABLE `cliente` ADD COLUMN `genero` VARCHAR(191) NULL,
+    ADD COLUMN `nivel_escolaridade` VARCHAR(191) NULL;
 
 -- CreateTable
 CREATE TABLE `ocp_prontuario` (
@@ -15,6 +16,9 @@ CREATE TABLE `ocp_prontuario` (
     `observacao_demanda` TEXT NULL,
     `objetivos_trabalho` VARCHAR(191) NOT NULL,
     `avaliacao_atendimento` VARCHAR(191) NULL,
+    `status` BOOLEAN NOT NULL DEFAULT true,
+    `criado_em` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `atualizado_em` DATETIME(3) NOT NULL,
 
     INDEX `ocp_prontuario_cliente_id_idx`(`cliente_id`),
     INDEX `ocp_prontuario_terapeuta_id_idx`(`terapeuta_id`),
