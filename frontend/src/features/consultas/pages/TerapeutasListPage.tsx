@@ -310,7 +310,7 @@ export default function TerapeutasListPage() {
             </div>
 
             {/* Container da tabela */}
-            <div className="flex-1 overflow-hidden">
+            <div className="flex-1 overflow-hidden rounded-lg">
                 <div className="h-full flex flex-col">
                     <TherapistTable
                         therapists={therapists}

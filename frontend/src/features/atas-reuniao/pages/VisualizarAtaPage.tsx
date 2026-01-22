@@ -516,10 +516,19 @@ export function VisualizarAtaPage() {
                                 {/* Cliente */}
                                 {ata.clienteNome && (
                                     <div className="flex items-center gap-2.5">
-                                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                                            <span className="text-xs font-semibold text-primary">
-                                                {ata.clienteNome.split(' ').map(n => n[0]).slice(0, 2).join('')}
-                                            </span>
+                                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
+                                            {ata.clienteAvatarUrl ? (
+                                                <img 
+                                                    src={`${import.meta.env.VITE_API_BASE ?? ''}${ata.clienteAvatarUrl}`}
+                                                    alt={ata.clienteNome}
+                                                    className="h-full w-full object-cover"
+                                                    referrerPolicy="no-referrer"
+                                                />
+                                            ) : (
+                                                <span className="text-xs font-semibold text-primary">
+                                                    {ata.clienteNome.split(' ').map(n => n[0]).slice(0, 2).join('')}
+                                                </span>
+                                            )}
                                         </div>
                                         <div>
                                             <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Cliente</p>
@@ -530,8 +539,17 @@ export function VisualizarAtaPage() {
 
                                 {/* Responsável */}
                                 <div className="flex items-center gap-2.5">
-                                    <div className="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
-                                        <User className="h-4 w-4 text-emerald-600" />
+                                    <div className="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center shrink-0 overflow-hidden">
+                                        {ata.terapeutaAvatarUrl ? (
+                                            <img 
+                                                src={`${import.meta.env.VITE_API_BASE ?? ''}${ata.terapeutaAvatarUrl}`}
+                                                alt={ata.cabecalho.terapeutaNome}
+                                                className="h-full w-full object-cover"
+                                                referrerPolicy="no-referrer"
+                                            />
+                                        ) : (
+                                            <User className="h-4 w-4 text-emerald-600" />
+                                        )}
                                     </div>
                                     <div>
                                         <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Responsável</p>
@@ -588,7 +606,7 @@ export function VisualizarAtaPage() {
 
                     {/* Resumo IA */}
                     {ata.resumoIA && (
-                        <div className="space-y-4">
+                        <div className="space-y-4 pb-4">
                             <div className="flex items-center gap-2">
                                 <Sparkles className="h-5 w-5 text-primary" />
                                 <h2 className="text-lg font-normal" style={{fontFamily: "Sora"}}>Resumo IA</h2>

@@ -27,27 +27,22 @@ export function useDocuments({ ownerType, ownerId, enabled = true }: UseDocument
 
   const loadDocuments = useCallback(async () => {
     if (!enabled || !ownerId) {
-      console.log('🚫 [useDocuments] Carregamento cancelado:', { enabled, ownerId });
       return;
     }
 
-    console.log('📋 [useDocuments] Iniciando carregamento:', { ownerType, ownerId, enabled });
     setIsLoading(true);
     setError(null);
 
     try {
       const documents = await listFiles({ ownerType, ownerId });
-      console.log('📋 [useDocuments] Documentos recebidos:', documents);
       setData(documents);
       
       // Dispatch eventos de observabilidade
       if (documents.length === 0) {
-        console.log('📋 [useDocuments] Nenhum documento encontrado');
         dispatchEvent(new CustomEvent('documents:list:empty', { 
           detail: { ownerType, ownerId } 
         }));
       } else {
-        console.log('📋 [useDocuments] Documentos carregados com sucesso:', documents.length);
         dispatchEvent(new CustomEvent('documents:list:success', { 
           detail: { ownerType, ownerId, count: documents.length } 
         }));
@@ -105,6 +100,9 @@ export function useDocuments({ ownerType, ownerId, enabled = true }: UseDocument
       const link = document.createElement('a');
       link.href = downloadUrl;
       link.style.display = 'none';
+      link.download = '';
+      link.target = '_blank';
+      link.rel = 'noopener';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

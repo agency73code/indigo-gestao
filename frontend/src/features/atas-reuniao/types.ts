@@ -119,6 +119,10 @@ export interface AtaReuniao extends AtaFormData {
     atualizadoEm: string;
     resumoIA?: string;
     anexos?: Anexo[];
+    /** URL do avatar do cliente */
+    clienteAvatarUrl?: string;
+    /** URL do avatar do terapeuta responsável */
+    terapeutaAvatarUrl?: string;
     /** Calculado pelo backend */
     duracaoMinutos?: number;
     /** Calculado pelo backend */

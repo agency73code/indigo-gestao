@@ -49,6 +49,8 @@ function mapAtaFromApi(data: any): AtaReuniao {
         conteudo: data.conteudo,
         clienteId: data.cliente_id ?? '',
         clienteNome: data.cliente?.nome ?? '',
+        clienteAvatarUrl: data.clienteAvatarUrl ?? undefined,
+        terapeutaAvatarUrl: data.terapeutaAvatarUrl ?? undefined,
         participantes: (data.participantes || []).map((p: any) => ({
             id: String(p.id),
             tipo: p.tipo,

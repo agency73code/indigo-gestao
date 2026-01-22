@@ -2,8 +2,6 @@ import { prisma } from "../../../../../config/database.js";
 
 
 export async function fetchMusicSessionsForChart(programId: string, stimulusId?: string, sort: 'asc' | 'desc' = 'asc') {
-  console.log(programId)
-  console.log(stimulusId)
   const sessions = await prisma.sessao.findMany({
     where: {
       ocp_id: Number(programId),

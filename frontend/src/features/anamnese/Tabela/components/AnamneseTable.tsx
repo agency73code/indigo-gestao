@@ -1,7 +1,6 @@
 import { useState, memo } from 'react';
 import { ArrowUpRight, FileText } from 'lucide-react';
 import { Button } from '@/ui/button';
-import { Link } from 'react-router-dom';
 import type { AnamneseListItem, SortState } from '../types/anamnese-table.types';
 
 interface AvatarWithSkeletonProps {
@@ -198,13 +197,14 @@ const AnamneseTable = memo(function AnamneseTable({
                                                 size="sm"
                                             />
                                             <div className="min-w-0 flex-1">
-                                                <Link
-                                                    to={`/app/anamnese/consultar/${anamnese.id}`}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => onViewProfile(anamnese)}
                                                     className="font-medium text-[14px] truncate text-left hover:underline cursor-pointer transition-colors"
                                                     style={{ fontFamily: 'Inter, sans-serif', color: 'var(--table-text)' }}
                                                 >
                                                     {anamnese.clienteNome}
-                                                </Link>
+                                                </button>
                                             </div>
                                         </div>
                                     </td>
@@ -261,13 +261,14 @@ const AnamneseTable = memo(function AnamneseTable({
                                         size="md"
                                     />
                                     <div>
-                                        <Link
-                                            to={`/app/anamnese/consultar/${anamnese.id}`}
+                                        <button
+                                            type="button"
+                                            onClick={() => onViewProfile(anamnese)}
                                             className="font-medium text-[14px] text-[#1F2937] text-left hover:underline cursor-pointer"
                                             style={{ fontFamily: 'Inter, sans-serif' }}
                                         >
                                             {anamnese.clienteNome}
-                                        </Link>
+                                        </button>
                                         <p className="text-xs text-[#6B7280]">
                                             {age !== null ? `${age} anos` : 'Idade não informada'}
                                         </p>
