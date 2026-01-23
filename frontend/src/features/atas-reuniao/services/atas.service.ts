@@ -51,15 +51,21 @@ function mapAtaFromApi(data: any): AtaReuniao {
         clienteNome: data.cliente?.nome ?? '',
         clienteAvatarUrl: data.clienteAvatarUrl ?? undefined,
         terapeutaAvatarUrl: data.terapeutaAvatarUrl ?? undefined,
-        participantes: (data.participantes || []).map((p: any) => ({
-            id: String(p.id),
-            tipo: p.tipo,
-            nome: p.nome,
-            descricao: p.descricao ?? '',
-            terapeutaId: p.terapeuta_id,
-            especialidade: p.terapeuta?.especialidade,
-            cargo: p.terapeuta?.cargo,
-        })),
+        participantes: (data.participantes || []).map((p: any) => {
+            const arquivoId = p.terapeuta?.arquivos?.[0]?.arquivo_id;
+            return {
+                id: String(p.id),
+                tipo: p.tipo,
+                nome: p.nome,
+                descricao: p.descricao ?? '',
+                terapeutaId: p.terapeuta_id,
+                especialidade: p.terapeuta?.especialidade,
+                cargo: p.terapeuta?.cargo,
+                avatarUrl: arquivoId 
+                    ? `${atasConfig.apiBase}/arquivos/${encodeURIComponent(arquivoId)}/view`
+                    : undefined,
+            };
+        }),
         links: (data.links || []).map((l: any) => ({
             id: String(l.id),
             titulo: l.titulo,

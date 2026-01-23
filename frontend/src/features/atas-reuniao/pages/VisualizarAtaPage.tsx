@@ -25,6 +25,7 @@ import {
 
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
     Dialog,
     DialogContent,
@@ -589,9 +590,12 @@ export function VisualizarAtaPage() {
                                         {/* Clínica */}
                                         {participantesClinica.map((p) => (
                                             <div key={p.id} className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-50 rounded-md text-xs border border-emerald-100 mr-1.5">
-                                                <div className="h-5 w-5 rounded-full bg-emerald-200 flex items-center justify-center shrink-0">
-                                                    <span className="text-[10px] font-medium text-emerald-700">{p.nome.charAt(0)}</span>
-                                                </div>
+                                                <Avatar className="h-5 w-5">
+                                                    <AvatarImage src={p.avatarUrl} alt={p.nome} />
+                                                    <AvatarFallback className="bg-emerald-200 text-[10px] font-medium text-emerald-700">
+                                                        {p.nome.charAt(0)}
+                                                    </AvatarFallback>
+                                                </Avatar>
                                                 <span className="font-medium text-emerald-900">{p.nome}</span>
                                                 {(p.especialidade || p.cargo) && (
                                                     <span className="text-emerald-600">({[p.especialidade, p.cargo].filter(Boolean).join(' • ')})</span>
