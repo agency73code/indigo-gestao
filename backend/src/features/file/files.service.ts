@@ -7,6 +7,8 @@ import path from 'path';
 import type { FileForDownload } from './types/files.types.js';
 import { AppError } from '../../errors/AppError.js';
 import { getVisibilityScope } from '../../utils/visibilityFilter.js';
+import { canDownloadFile } from './utils/canDownloadFile.js';
+import { toFileForDownload } from './r2/toFileForDownload.js';
 
 type OwnerType = 'cliente' | 'terapeuta';
 
@@ -174,8 +176,8 @@ export async function listFiles(ownerType: 'cliente' | 'terapeuta', ownerId: str
 }
 
 /** Busca um arquivo pelo ID (banco) */
-export async function findFileById(id: string) {
-    return prisma.arquivos.findFirst({ where: { arquivo_id: id } });
+export async function findFileById(id: number) {
+    return prisma.arquivos.findFirst({ where: { id: id } });
 }
 
 export async function findFileByStorageId(storageId: string) {
@@ -206,6 +208,9 @@ export async function deleteFromDatabase(id: number) {
     await prisma.arquivos.delete({ where: { id } });
 }
 
+const forbidden = () =>
+    new AppError('FORBIDDEN', 'Sem permissão para baixar este arquivo', 403);
+
 export async function findByIdForDownload(
     fileId: number,
     userId: string,
@@ -225,73 +230,31 @@ export async function findByIdForDownload(
     if (!file) return null;
 
     if (!file.arquivo_id) {
-        throw new AppError('FILE_NO_STORAGE', 'Arquivo sem referência de storage', 409);
+        throw new AppError(
+            'FILE_NO_STORAGE',
+            'Arquivo sem referência de storage',
+            409
+        );
+    }
+
+    // Se não tem dono definido, trata como inconsistência
+    if (!file.clienteId && !file.terapeutaId) {
+        throw new AppError(
+            'FILE_OWNER_MISSING',
+            'Arquivo sem clienteId/terapeutaId',
+            409
+        );
     }
 
     const visibility = await getVisibilityScope(userId);
 
-    // arquivo do CLIENTE
-    if (file.clienteId) {
-        if (file.clienteId === userId) {
-            return {
-                id: file.id,
-                storage_id: file.arquivo_id,
-                mime_type: file.mime_type,
-                nome: file.descricao_documento,
-            };
-        }
+    const allowed = await canDownloadFile({ file, userId, visibility });
+    if (!allowed) throw forbidden();
 
-        if (visibility.scope === 'none') {
-            throw new AppError('FORBIDDEN', 'Sem permissão para baixar este arquivo', 403);
-        }
-
-        const now = new Date();
-
-        const link = await prisma.terapeuta_cliente.findFirst({
-            where: {
-                cliente_id: file.clienteId,
-                status: 'active',
-                data_inicio: { lte: now },
-                OR: [
-                    { data_fim: null }, 
-                    { data_fim: { gt: now } }
-                ],
-                ...(visibility.scope === 'partial'
-                    ? { terapeuta_id: { in: visibility.therapistIds } }
-                    : {}),
-            },
-            select: { id: true },
-        });
-
-        if (!link) {
-            throw new AppError('FORBIDDEN', 'Sem permissão para baixar este arquivo', 403);
-        }
-
-        return {
-            id: file.id,
-            storage_id: file.arquivo_id,
-            mime_type: file.mime_type,
-            nome: file.descricao_documento,
-        };
-    }
-
-    if (file.terapeutaId) {
-        const allowed =
-            visibility.scope === 'all' ||
-            (visibility.scope === 'partial' && visibility.therapistIds.includes(file.terapeutaId));
-
-        if (!allowed) {
-            throw new AppError('FORBIDDEN', 'Sem permissão para baixar este arquivo', 403);
-        }
-
-        return {
-            id: file.id,
-            storage_id: file.arquivo_id,
-            mime_type: file.mime_type,
-            nome: file.descricao_documento,
-        };
-    }
-
-    // Se não tem dono definido, bloqueia (ou trata como inconsistente)
-    throw new AppError('FILE_OWNER_MISSING', 'Arquivo sem clienteId/terapeutaId', 409);
+    return toFileForDownload({
+        id: file.id,
+        storage_id: file.arquivo_id,
+        mime_type: file.mime_type,
+        document_description: file.descricao_documento,
+    });
 }
