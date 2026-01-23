@@ -1,6 +1,7 @@
 import type { Prisma } from '@prisma/client';
 import type { AnamnesePayload } from '../../../schemas/anamnese.schema.js';
 import { maybeCreateList } from './helpers.js';
+import { ensureFilenameWithExt } from '../../file/r2/ensureFilenameWithExt.js';
 
 type ComplaintDiagnosisPayload = AnamnesePayload['queixaDiagnostico'];
 
@@ -31,7 +32,11 @@ export function buildComplaintDiagnosis(
         const arquivos = maybeCreateList(
             exame.arquivos?.filter((arquivo) => !arquivo.removed),
             (arquivo) => ({
-                nome: arquivo.nome ?? null,
+                nome: ensureFilenameWithExt({
+                    name: arquivo.nome,
+                    path: arquivo.caminho,
+                    mime_type: arquivo.tipo,
+                }),
                 tipo: arquivo.tipo ?? null,
                 tamanho: arquivo.tamanho ?? null,
                 caminho: arquivo.caminho ?? null,

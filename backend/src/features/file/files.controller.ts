@@ -5,10 +5,9 @@ import { getFileStreamFromR2 } from './r2/getFileStream.js';
 import { createFolder } from './r2/createFolder.js';
 import { normalizedBirthDate } from './types/files.normalizer.js';
 import { R2GenericUploadService } from './r2/r2-upload-generic.js';
-import { z } from 'zod';
 import { AppError } from '../../errors/AppError.js';
-import { sanitizeUtf8Filename } from '../../utils/sanitizeUtf8Filename.js';
-import { asciiFallbackFilename } from '../../utils/asciiFallbackFilename.js';
+import { streamFileDownload } from './r2/streamDownloadResponse.js';
+import { arquivoIdParamSchema } from './files.schema.js';
 
 /**
  * Controller responsável pelos uploads de arquivos.
@@ -143,11 +142,6 @@ export async function viewFile(req: Request, res: Response) {
 /**
  * download R2.
  */
-
-const arquivoIdParamSchema = z.object({
-  id: z.coerce.number().int().positive(),
-});
-
 export async function downloadFile(req: Request, res: Response, next: NextFunction) {
     try {
         if (!req.user) {
@@ -166,31 +160,9 @@ export async function downloadFile(req: Request, res: Response, next: NextFuncti
             throw new AppError('FILE_NO_STORAGE', 'Arquivo sem arquivo_id', 409);
         }
 
-        // Pega stream no R2 pelo storage_id
-        const { metadata, stream } = await getFileStreamFromR2(dbFile.storage_id);
-        if (!stream) {
-            throw new AppError('R2_STREAM_FAILED', 'Falha ao obter stream do arquivo', 502);
-        }
-
-        const mimeType = dbFile.mime_type ?? metadata.mimeType ?? 'application/octet-stream';
-        const desiredName = sanitizeUtf8Filename(dbFile.nome ?? metadata.name ?? 'download');
-        const asciiName = asciiFallbackFilename(desiredName);
-
-        res.setHeader('Content-Type', mimeType);
-        res.setHeader(
-        'Content-Disposition',
-        `attachment; filename="${asciiName}"; filename*=UTF-8''${encodeURIComponent(desiredName)}`
-        );
-
-        // erro de stream: encerra a resposta sem tentar setar status depois que começou
-        stream.on('error', (err: unknown) => {
-            console.error('[downloadArquivoById] stream error', err);
-            res.destroy(err as Error);
-        });
-
-        return stream.pipe(res);
+        await streamFileDownload(res, dbFile);
     } catch (err) {
-        return next(err);
+        next(err);
     }
 }
 
@@ -198,20 +170,16 @@ export async function downloadFile(req: Request, res: Response, next: NextFuncti
  * Controller: exclui um arquivo do banco e do Google R2.
  */
 export async function deleteFile(req: Request, res: Response) {
-    const fileId = req.params.id;
-    
-    if (!fileId) {
-        return res.status(400).json({ error: 'ID é obrigatório.' });
-    }
-
     try {
+        const { id: fileId } = arquivoIdParamSchema.parse(req.params);
+
         const existing = await FilesService.findFileById(fileId);
 
         if (!existing) {
             return res.status(404).json({ error: 'Arquivo não encontrado.' });
         }
 
-        // Tenta excluir do R2, se gouver arquivo remoto
+        // Tenta excluir do R2, se houver arquivo remoto
         if (existing.arquivo_id) {
             await FilesService.deleteFromR2(existing.arquivo_id);
         }

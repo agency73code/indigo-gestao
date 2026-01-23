@@ -7,6 +7,8 @@ export interface AuthContextValue extends AuthState {
     logout: () => Promise<void>;
     hydrate: () => Promise<void>;
     updateAvatar: (avatarUrl: string) => void;
+    /** Versão do avatar, incrementa a cada atualização para forçar re-render */
+    avatarVersion: number;
 }
 
 export const AuthContext = createContext<AuthContextValue | undefined>(undefined);

@@ -8,41 +8,8 @@ import {
 } from '../schemas/queries/anamnese.schema.js';
 import type { AnamneseListFilters } from '../features/anamnese/anamnese.types.js';
 import { R2GenericUploadService } from '../features/file/r2/r2-upload-generic.js';
-import * as FilesService from '../features/file/files.service.js';
-import { getFileStreamFromR2 } from '../features/file/r2/getFileStream.js';
-import { extension as mimeExtension } from 'mime-types';
-import path from 'path';
-import { asciiFallbackFilename } from '../utils/asciiFallbackFilename.js';
-
-function resolveDownloadFilename(
-    baseName: string,
-    fallbackPath: string | null | undefined,
-    mimeType?: string | null,
-) {
-    const normalizedBase = baseName.trim() || 'arquivo';
-    const currentExt = path.extname(normalizedBase);
-
-    if (currentExt) {
-        return normalizedBase;
-    }
-
-    const fallbackExt = fallbackPath ? path.extname(fallbackPath) : '';
-    if (fallbackExt) {
-        return `${normalizedBase}${fallbackExt}`;
-    }
-
-    const mimeExt = mimeType ? mimeExtension(mimeType) : false;
-    if (typeof mimeExt === 'string' && mimeExt.length > 0) {
-        return `${normalizedBase}.${mimeExt}`;
-    }
-
-    return normalizedBase;
-}
-
-function sanitizeHeaderFilename(name: string): string {
-    // remove CR/LF e aspas que quebram header
-    return name.replace(/[\r\n"]/g, '_');
-}
+import { streamFileDownload } from '../features/file/r2/streamDownloadResponse.js';
+import { AppError } from '../errors/AppError.js';
 
 function extractFileId(fieldname: string): string | null {
     // espera "files[<id>]"
@@ -259,48 +226,21 @@ export async function downloadExamePrevioArquivo(
         }
 
         const parsed = anamneseArquivoIdSchema.parse(req.params);
-        const arquivo = await anamneseService.getExamePrevioArquivoForDownload(
+        const dbFile = await anamneseService.getExamePrevioArquivoForDownload(
             parsed.id,
             parsed.arquivoId,
             req.user.id,
         );
 
-        if (!arquivo) {
-            return res.status(404).json({ success: false, message: 'Arquivo não encontrado' });
+        if (!dbFile) {
+            throw new AppError('FILE_NOT_FOUND', 'Arquivo não encontrado', 404);
         }
 
-        if (!arquivo.caminho) {
-            return res.status(404).json({ success: false, message: 'Arquivo sem caminho válido' });
+        if (!dbFile.storage_id) {
+            throw new AppError('FILE_NO_STORAGE', 'Arquivo sem arquivo_id', 409);
         }
 
-        const { metadata, stream } = await getFileStreamFromR2(arquivo.caminho);
-
-        if (!stream) {
-            return res.status(500).json({ success: false, message: 'Falha ao obter arquivo' });
-        }
-
-        const dbArquivo = arquivo.caminho ? await FilesService.findFileByStorageId(arquivo.caminho) : null;
-        const mimeType = dbArquivo?.tipo ?? metadata.mimeType;
-        const filename = resolveDownloadFilename(
-            dbArquivo?.nome ?? metadata.name,
-            arquivo.caminho ?? metadata.name,
-            mimeType,
-        );
-        const filenameUtf8 = sanitizeHeaderFilename(filename);
-        const filenameAscii = asciiFallbackFilename(filenameUtf8);
-
-        res.setHeader('Content-Type', mimeType);
-        res.setHeader(
-            'Content-Disposition',
-            `attachment; filename="${filenameAscii}"; filename*=UTF-8''${encodeURIComponent(filenameUtf8)}`,
-        );
-
-        (stream as NodeJS.ReadableStream).on('error', (err) => {
-            console.error('Erro ao baixar arquivo de exame prévio:', err);
-            res.sendStatus(500);
-        });
-
-        return (stream as NodeJS.ReadableStream).pipe(res);
+        await streamFileDownload(res, dbFile);
     } catch (err) {
         return next(err);
     }

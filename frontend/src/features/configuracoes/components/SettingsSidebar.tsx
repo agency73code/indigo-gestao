@@ -59,7 +59,7 @@ export function SettingsSidebar({
                 style={{ fontFamily: 'Sora, sans-serif', fontWeight: 300 }}
             >
                 <div className="flex items-center justify-center h-8 w-8 rounded-full bg-primary shrink-0">
-                    <Icon className="h-4 w-4 text-background" />
+                    <Icon className="h-4 w-4 text-primary-foreground" />
                 </div>
                 <span>{item.label}</span>
             </button>

@@ -21,6 +21,7 @@ export function NavSecondary({
     title: string
     url: string
     icon: SidebarIconType
+    target?: string
   }[]
 } & React.ComponentPropsWithoutRef<typeof SidebarGroup>) {
   return (
@@ -30,7 +31,12 @@ export function NavSecondary({
           {items.map((item, index) => (
             <SidebarMenuItem key={item.title} className={index === items.length - 1 ? 'pb-2' : ''}>
               <SidebarMenuButton asChild size="sm" tooltip={item.title}>
-                <a href={item.url} className="[&_svg]:h-4 [&_svg]:w-4 group-data-[collapsible=icon]:justify-center">
+                <a 
+                  href={item.url} 
+                  target={item.target}
+                  rel={item.target === '_blank' ? 'noopener noreferrer' : undefined}
+                  className="[&_svg]:h-4 [&_svg]:w-4 group-data-[collapsible=icon]:justify-center"
+                >
                   <div className="flex items-center justify-center h-8 w-8 rounded-full bg-transparent border border-primary/30 shrink-0 [&_svg]:text-primary group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8">
                     <item.icon size={16} className="text-primary" />
                   </div>

@@ -182,8 +182,8 @@ export function NavMain({
                                             }}
                                             className="group-data-[collapsible=icon]:justify-center"
                                         >
-                                            <div className="flex items-center justify-center h-8 w-8 rounded-full bg-primary shrink-0 [&_svg]:text-background [&_svg]:h-4 [&_svg]:w-4 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8">
-                                                <item.icon size={16} className="text-background" />
+                                            <div className="flex items-center justify-center h-8 w-8 rounded-full bg-primary shrink-0 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8">
+                                                <item.icon size={16} className="text-primary-foreground" />
                                             </div>
                                             <span 
                                                 style={{ fontFamily: 'Sora, sans-serif', fontWeight: 300 }}
