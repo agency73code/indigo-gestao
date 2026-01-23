@@ -4,8 +4,11 @@ import { AppError } from "../../../errors/AppError.js";
 import type { PsychoPayload, queryType } from "./psychotherapy.schema.js";
 import { calculateAge } from "../../../utils/calculateAge.js";
 import { toDateOnly } from "../../../utils/toDateOnly.js";
-import { buildAvatarUrl } from "../../../utils/avatar-url.js";
 import { getVisibilityScope } from "../../../utils/visibilityFilter.js";
+import { queryPsychologicalRecord } from "./querys/queryPsychologicalRecord.js";
+import { mapPsychologicalRecord } from "./mappers/mapPsychologicalRecord.js";
+import { canAccessThis } from "../../../authorization/resourceAccess.policy.js";
+import { forbidden } from "../../../errors/forbidden.js";
 
 export async function createPsychotherapyRecord(payload: PsychoPayload, userId: string) {
     return await prisma.$transaction(async (tx) => {
@@ -158,94 +161,10 @@ export async function createPsychotherapyRecord(payload: PsychoPayload, userId: 
     });
 }
 
-export async function searchMedicalRecordByClient(clientId: string) {
+export async function searchMedicalRecordByClient(clientId: string, userId: string) {
     const medicalRecord = await prisma.ocp_prontuario.findFirst({
         where: { cliente_id: clientId },
-        select: {
-            id: true,
-            cliente_id: true,
-            terapeuta_id: true,
-            clientes: {
-                select: {
-                    id: true,
-                    nome: true,
-                    dataNascimento: true,
-                    genero: true,
-                    nivel_escolaridade: true,
-                    dadosEscola: {
-                        select: {
-                            nome: true,
-                        },
-                    },
-                    cuidadores: {
-                        select: {
-                            id: true,
-                            nome: true,
-                            cpf: true,
-                            relacao: true,
-                            descricaoRelacao: true,
-                            dataNascimento: true,
-                            profissao: true,
-                        },
-                    },
-                    anamneses: {
-                        select: {
-                            queixa_diagnostico: {
-                                select: {
-                                    terapias_previas: {
-                                        select: {
-                                            id: true,
-                                            profissional: true,
-                                            especialidade_abordagem: true,
-                                            tempo_intervencao: true,
-                                            observacao: true,
-                                            ativo: true,
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                    },
-                    arquivos: {
-                        where: { tipo: 'fotoPerfil' },
-                        select: {
-                            arquivo_id: true,
-                        },
-                        take: 1,
-                    }
-                },
-            },
-            profissao_ocupacao: true,
-            observacao_educacional: true,
-            observacoes_nucleo_familiar: true,
-            encaminhado_por: true,
-            motivo_busca_atendimento: true,
-            atendimentos_anteriores: true,
-            observacao_demanda: true,
-            objetivos_trabalho: true,
-            avaliacao_atendimento: true,
-            status: true,
-            criado_em: true,
-            atualizado_em: true,
-            terapeutas: {
-                select: {
-                    id: true,
-                    nome: true,
-                    registro_profissional: {
-                        select: {
-                            numero_conselho: true,
-                        },
-                    },
-                    arquivos: {
-                        where: { tipo: 'fotoPerfil' },
-                        select: {
-                            arquivo_id: true,
-                        },
-                        take: 1,
-                    },
-                },
-            },
-        }
+        select: queryPsychologicalRecord,
     });
 
     if (!medicalRecord) {
@@ -256,79 +175,15 @@ export async function searchMedicalRecordByClient(clientId: string) {
         )
     };
 
-    return {
-        id: medicalRecord.id,
-        cliente_id: medicalRecord.cliente_id,
-        terapeuta_id: medicalRecord.terapeuta_id,
-
-        // Informações Educacionais
-        informacoes_educacionais: {
-            nivel_escolaridade: medicalRecord.clientes.nivel_escolaridade,
-            instituicao_formacao: medicalRecord.clientes.dadosEscola?.nome,
-            profissao_ocupacao: medicalRecord.profissao_ocupacao,
-            observacoes: medicalRecord.observacao_educacional,
-        },
-
-        // Núcleo Familiar
-        nucleo_familiar: medicalRecord.clientes.cuidadores.map((c) => ({
-            id: String(c.id),
-            nome: c.nome,
-            cpf: c.cpf ?? undefined,
-            parentesco: c.relacao,
-            descricao_relacao: c.descricaoRelacao ?? undefined,
-            data_nascimento: toDateOnly(c.dataNascimento) ?? undefined,
-            idade: c.dataNascimento ? calculateAge(c.dataNascimento) : undefined,
-            ocupacao: c.profissao ?? undefined,
-            origem_banco: true,
-        })),
-        observacoes_nucleo_familiar: medicalRecord.observacoes_nucleo_familiar,
-
-        // Avaliação da Demanda
-        avaliacao_demanda: {
-            encaminhado_por: medicalRecord.encaminhado_por,
-            motivo_busca_atendimento: medicalRecord.motivo_busca_atendimento,
-            atendimentos_anteriores: medicalRecord.atendimentos_anteriores,
-            observacoes: medicalRecord.observacao_demanda,
-            terapias_previas: medicalRecord.clientes.anamneses
-                .flatMap((a) => a.queixa_diagnostico?.terapias_previas ?? [])
-                .map((tp) => ({
-                    id: String(tp.id),
-                    profissional: tp.profissional ?? 'Não informado',
-                    especialidade_abordagem: tp.especialidade_abordagem ?? 'Não informado',
-                    tempo_intervencao: tp.tempo_intervencao ?? 'Não informado',
-                    observacao: tp.observacao ?? undefined,
-                    ativo: tp.ativo,
-                    origem_anamnese: true,
-                })),
-        },
-
-        // Objetivos e Avaliação
-        objetivos_trabalho: medicalRecord.objetivos_trabalho,
-        avaliacao_atendimento: medicalRecord.avaliacao_atendimento,
-
-        // Evoluções
-        evolucoes: [], // TODO
-
-        // Metadados
-        status: medicalRecord.status ? 'ativo' : 'inativo',
-        criado_em: medicalRecord.criado_em,
-        atualizado_em: medicalRecord.atualizado_em ?? undefined,
-
-        // Relacionamentos expandidos (quando incluídos)
-        cliente: {
-            id: medicalRecord.cliente_id,
-            nome: medicalRecord.clientes.nome,
-            data_nascimento: toDateOnly(medicalRecord.clientes.dataNascimento),
-            genero: medicalRecord.clientes.genero ?? undefined,
-            foto_url: buildAvatarUrl(medicalRecord.clientes.arquivos),
-        },
-        terapeuta: {
-            id: medicalRecord.terapeuta_id,
-            nome: medicalRecord.terapeutas.nome,
-            crp: medicalRecord.terapeutas.registro_profissional[0]?.numero_conselho ?? undefined,
-            foto_url: buildAvatarUrl(medicalRecord.terapeutas.arquivos),
-        },
+    const visibility = await getVisibilityScope(userId);
+    const ownership = {
+        clientId: medicalRecord.cliente_id,
+        therapistId: medicalRecord.terapeuta_id,
     };
+    const allowed = await canAccessThis({ ownership, userId, visibility });
+    if (!allowed) throw forbidden();
+
+    return mapPsychologicalRecord(medicalRecord);
 }
 
 export async function listMedicalRecords(query: queryType, userId: string) {
@@ -406,4 +261,29 @@ export async function listMedicalRecords(query: queryType, userId: string) {
         pageSize: page_size,
         totalPages: Math.ceil(total / page_size),
     }
+}
+
+export async function searchMedicalRecordById(medicalRecordId: number, userId: string) {
+    const medicalRecord = await prisma.ocp_prontuario.findUnique({
+        where: { id: medicalRecordId },
+        select: queryPsychologicalRecord,
+    });
+
+    if (!medicalRecord) {
+        throw new AppError(
+            'MEDICAL_RECORD_NOT_FOUND',
+            'Prontuário do cliente não encontrado',
+            404,
+        )
+    };
+
+    const visibility = await getVisibilityScope(userId);
+    const ownership = {
+        clientId: medicalRecord.cliente_id,
+        therapistId: medicalRecord.terapeuta_id,
+    };
+    const allowed = await canAccessThis({ ownership, userId, visibility });
+    if (!allowed) throw forbidden();
+
+    return mapPsychologicalRecord(medicalRecord);
 }
