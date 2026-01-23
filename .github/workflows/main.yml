@@ -1,7 +1,10 @@
 name: Deploy MAIN (Produção)
 
 on:
-  workflow_dispatch:        # 👈 só dispara manualmente (botão "Run workflow")
+  workflow_dispatch:        # disparo manual (botão "Run workflow")
+  push:
+    branches:
+      - main                # disparo automático em push para main
 
 jobs:
   deploy:
