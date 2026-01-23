@@ -9,6 +9,7 @@ import { AppError } from '../../errors/AppError.js';
 import { getVisibilityScope } from '../../utils/visibilityFilter.js';
 import { canDownloadFile } from './utils/canDownloadFile.js';
 import { toFileForDownload } from './r2/toFileForDownload.js';
+import { forbidden } from './utils/forbidden.js';
 
 type OwnerType = 'cliente' | 'terapeuta';
 
@@ -207,9 +208,6 @@ export async function deleteFromR2(storageId: string) {
 export async function deleteFromDatabase(id: number) {
     await prisma.arquivos.delete({ where: { id } });
 }
-
-const forbidden = () =>
-    new AppError('FORBIDDEN', 'Sem permissão para baixar este arquivo', 403);
 
 export async function findByIdForDownload(
     fileId: number,

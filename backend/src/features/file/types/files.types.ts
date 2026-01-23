@@ -12,10 +12,6 @@ export type dbFileType = {
 }
 
 export type DbFileForAuth = {
-  id: number;
-  arquivo_id: string | null;
-  mime_type: string | null;
-  descricao_documento: string | null;
   clienteId: string | null;
   terapeutaId: string | null;
 }
