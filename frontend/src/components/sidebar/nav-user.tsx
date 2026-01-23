@@ -2,7 +2,6 @@ import { BadgeCheck, ChevronDown, LogOut } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -16,9 +15,8 @@ import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui
 import { useAuth } from '@/features/auth/hooks/useAuth';
 
 export function NavUser() {
-    const { logout, user } = useAuth();
+    const { logout, user, avatarVersion } = useAuth();
     const navigate = useNavigate();
-    const [imageLoading, setImageLoading] = useState(true);
     const [imageError, setImageError] = useState(false);
     const displayName = user?.name ?? '-';
     const displayRole = user?.perfil_acesso 
@@ -32,27 +30,25 @@ export function NavUser() {
         .join('') : '?';
     
     // Processar a URL do avatar corretamente
-    const avatarUrl = user?.avatar_url 
+    const baseAvatarUrl = user?.avatar_url 
         ? (user.avatar_url.startsWith('/api') 
             ? `${import.meta.env.VITE_API_BASE ?? ''}${user.avatar_url}`
             : user.avatar_url)
         : undefined;
+    
+    // Adiciona avatarVersion para evitar cache quando foto é atualizada
+    const avatarUrl = baseAvatarUrl 
+        ? `${baseAvatarUrl}${baseAvatarUrl.includes('?') ? '&' : '?'}v=${avatarVersion}`
+        : undefined;
 
-    // Reset loading state quando avatar URL muda
+    // Reset error state quando avatar URL ou versão muda
     useEffect(() => {
-        if (avatarUrl) {
-            setImageLoading(true);
+        if (baseAvatarUrl) {
             setImageError(false);
         }
-    }, [avatarUrl]);
-
-    const handleImageLoad = () => {
-        setImageLoading(false);
-        setImageError(false);
-    };
+    }, [baseAvatarUrl, avatarVersion]);
 
     const handleImageError = () => {
-        setImageLoading(false);
         setImageError(true);
     };
 
@@ -67,22 +63,15 @@ export function NavUser() {
                         <SidebarMenuButton
                             size="lg"
                             tooltip={displayName}
-                            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground rounded-full px-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:!w-10 group-data-[collapsible=icon]:!h-10"
+                            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground rounded-full px-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:size-10!"
                         >
-                            <Avatar className="h-10 w-10 rounded-full shrink-0 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8" key={avatarUrl}>
-                                {imageLoading && shouldShowImage && (
-                                    <Skeleton className="h-10 w-10 rounded-full absolute inset-0 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8" />
-                                )}
+                            <Avatar className="size-10 rounded-full shrink-0 group-data-[collapsible=icon]:size-8" key={avatarUrl}>
                                 {shouldShowImage && (
                                     <AvatarImage 
                                         src={avatarUrl} 
                                         alt={displayName}
-                                        onLoad={handleImageLoad}
                                         onError={handleImageError}
-                                        loading="eager"
-                                        decoding="async"
-                                        fetchPriority="high"
-                                        className={imageLoading ? 'opacity-0' : 'opacity-100 transition-opacity duration-200'}
+                                        className="object-cover"
                                     />
                                 )}
                                 <AvatarFallback className="rounded-full" delayMs={0}>{initials}</AvatarFallback>
@@ -102,20 +91,13 @@ export function NavUser() {
                     >
                         <DropdownMenuLabel className="p-0 font-light">
                             <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                                <Avatar className="h-10 w-10 rounded-full" key={avatarUrl}>
-                                    {imageLoading && shouldShowImage && (
-                                        <Skeleton className="h-10 w-10 rounded-full absolute inset-0" />
-                                    )}
+                                <Avatar className="size-10 rounded-full" key={avatarUrl}>
                                     {shouldShowImage && (
                                         <AvatarImage 
                                             src={avatarUrl} 
                                             alt={displayName}
-                                            onLoad={handleImageLoad}
                                             onError={handleImageError}
-                                            loading="eager"
-                                            decoding="async"
-                                            fetchPriority="high"
-                                            className={imageLoading ? 'opacity-0' : 'opacity-100 transition-opacity duration-200'}
+                                            className="object-cover"
                                         />
                                     )}
                                     <AvatarFallback className="rounded-full" delayMs={0}>

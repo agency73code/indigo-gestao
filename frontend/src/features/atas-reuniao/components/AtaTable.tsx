@@ -596,14 +596,15 @@ export function AtaTable() {
             atasParaAgrupar = atasParaAgrupar.filter(a => a.cabecalho.terapeutaId === terapeutaIdFilter);
         }
         
-        const grouped: Record<string, { clienteNome: string; clienteId: string; atas: AtaReuniao[] }> = {};
+        const grouped: Record<string, { clienteNome: string; clienteId: string; clienteAvatarUrl?: string; atas: AtaReuniao[] }> = {};
         
         atasParaAgrupar.forEach(ata => {
             const clienteId = ata.clienteId || 'sem-cliente';
             const clienteNome = ata.clienteNome || 'Sem cliente vinculado';
+            const clienteAvatarUrl = ata.clienteAvatarUrl;
             
             if (!grouped[clienteId]) {
-                grouped[clienteId] = { clienteId, clienteNome, atas: [] };
+                grouped[clienteId] = { clienteId, clienteNome, clienteAvatarUrl, atas: [] };
             }
             grouped[clienteId].atas.push(ata);
         });
@@ -1030,7 +1031,10 @@ export function AtaTable() {
                         </Button>
                         
                         <Avatar className="h-12 w-12 shrink-0">
-                            <AvatarImage src="" alt={selectedClientInfo?.clienteNome || ''} />
+                            <AvatarImage 
+                                src={selectedClientInfo?.clienteAvatarUrl ? `${import.meta.env.VITE_API_BASE ?? ''}${selectedClientInfo.clienteAvatarUrl}` : ''} 
+                                alt={selectedClientInfo?.clienteNome || ''} 
+                            />
                             <AvatarFallback className="bg-primary/10 text-primary font-regular">
                                 {getInitials(selectedClientInfo?.clienteNome || 'SC')}
                             </AvatarFallback>
@@ -1126,7 +1130,7 @@ export function AtaTable() {
                    LISTA DE CLIENTES (CARDS CLICÁVEIS)
                    ======================================== */
                 <div className="space-y-3">
-                    {groupedByClient.map(({ clienteId, clienteNome, atas: clientAtas }) => {
+                    {groupedByClient.map(({ clienteId, clienteNome, clienteAvatarUrl, atas: clientAtas }) => {
                         const totalClientAtas = clientAtas.length;
                         
                         const minutosCliente = clientAtas.reduce((acc, ata) => {
@@ -1149,7 +1153,10 @@ export function AtaTable() {
                                 </div>
                                 
                                 <Avatar className="h-12 w-12 shrink-0">
-                                    <AvatarImage src="" alt={clienteNome} />
+                                    <AvatarImage 
+                                        src={clienteAvatarUrl ? `${import.meta.env.VITE_API_BASE ?? ''}${clienteAvatarUrl}` : ''} 
+                                        alt={clienteNome} 
+                                    />
                                     <AvatarFallback className="bg-primary/10 text-primary font-regular">
                                         {getInitials(clienteNome)}
                                     </AvatarFallback>

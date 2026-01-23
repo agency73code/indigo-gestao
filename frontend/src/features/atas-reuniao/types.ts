@@ -68,7 +68,7 @@ export interface CabecalhoAta {
     dadosProfissionais?: DadoProfissional[];
 }
 
-/** Salvos: id, tipo, nome, descricao, terapeutaId | Derivados: especialidade, cargo */
+/** Salvos: id, tipo, nome, descricao, terapeutaId | Derivados: especialidade, cargo, avatarUrl */
 export interface Participante {
     id: string;
     tipo: TipoParticipante;
@@ -77,6 +77,8 @@ export interface Participante {
     terapeutaId?: string;
     especialidade?: string;
     cargo?: string;
+    /** URL do avatar do participante (apenas para profissionais da clínica) */
+    avatarUrl?: string;
 }
 
 /** Link de recomendação (brinquedos, materiais, etc.) */

@@ -68,6 +68,11 @@ export const ataSelectBase = Prisma.validator<Prisma.ata_reuniaoSelect>()({
                 select: {
                     id: true,
                     nome: true,
+                    arquivos: {
+                        where: { tipo: 'fotoPerfil' },
+                        select: { arquivo_id: true },
+                        take: 1,
+                    },
                     registro_profissional: {
                         select: {
                             numero_conselho: true,
@@ -163,6 +168,11 @@ export const ataSelectList = Prisma.validator<Prisma.ata_reuniaoSelect>()({
                 select: {
                     id: true,
                     nome: true,
+                    arquivos: {
+                        where: { tipo: 'fotoPerfil' },
+                        select: { arquivo_id: true },
+                        take: 1,
+                    },
                     registro_profissional: {
                         select: {
                             numero_conselho: true,
