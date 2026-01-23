@@ -61,15 +61,9 @@ export function buildViewUrl(fileId: string, storageId?: string): string {
   return `${API_BASE_URL}/arquivos/${idToUse}/view`;
 }
 
-export function buildDownloadUrl(fileId: string, storageId?: string): string {
-  if (MOCK_ENABLED) {
-    console.log('⬇️ [MOCK] URL de download gerada para:', fileId);
-    // Para mock, usa a mesma URL de visualização como download
-    return buildViewUrl(fileId, storageId);
-  }
-  
-  const idToUse = storageId || fileId;
-  return `${API_BASE_URL}/arquivos/${idToUse}/download`
+export function buildDownloadUrl(fileId: string, _storageId?: string): string {
+  const id = encodeURIComponent(fileId);
+  return `${API_BASE_URL}/arquivos/${id}/download`
 }
 
 // ============================================

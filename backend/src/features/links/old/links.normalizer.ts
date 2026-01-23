@@ -26,7 +26,7 @@ export function normalizeLink(link: LinkTypes.DBLink) {
         endDate: link.data_fim ? link.data_fim : null,
         status: normalizeStatus(link.status),
         notes: link.observacoes ?? null,
-        actuationArea: link.terapeuta?.registro_profissional?.[0]?.area_atuacao?.nome ?? null,
+        actuationArea: link.area_atuacao ?? null,
         createdAt: link.criado_em.toISOString(),
         updatedAt: link.atualizado_em.toISOString(),
     };
@@ -77,18 +77,21 @@ export function normalizeClientList(
 export function normalizeSelectTherapists(records: LinkTypes.TherapistRecord[]): LinkTypes.TherapistSelectDTO[] {
     return records.map((therapist) => {
         const avatarFile = therapist.arquivos?.[0]?.arquivo_id ?? null;
-        const professional = therapist.registro_profissional?.[0];
+        const regs = therapist.registro_profissional ?? [];
+
+        const dadosProfissionais = regs.map((rp) => ({
+            cargo: rp.cargo?.nome ?? 'Cargo sem nome',
+            areaAtuacao: rp.area_atuacao?.nome ?? 'Area de atuação sem nome',
+        }));
 
         return {
             id: therapist.id,
             nome: therapist.nome,
             avatarUrl: buildAvatarUrl(avatarFile),
-            dadosProfissionais: [
-                {
-                    cargo: professional?.cargo?.nome ?? 'Cargo sem nome',
-                    areaAtuacao: professional?.area_atuacao?.nome ?? 'Area de atuação sem nome',
-                },
-            ],
+            dadosProfissionais:
+                dadosProfissionais.length > 0
+                    ? dadosProfissionais
+                    : [],
         };
     });
 }

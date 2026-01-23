@@ -1,10 +1,11 @@
 import type { Request, Response, NextFunction } from 'express';
 import { AppError } from '../../errors/AppError.js';
 import { AIServiceError } from '../ai/ai.errors.js';
-import { ataIdSchema, createAtaPayloadSchema, gerarResumoSchema, listAtaSchema, listTherapistSchema, updateAtaPayloadSchema } from './ata.schema.js';
+import { ataIdSchema, createAtaPayloadSchema, fileIdSchema, gerarResumoSchema, listAtaSchema, listTherapistSchema, updateAtaPayloadSchema } from './ata.schema.js';
 import * as AtaService from './ata.service.js';
 import { parseAtaAnexos } from './utils/ata.anexos.js';
 import { getAccessLevel } from '../../utils/getAccessLevel.js';
+import { getFileStreamFromR2 } from '../file/r2/getFileStream.js';
 
 /**
  * POST /atas-reuniao/ai/summary
@@ -262,6 +263,52 @@ export async function deleteArea(req: Request, res: Response, next: NextFunction
         return res.status(200).json({ success: true });
     } catch (err) {
         next(err);
+    }
+}
+
+export async function fileDownload(req: Request, res: Response, next: NextFunction) {
+    try {
+        if (!req.user) {
+            throw new AppError('UNAUTHORIZED', 'Não autenticado', 401);
+        }
+
+        const { fileId } = fileIdSchema.parse(req.params);
+        const anexo = await AtaService.fileDownload(fileId, req.user.id);
+
+        if (!anexo) {
+            throw new AppError('NOT_FOUND', 'Arquivo não encontrado', 404);
+        }
+
+        if (!anexo.caminho) {
+            throw new AppError('INVALID_STATE', 'Arquivo sem caminho de storage', 500);
+        }
+
+        // Pegar stream + metadata do R2
+        const { stream, metadata } = await getFileStreamFromR2(anexo.caminho);
+
+        if (!stream) {
+            throw new AppError('R2_DOWNLOAD_FAILED', 'Falha ao obter o arquivo', 500);
+        }
+
+        const filename = anexo.original_nome ?? 'Arquivo sem nome';
+        const contentType = anexo.mime_type ?? metadata?.mimeType ?? 'application/octet-stream';
+
+        res.setHeader('content-Type', contentType);
+        res.setHeader(
+            'Content-Disposition',
+            `attachment; filename="${filename}"; filename*=UTF-8''${encodeURIComponent(filename)}`,
+        );
+        res.setHeader('Cache-Control', 'no-store');
+
+        (stream as NodeJS.ReadableStream).on('error', (err) => {
+            console.error('R2 stream error:', err);
+            if (!res.headersSent) res.sendStatus(500);
+            else res.end();
+        });
+
+        return (stream as NodeJS.ReadableStream).pipe(res);
+    } catch (err) {
+        return next(err);
     }
 }
 

@@ -30,5 +30,6 @@ router.post('/', ataUpload.any(), AtaController.create);
 router.patch('/:id', ataUpload.any(), AtaController.update);
 router.delete('/:id', AtaController.deleteArea);
 router.post('/:id/finalizar', AtaController.finalizeAtaById);
+router.get('/download/:fileId', AtaController.fileDownload);
 
 export default router;

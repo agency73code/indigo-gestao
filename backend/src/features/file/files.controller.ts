@@ -5,6 +5,9 @@ import { getFileStreamFromR2 } from './r2/getFileStream.js';
 import { createFolder } from './r2/createFolder.js';
 import { normalizedBirthDate } from './types/files.normalizer.js';
 import { R2GenericUploadService } from './r2/r2-upload-generic.js';
+import { AppError } from '../../errors/AppError.js';
+import { streamFileDownload } from './r2/streamDownloadResponse.js';
+import { arquivoIdParamSchema } from './files.schema.js';
 
 /**
  * Controller responsável pelos uploads de arquivos.
@@ -137,37 +140,29 @@ export async function viewFile(req: Request, res: Response) {
 }
 
 /**
- * Controller: força o download de um arquivo do Google R2.
+ * download R2.
  */
-export async function downloadFile(req: Request, res: Response) {
-    const storageId = req.params.id ?? req.params.storageId;
-
-    if (!storageId) {
-        return res.status(400).json({ error: 'storageId é obrigatório.' });
-    }
-
+export async function downloadFile(req: Request, res: Response, next: NextFunction) {
     try {
-        const { metadata, stream } = await getFileStreamFromR2(storageId);
-
-        if (!stream) {
-            return res.status(500).json({ error: 'Falha ao obter stream do arquivo.' });
+        if (!req.user) {
+            throw new AppError('UNAUTHENTICATED', 'Não autenticado', 401);
         }
 
-        res.setHeader('Content-Type', metadata.mimeType);
-        res.setHeader(
-            'Content-Disposition',
-            `attachment; filename="${metadata.name}"; filename*=UTF-8''${encodeURIComponent(metadata.name)}`,
-        );
+        const { id: fileId } = arquivoIdParamSchema.parse(req.params);
+        
+        // Busca no banco pelo ID lógico (seguro)
+        const dbFile = await FilesService.findByIdForDownload(fileId, req.user.id);
+        if (!dbFile) {
+            throw new AppError('FILE_NOT_FOUND', 'Arquivo não encontrado', 404);
+        }
 
-        (stream as NodeJS.ReadableStream).on('error', (err) => {
-            console.error('Erro ao baixar arquivo:', err);
-            res.sendStatus(500);
-        });
+        if (!dbFile.storage_id) {
+            throw new AppError('FILE_NO_STORAGE', 'Arquivo sem arquivo_id', 409);
+        }
 
-        return (stream as NodeJS.ReadableStream).pipe(res);
-    } catch (error) {
-        console.error('Erro ao baixar arquivo:', error);
-        return res.status(404).json({ error: 'Arquivo não encontrado no R2.' });
+        await streamFileDownload(res, dbFile);
+    } catch (err) {
+        next(err);
     }
 }
 
@@ -175,20 +170,16 @@ export async function downloadFile(req: Request, res: Response) {
  * Controller: exclui um arquivo do banco e do Google R2.
  */
 export async function deleteFile(req: Request, res: Response) {
-    const fileId = req.params.id;
-    
-    if (!fileId) {
-        return res.status(400).json({ error: 'ID é obrigatório.' });
-    }
-
     try {
+        const { id: fileId } = arquivoIdParamSchema.parse(req.params);
+
         const existing = await FilesService.findFileById(fileId);
 
         if (!existing) {
             return res.status(404).json({ error: 'Arquivo não encontrado.' });
         }
 
-        // Tenta excluir do R2, se gouver arquivo remoto
+        // Tenta excluir do R2, se houver arquivo remoto
         if (existing.arquivo_id) {
             await FilesService.deleteFromR2(existing.arquivo_id);
         }

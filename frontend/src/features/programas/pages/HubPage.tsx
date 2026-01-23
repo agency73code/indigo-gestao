@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import { Plus, ClipboardEdit, FileText, Eye, BarChart3, Search, FileStack } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitleHub } from '@/components/ui/card';
+import { Plus, ClipboardEdit, FileText, Eye, FileStack } from 'lucide-react';
+import { Card, CardHeader, CardTitleHub } from '@/components/ui/card';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 import { useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
@@ -131,80 +131,6 @@ export default function HubPage() {
                 </div>
             </div>
 
-            {/* Quick Stats Cards */}
-            <div className="space-y-4">
-                <h2
-                    style={{ 
-                        fontFamily: 'Sora, sans-serif',
-                        fontWeight: 'var(--hub-section-title-font-weight)'
-                    }}
-                    className="text-lg sm:text-xl text-foreground"
-                >
-                    Visão Geral
-                </h2>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <Card 
-                        padding="hub"
-                        className="rounded-lg border-0 shadow-none"
-                        style={{ backgroundColor: 'var(--hub-card-background)' }}
-                    >
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitleHub className="text-base">Programas Ativos</CardTitleHub>
-                            <BarChart3 className="h-5 w-5 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div 
-                                className="text-2xl tracking-tight"
-                                style={{ fontWeight: 'var(--dashboard-number-font-weight)' }}
-                            >
-                                12
-                            </div>
-                            <p className="text-xs text-muted-foreground">+2 desde o mês passado</p>
-                        </CardContent>
-                    </Card>
-
-                    <Card 
-                        padding="hub"
-                        className="rounded-lg border-0 shadow-none"
-                        style={{ backgroundColor: 'var(--hub-card-background)' }}
-                    >
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitleHub className="text-base">Sessões Hoje</CardTitleHub>
-                            <Search className="h-5 w-5 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div 
-                                className="text-2xl tracking-tight"
-                                style={{ fontWeight: 'var(--dashboard-number-font-weight)' }}
-                            >
-                                8
-                            </div>
-                            <p className="text-xs text-muted-foreground">4 concluídas, 4 pendentes</p>
-                        </CardContent>
-                    </Card>
-
-                    <Card 
-                        padding="hub"
-                        className="rounded-lg border-0 shadow-none"
-                        style={{ backgroundColor: 'var(--hub-card-background)' }}
-                    >
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitleHub className="text-base">Taxa de Sucesso</CardTitleHub>
-                            <Plus className="h-5 w-5 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div 
-                                className="text-2xl tracking-tight"
-                                style={{ fontWeight: 'var(--dashboard-number-font-weight)' }}
-                            >
-                                87%
-                            </div>
-                            <p className="text-xs text-muted-foreground">+5% desde o mês passado</p>
-                        </CardContent>
-                    </Card>
-                </div>
-            </div>
         </div>
     );
 }

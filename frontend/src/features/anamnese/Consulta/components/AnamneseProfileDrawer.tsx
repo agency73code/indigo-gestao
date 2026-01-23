@@ -596,7 +596,7 @@ export default function AnamneseProfileDrawer({
                 className="w-[75vw] max-w-[1400px] p-0 flex flex-col gap-0 rounded-2xl"
             >
                 {/* Header */}
-                <div className="flex items-center gap-4 px-6 py-4 bg-background shrink-0 rounded-2xl">
+                <div className="flex items-center gap-4 px-4 py-4 bg-background shrink-0 rounded-2xl">
                     {/* Botão X - Esquerda */}
                     <CloseButton onClick={onClose} />
 

@@ -619,6 +619,24 @@ export async function deleteAta(id: number, userId: string) {
     return true;
 }
 
+export async function fileDownload(fileId: number, therapistId: string) {
+    return await prisma.ata_anexo.findFirst({
+        where: {
+            id: fileId,
+            ata_reuniao: {
+                terapeuta_id: therapistId,
+            },
+        },
+        select: {
+            id: true,
+            caminho: true,
+            mime_type: true,
+            nome: true,
+            original_nome: true,
+        },
+    });
+}
+
 // ============================================
 // HELPERS
 // ============================================

@@ -16,6 +16,8 @@ import { buildFinishing } from './builders/buildFinishing.js';
 import { buildHeader } from './builders/buildHeader.js';
 import { buildInitialDevelopment } from './builders/buildInitialDevelopment.js';
 import { buildSocialAcademic } from './builders/buildSocialAcademic.js';
+import { canDownloadFile } from '../file/utils/canDownloadFile.js';
+import { forbidden } from '../file/utils/forbidden.js';
 
 type SimNao = 'sim' | 'nao' | null | undefined;
 
@@ -1490,49 +1492,59 @@ export async function updateAnamneseById(anamneseId: number, payload: AnamnesePa
 
 export async function getExamePrevioArquivoForDownload(
     anamneseId: number,
-    arquivoId: number,
+    fileId: number,
     therapistId: string,
 ) {
-    if (!therapistId) {
-        throw new AppError('REQUIRED_THERAPIST_ID', 'ID do terapeuta é obrigatório.', 400);
-    }
-
     const visibility = await getVisibilityScope(therapistId);
+    if (visibility.scope === 'none') return null;
 
-    if (visibility.scope === 'none') {
-        return null;
-    }
-
-    const anamnese = await prisma.anamnese.findFirst({
+    const dbFile = await prisma.anamnese_arquivo_exame_previo.findFirst({
         where: {
-            id: anamneseId,
-            ...(visibility.scope === 'partial' ? { terapeuta_id: { in: visibility.therapistIds } } : {}),
-            ...(visibility.maxAccessLevel < MANAGER_LEVEL
-                ? { cliente: { status: 'ativo' } }
-                : {}),
+            id: fileId,
+            exame: { anamnese_id: anamneseId },
         },
         select: {
-            id: true,
-        },
-    });
-
-    if (!anamnese) {
-        return null;
-    }
-
-    return prisma.anamnese_arquivo_exame_previo.findFirst({
-        where: {
-            id: arquivoId,
-            exame: {
-                anamnese_id: anamneseId,
-            },
-        },
-        select: {
-            id: true,
             nome: true,
             caminho: true,
             tipo: true,
-            tamanho: true,
+            exame: {
+                select: {
+                    anamnese: {
+                        select: {
+                            anamnese: {
+                                select: {
+                                    cliente_id: true,
+                                    terapeuta_id: true,
+                                },
+                            },
+                        },
+                    },
+                },
+            },
         },
     });
+
+    if (!dbFile) return null;
+
+    if (!dbFile.caminho) {
+        throw new AppError(
+            'FILE_NO_STORAGE',
+            'Arquivo sem referência de storage',
+            409
+        );
+    }
+
+    const owner = {
+        clienteId: dbFile.exame.anamnese.anamnese.cliente_id,
+        terapeutaId: dbFile.exame.anamnese.anamnese.terapeuta_id,
+    };
+
+    const allowed = await canDownloadFile({ file: owner, userId: therapistId, visibility });
+    if (!allowed) throw forbidden();
+
+    return {
+        storage_id: dbFile.caminho,
+        mime_type: dbFile.tipo ?? null,
+        name: dbFile.nome ?? null,
+    }
 }

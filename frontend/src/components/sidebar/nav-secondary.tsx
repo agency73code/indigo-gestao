@@ -26,13 +26,15 @@ export function NavSecondary({
   return (
     <SidebarGroup {...props}>
       <SidebarGroupContent>
-        <SidebarMenu>
-          {items.map((item) => (
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton asChild size="sm">
-                <a href={item.url} className="[&_svg]:h-4 [&_svg]:w-4">
-                  <item.icon size={16} />
-                  <span>{item.title}</span>
+        <SidebarMenu className="gap-2 group-data-[collapsible=icon]:gap-0.5">
+          {items.map((item, index) => (
+            <SidebarMenuItem key={item.title} className={index === items.length - 1 ? 'pb-2' : ''}>
+              <SidebarMenuButton asChild size="sm" tooltip={item.title}>
+                <a href={item.url} className="[&_svg]:h-4 [&_svg]:w-4 group-data-[collapsible=icon]:justify-center">
+                  <div className="flex items-center justify-center h-8 w-8 rounded-full bg-transparent border border-primary/30 shrink-0 [&_svg]:text-primary group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8">
+                    <item.icon size={16} className="text-primary" />
+                  </div>
+                  <span className="group-data-[collapsible=icon]:hidden">{item.title}</span>
                 </a>
               </SidebarMenuButton>
             </SidebarMenuItem>

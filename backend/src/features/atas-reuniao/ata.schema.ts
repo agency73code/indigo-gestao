@@ -158,6 +158,10 @@ export const updateAtaPayloadSchema = z
         }
     });
 
+export const fileIdSchema = z.object({
+  fileId: z.coerce.number().int().positive(),
+});
+
 export type GerarResumoInput = z.infer<typeof gerarResumoSchema>;
 export type createAtaPayload = z.infer<typeof createAtaPayloadSchema>;
 export type updateAtaPayload = z.infer<typeof updateAtaPayloadSchema>;

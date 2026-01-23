@@ -4,6 +4,12 @@ import { s3 } from '../../config/r2.js';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { DeleteObjectCommand } from '@aws-sdk/client-s3';
 import path from 'path';
+import type { FileForDownload } from './types/files.types.js';
+import { AppError } from '../../errors/AppError.js';
+import { getVisibilityScope } from '../../utils/visibilityFilter.js';
+import { canDownloadFile } from './utils/canDownloadFile.js';
+import { toFileForDownload } from './r2/toFileForDownload.js';
+import { forbidden } from './utils/forbidden.js';
 
 type OwnerType = 'cliente' | 'terapeuta';
 
@@ -171,15 +177,15 @@ export async function listFiles(ownerType: 'cliente' | 'terapeuta', ownerId: str
 }
 
 /** Busca um arquivo pelo ID (banco) */
-export async function findFileById(id: string) {
-    return prisma.arquivos.findFirst({ where: { arquivo_id: id } });
+export async function findFileById(id: number) {
+    return prisma.arquivos.findFirst({ where: { id: id } });
 }
 
 export async function findFileByStorageId(storageId: string) {
     return prisma.anamnese_arquivo_exame_previo.findFirst({ where: { caminho: storageId } });
 }
 
-/** Exclui um arquivo do Google R2 */
+/** Exclui um arquivo do R2 */
 export async function deleteFromR2(storageId: string) {
     const bucket = process.env.R2_BUCKET;
     if (!bucket) {
@@ -201,4 +207,52 @@ export async function deleteFromR2(storageId: string) {
 /** Remove o registro do banco */
 export async function deleteFromDatabase(id: number) {
     await prisma.arquivos.delete({ where: { id } });
+}
+
+export async function findByIdForDownload(
+    fileId: number,
+    userId: string,
+): Promise<FileForDownload | null> {
+    const file = await prisma.arquivos.findUnique({
+        where: { id: fileId },
+        select: {
+            id: true,
+            arquivo_id: true,
+            mime_type: true,
+            descricao_documento: true,
+            clienteId: true,
+            terapeutaId: true,
+        },
+    });
+
+    if (!file) return null;
+
+    if (!file.arquivo_id) {
+        throw new AppError(
+            'FILE_NO_STORAGE',
+            'Arquivo sem referência de storage',
+            409
+        );
+    }
+
+    // Se não tem dono definido, trata como inconsistência
+    if (!file.clienteId && !file.terapeutaId) {
+        throw new AppError(
+            'FILE_OWNER_MISSING',
+            'Arquivo sem clienteId/terapeutaId',
+            409
+        );
+    }
+
+    const visibility = await getVisibilityScope(userId);
+
+    const allowed = await canDownloadFile({ file, userId, visibility });
+    if (!allowed) throw forbidden();
+
+    return toFileForDownload({
+        id: file.id,
+        storage_id: file.arquivo_id,
+        mime_type: file.mime_type,
+        document_description: file.descricao_documento,
+    });
 }

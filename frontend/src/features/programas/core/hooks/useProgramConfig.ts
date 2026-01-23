@@ -49,7 +49,7 @@ const PROGRAM_AREAS: AreaMeta[] = [
         title: 'Musicoterapia', 
         path: '/app/programas/musicoterapia',
         icon: Music,
-        implemented: 'in-progress'
+        implemented: true
     },
     { 
         id: 'fisioterapia', 
