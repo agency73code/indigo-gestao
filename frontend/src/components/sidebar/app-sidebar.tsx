@@ -44,7 +44,7 @@ interface SidebarItem {
 const data: {
     user: { name: string; email: string; avatar: string };
     navMain: SidebarItem[];
-    navSecondary: { title: string; url: string; icon: SidebarIconType }[];
+    navSecondary: { title: string; url: string; icon: SidebarIconType; target?: string }[];
     projects: { name: string; url: string; icon: LucideIcon; target?: string }[];
 } = {
     user: {
@@ -104,8 +104,8 @@ const data: {
         },
     ],
     navSecondary: [
-        { title: 'Suporte', url: '#', icon: AnimatedIcons.Headset },
-        { title: 'Feedback', url: '#', icon: AnimatedIcons.Send },
+        { title: 'Suporte', url: 'https://wa.me/5511958017828?text=Olá! Preciso de suporte com o sistema Indigo.', icon: AnimatedIcons.Headset, target: '_blank' },
+        { title: 'Feedback', url: 'https://wa.me/5511958017828?text=Olá! Gostaria de enviar um feedback sobre o sistema Indigo.', icon: AnimatedIcons.Send, target: '_blank' },
     ],
     projects: [
         {

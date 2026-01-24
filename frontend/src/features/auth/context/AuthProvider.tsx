@@ -105,11 +105,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }, [navigate]);
 
+    // Versão do avatar - incrementa a cada atualização para forçar re-render
+    const [avatarVersion, setAvatarVersion] = useState(0);
+
     const updateAvatar = useCallback((avatarUrl: string) => {
         setAuthState((prev) => ({
             ...prev,
             user: prev.user ? { ...prev.user, avatar_url: avatarUrl } : null,
         }));
+        // Incrementa a versão para forçar componentes a atualizarem
+        setAvatarVersion((v) => v + 1);
     }, []);
 
     const didHydrateRef = useRef(false);
@@ -127,6 +132,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         logout,
         hydrate,
         updateAvatar,
+        avatarVersion,
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
