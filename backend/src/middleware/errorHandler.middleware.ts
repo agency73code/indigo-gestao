@@ -4,19 +4,23 @@ import { ZodError } from 'zod';
 import { AppError } from '../errors/AppError.js';
 
 export const errorHandler = (error: Error, req: Request, res: Response, _next: NextFunction) => {
-    console.error('Error:', error); // Log detalhado do erro para debugging
-
     if (error instanceof ZodError) {
-        const formatted = error.issues.map((issue) => ({
+        const errors = error.issues.map((issue) => ({
             path: issue.path.join('.'),
-            code: 'VALIDATION_ERROR',
             message: issue.message,
         }));
 
+        console.error('ZodError:', {
+            method: req.method,
+            url: req.originalUrl,
+            userId: req.user?.id,
+            errors,
+        })
+
         return res.status(422).json({
             success: false,
-            code: 'VALIDATION_ERROR',
-            errors: formatted,
+            message: error.issues[0]?.message,
+            errors,
         });
     }
 

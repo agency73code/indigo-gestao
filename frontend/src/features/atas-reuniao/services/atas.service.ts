@@ -223,8 +223,6 @@ export async function createAta(input: CreateAtaInput): Promise<AtaReuniao> {
         }
     }
 
-    console.log(Array.from(fd.entries()));
-
     const res = await authFetch(`${atasConfig.apiBase}/atas-reuniao`, {
         method: 'POST',
         body: fd,

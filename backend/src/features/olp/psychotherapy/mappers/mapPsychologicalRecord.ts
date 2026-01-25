@@ -2,6 +2,7 @@ import { buildAvatarUrl } from "../../../../utils/avatar-url.js";
 import { calculateAge } from "../../../../utils/calculateAge.js";
 import { toDateOnly } from "../../../../utils/toDateOnly.js";
 import type { PsychologicalRecordRow } from "../querys/queryPsychologicalRecord.js";
+import { inferFileType } from "../util/inferFileType.js";
 
 export function mapPsychologicalRecord(medicalRecord: PsychologicalRecordRow) {
     return {
@@ -55,7 +56,24 @@ export function mapPsychologicalRecord(medicalRecord: PsychologicalRecordRow) {
         avaliacao_atendimento: medicalRecord.avaliacao_atendimento,
 
         // Evoluções
-        evolucoes: [], // TODO
+        evolucoes: medicalRecord.evolucoes.map((e, i) => ({
+            id: e.id,
+            numero_sessao: i + 1,
+            data_evolucao: e.data_evolucao,
+            descricao_sessao: e.descricao_sessao,
+            arquivos: e.anexos.map((a) => ({
+                id: a.id,
+                nome: a.nome,
+                tipo: inferFileType(a.tipo),
+                mime_type: a.tipo ?? undefined,
+                tamanho: a.tamanho,
+                url: a.caminho ?? undefined,
+                caminho: a.caminho ?? undefined,
+                arquivo_id: a.caminho ?? undefined,
+            })),
+            criado_em: e.criado_em ?? undefined,
+            atualizado_em: e.atualizado_em ?? undefined,
+        })),
 
         // Metadados
         status: medicalRecord.status ? 'ativo' : 'inativo',
@@ -67,6 +85,7 @@ export function mapPsychologicalRecord(medicalRecord: PsychologicalRecordRow) {
             id: medicalRecord.cliente_id,
             nome: medicalRecord.clientes.nome,
             data_nascimento: toDateOnly(medicalRecord.clientes.dataNascimento),
+            idade: calculateAge(medicalRecord.clientes.dataNascimento),
             genero: medicalRecord.clientes.genero ?? undefined,
             foto_url: buildAvatarUrl(medicalRecord.clientes.arquivos),
         },

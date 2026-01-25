@@ -84,6 +84,24 @@ export const queryPsychologicalRecord = {
             },
         },
     },
+    evolucoes: {
+        select: {
+            id: true,
+            data_evolucao: true,
+            descricao_sessao: true,
+            criado_em: true,
+            atualizado_em: true,
+            anexos: {
+                select: {
+                    id: true,
+                    nome: true,
+                    tipo: true,
+                    tamanho: true,
+                    caminho: true,
+                },
+            },
+        },
+    },
 } satisfies Prisma.ocp_prontuarioSelect;
 
 export type PsychologicalRecordRow = Prisma.ocp_prontuarioGetPayload<{

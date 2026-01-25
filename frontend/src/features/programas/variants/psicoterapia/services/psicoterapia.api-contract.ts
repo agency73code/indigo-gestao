@@ -83,6 +83,7 @@ export interface ApiProntuarioPsicologico {
         id: string;
         nome: string;
         data_nascimento: string;
+        idade: string;
         genero?: string;
         foto_url?: string;
     };

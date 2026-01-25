@@ -42,5 +42,7 @@ router.post('/prontuarios-psicologicos', psychotherapy.createPsychotherapyRecord
 router.get('/prontuarios-psicologicos/cliente/:clientId', psychotherapy.searchMedicalRecordByClient);
 router.get('/prontuarios-psicologicos', psychotherapy.listMedicalRecords);
 router.get('/prontuarios-psicologicos/:medicalRecordId', psychotherapy.searchMedicalRecordById);
-router.post('/prontuarios-psicologicos/:medicalRecordId/evolucoes', psychotherapy.createEvolution);
+router.post('/prontuarios-psicologicos/:medicalRecordId/evolucoes', upload.any(), psychotherapy.createEvolution);
+router.get('/prontuarios-psicologicos/:medicalRecordId/evolucoes', psychotherapy.listEvolutions);
+router.patch('/prontuarios-psicologicos/:medicalRecordId', psychotherapy.updateMedicalRecord);
 export default router;

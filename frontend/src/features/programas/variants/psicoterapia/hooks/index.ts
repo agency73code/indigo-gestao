@@ -265,12 +265,13 @@ export function useProntuarioForm(prontuarioId?: string) {
     // Salvar prontuário
     const handleSave = useCallback(async (prontuarioId?: string) => {
         setIsSaving(true);
-        
         try {
-            const response = prontuarioId 
-                ? await atualizarProntuario(prontuarioId, formData)
-                : await criarProntuario(formData);
+            // const response = prontuarioId 
+            //     ? await atualizarProntuario(prontuarioId, formData)
+            //     : await criarProntuario(formData);
             
+            const response = await atualizarProntuario('2', formData);
+
             if (response.success) {
                 toast.success(response.message);
                 setHasChanges(false);
