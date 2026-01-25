@@ -333,12 +333,12 @@ export async function atualizarProntuario(
     data: Partial<ProntuarioFormData>
 ): Promise<ProntuarioResponse> {
     try {
-        console.log(data);
         const res = await authFetch(`${endpoints.prontuarios}/${id}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
         });
+        
         const json = await res.json();
         
         if (!res.ok) {
