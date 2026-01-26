@@ -124,7 +124,7 @@ export function SessionBillingData({
         horarioInicio: '',
         horarioFim: '',
         tipoAtendimento: TIPO_ATENDIMENTO.CONSULTORIO,
-        ajudaCusto: false,
+        ajudaCusto: undefined,
         observacaoFaturamento: '',
         arquivosFaturamento: [],
     };
@@ -149,7 +149,7 @@ export function SessionBillingData({
             ...value,
             tipoAtendimento: tipo,
             // Limpar ajuda de custo se mudar para consultório
-            ajudaCusto: tipo === TIPO_ATENDIMENTO.HOMECARE ? value.ajudaCusto : false,
+            ajudaCusto: tipo === TIPO_ATENDIMENTO.HOMECARE ? value.ajudaCusto : undefined,
         });
     }, [value, onChange]);
 
@@ -359,20 +359,20 @@ export function SessionBillingData({
                         </div>
                     )}
 
-                    {/* Observações de Faturamento */}
+                    {/* Ajuda de Custo - Observações */}
                     <TextAreaField
-                        label="Observações de Faturamento"
-                        placeholder="Notas sobre comprovantes, recibos ou outras informações relevantes para o faturamento (opcional)"
+                        label="Ajuda de Custo - Descrição"
+                        placeholder="Ex: Estacionamento R$ 25,00 • Uber R$ 35,00 • Material impresso R$ 15,00"
                         value={value.observacaoFaturamento || ''}
                         onChange={(e) => handleFieldChange('observacaoFaturamento', e.target.value)}
                         disabled={disabled}
-                        rows={3}
+                        rows={1}
                     />
 
-                    {/* Upload de Arquivos de Faturamento */}
+                    {/* Upload de Comprovantes */}
                     <div className="space-y-3">
                         <label className="text-sm font-medium text-muted-foreground">
-                            Comprovantes de Faturamento (opcional)
+                            Comprovantes (recibos, notas fiscais, tickets)
                         </label>
                         
                         <FileUploadBox

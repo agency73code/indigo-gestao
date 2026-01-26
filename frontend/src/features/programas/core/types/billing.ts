@@ -98,8 +98,8 @@ export interface DadosFaturamentoSessao {
     /** Tipo de atendimento: consultório ou homecare */
     tipoAtendimento: TipoAtendimento;
     
-    /** Se houve ajuda de custo (só para homecare) */
-    ajudaCusto: boolean;
+    /** Se houve ajuda de custo (só para homecare) - undefined = não selecionado */
+    ajudaCusto?: boolean;
     
     /** Observações específicas do faturamento (comprovantes, notas, etc) */
     observacaoFaturamento?: string;
@@ -116,7 +116,7 @@ export const DADOS_FATURAMENTO_INITIAL: DadosFaturamentoSessao = {
     horarioInicio: '',
     horarioFim: '',
     tipoAtendimento: TIPO_ATENDIMENTO.CONSULTORIO,
-    ajudaCusto: false,
+    ajudaCusto: undefined,
     observacaoFaturamento: '',
     arquivosFaturamento: [],
 };

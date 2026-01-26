@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { DadosFaturamentoAta } from './types/billing';
 
 // ============================================
 // ENUMS E CONSTANTES
@@ -11,6 +12,8 @@ export const FINALIDADE_REUNIAO = {
     REUNIAO_ESCOLA: 'reuniao_escola',
     SUPERVISAO_AT: 'supervisao_at',
     SUPERVISAO_TERAPEUTA: 'supervisao_terapeuta',
+    SUPERVISAO_RECEBIDA: 'supervisao_recebida',
+    DESENVOLVIMENTO_MATERIAIS: 'desenvolvimento_materiais',
     OUTROS: 'outros',
 } as const;
 
@@ -23,6 +26,8 @@ export const FINALIDADE_LABELS: Record<FinalidadeReuniao, string> = {
     [FINALIDADE_REUNIAO.REUNIAO_ESCOLA]: 'Reunião com a Escola',
     [FINALIDADE_REUNIAO.SUPERVISAO_AT]: 'Supervisão do AT',
     [FINALIDADE_REUNIAO.SUPERVISAO_TERAPEUTA]: 'Supervisão do Terapeuta',
+    [FINALIDADE_REUNIAO.SUPERVISAO_RECEBIDA]: 'Supervisão Recebida',
+    [FINALIDADE_REUNIAO.DESENVOLVIMENTO_MATERIAIS]: 'Desenvolvimento de Materiais',
     [FINALIDADE_REUNIAO.OUTROS]: 'Outros',
 };
 
@@ -101,6 +106,8 @@ export interface AtaFormData {
     clienteId?: string;
     clienteNome?: string;
     links?: LinkRecomendacao[];
+    /** Dados de faturamento da ata (separado do conteúdo) */
+    faturamento?: DadosFaturamentoAta;
 }
 
 /** Anexo - url é derivado */

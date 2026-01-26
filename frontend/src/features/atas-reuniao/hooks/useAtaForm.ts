@@ -19,6 +19,8 @@ import {
     TIPO_PARTICIPANTE,
     ataFormSchema,
 } from '../types';
+import type { DadosFaturamentoAta } from '../types/billing';
+import { DADOS_FATURAMENTO_ATA_INITIAL, getFaturamentoTypeByFinalidade } from '../types/billing';
 
 import {
     getTerapeutaLogado,
@@ -75,6 +77,9 @@ export interface UseAtaFormReturn {
     removeParticipante: (id: string) => void;
     selectTerapeutaParticipante: (participanteId: string, terapeutaId: string) => void;
 
+    // Handler de faturamento
+    handleFaturamentoChange: (faturamento: DadosFaturamentoAta) => void;
+
     // Ações
     handleSubmit: (anexos?: AnexoUpload[], links?: LinkRecomendacao[], finalizar?: boolean) => Promise<void>;
     clearDraft: () => void;
@@ -114,6 +119,7 @@ const getInitialFormData = (): AtaFormData => ({
     conteudo: '',
     clienteId: '',
     clienteNome: '',
+    faturamento: DADOS_FATURAMENTO_ATA_INITIAL,
 });
 
 // ============================================
@@ -205,6 +211,23 @@ export function useAtaForm({
         }
         loadTerapeutas();
     }, []);
+
+    // Atualizar tipo de faturamento automaticamente quando finalidade mudar
+    useEffect(() => {
+        if (!formData.finalidade) return;
+        
+        const novoTipo = getFaturamentoTypeByFinalidade(formData.finalidade);
+        
+        if (formData.faturamento?.tipoFaturamento !== novoTipo) {
+            setFormData((prev) => ({
+                ...prev,
+                faturamento: {
+                    ...(prev.faturamento || DADOS_FATURAMENTO_ATA_INITIAL),
+                    tipoFaturamento: novoTipo,
+                },
+            }));
+        }
+    }, [formData.finalidade, formData.faturamento?.tipoFaturamento, setFormData]);
 
     // ============================================
     // SELEÇÃO DE ÁREA DE ATUAÇÃO
@@ -318,6 +341,20 @@ export function useAtaForm({
             });
         },
         [terapeutas, updateParticipante]
+    );
+
+    // ============================================
+    // HANDLERS - FATURAMENTO
+    // ============================================
+
+    const handleFaturamentoChange = useCallback(
+        (faturamento: DadosFaturamentoAta) => {
+            setFormData((prev) => ({
+                ...prev,
+                faturamento,
+            }));
+        },
+        [setFormData]
     );
 
     // ============================================
@@ -441,6 +478,9 @@ export function useAtaForm({
         updateParticipante,
         removeParticipante,
         selectTerapeutaParticipante,
+
+        // Handler de faturamento
+        handleFaturamentoChange,
 
         // Ações
         handleSubmit,
