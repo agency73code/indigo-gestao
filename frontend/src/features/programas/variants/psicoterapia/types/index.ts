@@ -15,9 +15,13 @@ export type ID = string;
 export interface MembroNucleoFamiliar {
     id: ID;
     nome: string;
+    cpf?: string;
     parentesco: string;
+    descricaoRelacao?: string; // Para quando parentesco é "Outro"
+    dataNascimento?: string;
     idade?: number | string;
     ocupacao?: string;
+    origemBanco?: boolean; // true se veio dos cuidadores do cliente
 }
 
 // ============================================

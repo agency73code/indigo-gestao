@@ -62,32 +62,36 @@ model cargo {
 }
 
 model cliente {
-  id                  String              @id @default(uuid())
+  id                  String    @id @default(uuid())
   nome                String?
   status              String?
   perfil_acesso       String?
   senha               String?
   token_redefinicao   String?
   validade_token      DateTime?
-  criado_em           DateTime            @default(now())
-  atualizado_em       DateTime            @updatedAt
+  criado_em           DateTime  @default(now())
+  atualizado_em       DateTime  @updatedAt
   cpf                 String?
   dataEntrada         DateTime?
   dataNascimento      DateTime?
   dataSaida           DateTime?
-  emailContato        String?             @unique
+  emailContato        String?   @unique
   senha_atualizada_em DateTime?
-  arquivos            arquivos[]
-  enderecos           cliente_endereco[]
-  cuidadores          cuidador[]
-  dadosEscola         dados_escola?
-  dadosPagamento      dados_pagamento?
-  ocp                 ocp[]
-  sessao              sessao[]
-  terapeuta           terapeuta_cliente[]
-  relatorios          relatorio[]
-  anamneses           anamnese[]
-  atas_reuniao        ata_reuniao[]
+  nivel_escolaridade  String?
+  genero              String?
+
+  arquivos        arquivos[]
+  enderecos       cliente_endereco[]
+  cuidadores      cuidador[]
+  dadosEscola     dados_escola?
+  dadosPagamento  dados_pagamento?
+  ocp             ocp[]
+  sessao          sessao[]
+  terapeuta       terapeuta_cliente[]
+  relatorios      relatorio[]
+  anamneses       anamnese[]
+  ocp_prontuarios ocp_prontuario[]
+  atas_reuniao    ata_reuniao[]
 
   @@index([nome], map: "nome_idx")
 }
@@ -295,6 +299,7 @@ model terapeuta {
   disciplina            disciplina[]            @relation("disciplinaToterapeuta")
   relatorios            relatorio[]
   anamneses             anamnese[]
+  ocp_prontuarios       ocp_prontuario[]
   atas_reuniao          ata_reuniao[]
   atas_participacoes    ata_participante[]
 
@@ -311,7 +316,7 @@ model anamnese {
   cliente    cliente @relation(fields: [cliente_id], references: [id])
 
   terapeuta_id String
-  terapeuta    terapeuta @relation(fields: [terapeuta_id], references: [id])
+  terapeuta    terapeuta @relation(fields: [terapeuta_id], references: [id], onDelete: Restrict)
 
   // cabeçalho
   data_entrevista      DateTime
@@ -764,8 +769,8 @@ model pessoa_juridica {
   cnpj         String?   @unique
   razao_social String?
   endereco_id  Int
-  terapeuta_id String    @unique
   endereco     endereco  @relation(fields: [endereco_id], references: [id])
+  terapeuta_id String    @unique
   terapeuta    terapeuta @relation(fields: [terapeuta_id], references: [id])
 
   @@index([endereco_id], map: "pessoa_juridica_endereco_id_fkey")
@@ -894,7 +899,7 @@ model terapeuta_cliente {
   status        String    @default("active")
   area_atuacao  String?
   cliente       cliente   @relation(fields: [cliente_id], references: [id], onDelete: Cascade)
-  terapeuta     terapeuta @relation(fields: [terapeuta_id], references: [id], onDelete: Cascade)
+  terapeuta     terapeuta @relation(fields: [terapeuta_id], references: [id], onDelete: Restrict)
 
   @@index([terapeuta_id])
   @@index([cliente_id])
@@ -912,8 +917,8 @@ model vinculo_supervisao {
   observacoes       String?
   criado_em         DateTime  @default(now())
   atualizado_em     DateTime  @updatedAt
-  clinico           terapeuta @relation("ClinicoVinculo", fields: [clinico_id], references: [id], onDelete: Cascade)
-  supervisor        terapeuta @relation("SupervisorVinculo", fields: [supervisor_id], references: [id], onDelete: Cascade)
+  clinico           terapeuta @relation("ClinicoVinculo", fields: [clinico_id], references: [id], onDelete: Restrict)
+  supervisor        terapeuta @relation("SupervisorVinculo", fields: [supervisor_id], references: [id], onDelete: Restrict)
 
   @@unique([supervisor_id, clinico_id])
   @@index([supervisor_id])
@@ -932,6 +937,74 @@ model sessao_arquivo {
   sessao sessao @relation(fields: [sessao_id], references: [id], onDelete: Cascade)
 
   @@index([sessao_id])
+}
+
+model ocp_prontuario {
+  id Int @id @default(autoincrement())
+
+  cliente_id String
+  clientes   cliente @relation(fields: [cliente_id], references: [id], onDelete: Cascade)
+
+  terapeuta_id String
+  terapeutas   terapeuta @relation(fields: [terapeuta_id], references: [id], onDelete: Restrict)
+
+  profissao_ocupacao     String?
+  observacao_educacional String? @db.Text
+
+  observacoes_nucleo_familiar String? @db.Text
+
+  encaminhado_por          String?
+  motivo_busca_atendimento String
+  atendimentos_anteriores  String?
+  observacao_demanda       String? @db.Text
+
+  objetivos_trabalho    String
+  avaliacao_atendimento String?
+  status                Boolean @default(true)
+
+  criado_em     DateTime @default(now())
+  atualizado_em DateTime @updatedAt
+
+  evolucoes prontuario_evolucao[]
+
+  @@index([cliente_id])
+  @@index([terapeuta_id])
+}
+
+model prontuario_evolucao {
+  id Int @id @default(autoincrement())
+
+  prontuario_id Int
+  prontuario    ocp_prontuario @relation(fields: [prontuario_id], references: [id], onDelete: Cascade)
+
+  data_evolucao    DateTime
+  descricao_sessao String   @db.Text
+
+  criado_em     DateTime @default(now())
+  atualizado_em DateTime @updatedAt
+
+  anexos prontuario_evolucao_anexo[]
+
+  @@index([prontuario_id])
+  @@index([prontuario_id, data_evolucao])
+}
+
+model prontuario_evolucao_anexo {
+  id Int @id @default(autoincrement())
+
+  evolucao_id Int
+  evolucao    prontuario_evolucao @relation(fields: [evolucao_id], references: [id], onDelete: Cascade)
+
+  nome    String
+  caminho String
+  tipo    String
+  tamanho Int
+
+  criado_em     DateTime @default(now())
+  atualizado_em DateTime @updatedAt
+
+  @@index([evolucao_id])
+  @@index([caminho])
 }
 
 model ata_reuniao {
