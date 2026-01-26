@@ -5,6 +5,9 @@ import { Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ActionBar from '@/components/ui/action-bar';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
+import { SessionBillingData } from '@/features/programas/nova-sessao/components';
+import type { DadosFaturamentoSessao } from '@/features/programas/core/types/billing';
+import { DADOS_FATURAMENTO_INITIAL } from '@/features/programas/core/types/billing';
 import {
     ToPatientSelector,
     ToProgramSelector,
@@ -50,7 +53,7 @@ export default function RegistrarSessaoToPage() {
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
     const [selectedProgram, setSelectedProgram] = useState<ProgramListItem | null>(null);
     const [programDetail, setProgramDetail] = useState<ToProgramDetail | null>(null);
-    const [sessionState, setSessionState] = useState<ToSessionState>({
+    const [sessionState, setSessionState] = useState<ToSessionState & { billing?: DadosFaturamentoSessao }>({
         patientId: null,
         programId: null,
         attempts: [],
@@ -62,6 +65,7 @@ export default function RegistrarSessaoToPage() {
         },
         notes: '',
         files: [],
+        billing: DADOS_FATURAMENTO_INITIAL,
     });
 
     // Estados de carregamento
@@ -210,6 +214,13 @@ export default function RegistrarSessaoToPage() {
         }));
     };
 
+    const handleBillingChange = (billing: DadosFaturamentoSessao) => {
+        setSessionState((prev) => ({
+            ...prev,
+            billing,
+        }));
+    };
+
     const handleSave = async () => {
         if (!canSave) return;
 
@@ -224,6 +235,7 @@ export default function RegistrarSessaoToPage() {
                 notes: sessionState.notes,
                 files: sessionState.files,
                 area: 'terapia-ocupacional',
+                faturamento: sessionState.billing,
             });
 
             toast.success('Sessão registrada com sucesso! 🎉', {
@@ -308,6 +320,13 @@ export default function RegistrarSessaoToPage() {
                                 program={programDetail}
                                 attempts={sessionState.attempts}
                                 onAddAttempt={handleAddAttempt}
+                            />
+
+                            {/* Dados de Faturamento */}
+                            <SessionBillingData
+                                billing={sessionState.billing || DADOS_FATURAMENTO_INITIAL}
+                                onChange={handleBillingChange}
+                                disabled={savingSession}
                             />
 
                             {/* Observações da sessão */}
