@@ -33,6 +33,29 @@ export type SessionFile = {
     preview?: string;
 };
 
+/**
+ * ============================================================================
+ * DADOS DE FATURAMENTO DA SESSÃO
+ * ============================================================================
+ * 
+ * Importado do módulo centralizado de billing.
+ * Estes campos são enviados junto com o payload da sessão para o backend.
+ * 
+ * BACKEND: Ver /features/programas/core/types/billing.ts para documentação
+ * completa dos campos e estrutura de banco de dados.
+ * ============================================================================
+ */
+export type { 
+    DadosFaturamentoSessao, 
+    ArquivoFaturamento,
+    TipoAtendimento,
+} from '@/features/programas/core/types/billing';
+export { 
+    DADOS_FATURAMENTO_INITIAL,
+    TIPO_ATENDIMENTO,
+    validarDadosFaturamento,
+} from '@/features/programas/core/types/billing';
+
 export type MusiSessionState = {
     patientId: string | null;
     programId: string | null;
@@ -40,6 +63,11 @@ export type MusiSessionState = {
     summary: MusiSessionSummary;
     notes?: string;
     files?: SessionFile[];
+    /** 
+     * Dados de faturamento da sessão
+     * @see DadosFaturamentoSessao em billing.ts
+     */
+    billing?: import('@/features/programas/core/types/billing').DadosFaturamentoSessao;
 };
 
 export type MusiPredominantResult = 'verde' | 'laranja' | 'vermelho';

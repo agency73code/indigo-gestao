@@ -171,6 +171,14 @@ export interface ApiCreateEvolucaoPayload {
     prontuario_id: string;
     data_evolucao: string;
     descricao_sessao: string;
+    faturamento?: {
+        data_sessao: string;
+        horario_inicio: string;
+        horario_fim: string;
+        tipo_atendimento: string;
+        ajuda_custo: boolean;
+        observacao_faturamento?: string | null;
+    } | null;
 }
 
 // ============================================

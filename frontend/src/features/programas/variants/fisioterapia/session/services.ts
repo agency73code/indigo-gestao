@@ -6,6 +6,7 @@ import type {
     FisioSessionAttempt,
     FisioSessionSummary,
     SessionFile,
+    DadosFaturamentoSessao,
 } from './types';
 import type { AreaType } from '@/contexts/AreaContext';
 
@@ -64,6 +65,7 @@ export async function saveFisioSession(payload: {
     notes?: string;
     files?: SessionFile[];
     area: AreaType;
+    faturamento?: DadosFaturamentoSessao;
 }): Promise<void> {
     // TODO: Implementar chamada real à API
     const formData = buildSessionFormData(payload);

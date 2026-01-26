@@ -8,7 +8,10 @@ import { Button } from '@/ui/button';
 import { Input } from '@/components/ui/input';
 import { TextAreaField } from '@/ui/textarea-field';
 import { DateFieldWithLabel } from '@/ui/date-field-with-label';
-import type { EvolucaoFormData, ArquivoEvolucao, CabecalhoEvolucao } from '../types';
+import { SessionBillingData } from '@/features/programas/nova-sessao/components';
+import type { EvolucaoFormData, ArquivoEvolucao, CabecalhoEvolucao, DadosFaturamentoSessao } from '../types';
+import { DADOS_FATURAMENTO_INITIAL, validarDadosFaturamento } from '../types';
+import { toast } from 'sonner';
 
 interface EvolucaoFormProps {
     cabecalho: CabecalhoEvolucao;
@@ -103,6 +106,26 @@ export default function EvolucaoForm({
     const isImageFile = (type: string) => type?.startsWith('image/');
     const isVideoFile = (type: string) => type?.startsWith('video/');
 
+    // Handler para mudanças de billing
+    const handleBillingChange = (billing: DadosFaturamentoSessao) => {
+        onChange('billing', billing);
+    };
+
+    // Handler para salvar com validação de billing
+    const handleSaveWithValidation = async () => {
+        // Validar dados de faturamento
+        const billingValidation = validarDadosFaturamento(formData.billing);
+        if (!billingValidation.valido) {
+            toast.error('Dados de faturamento incompletos', {
+                description: billingValidation.mensagem,
+                duration: 4000,
+            });
+            return;
+        }
+        
+        return onSave();
+    };
+
     return (
         <div className="space-y-4">
             {/* Número da Sessão - Destaque */}
@@ -120,6 +143,13 @@ export default function EvolucaoForm({
                     </div>
                 </div>
             </div>
+
+            {/* Dados de Faturamento da Sessão */}
+            <SessionBillingData
+                billing={formData.billing || DADOS_FATURAMENTO_INITIAL}
+                onChange={handleBillingChange}
+                disabled={isSaving}
+            />
 
             {/* Data da Evolução - Card */}
             <div 
@@ -262,7 +292,7 @@ export default function EvolucaoForm({
             {/* Botão Salvar */}
             <div className="flex justify-end pt-2">
                 <Button
-                    onClick={onSave}
+                    onClick={handleSaveWithValidation}
                     disabled={isSaving || !formData.descricaoSessao.trim()}
                     size="sm"
                 >

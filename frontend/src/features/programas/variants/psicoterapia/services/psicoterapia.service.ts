@@ -368,6 +368,14 @@ export async function criarEvolucao(data: EvolucaoFormData): Promise<EvolucaoRes
             prontuario_id: data.prontuarioId,
             data_evolucao: data.dataEvolucao,
             descricao_sessao: data.descricaoSessao,
+            faturamento: data.billing ? {
+                data_sessao: data.billing.dataSessao,
+                horario_inicio: data.billing.horarioInicio,
+                horario_fim: data.billing.horarioFim,
+                tipo_atendimento: data.billing.tipoAtendimento,
+                ajuda_custo: data.billing.ajudaCusto,
+                observacao_faturamento: data.billing.observacaoFaturamento ?? null,
+            } : null,
         }));
         
         // Adicionar arquivos com validação
@@ -384,6 +392,23 @@ export async function criarEvolucao(data: EvolucaoFormData): Promise<EvolucaoRes
                 fd.append(`files[${arquivo.id}]`, arquivo.file, arquivo.file.name);
                 fd.append(`fileNames[${arquivo.id}]`, arquivo.nome);
             }
+        }
+
+        // Adicionar arquivos de faturamento
+        const billingFiles = data.billing?.arquivosFaturamento ?? [];
+        for (const arquivo of billingFiles) {
+            if (!arquivo.file) continue;
+
+            const validation = validateFile(arquivo.file);
+            if (!validation.valid) {
+                return {
+                    success: false,
+                    message: validation.error || 'Arquivo de faturamento inválido',
+                };
+            }
+
+            fd.append(`billingFiles[${arquivo.id}]`, arquivo.file, arquivo.file.name);
+            fd.append(`billingFileNames[${arquivo.id}]`, arquivo.nome);
         }
         
         const res = await authFetch(endpoints.evolucoes(data.prontuarioId), {
