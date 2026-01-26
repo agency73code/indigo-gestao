@@ -16,4 +16,4 @@ export { default as FonoSessionFiles } from './FonoSessionFiles.tsx';
 export type { SessionFile } from './FonoSessionFiles.tsx';
 
 // Componente de faturamento de sessão
-export { default as SessionBillingData } from './SessionBillingData.tsx';
+export { SessionBillingData } from './SessionBillingData.tsx';
