@@ -329,7 +329,7 @@ export default function DadosPessoaisStep({
                 </div>
             </div>
 
-            {/* Linha de Tipo de Chave Pix, Chave Pix e Valor Acordado */}
+            {/* Linha de Tipo de Chave Pix e Chave Pix */}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-12 md:gap-4">
                 <div className="md:col-span-3">
                     <SelectFieldRadix
@@ -351,7 +351,7 @@ export default function DadosPessoaisStep({
                     </SelectFieldRadix>
                 </div>
 
-                <div className="md:col-span-6">
+                <div className="md:col-span-9">
                     <InputField
                         label="Chave Pix *"
                         id="chavePix"
@@ -375,18 +375,76 @@ export default function DadosPessoaisStep({
                     />
                     
                 </div>
+            </div>
 
-                <div className="md:col-span-3">
+            {/* Seção: Valores por Tipo de Atividade */}
+            <div className="pt-2">
+                <h4 className="text-sm font-normal text-muted-foreground mb-3" style={{fontFamily: "Sora"}}>Valores por Tipo de Atividade</h4>
+                
+                {/* Linha 1: 3 campos */}
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 md:gap-4 mb-3">
                     <InputField
-                        label="Valor acordado por hora"
-                        id="valorHoraAcordado"
+                        label="Sessão em Consultório *"
+                        id="valorSessaoConsultorio"
                         type="text"
-                        value={data.valorHoraAcordado ?? ''}
-                        onChange={(e) => onUpdate('valorHoraAcordado', maskBRL(e.target.value))}
+                        value={data.valorSessaoConsultorio ?? ''}
+                        onChange={(e) => onUpdate('valorSessaoConsultorio', maskBRL(e.target.value))}
                         placeholder="R$ 0,00"
-                        error={errors.valorHoraAcordado}
+                        error={errors.valorSessaoConsultorio}
                     />
                     
+                    <InputField
+                        label="Sessão em Homecare *"
+                        id="valorSessaoHomecare"
+                        type="text"
+                        value={data.valorSessaoHomecare ?? ''}
+                        onChange={(e) => onUpdate('valorSessaoHomecare', maskBRL(e.target.value))}
+                        placeholder="R$ 0,00"
+                        error={errors.valorSessaoHomecare}
+                    />
+                    
+                    <InputField
+                        label="Hora Desenvolvimento Materiais *"
+                        id="valorHoraDesenvolvimentoMateriais"
+                        type="text"
+                        value={data.valorHoraDesenvolvimentoMateriais ?? ''}
+                        onChange={(e) => onUpdate('valorHoraDesenvolvimentoMateriais', maskBRL(e.target.value))}
+                        placeholder="R$ 0,00"
+                        error={errors.valorHoraDesenvolvimentoMateriais}
+                    />
+                </div>
+                
+                {/* Linha 2: 3 campos */}
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 md:gap-4">
+                    <InputField
+                        label="Hora Supervisão Recebida *"
+                        id="valorHoraSupervisaoRecebida"
+                        type="text"
+                        value={data.valorHoraSupervisaoRecebida ?? ''}
+                        onChange={(e) => onUpdate('valorHoraSupervisaoRecebida', maskBRL(e.target.value))}
+                        placeholder="R$ 0,00"
+                        error={errors.valorHoraSupervisaoRecebida}
+                    />
+                    
+                    <InputField
+                        label="Hora Supervisão Dada *"
+                        id="valorHoraSupervisaoDada"
+                        type="text"
+                        value={data.valorHoraSupervisaoDada ?? ''}
+                        onChange={(e) => onUpdate('valorHoraSupervisaoDada', maskBRL(e.target.value))}
+                        placeholder="R$ 0,00"
+                        error={errors.valorHoraSupervisaoDada}
+                    />
+                    
+                    <InputField
+                        label="Hora de Reuniões *"
+                        id="valorHoraReuniao"
+                        type="text"
+                        value={data.valorHoraReuniao ?? ''}
+                        onChange={(e) => onUpdate('valorHoraReuniao', maskBRL(e.target.value))}
+                        placeholder="R$ 0,00"
+                        error={errors.valorHoraReuniao}
+                    />
                 </div>
             </div>
         </div>

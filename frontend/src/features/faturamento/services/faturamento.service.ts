@@ -1,258 +1,396 @@
-// ============================================================================
-// SERVICE CONSOLIDADO DA FEATURE FATURAMENTO
-// ============================================================================
-// Este arquivo contém todos os services da feature, centralizando:
-// - Lançamento de horas (terapeuta)
-// - Gestão de horas (gerente)
-// - Toggle automático entre API real e mocks via VITE_USE_MOCK
-// ============================================================================
+/**
+ * ============================================================================
+ * SERVICE - FATURAMENTO
+ * ============================================================================
+ * 
+ * Serviço de faturamento para lançamento de horas.
+ * Preparado para integração com backend.
+ * 
+ * Quando o backend estiver pronto:
+ * 1. Implementar as funções com authFetch
+ * 2. Remover importações de mock
+ * 3. Remover flag useMock do config
+ * ============================================================================
+ */
 
+import { authFetch } from '@/lib/http';
 import type {
-    CreateHourEntryInput,
-    HourEntryDTO,
-    ListHourEntriesQuery,
-    ManagerEntryDTO,
-    ManagerFilters,
-    PagedResult,
-    TherapistDTO,
-    TherapistPayrollSummaryDTO,
-    UpdateHourEntryInput,
-    ApproveRejectPayload,
-    MarkPaidPayload,
-} from '../types/hourEntry.types';
+    Lancamento,
+    LancamentoListFilters,
+    LancamentoListResponse,
+    CreateLancamentoInput,
+    UpdateLancamentoInput,
+    ClienteOption,
+    TerapeutaOption,
+    ResumoHorasTerapeuta,
+    ResumoGestao,
+} from '../types';
 
-// Importar mocks
-import * as therapistMock from './mocks/therapist.mock.js';
-import * as managerMock from './mocks/manager.mock.js';
+import { faturamentoConfig } from './faturamento.config';
 
-const USE_MOCK = import.meta.env.VITE_USE_MOCK === '1';
+// Importar mocks (remover após implementação do backend)
+import * as mocks from './mocks/faturamento.mock';
 
-// ============================================================================
-// SERVICES DO TERAPEUTA (Registrar Lançamento + Minhas Horas)
-// ============================================================================
+// ============================================
+// HELPERS - MAPEAMENTO API ↔ FRONTEND
+// ============================================
 
-export const therapistService = {
-    /**
-     * Listar lançamentos do terapeuta logado
-     */
-    async listMine(query: ListHourEntriesQuery = {}): Promise<PagedResult<HourEntryDTO>> {
-        if (USE_MOCK) return therapistMock.listMine(query);
+/**
+ * Converte resposta do backend (snake_case) para frontend (camelCase)
+ * Implementar quando o backend estiver pronto
+ */
+function mapLancamentoFromApi(data: unknown): Lancamento {
+    // TODO: Implementar mapeamento quando o backend estiver pronto
+    return data as Lancamento;
+}
 
-        // TODO: Implementar chamada real à API
-        const response = await fetch('/api/faturamento/therapist/entries', {
+/**
+ * Converte input do frontend para formato do backend
+ * Implementar quando o backend estiver pronto
+ */
+function mapCreateLancamentoToApi(input: CreateLancamentoInput): Record<string, unknown> {
+    // TODO: Implementar mapeamento quando o backend estiver pronto
+    return {
+        cliente_id: input.clienteId,
+        data: input.data,
+        horario_inicio: input.horarioInicio,
+        horario_fim: input.horarioFim,
+        tipo_atividade: input.tipoAtividade,
+        is_homecare: input.isHomecare,
+        observacoes: input.observacoes,
+    };
+}
+
+// ============================================
+// CRUD - LANÇAMENTOS
+// ============================================
+
+/**
+ * Lista lançamentos com filtros e paginação
+ */
+export async function listLancamentos(
+    filters: LancamentoListFilters = {}
+): Promise<LancamentoListResponse> {
+    if (faturamentoConfig.useMock) {
+        return mocks.mockListLancamentos(filters);
+    }
+
+    // TODO: Implementar chamada real à API
+    const params = new URLSearchParams();
+    if (filters.q) params.append('q', filters.q);
+    if (filters.terapeutaId) params.append('terapeuta_id', filters.terapeutaId);
+    if (filters.clienteId) params.append('cliente_id', filters.clienteId);
+    if (filters.tipoAtividade && filters.tipoAtividade !== 'all') {
+        params.append('tipo_atividade', filters.tipoAtividade);
+    }
+    if (filters.status && filters.status !== 'all') {
+        params.append('status', filters.status);
+    }
+    if (filters.dataInicio) params.append('data_inicio', filters.dataInicio);
+    if (filters.dataFim) params.append('data_fim', filters.dataFim);
+    if (filters.page) params.append('page', String(filters.page));
+    if (filters.pageSize) params.append('page_size', String(filters.pageSize));
+
+    const res = await authFetch(`/api/faturamento/lancamentos?${params.toString()}`, {
+        method: 'GET',
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+        throw new Error(data?.message ?? 'Falha ao listar lançamentos');
+    }
+
+    return {
+        items: (data.items || []).map(mapLancamentoFromApi),
+        total: data.total || 0,
+        page: data.page || 1,
+        pageSize: data.page_size || 10,
+        totalPages: Math.ceil((data.total || 0) / (data.page_size || 10)),
+    };
+}
+
+/**
+ * Busca lançamento por ID
+ */
+export async function getLancamento(id: string): Promise<Lancamento | null> {
+    if (faturamentoConfig.useMock) {
+        return mocks.mockGetLancamento(id);
+    }
+
+    try {
+        const res = await authFetch(`/api/faturamento/lancamentos/${id}`, {
             method: 'GET',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
         });
+        const data = await res.json();
+        return mapLancamentoFromApi(data);
+    } catch {
+        return null;
+    }
+}
 
-        if (!response.ok) throw new Error('Erro ao listar lançamentos');
-        return response.json();
-    },
+/**
+ * Cria novo lançamento
+ */
+export async function createLancamento(
+    input: CreateLancamentoInput,
+    terapeutaId: string
+): Promise<Lancamento> {
+    if (faturamentoConfig.useMock) {
+        return mocks.mockCreateLancamento(input, terapeutaId);
+    }
 
-    /**
-     * Criar novo lançamento
-     */
-    async create(input: CreateHourEntryInput): Promise<HourEntryDTO> {
-        if (USE_MOCK) return therapistMock.create(input);
+    // Preparar FormData para suportar upload de arquivos
+    const formData = new FormData();
+    const payload = mapCreateLancamentoToApi(input);
+    
+    for (const [key, value] of Object.entries(payload)) {
+        if (value !== undefined && value !== null) {
+            formData.append(key, String(value));
+        }
+    }
 
-        // TODO: Implementar chamada real à API
-        const response = await fetch('/api/faturamento/therapist/entries', {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(input),
-        });
+    // Adicionar anexos se houver
+    if (input.anexos) {
+        for (const anexo of input.anexos) {
+            formData.append('anexos', anexo.file, anexo.nome);
+        }
+    }
 
-        if (!response.ok) throw new Error('Erro ao criar lançamento');
-        return response.json();
-    },
+    const res = await authFetch('/api/faturamento/lancamentos', {
+        method: 'POST',
+        body: formData,
+    });
+    const data = await res.json();
 
-    /**
-     * Enviar lançamento para aprovação
-     */
-    async submit(id: string): Promise<void> {
-        if (USE_MOCK) return therapistMock.submit(id);
+    if (!res.ok) {
+        throw new Error(data?.message ?? 'Falha ao criar lançamento');
+    }
 
-        // TODO: Implementar chamada real à API
-        const response = await fetch(`/api/faturamento/therapist/entries/${id}/submit`, {
-            method: 'POST',
-            credentials: 'include',
-        });
+    return mapLancamentoFromApi(data);
+}
 
-        if (!response.ok) throw new Error('Erro ao enviar lançamento');
-    },
+/**
+ * Atualiza lançamento existente
+ */
+export async function updateLancamento(
+    id: string,
+    input: UpdateLancamentoInput
+): Promise<Lancamento | null> {
+    if (faturamentoConfig.useMock) {
+        return mocks.mockUpdateLancamento(id, input);
+    }
 
-    /**
-     * Atualizar lançamento
-     */
-    async update(id: string, input: UpdateHourEntryInput): Promise<HourEntryDTO> {
-        if (USE_MOCK) return therapistMock.update(id, input);
+    const res = await authFetch(`/api/faturamento/lancamentos/${id}`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(input),
+    });
+    const data = await res.json();
 
-        // TODO: Implementar chamada real à API
-        const response = await fetch(`/api/faturamento/therapist/entries/${id}`, {
-            method: 'PATCH',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(input),
-        });
+    if (!res.ok) {
+        throw new Error(data?.message ?? 'Falha ao atualizar lançamento');
+    }
 
-        if (!response.ok) throw new Error('Erro ao atualizar lançamento');
-        return response.json();
-    },
+    return mapLancamentoFromApi(data);
+}
 
-    /**
-     * Buscar lançamento por ID
-     */
-    async getById(id: string): Promise<HourEntryDTO> {
-        if (USE_MOCK) return therapistMock.getById(id);
+/**
+ * Deleta lançamento
+ */
+export async function deleteLancamento(id: string): Promise<boolean> {
+    if (faturamentoConfig.useMock) {
+        return mocks.mockDeleteLancamento(id);
+    }
 
-        // TODO: Implementar chamada real à API
-        const response = await fetch(`/api/faturamento/therapist/entries/${id}`, {
-            method: 'GET',
-            credentials: 'include',
-        });
+    const res = await authFetch(`/api/faturamento/lancamentos/${id}`, {
+        method: 'DELETE',
+    });
 
-        if (!response.ok) throw new Error('Erro ao buscar lançamento');
-        return response.json();
-    },
+    if (!res.ok) {
+        throw new Error('Falha ao excluir lançamento');
+    }
 
-    /**
-     * Remover lançamento (desabilitado para terapeuta)
-     */
-    async remove(_id: string): Promise<void> {
-        if (USE_MOCK) return therapistMock.remove(_id);
-        throw new Error('Terapeuta não pode excluir lançamentos.');
-    },
-};
+    return true;
+}
 
-// ============================================================================
-// SERVICES DA GERENTE (Gestão de Horas)
-// ============================================================================
+// ============================================
+// AÇÕES DE GESTÃO (GERENTE)
+// ============================================
 
-export const managerService = {
-    /**
-     * Listar terapeutas (para filtros)
-     */
-    async listTherapists(): Promise<TherapistDTO[]> {
-        if (USE_MOCK) return managerMock.listTherapists();
+/**
+ * Aprova lançamento
+ */
+export async function aprovarLancamento(id: string): Promise<Lancamento | null> {
+    return updateLancamento(id, { status: 'aprovado' });
+}
 
-        // TODO: Implementar chamada real à API
-        const response = await fetch('/api/faturamento/manager/therapists', {
-            method: 'GET',
-            credentials: 'include',
-        });
+/**
+ * Rejeita lançamento
+ */
+export async function rejeitarLancamento(
+    id: string,
+    motivo: string
+): Promise<Lancamento | null> {
+    return updateLancamento(id, { 
+        status: 'rejeitado',
+        motivoRejeicao: motivo,
+    });
+}
 
-        if (!response.ok) throw new Error('Erro ao listar terapeutas');
-        return response.json();
-    },
+/**
+ * Aprova múltiplos lançamentos em lote
+ */
+export async function aprovarEmLote(ids: string[]): Promise<{ sucesso: number; erros: number }> {
+    let sucesso = 0;
+    let erros = 0;
 
-    /**
-     * Visão Geral: agregados por terapeuta
-     */
-    async listOverviewByTherapist(
-        filters: ManagerFilters,
-    ): Promise<PagedResult<TherapistPayrollSummaryDTO>> {
-        if (USE_MOCK) return managerMock.listOverviewByTherapist(filters);
+    for (const id of ids) {
+        try {
+            await aprovarLancamento(id);
+            sucesso++;
+        } catch {
+            erros++;
+        }
+    }
 
-        // TODO: Implementar chamada real à API
-        const params = new URLSearchParams(filters as Record<string, string>);
-        const response = await fetch(`/api/faturamento/manager/overview?${params}`, {
-            method: 'GET',
-            credentials: 'include',
-        });
+    return { sucesso, erros };
+}
 
-        if (!response.ok) throw new Error('Erro ao buscar visão geral');
-        return response.json();
-    },
+// ============================================
+// AUXILIARES
+// ============================================
 
-    /**
-     * Fila de aprovações (lançamentos submitted)
-     */
-    async listApprovalsQueue(filters: ManagerFilters): Promise<PagedResult<ManagerEntryDTO>> {
-        if (USE_MOCK) return managerMock.listApprovalsQueue(filters);
+/**
+ * Lista clientes disponíveis para seleção
+ */
+export async function listClientes(
+    q?: string
+): Promise<ClienteOption[]> {
+    if (faturamentoConfig.useMock) {
+        const clientes = await mocks.mockListClientes();
+        if (q) {
+            const query = q.toLowerCase();
+            return clientes.filter(c => c.nome.toLowerCase().includes(query));
+        }
+        return clientes;
+    }
 
-        // TODO: Implementar chamada real à API
-        const params = new URLSearchParams(filters as Record<string, string>);
-        const response = await fetch(`/api/faturamento/manager/approvals?${params}`, {
-            method: 'GET',
-            credentials: 'include',
-        });
+    const params = new URLSearchParams();
+    if (q) params.append('q', q);
 
-        if (!response.ok) throw new Error('Erro ao buscar fila de aprovações');
-        return response.json();
-    },
+    const res = await authFetch(`/api/clientes/select?${params.toString()}`, {
+        method: 'GET',
+    });
+    const data = await res.json();
 
-    /**
-     * Detalhe por terapeuta (com valores)
-     */
-    async listEntriesByTherapist(
-        therapistId: string,
-        filters: ManagerFilters,
-    ): Promise<PagedResult<ManagerEntryDTO>> {
-        if (USE_MOCK) return managerMock.listEntriesByTherapist(therapistId, filters);
+    if (!res.ok) {
+        throw new Error(data?.message ?? 'Falha ao listar clientes');
+    }
 
-        // TODO: Implementar chamada real à API
-        const params = new URLSearchParams(filters as Record<string, string>);
-        const response = await fetch(
-            `/api/faturamento/manager/therapists/${therapistId}/entries?${params}`,
-            {
-                method: 'GET',
-                credentials: 'include',
-            },
-        );
+    return (data.items || []).map((c: { id: string; nome: string; avatar_url?: string }) => ({
+        id: c.id,
+        nome: c.nome,
+        avatarUrl: c.avatar_url,
+    }));
+}
 
-        if (!response.ok) throw new Error('Erro ao buscar lançamentos do terapeuta');
-        return response.json();
-    },
+/**
+ * Lista terapeutas disponíveis para seleção
+ */
+export async function listTerapeutas(): Promise<TerapeutaOption[]> {
+    if (faturamentoConfig.useMock) {
+        return mocks.mockListTerapeutas();
+    }
 
-    /**
-     * Aprovar lançamentos
-     */
-    async approve(payload: ApproveRejectPayload): Promise<void> {
-        if (USE_MOCK) return managerMock.approve(payload);
+    const res = await authFetch('/api/terapeutas/select', {
+        method: 'GET',
+    });
+    const data = await res.json();
 
-        // TODO: Implementar chamada real à API
-        const response = await fetch('/api/faturamento/manager/approve', {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-        });
+    if (!res.ok) {
+        throw new Error(data?.message ?? 'Falha ao listar terapeutas');
+    }
 
-        if (!response.ok) throw new Error('Erro ao aprovar lançamentos');
-    },
+    return data.items as TerapeutaOption[];
+}
 
-    /**
-     * Reprovar lançamentos
-     */
-    async reject(payload: ApproveRejectPayload): Promise<void> {
-        if (USE_MOCK) return managerMock.reject(payload);
+/**
+ * Busca dados do terapeuta logado
+ */
+export async function getTerapeutaLogado(): Promise<TerapeutaOption> {
+    if (faturamentoConfig.useMock) {
+        return mocks.mockGetTerapeutaLogado();
+    }
 
-        // TODO: Implementar chamada real à API
-        const response = await fetch('/api/faturamento/manager/reject', {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-        });
+    const res = await authFetch('/api/terapeutas/me', {
+        method: 'GET',
+    });
+    const data = await res.json();
 
-        if (!response.ok) throw new Error('Erro ao reprovar lançamentos');
-    },
+    if (!res.ok) {
+        throw new Error(data?.message ?? 'Falha ao buscar terapeuta logado');
+    }
 
-    /**
-     * Marcar como pago
-     */
-    async markPaid(payload: MarkPaidPayload): Promise<void> {
-        if (USE_MOCK) return managerMock.markPaid(payload);
+    return data as TerapeutaOption;
+}
 
-        // TODO: Implementar chamada real à API
-        const response = await fetch('/api/faturamento/manager/mark-paid', {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-        });
+// ============================================
+// RESUMOS E ESTATÍSTICAS
+// ============================================
 
-        if (!response.ok) throw new Error('Erro ao marcar como pago');
-    },
-};
+/**
+ * Resumo de horas do terapeuta
+ */
+export async function getResumoTerapeuta(
+    terapeutaId: string,
+    periodoInicio?: string,
+    periodoFim?: string
+): Promise<ResumoHorasTerapeuta> {
+    if (faturamentoConfig.useMock) {
+        return mocks.mockGetResumoTerapeuta(terapeutaId, periodoInicio, periodoFim);
+    }
+
+    const params = new URLSearchParams();
+    if (periodoInicio) params.append('periodo_inicio', periodoInicio);
+    if (periodoFim) params.append('periodo_fim', periodoFim);
+
+    const res = await authFetch(`/api/faturamento/resumo/terapeuta/${terapeutaId}?${params.toString()}`, {
+        method: 'GET',
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+        throw new Error(data?.message ?? 'Falha ao buscar resumo');
+    }
+
+    return data as ResumoHorasTerapeuta;
+}
+
+/**
+ * Resumo para gestão (gerente)
+ */
+export async function getResumoGestao(
+    periodoInicio?: string,
+    periodoFim?: string
+): Promise<ResumoGestao> {
+    if (faturamentoConfig.useMock) {
+        return mocks.mockGetResumoGestao(periodoInicio, periodoFim);
+    }
+
+    const params = new URLSearchParams();
+    if (periodoInicio) params.append('periodo_inicio', periodoInicio);
+    if (periodoFim) params.append('periodo_fim', periodoFim);
+
+    const res = await authFetch(`/api/faturamento/resumo/gestao?${params.toString()}`, {
+        method: 'GET',
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+        throw new Error(data?.message ?? 'Falha ao buscar resumo de gestão');
+    }
+
+    return data as ResumoGestao;
+}

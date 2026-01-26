@@ -16,6 +16,7 @@ import {
     toTitleCaseSimple,
     validatePixKey,
     maskPixKey,
+    parseCurrencyBR,
 } from '@/common/utils/mask';
 // Componentes dos steps
 import VerticalStepSidebar from '../components/VerticalStepSidebar';
@@ -84,7 +85,15 @@ export default function CadastroTerapeutaPage() {
         conta: null,
         pixTipo: 'email',
         chavePix: null,
-        valorHoraAcordado: null,
+        
+        // Valores por tipo de atividade
+        valorSessaoConsultorio: null,
+        valorSessaoHomecare: null,
+        valorHoraDesenvolvimentoMateriais: null,
+        valorHoraSupervisaoRecebida: null,
+        valorHoraSupervisaoDada: null,
+        valorHoraReuniao: null,
+        
         professorUnindigo: 'nao' as 'sim' | 'nao',
         disciplinaUniindigo: null,
 
@@ -345,6 +354,20 @@ export default function CadastroTerapeutaPage() {
                         newErrors.chavePix = pixValidation.message || 'Chave Pix inválida';
                     }
                 }
+
+                // Validação dos valores por tipo de atividade
+                if (!formData.valorSessaoConsultorio?.trim())
+                    newErrors.valorSessaoConsultorio = 'Campo obrigatório';
+                if (!formData.valorSessaoHomecare?.trim())
+                    newErrors.valorSessaoHomecare = 'Campo obrigatório';
+                if (!formData.valorHoraDesenvolvimentoMateriais?.trim())
+                    newErrors.valorHoraDesenvolvimentoMateriais = 'Campo obrigatório';
+                if (!formData.valorHoraSupervisaoRecebida?.trim())
+                    newErrors.valorHoraSupervisaoRecebida = 'Campo obrigatório';
+                if (!formData.valorHoraSupervisaoDada?.trim())
+                    newErrors.valorHoraSupervisaoDada = 'Campo obrigatório';
+                if (!formData.valorHoraReuniao?.trim())
+                    newErrors.valorHoraReuniao = 'Campo obrigatório';
                 break;
 
             case 2: // Endereço
@@ -430,6 +453,20 @@ export default function CadastroTerapeutaPage() {
             if (payload.cnpj?.numero) payload.cnpj.numero = onlyDigits(payload.cnpj.numero);
             if (payload.cnpj?.razaoSocial)
                 payload.cnpj.razaoSocial = toTitleCaseSimple(payload.cnpj.razaoSocial);
+
+            // Converter valores de moeda de string formatada para número
+            if (payload.valorSessaoConsultorio)
+                payload.valorSessaoConsultorio = parseCurrencyBR(payload.valorSessaoConsultorio).toString();
+            if (payload.valorSessaoHomecare)
+                payload.valorSessaoHomecare = parseCurrencyBR(payload.valorSessaoHomecare).toString();
+            if (payload.valorHoraDesenvolvimentoMateriais)
+                payload.valorHoraDesenvolvimentoMateriais = parseCurrencyBR(payload.valorHoraDesenvolvimentoMateriais).toString();
+            if (payload.valorHoraSupervisaoRecebida)
+                payload.valorHoraSupervisaoRecebida = parseCurrencyBR(payload.valorHoraSupervisaoRecebida).toString();
+            if (payload.valorHoraSupervisaoDada)
+                payload.valorHoraSupervisaoDada = parseCurrencyBR(payload.valorHoraSupervisaoDada).toString();
+            if (payload.valorHoraReuniao)
+                payload.valorHoraReuniao = parseCurrencyBR(payload.valorHoraReuniao).toString();
 
             const formDataUpload = new FormData();
 
