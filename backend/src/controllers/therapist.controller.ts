@@ -59,7 +59,7 @@ export async function getById(req: Request, res: Response, next: NextFunction) {
     }
 }
 
-export async function update(req: Request, res: Response, next: NextFunction) {
+export async function update(req: Request, res: Response, next: NextFunction) { // TODO
     try {
         const { therapistId } = req.params;
         if (!therapistId) {
@@ -129,6 +129,17 @@ export async function list(req: Request, res: Response, next: NextFunction) {
         });
     } catch (error) {
         next(error);
+    }
+}
+
+export async function fetchTherapistSummaryById(req: Request, res: Response, next: NextFunction) {
+    try {
+        const therapistId = uuidParam.parse(req.params.therapistId);
+        const data = await TherapistService.fetchTherapistSummaryById(therapistId);
+
+        return res.status(200).json(data);
+    } catch (err) {
+        next(err);
     }
 }
 

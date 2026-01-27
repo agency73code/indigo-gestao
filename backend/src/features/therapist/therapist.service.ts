@@ -11,6 +11,7 @@ import { buildAddress } from '../../utils/buildAddress.js';
 import { getAccessLevelFromRoles } from '../../utils/normalizeRoleName.js';
 import { queryTherapist } from './querys/queryTherapist.js';
 import { mapTherapist } from './mappers/mapTherapist.js';
+import { getPrimaryAreaFromAreaRoles } from '../../utils/getPrimaryAreaFromAreaRoles.js';
 
 const MANAGER_LEVEL = ACCESS_LEVELS['gerente'] ?? 5;
 
@@ -256,6 +257,50 @@ export async function getById(therapistId: string) {
     }
 
     return mapTherapist(therapist);
+}
+
+export async function fetchTherapistSummaryById(therapistId: string) {
+    const therapist = await prisma.terapeuta.findUnique({
+        where: { id: therapistId },
+        select: {
+            id: true,
+            nome: true,
+            registro_profissional: {
+                select: {
+                    cargo: { select: { nome: true } },
+                    area_atuacao: { select: { nome: true } },
+                },
+            },
+            arquivos: {
+                where: { tipo: 'fotoPerfil' },
+                select: {
+                    arquivo_id: true,
+                },
+            }
+        }
+    });
+
+    if (!therapist) {
+        throw new AppError(
+            'THERAPIST_NOT_FOUND',
+            'Terapeuta não encontrado',
+            404
+        );
+    }
+
+    const therapistAvatar = therapist.arquivos[0] ? therapist.arquivos[0].arquivo_id : null;
+
+    return {
+        id: therapist.id,
+        nome: therapist.nome,
+        especialidade: getPrimaryAreaFromAreaRoles(
+            therapist.registro_profissional.map((r) => ({
+                area: r.area_atuacao?.nome ?? null,
+                role: r.cargo?.nome ?? null,
+            }))
+        ).area,
+        photoUrl: therapistAvatar ? `/api/arquivos/${encodeURIComponent(therapistAvatar)}/view` : null,
+    }
 }
 
 export async function getTherapistReport(therapistId: string) {

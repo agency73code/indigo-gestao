@@ -839,7 +839,6 @@ export default function AnamnesePage() {
             
             // Enviar para o service
             const response = await criarAnamnese(anamneseData);
-            console.log(response)
             
             if (response.success) {
                 toast.success('Anamnese cadastrada com sucesso!', {
