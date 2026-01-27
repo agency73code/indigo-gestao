@@ -315,11 +315,15 @@ export function useProntuarioForm(prontuarioId?: string) {
 // HOOK: useEvolucaoForm
 // ============================================
 
+// Importar o valor inicial de billing
+import { DADOS_FATURAMENTO_INITIAL } from '../types';
+
 const initialEvolucaoData: EvolucaoFormData = {
     prontuarioId: '',
     dataEvolucao: new Date().toISOString().split('T')[0],
     descricaoSessao: '',
     arquivos: [],
+    billing: DADOS_FATURAMENTO_INITIAL,
 };
 
 export function useEvolucaoForm(prontuarioId: string) {

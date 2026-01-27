@@ -93,6 +93,18 @@ function mapAtaFromApi(data: any): AtaReuniao {
             arquivoId: a.arquivo_id,
             url: `${atasConfig.apiBase}/atas-reuniao/download/${a.id}`,
         })),
+        // Dados de faturamento (ajuda de custo)
+        faturamento: data.tipo_faturamento ? {
+            tipoFaturamento: data.tipo_faturamento,
+            observacaoFaturamento: data.observacao_faturamento || '',
+            arquivosFaturamento: (data.arquivos_faturamento || []).map((a: any) => ({
+                id: String(a.id),
+                nome: a.nome ?? a.original_nome,
+                tipo: a.mime_type,
+                tamanho: a.tamanho,
+                url: a.arquivo_id ? `${atasConfig.apiBase}/arquivos/${encodeURIComponent(a.arquivo_id)}/view` : undefined,
+            })),
+        } : undefined,
     };
 }
 
@@ -121,6 +133,9 @@ function mapCreateAtaToApi(input: CreateAtaInput): Record<string, unknown> {
             titulo: l.titulo,
             url: l.url,
         })) || [],
+        // Dados de faturamento (ajuda de custo)
+        tipo_faturamento: formData.faturamento?.tipoFaturamento || null,
+        observacao_faturamento: formData.faturamento?.observacaoFaturamento || null,
     };
 }
 
@@ -154,6 +169,12 @@ function mapUpdateAtaToApi(input: UpdateAtaInput): Record<string, unknown> {
             titulo: l.titulo,
             url: l.url,
         }));
+    }
+    
+    // Dados de faturamento (ajuda de custo)
+    if (formData.faturamento !== undefined) {
+        payload.tipo_faturamento = formData.faturamento?.tipoFaturamento || null;
+        payload.observacao_faturamento = formData.faturamento?.observacaoFaturamento || null;
     }
 
     return payload;

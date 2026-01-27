@@ -29,6 +29,8 @@ import {
     MODALIDADE_LABELS,
     TIPO_PARTICIPANTE,
 } from '../types';
+import { DADOS_FATURAMENTO_ATA_INITIAL } from '../types/billing';
+import { AtaBillingData } from './AtaBillingData';
 
 import { useAtaForm } from '../hooks/useAtaForm';
 
@@ -68,6 +70,7 @@ export function AtaForm({ ataId, initialData, existingAnexos = [], onSuccess }: 
         removeParticipante,
         selectTerapeutaParticipante,
         handleSubmit,
+        handleFaturamentoChange,
         // Seleção de área de atuação
         selectedAreaIndex,
         hasMultipleAreas,
@@ -588,6 +591,20 @@ export function AtaForm({ ataId, initialData, existingAnexos = [], onSuccess }: 
         );
     };
 
+    // ============================================
+    // RENDERIZAÇÃO - FATURAMENTO
+    // ============================================
+
+    const renderFaturamento = () => (
+        <AtaBillingData
+            value={formData.faturamento || DADOS_FATURAMENTO_ATA_INITIAL}
+            onChange={handleFaturamentoChange}
+            horarioInicio={formData.horarioInicio}
+            horarioFim={formData.horarioFim}
+            disabled={submitting}
+        />
+    );
+
     const renderAnexos = () => {
         const totalAnexos = anexos.length + existingAnexos.length;
         return (
@@ -776,6 +793,7 @@ export function AtaForm({ ataId, initialData, existingAnexos = [], onSuccess }: 
                 {renderParticipantes()}
                 {renderConteudo()}
                 {renderLinks()}
+                {renderFaturamento()}
                 {renderAnexos()}
                 {renderActions()}
             </div>

@@ -330,6 +330,14 @@ export function buildSessionFormData<TAttempt>(payload: SaveSessionPayload<TAtte
     notes: payload.notes ?? null,
     attempts: payload.attempts,
     area: payload.area,
+    faturamento: payload.faturamento ? {
+      dataSessao: payload.faturamento.dataSessao,
+      horarioInicio: payload.faturamento.horarioInicio,
+      horarioFim: payload.faturamento.horarioFim,
+      tipoAtendimento: payload.faturamento.tipoAtendimento,
+      ajudaCusto: payload.faturamento.ajudaCusto,
+      observacaoFaturamento: payload.faturamento.observacaoFaturamento ?? null,
+    } : null,
   }));
 
   // Arquivos
@@ -352,6 +360,29 @@ export function buildSessionFormData<TAttempt>(payload: SaveSessionPayload<TAtte
   }
   
   formData.append('filesMeta', JSON.stringify(meta));
+
+  // Arquivos de faturamento
+  const billingFiles = payload.faturamento?.arquivosFaturamento ?? [];
+  const billingMeta: Array<{ size: number; name: string }> = [];
+
+  for (const billingFile of billingFiles) {
+    if (!billingFile.file) continue;
+
+    const originalName = billingFile.file.name;
+    const customName = billingFile.nome?.trim();
+    const ext = originalName.includes('.') ? originalName.slice(originalName.lastIndexOf('.')) : '';
+
+    const finalName = customName
+      ? `${customName}${
+        ext && !customName.toLowerCase().endsWith(ext.toLowerCase()) ? ext : ''
+      }`
+      : originalName;
+
+    formData.append('billingFiles', billingFile.file, finalName);
+    billingMeta.push({ size: billingFile.file.size, name: finalName });
+  }
+
+  formData.append('billingFilesMeta', JSON.stringify(billingMeta));
 
   return formData;
 }

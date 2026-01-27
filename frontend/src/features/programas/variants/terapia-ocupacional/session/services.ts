@@ -6,6 +6,7 @@ import type {
     ToSessionAttempt,
     ToSessionSummary,
     SessionFile,
+    DadosFaturamentoSessao,
 } from './types';
 import type { AreaType } from '@/contexts/AreaContext';
 
@@ -65,6 +66,7 @@ export async function saveToSession(payload: {
     notes?: string;
     files?: SessionFile[];
     area: AreaType;
+    faturamento?: DadosFaturamentoSessao;
 }): Promise<void> {
     const formData = buildSessionFormData(payload);
 

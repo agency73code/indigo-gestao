@@ -1,4 +1,4 @@
-import type { ProgramDetail, SessionState } from './types';
+import type { ProgramDetail, SessionState, DadosFaturamentoSessao } from './types';
 import type { SessionFile } from './components/FonoSessionFiles';
 import * as Api from '../api';
 import { searchPatients } from '@/features/programas/consultar-programas/services';
@@ -19,6 +19,7 @@ export async function saveSession(sessionData: {
     attempts: SessionState['attempts'];
     notes?: string;
     files?: SessionFile[];
+    faturamento?: DadosFaturamentoSessao;
 }): Promise<{ id: string }> {
 
     // Com arquivos: usar FormData (quando backend suportar)
@@ -29,6 +30,7 @@ export async function saveSession(sessionData: {
         notes: sessionData.notes,
         files: sessionData.files,
         area: 'fonoaudiologia' as const,
+        faturamento: sessionData.faturamento,
     };
     const formData = buildSessionFormData(payload);
 
