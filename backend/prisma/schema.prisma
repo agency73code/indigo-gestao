@@ -257,51 +257,57 @@ model endereco {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model terapeuta {
-  id                    String                  @id @default(uuid())
-  nome                  String
-  email                 String                  @unique
-  email_indigo          String                  @unique
-  celular               String
-  telefone              String?
-  cpf                   String                  @unique
-  data_nascimento       DateTime
-  possui_veiculo        Boolean                 @default(false)
-  placa_veiculo         String?
-  modelo_veiculo        String?
-  banco                 String?
-  agencia               String?
-  conta                 String?
-  chave_pix             String?
-  valor_hora            Decimal?                @db.Decimal(10, 2)
-  professor_uni         Boolean                 @default(false)
-  endereco_id           Int?
-  data_entrada          DateTime
-  data_saida            DateTime?
-  perfil_acesso         String
-  atividade             Boolean                 @default(true)
-  senha                 String?                 @db.VarChar(255)
-  token_redefinicao     String?
-  validade_token        DateTime?
-  criado_em             DateTime                @default(now())
-  atualizado_em         DateTime                @updatedAt
-  pix_tipo              String?
-  senha_atualizada_em   DateTime?
-  arquivos              arquivos[]
-  formacao              formacao?
-  ocp                   ocp[]                   @relation("TerapeutaOcp")
-  pessoa_juridica       pessoa_juridica?
-  registro_profissional registro_profissional[]
-  sessao                sessao[]
-  endereco              endereco?               @relation(fields: [endereco_id], references: [id])
-  cliente               terapeuta_cliente[]
-  supervisor            vinculo_supervisao[]    @relation("ClinicoVinculo")
-  supervisionados       vinculo_supervisao[]    @relation("SupervisorVinculo")
-  disciplina            disciplina[]            @relation("disciplinaToterapeuta")
-  relatorios            relatorio[]
-  anamneses             anamnese[]
-  ocp_prontuarios       ocp_prontuario[]
-  atas_reuniao          ata_reuniao[]
-  atas_participacoes    ata_participante[]
+  id                                   String                  @id @default(uuid())
+  nome                                 String
+  email                                String                  @unique
+  email_indigo                         String                  @unique
+  celular                              String
+  telefone                             String?
+  cpf                                  String                  @unique
+  data_nascimento                      DateTime
+  possui_veiculo                       Boolean                 @default(false)
+  placa_veiculo                        String?
+  modelo_veiculo                       String?
+  banco                                String?
+  agencia                              String?
+  conta                                String?
+  chave_pix                            String?
+  valor_hora                           Decimal?                @db.Decimal(10, 2)
+  valor_sessao_consultorio             Decimal?                @db.Decimal(10, 2)
+  valor_sessao_homecare                Decimal?                @db.Decimal(10, 2)
+  valor_hora_desenvolvimento_materiais Decimal?                @db.Decimal(10, 2)
+  valor_hora_supervisao_recebida       Decimal?                @db.Decimal(10, 2)
+  valor_hora_supervisao_dada           Decimal?                @db.Decimal(10, 2)
+  valor_hora_reuniao                   Decimal?                @db.Decimal(10, 2)
+  professor_uni                        Boolean                 @default(false)
+  endereco_id                          Int?
+  data_entrada                         DateTime
+  data_saida                           DateTime?
+  perfil_acesso                        String
+  atividade                            Boolean                 @default(true)
+  senha                                String?                 @db.VarChar(255)
+  token_redefinicao                    String?
+  validade_token                       DateTime?
+  criado_em                            DateTime                @default(now())
+  atualizado_em                        DateTime                @updatedAt
+  pix_tipo                             String?
+  senha_atualizada_em                  DateTime?
+  arquivos                             arquivos[]
+  formacao                             formacao?
+  ocp                                  ocp[]                   @relation("TerapeutaOcp")
+  pessoa_juridica                      pessoa_juridica?
+  registro_profissional                registro_profissional[]
+  sessao                               sessao[]
+  endereco                             endereco?               @relation(fields: [endereco_id], references: [id])
+  cliente                              terapeuta_cliente[]
+  supervisor                           vinculo_supervisao[]    @relation("ClinicoVinculo")
+  supervisionados                      vinculo_supervisao[]    @relation("SupervisorVinculo")
+  disciplina                           disciplina[]            @relation("disciplinaToterapeuta")
+  relatorios                           relatorio[]
+  anamneses                            anamnese[]
+  ocp_prontuarios                      ocp_prontuario[]
+  atas_reuniao                         ata_reuniao[]
+  atas_participacoes                   ata_participante[]
 
   @@index([atividade])
   @@index([nome])

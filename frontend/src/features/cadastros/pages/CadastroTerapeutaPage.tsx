@@ -483,6 +483,8 @@ export default function CadastroTerapeutaPage() {
 
             payload.arquivos = [];
 
+            if(payload.cnpj.numero === null) delete payload.cnpj; 
+
             const result = await cadastrarTerapeuta(payload);
 
             if (!result.ok) {
@@ -522,6 +524,8 @@ export default function CadastroTerapeutaPage() {
                     onClick: () => {},
                 },
             });
+
+            console.log(payload);
 
             setTimeout(() => {
                 navigate('/app/consultar/terapeutas');

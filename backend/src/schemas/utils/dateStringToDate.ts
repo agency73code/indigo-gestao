@@ -14,5 +14,10 @@ export const dateStringToDate = z.union([
         })
         .refine((dt) => !Number.isNaN(dt.getTime()), { message: 'Data inválida' }),
 ]).pipe(
-    z.date({ message: 'Data de nascimento inválida' })
+    z.date({ message: 'Data inválida' })
+);
+
+export const nullableDateStringToDate = z.preprocess(
+    (val) => (val === '' ? null : val),
+    dateStringToDate.nullable().default(null),
 );
