@@ -35,6 +35,7 @@ import {
     prepareToAttentionActivities,
     prepareToAutonomyByCategory,
  } from './services/reports/occupationaltherapy/index.js';
+import { createBilling } from '../billing/billing.controller.js';
 
 export async function createProgram(req: Request, res: Response) {
     try {
@@ -89,10 +90,12 @@ export async function createAreaSession(req: Request, res: Response, next: NextF
                 .json({ success: false, message: 'Dados inválidos para criar sessão.' });
         }
 
-        const uploadedFiles = ((req.files as Express.Multer.File[]) || []).map((file, i) => ({
-            ...file,
-            size: meta[i]?.size ?? file.size
-        }));
+        const uploadedFiles = ((req.files as Express.Multer.File[]) || [])
+            .filter((f) => f.fieldname === 'files')
+            .map((file, i) => ({
+                ...file,
+                size: meta[i]?.size ?? file.size
+            }));
 
         const payload = {
             programId: Number(programId),
@@ -126,7 +129,11 @@ export async function createAreaSession(req: Request, res: Response, next: NextF
                 break;
 
             default:
-                session = [];
+                session = null;
+        }
+
+        if (session) {
+            await createBilling(req, res, next, { sessionId: session.id });
         }
 
         return res.status(201).json(session);

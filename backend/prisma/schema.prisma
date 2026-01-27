@@ -49,6 +49,11 @@ enum ata_status {
   finalizada
 }
 
+enum faturamento_tipo_atendimento {
+  consultorio
+  homecare
+}
+
 model area_atuacao {
   id                    Int                     @id @default(autoincrement())
   nome                  String                  @db.VarChar(100)
@@ -830,6 +835,7 @@ model sessao {
   terapeuta          terapeuta        @relation(fields: [terapeuta_id], references: [id])
   trials             sessao_trial[]
   arquivos           sessao_arquivo[]
+  faturamentos       faturamento[]
 
   @@index([terapeuta_id, data_criacao])
   @@index([ocp_id])
@@ -989,7 +995,8 @@ model prontuario_evolucao {
   criado_em     DateTime @default(now())
   atualizado_em DateTime @updatedAt
 
-  anexos prontuario_evolucao_anexo[]
+  anexos       prontuario_evolucao_anexo[]
+  faturamentos faturamento[]
 
   @@index([prontuario_id])
   @@index([prontuario_id, data_evolucao])
@@ -1107,4 +1114,38 @@ model ata_anexo {
 
   @@unique([ata_reuniao_id, external_id])
   @@index([ata_reuniao_id])
+}
+
+model faturamento {
+  id                     Int                          @id @default(autoincrement())
+  inicio_em              DateTime
+  fim_em                 DateTime
+  tipo_atendimento       faturamento_tipo_atendimento
+  ajuda_custo            Boolean?
+  observacao_faturamento String?                      @db.Text
+  sessao_id              Int?
+  sessao                 sessao?                      @relation(fields: [sessao_id], references: [id], onDelete: Cascade)
+  evolucao_id            Int?
+  evolucao               prontuario_evolucao?         @relation(fields: [evolucao_id], references: [id], onDelete: Cascade)
+  arquivos               faturamento_arquivo[]
+  criado_em              DateTime                     @default(now())
+  atualizado_em          DateTime                     @updatedAt
+
+  @@unique([sessao_id])
+  @@unique([evolucao_id])
+  @@index([inicio_em])
+  @@index([tipo_atendimento])
+}
+
+model faturamento_arquivo {
+  id             Int         @id @default(autoincrement())
+  faturamento_id Int
+  faturamento    faturamento @relation(fields: [faturamento_id], references: [id], onDelete: Cascade)
+  nome           String
+  caminho        String
+  tamanho        Int
+  mime_type      String
+  criado_em      DateTime    @default(now())
+
+  @@index([faturamento_id])
 }

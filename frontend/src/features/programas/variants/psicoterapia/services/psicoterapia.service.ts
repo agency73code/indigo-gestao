@@ -377,15 +377,18 @@ export async function criarEvolucao(data: EvolucaoFormData): Promise<EvolucaoRes
             prontuario_id: data.prontuarioId,
             data_evolucao: data.dataEvolucao,
             descricao_sessao: data.descricaoSessao,
-            faturamento: data.billing ? {
-                data_sessao: data.billing.dataSessao,
-                horario_inicio: data.billing.horarioInicio,
-                horario_fim: data.billing.horarioFim,
-                tipo_atendimento: data.billing.tipoAtendimento,
-                ajuda_custo: data.billing.ajudaCusto,
-                observacao_faturamento: data.billing.observacaoFaturamento ?? null,
-            } : null,
         }));
+        
+        fd.append('data', JSON.stringify({
+            faturamento: data.billing ? {
+                dataSessao: data.billing.dataSessao,
+                horarioInicio: data.billing.horarioInicio,
+                horarioFim: data.billing.horarioFim,
+                tipoAtendimento: data.billing.tipoAtendimento,
+                ajudaCusto: data.billing.ajudaCusto,
+                observacaoFaturamento: data.billing.observacaoFaturamento ?? null,
+            } : null,
+        }))
         
         // Adicionar arquivos com validação
         for (const arquivo of data.arquivos) {
