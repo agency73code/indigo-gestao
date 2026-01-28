@@ -1,5 +1,4 @@
-import { prisma } from "../../../../../config/database.js";
-
+import { prisma } from "../../../../config/database.js";
 
 export async function fetchMusicSessionsForChart(programId: string, stimulusId?: string, sort: 'asc' | 'desc' = 'asc') {
   const sessions = await prisma.sessao.findMany({

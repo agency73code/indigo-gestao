@@ -4,44 +4,248 @@ import * as OcpType from './types/olp.types.js';
 import * as OcpNormalizer from './olp.normalizer.js';
 import { endOfDay, format, parseISO, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { musictherapySession, physiotherapySession, program, SpeechSession, TOSession } from './actions/create.js';
-import { programMusicUpdate, programUpdate } from './actions/update.js';
-import { updateProgramSchema } from './types/olp.schema.js';
 import { getVisibilityScope } from '../../utils/visibilityFilter.js';
 import { ACCESS_LEVELS } from '../../utils/accessLevels.js';
+import { createBilling } from '../billing/billing.service.js';
+import type { CreateSessionParams } from './types/CreateSessionParams.js';
+import { createAreaSessionTx } from './utils/createAreaSessionTx.js';
 
 const MANAGER_LEVEL = ACCESS_LEVELS['gerente'] ?? 5;
 const DAY = 1000 * 60 * 60 * 24;
 const DAYS = (n: number) => n * DAY;
 
 export async function createProgram(data: OcpType.CreateProgramPayload) {
-    return await program(data);
+    const isTO = data.area === 'terapia-ocupacional';
+
+    return prisma.ocp.create({
+        data: {
+            cliente: { connect: { id: data.patientId } },
+            terapeuta: { connect: { id: data.therapistId } },
+            nome_programa: data.name ?? data.goalTitle,
+            data_inicio: new Date(data.prazoInicio),
+            data_fim: new Date(data.prazoFim),
+            objetivo_programa: data.goalTitle,
+            objetivo_descricao: data.goalDescription ?? null,
+            criterio_aprendizagem: data.criteria ?? null,
+            objetivo_curto: data.shortTermGoalDescription,
+            descricao_aplicacao: data.stimuliApplicationDescription,
+            observacao_geral: data.notes ?? null,
+            estimulo_ocp: {
+                create: data.stimuli.map((s) => ({
+                    nome: s.label,
+                    status: s.active,
+                    descricao: s.description ?? null,
+                    metodos: s.metodos ?? null,
+                    tecnicas_procedimentos: s.tecnicasProcedimentos ?? null,
+                    estimulo: {
+                        connectOrCreate: {
+                            where: { nome: s.label },
+                            create: {
+                                nome: s.label,
+                                descricao: s.description ?? null,
+                            },
+                        },
+                    },
+                })),
+            },
+            area: data.area,
+            desempenho_atual: isTO ? (data.currentPerformanceLevel ?? null) : null,
+        },
+    });
 }
 
-export async function createSpeechSession(input: OcpType.CreateSpeechSessionInput) {
-    return await SpeechSession(input);
-}
+export async function createSession(params: CreateSessionParams) {
+    const { input, billingInput } = params;
 
-export async function createTOSession(input: OcpType.CreateToSessionInput) {
-    return await TOSession(input);
-}
+    return await prisma.$transaction(async (tx) => {
+        const session = await createAreaSessionTx(tx, input);
 
-export async function createPhysiotherapySession(input: OcpType.CreatePhysiotherapySessionInput) {
-    return await physiotherapySession(input);
-}
-
-export async function createMusictherapySession(input: OcpType.CreateMusictherapySessionInput) {
-    return await musictherapySession(input);
+        await createBilling(tx, billingInput, { sessionId: session.id });
+        
+        return session;
+    });
 }
 
 export async function updateProgram(programId: number, input: OcpType.UpdateProgramInput) {
-    const parsed = updateProgramSchema.parse({ ...input, id: programId });
-    const result = await programUpdate(programId, parsed);
-    return result;
+    const {
+        name,
+        prazoInicio,
+        prazoFim,
+        goalTitle,
+        goalDescription,
+        shortTermGoalDescription,
+        stimuliApplicationDescription,
+        currentPerformanceLevel,
+        status,
+        criteria,
+        notes,
+    } = input;
+
+    const data: Prisma.ocpUpdateInput = {};
+
+    if (name) data.nome_programa = name;
+    if (prazoInicio) data.data_inicio = new Date(prazoInicio);
+    if (prazoFim) data.data_fim = new Date(prazoFim);
+    if (goalTitle) data.objetivo_programa = goalTitle;
+    if (goalDescription) data.objetivo_descricao = goalDescription;
+    if (shortTermGoalDescription) data.objetivo_curto = shortTermGoalDescription;
+    if (stimuliApplicationDescription) data.descricao_aplicacao = stimuliApplicationDescription;
+    if (currentPerformanceLevel) data.desempenho_atual = currentPerformanceLevel;
+    if (status) data.status = status === 'active' ? 'ativado' : 'arquivado';
+    if (criteria) data.criterio_aprendizagem = criteria;
+    if (notes) data.observacao_geral = notes;
+
+    return await prisma.$transaction(async (tx) => {
+        const newStimuliIds = input.stimuli
+            .filter((s) => s.id) // só pega os que têm id
+            .map((s) => Number(s.id));
+
+        // Desativar os vínculos que não estão mais no input
+        await tx.estimulo_ocp.updateMany({
+            where: {
+                id_ocp: programId,
+                id_estimulo: { notIn: newStimuliIds },
+            },
+            data: { status: false },
+        });
+
+        // Fazer upsert (atualiza se existe, cria se não)
+        for (const s of input.stimuli) {
+            let stimulusId: number;
+
+            if (!s.id) {
+                // Criar novo estímulo base
+                const newStimulus = await tx.estimulo.create({
+                    data: {
+                        nome: s.label,
+                        descricao: s.description ?? null,
+                    },
+                });
+
+                stimulusId = newStimulus.id;
+            } else {
+                stimulusId = Number(s.id);
+            }
+
+            // Criar ou atualizar vínculo com OCP
+            await tx.estimulo_ocp.upsert({
+                where: {
+                    id_estimulo_id_ocp: {
+                        id_estimulo: stimulusId,
+                        id_ocp: programId,
+                    },
+                },
+                update: {
+                    nome: s.label,
+                    status: s.active,
+                    descricao: s.description ?? null,
+                },
+                create: {
+                    id_estimulo: stimulusId,
+                    id_ocp: programId,
+                    nome: s.label,
+                    status: s.active,
+                },
+            });
+        }
+
+        // Atualizar dados do OCP
+        const ocp = await tx.ocp.update({
+            where: { id: programId },
+            data,
+        });
+
+        return ocp;
+    });
 }
 
 export async function updateMusicProgram(programId: number, input: OcpType.UpdateMusicProgramInput) {
-    return await programMusicUpdate(programId, input);
+    const {
+        goalTitle,
+        goalDescription,
+        stimuli,
+        notes,
+        status,
+        prazoInicio,
+        prazoFim,
+    } = input;
+
+    const data: Prisma.ocpUpdateInput = {};
+
+    if (goalTitle) data.objetivo_programa = goalTitle;
+    if (goalDescription) data.objetivo_descricao = goalDescription;
+    if (notes) data.observacao_geral = notes;
+    if (status) data.status = status === 'active' ? 'ativado' : 'arquivado';
+    if (prazoInicio) data.data_inicio = prazoInicio;
+    if (prazoFim) data.data_fim = prazoFim;
+
+    return await prisma.$transaction(async (tx) => {
+        const newStimuliIds = stimuli
+            .filter((s) => s.id) // só pega os que têm id
+            .map((s) => Number(s.id));
+
+        // Desativar os vínculos que não estão mais no input
+        await tx.estimulo_ocp.updateMany({
+            where: {
+                id_ocp: programId,
+                id_estimulo: { notIn: newStimuliIds },
+            },
+            data: { status: false },
+        });
+
+        // Fazer upsert (atualiza se existe, cria se não)
+        for (const s of stimuli) {
+            let stimulusId: number;
+
+            if (!s.id) {
+                // Criar novo estímulo base
+                const newStimulus = await tx.estimulo.create({
+                    data: {
+                        nome: s.objetivo,
+                        descricao: s.objetivoEspecifico ?? null,
+                    },
+                });
+
+                stimulusId = newStimulus.id;
+            } else {
+                stimulusId = Number(s.id);
+            }
+
+            // Criar ou atualizar vínculo com OCP
+            await tx.estimulo_ocp.upsert({
+                where: {
+                    id_estimulo_id_ocp: {
+                        id_estimulo: stimulusId,
+                        id_ocp: programId,
+                    },
+                },
+                update: {
+                    nome: s.objetivo,
+                    status: s.active,
+                    descricao: s.objetivoEspecifico ?? null,
+                    metodos: s.metodos ?? null,
+                    tecnicas_procedimentos: s.tecnicasProcedimentos ?? null,
+                },
+                create: {
+                    id_estimulo: stimulusId,
+                    id_ocp: programId,
+                    nome: s.objetivo,
+                    status: s.active,
+                    descricao: s.objetivoEspecifico ?? null,
+                    metodos: s.metodos ?? null,
+                    tecnicas_procedimentos: s.tecnicasProcedimentos ?? null,
+                },
+            });
+        }
+
+        // Atualizar dados do OCP
+        const ocp = await tx.ocp.update({
+            where: { id: programId },
+            data,
+        });
+
+        return ocp;
+    });
 }
 
 export async function getProgramById(programId: string) {

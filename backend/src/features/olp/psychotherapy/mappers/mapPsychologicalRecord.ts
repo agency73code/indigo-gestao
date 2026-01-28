@@ -2,7 +2,7 @@ import { buildAvatarUrl } from "../../../../utils/avatar-url.js";
 import { calculateAge } from "../../../../utils/calculateAge.js";
 import { toDateOnly } from "../../../../utils/toDateOnly.js";
 import type { PsychologicalRecordRow } from "../querys/queryPsychologicalRecord.js";
-import { inferFileType } from "../util/inferFileType.js";
+import { inferFileType } from "../utils/inferFileType.js";
 
 export function mapPsychologicalRecord(medicalRecord: PsychologicalRecordRow) {
     return {

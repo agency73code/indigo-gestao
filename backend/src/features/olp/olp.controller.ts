@@ -5,6 +5,10 @@ import { Prisma } from '@prisma/client';
 import type { CreateProgramPayload, OcpDetailDTO, SessionDTO } from './types/olp.types.js';
 import { listClientProgramsSchema, listSessionsByClientSchema } from '../../schemas/queries/listSessions.query.js';
 import { sessionObservations } from '../../utils/sessionObservations.js';
+import { idParam } from '../../schemas/utils/id.js';
+import { unauthenticated } from '../../errors/unauthenticated.js';
+import { buildBillingInputFromRequest } from '../billing/billing.controller.js';
+import { createAreaSessionDataSchema, updateProgramSchema } from './types/olp.schema.js';
 
 import {
     getPhysioSessionData,
@@ -13,7 +17,7 @@ import {
     calcPerformanceLine,
     calcKpis,
     calcAttentionActivities,
-} from './services/reports/physiotherapy/index.js';
+} from './physiotherapy/reports/index.js';
 
 import {
     getMusicSessionsData,
@@ -25,7 +29,7 @@ import {
     calcAverageAndTrend,
     fetchMusicSessionsForChart,
     mapMusicSessionToChartPoint,
-} from './services/reports/musictherapy/index.js';
+} from './musictherapy/reports/index.js';
 
 import { 
     getOccupationalSessionData,
@@ -34,8 +38,7 @@ import {
     averageOccupationalMinutesActivities,
     prepareToAttentionActivities,
     prepareToAutonomyByCategory,
- } from './services/reports/occupationaltherapy/index.js';
-import { createBilling } from '../billing/billing.controller.js';
+ } from './occupationaltherapy/reports/index.js';
 
 export async function createProgram(req: Request, res: Response) {
     try {
@@ -68,27 +71,16 @@ export async function createProgram(req: Request, res: Response) {
 
 export async function createAreaSession(req: Request, res: Response, next: NextFunction) {
     try {
-        const { programId } = req.params;
-        if (!programId) {
-            return res
-                .status(400)
-                .json({ success: false, message: 'ID do programa não informado.' });
-        }
+        const programId = idParam.parse(req.params.programId);
 
         const therapistId = req.user?.id;
-        if (!therapistId) {
-            return res.status(400).json({ success: false, message: 'Usuário não autenticado.' });
-        }
+        if (!therapistId) throw unauthenticated();
 
         const data = JSON.parse(req.body.data);
-        const meta = req.body.filesMeta ? JSON.parse(req.body.filesMeta) : [];
 
-        const { patientId, notes, attempts, area } = data;
-        if (!patientId || !Array.isArray(attempts) || !area) {
-            return res
-                .status(400)
-                .json({ success: false, message: 'Dados inválidos para criar sessão.' });
-        }
+        const meta = req.body.filesMeta 
+            ? JSON.parse(req.body.filesMeta) 
+            : [];
 
         const uploadedFiles = ((req.files as Express.Multer.File[]) || [])
             .filter((f) => f.fieldname === 'files')
@@ -96,45 +88,21 @@ export async function createAreaSession(req: Request, res: Response, next: NextF
                 ...file,
                 size: meta[i]?.size ?? file.size
             }));
-
-        const payload = {
+            
+        const sessionData = createAreaSessionDataSchema.parse({
+            ...data,
             programId: Number(programId),
-            patientId,
             therapistId,
-            notes,
-            attempts,
-            files: uploadedFiles,
-            area,
-        };
+        });
 
-        let session;
+        const sessionInput = { ...sessionData, files: uploadedFiles };
 
-        switch (area) {
-            case 'fonoaudiologia':
-                session = await OcpService.createSpeechSession(payload);
-                break;
+        const billingPayload = buildBillingInputFromRequest(req);
 
-            case 'terapia-ocupacional':
-                session = await OcpService.createTOSession(payload);
-                break;
-
-            case 'fisioterapia':
-            case 'psicomotricidade':
-            case 'educacao-fisica':
-                session = await OcpService.createPhysiotherapySession(payload);
-                break;
-
-            case 'musicoterapia':
-                session = await OcpService.createMusictherapySession(payload);
-                break;
-
-            default:
-                session = null;
-        }
-
-        if (session) {
-            await createBilling(req, res, next, { sessionId: session.id });
-        }
+        const session = await OcpService.createSession({
+            input: sessionInput,
+            billingInput: billingPayload,
+        });
 
         return res.status(201).json(session);
     } catch (error) {
@@ -153,8 +121,8 @@ export async function updateProgram(req: Request, res: Response, next: NextFunct
             
             return res.status(200).json({ data: ocp });
         }
-
-        const ocp = await OcpService.updateProgram(programId, req.body);
+        const parsed = updateProgramSchema.parse({ ...req.body, id: programId });
+        const ocp = await OcpService.updateProgram(programId, parsed);
         if (!ocp) return res.status(404).json({ success: false, message: 'OCP não encontrado' });
 
         return res.status(200).json({ data: ocp });

@@ -11,8 +11,8 @@ import { canAccessThis } from "../../../authorization/resourceAccess.policy.js";
 import { forbidden } from "../../../errors/forbidden.js";
 import type { ParsedFile } from "../../../utils/parseMultipartFiles.js";
 import { R2GenericUploadService } from "../../file/r2/r2-upload-generic.js";
-import { inferFileType } from "./util/inferFileType.js";
-import { getLastEvolution } from "./util/lastEvolution.js";
+import { inferFileType } from "./utils/inferFileType.js";
+import { getLastEvolution } from "./utils/lastEvolution.js";
 
 export async function createPsychotherapyRecord(payload: PsychoPayload, userId: string) {
     return await prisma.$transaction(async (tx) => {

@@ -1,12 +1,12 @@
-import { prisma } from "../../../../../config/database.js";
+import { prisma } from "../../../../config/database.js";
 
-const FISIO_MODEL_AREAS = ['fisioterapia', 'psicomotricidade', 'educacao-fisica'];
+const OT_MODEL_AREAS = ['terapia-ocupacional'];
 
-export async function getPhysioSessionData(sessionIds: number[], stimulusIds: number[]) {
+export async function getOccupationalSessionData(sessionIds: number[], stimulusIds: number[]) {
   return prisma.sessao.findMany({
     where: {
       id: { in: sessionIds },
-      area: { in: FISIO_MODEL_AREAS },
+      area: { in: OT_MODEL_AREAS },
     },
     include: {
       trials: {
