@@ -398,7 +398,6 @@ export async function getAllSupervisionLinks(filters?: LinkFilters): Promise<The
   }
 
   const json = await res.json();
-  console.log({ 'terapeuta-terapeuta': json })
   return json as TherapistSupervisionLink[];
 }
 

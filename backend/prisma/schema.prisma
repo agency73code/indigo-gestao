@@ -49,6 +49,11 @@ enum ata_status {
   finalizada
 }
 
+enum faturamento_tipo_atendimento {
+  consultorio
+  homecare
+}
+
 model area_atuacao {
   id                    Int                     @id @default(autoincrement())
   nome                  String                  @db.VarChar(100)
@@ -62,32 +67,36 @@ model cargo {
 }
 
 model cliente {
-  id                  String              @id @default(uuid())
+  id                  String    @id @default(uuid())
   nome                String?
   status              String?
   perfil_acesso       String?
   senha               String?
   token_redefinicao   String?
   validade_token      DateTime?
-  criado_em           DateTime            @default(now())
-  atualizado_em       DateTime            @updatedAt
+  criado_em           DateTime  @default(now())
+  atualizado_em       DateTime  @updatedAt
   cpf                 String?
   dataEntrada         DateTime?
   dataNascimento      DateTime?
   dataSaida           DateTime?
-  emailContato        String?             @unique
+  emailContato        String?   @unique
   senha_atualizada_em DateTime?
-  arquivos            arquivos[]
-  enderecos           cliente_endereco[]
-  cuidadores          cuidador[]
-  dadosEscola         dados_escola?
-  dadosPagamento      dados_pagamento?
-  ocp                 ocp[]
-  sessao              sessao[]
-  terapeuta           terapeuta_cliente[]
-  relatorios          relatorio[]
-  anamneses           anamnese[]
-  atas_reuniao        ata_reuniao[]
+  nivel_escolaridade  String?
+  genero              String?
+
+  arquivos        arquivos[]
+  enderecos       cliente_endereco[]
+  cuidadores      cuidador[]
+  dadosEscola     dados_escola?
+  dadosPagamento  dados_pagamento?
+  ocp             ocp[]
+  sessao          sessao[]
+  terapeuta       terapeuta_cliente[]
+  relatorios      relatorio[]
+  anamneses       anamnese[]
+  ocp_prontuarios ocp_prontuario[]
+  atas_reuniao    ata_reuniao[]
 
   @@index([nome], map: "nome_idx")
 }
@@ -253,50 +262,57 @@ model endereco {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model terapeuta {
-  id                    String                  @id @default(uuid())
-  nome                  String
-  email                 String                  @unique
-  email_indigo          String                  @unique
-  celular               String
-  telefone              String?
-  cpf                   String                  @unique
-  data_nascimento       DateTime
-  possui_veiculo        Boolean                 @default(false)
-  placa_veiculo         String?
-  modelo_veiculo        String?
-  banco                 String?
-  agencia               String?
-  conta                 String?
-  chave_pix             String?
-  valor_hora            Decimal?                @db.Decimal(10, 2)
-  professor_uni         Boolean                 @default(false)
-  endereco_id           Int?
-  data_entrada          DateTime
-  data_saida            DateTime?
-  perfil_acesso         String
-  atividade             Boolean                 @default(true)
-  senha                 String?                 @db.VarChar(255)
-  token_redefinicao     String?
-  validade_token        DateTime?
-  criado_em             DateTime                @default(now())
-  atualizado_em         DateTime                @updatedAt
-  pix_tipo              String?
-  senha_atualizada_em   DateTime?
-  arquivos              arquivos[]
-  formacao              formacao?
-  ocp                   ocp[]                   @relation("TerapeutaOcp")
-  pessoa_juridica       pessoa_juridica?
-  registro_profissional registro_profissional[]
-  sessao                sessao[]
-  endereco              endereco?               @relation(fields: [endereco_id], references: [id])
-  cliente               terapeuta_cliente[]
-  supervisor            vinculo_supervisao[]    @relation("ClinicoVinculo")
-  supervisionados       vinculo_supervisao[]    @relation("SupervisorVinculo")
-  disciplina            disciplina[]            @relation("disciplinaToterapeuta")
-  relatorios            relatorio[]
-  anamneses             anamnese[]
-  atas_reuniao          ata_reuniao[]
-  atas_participacoes    ata_participante[]
+  id                                   String                  @id @default(uuid())
+  nome                                 String
+  email                                String                  @unique
+  email_indigo                         String                  @unique
+  celular                              String
+  telefone                             String?
+  cpf                                  String                  @unique
+  data_nascimento                      DateTime
+  possui_veiculo                       Boolean                 @default(false)
+  placa_veiculo                        String?
+  modelo_veiculo                       String?
+  banco                                String?
+  agencia                              String?
+  conta                                String?
+  chave_pix                            String?
+  valor_hora                           Decimal?                @db.Decimal(10, 2)
+  valor_sessao_consultorio             Decimal?                @db.Decimal(10, 2)
+  valor_sessao_homecare                Decimal?                @db.Decimal(10, 2)
+  valor_hora_desenvolvimento_materiais Decimal?                @db.Decimal(10, 2)
+  valor_hora_supervisao_recebida       Decimal?                @db.Decimal(10, 2)
+  valor_hora_supervisao_dada           Decimal?                @db.Decimal(10, 2)
+  valor_hora_reuniao                   Decimal?                @db.Decimal(10, 2)
+  professor_uni                        Boolean                 @default(false)
+  endereco_id                          Int?
+  data_entrada                         DateTime
+  data_saida                           DateTime?
+  perfil_acesso                        String
+  atividade                            Boolean                 @default(true)
+  senha                                String?                 @db.VarChar(255)
+  token_redefinicao                    String?
+  validade_token                       DateTime?
+  criado_em                            DateTime                @default(now())
+  atualizado_em                        DateTime                @updatedAt
+  pix_tipo                             String?
+  senha_atualizada_em                  DateTime?
+  arquivos                             arquivos[]
+  formacao                             formacao?
+  ocp                                  ocp[]                   @relation("TerapeutaOcp")
+  pessoa_juridica                      pessoa_juridica?
+  registro_profissional                registro_profissional[]
+  sessao                               sessao[]
+  endereco                             endereco?               @relation(fields: [endereco_id], references: [id])
+  cliente                              terapeuta_cliente[]
+  supervisor                           vinculo_supervisao[]    @relation("ClinicoVinculo")
+  supervisionados                      vinculo_supervisao[]    @relation("SupervisorVinculo")
+  disciplina                           disciplina[]            @relation("disciplinaToterapeuta")
+  relatorios                           relatorio[]
+  anamneses                            anamnese[]
+  ocp_prontuarios                      ocp_prontuario[]
+  atas_reuniao                         ata_reuniao[]
+  atas_participacoes                   ata_participante[]
 
   @@index([atividade])
   @@index([nome])
@@ -311,7 +327,7 @@ model anamnese {
   cliente    cliente @relation(fields: [cliente_id], references: [id])
 
   terapeuta_id String
-  terapeuta    terapeuta @relation(fields: [terapeuta_id], references: [id])
+  terapeuta    terapeuta @relation(fields: [terapeuta_id], references: [id], onDelete: Restrict)
 
   // cabeçalho
   data_entrevista      DateTime
@@ -764,8 +780,8 @@ model pessoa_juridica {
   cnpj         String?   @unique
   razao_social String?
   endereco_id  Int
-  terapeuta_id String    @unique
   endereco     endereco  @relation(fields: [endereco_id], references: [id])
+  terapeuta_id String    @unique
   terapeuta    terapeuta @relation(fields: [terapeuta_id], references: [id])
 
   @@index([endereco_id], map: "pessoa_juridica_endereco_id_fkey")
@@ -819,6 +835,7 @@ model sessao {
   terapeuta          terapeuta        @relation(fields: [terapeuta_id], references: [id])
   trials             sessao_trial[]
   arquivos           sessao_arquivo[]
+  faturamentos       faturamento[]
 
   @@index([terapeuta_id, data_criacao])
   @@index([ocp_id])
@@ -894,7 +911,7 @@ model terapeuta_cliente {
   status        String    @default("active")
   area_atuacao  String?
   cliente       cliente   @relation(fields: [cliente_id], references: [id], onDelete: Cascade)
-  terapeuta     terapeuta @relation(fields: [terapeuta_id], references: [id], onDelete: Cascade)
+  terapeuta     terapeuta @relation(fields: [terapeuta_id], references: [id], onDelete: Restrict)
 
   @@index([terapeuta_id])
   @@index([cliente_id])
@@ -912,8 +929,8 @@ model vinculo_supervisao {
   observacoes       String?
   criado_em         DateTime  @default(now())
   atualizado_em     DateTime  @updatedAt
-  clinico           terapeuta @relation("ClinicoVinculo", fields: [clinico_id], references: [id], onDelete: Cascade)
-  supervisor        terapeuta @relation("SupervisorVinculo", fields: [supervisor_id], references: [id], onDelete: Cascade)
+  clinico           terapeuta @relation("ClinicoVinculo", fields: [clinico_id], references: [id], onDelete: Restrict)
+  supervisor        terapeuta @relation("SupervisorVinculo", fields: [supervisor_id], references: [id], onDelete: Restrict)
 
   @@unique([supervisor_id, clinico_id])
   @@index([supervisor_id])
@@ -932,6 +949,75 @@ model sessao_arquivo {
   sessao sessao @relation(fields: [sessao_id], references: [id], onDelete: Cascade)
 
   @@index([sessao_id])
+}
+
+model ocp_prontuario {
+  id Int @id @default(autoincrement())
+
+  cliente_id String
+  clientes   cliente @relation(fields: [cliente_id], references: [id], onDelete: Cascade)
+
+  terapeuta_id String
+  terapeutas   terapeuta @relation(fields: [terapeuta_id], references: [id], onDelete: Restrict)
+
+  profissao_ocupacao     String?
+  observacao_educacional String? @db.Text
+
+  observacoes_nucleo_familiar String? @db.Text
+
+  encaminhado_por          String?
+  motivo_busca_atendimento String
+  atendimentos_anteriores  String?
+  observacao_demanda       String? @db.Text
+
+  objetivos_trabalho    String
+  avaliacao_atendimento String?
+  status                Boolean @default(true)
+
+  criado_em     DateTime @default(now())
+  atualizado_em DateTime @updatedAt
+
+  evolucoes prontuario_evolucao[]
+
+  @@index([cliente_id])
+  @@index([terapeuta_id])
+}
+
+model prontuario_evolucao {
+  id Int @id @default(autoincrement())
+
+  prontuario_id Int
+  prontuario    ocp_prontuario @relation(fields: [prontuario_id], references: [id], onDelete: Cascade)
+
+  data_evolucao    DateTime
+  descricao_sessao String   @db.Text
+
+  criado_em     DateTime @default(now())
+  atualizado_em DateTime @updatedAt
+
+  anexos       prontuario_evolucao_anexo[]
+  faturamentos faturamento[]
+
+  @@index([prontuario_id])
+  @@index([prontuario_id, data_evolucao])
+}
+
+model prontuario_evolucao_anexo {
+  id Int @id @default(autoincrement())
+
+  evolucao_id Int
+  evolucao    prontuario_evolucao @relation(fields: [evolucao_id], references: [id], onDelete: Cascade)
+
+  nome    String
+  caminho String
+  tipo    String
+  tamanho Int
+
+  criado_em     DateTime @default(now())
+  atualizado_em DateTime @updatedAt
+
+  @@index([evolucao_id])
+  @@index([caminho])
 }
 
 model ata_reuniao {
@@ -1028,4 +1114,38 @@ model ata_anexo {
 
   @@unique([ata_reuniao_id, external_id])
   @@index([ata_reuniao_id])
+}
+
+model faturamento {
+  id                     Int                          @id @default(autoincrement())
+  inicio_em              DateTime
+  fim_em                 DateTime
+  tipo_atendimento       faturamento_tipo_atendimento
+  ajuda_custo            Boolean?
+  observacao_faturamento String?                      @db.Text
+  sessao_id              Int?
+  sessao                 sessao?                      @relation(fields: [sessao_id], references: [id], onDelete: Cascade)
+  evolucao_id            Int?
+  evolucao               prontuario_evolucao?         @relation(fields: [evolucao_id], references: [id], onDelete: Cascade)
+  arquivos               faturamento_arquivo[]
+  criado_em              DateTime                     @default(now())
+  atualizado_em          DateTime                     @updatedAt
+
+  @@unique([sessao_id])
+  @@unique([evolucao_id])
+  @@index([inicio_em])
+  @@index([tipo_atendimento])
+}
+
+model faturamento_arquivo {
+  id             Int         @id @default(autoincrement())
+  faturamento_id Int
+  faturamento    faturamento @relation(fields: [faturamento_id], references: [id], onDelete: Cascade)
+  nome           String
+  caminho        String
+  tamanho        Int
+  mime_type      String
+  criado_em      DateTime    @default(now())
+
+  @@index([faturamento_id])
 }

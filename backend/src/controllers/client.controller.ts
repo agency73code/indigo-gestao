@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import * as clientService from '../features/client/client.service.js';
 import * as clientNormalize from '../features/client/client.normalizer.js';
-import { sendWelcomeEmail } from '../utils/mail.util.js';
+// import { sendWelcomeEmail } from '../utils/mail.util.js';
 import * as clientSchema from '../schemas/client.schema.js';
 import { AppError } from '../errors/AppError.js';
 
@@ -21,13 +21,13 @@ export async function create(req: Request, res: Response, next: NextFunction) {
                 .status(422)
                 .json({ success: false, message: 'Nome do cliente é obrigatório!' });
 
-        await sendWelcomeEmail({
-            to: client.emailContato,
-            name: client.nome,
-            token: client.token_redefinicao!,
-        }).catch((error) => {
-            console.error('Erro ao enviar email de boas-vindas:', error);
-        });
+        // await sendWelcomeEmail({
+        //     to: client.emailContato,
+        //     name: client.nome,
+        //     token: client.token_redefinicao!,
+        // }).catch((error) => {
+        //     console.error('Erro ao enviar email de boas-vindas:', error);
+        // });
 
         res.status(201).json({
             success: true,

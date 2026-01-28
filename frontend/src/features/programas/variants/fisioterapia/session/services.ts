@@ -70,6 +70,18 @@ export async function saveFisioSession(payload: {
     // TODO: Implementar chamada real à API
     const formData = buildSessionFormData(payload);
     
+    for (const [key, value] of formData.entries()) {
+        if (value instanceof File) {
+            console.log(key, {
+            name: value.name,
+            type: value.type,
+            size: value.size,
+            });
+        } else {
+            console.log(key, value);
+        }
+    }
+
     const response = await fetch(`/api/ocp/physiotherapy/programs/${payload.programId}/sessions`, {
         method: 'POST',
         credentials: 'include',

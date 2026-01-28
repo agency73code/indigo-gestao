@@ -52,7 +52,7 @@ export async function fetchMusiClientAvatar(clientId: string): Promise<string | 
 }
 
 export async function fetchMusiTherapistById(id: string): Promise<Therapist> {
-    const response = await fetch(`${API_URL}/terapeutas/${id}`, {
+    const response = await fetch(`${API_URL}/terapeutas/${id}/sumario`, {
         credentials: 'include',
     });
 
@@ -61,13 +61,12 @@ export async function fetchMusiTherapistById(id: string): Promise<Therapist> {
     }
 
     const data = await response.json();
-    const photoUrl = await fetchMusiTherapistAvatar(id);
 
     return {
-        id,
+        id: data.id,
         name: data.nome,
-        photoUrl,
-        especialidade: data.dadosProfissionais?.[0]?.areaAtuacao || 'Musicoterapia',
+        photoUrl: data.photoUrl,
+        especialidade: data.especialidade,
     };
 }
 

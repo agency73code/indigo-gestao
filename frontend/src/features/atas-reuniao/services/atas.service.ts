@@ -291,7 +291,6 @@ export async function createAta(input: CreateAtaInput): Promise<AtaReuniao> {
         fd.append(`billingFiles[${arquivo.id}]`, arquivo.file, arquivo.file.name);
         fd.append(`billingFileNames[${arquivo.id}]`, arquivo.nome);
     }
-
     const res = await authFetch(`${atasConfig.apiBase}/atas-reuniao`, {
         method: 'POST',
         body: fd,

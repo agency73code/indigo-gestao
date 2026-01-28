@@ -72,7 +72,8 @@
 - tipo_atendimento
 - ajuda_custo
 - observacao_faturamento
-- referencia_sessao (FK) / referencia_evolucao (FK)
+- ata_id
+- referencia_sessao (FK) / referencia_evolucao (FK) / ATA (ata_id)
 
 ### arquivos_faturamento
 - nome

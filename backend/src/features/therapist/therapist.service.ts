@@ -1,257 +1,140 @@
-import type { Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { prisma } from '../../config/database.js';
 import * as TherapistTypes from './therapist.types.js';
-import { brMoneyToNumber } from '../../utils/brMoney.js';
 import { generateResetToken } from '../../utils/resetToken.js';
 import { AppError } from '../../errors/AppError.js';
 import { ACCESS_LEVELS } from '../../utils/accessLevels.js';
 import { invalidateTherapistCache } from '../../cache/therapistCache.js';
 import { getVisibilityScope } from '../../utils/visibilityFilter.js';
+import type { TherapistSchemaInput } from '../../schemas/therapist.schema.js';
+import { buildAddress } from '../../utils/buildAddress.js';
+import { getAccessLevelFromRoles } from '../../utils/normalizeRoleName.js';
+import { queryTherapist } from './querys/queryTherapist.js';
+import { mapTherapist } from './mappers/mapTherapist.js';
+import { getPrimaryAreaFromAreaRoles } from '../../utils/getPrimaryAreaFromAreaRoles.js';
 
 const MANAGER_LEVEL = ACCESS_LEVELS['gerente'] ?? 5;
 
-async function resolveAreaAtuacaoId(
-    areaAtuacaoId: TherapistTypes.TherapistProfessionalDataInput['areaAtuacaoId'],
-    areaAtuacaoNome: string,
-) {
-    if (areaAtuacaoId != null && areaAtuacaoId !== '') {
-        const parsedId = Number(areaAtuacaoId);
-        if (!Number.isNaN(parsedId) && parsedId > 0) {
-            const exists = await prisma.area_atuacao.findUnique({
-                select: { id: true },
-                where: { id: parsedId },
-            });
-            if (exists) {
-                return exists.id;
-            }
-        }
-    }
-
-    const normalizedName = areaAtuacaoNome?.trim();
-    if (!normalizedName) {
-        throw new AppError(
-            'INVALID_AREA_ACTIVITY',
-            'Área de atuação inválida. Selecione uma área de atuação cadastrada.',
-            400,
-        );
-    }
-
-    const area = await prisma.area_atuacao.findFirst({
-        where: {
-            nome: normalizedName,
-        },
-        select: { id: true },
-    });
-
-    if (!area) {
-        throw new AppError(
-            'INVALID_AREA_ACTIVITY',
-            'Área de atuação inválida. Selecione uma área de atuação cadastrada.',
-            400,
-        );
-    }
-
-    return area.id;
-}
-
-async function resolveCargoId(
-    cargoId: TherapistTypes.TherapistProfessionalDataInput['cargoId'],
-    cargoNome: string,
-) {
-    if (cargoId != null && cargoId !== '') {
-        const parsedId = Number(cargoId);
-        if (!Number.isNaN(parsedId) && parsedId > 0) {
-            const exists = await prisma.cargo.findUnique({
-                select: { id: true },
-                where: { id: parsedId },
-            });
-            if (exists) {
-                return exists.id;
-            }
-        }
-    }
-
-    const normalizedName = cargoNome?.trim();
-    if (!normalizedName) {
-        return null;
-    }
-
-    const cargo = await prisma.cargo.findFirst({
-        where: {
-            nome: normalizedName,
-        },
-        select: { id: true },
-    });
-
-    if (!cargo) {
-        throw new AppError(
-            'INVALID_POSITION',
-            'Cargo inválido. Selecione um cargo cadastrado.',
-            400,
-        );
-    }
-
-    return cargo.id;
-}
-
-export async function create(dto: TherapistTypes.TherapistForm) {
-    const existsCpf = await prisma.terapeuta.findUnique({ where: { cpf: dto.cpf } });
-    if (existsCpf) throw new AppError('CPF_DUPLICADO', 'CPF já cadastrado!', 409);
-
-    const existsEmail = await prisma.terapeuta.findUnique({
-        where: { email_indigo: dto.emailIndigo },
-    });
-    if (existsEmail) throw new AppError('EMAIL_DUPLICADO', 'E-mail já cadastrado', 409);
-
+export async function create(dto: TherapistSchemaInput) {
     const { token, expiry } = generateResetToken();
+    const now = new Date();
 
-    const professionalRegistrations = await Promise.all(
-        (dto.dadosProfissionais ?? []).map(async (data) => ({
-            area_atuacao_id: await resolveAreaAtuacaoId(data.areaAtuacaoId, data.areaAtuacao),
-            cargo_id: await resolveCargoId(data.cargoId, data.cargo),
-            numero_conselho: data.numeroConselho || null,
-        })),
-    );
+    const data: Prisma.terapeutaCreateInput = {
+        nome: dto.nome,
+        email: dto.email,
+        email_indigo: dto.emailIndigo,
+        telefone: dto.telefone,
+        celular: dto.celular,
+        cpf: dto.cpf,
+        data_nascimento: dto.dataNascimento,
+        possui_veiculo: dto.possuiVeiculo,
+        placa_veiculo: dto.placaVeiculo,
+        modelo_veiculo: dto.modeloVeiculo,
+        banco: dto.banco,
+        agencia: dto.agencia,
+        conta: dto.conta,
+        pix_tipo: dto.pixTipo,
+        chave_pix: dto.chavePix,
+        valor_sessao_consultorio: dto.valorSessaoConsultorio,
+        valor_sessao_homecare: dto.valorSessaoHomecare,
+        valor_hora_desenvolvimento_materiais: dto.valorHoraDesenvolvimentoMateriais,
+        valor_hora_supervisao_recebida: dto.valorHoraSupervisaoRecebida,
+        valor_hora_supervisao_dada: dto.valorHoraSupervisaoDada,
+        valor_hora_reuniao: dto.valorHoraReuniao,
+        professor_uni: dto.professorUnindigo,
+        data_entrada: dto.dataInicio,
+        data_saida: dto.dataFim,
+        perfil_acesso: getAccessLevelFromRoles(dto.dadosProfissionais.map((t) => t.cargo)).role,
+        atividade: !dto.dataFim || dto.dataFim >= now,
+        token_redefinicao: token,
+        validade_token: expiry,
+    }
 
-    const therapist = await prisma.terapeuta.create({
-        data: {
-            nome: dto.nome,
-            email: dto.email,
-            email_indigo: dto.emailIndigo,
-            celular: dto.celular,
-            telefone: dto.telefone ?? null,
-            cpf: dto.cpf,
-            data_nascimento: new Date(dto.dataNascimento),
-            possui_veiculo: dto.possuiVeiculo === 'sim',
-            placa_veiculo: dto.placaVeiculo ?? null,
-            modelo_veiculo: dto.modeloVeiculo ?? null,
-            banco: dto.banco,
-            agencia: dto.agencia,
-            conta: dto.conta,
-            chave_pix: dto.chavePix,
-            pix_tipo: dto.pixTipo,
-            valor_hora: brMoneyToNumber(dto.valorHoraAcordado),
-            professor_uni: dto.professorUnindigo === 'sim',
+    const subjects = dto.disciplinaUniindigo ? [dto.disciplinaUniindigo] : [];
+    if (subjects.length > 0) {
+        data.disciplina = {
+            connectOrCreate: subjects.map((nome) => ({
+                where: { nome },
+                create: { nome },
+            })),
+        };
+    }
 
-            endereco: {
-                connectOrCreate: {
-                    where: {
-                        unique_endereco: {
-                            cep: dto.endereco.cep,
-                            rua: dto.endereco.rua,
-                            numero: dto.endereco.numero,
-                            bairro: dto.endereco.bairro,
-                            cidade: dto.endereco.cidade,
-                            uf: dto.endereco.estado,
-                            complemento: dto.endereco.complemento ?? '',
-                        },
-                    },
-                    create: {
-                        cep: dto.endereco.cep,
-                        rua: dto.endereco.rua,
-                        numero: dto.endereco.numero,
-                        bairro: dto.endereco.bairro,
-                        cidade: dto.endereco.cidade,
-                        uf: dto.endereco.estado,
-                        complemento: dto.endereco.complemento ?? '',
-                    },
-                },
+    if (dto.endereco) {
+        const endereco = buildAddress(dto.endereco);
+
+        data.endereco = {
+            connectOrCreate: {
+                where: { unique_endereco: endereco },
+                create: endereco,
             },
+        };
+    }
 
-            data_entrada: new Date(dto.dataInicio),
-            data_saida: dto.dataFim ? new Date(dto.dataFim) : null,
-            perfil_acesso: getHighestAccessRole(dto.dadosProfissionais),
-            token_redefinicao: token,
-            validade_token: expiry,
+    if (dto.formacao) {
+        const createTraining: Prisma.formacaoCreateWithoutTerapeutaInput = {
+            graduacao: dto.formacao.graduacao,
+            instituicao_graduacao: dto.formacao.instituicaoGraduacao,
+            ano_formatura: dto.formacao.anoFormatura,
+            participacao_congressos: dto.formacao.participacaoCongressosDescricao,
+            publicacoes_descricao: dto.formacao.publicacoesLivrosDescricao,
+        };
 
-            arquivos: {
-                create:
-                    dto.arquivos?.map((a) => ({
-                        tipo: a.tipo,
-                        arquivo_id: a.arquivo_id,
-                        mime_type: a.mime_type,
-                        tamanho: a.tamanho,
-                        data_upload: new Date(a.data_upload),
-                    })) ?? [],
+        if (dto.formacao.posGraduacoes.length > 0) {
+            createTraining.pos_graduacao = {
+                create: dto.formacao.posGraduacoes.map((pg) => ({
+                    tipo: pg.tipo,
+                    curso: pg.curso,
+                    instituicao: pg.instituicao,
+                    conclusao: pg.conclusao,
+                })),
+            };
+        }
+
+        data.formacao = { create: createTraining };
+    }
+
+    if (dto.cnpj) {
+        const endereco = buildAddress(dto.cnpj.endereco);
+
+        data.pessoa_juridica = {
+            create: {
+                cnpj: dto.cnpj.numero,
+                razao_social: dto.cnpj.razaoSocial,
+                endereco: {
+                    connectOrCreate: {
+                        where: { unique_endereco: endereco },
+                        create: endereco,
+                    }
+                }
+            }
+        }
+    }
+
+    if (dto.dadosProfissionais.length > 0) {
+        data.registro_profissional = {
+            createMany: {
+                data: dto.dadosProfissionais.map((registro) => ({
+                    numero_conselho: registro.numeroConselho,
+                    area_atuacao_id: registro.areaAtuacaoId,
+                    cargo_id: registro.cargoId,
+                })),
             },
+        };
+    }
 
-            ...(professionalRegistrations.length
-                ? {
-                      registro_profissional: {
-                          createMany: {
-                              data: professionalRegistrations,
-                          },
-                      },
-                  }
-                : {}),
-
-            formacao: {
-                create: {
-                    graduacao: dto.formacao?.graduacao ?? null,
-                    instituicao_graduacao: dto.formacao?.instituicaoGraduacao ?? null,
-                    ano_formatura: Number(dto.formacao?.anoFormatura),
-                    participacao_congressos: dto.formacao?.participacaoCongressosDescricao ?? null,
-                    publicacoes_descricao: dto.formacao?.publicacoesLivrosDescricao ?? null,
-                    ...(dto.formacao?.posGraduacoes?.length
-                        ? {
-                              pos_graduacao: {
-                                  create: dto.formacao.posGraduacoes.map((p) => ({
-                                      tipo: p.tipo,
-                                      curso: p.curso,
-                                      instituicao: p.instituicao,
-                                      conclusao: p.conclusao,
-                                  })),
-                              },
-                          }
-                        : {}),
-                },
+    const therapist = await prisma.$transaction(async (tx) => {
+        const created = await tx.terapeuta.create({
+            data,
+            select: { 
+                id: true,
+                nome: true,
+                email: true,
+                token_redefinicao: true,
             },
+        });
 
-            ...(dto.cnpj?.numero?.trim()
-                ? {
-                      pessoa_juridica: {
-                          create: {
-                              cnpj: dto.cnpj.numero.trim(),
-                              razao_social: dto.cnpj.razaoSocial ?? null,
-                              endereco: {
-                                  connectOrCreate: {
-                                      where: {
-                                          unique_endereco: {
-                                              cep: dto.cnpj.endereco?.cep ?? '',
-                                              rua: dto.cnpj.endereco?.rua ?? '',
-                                              numero: dto.cnpj.endereco?.numero ?? '',
-                                              bairro: dto.cnpj.endereco?.bairro ?? '',
-                                              cidade: dto.cnpj.endereco?.cidade ?? '',
-                                              uf: dto.cnpj.endereco?.estado ?? '',
-                                              complemento: dto.cnpj.endereco?.complemento ?? '',
-                                          },
-                                      },
-                                      create: {
-                                          cep: dto.cnpj.endereco?.cep ?? '',
-                                          rua: dto.cnpj.endereco?.rua ?? '',
-                                          numero: dto.cnpj.endereco?.numero ?? '',
-                                          bairro: dto.cnpj.endereco?.bairro ?? '',
-                                          cidade: dto.cnpj.endereco?.cidade ?? '',
-                                          uf: dto.cnpj.endereco?.estado ?? '',
-                                          complemento: dto.cnpj.endereco?.complemento ?? '',
-                                      },
-                                  },
-                              },
-                          },
-                      },
-                  }
-                : {}),
-
-            ...(dto.disciplinaUniindigo
-                ? { disciplina: { create: { nome: dto.disciplinaUniindigo } } }
-                : {}),
-        },
-        select: {
-            id: true,
-            email: true,
-            nome: true,
-            token_redefinicao: true,
-        },
+        return created;
     });
 
     invalidateTherapistCache(therapist.id);
@@ -360,17 +243,64 @@ export async function list(
 }
 
 export async function getById(therapistId: string) {
-    return prisma.terapeuta.findFirst({
+    const therapist = await prisma.terapeuta.findUnique({
         where: { id: therapistId },
-        include: {
-            endereco: true,
-            formacao: { include: { pos_graduacao: true } },
-            registro_profissional: { include: { area_atuacao: true, cargo: true } },
-            arquivos: true,
-            pessoa_juridica: { include: { endereco: true } },
-            disciplina: true,
-        },
+        select: queryTherapist,
     });
+
+    if (!therapist) {
+        throw new AppError(
+            'THERAPIST_NOT_FOUND',
+            'Terapeuta não encontrado',
+            404
+        );
+    }
+
+    return mapTherapist(therapist);
+}
+
+export async function fetchTherapistSummaryById(therapistId: string) {
+    const therapist = await prisma.terapeuta.findUnique({
+        where: { id: therapistId },
+        select: {
+            id: true,
+            nome: true,
+            registro_profissional: {
+                select: {
+                    cargo: { select: { nome: true } },
+                    area_atuacao: { select: { nome: true } },
+                },
+            },
+            arquivos: {
+                where: { tipo: 'fotoPerfil' },
+                select: {
+                    arquivo_id: true,
+                },
+            }
+        }
+    });
+
+    if (!therapist) {
+        throw new AppError(
+            'THERAPIST_NOT_FOUND',
+            'Terapeuta não encontrado',
+            404
+        );
+    }
+
+    const therapistAvatar = therapist.arquivos[0] ? therapist.arquivos[0].arquivo_id : null;
+
+    return {
+        id: therapist.id,
+        nome: therapist.nome,
+        especialidade: getPrimaryAreaFromAreaRoles(
+            therapist.registro_profissional.map((r) => ({
+                area: r.area_atuacao?.nome ?? null,
+                role: r.cargo?.nome ?? null,
+            }))
+        ).area,
+        photoUrl: therapistAvatar ? `/api/arquivos/${encodeURIComponent(therapistAvatar)}/view` : null,
+    }
 }
 
 export async function getTherapistReport(therapistId: string) {
