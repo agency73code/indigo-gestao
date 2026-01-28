@@ -4,7 +4,7 @@ import * as psychothrapyService from "./psychotherapy.service.js";
 import { uuidParam } from "../../../schemas/utils/uuid.js";
 import { unauthenticated } from "../../../errors/unauthenticated.js";
 import { idParam } from "../../../schemas/utils/id.js";
-import { parseMultipartFiles } from "../../../utils/parseMultipartFiles.js";
+import { buildBillingInputFromRequest } from "../../billing/billing.controller.js";
 
 export async function createPsychotherapyRecord(req: Request, res: Response, next: NextFunction) {
     try {
@@ -80,15 +80,37 @@ export async function createEvolution(req: Request, res: Response, next: NextFun
         if (!userId) throw unauthenticated();
 
         const medicalRecordId = idParam.parse(req.params.medicalRecordId);
+
         const payload = createEvolutionPayloadSchema.parse(
             JSON.parse(req.body.payload)
         );
-        const attachment = parseMultipartFiles(
-            req.files as Express.Multer.File[],
-            req.body.fileNames,
-        );
+        
+        const allFiles = (req.files as Express.Multer.File[]) || [];
 
-        await psychothrapyService.createEvolution(payload, attachment, medicalRecordId, userId);
+        const uploadedFiles = allFiles
+            .filter((f) => f.fieldname === 'files')
+            .map((file) => ({
+                ...file,
+                size: file.size,
+            }));
+
+        const attachments = uploadedFiles.map((f) => ({
+            buffer: f.buffer,
+            mime_type: f.mimetype,
+            original_name: f.originalname,
+            name: f.originalname,
+            size: f.size,
+        }));
+
+        const billingPayload = buildBillingInputFromRequest(req);
+
+        await psychothrapyService.createEvolution({
+            payload,
+            attachments,
+            billingPayload,
+            medicalRecordId,
+            userId
+        });
 
         res.status(201).json({
             success: true,

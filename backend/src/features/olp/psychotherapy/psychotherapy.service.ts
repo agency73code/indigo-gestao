@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../../config/database.js";
 import { AppError } from "../../../errors/AppError.js";
-import type { CreateEvolutionType, PsychoPayload, PsychoUpdatePayload, queryType } from "./psychotherapy.schema.js";
+import type { PsychoPayload, PsychoUpdatePayload, queryType } from "./psychotherapy.schema.js";
 import { calculateAge } from "../../../utils/calculateAge.js";
 import { toDateOnly } from "../../../utils/toDateOnly.js";
 import { getVisibilityScope } from "../../../utils/visibilityFilter.js";
@@ -9,10 +9,11 @@ import { queryPsychologicalRecord } from "./querys/queryPsychologicalRecord.js";
 import { mapPsychologicalRecord } from "./mappers/mapPsychologicalRecord.js";
 import { canAccessThis } from "../../../authorization/resourceAccess.policy.js";
 import { forbidden } from "../../../errors/forbidden.js";
-import type { ParsedFile } from "../../../utils/parseMultipartFiles.js";
 import { R2GenericUploadService } from "../../file/r2/r2-upload-generic.js";
 import { inferFileType } from "./utils/inferFileType.js";
 import { getLastEvolution } from "./utils/lastEvolution.js";
+import type { CreateEvolutionServiceInput } from "./types/CreateEvolutionServiceInput.js";
+import { createBilling } from "../../billing/billing.service.js";
 
 export async function createPsychotherapyRecord(payload: PsychoPayload, userId: string) {
     return await prisma.$transaction(async (tx) => {
@@ -274,12 +275,8 @@ export async function searchMedicalRecordById(medicalRecordId: number, userId: s
     return mapPsychologicalRecord(medicalRecord);
 }
 
-export async function createEvolution(
-    payload: CreateEvolutionType, 
-    attachments: ParsedFile[], 
-    medicalRecordId: number, 
-    _userId: string
-) {
+export async function createEvolution(input: CreateEvolutionServiceInput) {
+    const { payload, attachments, medicalRecordId, billingPayload } = input;
     return await prisma.$transaction(async (tx) => {
         const medicalRecord = await tx.ocp_prontuario.findUnique({
             where: { id: medicalRecordId },
@@ -303,7 +300,9 @@ export async function createEvolution(
             select: { id: true },
         });
 
-        if (attachments.length === 0) return;
+        await createBilling(tx, billingPayload, { evolutionId: evolution.id });
+
+        if (attachments.length === 0) return { id: evolution.id };
 
         const uploaded = await R2GenericUploadService.uploadMany({
             prefix: `prontuarios/${medicalRecordId}/evolucoes/${evolution.id}`,
@@ -315,27 +314,29 @@ export async function createEvolution(
             })),
         });
 
-        await tx.prontuario_evolucao_anexo.createMany({
-            data: attachments.map((a, i) => {
-                const upload = uploaded[i];
+        if (uploaded.length !== attachments.length) {
+            await R2GenericUploadService.deleteMany(uploaded.map((u) => u.key));
+            throw new AppError('UPLOAD_FAILED', 'Falha ao fazer upload dos anexos', 500);
+        }
 
-                if (!upload) {
-                    throw new AppError(
-                        'UPLOAD_FAILED',
-                        'Falha ao mapear upload de anexo',
-                        500
-                    );
-                }
-
-                return {
+        try {
+            await tx.prontuario_evolucao_anexo.createMany({
+                data: attachments.map((a, i) => ({
                     evolucao_id: evolution.id,
                     nome: a.name,
-                    caminho: upload.key,
+                    caminho: uploaded[i]!.key,
                     tipo: a.mime_type,
                     tamanho: a.size,
-                };
-            }),
-        });
+                })),
+            });
+        } catch (err) {
+            await Promise.allSettled([
+                R2GenericUploadService.deleteMany(uploaded.map((u) => u.key)),
+            ]);
+            throw err;
+        }
+
+        return { id: evolution.id };
     })
 }
 

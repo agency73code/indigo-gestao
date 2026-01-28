@@ -401,8 +401,8 @@ export async function criarEvolucao(data: EvolucaoFormData): Promise<EvolucaoRes
                         message: validation.error || 'Arquivo inválido',
                     };
                 }
-                fd.append(`files[${arquivo.id}]`, arquivo.file, arquivo.file.name);
-                fd.append(`fileNames[${arquivo.id}]`, arquivo.nome);
+                fd.append(`files`, arquivo.file, arquivo.file.name);
+                fd.append(`fileNames`, arquivo.nome);
             }
         }
 
@@ -419,8 +419,8 @@ export async function criarEvolucao(data: EvolucaoFormData): Promise<EvolucaoRes
                 };
             }
 
-            fd.append(`billingFiles[${arquivo.id}]`, arquivo.file, arquivo.file.name);
-            fd.append(`billingFileNames[${arquivo.id}]`, arquivo.nome);
+            fd.append(`billingFiles`, arquivo.file, arquivo.file.name);
+            fd.append(`billingFileNames`, arquivo.nome);
         }
         
         const res = await authFetch(endpoints.evolucoes(data.prontuarioId), {
