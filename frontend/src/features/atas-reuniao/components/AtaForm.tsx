@@ -599,8 +599,6 @@ export function AtaForm({ ataId, initialData, existingAnexos = [], onSuccess }: 
         <AtaBillingData
             value={formData.faturamento || DADOS_FATURAMENTO_ATA_INITIAL}
             onChange={handleFaturamentoChange}
-            horarioInicio={formData.horarioInicio}
-            horarioFim={formData.horarioFim}
             disabled={submitting}
         />
     );

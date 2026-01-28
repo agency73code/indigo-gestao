@@ -18,6 +18,11 @@ export interface ApiCreateAtaPayload {
     conteudo: string;
     participantes: ApiParticipante[];
     links: ApiLink[];
+    // Faturamento (ata)
+    tipo_faturamento?: string | null;
+    observacao_faturamento?: string | null;
+    tem_ajuda_custo?: boolean;
+    motivo_ajuda_custo?: string | null;
 }
 
 export interface ApiAtaReuniao {
@@ -37,6 +42,11 @@ export interface ApiAtaReuniao {
     resumo_ia: string | null;
     duracao_minutos: number | null;
     horas_faturadas: number | null;
+    // Faturamento (ata)
+    tipo_faturamento?: string | null;
+    observacao_faturamento?: string | null;
+    tem_ajuda_custo?: boolean;
+    motivo_ajuda_custo?: string | null;
     cliente?: { id: string; nome: string };
     terapeuta?: {
         id: string;
@@ -49,6 +59,7 @@ export interface ApiAtaReuniao {
     };
     participantes: ApiParticipante[];
     anexos: ApiAnexo[];
+    arquivos_faturamento?: ApiAnexo[];
     links: ApiLink[];
 }
 

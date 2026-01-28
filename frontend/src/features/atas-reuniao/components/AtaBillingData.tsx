@@ -3,39 +3,32 @@
  * COMPONENTE: AtaBillingData
  * ============================================================================
  * 
- * Componente para captura de COMPROVANTES de pagamento das horas da ata.
+ * Componente para solicitação de Ajuda de Custo/Reembolso de despesas.
  * 
- * CAMPOS:
- * - Observações do pagamento (dados bancários, NF, etc)
- * - Arquivos (comprovantes de transferência, recibos, notas fiscais)
- * 
- * IMPORTANTE: 
- * - O tipo de faturamento é determinado automaticamente pela finalidade da reunião
- * - A duração é calculada pelos horários início/fim da ata
- * - O valor será calculado pelo backend com base no cadastro do terapeuta
- * 
- * Este componente serve para DOCUMENTAR O PAGAMENTO após recebê-lo.
+ * Fluxo:
+ * 1. Terapeuta responde "Sim" ou "Não" para ajuda de custo
+ * 2. Se "Sim", informa descrição dos gastos e anexa comprovantes
+ * 3. Ata é enviada para aprovação
+ * 4. Gestor visualiza no GestaoFaturamentoHub e aprova/rejeita
  * 
  * ============================================================================
  */
 
 import { useState, useCallback } from 'react';
 import { 
-    Wallet,
-    Info,
-    X, 
+    DollarSign,
+    X as XIcon,
     FileText, 
     Image as ImageIcon, 
     File, 
     Trash2,
     Check,
-    ChevronDown,
-    ChevronUp,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { TextAreaField } from '@/ui/textarea-field';
 import { FileUploadBox } from '@/ui/file-upload-box';
 
@@ -57,8 +50,6 @@ export interface AtaBillingDataProps {
     errors?: Record<string, string>;
     /** Se está desabilitado (salvando, etc) */
     disabled?: boolean;
-    /** Se deve iniciar expandido */
-    defaultExpanded?: boolean;
 }
 
 // ============================================
@@ -92,13 +83,9 @@ export function AtaBillingData({
     onChange,
     errors = {},
     disabled = false,
-    defaultExpanded = true,
 }: AtaBillingDataProps) {
-    const [expanded, setExpanded] = useState(defaultExpanded);
     const [editingFileId, setEditingFileId] = useState<string | null>(null);
     const [editingFileName, setEditingFileName] = useState('');
-
-    const arquivosCount = value.arquivosFaturamento?.length || 0;
 
     // Handlers
     const handleFieldChange = useCallback(<K extends keyof DadosFaturamentoAta>(
@@ -160,75 +147,82 @@ export function AtaBillingData({
         setEditingFileName('');
     };
 
+    // Handler para toggle Sim/Não
+    const handleToggleAjudaCusto = (temAjuda: boolean) => {
+        onChange({
+            ...value,
+            temAjudaCusto: temAjuda,
+            // Limpa campos se desmarcar
+            ...(temAjuda ? {} : {
+                motivoAjudaCusto: '',
+                arquivosFaturamento: [],
+            }),
+        });
+    };
+
     return (
-        <div className="bg-card border rounded-lg overflow-hidden">
-            {/* Header colapsável */}
-            <button
-                type="button"
-                className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
-                onClick={() => setExpanded(!expanded)}
-            >
-                <div className="flex items-center gap-3">
-                    <div className="p-2 bg-green-500/10 rounded-lg">
-                        <Wallet className="h-5 w-5 text-green-600" />
-                    </div>
-                    <div className="text-left">
-                        <h3 className="font-medium">Ajuda de Custo</h3>
-                        <p className="text-sm text-muted-foreground">
-                            Anexe comprovantes de despesas para reembolso
-                            {arquivosCount > 0 && (
-                                <span className="ml-2">• {arquivosCount} arquivo{arquivosCount > 1 ? 's' : ''}</span>
-                            )}
-                        </p>
-                    </div>
-                </div>
-                {expanded ? (
-                    <ChevronUp className="h-5 w-5 text-muted-foreground" />
-                ) : (
-                    <ChevronDown className="h-5 w-5 text-muted-foreground" />
-                )}
-            </button>
-
-            {/* Conteúdo */}
-            {expanded && (
-                <div className="p-4 pt-0 space-y-4">
-                    {/* Banner explicativo */}
-                    <div className="flex gap-3 p-3 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
-                        <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                        <div className="text-sm text-blue-800 dark:text-blue-200">
-                            <p className="font-medium">
-                                Teve alguma despesa relacionada a esta reunião?
-                            </p>
-                            <p className="text-blue-600 dark:text-blue-300 mt-1">
-                                Anexe os comprovantes e descreva os gastos para solicitar reembolso.
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Descrição da Despesa */}
-                    <TextAreaField
-                        label="Descrição da Despesa"
-                        value={value.observacaoFaturamento || ''}
-                        onChange={(val) => handleFieldChange('observacaoFaturamento', val)}
-                        placeholder="Ex: Estacionamento R$ 25,00 • Uber R$ 35,00 • Material R$ 15,00"
-                        rows={1}
+        <div className="space-y-4">
+            {/* Pergunta Sim/Não */}
+            <div className="space-y-2">
+                <Label className="text-sm font-medium">
+                    Ajuda de Custo<span className="text-destructive">*</span>
+                </Label>
+                <div className="grid grid-cols-2 gap-3">
+                    <button
+                        type="button"
+                        onClick={() => handleToggleAjudaCusto(true)}
                         disabled={disabled}
-                        error={errors.observacaoFaturamento}
+                        className={cn(
+                            'flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-all',
+                            value.temAjudaCusto
+                                ? 'border-primary bg-primary/5 text-primary'
+                                : 'border-border hover:border-muted-foreground/50'
+                        )}
+                    >
+                        <DollarSign className="h-4 w-4" />
+                        <span className="font-medium">Sim</span>
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => handleToggleAjudaCusto(false)}
+                        disabled={disabled}
+                        className={cn(
+                            'flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-all',
+                            !value.temAjudaCusto
+                                ? 'border-primary bg-primary/5 text-primary'
+                                : 'border-border hover:border-muted-foreground/50'
+                        )}
+                    >
+                        <XIcon className="h-4 w-4" />
+                        <span className="font-medium">Não</span>
+                    </button>
+                </div>
+            </div>
+
+            {/* Campos condicionais - aparecem apenas se Sim */}
+            {value.temAjudaCusto && (
+                <div className="space-y-4 pt-2">
+                    {/* Descrição/Motivo dos gastos */}
+                    <TextAreaField
+                        label="Ajuda de Custo - Descrição"
+                        value={value.motivoAjudaCusto || ''}
+                        onChange={(e) => handleFieldChange('motivoAjudaCusto', e.target.value)}
+                        placeholder="Ex: Estacionamento R$ 25,00 • Uber R$ 35,00 • Material impresso R$ 15,00"
+                        rows={3}
+                        disabled={disabled}
+                        error={errors.motivoAjudaCusto}
                     />
 
                     {/* Comprovantes */}
                     <div className="space-y-3">
                         <div>
                             <label className="text-sm font-medium">
-                                Comprovantes
+                                Comprovantes (recibos, notas fiscais, tickets)
                             </label>
-                            <p className="text-xs text-muted-foreground mt-1">
-                                Recibos, notas fiscais, tickets de estacionamento, etc.
-                            </p>
                         </div>
 
                         <FileUploadBox
-                            onFileSelect={handleAddFile}
+                            onChange={(file) => file && handleAddFile(file)}
                             disabled={disabled}
                             accept="image/*,application/pdf,.doc,.docx"
                         />
@@ -245,7 +239,7 @@ export function AtaBillingData({
                                             key={arquivo.id}
                                             className="flex items-center gap-3 p-3 bg-muted/50 rounded-md group"
                                         >
-                                            <Icon className={cn('h-5 w-5 flex-shrink-0', color)} />
+                                            <Icon className={cn('h-5 w-5 shrink-0', color)} />
                                             
                                             <div className="flex-1 min-w-0">
                                                 {isEditing ? (
@@ -275,7 +269,7 @@ export function AtaBillingData({
                                                             onClick={cancelEditingFileName}
                                                             className="h-8 w-8 p-0"
                                                         >
-                                                            <X className="h-4 w-4" />
+                                                            <XIcon className="h-4 w-4" />
                                                         </Button>
                                                     </div>
                                                 ) : (

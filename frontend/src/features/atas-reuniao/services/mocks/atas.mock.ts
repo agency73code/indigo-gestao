@@ -1373,6 +1373,8 @@ export async function generateWhatsAppSummaryMock(id: string): Promise<string> {
             reuniao_outro_especialista: 'reunião com especialista',
             supervisao_terapeuta: 'supervisão',
             supervisao_at: 'supervisão AT',
+            supervisao_recebida: 'supervisão recebida',
+            desenvolvimento_materiais: 'desenvolvimento de materiais',
             planejamento_terapeutico: 'planejamento terapêutico',
             devolutiva: 'devolutiva',
             devolutiva_avaliacao: 'devolutiva de avaliação',

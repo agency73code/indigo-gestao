@@ -20,7 +20,7 @@ export function HubFaturamentoPage() {
     const accessOptions = [
         {
             title: 'Minhas Horas',
-            description: 'Consulte e lance suas horas de atendimento, sessões e atividades realizadas.',
+            description: 'Visualize suas horas de sessões e atas de reunião registradas no sistema.',
             icon: Clock,
             href: '/app/faturamento/minhas-horas',
             iconColor: 'text-indigo-600',

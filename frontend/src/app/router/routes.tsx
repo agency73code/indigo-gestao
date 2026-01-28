@@ -28,7 +28,7 @@ import CadastroOcpPage from '../../features/programas/pages/CadastroOcpPage';
 import DetalheProgramaPage from '../../features/programas/pages/DetalheProgramaPage';
 import EditarProgramaPage from '../../features/programas/pages/EditarProgramaPage';
 import { CadastroSessaoPage } from '../../features/programas/nova-sessao';
-import { FaturamentoHubPage, MinhasHorasPage, GestaoHorasPage, RegistrarLancamentoPage, DetalheLancamentoPage } from '../../features/faturamento';
+import { FaturamentoHubPage, MinhasHorasPage, GestaoFaturamentoPage } from '../../features/faturamento';
 import { AnamnesePage } from '../../features/anamnese/Cadastro';
 import { AnamneseListPage } from '../../features/anamnese/Tabela';
 import { AtasHubPage, NovaAtaPage, VisualizarAtaPage } from '../../features/atas-reuniao';
@@ -880,38 +880,15 @@ export const router = createBrowserRouter([
                                 path: 'faturamento/gestao',
                                 element: (
                                     <Suspense fallback={suspenseFallback}>
-                                        <GestaoHorasPage />
+                                        <GestaoFaturamentoPage />
                                     </Suspense>
                                 ),
                                 handle: {
-                                    breadcrumb: 'Gestão de Horas',
-                                    title: 'Gestão de Horas',
+                                    breadcrumb: 'Gestão de Faturamento',
+                                    title: 'Gestão de Faturamento',
                                 },
                             },
-                            {
-                                path: 'faturamento/registrar-lancamento',
-                                element: (
-                                    <Suspense fallback={suspenseFallback}>
-                                        <RegistrarLancamentoPage />
-                                    </Suspense>
-                                ),
-                                handle: {
-                                    breadcrumb: 'Registrar Lançamento',
-                                    title: 'Registrar Lançamento',
-                                },
-                            },
-                            {
-                                path: 'faturamento/lancamentos/:id',
-                                element: (
-                                    <Suspense fallback={suspenseFallback}>
-                                        <DetalheLancamentoPage />
-                                    </Suspense>
-                                ),
-                                handle: {
-                                    breadcrumb: 'Detalhes do Lançamento',
-                                    title: 'Detalhes do Lançamento',
-                                },
-                            },
+                            // Rotas de lançamento manual removidas - dados vêm de sessões e atas
                         ],
                     },
                 ],

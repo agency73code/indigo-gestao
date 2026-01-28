@@ -6,28 +6,34 @@
  * Exports públicos da feature de faturamento.
  * 
  * Esta feature permite:
- * - Terapeuta: Lançar horas trabalhadas e acompanhar status
- * - Gerente: Visualizar, aprovar e gerenciar lançamentos
+ * - Terapeuta: Visualizar faturamento de sessões e atas cadastradas
+ * - Gerente: Visualizar, aprovar e gerenciar faturamento
+ * 
+ * NOTA: Os dados de faturamento vêm de sessões e atas cadastradas.
+ * Não há mais lançamentos manuais.
  * ============================================================================
  */
 
-// Types
-export * from './types';
+// Types - Novos
+export * from './types/faturamento.types';
 
 // Pages
 export {
     HubFaturamentoPage,
     HubFaturamentoPage as FaturamentoHubPage, // Alias para compatibilidade com routes.tsx
-    MinhasHorasPage,
+    MinhasHorasSessoesPage,
+    MinhasHorasSessoesPage as MinhasHorasPage,
     GestaoHorasPage,
-    RegistrarLancamentoPage,
-    DetalheLancamentoPage,
+    // Páginas do GERENTE (3 telas separadas)
+    GestaoFaturamentoPage,
+    AprovarHorasPage,
+    HorasPorTerapeutaPage,
+    HorasPorClientePage,
 } from './pages';
 
 // Components
 export {
-    LancamentosTable,
-    LancamentoDrawer,
+    FaturamentoHub,
 } from './components';
 
 // Hooks
@@ -37,19 +43,14 @@ export {
     useResumoHoras,
 } from './hooks';
 
-// Services
+// Services - Novos
 export {
-    listLancamentos,
-    getLancamento,
-    createLancamento,
-    updateLancamento,
-    deleteLancamento,
+    listFaturamento,
+    getFaturamentoById,
+    getResumoFaturamento,
+    listClientes,
+    getTerapeutaLogado,
     aprovarLancamento,
     rejeitarLancamento,
     aprovarEmLote,
-    listClientes,
-    listTerapeutas,
-    getTerapeutaLogado,
-    getResumoTerapeuta,
-    getResumoGestao,
-} from './services/faturamento.service';
+} from './services/faturamento-sessoes.service';

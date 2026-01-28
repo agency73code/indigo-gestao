@@ -23,15 +23,7 @@
  * | Reunião com a Escola        | hora_reuniao                  | valorHoraReuniao               |
  * | Supervisão do AT            | hora_reuniao                  | valorHoraReuniao               |
  * | Outros                      | hora_reuniao                  | valorHoraReuniao               |
- * 
- * BACKEND: Para implementar, adicionar na tabela de atas:
- * - tipoFaturamento: enum('hora_reuniao', 'hora_supervisao_recebida', 'hora_supervisao_dada', 'hora_desenvolvimento_materiais')
- * - valorHora: decimal (valor por hora usado no cálculo)
- * - observacaoFaturamento: text (separado do conteúdo da ata)
- * - Tabela relacionada para arquivos de faturamento (comprovantes)
- * 
- * ============================================================================
- */
+
 
 // ============================================
 // TIPOS DE FATURAMENTO
@@ -87,9 +79,15 @@ export interface ArquivoFaturamentoAta {
  * - Observações para faturamento (dados bancários, notas fiscais, etc)
  * - Arquivos (comprovantes de pagamento, recibos)
  * 
+ * AJUDA DE CUSTO (opcional):
+ * - O terapeuta informa se teve ajuda de custo
+ * - Descreve o motivo/detalhamento dos gastos
+ * - Anexa comprovantes (notas, recibos, tickets)
+ * 
  * BACKEND: Adicionar campos na tabela `ata_reuniao`:
  * - tipo_faturamento: varchar (enum acima) - determinado automaticamente
  * - observacao_faturamento: text
+ * - motivo_ajuda_custo: text (descrição detalhada dos gastos)
  */
 export interface DadosFaturamentoAta {
     /** Tipo de faturamento (determinado automaticamente pela finalidade) */
@@ -98,6 +96,10 @@ export interface DadosFaturamentoAta {
     observacaoFaturamento?: string;
     /** Arquivos de faturamento (comprovantes de pagamento, recibos) */
     arquivosFaturamento?: ArquivoFaturamentoAta[];
+    /** Se o terapeuta teve ajuda de custo (despesas para reembolso) */
+    temAjudaCusto: boolean;
+    /** Descrição detalhada dos gastos (motivo da ajuda de custo) */
+    motivoAjudaCusto?: string;
 }
 
 // ============================================
@@ -108,6 +110,8 @@ export const DADOS_FATURAMENTO_ATA_INITIAL: DadosFaturamentoAta = {
     tipoFaturamento: TIPO_FATURAMENTO_ATA.HORA_REUNIAO,
     observacaoFaturamento: '',
     arquivosFaturamento: [],
+    temAjudaCusto: false,
+    motivoAjudaCusto: '',
 };
 
 // ============================================

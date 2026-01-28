@@ -3,7 +3,18 @@
  */
 
 export { HubFaturamentoPage } from './HubFaturamentoPage';
-export { MinhasHorasPage } from './MinhasHorasPage';
+export { MinhasHorasSessoesPage } from './MinhasHorasSessoesPage';
+// Alias para compatibilidade
+export { MinhasHorasSessoesPage as MinhasHorasPage } from './MinhasHorasSessoesPage';
 export { GestaoHorasPage } from './GestaoHorasPage';
-export { RegistrarLancamentoPage } from './RegistrarLancamentoPage';
-export { DetalheLancamentoPage } from './DetalheLancamentoPage';
+
+// Hub unificado do GERENTE (com tabs)
+export { GestaoFaturamentoHub } from './GestaoFaturamentoHub';
+// Alias para compatibilidade com routes.tsx
+export { GestaoFaturamentoHub as GestaoFaturamentoPage } from './GestaoFaturamentoHub';
+
+// Páginas antigas separadas (mantidas para compatibilidade, mas não usadas)
+export { AprovarHorasPage } from './AprovarHorasPage';
+export { HorasPorTerapeutaPage } from './HorasPorTerapeutaPage';
+export { HorasPorClientePage } from './HorasPorClientePage';
+
