@@ -75,7 +75,8 @@ export interface CabecalhoAta {
 
 /** Salvos: id, tipo, nome, descricao, terapeutaId | Derivados: especialidade, cargo, avatarUrl */
 export interface Participante {
-    id: string;
+    id?: number;
+    localId: string;
     tipo: TipoParticipante;
     nome: string;
     descricao?: string;
@@ -84,6 +85,7 @@ export interface Participante {
     cargo?: string;
     /** URL do avatar do participante (apenas para profissionais da clínica) */
     avatarUrl?: string;
+    removed?: true;
 }
 
 /** Link de recomendação (brinquedos, materiais, etc.) */
@@ -211,7 +213,8 @@ export interface ClienteOption {
 // ============================================
 
 export const participanteSchema = z.object({
-    id: z.string().min(1),
+    id: z.number().int().positive().optional(),
+    localId: z.string().min(1),
     tipo: z.enum([
         TIPO_PARTICIPANTE.FAMILIA,
         TIPO_PARTICIPANTE.PROFISSIONAL_EXTERNO,
@@ -222,6 +225,7 @@ export const participanteSchema = z.object({
     terapeutaId: z.string().optional().nullable(),
     especialidade: z.string().optional().nullable(),
     cargo: z.string().optional().nullable(),
+    removed: z.literal(true).optional(),
 });
 
 export const ataFormSchema = z.object({

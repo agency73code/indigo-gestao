@@ -88,10 +88,12 @@ export const listAtaSchema = z.object({
 
 export const ataParticipanteSchema = z
     .object({
+        id: z.number().int().positive().optional(),
         tipo: ataParticipanteTipoSchema,
         nome: z.string().min(1),
         descricao: z.string().optional().nullable(),
         terapeuta_id: z.uuid({ message: 'UUID inválido' }).optional().nullable(),
+        removed: z.literal(true).optional(),
     }).superRefine((p, ctx) => {
         if (p.tipo === ata_participante_tipo.profissional_clinica && !p.terapeuta_id) {
             ctx.addIssue({
@@ -107,7 +109,7 @@ export const ataLinkSchema = z.object({
     url: z.string().min(1),
 });
 
-export const createAtaPayloadSchema = z
+export const ataBaseSchema = z
     .object({
         terapeuta_id: uuidParam,
         cliente_id: uuidParam.nullable().default(null),
@@ -120,7 +122,7 @@ export const createAtaPayloadSchema = z
         conteudo: z.string().min(1),
         status: ataStatusSchema.default(ata_status.rascunho),
         participantes: z.array(ataParticipanteSchema).min(1),
-        links: z.array(ataLinkSchema).nullable().default(null),
+        links: z.array(ataLinkSchema).nullable().default([]),
     })
     .superRefine((val, ctx) => {
         if (val.finalidade === ata_finalidade_reuniao.outros) {
@@ -134,35 +136,8 @@ export const createAtaPayloadSchema = z
         }
     });
 
-export const updateAtaPayloadSchema = z
-    .object({
-        data: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Data inválida (YYYY-MM-DD)').optional(),
-        horario_inicio: z.string().regex(/^\d{2}:\d{2}$/, 'Horário inválido (HH:mm)').optional(),
-        horario_fim: z.string().regex(/^\d{2}:\d{2}$/, 'Horário inválido (HH:mm)').optional(),
-        finalidade: ataFinalidadeSchema.optional(),
-        finalidade_outros: z.string().optional().nullable(),
-        modalidade: ataModalidadeSchema.optional(),
-        conteudo: z.string().min(1).optional(),
-        status: ataStatusSchema.optional(),
-        cliente_id: z.uuid({ message: 'UUID inválido' }).optional().nullable(),
-        participantes: z.array(ataParticipanteSchema).min(1).optional(),
-        links: z.array(ataLinkSchema).optional().nullable(),
-    })
-    .superRefine((val, ctx) => {
-        if (val.finalidade === ata_finalidade_reuniao.outros) {
-            if (!val.finalidade_outros || val.finalidade_outros.trim().length === 0) {
-                ctx.addIssue({
-                    code: 'custom',
-                    message: 'Descreva a finalidade da reunião',
-                    path: ['finalidade_outros'],
-                });
-            }
-        }
-    });
-
-export const fileIdSchema = z.object({
-  fileId: z.coerce.number().int().positive(),
-});
+export const createAtaPayloadSchema = ataBaseSchema;
+export const updateAtaPayloadSchema = ataBaseSchema.omit({ terapeuta_id: true });
 
 export type GerarResumoInput = z.infer<typeof gerarResumoSchema>;
 export type createAtaPayload = z.infer<typeof createAtaPayloadSchema>;

@@ -357,7 +357,7 @@ function DetailPanel({
                             <div className="space-y-2 pl-[28px]">
                                 {ata.participantes.map((p) => (
                                     <div 
-                                        key={p.id}
+                                        key={p.id ?? p.localId}
                                         className="py-2.5 border-b border-border/50 last:border-b-0"
                                     >
                                         <p className="text-sm font-medium leading-tight">{p.nome}</p>

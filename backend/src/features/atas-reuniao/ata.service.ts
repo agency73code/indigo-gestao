@@ -268,7 +268,7 @@ export async function create(input: CreateAtaServiceInput) {
               });
       
               if (!terapeuta) {
-                  throw new AppError('TERAPEUTA_NOT_FOUND', 'Terapeuta não encontrado');
+                  throw new AppError('THERAPIST_NOT_FOUND', 'Terapeuta não encontrado');
               }
       
               const cabecalho_terapeuta_id = terapeuta.id;
@@ -276,7 +276,7 @@ export async function create(input: CreateAtaServiceInput) {
               const registro_principal = terapeuta.registro_profissional[0];
       
               if (cabecalho_terapeuta_nome.trim().length === 0) {
-                  throw new AppError('TERAPEUTA_INVALID', 'Terapeuta sem nome válido');
+                  throw new AppError('THERAPIST_INVALID', 'Terapeuta sem nome válido');
               }
       
               // cria ata + filhos simples
@@ -416,70 +416,44 @@ export async function finalizeAtaById(id: number, userId: string) {
 export async function update(input: UpdateAtaServiceInput) {
     const { id, userId, payload, anexos } = input;
 
-    const existing = await prisma.ata_reuniao.findFirst({
-        where: { id, terapeuta_id: userId },
-        select: {
-            id: true,
-            data: true,
-            horario_inicio: true,
-            horario_fim: true,
-        },
-    });
+    const duracao_minutos = computeDurationMinutes(payload.horario_inicio, payload.horario_fim);
+    const horas_faturadas =
+        duracao_minutos !== null
+            ? new Prisma.Decimal(calcularHorasFaturadasPorReuniao(duracao_minutos))
+            : null;
 
-    if (!existing) return null;
+    await prisma.$transaction(async (tx) => {
+        const existing = await tx.ata_reuniao.findFirst({
+            where: { id, terapeuta_id: userId },
+            select: {
+                id: true,
+                data: true,
+                horario_inicio: true,
+                horario_fim: true,
+            },
+        });
 
-    const dataToSave: Prisma.ata_reuniaoUncheckedUpdateInput = {};
+        if (!existing) throw new AppError('ATA_NOT_FOUND', 'Ata não encontrada');
 
-    if (payload.data !== undefined) {
-        dataToSave.data = toDateOnlyLocal(payload.data);
-    }
+        const updated = await tx.ata_reuniao.update({
+            where: { id, terapeuta_id: userId },
+            data: {
+                cliente_id: payload.cliente_id,
+                data: payload.data,
+                horario_inicio: payload.horario_inicio,
+                horario_fim: payload.horario_fim,
+                finalidade: payload.finalidade,
+                finalidade_outros: payload.finalidade_outros,
+                modalidade: payload.modalidade,
+                conteudo: payload.conteudo,
+                status: payload.status,
+                duracao_minutos,
+                horas_faturadas,
+            }
+        });
 
-    const horarioInicio = 
-        payload.horario_inicio !== undefined ? payload.horario_inicio : existing.horario_inicio;
-    const horarioFim = payload.horario_fim !== undefined ? payload.horario_fim : existing.horario_fim;
-
-    if (payload.horario_inicio !== undefined) {
-        dataToSave.horario_inicio = payload.horario_inicio;
-    }
-
-    if (payload.horario_fim !== undefined) {
-        dataToSave.horario_fim = payload.horario_fim;
-    }
-
-    if (payload.horario_inicio !== undefined || payload.horario_fim !== undefined) {
-        const duracao = computeDurationMinutes(horarioInicio, horarioFim);
-        dataToSave.duracao_minutos = duracao ?? null;
-        dataToSave.horas_faturadas =
-            duracao !== null
-                ? new Prisma.Decimal(calcularHorasFaturadasPorReuniao(duracao))
-                : null;
-    }
-
-    if (payload.finalidade !== undefined) {
-        dataToSave.finalidade = payload.finalidade;
-        dataToSave.finalidade_outros =
-            payload.finalidade === ata_finalidade_reuniao.outros
-                ? payload.finalidade_outros ?? null
-                : null;
-    } else if (payload.finalidade_outros !== undefined) {
-        dataToSave.finalidade_outros = payload.finalidade_outros ?? null;
-    }
-
-    if (payload.modalidade !== undefined) {
-        dataToSave.modalidade = payload.modalidade;
-    }
-
-    if (payload.conteudo !== undefined) {
-        dataToSave.conteudo = payload.conteudo;
-    }
-
-    if (payload.status !== undefined) {
-        dataToSave.status = payload.status;
-    }
-
-    if (payload.cliente_id !== undefined) {
-        dataToSave.cliente_id = payload.cliente_id ?? null;
-    }
+        
+    })
 
     const updated = await prisma.$transaction(async (tx) => {
         if (Object.keys(dataToSave).length > 0) {

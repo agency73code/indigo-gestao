@@ -84,7 +84,8 @@ function mapAtaFromApi(data: any): AtaReuniao {
         participantes: (data.participantes || []).map((p: any) => {
             const arquivoId = p.terapeuta?.arquivos?.[0]?.arquivo_id;
             return {
-                id: String(p.id),
+                id: p.id,
+                localId: p.id ? String(p.id) : crypto.randomUUID(),
                 tipo: p.tipo,
                 nome: p.nome,
                 descricao: p.descricao ?? '',
@@ -156,10 +157,12 @@ function mapCreateAtaToApi(input: CreateAtaInput): Record<string, unknown> {
         conteudo: formData.conteudo,
         status: status || 'rascunho',
         participantes: formData.participantes.map((p) => ({
+            ...(p.id !== undefined ? { id: p.id } : {}),
             tipo: p.tipo,
             nome: p.nome,
             descricao: p.descricao || null,
             terapeuta_id: p.terapeutaId || null,
+            ...(p.removed ? { removed: true } : {}),
         })),
         links: formData.links?.map((l) => ({
             titulo: l.titulo,
@@ -187,10 +190,12 @@ function mapUpdateAtaToApi(input: UpdateAtaInput): Record<string, unknown> {
     if (formData.clienteId !== undefined) payload.cliente_id = formData.clienteId || null;
     if (formData.participantes !== undefined) {
         payload.participantes = formData.participantes.map((p) => ({
+            ...(p.id !== undefined ? { id: p.id } : {}),
             tipo: p.tipo,
             nome: p.nome,
             descricao: p.descricao || null,
             terapeuta_id: p.terapeutaId || null,
+            ...(p.removed ? { removed: true } : {}),
         }));
     }
     if (formData.links !== undefined) {
@@ -294,9 +299,6 @@ export async function createAta(input: CreateAtaInput): Promise<AtaReuniao> {
         fd.append(`billingFiles`, arquivo.file, arquivo.file.name);
         fd.append(`billingFileNames`, arquivo.nome);
     }
-
-    const debug = debugFormData(fd);
-    console.log(debug);
     
     const res = await authFetch(`${atasConfig.apiBase}/atas-reuniao`, {
         method: 'POST',
@@ -322,10 +324,12 @@ export async function updateAta(id: string, input: UpdateAtaInput): Promise<AtaR
     if (input.formData.faturamento !== undefined) {
         fd.append('data', JSON.stringify({
             faturamento: input.formData.faturamento ? {
-                tipoFaturamento: input.formData.faturamento.tipoFaturamento,
-                observacaoFaturamento: input.formData.faturamento.observacaoFaturamento ?? null,
-                temAjudaCusto: input.formData.faturamento.temAjudaCusto,
-                motivoAjudaCusto: input.formData.faturamento.motivoAjudaCusto ?? null,
+                tipoAtendimento: input.formData.faturamento.tipoFaturamento,
+                ajudaCusto: input.formData.faturamento.temAjudaCusto,
+                observacaoFaturamento: input.formData.faturamento.motivoAjudaCusto ?? null,
+                dataSessao: input.formData.data,
+                horarioInicio: input.formData.horarioInicio,
+                horarioFim: input.formData.horarioFim,
             } : null,
         }));
     }
@@ -351,9 +355,12 @@ export async function updateAta(id: string, input: UpdateAtaInput): Promise<AtaR
         if (!validation.valid) {
             throw new Error(validation.error || 'Arquivo de faturamento inválido');
         }
-        fd.append(`billingFiles[${arquivo.id}]`, arquivo.file, arquivo.file.name);
-        fd.append(`billingFileNames[${arquivo.id}]`, arquivo.nome);
+        fd.append(`billingFiles`, arquivo.file, arquivo.file.name);
+        fd.append(`billingFileNames`, arquivo.nome);
     }
+
+    const debug = debugFormData(fd);
+    console.log(debug);
 
     const res = await authFetch(`${atasConfig.apiBase}/atas-reuniao/${id}`, {
         method: 'PATCH',

@@ -4,7 +4,6 @@
 
 import type { ata_finalidade_reuniao } from "@prisma/client";
 import type { createAtaPayload, updateAtaPayload } from "./ata.schema.js";
-import type { ParsedAtaAnexo } from "./utils/ata.anexos.js";
 import type { UploadedFile } from "../file/types/UploadedFile.js";
 import type { CreateBillingPayload } from "../billing/types/CreateBillingPayload.js";
 
@@ -37,7 +36,7 @@ export type UpdateAtaServiceInput = {
     id: number;
     userId: string;
     payload: updateAtaPayload;
-    anexos: ParsedAtaAnexo[];
+    anexos: UploadedFile[];
 }
 
 export interface AtaListFilters {

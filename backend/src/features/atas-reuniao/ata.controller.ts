@@ -1,13 +1,13 @@
 import type { Request, Response, NextFunction } from 'express';
 import { AppError } from '../../errors/AppError.js';
 import { AIServiceError } from '../ai/ai.errors.js';
-import { ataIdSchema, createAtaPayloadSchema, fileIdSchema, gerarResumoSchema, listAtaSchema, listTherapistSchema, updateAtaPayloadSchema } from './ata.schema.js';
+import { ataIdSchema, createAtaPayloadSchema, gerarResumoSchema, listAtaSchema, listTherapistSchema, updateAtaPayloadSchema } from './ata.schema.js';
 import * as AtaService from './ata.service.js';
-import { parseAtaAnexos } from './utils/ata.anexos.js';
 import { getAccessLevel } from '../../utils/getAccessLevel.js';
 import { getFileStreamFromR2 } from '../file/r2/getFileStream.js';
 import { unauthenticated } from '../../errors/unauthenticated.js';
 import { buildBillingInputFromRequest } from '../billing/billing.controller.js';
+import { idParam } from '../../schemas/utils/id.js';
 
 /**
  * POST /atas-reuniao/ai/summary
@@ -149,8 +149,6 @@ export async function create(req: Request, res: Response, next: NextFunction) {
                 return { ...file, nome, size:file.size };
             });
 
-        console.log(uploadedFiles)
-
         const billingInput = buildBillingInputFromRequest(req);
 
         // service
@@ -160,7 +158,7 @@ export async function create(req: Request, res: Response, next: NextFunction) {
             anexos: uploadedFiles,
         });
 
-        return res.status(201).json(created)
+        return res.status(201).json(created);
     } catch(err) {
         next(err);
     }
@@ -168,43 +166,38 @@ export async function create(req: Request, res: Response, next: NextFunction) {
 
 export async function update(req: Request, res: Response, next: NextFunction) {
     try {
-        if (!req.user) {
-            return res.status(401).json({ success: false, message: 'Não autenticado' });
-        }
+        if (!req.user) throw unauthenticated();
 
         const { id: ataId } = ataIdSchema.parse(req.params);
 
-        const raw = req.body?.payload;
-        if (typeof raw !== 'string' || raw.trim().length === 0) {
-            return res.status(400).json({ success: false, message: 'Campo payload é obrigatório' });
-        }
-
-        let parsed: unknown;
-        try {
-            parsed = JSON.parse(raw) as unknown;
-        } catch {
-            return res.status(400).json({ success: false, message: 'Payload inválido (JSON malformado)' })
-        }
-
+        const parsed = JSON.parse(req.body?.payload);
         const payload = updateAtaPayloadSchema.parse(parsed);
 
-        const files = Array.isArray(req.files) ? req.files: [];
-        const anexos = parseAtaAnexos(files, req.body);
+        const uploadedFiles = ((req.files as Express.Multer.File[]) || [])
+            .filter(f => f.fieldname.startsWith("files["))
+            .map((file) => {
+                const id = file.fieldname.slice("files[".length, -1);
 
-        if (Object.keys(payload).length === 0 && anexos.length === 0) {
-            return res.status(400).json({ success: false, message: 'Nenhuma alteração enviada' });
-        }
+                const fileNames = (req.body?.fileNames ?? {}) as Record<string, string>;
+                const nome = fileNames[id] ?? file.originalname ?? null;
 
-        const updated = await AtaService.update({
-            id: ataId,
-            userId: req.user.id,
-            payload,
-            anexos,
-        });
+                return { ...file, nome, size:file.size };
+            });
 
-        if (!updated) {
-            return res.status(404).json({ success: false, message: 'Ata não identificada' });
-        }
+        console.log('------------------ INIT ------------------');
+        console.log(payload);
+        console.log('------------------ END ------------------');
+
+        // const updated = await AtaService.update({
+        //     id: ataId,
+        //     userId: req.user.id,
+        //     payload,
+        //     anexos,
+        // });
+
+        // if (!updated) {
+        //     return res.status(404).json({ success: false, message: 'Ata não identificada' });
+        // }
 
         return res.status(200).json(updated);
     } catch(err) {
@@ -270,7 +263,7 @@ export async function fileDownload(req: Request, res: Response, next: NextFuncti
             throw new AppError('UNAUTHORIZED', 'Não autenticado', 401);
         }
 
-        const { fileId } = fileIdSchema.parse(req.params);
+        const { fileId } = idParam.parse(req.params);
         const anexo = await AtaService.fileDownload(fileId, req.user.id);
 
         if (!anexo) {

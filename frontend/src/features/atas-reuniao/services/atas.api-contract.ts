@@ -64,11 +64,12 @@ export interface ApiAtaReuniao {
 }
 
 export interface ApiParticipante {
-    id?: string;
+    id?: number;
     tipo: string;
     nome: string;
     descricao: string | null;
     terapeuta_id: string | null;
+    removed?: true;
     terapeuta?: {
         nome: string;
         especialidade?: string;

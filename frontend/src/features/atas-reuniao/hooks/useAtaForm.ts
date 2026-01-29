@@ -73,8 +73,8 @@ export interface UseAtaFormReturn {
 
     // Handlers de participantes
     addParticipante: (tipo: keyof typeof TIPO_PARTICIPANTE) => void;
-    updateParticipante: (id: string, updates: Partial<Participante>) => void;
-    removeParticipante: (id: string) => void;
+    updateParticipante: (localId: string, updates: Partial<Participante>) => void;
+    removeParticipante: (localId: string) => void;
     selectTerapeutaParticipante: (participanteId: string, terapeutaId: string) => void;
 
     // Handler de faturamento
@@ -293,7 +293,7 @@ export function useAtaForm({
     const addParticipante = useCallback(
         (tipo: keyof typeof TIPO_PARTICIPANTE) => {
             const novoParticipante: Participante = {
-                id: crypto.randomUUID(),
+                localId: crypto.randomUUID(),
                 tipo: TIPO_PARTICIPANTE[tipo],
                 nome: '',
                 descricao: '',
@@ -307,11 +307,11 @@ export function useAtaForm({
     );
 
     const updateParticipante = useCallback(
-        (id: string, updates: Partial<Participante>) => {
+        (localId: string, updates: Partial<Participante>) => {
             setFormData((prev) => ({
                 ...prev,
                 participantes: prev.participantes.map((p) =>
-                    p.id === id ? { ...p, ...updates } : p
+                    p.localId === localId ? { ...p, ...updates } : p
                 ),
             }));
         },
@@ -319,10 +319,12 @@ export function useAtaForm({
     );
 
     const removeParticipante = useCallback(
-        (id: string) => {
+        (localId: string) => {
             setFormData((prev) => ({
                 ...prev,
-                participantes: prev.participantes.filter((p) => p.id !== id),
+                participantes: prev.participantes.map((p) =>
+                    p.localId === localId ? { ...p, removed: true } : p
+                ),
             }));
         },
         [setFormData]
@@ -362,7 +364,10 @@ export function useAtaForm({
     // ============================================
 
     const validateForm = useCallback((): boolean => {
-        const result = ataFormSchema.safeParse(formData);
+        const result = ataFormSchema.safeParse({
+            ...formData,
+            participantes: formData.participantes.filter((p) => !p.removed),
+        });
 
         if (!result.success) {
             const newErrors: Record<string, string> = {};

@@ -235,7 +235,7 @@ export function AtaForm({ ataId, initialData, existingAnexos = [], onSuccess }: 
         const isClinica = p.tipo === TIPO_PARTICIPANTE.PROFISSIONAL_CLINICA;
 
         return (
-            <div key={p.id} className="flex items-start gap-4 p-4 border rounded-lg bg-card">
+            <div key={p.localId} className="flex items-start gap-4 p-4 border rounded-lg bg-card">
                 <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
                     {isClinica ? (
                         <>
@@ -250,7 +250,7 @@ export function AtaForm({ ataId, initialData, existingAnexos = [], onSuccess }: 
                                         searchValue: `${t.nome} ${t.especialidade ?? ''}`,
                                     }))}
                                     value={p.terapeutaId}
-                                    onValueChange={(id) => selectTerapeutaParticipante(p.id, id)}
+                                    onValueChange={(id) => selectTerapeutaParticipante(p.localId, id)}
                                     placeholder="Selecione o profissional..."
                                     searchPlaceholder="Buscar profissional..."
                                     emptyMessage="Nenhum profissional encontrado"
@@ -268,13 +268,13 @@ export function AtaForm({ ataId, initialData, existingAnexos = [], onSuccess }: 
                             <InputField
                                 label="Nome*"
                                 value={p.nome}
-                                onChange={(e) => updateParticipante(p.id, { nome: e.target.value })}
+                                onChange={(e) => updateParticipante(p.localId, { nome: e.target.value })}
                                 placeholder={isFamilia ? 'Ex: Maria Silva' : 'Ex: Dr. João Santos'}
                             />
                             <InputField
                                 label={isFamilia ? 'Relação com o Cliente' : 'Área de Atuação'}
                                 value={p.descricao ?? ''}
-                                onChange={(e) => updateParticipante(p.id, { descricao: e.target.value })}
+                                onChange={(e) => updateParticipante(p.localId, { descricao: e.target.value })}
                                 placeholder={isFamilia ? 'Ex: Mãe, Pai, Avó' : 'Ex: Pediatra, Neurologista'}
                             />
                         </>
@@ -284,7 +284,7 @@ export function AtaForm({ ataId, initialData, existingAnexos = [], onSuccess }: 
                     variant="ghost"
                     size="icon"
                     className="text-muted-foreground hover:text-destructive shrink-0 mt-4"
-                    onClick={() => removeParticipante(p.id)}
+                    onClick={() => removeParticipante(p.localId)}
                 >
                     <Trash2 className="h-4 w-4" />
                 </Button>
@@ -293,9 +293,10 @@ export function AtaForm({ ataId, initialData, existingAnexos = [], onSuccess }: 
     };
 
     const renderParticipantes = () => {
-        const familiaParticipantes = formData.participantes.filter((p) => p.tipo === TIPO_PARTICIPANTE.FAMILIA);
-        const externoParticipantes = formData.participantes.filter((p) => p.tipo === TIPO_PARTICIPANTE.PROFISSIONAL_EXTERNO);
-        const clinicaParticipantes = formData.participantes.filter((p) => p.tipo === TIPO_PARTICIPANTE.PROFISSIONAL_CLINICA);
+        const participantesVisiveis = formData.participantes.filter((p) => !p.removed);
+        const familiaParticipantes = participantesVisiveis.filter((p) => p.tipo === TIPO_PARTICIPANTE.FAMILIA);
+        const externoParticipantes = participantesVisiveis.filter((p) => p.tipo === TIPO_PARTICIPANTE.PROFISSIONAL_EXTERNO);
+        const clinicaParticipantes = participantesVisiveis.filter((p) => p.tipo === TIPO_PARTICIPANTE.PROFISSIONAL_CLINICA);
 
         return (
             <Card>
