@@ -77,7 +77,8 @@ export function useLancamentoForm(options: UseLancamentoFormOptions = {}): UseLa
 
     // Configurar formulário com Zod
     const form = useForm<LancamentoFormSchema>({
-        resolver: zodResolver(lancamentoFormSchema),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        resolver: zodResolver(lancamentoFormSchema as any),
         defaultValues: {
             clienteId: lancamento?.clienteId || '',
             data: lancamento?.data || hoje,

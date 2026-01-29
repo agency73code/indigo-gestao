@@ -179,6 +179,13 @@ export interface ItemFaturamento {
     /** Motivo da rejeição (preenchido quando status = REJEITADO) */
     motivoRejeicao?: string;
     
+    // ============================================
+    // DADOS DE FATURAMENTO DETALHADOS
+    // ============================================
+    
+    /** Dados completos de faturamento (para sessões) */
+    faturamento?: import('@/features/programas/core/types/billing').DadosFaturamentoSessao;
+    
     // Timestamps
     criadoEm: string;
 }

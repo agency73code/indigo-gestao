@@ -208,39 +208,41 @@ export function SessionBillingData({
         : null;
 
     return (
-        <div className="bg-card border rounded-lg overflow-hidden">
-            {/* Header colapsável */}
-            <button
-                type="button"
-                className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
-                onClick={() => setExpanded(!expanded)}
-            >
-                <div className="flex items-center gap-3">
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                        <DollarSign className="h-5 w-5 text-primary" />
+        <div className={title ? "bg-card border rounded-lg overflow-hidden" : ""}>
+            {/* Header colapsável - só mostra se houver título */}
+            {title && (
+                <button
+                    type="button"
+                    className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+                    onClick={() => setExpanded(!expanded)}
+                >
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-primary/10 rounded-lg">
+                            <DollarSign className="h-5 w-5 text-primary" />
+                        </div>
+                        <div className="text-left">
+                            <h3 className="font-medium">{title}</h3>
+                            <p className="text-sm text-muted-foreground">
+                                {value.tipoAtendimento === TIPO_ATENDIMENTO.HOMECARE 
+                                    ? 'Homecare' 
+                                    : 'Consultório'}
+                                {duracao && duracao > 0 && (
+                                    <span className="ml-2">• {formatarDuracao(duracao)}</span>
+                                )}
+                            </p>
+                        </div>
                     </div>
-                    <div className="text-left">
-                        <h3 className="font-medium">{title}</h3>
-                        <p className="text-sm text-muted-foreground">
-                            {value.tipoAtendimento === TIPO_ATENDIMENTO.HOMECARE 
-                                ? 'Homecare' 
-                                : 'Consultório'}
-                            {duracao && duracao > 0 && (
-                                <span className="ml-2">• {formatarDuracao(duracao)}</span>
-                            )}
-                        </p>
-                    </div>
-                </div>
-                {expanded ? (
-                    <ChevronUp className="h-5 w-5 text-muted-foreground" />
-                ) : (
-                    <ChevronDown className="h-5 w-5 text-muted-foreground" />
-                )}
-            </button>
+                    {expanded ? (
+                        <ChevronUp className="h-5 w-5 text-muted-foreground" />
+                    ) : (
+                        <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                    )}
+                </button>
+            )}
 
             {/* Conteúdo */}
-            {expanded && (
-                <div className="p-4 pt-0 space-y-6">
+            {(expanded || !title) && (
+                <div className={title ? "p-4 pt-0 space-y-6" : "space-y-6"}>
                     {/* Data e Horários */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <DateFieldWithLabel
@@ -271,13 +273,6 @@ export function SessionBillingData({
                             disabled={disabled}
                         />
                     </div>
-
-                    {/* Duração calculada */}
-                    {duracao !== null && duracao > 0 && (
-                        <div className="text-sm text-muted-foreground bg-muted/50 px-3 py-2 rounded-md">
-                            Duração da sessão: <span className="font-medium text-foreground">{formatarDuracao(duracao)}</span>
-                        </div>
-                    )}
 
                     {/* Tipo de Atendimento */}
                     <div className="space-y-2">

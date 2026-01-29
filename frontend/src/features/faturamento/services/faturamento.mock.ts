@@ -277,6 +277,24 @@ const MOCK_LANCAMENTOS: ItemFaturamento[] = [
         area: 'Terapia Ocupacional',
         programaNome: 'Programa Motor',
         criadoEm: '2026-01-12T15:00:00Z',
+        faturamento: {
+            dataSessao: '2026-01-12',
+            horarioInicio: '14:00',
+            horarioFim: '15:00',
+            tipoAtendimento: 'consultorio' as const,
+            ajudaCusto: null,
+            observacaoFaturamento: 'Sessão de Terapia Ocupacional focada em atividades de coordenação motora fina. Paciente apresentou boa participação durante toda a sessão.',
+            arquivosFaturamento: [
+                {
+                    id: 'arq-3',
+                    nome: 'foto_atividade_1.jpg',
+                    tipo: 'image/jpeg',
+                    tamanho: 512400,
+                    caminho: '/uploads/faturamento/foto_atividade_1.jpg',
+                    url: '/api/faturamentos/arquivos/arq-3/download',
+                },
+            ],
+        },
     },
     {
         id: 'ata_rej_1',
@@ -297,6 +315,32 @@ const MOCK_LANCAMENTOS: ItemFaturamento[] = [
         motivoRejeicao: 'Ata de reunião sem assinatura do responsável. Solicitar nova documentação.',
         finalidade: 'reuniao_escola',
         criadoEm: '2026-01-10T17:00:00Z',
+        faturamento: {
+            dataSessao: '2026-01-10',
+            horarioInicio: '16:00',
+            horarioFim: '17:00',
+            tipoAtendimento: 'consultorio' as const,
+            ajudaCusto: null,
+            observacaoFaturamento: 'Reunião com a escola para discutir adaptações curriculares. Participaram a coordenadora pedagógica, professora da sala e psicopedagoga.',
+            arquivosFaturamento: [
+                {
+                    id: 'arq-1',
+                    nome: 'comprovante_reuniao_escola.pdf',
+                    tipo: 'application/pdf',
+                    tamanho: 245680,
+                    caminho: '/uploads/faturamento/comprovante_reuniao_escola.pdf',
+                    url: '/api/faturamentos/arquivos/arq-1/download',
+                },
+                {
+                    id: 'arq-2',
+                    nome: 'lista_presenca.pdf',
+                    tipo: 'application/pdf',
+                    tamanho: 128340,
+                    caminho: '/uploads/faturamento/lista_presenca.pdf',
+                    url: '/api/faturamentos/arquivos/arq-2/download',
+                },
+            ],
+        },
     },
 ];
 

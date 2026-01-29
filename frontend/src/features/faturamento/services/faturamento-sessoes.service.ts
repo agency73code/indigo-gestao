@@ -5,11 +5,13 @@
  * 
  * Serviço de faturamento que consulta dados de sessões e atas.
  * 
- * IMPORTANTE: Quando o backend estiver pronto, altere USE_MOCK para false
- * e implemente as chamadas reais à API.
+ * IMPORTANTE: O mock é controlado pela variável de ambiente VITE_USE_MOCK_FATURAMENTO
+ * - VITE_USE_MOCK_FATURAMENTO=true → usa mock
+ * - VITE_USE_MOCK_FATURAMENTO=false ou não definido → usa API real
  * ============================================================================
  */
 
+import { authFetch } from '@/lib/http';
 import type {
     ItemFaturamento,
     FaturamentoListResponse,
@@ -20,10 +22,8 @@ import type {
     TerapeutaOption,
 } from '../types/faturamento.types';
 
+import { faturamentoConfig } from './faturamento.config';
 import * as mocks from './faturamento.mock';
-
-// Flag para usar mock (altere para false quando o backend estiver pronto)
-const USE_MOCK = true;
 
 // ============================================
 // LISTAGEM E BUSCA
@@ -35,30 +35,42 @@ const USE_MOCK = true;
 export async function listFaturamento(
     filters: FaturamentoListFilters = {}
 ): Promise<FaturamentoListResponse> {
-    if (USE_MOCK) {
+    if (faturamentoConfig.useMock) {
         return mocks.mockListFaturamento(filters);
     }
 
-    // TODO: Implementar chamada real à API quando o backend estiver pronto
-    // const params = new URLSearchParams();
-    // if (filters.q) params.append('q', filters.q);
-    // ...etc
-    // const res = await authFetch(`/api/faturamento?${params.toString()}`);
-    // return res.json();
-    
-    return mocks.mockListFaturamento(filters);
+    // API real
+    const params = new URLSearchParams();
+    if (filters.q) params.append('q', filters.q);
+    if (filters.terapeutaId) params.append('terapeutaId', filters.terapeutaId);
+    if (filters.clienteId) params.append('clienteId', filters.clienteId);
+    if (filters.status && filters.status !== 'all') params.append('status', filters.status);
+    if (filters.dataInicio) params.append('dataInicio', filters.dataInicio);
+    if (filters.dataFim) params.append('dataFim', filters.dataFim);
+    if (filters.page) params.append('page', String(filters.page));
+    if (filters.pageSize) params.append('pageSize', String(filters.pageSize));
+
+    const res = await authFetch(`/api/faturamento/lancamentos?${params.toString()}`);
+    if (!res.ok) {
+        throw new Error('Erro ao listar faturamento');
+    }
+    return res.json();
 }
 
 /**
  * Busca lançamento por ID
  */
 export async function getFaturamentoById(id: string): Promise<ItemFaturamento | null> {
-    if (USE_MOCK) {
+    if (faturamentoConfig.useMock) {
         return mocks.mockGetFaturamentoById(id);
     }
 
-    // TODO: Implementar chamada real à API
-    return mocks.mockGetFaturamentoById(id);
+    const res = await authFetch(`/api/faturamento/lancamentos/${id}`);
+    if (!res.ok) {
+        if (res.status === 404) return null;
+        throw new Error('Erro ao buscar lançamento');
+    }
+    return res.json();
 }
 
 // ============================================
@@ -72,12 +84,20 @@ export async function getResumoFaturamento(
     terapeutaId?: string,
     filters?: FaturamentoListFilters
 ): Promise<ResumoFaturamento> {
-    if (USE_MOCK) {
+    if (faturamentoConfig.useMock) {
         return mocks.mockGetResumoFaturamento(terapeutaId, filters);
     }
 
-    // TODO: Implementar chamada real à API
-    return mocks.mockGetResumoFaturamento(terapeutaId, filters);
+    const params = new URLSearchParams();
+    if (terapeutaId) params.append('terapeutaId', terapeutaId);
+    if (filters?.dataInicio) params.append('dataInicio', filters.dataInicio);
+    if (filters?.dataFim) params.append('dataFim', filters.dataFim);
+
+    const res = await authFetch(`/api/faturamento/resumo?${params.toString()}`);
+    if (!res.ok) {
+        throw new Error('Erro ao buscar resumo de faturamento');
+    }
+    return res.json();
 }
 
 /**
@@ -86,12 +106,19 @@ export async function getResumoFaturamento(
 export async function getResumoGerente(
     filters?: FaturamentoListFilters
 ): Promise<ResumoGerente> {
-    if (USE_MOCK) {
+    if (faturamentoConfig.useMock) {
         return mocks.mockGetResumoGerente(filters);
     }
 
-    // TODO: Implementar chamada real à API
-    return mocks.mockGetResumoGerente(filters);
+    const params = new URLSearchParams();
+    if (filters?.dataInicio) params.append('dataInicio', filters.dataInicio);
+    if (filters?.dataFim) params.append('dataFim', filters.dataFim);
+
+    const res = await authFetch(`/api/faturamento/resumo-gerente?${params.toString()}`);
+    if (!res.ok) {
+        throw new Error('Erro ao buscar resumo gerente');
+    }
+    return res.json();
 }
 
 // ============================================
@@ -102,24 +129,33 @@ export async function getResumoGerente(
  * Lista clientes disponíveis para seleção
  */
 export async function listClientes(q?: string): Promise<ClienteOption[]> {
-    if (USE_MOCK) {
+    if (faturamentoConfig.useMock) {
         return mocks.mockListClientes(q);
     }
 
-    // TODO: Implementar chamada real à API
-    return mocks.mockListClientes(q);
+    const params = new URLSearchParams();
+    if (q) params.append('q', q);
+
+    const res = await authFetch(`/api/clientes?${params.toString()}`);
+    if (!res.ok) {
+        throw new Error('Erro ao listar clientes');
+    }
+    return res.json();
 }
 
 /**
  * Busca dados do terapeuta logado
  */
 export async function getTerapeutaLogado(): Promise<TerapeutaOption> {
-    if (USE_MOCK) {
+    if (faturamentoConfig.useMock) {
         return mocks.mockGetTerapeutaLogado();
     }
 
-    // TODO: Implementar chamada real à API
-    return mocks.mockGetTerapeutaLogado();
+    const res = await authFetch(`/api/terapeutas/me`);
+    if (!res.ok) {
+        throw new Error('Erro ao buscar terapeuta logado');
+    }
+    return res.json();
 }
 
 // ============================================
@@ -130,24 +166,36 @@ export async function getTerapeutaLogado(): Promise<TerapeutaOption> {
  * Aprova lançamento
  */
 export async function aprovarLancamento(id: string): Promise<ItemFaturamento | null> {
-    if (USE_MOCK) {
+    if (faturamentoConfig.useMock) {
         return mocks.mockAprovarLancamento(id);
     }
 
-    // TODO: Implementar chamada real à API
-    return mocks.mockAprovarLancamento(id);
+    const res = await authFetch(`/api/faturamento/lancamentos/${id}/aprovar`, {
+        method: 'POST',
+    });
+    if (!res.ok) {
+        throw new Error('Erro ao aprovar lançamento');
+    }
+    return res.json();
 }
 
 /**
  * Rejeita lançamento
  */
 export async function rejeitarLancamento(id: string, motivo: string): Promise<ItemFaturamento | null> {
-    if (USE_MOCK) {
+    if (faturamentoConfig.useMock) {
         return mocks.mockRejeitarLancamento(id, motivo);
     }
 
-    // TODO: Implementar chamada real à API
-    return mocks.mockRejeitarLancamento(id, motivo);
+    const res = await authFetch(`/api/faturamento/lancamentos/${id}/rejeitar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ motivo }),
+    });
+    if (!res.ok) {
+        throw new Error('Erro ao rejeitar lançamento');
+    }
+    return res.json();
 }
 
 /**
@@ -172,18 +220,19 @@ export async function aprovarEmLote(ids: string[]): Promise<{ sucesso: number; e
 /**
  * Aprova múltiplos lançamentos (usa aprovarEmLote internamente)
  */
-export async function aprovarLancamentos(_ids: string[]): Promise<void> {
-    if (USE_MOCK) {
+export async function aprovarLancamentos(ids: string[]): Promise<void> {
+    if (faturamentoConfig.useMock) {
         // Simula delay de processamento
         await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 500));
-        // Mock: atualiza status localmente (em produção seria uma chamada PUT/PATCH)
         return;
     }
 
-    // TODO: Implementar chamada real à API
-    // const res = await authFetch('/api/faturamento/aprovar-lote', {
-    //     method: 'POST',
-    //     body: JSON.stringify({ ids }),
-    // });
-    // if (!res.ok) throw new Error('Erro ao aprovar lançamentos');
+    const res = await authFetch('/api/faturamento/aprovar-lote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids }),
+    });
+    if (!res.ok) {
+        throw new Error('Erro ao aprovar lançamentos');
+    }
 }

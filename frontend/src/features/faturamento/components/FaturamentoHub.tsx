@@ -12,7 +12,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import {
     ChevronLeft,
     ChevronRight,
@@ -56,6 +56,9 @@ import {
     getTerapeutaLogado,
 } from '../services/faturamento-sessoes.service';
 import { FaturamentoTable, type FaturamentoColumnFilters, type FaturamentoColumnFilterOptions } from './FaturamentoTable';
+import { BillingDrawer } from './BillingDrawer';
+import { useBillingCorrection } from '../hooks/useBillingCorrection';
+import type { BillingLancamento } from '../types/billingCorrection';
 import type { FilterOption } from '@/components/ui/column-header-filter';
 
 // ============================================
@@ -231,8 +234,17 @@ function getInitials(nome: string): string {
 
 export function FaturamentoHub({ mode }: FaturamentoHubProps) {
     const [searchParams, setSearchParams] = useSearchParams();
-    const navigate = useNavigate();
-
+    
+    // Hook de correção de faturamento
+    const {
+        isOpen: isDrawerOpen,
+        lancamento: lancamentoCorrection,
+        isSaving: isSavingCorrection,
+        openCorrection,
+        closeCorrection,
+        saveCorrection,
+        getBillingData,
+    } = useBillingCorrection();
     // Estados
     const [lancamentos, setLancamentos] = useState<ItemFaturamento[]>([]);
     const [resumo, setResumo] = useState<ResumoFaturamento | null>(null);
@@ -517,27 +529,28 @@ export function FaturamentoHub({ mode }: FaturamentoHubProps) {
         setSearchParams(newParams);
     }, [searchParams, setSearchParams]);
 
-    const handleViewDetails = useCallback((item: ItemFaturamento) => {
-        // Navegar para a origem (sessão ou ata)
-        if (item.origem === ORIGEM_LANCAMENTO.SESSAO) {
-            // TODO: Navegar para página de detalhe da sessão
-            toast.info(`Sessão ID: ${item.origemId}`);
-        } else {
-            // Navegar para página de detalhe da ata
-            navigate(`/app/atas-reuniao/${item.origemId}`);
-        }
-    }, [navigate]);
+    const handleViewBilling = useCallback((item: ItemFaturamento) => {
+        // Converter ItemFaturamento para BillingLancamento e abrir drawer
+        const lancamento: BillingLancamento = {
+            id: item.id,
+            clienteId: item.clienteId || '',
+            clienteNome: item.clienteNome || 'Cliente',
+            terapeutaId: item.terapeutaId || '',
+            tipo: item.tipoAtividade === 'homecare' ? 'homecare' : item.tipoAtividade === 'consultorio' ? 'consultorio' : 'de Reuniões',
+            data: item.data,
+            horario: `${item.horarioInicio} - ${item.horarioFim}`,
+            duracao: `${Math.floor(item.duracaoMinutos / 60)}h ${item.duracaoMinutos % 60}min`,
+            valor: item.valorTotal || 0,
+            status: item.status as 'aprovado' | 'rejeitado' | 'pendente' | 'aguardando',
+            motivoRejeicao: item.motivoRejeicao,
+            sessaoId: item.origem === ORIGEM_LANCAMENTO.SESSAO ? String(item.origemId) : null,
+            faturamento: item.faturamento,
+        };
+        
+        openCorrection(lancamento);
+    }, [openCorrection]);
 
-    const handleCorrectAndResend = useCallback((item: ItemFaturamento) => {
-        // Navegar para a origem para correção
-        if (item.origem === ORIGEM_LANCAMENTO.SESSAO) {
-            // TODO: Navegar para página de edição da sessão
-            toast.info(`Corrigir Sessão ID: ${item.origemId}`);
-        } else {
-            // Navegar para página de edição da ata
-            navigate(`/app/atas-reuniao/${item.origemId}/editar`);
-        }
-    }, [navigate]);
+
 
     // ============================================
     // RENDERIZAÇÃO
@@ -732,8 +745,8 @@ export function FaturamentoHub({ mode }: FaturamentoHubProps) {
                                 columnFilters={columnFilters}
                                 filterOptions={columnFilterOptions}
                                 onColumnFilterChange={handleColumnFilterChange}
-                                onViewDetails={handleViewDetails}
-                                onCorrectAndResend={handleCorrectAndResend}
+                                onViewDetails={handleViewBilling}
+                                onCorrectAndResend={handleViewBilling}
                             />
                         )}
                     </div>
@@ -808,6 +821,20 @@ export function FaturamentoHub({ mode }: FaturamentoHubProps) {
                     </div>
                 )}
             </div>
+            
+            {/* Drawer de Visualização/Correção de Faturamento */}
+            <BillingDrawer
+                isOpen={isDrawerOpen}
+                onClose={closeCorrection}
+                lancamento={lancamentoCorrection}
+                initialBillingData={lancamentoCorrection ? getBillingData(lancamentoCorrection) : null}
+                onSave={async (lancamentoId, dadosCorrigidos, comentario) => {
+                    await saveCorrection(lancamentoId, dadosCorrigidos, comentario);
+                    // Recarregar dados após correção
+                    loadData();
+                }}
+                isSaving={isSavingCorrection}
+            />
         </div>
     );
 }

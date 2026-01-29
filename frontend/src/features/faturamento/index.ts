@@ -34,6 +34,8 @@ export {
 // Components
 export {
     FaturamentoHub,
+    CorrectBillingDrawer,
+    BillingDrawer,
 } from './components';
 
 // Hooks
@@ -41,6 +43,7 @@ export {
     useLancamentos,
     useLancamentoForm,
     useResumoHoras,
+    useBillingCorrection,
 } from './hooks';
 
 // Services - Novos

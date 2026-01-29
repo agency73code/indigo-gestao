@@ -410,6 +410,8 @@ export function LancamentosHub({ mode }: LancamentosHubProps) {
         } catch (error) {
             console.error('Erro ao carregar lançamentos:', error);
             toast.error('Erro ao carregar lançamentos');
+            // Garante que mostra estado vazio ao invés de ficar no loading
+            setLancamentos([]);
         } finally {
             setLoading(false);
         }
@@ -420,7 +422,12 @@ export function LancamentosHub({ mode }: LancamentosHubProps) {
         if (mode === 'terapeuta') {
             getTerapeutaLogado()
                 .then(terapeuta => setTerapeutaId(terapeuta.id))
-                .catch(console.error);
+                .catch((error) => {
+                    console.error('Erro ao buscar terapeuta logado:', error);
+                    toast.error('Erro ao carregar dados do terapeuta');
+                    // Define um ID placeholder para permitir que loadData execute e mostre o estado vazio
+                    setTerapeutaId('_error_');
+                });
         }
     }, [mode]);
 

@@ -6,6 +6,9 @@
 export { FaturamentoHub } from './FaturamentoHub';
 export { FaturamentoGerenteHub } from './FaturamentoGerenteHub';
 export { FaturamentoTable, type FaturamentoColumnFilters, type FaturamentoColumnFilterOptions } from './FaturamentoTable';
+export { CorrectBillingDrawer } from './CorrectBillingDrawer';
+export { BillingDrawer } from './BillingDrawer';
+export { BillingInfoView } from './BillingInfoView';
 
 // Componentes antigos (deprecados - serão removidos)
 export { LancamentosTable, default as LancamentosTableDefault } from './LancamentosTable';

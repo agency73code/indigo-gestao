@@ -6,7 +6,7 @@
  */
 
 import { memo } from 'react';
-import { MoreHorizontal, FileText, RefreshCw, Eye, AlertCircle } from 'lucide-react';
+import { MoreHorizontal, FileText, Eye, AlertCircle } from 'lucide-react';
 import { Button } from '@/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -145,7 +145,7 @@ export const FaturamentoTable = memo(function FaturamentoTable({
     data,
     loading = false,
     onViewDetails,
-    onCorrectAndResend,
+    // onCorrectAndResend removido - correção feita via BillingDrawer
     columnFilters,
     filterOptions,
     onColumnFilterChange,
@@ -317,7 +317,7 @@ export const FaturamentoTable = memo(function FaturamentoTable({
                                                         className="cursor-pointer"
                                                     >
                                                         <Eye className="mr-2 h-4 w-4" />
-                                                        <span>Ver {item.origem === ORIGEM_LANCAMENTO.SESSAO ? 'sessão' : 'ata'}</span>
+                                                        <span>Ver faturamento</span>
                                                     </DropdownMenuItem>
                                                     
                                                     {item.status === STATUS_FATURAMENTO.REJEITADO && (
@@ -332,14 +332,6 @@ export const FaturamentoTable = memo(function FaturamentoTable({
                                                                     <span>Ver motivo da rejeição</span>
                                                                 </DropdownMenuItem>
                                                             </PopoverTrigger>
-                                                            <DropdownMenuSeparator />
-                                                            <DropdownMenuItem
-                                                                onClick={() => onCorrectAndResend?.(item)}
-                                                                className="cursor-pointer text-primary focus:text-primary"
-                                                            >
-                                                                <RefreshCw className="mr-2 h-4 w-4" />
-                                                                <span>Corrigir e reenviar</span>
-                                                            </DropdownMenuItem>
                                                         </>
                                                     )}
                                                 </DropdownMenuContent>
@@ -466,15 +458,6 @@ export const FaturamentoTable = memo(function FaturamentoTable({
                                             </div>
                                         </PopoverContent>
                                     </Popover>
-                                    <Button
-                                        variant="default"
-                                        size="sm"
-                                        onClick={() => onCorrectAndResend?.(item)}
-                                        className="w-full gap-2"
-                                    >
-                                        <RefreshCw className="w-3.5 h-3.5" />
-                                        Corrigir e reenviar
-                                    </Button>
                                 </>
                             )}
                         </div>

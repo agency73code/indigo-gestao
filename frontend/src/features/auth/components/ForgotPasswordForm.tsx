@@ -30,7 +30,8 @@ export default function ForgotPasswordForm({
         handleSubmit,
         formState: { errors },
     } = useForm<ForgotPasswordData>({
-        resolver: zodResolver(forgotPasswordSchema),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        resolver: zodResolver(forgotPasswordSchema as any),
     });
 
     return (
