@@ -25,7 +25,7 @@ export type TherapistForm = {
     celular: string;
     cpf: string;
     dataNascimento: Date;
-    possuiVeiculo: string;
+    possuiVeiculo: string | boolean;
     placaVeiculo: string | null;
     modeloVeiculo: string | null;
     banco: string;
@@ -33,15 +33,21 @@ export type TherapistForm = {
     conta: string;
     chavePix: string;
     pixTipo: 'email' | 'telefone' | 'cpf' | 'cnpj' | 'aleatoria';
-    valorHoraAcordado: string;
-    professorUnindigo: string;
+    valorHoraAcordado?: string;
+    valorSessaoConsultorio: string | number;
+    valorSessaoHomecare: string | number;
+    valorHoraDesenvolvimentoMateriais: string | number;
+    valorHoraSupervisaoRecebida: string | number;
+    valorHoraSupervisaoDada: string | number;
+    valorHoraReuniao: string | number;
+    professorUnindigo: string | boolean;
     disciplinaUniindigo?: string | null | undefined;
 
     endereco: {
         cep: string;
         rua: string;
         numero: string;
-        complemento: string;
+        complemento: string | null;
         bairro: string;
         cidade: string;
         estado: string;
@@ -52,7 +58,7 @@ export type TherapistForm = {
     formacao?: {
         graduacao: string;
         instituicaoGraduacao: string;
-        anoFormatura: string;
+        anoFormatura: string | number;
         posGraduacoes: {
             tipo: string;
             curso: string;

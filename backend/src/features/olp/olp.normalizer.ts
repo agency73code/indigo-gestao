@@ -40,51 +40,80 @@ export function mapOcpDetail(dto: OcpTypes.OcpDetailDTO) {
 }
 
 export function mapSessionList(dto: OcpTypes.SessionDTO[]): OcpTypes.Session[] {
-    return dto.map((s) => ({
-        id: s.id.toString(),
-        pacienteId: s.cliente_id,
-        terapeutaId: s.terapeuta_id,
-        data: s.data_criacao.toISOString(),
-        programId: s.ocp?.id ?? 0,
-        programa: s.ocp?.nome_programa ?? '',
-        objetivo: s.ocp?.objetivo_programa ?? '',
-        prazoInicio: s.ocp?.criado_em?.toISOString() ?? null,
-        prazoFim: null,
-        observacoes: s.observacoes_sessao ?? null,
-        area: s.area,
-        files: s.arquivos.map((file) => {
-            const fileName = file.nome;
-            const mimeType = mimeLookup(fileName) || 'application/octet-stream';
+    return dto.map((s) => {
+        const session: OcpTypes.Session = {
+            id: s.id.toString(),
+            pacienteId: s.cliente_id,
+            terapeutaId: s.terapeuta_id,
+            data: s.data_criacao.toISOString(),
+            programId: s.ocp?.id ?? 0,
+            programa: s.ocp?.nome_programa ?? '',
+            objetivo: s.ocp?.objetivo_programa ?? '',
+            prazoInicio: s.ocp?.criado_em?.toISOString() ?? null,
+            prazoFim: null,
+            observacoes: s.observacoes_sessao ?? null,
+            area: s.area,
+            files: s.arquivos.map((file) => {
+                const fileName = file.nome;
+                const mimeType = mimeLookup(fileName) || 'application/octet-stream';
 
-            return {
-                id: file.id.toString(),
-                name: file.nome,
-                fileName,
-                type: typeof mimeType === 'string' ? mimeType : 'application/octet-stream',
-                size: file.tamanho,
-                url: file.caminho,
+                return {
+                    id: file.id.toString(),
+                    name: file.nome,
+                    fileName,
+                    type: typeof mimeType === 'string' ? mimeType : 'application/octet-stream',
+                    size: file.tamanho,
+                    url: file.caminho,
+                };
+            }),
+            registros: s.trials.map((t) => ({
+                tentativa: t.ordem,
+                resultado: translateResult(t.resultado),
+                stimulusId: t.estimulosOcp?.id.toString(),
+                stimulusLabel: t.estimulosOcp?.nome ?? undefined,
+                durationMinutes: t.duracao_minutos ?? null,
+
+                // Fisioterapia
+                usedLoad: t.utilizou_carga ?? false,
+                loadValue: t.valor_carga ?? null,
+                hadDiscomfort: t.teve_desconforto ?? false,
+                discomfortDescription: t.descricao_desconforto ?? null,
+                hadCompensation: t.teve_compensacao ?? false,
+                compensationDescription: t.descricao_compensacao ?? null,
+
+                // Musicoterapia
+                participacao: t.participacao ?? null,
+                suporte: t.suporte ?? null,
+            })),
+        };
+
+        // Adicionar dados de faturamento se existirem
+        if (s.faturamentos?.[0]) {
+            const faturamento = s.faturamentos[0];
+            session.faturamento = {
+                dataSessao: faturamento.inicio_em.toISOString().split('T')[0] || '',
+                horarioInicio: faturamento.inicio_em.toTimeString().slice(0, 5),
+                horarioFim: faturamento.fim_em.toTimeString().slice(0, 5),
+                tipoAtendimento: faturamento.tipo_atendimento,
+                ajudaCusto: faturamento.ajuda_custo,
+                arquivosFaturamento: faturamento.arquivos.map((arquivo) => ({
+                    id: arquivo.id.toString(),
+                    nome: arquivo.nome,
+                    tipo: arquivo.mime_type,
+                    tamanho: arquivo.tamanho,
+                    caminho: arquivo.caminho,
+                    url: `/api/faturamentos/arquivos/${arquivo.id}/download`,
+                })),
             };
-        }),
-        registros: s.trials.map((t) => ({
-            tentativa: t.ordem,
-            resultado: translateResult(t.resultado),
-            stimulusId: t.estimulosOcp?.id.toString(),
-            stimulusLabel: t.estimulosOcp?.nome ?? undefined,
-            durationMinutes: t.duracao_minutos ?? null,
 
-            // Fisioterapia
-            usedLoad: t.utilizou_carga ?? false,
-            loadValue: t.valor_carga ?? null,
-            hadDiscomfort: t.teve_desconforto ?? false,
-            discomfortDescription: t.descricao_desconforto ?? null,
-            hadCompensation: t.teve_compensacao ?? false,
-            compensationDescription: t.descricao_compensacao ?? null,
+            // Adicionar observação apenas se existir
+            if (faturamento.observacao_faturamento) {
+                session.faturamento.observacaoFaturamento = faturamento.observacao_faturamento;
+            }
+        }
 
-            // Musicoterapia
-            participacao: t.participacao ?? null,
-            suporte: t.suporte ?? null,
-        })),
-    }));
+        return session;
+    });
 }
 
 export function mapSessionReturn(session: OcpTypes.UnmappedSession) {

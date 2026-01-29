@@ -605,6 +605,25 @@ export async function listSessionsByClient(filters: OcpType.ListSessionsFilters)
                         tamanho: true,
                     },
                 },
+                faturamentos: {
+                    select: {
+                        id: true,
+                        inicio_em: true,
+                        fim_em: true,
+                        tipo_atendimento: true,
+                        ajuda_custo: true,
+                        observacao_faturamento: true,
+                        arquivos: {
+                            select: {
+                                id: true,
+                                nome: true,
+                                caminho: true,
+                                mime_type: true,
+                                tamanho: true,
+                            },
+                        },
+                    },
+                },
             },
             skip: (page - 1) * pageSize,
             take: pageSize,

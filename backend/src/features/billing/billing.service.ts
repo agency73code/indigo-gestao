@@ -4,6 +4,7 @@ import type { CreateBillingPayload } from "./types/CreateBillingPayload.js";
 import { buildUtcDate } from "./utils/buildUtcDate.js";
 import { R2GenericUploadService } from "../file/r2/r2-upload-generic.js";
 import { AppError } from "../../errors/AppError.js";
+import { prisma } from "../../config/database.js";
 
 export async function createBilling(tx: Prisma.TransactionClient, payload: CreateBillingPayload, target: BillingTarget) {
     const { billing, billingFiles } = payload;
@@ -59,4 +60,24 @@ export async function createBilling(tx: Prisma.TransactionClient, payload: Creat
     }
 
     return createdBilling;
+}
+
+export async function findBillingFileForDownload(fileId: number) {
+    return await prisma.faturamento_arquivo.findUnique({
+        where: { id: fileId },
+        select: {
+            id: true,
+            nome: true,
+            caminho: true,
+            mime_type: true,
+            tamanho: true,
+            faturamento: {
+                select: {
+                    id: true,
+                    sessao_id: true,
+                    evolucao_id: true,
+                }
+            }
+        }
+    });
 }
