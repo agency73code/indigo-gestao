@@ -1,4 +1,5 @@
 import type { Prisma } from "@prisma/client";
+import { faturamento_tipo_atendimento } from '@prisma/client';
 
 export type createOCP = {
     patientId: string;
@@ -268,7 +269,7 @@ export interface SessionDTO {
         id: number;
         inicio_em: Date;
         fim_em: Date;
-        tipo_atendimento: 'consultorio' | 'homecare';
+        tipo_atendimento: faturamento_tipo_atendimento;
         ajuda_custo: boolean | null;
         observacao_faturamento: string | null;
         arquivos: {
@@ -305,7 +306,7 @@ export interface Session {
         dataSessao: string;
         horarioInicio: string;
         horarioFim: string;
-        tipoAtendimento: 'consultorio' | 'homecare';
+        tipoAtendimento: faturamento_tipo_atendimento;
         ajudaCusto: boolean | null;
         observacaoFaturamento?: string;
         arquivosFaturamento?: {

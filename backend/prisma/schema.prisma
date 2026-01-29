@@ -1113,7 +1113,6 @@ model ata_anexo {
   caminho        String      @db.Text
   criado_em      DateTime    @default(now())
 
-  @@unique([ata_reuniao_id])
   @@index([ata_reuniao_id])
 }
 

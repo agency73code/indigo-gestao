@@ -91,8 +91,8 @@ export const ataParticipanteSchema = z
         id: z.number().int().positive().optional(),
         tipo: ataParticipanteTipoSchema,
         nome: z.string().min(1),
-        descricao: z.string().optional().nullable(),
-        terapeuta_id: z.uuid({ message: 'UUID inválido' }).optional().nullable(),
+        descricao: z.string().nullable().default(null),
+        terapeuta_id: z.uuid({ message: 'UUID inválido' }).nullable().default(null),
         removed: z.literal(true).optional(),
     }).superRefine((p, ctx) => {
         if (p.tipo === ata_participante_tipo.profissional_clinica && !p.terapeuta_id) {

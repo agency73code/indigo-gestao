@@ -188,16 +188,16 @@ export async function update(req: Request, res: Response, next: NextFunction) {
         console.log(payload);
         console.log('------------------ END ------------------');
 
-        // const updated = await AtaService.update({
-        //     id: ataId,
-        //     userId: req.user.id,
-        //     payload,
-        //     anexos,
-        // });
+        const updated = await AtaService.update({
+            id: ataId,
+            userId: req.user.id,
+            payload,
+            anexos: uploadedFiles,
+        });
 
-        // if (!updated) {
-        //     return res.status(404).json({ success: false, message: 'Ata não identificada' });
-        // }
+        if (!updated) {
+            return res.status(404).json({ success: false, message: 'Ata não identificada' });
+        }
 
         return res.status(200).json(updated);
     } catch(err) {
@@ -263,7 +263,7 @@ export async function fileDownload(req: Request, res: Response, next: NextFuncti
             throw new AppError('UNAUTHORIZED', 'Não autenticado', 401);
         }
 
-        const { fileId } = idParam.parse(req.params);
+        const fileId = idParam.parse(req.params.fileId);
         const anexo = await AtaService.fileDownload(fileId, req.user.id);
 
         if (!anexo) {
