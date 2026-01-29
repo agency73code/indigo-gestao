@@ -7,7 +7,7 @@ import { AppError } from "../../errors/AppError.js";
 
 export async function createBilling(tx: Prisma.TransactionClient, payload: CreateBillingPayload, target: BillingTarget) {
     const { billing, billingFiles } = payload;
-    const { sessionId, evolutionId } = target;
+    const { sessionId, evolutionId, ataId } = target;
     const inicio_em = buildUtcDate(billing.dataSessao, billing.horarioInicio);
     const fim_em = buildUtcDate(billing.dataSessao, billing.horarioFim);
 
@@ -20,6 +20,7 @@ export async function createBilling(tx: Prisma.TransactionClient, payload: Creat
             observacao_faturamento: billing.observacaoFaturamento,
             sessao_id: sessionId ?? null,
             evolucao_id: evolutionId ?? null,
+            ata_id: ataId ?? null,
         }
     });
 

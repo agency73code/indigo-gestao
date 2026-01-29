@@ -35,3 +35,11 @@ export type ListQueryParams = {
     page?: number;
     pageSize?: number;
 };
+
+export type DebugFormDataValue =
+    | string
+    | {
+          name: string;
+          size: number;
+          type: string;
+      };

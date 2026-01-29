@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { FINALIDADE_REUNIAO } from './ata.types.js';
 import { ata_finalidade_reuniao, ata_modalidade_reuniao, ata_participante_tipo, ata_status } from '@prisma/client';
+import { uuidParam } from '../../schemas/utils/uuid.js';
+import { dateStringToDate } from '../../schemas/utils/dateStringToDate.js';
 
 export const ataStatusSchema = z.enum(ata_status)
 export const ataModalidadeSchema = z.enum(ata_modalidade_reuniao);
@@ -107,18 +109,18 @@ export const ataLinkSchema = z.object({
 
 export const createAtaPayloadSchema = z
     .object({
-        terapeuta_id: z.uuid({ message: 'UUID inválido' }),
-        cliente_id: z.uuid({ message: 'UUID inválido' }).optional().nullable(),
-        data: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Data inválida (YYYY-MM-DD)'),
+        terapeuta_id: uuidParam,
+        cliente_id: uuidParam.nullable().default(null),
+        data: dateStringToDate,
         horario_inicio: z.string().regex(/^\d{2}:\d{2}$/, 'Horário inválido (HH:mm)'),
         horario_fim: z.string().regex(/^\d{2}:\d{2}$/, 'Horário inválido (HH:mm)'),
         finalidade: ataFinalidadeSchema,
-        finalidade_outros: z.string().optional().nullable(),
+        finalidade_outros: z.string().nullable().default(null),
         modalidade: ataModalidadeSchema,
         conteudo: z.string().min(1),
         status: ataStatusSchema.default(ata_status.rascunho),
         participantes: z.array(ataParticipanteSchema).min(1),
-        links: z.array(ataLinkSchema).optional().nullable(),
+        links: z.array(ataLinkSchema).nullable().default(null),
     })
     .superRefine((val, ctx) => {
         if (val.finalidade === ata_finalidade_reuniao.outros) {

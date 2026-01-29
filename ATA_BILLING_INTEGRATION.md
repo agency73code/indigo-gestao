@@ -7,7 +7,7 @@ Adicionar na tabela `ata_reuniao`:
 - `tem_ajuda_custo` (boolean)
 - `motivo_ajuda_custo` (text)
 
-Adicionar na enum `ata_finalidade_reuniao`:
+Adicionar na enum `ata_finalidade_reuniao`: ok
 - `supervisao_recebida`
 - `desenvolvimento_materiais`
 
@@ -35,7 +35,7 @@ FormData:
 - `data` (JSON)
   - `faturamento`: {
       `tipoFaturamento`,
-      `observacaoFaturamento`,
+      <!-- `observacaoFaturamento`, campo não preenchivel só não importa -->
       `temAjudaCusto`,
       `motivoAjudaCusto`
     }

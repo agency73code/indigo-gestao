@@ -3,7 +3,7 @@ import { authFetch } from "./http";
 import type { Terapeuta, Cliente } from "@/features/cadastros/types/cadastros.types";
 import type { Bank } from '@/common/constants/banks';
 import type { Therapist as TerapeutaConsulta, Patient } from '@/features/consultas/types/consultas.types'
-import type { ListQueryParams, PaginatedListResult, QueryParams, SaveSessionPayload } from "./types/api.types";
+import type { DebugFormDataValue, ListQueryParams, PaginatedListResult, QueryParams, SaveSessionPayload } from "./types/api.types";
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -438,4 +438,21 @@ export async function fetchOwnerAvatar(ownerId: string, ownerType: 'cliente' | '
     console.error('Erro ao buscar avatar:', error);
     return null;
   }
+}
+
+export function debugFormData(fd: FormData): Record<string, DebugFormDataValue> {
+  const result: Record<string, DebugFormDataValue> = {};
+
+  for (const [key, value] of fd.entries()) {
+      result[key] =
+          value instanceof File
+              ? {
+                    name: value.name,
+                    size: value.size,
+                    type: value.type,
+                }
+              : value;
+  }
+
+  return result;
 }

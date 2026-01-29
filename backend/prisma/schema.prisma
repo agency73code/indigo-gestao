@@ -30,6 +30,8 @@ enum ata_finalidade_reuniao {
   reuniao_escola
   supervisao_at
   supervisao_terapeuta
+  supervisao_recebida
+  desenvolvimento_materiais
   outros
 }
 
@@ -52,6 +54,10 @@ enum ata_status {
 enum faturamento_tipo_atendimento {
   consultorio
   homecare
+  hora_reuniao
+  hora_supervisao_recebida
+  hora_supervisao_dada
+  hora_desenvolvimento_materiais
 }
 
 model area_atuacao {
@@ -1057,6 +1063,7 @@ model ata_reuniao {
   participantes ata_participante[]
   links         ata_link_recomendacao[]
   anexos        ata_anexo[]
+  faturamentos  faturamento[]
 
   @@index([terapeuta_id])
   @@index([cliente_id])
@@ -1096,23 +1103,17 @@ model ata_link_recomendacao {
 }
 
 model ata_anexo {
-  id Int @id @default(autoincrement())
-
+  id             Int         @id @default(autoincrement())
   ata_reuniao_id Int
   ata_reuniao    ata_reuniao @relation(fields: [ata_reuniao_id], references: [id], onDelete: Cascade)
+  nome           String?
+  original_nome  String?
+  mime_type      String?
+  tamanho        Int?
+  caminho        String      @db.Text
+  criado_em      DateTime    @default(now())
 
-  external_id String
-  nome        String?
-
-  original_nome String?
-  mime_type     String?
-  tamanho       Int?
-
-  caminho String @db.Text
-
-  criado_em DateTime @default(now())
-
-  @@unique([ata_reuniao_id, external_id])
+  @@unique([ata_reuniao_id])
   @@index([ata_reuniao_id])
 }
 
@@ -1127,6 +1128,8 @@ model faturamento {
   sessao                 sessao?                      @relation(fields: [sessao_id], references: [id], onDelete: Cascade)
   evolucao_id            Int?
   evolucao               prontuario_evolucao?         @relation(fields: [evolucao_id], references: [id], onDelete: Cascade)
+  ata_id                 Int?
+  ata                    ata_reuniao?                 @relation(fields: [ata_id], references: [id], onDelete: Cascade)
   arquivos               faturamento_arquivo[]
   criado_em              DateTime                     @default(now())
   atualizado_em          DateTime                     @updatedAt

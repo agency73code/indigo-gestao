@@ -6,6 +6,8 @@ import * as AtaService from './ata.service.js';
 import { parseAtaAnexos } from './utils/ata.anexos.js';
 import { getAccessLevel } from '../../utils/getAccessLevel.js';
 import { getFileStreamFromR2 } from '../file/r2/getFileStream.js';
+import { unauthenticated } from '../../errors/unauthenticated.js';
+import { buildBillingInputFromRequest } from '../billing/billing.controller.js';
 
 /**
  * POST /atas-reuniao/ai/summary
@@ -131,35 +133,31 @@ export async function therapistData(req: Request, res: Response, next: NextFunct
 
 export async function create(req: Request, res: Response, next: NextFunction) {
     try {
-        if (!req.user) {
-            return res.status(401).json({ success: false, message: 'Não autenticado' });
-        }
+        if (!req.user) throw unauthenticated();
 
-        // payload: string -> JSON -> Zod
-        const raw = req.body?.payload;
-        if (typeof raw !== 'string' || raw.trim().length === 0) {
-            return res.status(400).json({ success: false, message: 'Campo payload é obrigatório' });
-        }
-
-        let parsed: unknown;
-        try {
-            parsed = JSON.parse(raw) as unknown;
-        } catch {
-            return res.status(400).json({ success: false, message: 'Payload inválido (JSON malformado)' })
-        }
-
+        const parsed = JSON.parse(req.body?.payload);
         const payload = createAtaPayloadSchema.parse(parsed);
 
-        // files: multer
-        const files = Array.isArray(req.files) ? req.files: [];
+        const uploadedFiles = ((req.files as Express.Multer.File[]) || [])
+            .filter(f => f.fieldname.startsWith("files["))
+            .map((file) => {
+                const id = file.fieldname.slice("files[".length, -1);
 
-        // anexo names
-        const anexos = parseAtaAnexos(files, req.body);
+                const fileNames = (req.body?.fileNames ?? {}) as Record<string, string>;
+                const nome = fileNames[id] ?? file.originalname ?? null;
+
+                return { ...file, nome, size:file.size };
+            });
+
+        console.log(uploadedFiles)
+
+        const billingInput = buildBillingInputFromRequest(req);
 
         // service
         const created = await AtaService.create({
             payload,
-            anexos,
+            billingInput,
+            anexos: uploadedFiles,
         });
 
         return res.status(201).json(created)
@@ -218,7 +216,7 @@ export async function getById(req: Request, res: Response, next: NextFunction) {
     try {
         const { id: ataId } = ataIdSchema.parse(req.params);
         const userId = req.user?.id;
-        if (!userId) return res.status(404).json({ message: 'Não autenticado' });
+        if (!userId) throw unauthenticated();
 
         const result = await AtaService.getById(ataId, userId);
         if (!result) return res.status(401).json({ message: 'Ata não identificada' });

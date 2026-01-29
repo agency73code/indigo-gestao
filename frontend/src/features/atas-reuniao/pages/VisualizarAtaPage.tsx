@@ -466,7 +466,8 @@ export function VisualizarAtaPage() {
                                 </h3>
                                 <div className="space-y-2">
                                     {ata.anexos.map((anexo) => {
-                                        const ext = anexo.name.split('.').pop()?.toLowerCase();
+                                        const nome = anexo.name ?? 'naoIdentificado.png'
+                                        const ext = nome.split('.').pop()?.toLowerCase();
                                         const isPdf = ext === 'pdf';
                                         const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext || '');
                                         

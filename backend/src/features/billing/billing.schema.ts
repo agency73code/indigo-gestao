@@ -1,3 +1,4 @@
+import { faturamento_tipo_atendimento } from '@prisma/client';
 import { z } from 'zod';
 
 export const billingSchema = z
@@ -5,7 +6,7 @@ export const billingSchema = z
         dataSessao: z.string().min(1),
         horarioInicio: z.string().min(1),
         horarioFim: z.string().min(1),
-        tipoAtendimento: z.enum(['consultorio', 'homecare']),
+        tipoAtendimento: z.enum(faturamento_tipo_atendimento),
         ajudaCusto: z.boolean().nullable().default(null),
         observacaoFaturamento: z.string().nullable().default(null),
     })

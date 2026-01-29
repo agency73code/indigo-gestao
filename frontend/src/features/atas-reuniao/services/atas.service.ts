@@ -10,6 +10,7 @@ import type {
 } from '../types';
 
 import { atasConfig } from './atas.config';
+import { debugFormData } from '@/lib/api';
 
 // ============================================
 // HELPERS - MAPEAMENTO API ↔ FRONTEND
@@ -259,10 +260,12 @@ export async function createAta(input: CreateAtaInput): Promise<AtaReuniao> {
     // Dados de faturamento (padrão: campo "data")
     fd.append('data', JSON.stringify({
         faturamento: input.formData.faturamento ? {
-            tipoFaturamento: input.formData.faturamento.tipoFaturamento,
-            observacaoFaturamento: input.formData.faturamento.observacaoFaturamento ?? null,
-            temAjudaCusto: input.formData.faturamento.temAjudaCusto,
-            motivoAjudaCusto: input.formData.faturamento.motivoAjudaCusto ?? null,
+            tipoAtendimento: input.formData.faturamento.tipoFaturamento,
+            ajudaCusto: input.formData.faturamento.temAjudaCusto,
+            observacaoFaturamento: input.formData.faturamento.motivoAjudaCusto ?? null,
+            dataSessao: input.formData.data,
+            horarioInicio: input.formData.horarioInicio,
+            horarioFim: input.formData.horarioFim,
         } : null,
     }));
 
@@ -288,9 +291,13 @@ export async function createAta(input: CreateAtaInput): Promise<AtaReuniao> {
         if (!validation.valid) {
             throw new Error(validation.error || 'Arquivo de faturamento inválido');
         }
-        fd.append(`billingFiles[${arquivo.id}]`, arquivo.file, arquivo.file.name);
-        fd.append(`billingFileNames[${arquivo.id}]`, arquivo.nome);
+        fd.append(`billingFiles`, arquivo.file, arquivo.file.name);
+        fd.append(`billingFileNames`, arquivo.nome);
     }
+
+    const debug = debugFormData(fd);
+    console.log(debug);
+    
     const res = await authFetch(`${atasConfig.apiBase}/atas-reuniao`, {
         method: 'POST',
         body: fd,
