@@ -124,7 +124,7 @@ export function SessionBillingData({
         horarioInicio: '',
         horarioFim: '',
         tipoAtendimento: TIPO_ATENDIMENTO.CONSULTORIO,
-        ajudaCusto: undefined,
+        ajudaCusto: null,
         observacaoFaturamento: '',
         arquivosFaturamento: [],
     };
@@ -149,7 +149,7 @@ export function SessionBillingData({
             ...value,
             tipoAtendimento: tipo,
             // Limpar ajuda de custo se mudar para consultório
-            ajudaCusto: tipo === TIPO_ATENDIMENTO.HOMECARE ? value.ajudaCusto : undefined,
+            ajudaCusto: tipo === TIPO_ATENDIMENTO.HOMECARE ? value.ajudaCusto : null,
         });
     }, [value, onChange]);
 

@@ -4,6 +4,7 @@ import { aggregateByStimulus, sumCounts } from '@/features/programas/consulta-se
 import HeaderSessao from '@/features/programas/consulta-sessao/components/HeaderSessao';
 import SessionNotes from '@/features/programas/consulta-sessao/pages/components/SessionNotes';
 import SessionFiles, { type SessionFile } from '@/features/programas/consulta-sessao/pages/components/SessionFiles';
+import SessionBillingView from '@/features/programas/consulta-sessao/components/SessionBillingView';
 import { initializeMockSessionFiles } from '../../session/services';
 import { MusiActivitiesPerformanceList, MusiSessionSummary } from '.';
 
@@ -145,6 +146,9 @@ export default function DetalheSessaoMusi({ sessao, paciente, programa, onBack }
                 scalesByActivity={scalesByActivity}
                 defaultSort="severity"
             />
+
+            {/* Dados de Faturamento */}
+            <SessionBillingView billing={sessao.faturamento} />
 
             <SessionFiles files={sessionFiles} />
 

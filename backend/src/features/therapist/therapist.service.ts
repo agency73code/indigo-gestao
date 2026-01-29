@@ -355,7 +355,7 @@ export async function update(id: string, dto: TherapistTypes.TherapistForm) {
             celular: dto.celular,
             cpf: dto.cpf,
             data_nascimento: dto.dataNascimento,
-            possui_veiculo: dto.possuiVeiculo === 'sim' ? true : false,
+            possui_veiculo: typeof dto.possuiVeiculo === 'boolean' ? dto.possuiVeiculo : dto.possuiVeiculo === 'sim',
             placa_veiculo: dto.placaVeiculo,
             modelo_veiculo: dto.modeloVeiculo,
             banco: dto.banco,
@@ -363,6 +363,12 @@ export async function update(id: string, dto: TherapistTypes.TherapistForm) {
             conta: dto.conta,
             chave_pix: dto.chavePix,
             pix_tipo: dto.pixTipo,
+            valor_sessao_consultorio: dto.valorSessaoConsultorio,
+            valor_sessao_homecare: dto.valorSessaoHomecare,
+            valor_hora_desenvolvimento_materiais: dto.valorHoraDesenvolvimentoMateriais,
+            valor_hora_supervisao_recebida: dto.valorHoraSupervisaoRecebida,
+            valor_hora_supervisao_dada: dto.valorHoraSupervisaoDada,
+            valor_hora_reuniao: dto.valorHoraReuniao,
 
             endereco: {
                 connectOrCreate: {
@@ -371,7 +377,7 @@ export async function update(id: string, dto: TherapistTypes.TherapistForm) {
                             cep: dto.endereco.cep,
                             rua: dto.endereco.rua,
                             numero: dto.endereco.numero,
-                            complemento: dto.endereco.complemento,
+                            complemento: dto.endereco.complemento || '',
                             bairro: dto.endereco.bairro,
                             cidade: dto.endereco.cidade,
                             uf: dto.endereco.estado,
@@ -381,7 +387,7 @@ export async function update(id: string, dto: TherapistTypes.TherapistForm) {
                         cep: dto.endereco.cep,
                         rua: dto.endereco.rua,
                         numero: dto.endereco.numero,
-                        complemento: dto.endereco.complemento,
+                        complemento: dto.endereco.complemento || '',
                         bairro: dto.endereco.bairro,
                         cidade: dto.endereco.cidade,
                         uf: dto.endereco.estado,
@@ -405,8 +411,8 @@ export async function update(id: string, dto: TherapistTypes.TherapistForm) {
             data_entrada: dto.dataInicio,
             data_saida: dto.dataFim ?? null,
             atividade,
-            valor_hora: dto.valorHoraAcordado,
-            professor_uni: dto.professorUnindigo === 'sim',
+            valor_hora: dto.valorHoraAcordado || null,
+            professor_uni: typeof dto.professorUnindigo === 'boolean' ? dto.professorUnindigo : dto.professorUnindigo === 'sim',
             perfil_acesso: getHighestAccessRole(dto.dadosProfissionais),
 
             ...(dto.disciplinaUniindigo

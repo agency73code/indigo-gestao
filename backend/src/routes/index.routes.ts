@@ -13,6 +13,7 @@ import reportsRoutes from './reports.routes.js';
 import aiRoutes from '../features/ai/ai.routes.js';
 import anamneseRoutes from './anamnese.routes.js';
 import atasReuniaoRoutes from '../features/atas-reuniao/ata.routes.js';
+import { billingRoutes } from '../features/billing/billing.routes.js';
 
 const router: ExpressRouter = Router();
 
@@ -29,5 +30,6 @@ router.use('/relatorios', reportsRoutes);
 router.use('/ai', aiRoutes);
 router.use('/anamneses', anamneseRoutes);
 router.use('/atas-reuniao', atasReuniaoRoutes);
+router.use('/faturamentos', billingRoutes);
 
 export default router;

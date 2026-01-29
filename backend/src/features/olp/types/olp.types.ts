@@ -264,6 +264,21 @@ export interface SessionDTO {
         caminho: string;
         tamanho: number;
     }[];
+    faturamentos: {
+        id: number;
+        inicio_em: Date;
+        fim_em: Date;
+        tipo_atendimento: 'consultorio' | 'homecare';
+        ajuda_custo: boolean | null;
+        observacao_faturamento: string | null;
+        arquivos: {
+            id: number;
+            nome: string;
+            caminho: string;
+            mime_type: string;
+            tamanho: number;
+        }[];
+    }[];
 };
 
 export interface Session {
@@ -286,6 +301,22 @@ export interface Session {
         size: number;
         url: string;
     }[];
+    faturamento?: {
+        dataSessao: string;
+        horarioInicio: string;
+        horarioFim: string;
+        tipoAtendimento: 'consultorio' | 'homecare';
+        ajudaCusto: boolean | null;
+        observacaoFaturamento?: string;
+        arquivosFaturamento?: {
+            id: string;
+            nome: string;
+            tipo: string;
+            tamanho: number;
+            url?: string;
+            caminho?: string;
+        }[];
+    };
     registros: {
         tentativa: number;
         resultado: 'acerto' | 'erro' | 'ajuda';

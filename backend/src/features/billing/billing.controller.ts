@@ -1,6 +1,10 @@
-import type { Request } from "express";
+import type { Request, Response, NextFunction } from "express";
+import { z } from 'zod';
 import { billingSchema } from "./billing.schema.js";
 import type { BillingInput } from "./types/BillingInput.js";
+import * as BillingService from './billing.service.js';
+import { AppError } from '../../errors/AppError.js';
+import { streamFileDownload } from '../file/r2/streamDownloadResponse.js';
 
 export function buildBillingInputFromRequest(req: Request): BillingInput {
     const data = JSON.parse(req.body.data);
@@ -25,4 +29,38 @@ export function buildBillingInputFromRequest(req: Request): BillingInput {
     const billing = billingSchema.parse(data.faturamento);
 
     return { billing, billingFiles };
+}
+
+const fileIdSchema = z.object({
+    fileId: z.string().transform((val) => parseInt(val, 10)),
+});
+
+export async function downloadBillingFile(req: Request, res: Response, next: NextFunction) {
+    try {
+        if (!req.user) {
+            throw new AppError('UNAUTHENTICATED', 'Não autenticado', 401);
+        }
+
+        const { fileId } = fileIdSchema.parse(req.params);
+        const billingFile = await BillingService.findBillingFileForDownload(fileId);
+
+        if (!billingFile) {
+            throw new AppError('FILE_NOT_FOUND', 'Arquivo de faturamento não encontrado', 404);
+        }
+
+        if (!billingFile.caminho) {
+            throw new AppError('FILE_NO_STORAGE', 'Arquivo sem caminho de storage', 500);
+        }
+
+        const fileForDownload = {
+            id: billingFile.id,
+            storage_id: billingFile.caminho,
+            mime_type: billingFile.mime_type,
+            name: billingFile.nome,
+        };
+
+        await streamFileDownload(res, fileForDownload);
+    } catch (err) {
+        next(err);
+    }
 }
