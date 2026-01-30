@@ -280,7 +280,11 @@ export async function createEvolution(input: CreateEvolutionServiceInput) {
     return await prisma.$transaction(async (tx) => {
         const medicalRecord = await tx.ocp_prontuario.findUnique({
             where: { id: medicalRecordId },
-            select: { id: true },
+            select: { 
+                id: true,
+                terapeuta_id: true,
+                cliente_id: true,
+            },
         });
 
         if (!medicalRecord) {
@@ -300,7 +304,12 @@ export async function createEvolution(input: CreateEvolutionServiceInput) {
             select: { id: true },
         });
 
-        await createBilling(tx, billingPayload, { evolutionId: evolution.id });
+        const parties = {
+            clienteId: medicalRecord.cliente_id,
+            terapeutaId: medicalRecord.terapeuta_id,
+        }
+
+        await createBilling(tx, billingPayload, parties, { evolutionId: evolution.id });
 
         if (attachments.length === 0) return { id: evolution.id };
 
