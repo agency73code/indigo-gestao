@@ -8,7 +8,7 @@
  * FEATURES:
  * - Abre lateralmente à direita
  * - Header com título dinâmico e botão de voltar
- * - Formulário de edição de faturamento
+ * - Formulário de edição de faturamento com TODOS os tipos de atividade
  * - Validação antes de enviar
  * - Feedback de sucesso/erro
  * 
@@ -20,7 +20,7 @@ import { X, ArrowLeft, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
-import { SessionBillingData } from '@/features/programas/nova-sessao/components/SessionBillingData';
+import { BillingCorrectionForm, type DadosFaturamentoCorrecao } from './BillingCorrectionForm';
 import { cn } from '@/lib/utils';
 import type { BillingLancamento } from '../types/billingCorrection';
 import type { DadosFaturamentoSessao } from '@/features/programas/core/types/billing';
@@ -51,6 +51,33 @@ export interface CorrectBillingDrawerProps {
 }
 
 // ============================================
+// HELPER: Converter para DadosFaturamentoCorrecao
+// ============================================
+
+function toBillingCorrecao(data: DadosFaturamentoSessao | null, lancamento: BillingLancamento | null): DadosFaturamentoCorrecao | null {
+    if (!data) return null;
+    
+    // Determinar o tipoAtividade baseado no lancamento ou no tipoAtendimento
+    let tipoAtividade = data.tipoAtendimento || 'consultorio';
+    
+    // Se o lancamento tem tipo, usar ele
+    if (lancamento?.tipo) {
+        const tipoLower = lancamento.tipo.toLowerCase();
+        if (tipoLower === 'homecare') tipoAtividade = 'homecare';
+        else if (tipoLower === 'consultorio' || tipoLower === 'consultório') tipoAtividade = 'consultorio';
+        else if (tipoLower.includes('reunião') || tipoLower.includes('reuniao') || tipoLower === 'de reuniões') tipoAtividade = 'reuniao';
+        else if (tipoLower.includes('supervisão recebida') || tipoLower.includes('supervisao_recebida')) tipoAtividade = 'supervisao_recebida';
+        else if (tipoLower.includes('supervisão dada') || tipoLower.includes('supervisao_dada')) tipoAtividade = 'supervisao_dada';
+        else if (tipoLower.includes('material') || tipoLower.includes('desenvolvimento')) tipoAtividade = 'desenvolvimento_materiais';
+    }
+    
+    return {
+        ...data,
+        tipoAtividade: tipoAtividade as any,
+    };
+}
+
+// ============================================
 // COMPONENTE PRINCIPAL
 // ============================================
 
@@ -62,7 +89,9 @@ export function CorrectBillingDrawer({
     onSave,
     isSaving = false,
 }: CorrectBillingDrawerProps) {
-    const [billingData, setBillingData] = useState<DadosFaturamentoSessao | null>(initialBillingData);
+    const [billingData, setBillingData] = useState<DadosFaturamentoCorrecao | null>(
+        toBillingCorrecao(initialBillingData, lancamento)
+    );
     const [comentario, setComentario] = useState('');
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [showSuccess, setShowSuccess] = useState(false);
@@ -70,7 +99,7 @@ export function CorrectBillingDrawer({
     // Atualizar dados quando mudar o lançamento
     useEffect(() => {
         if (initialBillingData) {
-            setBillingData(initialBillingData);
+            setBillingData(toBillingCorrecao(initialBillingData, lancamento));
             setComentario('');
             setErrors({});
             setShowSuccess(false);
@@ -194,9 +223,9 @@ export function CorrectBillingDrawer({
 
                     {/* Caixa cinza claro com conteúdo */}
                     <div className="bg-muted/30 rounded-lg p-6 space-y-6">
-                        {/* Formulário de Faturamento */}
+                        {/* Formulário de Faturamento com TODOS os tipos de atividade */}
                         {billingData && (
-                            <SessionBillingData
+                            <BillingCorrectionForm
                                 value={billingData}
                                 onChange={setBillingData}
                                 errors={errors}

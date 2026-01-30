@@ -1,20 +1,18 @@
 /**
  * ============================================================================
- * COMPONENTE: SessionBillingData
+ * COMPONENTE: BillingCorrectionForm
  * ============================================================================
  * 
- * Componente para captura de dados de faturamento em sessões de terapia.
+ * Formulário para correção de faturamento com TODOS os tipos de atividade.
+ * Diferente do SessionBillingData que só tem consultório/homecare.
  * 
- * CAMPOS:
- * - Data da sessão (editável, default: hoje)
- * - Horário início e fim
- * - Tipo de atendimento (consultório/homecare)
- * - Ajuda de custo (só para homecare)
- * - Observações de faturamento (separadas das observações clínicas)
- * - Arquivos de faturamento (comprovantes, recibos, etc)
- * 
- * IMPORTANTE: Este componente é separado das observações/arquivos clínicos
- * para manter os dados de faturamento organizados.
+ * TIPOS DE ATIVIDADE:
+ * - Consultório
+ * - Homecare
+ * - Reunião
+ * - Supervisão Recebida
+ * - Supervisão Dada
+ * - Desenvolvimento de Materiais
  * 
  * ============================================================================
  */
@@ -23,6 +21,10 @@ import { useState, useCallback } from 'react';
 import { 
     Building2, 
     Home, 
+    Users,
+    GraduationCap,
+    BookOpen,
+    Wrench,
     DollarSign, 
     X, 
     FileText, 
@@ -42,38 +44,81 @@ import { TimeFieldWithLabel } from '@/ui/time-field-with-label';
 import { TextAreaField } from '@/ui/textarea-field';
 import { FileUploadBox } from '@/ui/file-upload-box';
 
-import type { 
-    DadosFaturamentoSessao, 
-    ArquivoFaturamento,
-    TipoAtendimento,
-} from '@/features/programas/core/types/billing';
-import { 
-    TIPO_ATENDIMENTO, 
-    TIPO_ATENDIMENTO_LABELS,
-    calcularDuracaoMinutos,
-    formatarDuracao,
-} from '@/features/programas/core/types/billing';
+import type { DadosFaturamentoSessao, ArquivoFaturamento } from '@/features/programas/core/types/billing';
+import { calcularDuracaoMinutos, formatarDuracao } from '@/features/programas/core/types/billing';
+import {
+    TIPO_ATIVIDADE_FATURAMENTO,
+    TIPO_ATIVIDADE_FATURAMENTO_LABELS,
+    type TipoAtividadeFaturamento,
+} from '../types/faturamento.types';
 
 // ============================================
 // TIPOS
 // ============================================
 
-export interface SessionBillingDataProps {
-    /** Dados atuais de faturamento (alias: billing) */
-    value?: DadosFaturamentoSessao;
-    /** Alias para value - dados atuais de faturamento */
-    billing?: DadosFaturamentoSessao;
+// Estende DadosFaturamentoSessao para incluir tipoAtividade
+export interface DadosFaturamentoCorrecao extends Omit<DadosFaturamentoSessao, 'tipoAtendimento'> {
+    tipoAtividade: TipoAtividadeFaturamento;
+    tipoAtendimento?: 'consultorio' | 'homecare'; // mantém compatibilidade
+}
+
+export interface BillingCorrectionFormProps {
+    /** Dados atuais de faturamento */
+    value: DadosFaturamentoCorrecao;
     /** Callback ao alterar dados */
-    onChange: (dados: DadosFaturamentoSessao) => void;
+    onChange: (dados: DadosFaturamentoCorrecao) => void;
     /** Erros de validação */
     errors?: Record<string, string>;
-    /** Se está desabilitado (salvando, etc) */
+    /** Se está desabilitado */
     disabled?: boolean;
     /** Título customizado da seção */
     title?: string;
     /** Se deve iniciar expandido */
     defaultExpanded?: boolean;
 }
+
+// ============================================
+// CONFIGURAÇÃO DOS TIPOS DE ATIVIDADE
+// ============================================
+
+const TIPOS_ATIVIDADE_CONFIG = [
+    { 
+        value: TIPO_ATIVIDADE_FATURAMENTO.CONSULTORIO, 
+        label: 'Consultório', 
+        icon: Building2,
+        temAjudaCusto: false,
+    },
+    { 
+        value: TIPO_ATIVIDADE_FATURAMENTO.HOMECARE, 
+        label: 'Homecare', 
+        icon: Home,
+        temAjudaCusto: true,
+    },
+    { 
+        value: TIPO_ATIVIDADE_FATURAMENTO.REUNIAO, 
+        label: 'Reunião', 
+        icon: Users,
+        temAjudaCusto: false,
+    },
+    { 
+        value: TIPO_ATIVIDADE_FATURAMENTO.SUPERVISAO_RECEBIDA, 
+        label: 'Supervisão Recebida', 
+        icon: GraduationCap,
+        temAjudaCusto: false,
+    },
+    { 
+        value: TIPO_ATIVIDADE_FATURAMENTO.SUPERVISAO_DADA, 
+        label: 'Supervisão Dada', 
+        icon: BookOpen,
+        temAjudaCusto: false,
+    },
+    { 
+        value: TIPO_ATIVIDADE_FATURAMENTO.DESENVOLVIMENTO_MATERIAIS, 
+        label: 'Desenv. Materiais', 
+        icon: Wrench,
+        temAjudaCusto: false,
+    },
+];
 
 // ============================================
 // HELPERS
@@ -97,46 +142,26 @@ function formatFileSize(bytes: number): string {
     return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
 }
 
-function getLocalIsoDate(): string {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
-
 // ============================================
 // COMPONENTE PRINCIPAL
 // ============================================
 
-export function SessionBillingData({
-    value: valueProp,
-    billing,
+export function BillingCorrectionForm({
+    value,
     onChange,
     errors = {},
     disabled = false,
     title = 'Dados de Faturamento',
     defaultExpanded = true,
-}: SessionBillingDataProps) {
-    // Usar billing como alias de value
-    const value = valueProp || billing || {
-        dataSessao: getLocalIsoDate(),
-        horarioInicio: '',
-        horarioFim: '',
-        tipoAtendimento: TIPO_ATENDIMENTO.CONSULTORIO,
-        ajudaCusto: null,
-        observacaoFaturamento: '',
-        arquivosFaturamento: [],
-    };
-
+}: BillingCorrectionFormProps) {
     const [expanded, setExpanded] = useState(defaultExpanded);
     const [editingFileId, setEditingFileId] = useState<string | null>(null);
     const [editingFileName, setEditingFileName] = useState('');
 
     // Handlers
-    const handleFieldChange = useCallback(<K extends keyof DadosFaturamentoSessao>(
+    const handleFieldChange = useCallback(<K extends keyof DadosFaturamentoCorrecao>(
         field: K,
-        fieldValue: DadosFaturamentoSessao[K]
+        fieldValue: DadosFaturamentoCorrecao[K]
     ) => {
         onChange({
             ...value,
@@ -144,12 +169,15 @@ export function SessionBillingData({
         });
     }, [value, onChange]);
 
-    const handleTipoAtendimentoChange = useCallback((tipo: TipoAtendimento) => {
+    const handleTipoAtividadeChange = useCallback((tipo: TipoAtividadeFaturamento) => {
+        const config = TIPOS_ATIVIDADE_CONFIG.find(t => t.value === tipo);
         onChange({
             ...value,
-            tipoAtendimento: tipo,
-            // Limpar ajuda de custo se mudar para consultório
-            ajudaCusto: tipo === TIPO_ATENDIMENTO.HOMECARE ? value.ajudaCusto : null,
+            tipoAtividade: tipo,
+            // Atualizar tipoAtendimento para compatibilidade
+            tipoAtendimento: tipo === 'homecare' ? 'homecare' : tipo === 'consultorio' ? 'consultorio' : value.tipoAtendimento,
+            // Limpar ajuda de custo se não for homecare
+            ajudaCusto: config?.temAjudaCusto ? value.ajudaCusto : null,
         });
     }, [value, onChange]);
 
@@ -178,20 +206,20 @@ export function SessionBillingData({
     const handleRenameFile = useCallback((fileId: string, nome: string) => {
         onChange({
             ...value,
-            arquivosFaturamento: (value.arquivosFaturamento || []).map((f: ArquivoFaturamento) => 
+            arquivosFaturamento: (value.arquivosFaturamento || []).map((f: ArquivoFaturamento) =>
                 f.id === fileId ? { ...f, nome } : f
             ),
         });
     }, [value, onChange]);
 
-    const startEditingFileName = (id: string, currentName: string) => {
-        setEditingFileId(id);
+    const startEditingFileName = (fileId: string, currentName: string) => {
+        setEditingFileId(fileId);
         setEditingFileName(currentName);
     };
 
-    const saveFileName = (id: string) => {
+    const saveFileName = (fileId: string) => {
         if (editingFileName.trim()) {
-            handleRenameFile(id, editingFileName.trim());
+            handleRenameFile(fileId, editingFileName.trim());
         }
         setEditingFileId(null);
         setEditingFileName('');
@@ -206,6 +234,10 @@ export function SessionBillingData({
     const duracao = value.horarioInicio && value.horarioFim
         ? calcularDuracaoMinutos(value.horarioInicio, value.horarioFim)
         : null;
+
+    // Verificar se o tipo atual tem ajuda de custo
+    const tipoAtualConfig = TIPOS_ATIVIDADE_CONFIG.find(t => t.value === value.tipoAtividade);
+    const temAjudaCusto = tipoAtualConfig?.temAjudaCusto ?? false;
 
     return (
         <div className={title ? "bg-card border rounded-lg overflow-hidden" : ""}>
@@ -223,9 +255,7 @@ export function SessionBillingData({
                         <div className="text-left">
                             <h3 className="font-medium">{title}</h3>
                             <p className="text-sm text-muted-foreground">
-                                {value.tipoAtendimento === TIPO_ATENDIMENTO.HOMECARE 
-                                    ? 'Homecare' 
-                                    : 'Consultório'}
+                                {TIPO_ATIVIDADE_FATURAMENTO_LABELS[value.tipoAtividade] || 'Não definido'}
                                 {duracao && duracao > 0 && (
                                     <span className="ml-2">• {formatarDuracao(duracao)}</span>
                                 )}
@@ -242,9 +272,9 @@ export function SessionBillingData({
 
             {/* Conteúdo */}
             {(expanded || !title) && (
-                <div className={title ? "p-4 pt-0 space-y-6" : "space-y-6"}>
+                <div className={cn("space-y-6", title && "p-4 pt-0")}>
                     {/* Data e Horários */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <DateFieldWithLabel
                             label="Data da Sessão*"
                             value={value.dataSessao}
@@ -274,47 +304,40 @@ export function SessionBillingData({
                         />
                     </div>
 
-                    {/* Tipo de Atendimento */}
+                    {/* Tipo de Atividade - Grid com todos os tipos */}
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-muted-foreground">
-                            Tipo de Atendimento<span className="text-destructive">*</span>
+                            Tipo de Atividade<span className="text-destructive">*</span>
                         </label>
-                        <div className="flex gap-4">
-                            <button
-                                type="button"
-                                onClick={() => handleTipoAtendimentoChange(TIPO_ATENDIMENTO.CONSULTORIO)}
-                                disabled={disabled}
-                                className={cn(
-                                    "flex-1 flex items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all cursor-pointer",
-                                    value.tipoAtendimento === TIPO_ATENDIMENTO.CONSULTORIO
-                                        ? "border-primary bg-primary/5 text-primary"
-                                        : "border-muted hover:border-muted-foreground/30 hover:bg-muted/20",
-                                    disabled && "opacity-50 cursor-not-allowed"
-                                )}
-                            >
-                                <Building2 className="h-5 w-5" />
-                                <span className="font-medium">{TIPO_ATENDIMENTO_LABELS.consultorio}</span>
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => handleTipoAtendimentoChange(TIPO_ATENDIMENTO.HOMECARE)}
-                                disabled={disabled}
-                                className={cn(
-                                    "flex-1 flex items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all cursor-pointer",
-                                    value.tipoAtendimento === TIPO_ATENDIMENTO.HOMECARE
-                                        ? "border-primary bg-primary/5 text-primary"
-                                        : "border-muted hover:border-muted-foreground/30 hover:bg-muted/20",
-                                    disabled && "opacity-50 cursor-not-allowed"
-                                )}
-                            >
-                                <Home className="h-5 w-5" />
-                                <span className="font-medium">{TIPO_ATENDIMENTO_LABELS.homecare}</span>
-                            </button>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            {TIPOS_ATIVIDADE_CONFIG.map((tipo) => {
+                                const Icon = tipo.icon;
+                                const isSelected = value.tipoAtividade === tipo.value;
+                                
+                                return (
+                                    <button
+                                        key={tipo.value}
+                                        type="button"
+                                        onClick={() => handleTipoAtividadeChange(tipo.value)}
+                                        disabled={disabled}
+                                        className={cn(
+                                            "flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-all cursor-pointer",
+                                            isSelected
+                                                ? "border-primary bg-primary/5 text-primary"
+                                                : "border-muted hover:border-muted-foreground/30 hover:bg-muted/20",
+                                            disabled && "opacity-50 cursor-not-allowed"
+                                        )}
+                                    >
+                                        <Icon className="h-4 w-4" />
+                                        <span className="font-medium text-sm">{tipo.label}</span>
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
 
                     {/* Ajuda de Custo (só para homecare) */}
-                    {value.tipoAtendimento === TIPO_ATENDIMENTO.HOMECARE && (
+                    {temAjudaCusto && (
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-muted-foreground">
                                 Ajuda de Custo<span className="text-destructive">*</span>
@@ -325,14 +348,14 @@ export function SessionBillingData({
                                     onClick={() => handleFieldChange('ajudaCusto', true)}
                                     disabled={disabled}
                                     className={cn(
-                                        "flex-1 flex items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all",
-                                        value.ajudaCusto
+                                        "flex-1 flex items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all cursor-pointer",
+                                        value.ajudaCusto === true
                                             ? "border-primary bg-primary/5 text-primary"
-                                            : "border-muted hover:border-muted-foreground/30",
+                                            : "border-muted hover:border-muted-foreground/30 hover:bg-muted/20",
                                         disabled && "opacity-50 cursor-not-allowed"
                                     )}
                                 >
-                                    <DollarSign className="h-5 w-5" />
+                                    <Check className="h-5 w-5" />
                                     <span className="font-medium">Sim</span>
                                 </button>
                                 <button
@@ -340,10 +363,10 @@ export function SessionBillingData({
                                     onClick={() => handleFieldChange('ajudaCusto', false)}
                                     disabled={disabled}
                                     className={cn(
-                                        "flex-1 flex items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all",
-                                        !value.ajudaCusto
+                                        "flex-1 flex items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all cursor-pointer",
+                                        value.ajudaCusto === false
                                             ? "border-primary bg-primary/5 text-primary"
-                                            : "border-muted hover:border-muted-foreground/30",
+                                            : "border-muted hover:border-muted-foreground/30 hover:bg-muted/20",
                                         disabled && "opacity-50 cursor-not-allowed"
                                     )}
                                 >
@@ -354,17 +377,19 @@ export function SessionBillingData({
                         </div>
                     )}
 
-                    {/* Ajuda de Custo - Observações */}
-                    <TextAreaField
-                        label="Ajuda de Custo - Descrição"
-                        placeholder="Ex: Estacionamento R$ 25,00 • Uber R$ 35,00 • Material impresso R$ 15,00"
-                        value={value.observacaoFaturamento || ''}
-                        onChange={(e) => handleFieldChange('observacaoFaturamento', e.target.value)}
-                        disabled={disabled}
-                        rows={1}
-                    />
+                    {/* Observações de Faturamento */}
+                    <div className="space-y-2">
+                        <TextAreaField
+                            label="Ajuda de Custo - Descrição"
+                            value={value.observacaoFaturamento || ''}
+                            onChange={(e) => handleFieldChange('observacaoFaturamento', e.target.value)}
+                            placeholder="Descreva os gastos com transporte, materiais, etc..."
+                            disabled={disabled}
+                            rows={3}
+                        />
+                    </div>
 
-                    {/* Upload de Comprovantes */}
+                    {/* Arquivos/Comprovantes */}
                     <div className="space-y-3">
                         <label className="text-sm font-medium text-muted-foreground">
                             Comprovantes (recibos, notas fiscais, tickets)
@@ -463,4 +488,4 @@ export function SessionBillingData({
     );
 }
 
-export default SessionBillingData;
+export default BillingCorrectionForm;

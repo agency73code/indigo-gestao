@@ -178,13 +178,18 @@ export async function getTerapeutaLogado(): Promise<TerapeutaOption> {
 /**
  * Aprova lançamento
  */
-export async function aprovarLancamento(id: string): Promise<ItemFaturamento | null> {
+export async function aprovarLancamento(
+    id: string, 
+    valorAjudaCusto?: number
+): Promise<ItemFaturamento | null> {
     if (faturamentoConfig.useMock) {
         return mocks.mockAprovarLancamento(id);
     }
 
     const res = await authFetch(`/api/faturamento/lancamentos/${id}/aprovar`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ valorAjudaCusto }),
     });
     if (!res.ok) {
         throw new Error('Erro ao aprovar lançamento');

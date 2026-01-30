@@ -14,7 +14,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import {
     ChevronLeft,
     ChevronRight,
@@ -62,6 +62,9 @@ import {
     aprovarLancamentos,
 } from '../services/faturamento-sessoes.service';
 import { FaturamentoTable, type FaturamentoColumnFilters, type FaturamentoColumnFilterOptions } from './FaturamentoTable';
+import { BillingDrawer } from './BillingDrawer';
+import { useBillingCorrection } from '../hooks/useBillingCorrection';
+import type { BillingLancamento } from '../types/billingCorrection';
 
 // ============================================
 // TIPOS
@@ -221,7 +224,17 @@ function getInitials(nome: string): string {
 
 export function FaturamentoGerenteHub() {
     const [searchParams, setSearchParams] = useSearchParams();
-    const navigate = useNavigate();
+
+    // Hook de correção de faturamento (igual ao terapeuta)
+    const {
+        isOpen: isDrawerOpen,
+        lancamento: lancamentoCorrection,
+        isSaving: isSavingCorrection,
+        openCorrection,
+        closeCorrection,
+        saveCorrection,
+        getBillingData,
+    } = useBillingCorrection();
 
     // Estados principais
     const [lancamentos, setLancamentos] = useState<ItemFaturamento[]>([]);
@@ -566,13 +579,27 @@ export function FaturamentoGerenteHub() {
         }
     }, [selectedIds, loadData]);
 
+    // Handler para visualizar detalhes (igual ao terapeuta)
     const handleViewDetails = useCallback((item: ItemFaturamento) => {
-        if (item.origem === ORIGEM_LANCAMENTO.SESSAO) {
-            toast.info(`Sessão ID: ${item.origemId}`);
-        } else {
-            navigate(`/app/atas-reuniao/${item.origemId}`);
-        }
-    }, [navigate]);
+        // Converter ItemFaturamento para BillingLancamento e abrir drawer
+        const lancamento: BillingLancamento = {
+            id: item.id,
+            clienteId: item.clienteId || '',
+            clienteNome: item.clienteNome || 'Cliente',
+            terapeutaId: item.terapeutaId || '',
+            tipo: item.tipoAtividade === 'homecare' ? 'homecare' : item.tipoAtividade === 'consultorio' ? 'consultorio' : 'de Reuniões',
+            data: item.data,
+            horario: `${item.horarioInicio} - ${item.horarioFim}`,
+            duracao: `${Math.floor(item.duracaoMinutos / 60)}h ${item.duracaoMinutos % 60}min`,
+            valor: item.valorTotal || 0,
+            status: item.status as 'aprovado' | 'rejeitado' | 'pendente' | 'aguardando',
+            motivoRejeicao: item.motivoRejeicao,
+            sessaoId: item.origem === ORIGEM_LANCAMENTO.SESSAO ? String(item.origemId) : null,
+            faturamento: item.faturamento,
+        };
+        
+        openCorrection(lancamento);
+    }, [openCorrection]);
 
     const handleColumnFilterChange = useCallback((newFilters: FaturamentoColumnFilters) => {
         setColumnFilters(newFilters);
@@ -1007,6 +1034,20 @@ export function FaturamentoGerenteHub() {
                     )}
                 </div>
             )}
+
+            {/* Drawer de Visualização/Correção de Faturamento (igual ao terapeuta) */}
+            <BillingDrawer
+                isOpen={isDrawerOpen}
+                onClose={closeCorrection}
+                lancamento={lancamentoCorrection}
+                initialBillingData={lancamentoCorrection ? getBillingData(lancamentoCorrection) : null}
+                onSave={async (lancamentoId, dadosCorrigidos, comentario) => {
+                    await saveCorrection(lancamentoId, dadosCorrigidos, comentario);
+                    // Recarregar dados após correção
+                    loadData();
+                }}
+                isSaving={isSavingCorrection}
+            />
         </div>
     );
 }
