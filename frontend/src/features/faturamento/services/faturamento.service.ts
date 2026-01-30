@@ -324,9 +324,10 @@ export async function getTerapeutaLogado(): Promise<TerapeutaOption> {
         return mocks.mockGetTerapeutaLogado();
     }
 
-    const res = await authFetch('/api/terapeutas/me', {
+    const res = await authFetch('/api/auth/me', {
         method: 'GET',
     });
+    
     const data = await res.json();
 
     if (!res.ok) {

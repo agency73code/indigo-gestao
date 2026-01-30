@@ -31,6 +31,18 @@ export function buildBillingInputFromRequest(req: Request): BillingInput {
     return { billing, billingFiles };
 }
 
+export async function listBilling(req: Request, res: Response, next: NextFunction) {
+    try {
+        console.log(req.query);
+        const teste = await BillingService.listBilling();
+
+        res.status(200).json(teste);
+    } catch (err) {
+        next(err);
+    }
+}
+
+// :/
 const fileIdSchema = z.object({
     fileId: z.string().transform((val) => parseInt(val, 10)),
 });

@@ -4,6 +4,8 @@ import * as BillingController from './billing.controller.js';
 
 const router: Router = Router();
 
-router.get('/arquivos/:fileId/download', auth, BillingController.downloadBillingFile);
+router.use(auth);
+router.get('/arquivos/:fileId/download', BillingController.downloadBillingFile);
+router.get('/lancamentos', BillingController.listBilling);
 
 export { router as billingRoutes };

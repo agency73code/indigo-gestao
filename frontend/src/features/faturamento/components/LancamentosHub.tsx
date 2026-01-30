@@ -397,7 +397,7 @@ export function LancamentosHub({ mode }: LancamentosHubProps) {
                 dataFim: filters.dataFim,
                 orderBy: filters.orderBy,
                 page: 1,
-                pageSize: 9999, // Buscar todos para agrupar no frontend
+                pageSize: 10, // Buscar todos para agrupar no frontend
             };
 
             // Se for terapeuta, filtrar por seu ID

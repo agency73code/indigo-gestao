@@ -60,7 +60,12 @@ export async function createSession(params: CreateSessionParams) {
     return await prisma.$transaction(async (tx) => {
         const session = await createAreaSessionTx(tx, input);
 
-        await createBilling(tx, billingInput, { sessionId: session.id });
+        const parties = {
+            clienteId: input.patientId,
+            terapeutaId: input.therapistId,
+        }
+
+        await createBilling(tx, billingInput, parties, { sessionId: session.id });
         
         return session;
     });

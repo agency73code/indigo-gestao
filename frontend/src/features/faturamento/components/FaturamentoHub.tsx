@@ -437,13 +437,16 @@ export function FaturamentoHub({ mode }: FaturamentoHubProps) {
                 params.terapeutaId = terapeutaId;
             }
 
-            const [responseList, responseResumo] = await Promise.all([
-                listFaturamento(params),
-                getResumoFaturamento(mode === 'terapeuta' ? terapeutaId : undefined, params),
-            ]);
-
+            const responseList = await listFaturamento(params); // TODO: finalizar o getResumo e descomentar isso aqui
+            console.log(responseList);
             setLancamentos(responseList.items);
-            setResumo(responseResumo);
+            // const [responseList, responseResumo] = await Promise.all([
+            //     listFaturamento(params),
+            //     getResumoFaturamento(mode === 'terapeuta' ? terapeutaId : undefined, params),
+            // ]);
+
+            // setLancamentos(responseList.items);
+            // setResumo(responseResumo);
         } catch (error) {
             console.error('Erro ao carregar faturamento:', error);
             toast.error('Erro ao carregar dados de faturamento');

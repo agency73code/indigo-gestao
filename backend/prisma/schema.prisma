@@ -60,6 +60,12 @@ enum faturamento_tipo_atendimento {
   hora_desenvolvimento_materiais
 }
 
+enum faturamento_status {
+  pendente
+  aprovado
+  rejeitado
+}
+
 model area_atuacao {
   id                    Int                     @id @default(autoincrement())
   nome                  String                  @db.VarChar(100)
@@ -103,6 +109,7 @@ model cliente {
   anamneses       anamnese[]
   ocp_prontuarios ocp_prontuario[]
   atas_reuniao    ata_reuniao[]
+  faturamentos    faturamento[]
 
   @@index([nome], map: "nome_idx")
 }
@@ -319,6 +326,7 @@ model terapeuta {
   ocp_prontuarios                      ocp_prontuario[]
   atas_reuniao                         ata_reuniao[]
   atas_participacoes                   ata_participante[]
+  faturamentos                         faturamento[]
 
   @@index([atividade])
   @@index([nome])
@@ -1130,6 +1138,13 @@ model faturamento {
   ata_id                 Int?
   ata                    ata_reuniao?                 @relation(fields: [ata_id], references: [id], onDelete: Cascade)
   arquivos               faturamento_arquivo[]
+  status                 faturamento_status
+  motivo_rejeicao        String?
+  valor_ajuda_custo      Decimal?                     @db.Decimal(10, 2)
+  terapeuta_id           String
+  terapeuta              terapeuta                    @relation(fields: [terapeuta_id], references: [id], onDelete: Restrict)
+  cliente_id             String
+  cliente                cliente                      @relation(fields: [cliente_id], references: [id], onDelete: Restrict)
   criado_em              DateTime                     @default(now())
   atualizado_em          DateTime                     @updatedAt
 

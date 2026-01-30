@@ -47,14 +47,19 @@ export async function listFaturamento(
     if (filters.status && filters.status !== 'all') params.append('status', filters.status);
     if (filters.dataInicio) params.append('dataInicio', filters.dataInicio);
     if (filters.dataFim) params.append('dataFim', filters.dataFim);
+    if (filters.orderBy) params.append('orderBy', filters.orderBy);
     if (filters.page) params.append('page', String(filters.page));
     if (filters.pageSize) params.append('pageSize', String(filters.pageSize));
 
-    const res = await authFetch(`/api/faturamento/lancamentos?${params.toString()}`);
+    const res = await authFetch(`/api/faturamentos/lancamentos?${params.toString()}`);
+
     if (!res.ok) {
         throw new Error('Erro ao listar faturamento');
     }
-    return res.json();
+    
+    const teste = await res.json();
+    console.log(teste)
+    return teste;
 }
 
 /**
@@ -151,11 +156,19 @@ export async function getTerapeutaLogado(): Promise<TerapeutaOption> {
         return mocks.mockGetTerapeutaLogado();
     }
 
-    const res = await authFetch(`/api/terapeutas/me`);
+    const res = await authFetch(`/api/auth/me`);
+
     if (!res.ok) {
         throw new Error('Erro ao buscar terapeuta logado');
     }
-    return res.json();
+
+    const data = await res.json();
+
+    return {
+        id: data.user.id,
+        nome: data.user.name,
+        avatarUrl: data.user.avatar_url ?? null,
+    };
 }
 
 // ============================================

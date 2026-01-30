@@ -1,12 +1,15 @@
-import type { Prisma } from "@prisma/client";
+import { faturamento_status, type Prisma } from "@prisma/client";
 import type { BillingTarget } from "./types/BillingTarget.js";
 import type { CreateBillingPayload } from "./types/CreateBillingPayload.js";
 import { buildUtcDate } from "./utils/buildUtcDate.js";
 import { R2GenericUploadService } from "../file/r2/r2-upload-generic.js";
 import { AppError } from "../../errors/AppError.js";
 import { prisma } from "../../config/database.js";
+import type { BillingParties } from "./types/BillingParties.js";
+import { billingListSelect } from "./queries/billingListSelect.js";
+import { mapBillingListItem } from "./mappers/mapBillingListItem.js";
 
-export async function createBilling(tx: Prisma.TransactionClient, payload: CreateBillingPayload, target: BillingTarget) {
+export async function createBilling(tx: Prisma.TransactionClient, payload: CreateBillingPayload, parties: BillingParties, target: BillingTarget) {
     const { billing, billingFiles } = payload;
     const { sessionId, evolutionId, ataId } = target;
     const inicio_em = buildUtcDate(billing.dataSessao, billing.horarioInicio);
@@ -14,6 +17,9 @@ export async function createBilling(tx: Prisma.TransactionClient, payload: Creat
 
     const createdBilling = await tx.faturamento.create({
         data: {
+            cliente_id: parties.clienteId,
+            terapeuta_id: parties.terapeutaId,
+            status: faturamento_status.pendente,
             inicio_em,
             fim_em,
             tipo_atendimento: billing.tipoAtendimento,
@@ -62,6 +68,21 @@ export async function createBilling(tx: Prisma.TransactionClient, payload: Creat
     return createdBilling;
 }
 
+export async function listBilling() {
+    const billing = await prisma.faturamento.findMany({
+        select: billingListSelect,
+    });
+
+    return {
+        items: billing.map(mapBillingListItem),
+        total: 0,
+        page: 0,
+        pageSize: 0,
+        totalPages: 0,
+    }
+}
+
+// :/
 export async function findBillingFileForDownload(fileId: number) {
     return await prisma.faturamento_arquivo.findUnique({
         where: { id: fileId },

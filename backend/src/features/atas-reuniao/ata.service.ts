@@ -281,7 +281,7 @@ export async function create(input: CreateAtaServiceInput) {
               const ata = await tx.ata_reuniao.create({
                   data: {
                       terapeuta_id: payload.terapeuta_id,
-                      cliente_id: payload.cliente_id ?? null,
+                      cliente_id: payload.cliente_id,
       
                       data: payload.data,
                       horario_inicio: payload.horario_inicio,
@@ -330,8 +330,13 @@ export async function create(input: CreateAtaServiceInput) {
                       })),
                   });
               }
-      
-              await createBilling(tx, billingInput, { ataId: ata.id });
+
+              const parties = {
+                clienteId: payload.cliente_id!,
+                terapeutaId: payload.terapeuta_id,
+              }
+
+              await createBilling(tx, billingInput, parties, { ataId: ata.id });
       
               // anexos: upload + cria registros
               if (anexos.length === 0) return ata;
