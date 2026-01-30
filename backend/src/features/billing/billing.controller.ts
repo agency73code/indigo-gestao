@@ -5,6 +5,7 @@ import type { BillingInput } from "./types/BillingInput.js";
 import * as BillingService from './billing.service.js';
 import { AppError } from '../../errors/AppError.js';
 import { streamFileDownload } from '../file/r2/streamDownloadResponse.js';
+import { listBillingSchema } from "./schemas/listBillingSchema.js";
 
 export function buildBillingInputFromRequest(req: Request): BillingInput {
     const data = JSON.parse(req.body.data);
@@ -33,10 +34,10 @@ export function buildBillingInputFromRequest(req: Request): BillingInput {
 
 export async function listBilling(req: Request, res: Response, next: NextFunction) {
     try {
-        console.log(req.query);
-        const teste = await BillingService.listBilling();
+        const params = listBillingSchema.parse(req.query);
+        const data = await BillingService.listBilling(params);
 
-        res.status(200).json(teste);
+        res.status(200).json(data);
     } catch (err) {
         next(err);
     }

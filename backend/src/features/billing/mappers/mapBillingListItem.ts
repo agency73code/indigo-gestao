@@ -51,7 +51,7 @@ export function mapBillingListItem(item: BillingListItem) {
             horarioInicio: time.start,
             horarioFim: time.end,
             tipoAtendimento: item.tipo_atendimento,
-            ajudaCusto: item.ajuda_custo,
+            ajudaCusto: item.valor_ajuda_custo,
             observacaoFaturamento: item.observacao_faturamento,
             arquivosFaturamento: [],
         },

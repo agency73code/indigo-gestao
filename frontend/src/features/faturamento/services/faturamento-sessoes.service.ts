@@ -57,9 +57,9 @@ export async function listFaturamento(
         throw new Error('Erro ao listar faturamento');
     }
     
-    const teste = await res.json();
-    console.log(teste)
-    return teste;
+    const data = await res.json();
+    console.log(data)
+    return data;
 }
 
 /**

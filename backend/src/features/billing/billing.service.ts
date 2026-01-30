@@ -8,6 +8,8 @@ import { prisma } from "../../config/database.js";
 import type { BillingParties } from "./types/BillingParties.js";
 import { billingListSelect } from "./queries/billingListSelect.js";
 import { mapBillingListItem } from "./mappers/mapBillingListItem.js";
+import type { listBillingPayload } from "./schemas/listBillingSchema.js";
+import { endOfDay, startOfDay } from "./utils/scheduleAdjustment.js";
 
 export async function createBilling(tx: Prisma.TransactionClient, payload: CreateBillingPayload, parties: BillingParties, target: BillingTarget) {
     const { billing, billingFiles } = payload;
@@ -68,17 +70,44 @@ export async function createBilling(tx: Prisma.TransactionClient, payload: Creat
     return createdBilling;
 }
 
-export async function listBilling() {
-    const billing = await prisma.faturamento.findMany({
-        select: billingListSelect,
-    });
+export async function listBilling(params: listBillingPayload) {
+    const { q, terapeutaId, clienteId, status, dataInicio, dataFim, orderBy, page, pageSize } = params;
+
+    const skip = (page - 1) * pageSize;
+    const take = pageSize;
+
+    const where: Prisma.faturamentoWhereInput = {
+        criado_em: {
+            ...(dataInicio && { gte: startOfDay(dataInicio) }),
+            ...(dataFim && { lte: endOfDay(dataFim) }),
+        },
+    };
+
+    console.log('gte local:', startOfDay(dataInicio!).toString());
+    console.log('gte iso  :', startOfDay(dataInicio!).toISOString());
+
+    console.log('lte local:', endOfDay(dataFim!).toString());
+    console.log('lte iso  :', endOfDay(dataFim!).toISOString());
+
+    const [items, total] = await prisma.$transaction([
+        prisma.faturamento.findMany({
+            where,
+            select: billingListSelect,
+            skip,
+            take,
+            orderBy,
+        }),
+        prisma.faturamento.count({ where }),
+    ]);
+
+    const totalPages = Math.ceil(total / pageSize);
 
     return {
-        items: billing.map(mapBillingListItem),
-        total: 0,
-        page: 0,
-        pageSize: 0,
-        totalPages: 0,
+        items: items.map(mapBillingListItem),
+        total,
+        page: page,
+        pageSize: pageSize,
+        totalPages,
     }
 }
 
