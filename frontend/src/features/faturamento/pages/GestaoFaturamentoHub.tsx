@@ -27,6 +27,7 @@ import {
     Image as ImageIcon,
     ExternalLink,
     XCircle,
+    LayoutList,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -51,8 +52,14 @@ import {
 import {
     listFaturamento,
     aprovarLancamentos,
+    aprovarLancamento,
+    rejeitarLancamento,
 } from '../services/faturamento-sessoes.service';
 import { FaturamentoTable, type FaturamentoColumnFilters, type FaturamentoColumnFilterOptions } from '../components/FaturamentoTable';
+import { BillingDrawer } from '../components/BillingDrawer';
+import { useBillingCorrection } from '../hooks/useBillingCorrection';
+import type { BillingLancamento } from '../types/billingCorrection';
+import { ORIGEM_LANCAMENTO } from '../types/faturamento.types';
 
 // ============================================
 // TIPOS
@@ -166,40 +173,76 @@ function TabButton({ active, icon, label, count, badge, onClick }: TabButtonProp
     );
 }
 
-interface StatCardProps {
+interface StatsCardPrimaryProps {
     icon: React.ReactNode;
     label: string;
-    value: string | number;
-    subLabel?: string;
-    variant?: 'default' | 'highlight';
+    value: string;
+    isActive?: boolean;
+    onClick?: () => void;
 }
 
-function StatCard({ icon, label, value, subLabel, variant = 'default' }: StatCardProps) {
+function StatsCardPrimary({ icon, label, value, isActive, onClick }: StatsCardPrimaryProps) {
     return (
-        <div className={cn(
-            "rounded-xl p-4",
-            variant === 'highlight' 
-                ? "bg-zinc-900 dark:bg-zinc-800 text-white" 
-                : "bg-card border"
-        )}>
-            <div className="flex items-center gap-3">
-                <div className={cn(
-                    "p-2 rounded-lg",
-                    variant === 'highlight' ? "bg-white/10" : "bg-muted"
-                )}>
+        <div
+            className={cn(
+                "bg-primary rounded-xl p-5 cursor-pointer transition-all hover:bg-primary/90",
+                isActive && "ring-2 ring-primary-foreground ring-offset-2 ring-offset-background"
+            )}
+            onClick={onClick}
+        >
+            <div className="flex items-start justify-between">
+                <div className="p-2 bg-primary-foreground/10 rounded-lg text-primary-foreground">
                     {icon}
                 </div>
-                <div>
-                    <p className={cn(
-                        "text-xs",
-                        variant === 'highlight' ? "text-zinc-400" : "text-muted-foreground"
-                    )}>{label}</p>
-                    <p className="text-lg font-medium">{value}</p>
-                    {subLabel && (
-                        <p className={cn(
-                            "text-xs",
-                            variant === 'highlight' ? "text-zinc-500" : "text-muted-foreground"
-                        )}>{subLabel}</p>
+            </div>
+            <div className="mt-4">
+                <p className="text-xs text-primary-foreground/70 mb-1">{label}</p>
+                <p className="text-2xl font-normal text-primary-foreground">{value}</p>
+            </div>
+        </div>
+    );
+}
+
+interface StatsCardSecondaryProps {
+    icon: React.ReactNode;
+    label: string;
+    value: number | string;
+    badge?: {
+        value: string;
+        variant: 'success' | 'warning' | 'default';
+    };
+    isActive?: boolean;
+    onClick?: () => void;
+}
+
+function StatsCardSecondary({ icon, label, value, badge, isActive, onClick }: StatsCardSecondaryProps) {
+    return (
+        <div
+            className={cn(
+                "bg-card border rounded-xl p-5 cursor-pointer transition-all hover:shadow-md hover:border-primary/20",
+                isActive && "ring-2 ring-primary ring-offset-2"
+            )}
+            onClick={onClick}
+        >
+            <div className="flex items-start justify-between">
+                <div className="p-2 bg-muted rounded-lg text-muted-foreground">
+                    {icon}
+                </div>
+                <span className="text-muted-foreground">•••</span>
+            </div>
+            <div className="mt-4">
+                <p className="text-xs text-muted-foreground mb-1">{label}</p>
+                <div className="flex items-center gap-3">
+                    <p className="text-2xl font-normal">{value}</p>
+                    {badge && (
+                        <span className={cn(
+                            "text-xs px-2 py-0.5 rounded-full font-medium",
+                            badge.variant === 'success' && "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+                            badge.variant === 'warning' && "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+                            badge.variant === 'default' && "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400",
+                        )}>
+                            {badge.value}
+                        </span>
                     )}
                 </div>
             </div>
@@ -210,15 +253,27 @@ function StatCard({ icon, label, value, subLabel, variant = 'default' }: StatCar
 function LoadingSkeleton() {
     return (
         <div className="space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                {/* Primeiro card - estilo primário */}
+                <div className="bg-primary rounded-xl p-5">
+                    <div className="flex items-start justify-between">
+                        <Skeleton className="h-9 w-9 rounded-lg bg-primary-foreground/10" />
+                    </div>
+                    <div className="mt-4 space-y-1">
+                        <Skeleton className="h-3 w-20 bg-primary-foreground/20" />
+                        <Skeleton className="h-7 w-24 bg-primary-foreground/20" />
+                    </div>
+                </div>
+                {/* Cards secundários */}
                 {[...Array(4)].map((_, i) => (
-                    <div key={i} className="bg-card border rounded-xl p-4">
-                        <div className="flex items-center gap-3">
-                            <Skeleton className="h-10 w-10 rounded-lg" />
-                            <div className="space-y-1">
-                                <Skeleton className="h-3 w-16" />
-                                <Skeleton className="h-5 w-12" />
-                            </div>
+                    <div key={i} className="bg-card border rounded-xl p-5">
+                        <div className="flex items-start justify-between">
+                            <Skeleton className="h-9 w-9 rounded-lg" />
+                            <Skeleton className="h-4 w-6" />
+                        </div>
+                        <div className="mt-4 space-y-1">
+                            <Skeleton className="h-3 w-24" />
+                            <Skeleton className="h-7 w-16" />
                         </div>
                     </div>
                 ))}
@@ -247,6 +302,17 @@ function LoadingSkeleton() {
 export function GestaoFaturamentoHub() {
     const { setPageTitle, setNoMainContainer } = usePageTitle();
 
+    // Hook de correção de faturamento (igual ao terapeuta)
+    const {
+        isOpen: isDrawerOpen,
+        lancamento: lancamentoCorrection,
+        isSaving: isSavingCorrection,
+        openCorrection,
+        closeCorrection,
+        saveCorrection,
+        getBillingData,
+    } = useBillingCorrection();
+
     // Estado principal
     const [lancamentos, setLancamentos] = useState<ItemFaturamento[]>([]);
     const [loading, setLoading] = useState(true);
@@ -264,6 +330,28 @@ export function GestaoFaturamentoHub() {
     // Estado para drill-down
     const [expandedTerapeutaId, setExpandedTerapeutaId] = useState<string | null>(null);
     const [expandedClienteId, setExpandedClienteId] = useState<string | null>(null);
+
+    // Handler para visualizar detalhes (igual ao terapeuta)
+    const handleViewDetails = useCallback((item: ItemFaturamento) => {
+        // Converter ItemFaturamento para BillingLancamento e abrir drawer
+        const lancamento: BillingLancamento = {
+            id: item.id,
+            clienteId: item.clienteId || '',
+            clienteNome: item.clienteNome || 'Cliente',
+            terapeutaId: item.terapeutaId || '',
+            tipo: item.tipoAtividade === 'homecare' ? 'homecare' : item.tipoAtividade === 'consultorio' ? 'consultorio' : 'de Reuniões',
+            data: item.data,
+            horario: `${item.horarioInicio} - ${item.horarioFim}`,
+            duracao: `${Math.floor(item.duracaoMinutos / 60)}h ${item.duracaoMinutos % 60}min`,
+            valor: item.valorTotal || 0,
+            status: item.status as 'aprovado' | 'rejeitado' | 'pendente' | 'aguardando',
+            motivoRejeicao: item.motivoRejeicao,
+            sessaoId: item.origem === ORIGEM_LANCAMENTO.SESSAO ? String(item.origemId) : null,
+            faturamento: item.faturamento,
+        };
+        
+        openCorrection(lancamento);
+    }, [openCorrection]);
 
     useEffect(() => {
         setPageTitle('Gestão de Faturamento');
@@ -516,30 +604,50 @@ export function GestaoFaturamentoHub() {
                 <div className="container space-y-4">
 
 
-                    {/* Cards de estatísticas - fixos */}
+                    {/* Cards de estatísticas - igual ao Minhas Horas do terapeuta */}
                     {!loading && (
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                            <StatCard
-                                icon={<AlertCircle className="h-5 w-5 text-amber-500" />}
-                                label="Pendentes"
-                                value={stats.pendentes}
-                                subLabel={formatarValor(stats.valorPendente)}
-                                variant="highlight"
-                            />
-                            <StatCard
-                                icon={<CheckCircle2 className="h-5 w-5 text-emerald-500" />}
-                                label="Aprovados"
-                                value={stats.aprovados}
-                            />
-                            <StatCard
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                            {/* Card Primário - Pendentes (destaque) */}
+                            <StatsCardPrimary
                                 icon={<Clock className="h-5 w-5" />}
                                 label="Total Horas"
                                 value={stats.totalHoras}
                             />
-                            <StatCard
+
+                            {/* Card Secundário - Valor Total */}
+                            <StatsCardSecondary
                                 icon={<DollarSign className="h-5 w-5" />}
                                 label="Valor Total"
                                 value={formatarValor(stats.totalValor)}
+                            />
+
+                            {/* Card Secundário - Total de Lançamentos */}
+                            <StatsCardSecondary
+                                icon={<LayoutList className="h-5 w-5" />}
+                                label="Total de Lançamentos"
+                                value={lancamentos.length}
+                            />
+
+                            {/* Card Secundário - Aprovados */}
+                            <StatsCardSecondary
+                                icon={<CheckCircle2 className="h-5 w-5" />}
+                                label="Aprovados"
+                                value={stats.aprovados}
+                                badge={lancamentos.length > 0 ? {
+                                    value: `${Math.round((stats.aprovados / lancamentos.length) * 100)}%`,
+                                    variant: 'success'
+                                } : undefined}
+                            />
+
+                            {/* Card Secundário - Pendentes */}
+                            <StatsCardSecondary
+                                icon={stats.pendentes > 0 ? <AlertCircle className="h-5 w-5" /> : <CheckCircle2 className="h-5 w-5" />}
+                                label="Pendentes"
+                                value={stats.pendentes}
+                                badge={stats.pendentes > 0 ? {
+                                    value: `${stats.pendentes} aguardando`,
+                                    variant: 'warning'
+                                } : undefined}
                             />
                         </div>
                     )}
@@ -669,6 +777,7 @@ export function GestaoFaturamentoHub() {
                                         selectedIds={selectedIds}
                                         onToggleSelect={toggleSelect}
                                         onToggleSelectAll={toggleSelectAll}
+                                        onRefresh={loadData}
                                     />
                                 )}
 
@@ -677,6 +786,7 @@ export function GestaoFaturamentoHub() {
                                         grupos={groupedByTerapeuta}
                                         expandedId={expandedTerapeutaId}
                                         onToggleExpand={(id) => setExpandedTerapeutaId(prev => prev === id ? null : id)}
+                                        onViewDetails={handleViewDetails}
                                     />
                                 )}
 
@@ -685,6 +795,7 @@ export function GestaoFaturamentoHub() {
                                         grupos={groupedByCliente}
                                         expandedId={expandedClienteId}
                                         onToggleExpand={(id) => setExpandedClienteId(prev => prev === id ? null : id)}
+                                        onViewDetails={handleViewDetails}
                                     />
                                 )}
                             </div>
@@ -692,6 +803,21 @@ export function GestaoFaturamentoHub() {
                     )}
                 </div>
             </div>
+
+            {/* Drawer de Visualização/Correção de Faturamento (igual ao terapeuta) */}
+            <BillingDrawer
+                isOpen={isDrawerOpen}
+                onClose={closeCorrection}
+                lancamento={lancamentoCorrection}
+                initialBillingData={lancamentoCorrection ? getBillingData(lancamentoCorrection) : null}
+                onSave={async (lancamentoId, dadosCorrigidos, comentario) => {
+                    await saveCorrection(lancamentoId, dadosCorrigidos, comentario);
+                    // Recarregar dados após correção
+                    loadData();
+                }}
+                isSaving={isSavingCorrection}
+                canEdit={false}
+            />
         </div>
     );
 }
@@ -705,15 +831,18 @@ interface AprovarHorasTabProps {
     selectedIds: Set<string>;
     onToggleSelect: (id: string) => void;
     onToggleSelectAll: () => void;
+    onRefresh: () => void;
 }
 
-function AprovarHorasTab({ lancamentos, selectedIds, onToggleSelect, onToggleSelectAll }: AprovarHorasTabProps) {
+function AprovarHorasTab({ lancamentos, selectedIds, onToggleSelect, onToggleSelectAll, onRefresh }: AprovarHorasTabProps) {
     // Estado para item expandido (detalhe)
     const [expandedId, setExpandedId] = useState<string | null>(null);
     // Estado para valores de ajuda de custo por item
     const [valoresAjudaCusto, setValoresAjudaCusto] = useState<Record<string, string>>({});
     // Estado de loading por item
     const [loadingItems, setLoadingItems] = useState<Set<string>>(new Set());
+    // Estado de loading para aprovação em lote
+    const [isApprovingBatch, setIsApprovingBatch] = useState(false);
     // Estado para rejeição com motivo
     const [rejeitandoId, setRejeitandoId] = useState<string | null>(null);
     const [motivoRejeicao, setMotivoRejeicao] = useState<string>('');
@@ -742,14 +871,16 @@ function AprovarHorasTab({ lancamentos, selectedIds, onToggleSelect, onToggleSel
                 return;
             }
 
-            await aprovarLancamentos([lancamento.id]);
+            // Usar aprovação individual para enviar valorAjudaCusto
+            await aprovarLancamento(lancamento.id, valorNumerico);
             toast.success('Lançamento aprovado!', {
                 description: valorNumerico 
                     ? `Ajuda de custo: ${formatarValor(valorNumerico)}`
                     : undefined,
             });
-            // Fechar expansão após aprovar
+            // Fechar expansão e atualizar lista após aprovar
             setExpandedId(null);
+            onRefresh();
         } catch (error) {
             toast.error('Erro ao aprovar lançamento');
         } finally {
@@ -781,14 +912,14 @@ function AprovarHorasTab({ lancamentos, selectedIds, onToggleSelect, onToggleSel
 
         setLoadingItems(prev => new Set(prev).add(rejeitandoId));
         try {
-            // TODO: Chamar API de rejeição com motivo
-            // await rejeitarLancamento(rejeitandoId, motivoRejeicao);
+            await rejeitarLancamento(rejeitandoId, motivoRejeicao);
             toast.success('Lançamento rejeitado', {
                 description: 'O terapeuta será notificado com o motivo.',
             });
             setRejeitandoId(null);
             setMotivoRejeicao('');
             setExpandedId(null);
+            onRefresh();
         } catch (error) {
             toast.error('Erro ao rejeitar lançamento');
         } finally {
@@ -800,6 +931,21 @@ function AprovarHorasTab({ lancamentos, selectedIds, onToggleSelect, onToggleSel
         }
     };
 
+    // Handler para aprovação em lote
+    const handleAprovarEmLote = async (ids: string[]) => {
+        if (ids.length === 0) return;
+        
+        setIsApprovingBatch(true);
+        try {
+            await aprovarLancamentos(ids);
+            toast.success(`${ids.length} lançamento(s) aprovado(s)!`);
+            onRefresh();
+        } catch (error) {
+            toast.error('Erro ao aprovar lançamentos');
+        } finally {
+            setIsApprovingBatch(false);
+        }
+    };
     if (lancamentos.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -849,9 +995,19 @@ function AprovarHorasTab({ lancamentos, selectedIds, onToggleSelect, onToggleSel
                     )}
                 </div>
                 {canApproveInBatch && (
-                    <Button size="sm" variant="default" className="ml-auto gap-2">
-                        <Check className="h-4 w-4" />
-                        Aprovar {selectedSemAjudaCusto.length} selecionado(s)
+                    <Button 
+                        size="sm" 
+                        variant="default" 
+                        className="ml-auto gap-2"
+                        onClick={() => handleAprovarEmLote(selectedSemAjudaCusto)}
+                        disabled={isApprovingBatch}
+                    >
+                        {isApprovingBatch ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                            <Check className="h-4 w-4" />
+                        )}
+                        {isApprovingBatch ? 'Aprovando...' : `Aprovar ${selectedSemAjudaCusto.length} selecionado(s)`}
                     </Button>
                 )}
             </div>
@@ -935,7 +1091,7 @@ function AprovarHorasTab({ lancamentos, selectedIds, onToggleSelect, onToggleSel
                             {/* Data e hora */}
                             <div className="text-right shrink-0">
                                 <p className="text-sm">{formatarData(lancamento.data)}</p>
-                                <p className="text-xs text-muted-foreground">{lancamento.horarioInicio}</p>
+                                <p className="text-xs text-muted-foreground">{lancamento.horarioInicio} - {lancamento.horarioFim}</p>
                             </div>
 
                             {/* Duração e valor */}
@@ -955,27 +1111,7 @@ function AprovarHorasTab({ lancamentos, selectedIds, onToggleSelect, onToggleSel
 
                         {/* Área expandida - detalhes e ações */}
                         {isExpanded && (
-                            <div className="border-t bg-muted/20 p-4 space-y-4">
-                                {/* Grid de informações */}
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                                    <div>
-                                        <span className="text-muted-foreground">Área</span>
-                                        <p className="font-medium">{lancamento.area || 'Não informado'}</p>
-                                    </div>
-                                    <div>
-                                        <span className="text-muted-foreground">Programa</span>
-                                        <p className="font-medium">{lancamento.programaNome || lancamento.finalidade || 'Não informado'}</p>
-                                    </div>
-                                    <div>
-                                        <span className="text-muted-foreground">Horário</span>
-                                        <p className="font-medium">{lancamento.horarioInicio} - {lancamento.horarioFim}</p>
-                                    </div>
-                                    <div>
-                                        <span className="text-muted-foreground">Valor/hora</span>
-                                        <p className="font-medium">{formatarValor(lancamento.valorHora ?? 0)}</p>
-                                    </div>
-                                </div>
-
+                            <div className="border-t bg-muted/20 p-4 py-2 space-y-4">
                                 {/* Seção Ajuda de Custo */}
                                 {temAjudaCusto && (
                                     <div className="rounded-lg border bg-card">
@@ -1061,7 +1197,7 @@ function AprovarHorasTab({ lancamentos, selectedIds, onToggleSelect, onToggleSel
                                 )}
 
                                 {/* Ações */}
-                                <div className="flex items-center justify-between pt-3 border-t">
+                                <div className="flex items-center justify-between">
                                     {/* Resumo de valor */}
                                     <div>
                                         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Total a pagar</span>
@@ -1186,9 +1322,10 @@ interface TerapeutasTabProps {
     grupos: TerapeutaGroupItem[];
     expandedId: string | null;
     onToggleExpand: (id: string) => void;
+    onViewDetails: (item: ItemFaturamento) => void;
 }
 
-function TerapeutasTab({ grupos, expandedId, onToggleExpand }: TerapeutasTabProps) {
+function TerapeutasTab({ grupos, expandedId, onToggleExpand, onViewDetails }: TerapeutasTabProps) {
     // Estado de filtros de coluna para a tabela expandida
     const [columnFilters, setColumnFilters] = useState<FaturamentoColumnFilters>({
         tipoAtividade: undefined,
@@ -1313,7 +1450,7 @@ function TerapeutasTab({ grupos, expandedId, onToggleExpand }: TerapeutasTabProp
                         columnFilters={columnFilters}
                         filterOptions={filterOptions}
                         onColumnFilterChange={setColumnFilters}
-                        onViewDetails={(item) => toast.info(`Ver detalhes: ${item.id}`)}
+                        onViewDetails={onViewDetails}
                     />
                 </div>
             </div>
@@ -1386,9 +1523,10 @@ interface ClientesTabProps {
     grupos: ClienteGroupItem[];
     expandedId: string | null;
     onToggleExpand: (id: string) => void;
+    onViewDetails: (item: ItemFaturamento) => void;
 }
 
-function ClientesTab({ grupos, expandedId, onToggleExpand }: ClientesTabProps) {
+function ClientesTab({ grupos, expandedId, onToggleExpand, onViewDetails }: ClientesTabProps) {
     // Estado de filtros de coluna para a tabela expandida
     const [columnFilters, setColumnFilters] = useState<FaturamentoColumnFilters>({
         tipoAtividade: undefined,
@@ -1513,7 +1651,7 @@ function ClientesTab({ grupos, expandedId, onToggleExpand }: ClientesTabProps) {
                         columnFilters={columnFilters}
                         filterOptions={filterOptions}
                         onColumnFilterChange={setColumnFilters}
-                        onViewDetails={(item) => toast.info(`Ver detalhes: ${item.id}`)}
+                        onViewDetails={onViewDetails}
                     />
                 </div>
             </div>

@@ -178,7 +178,7 @@ export const FaturamentoTable = memo(function FaturamentoTable({
             {/* Tabela Desktop */}
             <div className="hidden md:block overflow-x-auto overflow-y-visible scroll-pt-16">
                 <table className="w-full">
-                    <thead className="sticky top-0 z-10 shadow-sm" style={{ backgroundColor: 'var(--table-header-bg)' }}>
+                    <thead className="sticky top-0 z-10 shadow-sm rounded-lg rounded-br-0 rounded-bl-0" style={{ backgroundColor: 'var(--table-header-bg)' }}>
                         <tr>
                             <th className="text-left p-3 font-medium text-sm first:rounded-tl-lg" style={{ color: 'var(--table-text-secondary)' }}>
                                 Cliente

@@ -73,16 +73,16 @@ interface StatsCardPrimaryProps {
 
 function StatsCardPrimary({ icon, label, value, subValue }: StatsCardPrimaryProps) {
     return (
-        <div className="bg-zinc-900 dark:bg-zinc-800 rounded-xl p-5">
+        <div className="bg-primary rounded-xl p-5">
             <div className="flex items-start justify-between">
-                <div className="p-2 bg-white/10 rounded-lg text-white">
+                <div className="p-2 bg-primary-foreground/10 rounded-lg text-primary-foreground">
                     {icon}
                 </div>
             </div>
             <div className="mt-4">
-                <p className="text-xs text-zinc-400 mb-1">{label}</p>
-                <p className="text-2xl font-normal text-white">{value}</p>
-                {subValue && <p className="text-sm text-zinc-500 mt-1">{subValue}</p>}
+                <p className="text-xs text-primary-foreground/70 mb-1">{label}</p>
+                <p className="text-2xl font-normal text-primary-foreground">{value}</p>
+                {subValue && <p className="text-sm text-primary-foreground/50 mt-1">{subValue}</p>}
             </div>
         </div>
     );

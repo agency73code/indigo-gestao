@@ -99,19 +99,19 @@ function StatsCardPrimary({ icon, label, value, isActive, onClick }: StatsCardPr
     return (
         <div
             className={cn(
-                "bg-zinc-900 dark:bg-zinc-800 rounded-xl p-5 cursor-pointer transition-all hover:bg-zinc-800 dark:hover:bg-zinc-700",
-                isActive && "ring-2 ring-primary ring-offset-2 ring-offset-background"
+                "bg-primary rounded-xl p-5 cursor-pointer transition-all hover:bg-primary/90",
+                isActive && "ring-2 ring-primary-foreground ring-offset-2 ring-offset-background"
             )}
             onClick={onClick}
         >
             <div className="flex items-start justify-between">
-                <div className="p-2 bg-white/10 rounded-lg text-white">
+                <div className="p-2 bg-primary-foreground/10 rounded-lg text-primary-foreground">
                     {icon}
                 </div>
             </div>
             <div className="mt-4">
-                <p className="text-xs text-zinc-400 mb-1">{label}</p>
-                <p className="text-2xl font-normal text-white">{value}</p>
+                <p className="text-xs text-primary-foreground/70 mb-1">{label}</p>
+                <p className="text-2xl font-normal text-primary-foreground">{value}</p>
             </div>
         </div>
     );

@@ -24,11 +24,11 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/ui/alert';
 import { BackButton } from '@/components/layout/BackButton';
 import { BillingInfoView } from './BillingInfoView';
-import { SessionBillingData } from '@/features/programas/nova-sessao/components/SessionBillingData';
+import { BillingCorrectionForm, type DadosFaturamentoCorrecao } from './BillingCorrectionForm';
 import { cn } from '@/lib/utils';
 import type { BillingLancamento } from '../types/billingCorrection';
-import type { DadosFaturamentoSessao } from '@/features/programas/core/types/billing';
-import { validarDadosFaturamento } from '@/features/programas/core/types/billing';
+import type { DadosFaturamentoSessao, TipoAtendimento } from '@/features/programas/core/types/billing';
+import type { TipoAtividadeFaturamento } from '../types/faturamento.types';
 
 // ============================================
 // TIPOS
@@ -54,6 +54,85 @@ export interface BillingDrawerProps {
     
     /** Se está salvando */
     isSaving?: boolean;
+    
+    /** Se o usuário pode editar (ex: terapeuta pode, gerente não) */
+    canEdit?: boolean;
+}
+
+// ============================================
+// HELPERS DE CONVERSÃO
+// ============================================
+
+// Helper para converter DadosFaturamentoSessao para DadosFaturamentoCorrecao
+function toBillingCorrecao(data: DadosFaturamentoSessao | null, lancamento: BillingLancamento | null): DadosFaturamentoCorrecao | null {
+    if (!data) return null;
+    
+    // Determinar o tipoAtividade baseado no lancamento ou no tipoAtendimento
+    let tipoAtividade: TipoAtividadeFaturamento = data.tipoAtendimento || 'consultorio';
+    
+    // Se o lancamento tem tipo, usar ele
+    if (lancamento?.tipo) {
+        const tipoLower = lancamento.tipo.toLowerCase();
+        if (tipoLower === 'homecare') tipoAtividade = 'homecare';
+        else if (tipoLower === 'consultorio' || tipoLower === 'consultório') tipoAtividade = 'consultorio';
+        else if (tipoLower.includes('reunião') || tipoLower.includes('reuniao') || tipoLower === 'de reuniões') tipoAtividade = 'reuniao';
+        else if (tipoLower.includes('supervisão recebida') || tipoLower.includes('supervisao_recebida')) tipoAtividade = 'supervisao_recebida';
+        else if (tipoLower.includes('supervisão dada') || tipoLower.includes('supervisao_dada')) tipoAtividade = 'supervisao_dada';
+        else if (tipoLower.includes('material') || tipoLower.includes('desenvolvimento')) tipoAtividade = 'desenvolvimento_materiais';
+    }
+    
+    return {
+        dataSessao: data.dataSessao,
+        horarioInicio: data.horarioInicio,
+        horarioFim: data.horarioFim,
+        ajudaCusto: data.ajudaCusto,
+        observacaoFaturamento: data.observacaoFaturamento,
+        arquivosFaturamento: data.arquivosFaturamento,
+        tipoAtividade,
+        tipoAtendimento: data.tipoAtendimento,
+    };
+}
+
+// Helper para converter DadosFaturamentoCorrecao para DadosFaturamentoSessao (para salvar)
+function fromBillingCorrecao(data: DadosFaturamentoCorrecao): DadosFaturamentoSessao {
+    // Extrair tipoAtendimento do tipoAtividade (apenas consultorio e homecare são válidos)
+    const tipoAtendimento: TipoAtendimento = (data.tipoAtividade === 'homecare') ? 'homecare' : 'consultorio';
+    
+    return {
+        dataSessao: data.dataSessao,
+        horarioInicio: data.horarioInicio,
+        horarioFim: data.horarioFim,
+        tipoAtendimento,
+        ajudaCusto: data.ajudaCusto,
+        observacaoFaturamento: data.observacaoFaturamento,
+        arquivosFaturamento: data.arquivosFaturamento,
+    };
+}
+
+// Helper para validar dados de correção
+function validarDadosCorrecao(data: DadosFaturamentoCorrecao): { valido: boolean; erros: Record<string, string> } {
+    const erros: Record<string, string> = {};
+    
+    if (!data.tipoAtividade) {
+        erros.tipoAtividade = 'Tipo de atividade é obrigatório';
+    }
+    
+    if (!data.dataSessao) {
+        erros.dataSessao = 'Data é obrigatória';
+    }
+    
+    if (!data.horarioInicio) {
+        erros.horarioInicio = 'Horário de início é obrigatório';
+    }
+    
+    if (!data.horarioFim) {
+        erros.horarioFim = 'Horário de fim é obrigatório';
+    }
+    
+    return {
+        valido: Object.keys(erros).length === 0,
+        erros
+    };
 }
 
 // ============================================
@@ -67,9 +146,10 @@ export function BillingDrawer({
     initialBillingData,
     onSave,
     isSaving = false,
+    canEdit = true,
 }: BillingDrawerProps) {
     const [mode, setMode] = useState<DrawerMode>('view');
-    const [billingData, setBillingData] = useState<DadosFaturamentoSessao | null>(initialBillingData);
+    const [billingData, setBillingData] = useState<DadosFaturamentoCorrecao | null>(toBillingCorrecao(initialBillingData, lancamento));
     const [comentario, setComentario] = useState('');
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [showSuccess, setShowSuccess] = useState(false);
@@ -78,7 +158,7 @@ export function BillingDrawer({
     useEffect(() => {
         if (isOpen && initialBillingData) {
             setMode('view');
-            setBillingData(initialBillingData);
+            setBillingData(toBillingCorrecao(initialBillingData, lancamento));
             setComentario('');
             setErrors({});
             setShowSuccess(false);
@@ -102,7 +182,7 @@ export function BillingDrawer({
     // Cancelar edição e voltar para visualização
     const handleCancelEdit = () => {
         setMode('view');
-        setBillingData(initialBillingData);
+        setBillingData(toBillingCorrecao(initialBillingData, lancamento));
         setComentario('');
         setErrors({});
     };
@@ -112,7 +192,7 @@ export function BillingDrawer({
         if (!billingData || !lancamento) return;
 
         // Validar dados
-        const validation = validarDadosFaturamento(billingData);
+        const validation = validarDadosCorrecao(billingData);
         
         if (!validation.valido) {
             setErrors(validation.erros);
@@ -122,7 +202,9 @@ export function BillingDrawer({
         setErrors({});
 
         try {
-            await onSave(lancamento.id, billingData, comentario);
+            // Converter de volta para DadosFaturamentoSessao
+            const dadosParaSalvar = fromBillingCorrecao(billingData);
+            await onSave(lancamento.id, dadosParaSalvar, comentario);
             
             // Mostrar mensagem de sucesso
             setShowSuccess(true);
@@ -185,8 +267,8 @@ export function BillingDrawer({
 
                     {/* Botões no Header */}
                     {mode === 'view' ? (
-                        /* Modo Visualização: Botão Corrigir (se rejeitado) */
-                        isRejeitado && (
+                        /* Modo Visualização: Botão Corrigir (se rejeitado E pode editar) */
+                        isRejeitado && canEdit && (
                             <Button
                                 onClick={handleEdit}
                                 className="min-w-[120px]"
@@ -255,7 +337,7 @@ export function BillingDrawer({
                                    ======================================== */
                                 billingData && (
                                     <BillingInfoView
-                                        billing={billingData}
+                                        billing={fromBillingCorrecao(billingData)}
                                         title="Dados de Faturamento"
                                     />
                                 )
@@ -271,7 +353,7 @@ export function BillingDrawer({
                                         >
                                             Dados de Faturamento
                                         </h4>
-                                        <SessionBillingData
+                                        <BillingCorrectionForm
                                             value={billingData}
                                             onChange={setBillingData}
                                             errors={errors}

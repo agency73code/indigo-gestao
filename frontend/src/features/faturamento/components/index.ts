@@ -9,6 +9,8 @@ export { FaturamentoTable, type FaturamentoColumnFilters, type FaturamentoColumn
 export { CorrectBillingDrawer } from './CorrectBillingDrawer';
 export { BillingDrawer } from './BillingDrawer';
 export { BillingInfoView } from './BillingInfoView';
+export { BillingViewDrawer } from './BillingViewDrawer';
+export { BillingCorrectionForm, type DadosFaturamentoCorrecao } from './BillingCorrectionForm';
 
 // Componentes antigos (deprecados - serão removidos)
 export { LancamentosTable, default as LancamentosTableDefault } from './LancamentosTable';
