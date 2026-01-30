@@ -76,18 +76,18 @@ export async function listBilling(params: listBillingPayload) {
     const skip = (page - 1) * pageSize;
     const take = pageSize;
 
+    console.log(dataInicio, dataFim)
+    console.log({
+            ...(dataInicio && { gte: startOfDay(dataInicio) }),
+            ...(dataFim && { lte: endOfDay(dataFim) }),
+        },)
+
     const where: Prisma.faturamentoWhereInput = {
         criado_em: {
             ...(dataInicio && { gte: startOfDay(dataInicio) }),
             ...(dataFim && { lte: endOfDay(dataFim) }),
         },
     };
-
-    console.log('gte local:', startOfDay(dataInicio!).toString());
-    console.log('gte iso  :', startOfDay(dataInicio!).toISOString());
-
-    console.log('lte local:', endOfDay(dataFim!).toString());
-    console.log('lte iso  :', endOfDay(dataFim!).toISOString());
 
     const [items, total] = await prisma.$transaction([
         prisma.faturamento.findMany({
