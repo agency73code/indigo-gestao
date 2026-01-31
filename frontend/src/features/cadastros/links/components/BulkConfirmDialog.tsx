@@ -36,7 +36,15 @@ export default function BulkConfirmDialog({
         <AlertDialog open={open} onOpenChange={onClose}>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>{title}</AlertDialogTitle>
+                    <AlertDialogTitle 
+                        style={{
+                            fontSize: 'var(--page-title-font-size)',
+                            fontWeight: 'var(--page-title-font-weight)',
+                            fontFamily: 'var(--page-title-font-family)'
+                        }}
+                    >
+                        {title}
+                    </AlertDialogTitle>
                     <AlertDialogDescription>{description}</AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -47,7 +55,6 @@ export default function BulkConfirmDialog({
                             onConfirm();
                         }}
                         disabled={loading}
-                        className={variant === 'destructive' ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90' : ''}
                     >
                         {loading ? 'Processando...' : confirmText}
                     </AlertDialogAction>

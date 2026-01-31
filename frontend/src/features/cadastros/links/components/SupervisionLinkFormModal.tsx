@@ -21,8 +21,8 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogFooter,
 } from '@/components/ui/dialog';
+import { SlidePanel } from '@/components/layout/SlidePanel';
 import type {
     SupervisionLinkFormModalProps,
     CreateSupervisionLinkInput,
@@ -217,26 +217,43 @@ export default function SupervisionLinkFormModal({
 
     const title = isEdit ? 'Editar Vínculo de Supervisão' : 'Novo Vínculo de Supervisão';
 
-    return (
-        <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="max-w-lg w-[95vw] sm:w-full max-h-[90vh] overflow-y-auto mx-auto rounded-[5px]">
-                <DialogHeader>
-                    <DialogTitle
-                        style={{ fontFamily: 'Sora, sans-serif' }}
-                        className="text-lg sm:text-xl font-semibold"
-                    >
-                        {title}
-                    </DialogTitle>
-                </DialogHeader>
+    const subtitle = selectedSupervisor && selectedTherapist
+        ? `${selectedSupervisor.nome} → ${selectedTherapist.nome}`
+        : selectedSupervisor
+          ? selectedSupervisor.nome
+          : selectedTherapist
+            ? selectedTherapist.nome
+            : undefined;
 
-                <div className="space-y-4 sm:space-y-6 py-2 sm:py-4">
+    const headerActions = (
+        <Button
+            onClick={handleSubmit}
+            disabled={loading}
+            className="min-w-[120px]"
+        >
+            {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+            {isEdit ? 'Salvar' : 'Criar Vínculo'}
+        </Button>
+    );
+
+    return (
+        <>
+            <SlidePanel
+                isOpen={open}
+                onClose={onClose}
+                title={title}
+                subtitle={subtitle}
+                headerActions={headerActions}
+                width="md"
+            >
+                <div className="space-y-6">
                     {/* Seleção de Supervisor */}
                     <div className="space-y-2">
                         <Label className="text-sm font-medium">Supervisor *</Label>
                         <div className="relative">
                             <div
                                 className={cn(
-                                    'flex items-center gap-3 p-3 border rounded-[5px] cursor-pointer',
+                                    'flex items-center gap-3 p-3 border rounded-lg cursor-pointer bg-background',
                                     'hover:bg-muted/50 transition-colors',
                                     errors.supervisor ? 'border-destructive' : 'border-input',
                                     isEdit && 'opacity-60 cursor-not-allowed',
@@ -289,7 +306,7 @@ export default function SupervisionLinkFormModal({
                         <div className="relative">
                             <div
                                 className={cn(
-                                    'flex items-center gap-3 p-3 border rounded-[5px] cursor-pointer',
+                                    'flex items-center gap-3 p-3 border rounded-lg cursor-pointer bg-background',
                                     'hover:bg-muted/50 transition-colors',
                                     errors.therapist ? 'border-destructive' : 'border-input',
                                     isEdit && 'opacity-60 cursor-not-allowed',
@@ -356,7 +373,7 @@ export default function SupervisionLinkFormModal({
                     <div className="space-y-2">
                         <Label className="text-sm font-medium">Escopo de Supervisão</Label>
                         <Select value={supervisionScope} onValueChange={(value: 'direct' | 'team') => setSupervisionScope(value)}>
-                            <SelectTrigger className="w-full">
+                            <SelectTrigger className="w-full bg-background">
                                 <SelectValue placeholder="Selecione o escopo" />
                             </SelectTrigger>
                             <SelectContent className="w-[400px]">
@@ -387,7 +404,7 @@ export default function SupervisionLinkFormModal({
                             placeholder="Observações sobre o vínculo de supervisão (opcional)"
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}
-                            className="min-h-[100px] resize-none"
+                            className="min-h-[100px] resize-none bg-background"
                             maxLength={500}
                         />
                         <div className="text-xs text-muted-foreground text-right">
@@ -395,36 +412,12 @@ export default function SupervisionLinkFormModal({
                         </div>
                     </div>
                 </div>
-
-                <DialogFooter className="gap-2 sm:gap-0">
-                    <Button
-                        variant="outline"
-                        onClick={onClose}
-                        disabled={loading}
-                        className="flex-1 sm:flex-none"
-                    >
-                        Cancelar
-                    </Button>
-                    <Button
-                        onClick={handleSubmit}
-                        disabled={loading}
-                        className="flex-1 sm:flex-none gap-2"
-                    >
-                        {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-                        <span className="sm:hidden">
-                            {isEdit ? 'Salvar' : 'Criar'}
-                        </span>
-                        <span className="hidden sm:inline">
-                            {isEdit ? 'Salvar Alterações' : 'Criar Vínculo'}
-                        </span>
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
+            </SlidePanel>
 
             {/* Modal de busca de supervisores */}
             {showSupervisorSearch && (
                 <Dialog open={showSupervisorSearch} onOpenChange={setShowSupervisorSearch}>
-                    <DialogContent className="max-w-md w-[95vw] sm:w-full mx-auto rounded-[5px]">
+                    <DialogContent className="max-w-md w-[95vw] sm:w-full mx-auto rounded-lg">
                         <DialogHeader>
                             <DialogTitle className="text-base sm:text-lg">
                                 Selecionar supervisor
@@ -451,7 +444,7 @@ export default function SupervisionLinkFormModal({
                                             return (
                                                 <div
                                                     key={supervisor.id}
-                                                    className="flex items-center gap-3 p-3 hover:bg-muted/50 cursor-pointer rounded-[5px]"
+                                                    className="flex items-center gap-3 p-3 hover:bg-muted/50 cursor-pointer rounded-lg"
                                                     onClick={() => handleSupervisorSelect(supervisor)}
                                                 >
                                                     <Avatar className="h-8 w-8">
@@ -495,7 +488,7 @@ export default function SupervisionLinkFormModal({
             {/* Modal de busca de terapeutas clínicos */}
             {showTherapistSearch && (
                 <Dialog open={showTherapistSearch} onOpenChange={setShowTherapistSearch}>
-                    <DialogContent className="max-w-md w-[95vw] sm:w-full mx-auto rounded-[5px]">
+                    <DialogContent className="max-w-md w-[95vw] sm:w-full mx-auto rounded-lg">
                         <DialogHeader>
                             <DialogTitle className="text-base sm:text-lg">
                                 Selecionar terapeuta clínico
@@ -522,7 +515,7 @@ export default function SupervisionLinkFormModal({
                                             return (
                                                 <div
                                                     key={therapist.id}
-                                                    className="flex items-center gap-3 p-3 hover:bg-muted/50 cursor-pointer rounded-[5px]"
+                                                    className="flex items-center gap-3 p-3 hover:bg-muted/50 cursor-pointer rounded-lg"
                                                     onClick={() => handleTherapistSelect(therapist)}
                                                 >
                                                     <Avatar className="h-8 w-8">
@@ -562,6 +555,6 @@ export default function SupervisionLinkFormModal({
                     </DialogContent>
                 </Dialog>
             )}
-        </Dialog>
+        </>
     );
 }
