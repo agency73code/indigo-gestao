@@ -30,7 +30,7 @@ import * as mocks from './faturamento.mock';
 // ============================================
 
 /**
- * Lista lançamentos de faturamento (sessões + atas) com filtros
+ * Lista lançamentos de faturamento (sessões + atas) com filtros [feito]
  */
 export async function listFaturamento(
     filters: FaturamentoListFilters = {}
@@ -58,7 +58,7 @@ export async function listFaturamento(
     }
     
     const data = await res.json();
-    console.log(data)
+
     return data;
 }
 

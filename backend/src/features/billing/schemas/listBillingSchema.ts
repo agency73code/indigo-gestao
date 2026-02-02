@@ -1,8 +1,9 @@
 import { z } from "zod";
 import { uuidParam } from "../../../schemas/utils/uuid.js";
 import { dateStringToDate } from "../../../schemas/utils/dateStringToDate.js";
+import { faturamento_status } from "@prisma/client";
 
-const statusEnum = z.enum(['pendente', 'aprovado', 'rejeitado']);
+const statusEnum = z.enum(faturamento_status);
 const orderByEnum = z.enum(['recent', 'oldest']);
 const orderBySchema = orderByEnum
     .default('oldest')

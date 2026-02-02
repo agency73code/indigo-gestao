@@ -10,6 +10,9 @@ import { billingListSelect } from "./queries/billingListSelect.js";
 import { mapBillingListItem } from "./mappers/mapBillingListItem.js";
 import type { listBillingPayload } from "./schemas/listBillingSchema.js";
 import { endOfDay, startOfDay } from "./utils/scheduleAdjustment.js";
+import { parseYMDToLocalDate } from "../../schemas/utils/parseYMDToLocalDate.js";
+import { toDateOnly } from "../../utils/toDateOnly.js";
+import { getVisibilityScope } from "../../utils/visibilityFilter.js";
 
 export async function createBilling(tx: Prisma.TransactionClient, payload: CreateBillingPayload, parties: BillingParties, target: BillingTarget) {
     const { billing, billingFiles } = payload;
@@ -70,24 +73,31 @@ export async function createBilling(tx: Prisma.TransactionClient, payload: Creat
     return createdBilling;
 }
 
-export async function listBilling(params: listBillingPayload) {
-    const { q, terapeutaId, clienteId, status, dataInicio, dataFim, orderBy, page, pageSize } = params;
+export async function listBilling(params: listBillingPayload, userId: string) {
+    const { q, clienteId, status, dataInicio, dataFim, orderBy, page, pageSize } = params;
 
     const skip = (page - 1) * pageSize;
     const take = pageSize;
 
-    console.log(dataInicio, dataFim)
-    console.log({
-            ...(dataInicio && { gte: startOfDay(dataInicio) }),
-            ...(dataFim && { lte: endOfDay(dataFim) }),
-        },)
+    const visibility = await getVisibilityScope(userId);
 
     const where: Prisma.faturamentoWhereInput = {
         criado_em: {
-            ...(dataInicio && { gte: startOfDay(dataInicio) }),
-            ...(dataFim && { lte: endOfDay(dataFim) }),
+            ...(dataInicio && { gte: startOfDay(parseYMDToLocalDate(toDateOnly(dataInicio))) }),
+            ...(dataFim && { lte: endOfDay(parseYMDToLocalDate(toDateOnly(dataFim))) }),
         },
+        ...(status && { status }),
+        ...(q && { cliente: { nome: { contains: q } } }),
+        ...(clienteId && { cliente_id: clienteId })
     };
+
+    if (visibility.scope === 'none') {
+        where.id = { equals: -1 };
+    } 
+    
+    if (visibility.scope === 'partial') {
+        where.terapeuta_id = { in: visibility.therapistIds };
+    } 
 
     const [items, total] = await prisma.$transaction([
         prisma.faturamento.findMany({

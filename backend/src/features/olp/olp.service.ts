@@ -57,25 +57,18 @@ export async function createProgram(data: OcpType.CreateProgramPayload) {
 export async function createSession(params: CreateSessionParams) {
     const { input, billingInput } = params;
 
-    try {
-        const teste = await prisma.$transaction(async (tx) => {
-            const session = await createAreaSessionTx(tx, input);
-    
-            const parties = {
-                clienteId: input.patientId,
-                terapeutaId: input.therapistId,
-            }
-    
-            await createBilling(tx, billingInput, parties, { sessionId: session.id });
-            
-            return session;
-        });
+    return await prisma.$transaction(async (tx) => {
+        const session = await createAreaSessionTx(tx, input);
 
-        return teste;
-    } catch (err) {
-        console.error('[TX ERROR]', err);
-        throw err;
-    }
+        const parties = {
+            clienteId: input.patientId,
+            terapeutaId: input.therapistId,
+        }
+
+        await createBilling(tx, billingInput, parties, { sessionId: session.id });
+        
+        return session;
+    });
 }
 
 export async function updateProgram(programId: number, input: OcpType.UpdateProgramInput) {

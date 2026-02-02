@@ -70,6 +70,7 @@ model area_atuacao {
   id                    Int                     @id @default(autoincrement())
   nome                  String                  @db.VarChar(100)
   registro_profissional registro_profissional[]
+  clienteAreas          cliente_valor_area[]
 }
 
 model cargo {
@@ -110,6 +111,7 @@ model cliente {
   ocp_prontuarios ocp_prontuario[]
   atas_reuniao    ata_reuniao[]
   faturamentos    faturamento[]
+  clienteAreas    cliente_valor_area[]
 
   @@index([nome], map: "nome_idx")
 }
@@ -910,6 +912,19 @@ model ocp {
   @@index([cliente_id, area])
   @@index([nome_programa])
   @@index([terapeuta_id], map: "ocp_terapeuta_id_fkey")
+}
+
+model cliente_valor_area {
+  id              Int          @id @default(autoincrement())
+  cliente_id      String
+  cliente         cliente      @relation(fields: [cliente_id], references: [id], onDelete: Cascade)
+  area_atuacao_id Int
+  areaAtuacao     area_atuacao @relation(fields: [area_atuacao_id], references: [id], onDelete: Restrict)
+  valor_sessao    Decimal      @db.Decimal(10, 2)
+  criado_em       DateTime     @default(now())
+  atualizado_em   DateTime     @updatedAt
+
+  @@index([criado_em])
 }
 
 model terapeuta_cliente {
