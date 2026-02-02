@@ -58,7 +58,7 @@ function toBillingCorrecao(data: DadosFaturamentoSessao | null, lancamento: Bill
     if (!data) return null;
     
     // Determinar o tipoAtividade baseado no lancamento ou no tipoAtendimento
-    let tipoAtividade = data.tipoAtendimento || 'consultorio';
+    let tipoAtividade: string = data.tipoAtendimento || 'consultorio';
     
     // Se o lancamento tem tipo, usar ele
     if (lancamento?.tipo) {
@@ -73,7 +73,26 @@ function toBillingCorrecao(data: DadosFaturamentoSessao | null, lancamento: Bill
     
     return {
         ...data,
-        tipoAtividade: tipoAtividade as any,
+        tipoAtividade: tipoAtividade as DadosFaturamentoCorrecao['tipoAtividade'],
+    };
+}
+
+// ============================================
+// HELPER: Converter DadosFaturamentoCorrecao para DadosFaturamentoSessao
+// ============================================
+
+function fromBillingCorrecao(data: DadosFaturamentoCorrecao): DadosFaturamentoSessao {
+    // Determina tipoAtendimento baseado no tipoAtividade
+    const tipoAtendimento = data.tipoAtividade === 'homecare' ? 'homecare' : 'consultorio';
+    
+    return {
+        dataSessao: data.dataSessao,
+        horarioInicio: data.horarioInicio,
+        horarioFim: data.horarioFim,
+        tipoAtendimento,
+        ajudaCusto: data.ajudaCusto,
+        observacaoFaturamento: data.observacaoFaturamento,
+        arquivosFaturamento: data.arquivosFaturamento,
     };
 }
 
@@ -117,8 +136,11 @@ export function CorrectBillingDrawer({
     const handleSave = async () => {
         if (!billingData || !lancamento) return;
 
+        // Converter para DadosFaturamentoSessao para validação e salvamento
+        const dadosParaSalvar = fromBillingCorrecao(billingData);
+
         // Validar dados
-        const validation = validarDadosFaturamento(billingData);
+        const validation = validarDadosFaturamento(dadosParaSalvar);
         
         if (!validation.valido) {
             setErrors(validation.erros);
@@ -128,7 +150,7 @@ export function CorrectBillingDrawer({
         setErrors({});
 
         try {
-            await onSave(lancamento.id, billingData, comentario);
+            await onSave(lancamento.id, dadosParaSalvar, comentario);
             
             // Mostrar mensagem de sucesso
             setShowSuccess(true);

@@ -479,7 +479,7 @@ export function BaseCadastroProgramaPage({
             </div>
 
             {errors.general && (
-                <div className="fixed top-4 right-4 z-50 bg-destructive text-destructive-foreground p-4 rounded-md shadow-lg">
+                <div className="fixed top-4 right-4 z-50 bg-destructive text-white p-4 rounded-md shadow-lg">
                     {errors.general}
                 </div>
             )}

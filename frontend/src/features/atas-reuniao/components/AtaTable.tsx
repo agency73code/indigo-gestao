@@ -441,7 +441,7 @@ function DetailPanel({
                         </Button>
                         <Button 
                             variant="outline" 
-                            className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                            className="text-destructive hover:bg-destructive hover:text-white"
                             onClick={onDelete}
                         >
                             <Trash2 className="h-4 w-4" />
@@ -1211,7 +1211,7 @@ export function AtaTable() {
                         <AlertDialogAction
                             onClick={handleDeleteConfirm}
                             disabled={deleting}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            className="bg-destructive text-white hover:bg-destructive/90"
                         >
                             {deleting ? (
                                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />

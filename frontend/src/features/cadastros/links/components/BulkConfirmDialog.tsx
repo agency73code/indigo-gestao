@@ -29,7 +29,7 @@ export default function BulkConfirmDialog({
     description,
     confirmText,
     cancelText = 'Cancelar',
-    variant = 'default',
+    variant: _variant = 'default',
     loading = false,
 }: BulkConfirmDialogProps) {
     return (
