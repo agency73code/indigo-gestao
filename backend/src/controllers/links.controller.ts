@@ -4,23 +4,12 @@ import * as LinkNormalizer from '../features/links/old/links.normalizer.js';
 import * as LinkTypes from '../features/links/old/links.types.js';
 import { clientListSchema, clientOptionsSchema } from '../schemas/queries/client.schema.js';
 import { therapistListQuerySchema, therapistSelectQuerySchema } from '../schemas/queries/therapists.schema.js';
+import { linksSchema } from '../features/links/links.schema.js';
 
-export async function createLink(
-    req: Request<unknown, unknown, LinkTypes.CreateLink>,
-    res: Response,
-    next: NextFunction,
-) {
+export async function createLink(req: Request, res: Response, next: NextFunction) {
     try {
-        const body = req.body;
-        const created = await LinkService.createLink({
-            patientId: body.patientId,
-            therapistId: body.therapistId,
-            role: body.role,
-            startDate: body.startDate,
-            endDate: body.endDate,
-            notes: body.notes,
-            actuationArea: body.actuationArea,
-        });
+        const payload = linksSchema.parse(req.body);
+        const created = await LinkService.createLink(payload);
 
         const normalized = LinkNormalizer.normalizeLink(created);
         res.status(201).json(normalized);

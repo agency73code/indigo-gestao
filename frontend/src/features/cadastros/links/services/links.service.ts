@@ -76,7 +76,7 @@ export async function createLink(input: CreateLinkInput): Promise<PatientTherapi
     },
     body: JSON.stringify(input)
   });
-
+  console.log(input)
   if (!res.ok) {
     let errorMessage = 'Falha ao criar vínculo';
     const errorText = await res.text();

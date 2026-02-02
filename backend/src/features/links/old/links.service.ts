@@ -7,6 +7,8 @@ import * as clients from './actions/clients.js';
 import * as therapists from './actions/therapist.js';
 import type { TherapistListQuery, TherapistSelectQuery } from '../../../schemas/queries/therapists.schema.js';
 import { normalizeListTherapists, normalizeSelectTherapists } from './links.normalizer.js';
+import type { linksPayload } from '../links.schema.js';
+import { normalizeRoleName } from '../../../utils/normalizeRoleName.js';
 
 const LINK_SELECT = {
     id: true,
@@ -89,50 +91,65 @@ async function resolveTherapistActuation(
  * Em caso de sucesso, retorna o vínculo recém-criado com os campos definidos em LINK_SELECT.
  * Não realiza normalização — responsabilidade da camada Controller.
  */
-export async function createLink(payload: LinkTypes.CreateLink) {
-    const actuationArea = await resolveTherapistActuation(
-        payload.therapistId,
-        payload.actuationArea,
-    );
+export async function createLink(payload: linksPayload) {
+    try {
+        return await prisma.$transaction(async (tx) => {
+            const existingLink = await tx.terapeuta_cliente.findFirst({
+                where: {
+                    cliente_id: payload.patientId,
+                    terapeuta_id: payload.therapistId,
+                },
+            });
+    
+            if (existingLink) {
+                throw new AppError(
+                    'LINK_ALREADY_EXISTS',
+                    'Já existe um vínculo ativo entre o terapeuta e o cliente.',
+                    400,
+                );
+            }
+    
+            const actuationArea = await tx.area_atuacao.findFirst({
+                where: { nome: payload.actuationArea },
+                select: { id: true }
+            });
+    
+            if (!actuationArea) {
+                throw new AppError(
+                    'ACTUATION_AREA_NOT_FOUND',
+                    'Área de atuação informada não existe.',
+                    400,
+                );
+            }
+    
+            const created = await tx.terapeuta_cliente.create({
+                data: {
+                    cliente_id: payload.patientId,
+                    terapeuta_id: payload.therapistId,
+                    papel: payload.role,
+                    status: 'active',
+                    data_inicio: new Date(payload.startDate),
+                    observacoes: payload.notes ,
+                    area_atuacao: normalizeRoleName(payload.actuationArea),
+                }
+            });
+    
+    
+            await tx.cliente_valor_area.create({
+                data: {
+                    cliente_id: payload.patientId,
+                    area_atuacao_id: actuationArea.id,
+                    valor_sessao: payload.valorSessao,
+                }
+            });
+    
+            return created;
+        });
 
-    if (payload.endDate && payload.startDate < payload.endDate) {
-        throw new AppError(
-            'DATE_RANGE_INVALID',
-            'A data de término não pode ser anterior à data de início.',
-            400,
-        );
+    } catch (err) {
+        console.error(err)
+        throw err;
     }
-
-    const existingLink = await prisma.terapeuta_cliente.findFirst({
-        where: {
-            cliente_id: payload.patientId,
-            terapeuta_id: payload.therapistId,
-        },
-    });
-
-    if (existingLink) {
-        throw new AppError(
-            'LINK_ALREADY_EXISTS',
-            'Já existe um vínculo ativo entre o terapeuta e o cliente.',
-            400,
-        );
-    }
-
-    const created = await prisma.terapeuta_cliente.create({
-        data: {
-            cliente_id: payload.patientId,
-            terapeuta_id: payload.therapistId,
-            papel: payload.role,
-            status: 'active',
-            data_inicio: new Date(payload.startDate),
-            data_fim: payload.endDate ? new Date(payload.endDate) : null,
-            observacoes: payload.notes ?? null,
-            area_atuacao: actuationArea,
-        },
-        select: LINK_SELECT,
-    });
-
-    return created;
 }
 
 export async function getClientOptions(userId: string, search?: string, limit?: number) {
