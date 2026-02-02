@@ -364,7 +364,7 @@ const MOCK_LANCAMENTOS_OUTROS_TERAPEUTAS: ItemFaturamento[] = [
         tipoAtividade: TIPO_ATIVIDADE_FATURAMENTO.CONSULTORIO,
         duracaoMinutos: 60,
         valorHora: 180,
-        valorTotal: 180,
+        valorTotal: 100000,
         status: STATUS_FATURAMENTO.PENDENTE,
         area: 'Psicologia',
         programaNome: 'Programa Comportamental',

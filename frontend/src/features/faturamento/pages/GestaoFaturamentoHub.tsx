@@ -207,6 +207,7 @@ interface StatsCardSecondaryProps {
     icon: React.ReactNode;
     label: string;
     value: number | string;
+    subValue?: string;
     badge?: {
         value: string;
         variant: 'success' | 'warning' | 'default';
@@ -215,7 +216,7 @@ interface StatsCardSecondaryProps {
     onClick?: () => void;
 }
 
-function StatsCardSecondary({ icon, label, value, badge, isActive, onClick }: StatsCardSecondaryProps) {
+function StatsCardSecondary({ icon, label, value, subValue, badge, isActive, onClick }: StatsCardSecondaryProps) {
     return (
         <div
             className={cn(
@@ -232,17 +233,22 @@ function StatsCardSecondary({ icon, label, value, badge, isActive, onClick }: St
             </div>
             <div className="mt-4">
                 <p className="text-xs text-muted-foreground mb-1">{label}</p>
-                <div className="flex items-center gap-3">
-                    <p className="text-2xl font-normal">{value}</p>
-                    {badge && (
-                        <span className={cn(
-                            "text-xs px-2 py-0.5 rounded-full font-medium",
-                            badge.variant === 'success' && "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
-                            badge.variant === 'warning' && "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-                            badge.variant === 'default' && "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400",
-                        )}>
-                            {badge.value}
-                        </span>
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <p className="text-2xl font-normal">{value}</p>
+                        {badge && (
+                            <span className={cn(
+                                "text-xs px-2 py-0.5 rounded-full font-medium",
+                                badge.variant === 'success' && "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+                                badge.variant === 'warning' && "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+                                badge.variant === 'default' && "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400",
+                            )}>
+                                {badge.value}
+                            </span>
+                        )}
+                    </div>
+                    {subValue && (
+                        <p className="text-xs text-muted-foreground">{subValue}</p>
                     )}
                 </div>
             </div>
@@ -399,6 +405,7 @@ export function GestaoFaturamentoHub() {
         const totalMinutos = lancamentos.reduce((acc, l) => acc + l.duracaoMinutos, 0);
         const totalValor = lancamentos.reduce((acc, l) => acc + (l.valorTotal ?? 0), 0);
         const valorPendente = pendentes.reduce((acc, l) => acc + (l.valorTotal ?? 0), 0);
+        const valorAprovado = aprovados.reduce((acc, l) => acc + (l.valorTotal ?? 0), 0);
 
         return {
             totalLancamentos: lancamentos.length,
@@ -407,6 +414,7 @@ export function GestaoFaturamentoHub() {
             totalHoras: formatarHoras(totalMinutos),
             totalValor,
             valorPendente,
+            valorAprovado,
         };
     }, [lancamentos, pendentes, aprovados]);
 
@@ -633,6 +641,7 @@ export function GestaoFaturamentoHub() {
                                 icon={<CheckCircle2 className="h-5 w-5" />}
                                 label="Aprovados"
                                 value={stats.aprovados}
+                                subValue={formatarValor(stats.valorAprovado)}
                                 badge={lancamentos.length > 0 ? {
                                     value: `${Math.round((stats.aprovados / lancamentos.length) * 100)}%`,
                                     variant: 'success'
@@ -644,6 +653,7 @@ export function GestaoFaturamentoHub() {
                                 icon={stats.pendentes > 0 ? <AlertCircle className="h-5 w-5" /> : <CheckCircle2 className="h-5 w-5" />}
                                 label="Pendentes"
                                 value={stats.pendentes}
+                                subValue={formatarValor(stats.valorPendente)}
                                 badge={stats.pendentes > 0 ? {
                                     value: `${stats.pendentes} aguardando`,
                                     variant: 'warning'
