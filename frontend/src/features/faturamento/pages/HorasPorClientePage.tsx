@@ -36,7 +36,7 @@ import {
     ORIGEM_LANCAMENTO,
 } from '../types/faturamento.types';
 import { listFaturamento } from '../services/faturamento-sessoes.service';
-import { FaturamentoTable, type FaturamentoColumnFilters, type FaturamentoColumnFilterOptions } from '../components/FaturamentoTable';
+import { FaturamentoTable, type FaturamentoColumnFilters, type FaturamentoColumnFilterOptions, type FaturamentoViewContext } from '../components/FaturamentoTable';
 
 // ============================================
 // TIPOS
@@ -48,7 +48,10 @@ interface ClienteGroup {
     clienteAvatarUrl?: string;
     lancamentos: ItemFaturamento[];
     totalMinutos: number;
+    /** Valor total que o cliente paga à clínica (valorTotalCliente) */
     totalValor: number;
+    /** Valor total que a clínica paga ao terapeuta (valorTotal) */
+    totalValorTerapeuta: number;
     totalLancamentos: number;
     totalPendentes: number;
     totalAprovados: number;
@@ -212,7 +215,9 @@ export function HorasPorClientePage() {
 
     // Filtros de coluna (para drill-down)
     const [columnFilters, setColumnFilters] = useState<FaturamentoColumnFilters>({
+        firstColumn: undefined,
         tipoAtividade: undefined,
+        especialidade: undefined,
         status: undefined,
     });
 
@@ -241,6 +246,7 @@ export function HorasPorClientePage() {
 
     // ============================================
     // AGRUPAR POR CLIENTE
+    // Usa valorTotalCliente (quanto o cliente paga à clínica)
     // ============================================
 
     const groupedByCliente = useMemo((): ClienteGroup[] => {
@@ -259,7 +265,8 @@ export function HorasPorClientePage() {
                     clienteAvatarUrl: l.clienteAvatarUrl,
                     lancamentos: [],
                     totalMinutos: 0,
-                    totalValor: 0,
+                    totalValor: 0, // Valor do cliente (quanto o cliente paga)
+                    totalValorTerapeuta: 0, // Valor do terapeuta (quanto pagar)
                     totalLancamentos: 0,
                     totalPendentes: 0,
                     totalAprovados: 0,
@@ -269,7 +276,9 @@ export function HorasPorClientePage() {
 
             grouped[l.clienteId].lancamentos.push(l);
             grouped[l.clienteId].totalMinutos += l.duracaoMinutos;
-            grouped[l.clienteId].totalValor += l.valorTotal ?? 0;
+            // Usar valorTotalCliente para cliente, com fallback para valorTotal
+            grouped[l.clienteId].totalValor += l.valorTotalCliente ?? l.valorTotal ?? 0;
+            grouped[l.clienteId].totalValorTerapeuta += l.valorTotal ?? 0;
             grouped[l.clienteId].totalLancamentos += 1;
 
             if (l.status === STATUS_FATURAMENTO.PENDENTE) {
@@ -323,20 +332,33 @@ export function HorasPorClientePage() {
     }, [selectedCliente, columnFilters]);
 
     const columnFilterOptions: FaturamentoColumnFilterOptions = useMemo(() => {
-        if (!selectedCliente) return { tipoAtividade: [], status: [] };
+        if (!selectedCliente) return { firstColumn: [], tipoAtividade: [], especialidade: [], status: [] };
 
+        const firstColumnSet = new Set<string>();
         const tipoSet = new Set<string>();
+        const especialidadeSet = new Set<string>();
         const statusSet = new Set<string>();
 
         selectedCliente.lancamentos.forEach(l => {
+            // Na view por cliente, primeira coluna é o terapeuta
+            firstColumnSet.add(l.terapeutaNome || 'Sem terapeuta');
             tipoSet.add(l.tipoAtividade);
+            if (l.area) especialidadeSet.add(l.area);
             statusSet.add(l.status);
         });
 
         return {
+            firstColumn: Array.from(firstColumnSet).sort().map(name => ({
+                value: name,
+                label: name,
+            })),
             tipoAtividade: Array.from(tipoSet).map(tipo => ({
                 value: tipo,
                 label: TIPO_ATIVIDADE_FATURAMENTO_LABELS[tipo as keyof typeof TIPO_ATIVIDADE_FATURAMENTO_LABELS] ?? tipo,
+            })),
+            especialidade: Array.from(especialidadeSet).sort().map(esp => ({
+                value: esp,
+                label: esp,
             })),
             status: Array.from(statusSet).map(status => ({
                 value: status,
@@ -351,7 +373,7 @@ export function HorasPorClientePage() {
 
     const navigateToCliente = useCallback((clienteId: string) => {
         setSearchParams({ clienteId });
-        setColumnFilters({ tipoAtividade: undefined, status: undefined });
+        setColumnFilters({ firstColumn: undefined, tipoAtividade: undefined, especialidade: undefined, status: undefined });
     }, [setSearchParams]);
 
     const navigateBack = useCallback(() => {
@@ -368,12 +390,14 @@ export function HorasPorClientePage() {
 
     // ============================================
     // ESTATÍSTICAS
+    // Usa valorTotalCliente (quanto o cliente paga à clínica)
     // ============================================
 
     const stats = useMemo(() => {
         const totalPacientes = groupedByCliente.length;
         const totalHoras = lancamentos.reduce((acc, l) => acc + l.duracaoMinutos, 0);
-        const totalValor = lancamentos.reduce((acc, l) => acc + (l.valorTotal ?? 0), 0);
+        // Usar valorTotalCliente para cliente, com fallback para valorTotal
+        const totalValor = lancamentos.reduce((acc, l) => acc + (l.valorTotalCliente ?? l.valorTotal ?? 0), 0);
         const totalPendentes = lancamentos.filter(l => l.status === STATUS_FATURAMENTO.PENDENTE).length;
         const totalAprovados = lancamentos.filter(l => l.status === STATUS_FATURAMENTO.APROVADO).length;
         return { totalPacientes, totalHoras, totalValor, totalPendentes, totalAprovados };
@@ -484,6 +508,7 @@ export function HorasPorClientePage() {
                     filterOptions={columnFilterOptions}
                     onColumnFilterChange={setColumnFilters}
                     onViewDetails={handleViewDetails}
+                    viewContext="by-client"
                 />
             </div>
         );

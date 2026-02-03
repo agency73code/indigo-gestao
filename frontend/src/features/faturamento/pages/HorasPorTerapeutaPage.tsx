@@ -36,7 +36,7 @@ import {
     ORIGEM_LANCAMENTO,
 } from '../types/faturamento.types';
 import { listFaturamento } from '../services/faturamento-sessoes.service';
-import { FaturamentoTable, type FaturamentoColumnFilters, type FaturamentoColumnFilterOptions } from '../components/FaturamentoTable';
+import { FaturamentoTable, type FaturamentoColumnFilters, type FaturamentoColumnFilterOptions, type FaturamentoViewContext } from '../components/FaturamentoTable';
 
 // ============================================
 // COMPONENTES DE ESTATÍSTICAS
@@ -190,7 +190,9 @@ export function HorasPorTerapeutaPage() {
 
     // Filtros de coluna (para drill-down)
     const [columnFilters, setColumnFilters] = useState<FaturamentoColumnFilters>({
+        firstColumn: undefined,
         tipoAtividade: undefined,
+        especialidade: undefined,
         status: undefined,
     });
 
@@ -282,20 +284,33 @@ export function HorasPorTerapeutaPage() {
     }, [selectedTerapeuta, columnFilters]);
 
     const columnFilterOptions: FaturamentoColumnFilterOptions = useMemo(() => {
-        if (!selectedTerapeuta) return { tipoAtividade: [], status: [] };
+        if (!selectedTerapeuta) return { firstColumn: [], tipoAtividade: [], especialidade: [], status: [] };
 
+        const firstColumnSet = new Set<string>();
         const tipoSet = new Set<string>();
+        const especialidadeSet = new Set<string>();
         const statusSet = new Set<string>();
 
         selectedTerapeuta.lancamentos.forEach(l => {
+            // Na view por terapeuta, primeira coluna é o cliente
+            firstColumnSet.add(l.clienteNome || 'Sem cliente');
             tipoSet.add(l.tipoAtividade);
+            if (l.area) especialidadeSet.add(l.area);
             statusSet.add(l.status);
         });
 
         return {
+            firstColumn: Array.from(firstColumnSet).sort().map(name => ({
+                value: name,
+                label: name,
+            })),
             tipoAtividade: Array.from(tipoSet).map(tipo => ({
                 value: tipo,
                 label: TIPO_ATIVIDADE_FATURAMENTO_LABELS[tipo as keyof typeof TIPO_ATIVIDADE_FATURAMENTO_LABELS] ?? tipo,
+            })),
+            especialidade: Array.from(especialidadeSet).sort().map(esp => ({
+                value: esp,
+                label: esp,
             })),
             status: Array.from(statusSet).map(status => ({
                 value: status,
@@ -310,7 +325,7 @@ export function HorasPorTerapeutaPage() {
 
     const navigateToTerapeuta = useCallback((terapeutaId: string) => {
         setSearchParams({ terapeutaId });
-        setColumnFilters({ tipoAtividade: undefined, status: undefined });
+        setColumnFilters({ firstColumn: undefined, tipoAtividade: undefined, especialidade: undefined, status: undefined });
     }, [setSearchParams]);
 
     const navigateBack = useCallback(() => {
@@ -414,6 +429,7 @@ export function HorasPorTerapeutaPage() {
                     filterOptions={columnFilterOptions}
                     onColumnFilterChange={setColumnFilters}
                     onViewDetails={handleViewDetails}
+                    viewContext="by-therapist"
                 />
             </div>
         );

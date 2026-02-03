@@ -263,7 +263,9 @@ export function FaturamentoHub({ mode }: FaturamentoHubProps) {
 
     // Filtros de coluna da tabela (FaturamentoTable)
     const [columnFilters, setColumnFilters] = useState<FaturamentoColumnFilters>({
+        firstColumn: undefined,
         tipoAtividade: undefined,
+        especialidade: undefined,
         status: undefined,
     });
 
@@ -348,17 +350,31 @@ export function FaturamentoHub({ mode }: FaturamentoHubProps) {
 
     // Opções para os filtros de coluna (baseadas nos lançamentos disponíveis)
     const columnFilterOptions: FaturamentoColumnFilterOptions = useMemo(() => {
+        const firstColumnSet = new Set<string>();
         const tipoSet = new Set<TipoAtividadeFaturamento>();
+        const especialidadeSet = new Set<string>();
         const statusSet = new Set<StatusFaturamento>();
 
         clientFilteredLancamentos.forEach(l => {
+            firstColumnSet.add(l.clienteNome || 'Sem cliente');
             tipoSet.add(l.tipoAtividade);
+            if (l.area) especialidadeSet.add(l.area);
             statusSet.add(l.status);
         });
+
+        const firstColumnOptions: FilterOption[] = Array.from(firstColumnSet).sort().map(name => ({
+            value: name,
+            label: name,
+        }));
 
         const tipoOptions: FilterOption[] = Array.from(tipoSet).map(tipo => ({
             value: tipo,
             label: TIPO_ATIVIDADE_FATURAMENTO_LABELS[tipo] ?? tipo,
+        }));
+
+        const especialidadeOptions: FilterOption[] = Array.from(especialidadeSet).sort().map(esp => ({
+            value: esp,
+            label: esp,
         }));
 
         const statusOptions: FilterOption[] = Array.from(statusSet).map(status => ({
@@ -367,7 +383,9 @@ export function FaturamentoHub({ mode }: FaturamentoHubProps) {
         }));
 
         return {
+            firstColumn: firstColumnOptions,
             tipoAtividade: tipoOptions,
+            especialidade: especialidadeOptions,
             status: statusOptions,
         };
     }, [clientFilteredLancamentos]);
@@ -517,7 +535,7 @@ export function FaturamentoHub({ mode }: FaturamentoHubProps) {
         setSearchParams(new URLSearchParams());
         setSearchValue('');
         setStatusFilter('all');
-        setColumnFilters({ tipoAtividade: undefined, status: undefined });
+        setColumnFilters({ firstColumn: undefined, tipoAtividade: undefined, status: undefined });
     }, [setSearchParams]);
 
     // Handler para filtros de coluna da tabela

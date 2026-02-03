@@ -24,12 +24,16 @@ import {
     Wallet,
     Paperclip,
     FileText,
+    FileDown,
     Image as ImageIcon,
     ExternalLink,
     XCircle,
     LayoutList,
+    MoreHorizontal,
+    FileBarChart,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { AreaChart, Area, ResponsiveContainer, Tooltip as RechartsTooltip, RadialBarChart, RadialBar, PolarAngleAxis } from 'recharts';
 
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 import { Button } from '@/components/ui/button';
@@ -39,6 +43,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Checkbox } from '@/components/ui/checkbox';
 import { FiltersPopover } from '@/components/ui/filters-popover';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
+import { CloseButton } from '@/components/layout/CloseButton';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { type DateRangeValue } from '@/ui/date-range-picker-field';
 import { cn } from '@/lib/utils';
 
@@ -55,6 +63,7 @@ import {
     aprovarLancamento,
     rejeitarLancamento,
 } from '../services/faturamento-sessoes.service';
+import { gerarRelatorioFaturamento, exportarRelatorioWord } from '../services/relatorio-faturamento.service';
 import { FaturamentoTable, type FaturamentoColumnFilters, type FaturamentoColumnFilterOptions } from '../components/FaturamentoTable';
 import { BillingDrawer } from '../components/BillingDrawer';
 import { useBillingCorrection } from '../hooks/useBillingCorrection';
@@ -65,7 +74,7 @@ import { ORIGEM_LANCAMENTO } from '../types/faturamento.types';
 // TIPOS
 // ============================================
 
-type TabType = 'aprovar' | 'terapeutas' | 'clientes';
+type TabType = 'aprovar' | 'terapeutas' | 'clientes' | 'relatorios';
 
 interface TerapeutaGroupItem {
     terapeutaId: string;
@@ -177,28 +186,100 @@ interface StatsCardPrimaryProps {
     icon: React.ReactNode;
     label: string;
     value: string;
-    isActive?: boolean;
+    items?: Array<{ label: string; value: string }>;
+    sparklineData?: Array<{ date: string; dateFormatted: string; value: number }>;
+    onMoreClick?: () => void;
     onClick?: () => void;
 }
 
-function StatsCardPrimary({ icon, label, value, isActive, onClick }: StatsCardPrimaryProps) {
+// Tooltip customizado para o sparkline
+function SparklineTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload: { dateFormatted: string; value: number } }> }) {
+    if (!active || !payload || !payload.length) return null;
+    
+    const data = payload[0].payload;
     return (
-        <div
-            className={cn(
-                "bg-primary rounded-xl p-5 cursor-pointer transition-all hover:bg-primary/90",
-                isActive && "ring-2 ring-primary-foreground ring-offset-2 ring-offset-background"
-            )}
+        <div className="bg-background border border-border rounded-lg shadow-lg px-3 py-2 text-xs">
+            <p className="font-medium text-foreground">{data.dateFormatted}</p>
+            <p className="text-primary font-semibold">
+                {data.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+            </p>
+        </div>
+    );
+}
+
+function StatsCardPrimary({ icon, label, value, items, sparklineData, onMoreClick, onClick }: StatsCardPrimaryProps) {
+    return (
+        <div 
+            className="bg-primary rounded-xl p-5 pb-4 relative overflow-hidden cursor-pointer transition-all hover:shadow-lg hover:brightness-110"
             onClick={onClick}
         >
-            <div className="flex items-start justify-between">
+            {/* Botão de três pontinhos - sempre visível */}
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <button
+                            type="button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onMoreClick?.();
+                            }}
+                            className="absolute top-3 right-3 p-1 rounded-md hover:bg-primary-foreground/10 transition-colors text-primary-foreground/70 hover:text-primary-foreground z-10"
+                        >
+                            <MoreHorizontal className="h-4 w-4" />
+                        </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Ver mais</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+            {/* Sparkline com gradiente */}
+            {sparklineData && sparklineData.length > 0 && (
+                <div className="absolute top-10 right-5 w-24 h-10">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={sparklineData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                            <defs>
+                                <linearGradient id="sparklineGradient" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor="rgba(255,255,255,0.4)" />
+                                    <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+                                </linearGradient>
+                            </defs>
+                            <RechartsTooltip
+                                content={<SparklineTooltip />}
+                                cursor={{ stroke: 'rgba(255,255,255,0.3)', strokeWidth: 1 }}
+                            />
+                            <Area
+                                type="monotone"
+                                dataKey="value"
+                                stroke="rgba(255,255,255,0.8)"
+                                strokeWidth={2}
+                                fill="url(#sparklineGradient)"
+                                dot={false}
+                                activeDot={{ r: 4, fill: 'white', stroke: 'rgba(255,255,255,0.5)', strokeWidth: 2 }}
+                            />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                </div>
+            )}
+            <div className="flex items-center gap-4 min-h-[48px]">
                 <div className="p-2 bg-primary-foreground/10 rounded-lg text-primary-foreground">
                     {icon}
                 </div>
+                <div>
+                    <p className="text-xs text-primary-foreground/70">{label}</p>
+                    <p className="text-1xl font-normal text-primary-foreground">{value}</p>
+                </div>
             </div>
-            <div className="mt-4">
-                <p className="text-xs text-primary-foreground/70 mb-1">{label}</p>
-                <p className="text-2xl font-normal text-primary-foreground">{value}</p>
-            </div>
+            {items && items.length > 0 && (
+                <div className="mt-4 space-y-1.5 border-t border-primary-foreground/20 pt-2">
+                    {items.map((item, i) => (
+                        <div key={i} className="flex items-center justify-between text-sm">
+                            <span className="text-primary-foreground/70">{item.label}</span>
+                            <span className="text-primary-foreground font-normal">{item.value}</span>
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }
@@ -212,30 +293,153 @@ interface StatsCardSecondaryProps {
         value: string;
         variant: 'success' | 'warning' | 'default';
     };
+    items?: Array<{ label: string; value: string }>;
+    sparklineData?: Array<{ date: string; dateFormatted: string; value: number }>;
+    bottomSparklineData?: Array<{ date: string; dateFormatted: string; value: number }>;
+    progressPercent?: number; // 0-100 para mostrar gráfico circular
+    progressColor?: 'primary' | 'success' | 'warning';
+    progressLabel?: string; // Label para o tooltip do gráfico circular
+    totalCount?: number; // Total para mostrar no tooltip
+    onMoreClick?: () => void;
     isActive?: boolean;
     onClick?: () => void;
 }
 
-function StatsCardSecondary({ icon, label, value, subValue, badge, isActive, onClick }: StatsCardSecondaryProps) {
+function StatsCardSecondary({ icon, label, value, subValue, badge, items, sparklineData, bottomSparklineData, progressPercent, progressColor = 'primary', progressLabel, totalCount, onMoreClick, isActive, onClick }: StatsCardSecondaryProps) {
+    // ID único para o gradiente do sparkline
+    const gradientId = `sparklineGradientSecondary-${label.replace(/\s/g, '')}`;
+    const bottomGradientId = `bottomSparklineGradient-${label.replace(/\s/g, '')}`;
+    
+    // Dados para o gráfico circular com label para tooltip
+    const progressData = progressPercent !== undefined ? [{ 
+        value: progressPercent, 
+        fill: 'currentColor',
+        label: progressLabel || label,
+        count: typeof value === 'number' ? value : 0,
+        total: totalCount || 0
+    }] : null;
+    
+    // Cor do progresso
+    const progressColorClass = progressColor === 'success' 
+        ? 'text-emerald-500' 
+        : progressColor === 'warning' 
+            ? 'text-amber-500' 
+            : 'text-primary';
+    
     return (
         <div
             className={cn(
-                "bg-card border rounded-xl p-5 cursor-pointer transition-all hover:shadow-md hover:border-primary/20",
+                "bg-card border rounded-xl p-5 pb-4 relative cursor-pointer transition-all hover:shadow-md hover:border-primary/20",
                 isActive && "ring-2 ring-primary ring-offset-2"
             )}
             onClick={onClick}
         >
-            <div className="flex items-start justify-between">
+            {/* Botão de três pontinhos */}
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <button
+                            type="button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onMoreClick?.();
+                            }}
+                            className="absolute top-3 right-3 p-1 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground z-10"
+                        >
+                            <MoreHorizontal className="h-4 w-4" />
+                        </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>Ver mais</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+            
+            {/* Gráfico Circular de Progresso */}
+            {progressData && (
+                <div className={cn("absolute top-5 right-10 w-14 h-14", progressColorClass)} style={{ overflow: 'visible' }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                        <RadialBarChart
+                            innerRadius="70%"
+                            outerRadius="100%"
+                            data={progressData}
+                            startAngle={90}
+                            endAngle={-270}
+                            style={{ overflow: 'visible' }}
+                        >
+                            <PolarAngleAxis
+                                type="number"
+                                domain={[0, 100]}
+                                angleAxisId={0}
+                                tick={false}
+                            />
+                            <RechartsTooltip
+                                content={({ active, payload }) => {
+                                    if (!active || !payload || !payload.length) return null;
+                                    const data = payload[0].payload;
+                                    return (
+                                        <div className="bg-background border border-border rounded-lg shadow-lg px-3 py-2 text-xs whitespace-nowrap">
+                                            <p className="font-medium text-foreground">{data.label}</p>
+                                            <p className="text-muted-foreground">
+                                                {data.count} de {data.total} ({data.value}%)
+                                            </p>
+                                        </div>
+                                    );
+                                }}
+                                cursor={false}
+                                wrapperStyle={{ zIndex: 100 }}
+                                position={{ x: -100, y: 0 }}
+                            />
+                            <RadialBar
+                                background={{ fill: '#e5e7eb' }}
+                                dataKey="value"
+                                cornerRadius={10}
+                                fill="currentColor"
+                            />
+                        </RadialBarChart>
+                    </ResponsiveContainer>
+                </div>
+            )}
+            
+            {/* Sparkline com gradiente */}
+            {sparklineData && sparklineData.length > 0 && !progressData && (
+                <div className="absolute top-10 right-5 w-24 h-10">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={sparklineData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                            <defs>
+                                <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                                </linearGradient>
+                            </defs>
+                            <RechartsTooltip
+                                content={<SparklineTooltip />}
+                                cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1, strokeOpacity: 0.3 }}
+                            />
+                            <Area
+                                type="monotone"
+                                dataKey="value"
+                                stroke="hsl(var(--primary))"
+                                strokeWidth={2}
+                                strokeOpacity={0.6}
+                                fill={`url(#${gradientId})`}
+                                dot={false}
+                                activeDot={{ r: 4, fill: 'hsl(var(--primary))', stroke: 'hsl(var(--primary))', strokeWidth: 2, strokeOpacity: 0.3 }}
+                            />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                </div>
+            )}
+            
+            {/* Ícone + Label + Value na mesma linha */}
+            <div className="flex items-center gap-4 min-h-[48px]">
                 <div className="p-2 bg-muted rounded-lg text-muted-foreground">
                     {icon}
                 </div>
-                <span className="text-muted-foreground">•••</span>
-            </div>
-            <div className="mt-4">
-                <p className="text-xs text-muted-foreground mb-1">{label}</p>
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <p className="text-2xl font-normal">{value}</p>
+                <div>
+                    <p className="text-xs text-muted-foreground">{label}</p>
+                    <div className="flex items-center gap-2">
+                        <p className="text-xl font-normal">{value}</p>
                         {badge && (
                             <span className={cn(
                                 "text-xs px-2 py-0.5 rounded-full font-medium",
@@ -247,11 +451,58 @@ function StatsCardSecondary({ icon, label, value, subValue, badge, isActive, onC
                             </span>
                         )}
                     </div>
-                    {subValue && (
-                        <p className="text-xs text-muted-foreground">{subValue}</p>
-                    )}
                 </div>
             </div>
+            
+            {/* Items - A pagar / A receber */}
+            {items && items.length > 0 && (
+                <div className="mt-4 space-y-1.5 border-t border-border pt-2">
+                    {items.map((item, i) => (
+                        <div key={i} className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">{item.label}</span>
+                            <span className="text-foreground font-normal">{item.value}</span>
+                        </div>
+                    ))}
+                </div>
+            )}
+            
+            {/* Bottom Sparkline - Linha na parte inferior do card */}
+            {bottomSparklineData && bottomSparklineData.length > 0 && (
+                <div className="mt-4 h-10 -mx-1 -mb-0">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={bottomSparklineData} margin={{ top: 5, right: 4, left: 4, bottom: 4 }}>
+                            <defs>
+                                <linearGradient id={bottomGradientId} x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor="rgba(16,185,129,0.4)" />
+                                    <stop offset="100%" stopColor="rgba(16,185,129,0)" />
+                                </linearGradient>
+                            </defs>
+                            <RechartsTooltip
+                                content={({ active, payload }) => {
+                                    if (!active || !payload || !payload.length) return null;
+                                    const data = payload[0].payload;
+                                    return (
+                                        <div className="bg-background border border-border rounded-lg shadow-lg px-3 py-2 text-xs">
+                                            <p className="font-medium text-foreground">{data.dateFormatted}</p>
+                                            <p className="text-emerald-600 font-semibold">{data.value} lançamentos</p>
+                                        </div>
+                                    );
+                                }}
+                                cursor={{ stroke: '#10b981', strokeWidth: 1, strokeOpacity: 0.3 }}
+                            />
+                            <Area
+                                type="monotone"
+                                dataKey="value"
+                                stroke="rgba(16,185,129,0.8)"
+                                strokeWidth={2}
+                                fill={`url(#${bottomGradientId})`}
+                                dot={false}
+                                activeDot={{ r: 4, fill: '#10b981', stroke: 'rgba(16,185,129,0.5)', strokeWidth: 2 }}
+                            />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                </div>
+            )}
         </div>
     );
 }
@@ -259,7 +510,7 @@ function StatsCardSecondary({ icon, label, value, subValue, badge, isActive, onC
 function LoadingSkeleton() {
     return (
         <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Primeiro card - estilo primário */}
                 <div className="bg-primary rounded-xl p-5">
                     <div className="flex items-start justify-between">
@@ -271,7 +522,7 @@ function LoadingSkeleton() {
                     </div>
                 </div>
                 {/* Cards secundários */}
-                {[...Array(4)].map((_, i) => (
+                {[...Array(3)].map((_, i) => (
                     <div key={i} className="bg-card border rounded-xl p-5">
                         <div className="flex items-start justify-between">
                             <Skeleton className="h-9 w-9 rounded-lg" />
@@ -336,6 +587,16 @@ export function GestaoFaturamentoHub() {
     // Estado para drill-down
     const [expandedTerapeutaId, setExpandedTerapeutaId] = useState<string | null>(null);
     const [expandedClienteId, setExpandedClienteId] = useState<string | null>(null);
+    
+    // Estado para drawer de detalhes
+    const [showDetailsDrawer, setShowDetailsDrawer] = useState(false);
+    const [drawerType, setDrawerType] = useState<'valor' | 'lancamentos' | 'aprovados' | 'pendentes'>('valor');
+    
+    // Handler para abrir drawer de detalhes
+    const openDetailsDrawer = useCallback((type: 'valor' | 'lancamentos' | 'aprovados' | 'pendentes') => {
+        setDrawerType(type);
+        setShowDetailsDrawer(true);
+    }, []);
 
     // Handler para visualizar detalhes (igual ao terapeuta)
     const handleViewDetails = useCallback((item: ItemFaturamento) => {
@@ -401,22 +662,142 @@ export function GestaoFaturamentoHub() {
         [lancamentos]
     );
 
+    const rejeitados = useMemo(() => 
+        lancamentos.filter(l => l.status === STATUS_FATURAMENTO.REJEITADO),
+        [lancamentos]
+    );
+
     const stats = useMemo(() => {
         const totalMinutos = lancamentos.reduce((acc, l) => acc + l.duracaoMinutos, 0);
         const totalValor = lancamentos.reduce((acc, l) => acc + (l.valorTotal ?? 0), 0);
         const valorPendente = pendentes.reduce((acc, l) => acc + (l.valorTotal ?? 0), 0);
         const valorAprovado = aprovados.reduce((acc, l) => acc + (l.valorTotal ?? 0), 0);
+        
+        // Valor do terapeuta (o que a clínica paga ao terapeuta)
+        const totalValorTerapeuta = lancamentos.reduce((acc, l) => acc + (l.valorTotal ?? 0), 0);
+        // Valor do cliente (o que o cliente paga à clínica)
+        const totalValorCliente = lancamentos.reduce((acc, l) => acc + (l.valorTotalCliente ?? l.valorTotal ?? 0), 0);
+        
+        // Valores aprovados separados
+        const valorAprovadoTerapeuta = aprovados.reduce((acc, l) => acc + (l.valorTotal ?? 0), 0);
+        const valorAprovadoCliente = aprovados.reduce((acc, l) => acc + (l.valorTotalCliente ?? l.valorTotal ?? 0), 0);
+        
+        // Valores pendentes separados
+        const valorPendenteTerapeuta = pendentes.reduce((acc, l) => acc + (l.valorTotal ?? 0), 0);
+        const valorPendenteCliente = pendentes.reduce((acc, l) => acc + (l.valorTotalCliente ?? l.valorTotal ?? 0), 0);
+        
+        // Valores rejeitados
+        const valorRejeitado = rejeitados.reduce((acc, l) => acc + (l.valorTotal ?? 0), 0);
+        const valorRejeitadoTerapeuta = rejeitados.reduce((acc, l) => acc + (l.valorTotal ?? 0), 0);
+        const valorRejeitadoCliente = rejeitados.reduce((acc, l) => acc + (l.valorTotalCliente ?? l.valorTotal ?? 0), 0);
 
         return {
             totalLancamentos: lancamentos.length,
             pendentes: pendentes.length,
             aprovados: aprovados.length,
+            rejeitados: rejeitados.length,
             totalHoras: formatarHoras(totalMinutos),
             totalValor,
             valorPendente,
             valorAprovado,
+            valorRejeitado,
+            totalValorTerapeuta,
+            totalValorCliente,
+            valorAprovadoTerapeuta,
+            valorAprovadoCliente,
+            valorPendenteTerapeuta,
+            valorPendenteCliente,
+            valorRejeitadoTerapeuta,
+            valorRejeitadoCliente,
         };
-    }, [lancamentos, pendentes, aprovados]);
+    }, [lancamentos, pendentes, aprovados, rejeitados]);
+
+    // Dados para o sparkline - agrupa valores por data (últimos 7 dias)
+    const sparklineData = useMemo(() => {
+        // Agrupar lançamentos por data
+        const valorPorData: Record<string, number> = {};
+        
+        lancamentos.forEach(l => {
+            const data = l.data;
+            valorPorData[data] = (valorPorData[data] || 0) + (l.valorTotal ?? 0);
+        });
+        
+        // Ordenar por data e pegar os últimos registros
+        const sortedDates = Object.keys(valorPorData).sort();
+        const recentDates = sortedDates.slice(-10);
+        
+        return recentDates.map(data => ({
+            date: data,
+            dateFormatted: new Date(data + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+            value: valorPorData[data],
+        }));
+    }, [lancamentos]);
+
+    // Dados para o sparkline de lançamentos - agrupa quantidade por data
+    const lancamentosSparklineData = useMemo(() => {
+        // Agrupar lançamentos por data (contagem)
+        const countPorData: Record<string, number> = {};
+        
+        lancamentos.forEach(l => {
+            const data = l.data;
+            countPorData[data] = (countPorData[data] || 0) + 1;
+        });
+        
+        // Ordenar por data e pegar os últimos registros
+        const sortedDates = Object.keys(countPorData).sort();
+        const recentDates = sortedDates.slice(-10);
+        
+        return recentDates.map(data => ({
+            date: data,
+            dateFormatted: new Date(data + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+            value: countPorData[data],
+        }));
+    }, [lancamentos]);
+
+    // Sparkline de aprovados por data
+    const aprovadosSparklineData = useMemo(() => {
+        const valorPorData: Record<string, number> = {};
+        aprovados.forEach(l => {
+            const data = l.data;
+            valorPorData[data] = (valorPorData[data] || 0) + (l.valorTotal ?? 0);
+        });
+        const sortedDates = Object.keys(valorPorData).sort();
+        return sortedDates.map(data => ({
+            date: data,
+            dateFormatted: new Date(data + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+            value: valorPorData[data],
+        }));
+    }, [aprovados]);
+
+    // Sparkline de pendentes por data
+    const pendentesSparklineData = useMemo(() => {
+        const valorPorData: Record<string, number> = {};
+        pendentes.forEach(l => {
+            const data = l.data;
+            valorPorData[data] = (valorPorData[data] || 0) + (l.valorTotal ?? 0);
+        });
+        const sortedDates = Object.keys(valorPorData).sort();
+        return sortedDates.map(data => ({
+            date: data,
+            dateFormatted: new Date(data + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+            value: valorPorData[data],
+        }));
+    }, [pendentes]);
+
+    // Sparkline de rejeitados por data
+    const rejeitadosSparklineData = useMemo(() => {
+        const valorPorData: Record<string, number> = {};
+        rejeitados.forEach(l => {
+            const data = l.data;
+            valorPorData[data] = (valorPorData[data] || 0) + (l.valorTotal ?? 0);
+        });
+        const sortedDates = Object.keys(valorPorData).sort();
+        return sortedDates.map(data => ({
+            date: data,
+            dateFormatted: new Date(data + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+            value: valorPorData[data],
+        }));
+    }, [rejeitados]);
 
     // Agrupar por terapeuta
     const groupedByTerapeuta = useMemo((): TerapeutaGroupItem[] => {
@@ -614,19 +995,19 @@ export function GestaoFaturamentoHub() {
 
                     {/* Cards de estatísticas - igual ao Minhas Horas do terapeuta */}
                     {!loading && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                            {/* Card Primário - Pendentes (destaque) */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {/* Card Primário - Valor Total (destaque) */}
                             <StatsCardPrimary
-                                icon={<Clock className="h-5 w-5" />}
-                                label="Total Horas"
-                                value={stats.totalHoras}
-                            />
-
-                            {/* Card Secundário - Valor Total */}
-                            <StatsCardSecondary
                                 icon={<DollarSign className="h-5 w-5" />}
                                 label="Valor Total"
                                 value={formatarValor(stats.totalValor)}
+                                items={[
+                                    { label: 'A pagar', value: formatarValor(stats.totalValorTerapeuta) },
+                                    { label: 'A receber', value: formatarValor(stats.totalValorCliente) },
+                                ]}
+                                sparklineData={sparklineData}
+                                onClick={() => openDetailsDrawer('valor')}
+                                onMoreClick={() => openDetailsDrawer('valor')}
                             />
 
                             {/* Card Secundário - Total de Lançamentos */}
@@ -634,6 +1015,9 @@ export function GestaoFaturamentoHub() {
                                 icon={<LayoutList className="h-5 w-5" />}
                                 label="Total de Lançamentos"
                                 value={lancamentos.length}
+                                bottomSparklineData={lancamentosSparklineData}
+                                onClick={() => openDetailsDrawer('lancamentos')}
+                                onMoreClick={() => openDetailsDrawer('lancamentos')}
                             />
 
                             {/* Card Secundário - Aprovados */}
@@ -641,11 +1025,19 @@ export function GestaoFaturamentoHub() {
                                 icon={<CheckCircle2 className="h-5 w-5" />}
                                 label="Aprovados"
                                 value={stats.aprovados}
-                                subValue={formatarValor(stats.valorAprovado)}
                                 badge={lancamentos.length > 0 ? {
                                     value: `${Math.round((stats.aprovados / lancamentos.length) * 100)}%`,
                                     variant: 'success'
                                 } : undefined}
+                                progressPercent={lancamentos.length > 0 ? Math.round((stats.aprovados / lancamentos.length) * 100) : 0}
+                                progressColor="success"
+                                totalCount={lancamentos.length}
+                                items={[
+                                    { label: 'A pagar', value: formatarValor(stats.valorAprovadoTerapeuta) },
+                                    { label: 'A receber', value: formatarValor(stats.valorAprovadoCliente) },
+                                ]}
+                                onClick={() => openDetailsDrawer('aprovados')}
+                                onMoreClick={() => openDetailsDrawer('aprovados')}
                             />
 
                             {/* Card Secundário - Pendentes */}
@@ -653,11 +1045,19 @@ export function GestaoFaturamentoHub() {
                                 icon={stats.pendentes > 0 ? <AlertCircle className="h-5 w-5" /> : <CheckCircle2 className="h-5 w-5" />}
                                 label="Pendentes"
                                 value={stats.pendentes}
-                                subValue={formatarValor(stats.valorPendente)}
                                 badge={stats.pendentes > 0 ? {
                                     value: `${stats.pendentes} aguardando`,
                                     variant: 'warning'
                                 } : undefined}
+                                progressPercent={lancamentos.length > 0 ? Math.round((stats.pendentes / lancamentos.length) * 100) : 0}
+                                progressColor="warning"
+                                totalCount={lancamentos.length}
+                                items={[
+                                    { label: 'A pagar', value: formatarValor(stats.valorPendenteTerapeuta) },
+                                    { label: 'A receber', value: formatarValor(stats.valorPendenteCliente) },
+                                ]}
+                                onClick={() => openDetailsDrawer('pendentes')}
+                                onMoreClick={() => openDetailsDrawer('pendentes')}
                             />
                         </div>
                     )}
@@ -684,6 +1084,12 @@ export function GestaoFaturamentoHub() {
                             label="Por Cliente"
                             count={groupedByCliente.length}
                             onClick={() => handleTabChange('clientes')}
+                        />
+                        <TabButton
+                            active={activeTab === 'relatorios'}
+                            icon={<FileBarChart className="h-4 w-4" />}
+                            label="Relatórios"
+                            onClick={() => handleTabChange('relatorios')}
                         />
                     </div>
                 </div>
@@ -797,6 +1203,7 @@ export function GestaoFaturamentoHub() {
                                         expandedId={expandedTerapeutaId}
                                         onToggleExpand={(id) => setExpandedTerapeutaId(prev => prev === id ? null : id)}
                                         onViewDetails={handleViewDetails}
+                                        lancamentos={lancamentos}
                                     />
                                 )}
 
@@ -806,6 +1213,13 @@ export function GestaoFaturamentoHub() {
                                         expandedId={expandedClienteId}
                                         onToggleExpand={(id) => setExpandedClienteId(prev => prev === id ? null : id)}
                                         onViewDetails={handleViewDetails}
+                                        lancamentos={lancamentos}
+                                    />
+                                )}
+
+                                {activeTab === 'relatorios' && (
+                                    <RelatoriosTab
+                                        lancamentos={lancamentos}
                                     />
                                 )}
                             </div>
@@ -828,6 +1242,369 @@ export function GestaoFaturamentoHub() {
                 isSaving={isSavingCorrection}
                 canEdit={false}
             />
+
+            {/* Drawer de Detalhes - Ver mais */}
+            <Sheet open={showDetailsDrawer} onOpenChange={setShowDetailsDrawer}>
+                <SheetContent side="right" className="w-[80vw] max-w-[1000px] p-0 flex flex-col gap-0">
+                    {/* Header */}
+                    <div className="flex items-center gap-4 px-4 py-4 bg-background shrink-0 rounded-2xl">
+                        <CloseButton onClick={() => setShowDetailsDrawer(false)} />
+                        <SheetTitle 
+                            style={{ 
+                                fontSize: 'var(--page-title-font-size)',
+                                fontWeight: 'var(--page-title-font-weight)',
+                                fontFamily: 'var(--page-title-font-family)',
+                                color: 'hsl(var(--foreground))'
+                            }}
+                        >
+                            {drawerType === 'valor' ? 'Análise de Valores' : 'Análise de Lançamentos'}
+                        </SheetTitle>
+                    </div>
+                    
+                    {/* Content Area - igual ao padrão do sistema */}
+                    <div className="flex flex-1 min-h-0 p-2 gap-2 bg-background rounded-2xl">
+                        {/* Caixa de conteúdo */}
+                        <div className="flex-1 min-h-0 bg-header-bg rounded-2xl overflow-hidden flex flex-col shadow-sm">
+                            {/* Conteúdo scrollável */}
+                            <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-6">
+                                
+                                {/* Gráficos por Status - Drawer de Valores */}
+                                {drawerType === 'valor' && (
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {/* Card 1 - Valor Total */}
+                                        <div className="bg-primary rounded-xl p-5 pb-4 relative overflow-hidden">
+                                            <div className="flex items-center gap-4 mb-4">
+                                                <div className="p-2 bg-primary-foreground/10 rounded-lg text-primary-foreground">
+                                                    <DollarSign className="h-5 w-5" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs text-primary-foreground/70">Valor Total</p>
+                                                    <p className="text-xl font-normal text-primary-foreground">{formatarValor(stats.totalValor)}</p>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-1.5 border-t border-primary-foreground/20 pt-2 mb-4">
+                                                <div className="flex items-center justify-between text-sm">
+                                                    <span className="text-primary-foreground/70">A pagar</span>
+                                                    <span className="text-primary-foreground font-normal">{formatarValor(stats.totalValorTerapeuta)}</span>
+                                                </div>
+                                                <div className="flex items-center justify-between text-sm">
+                                                    <span className="text-primary-foreground/70">A receber</span>
+                                                    <span className="text-primary-foreground font-normal">{formatarValor(stats.totalValorCliente)}</span>
+                                                </div>
+                                            </div>
+                                            <div className="h-36">
+                                                <ResponsiveContainer width="100%" height="100%">
+                                                    <AreaChart data={sparklineData} margin={{ top: 10, right: 16, left: 16, bottom: 10 }}>
+                                                        <defs>
+                                                            <linearGradient id="drawerValueGradient" x1="0" y1="0" x2="0" y2="1">
+                                                                <stop offset="0%" stopColor="rgba(255,255,255,0.4)" />
+                                                                <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+                                                            </linearGradient>
+                                                        </defs>
+                                                        <RechartsTooltip content={<SparklineTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.3)', strokeWidth: 1 }} />
+                                                        <Area type="monotone" dataKey="value" stroke="rgba(255,255,255,0.8)" strokeWidth={2} fill="url(#drawerValueGradient)" dot={{ r: 3, fill: 'white', stroke: 'rgba(255,255,255,0.5)', strokeWidth: 2 }} activeDot={{ r: 5, fill: 'white', stroke: 'rgba(255,255,255,0.5)', strokeWidth: 2 }} />
+                                                    </AreaChart>
+                                                </ResponsiveContainer>
+                                            </div>
+                                        </div>
+
+                                        {/* Card 2 - Aprovados */}
+                                        <div className="bg-background rounded-xl p-5 pb-4 border relative overflow-hidden">
+                                            <div className="flex items-center gap-4 mb-4">
+                                                <div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg text-emerald-600">
+                                                    <CheckCircle2 className="h-5 w-5" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs text-muted-foreground">Aprovados</p>
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="text-xl font-normal">{stats.aprovados}</p>
+                                                        <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                                                            {lancamentos.length > 0 ? Math.round((stats.aprovados / lancamentos.length) * 100) : 0}%
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-1.5 border-t border-border pt-2 mb-4">
+                                                <div className="flex items-center justify-between text-sm">
+                                                    <span className="text-muted-foreground">A pagar</span>
+                                                    <span className="text-foreground font-normal">{formatarValor(stats.valorAprovadoTerapeuta)}</span>
+                                                </div>
+                                                <div className="flex items-center justify-between text-sm">
+                                                    <span className="text-muted-foreground">A receber</span>
+                                                    <span className="text-foreground font-normal">{formatarValor(stats.valorAprovadoCliente)}</span>
+                                                </div>
+                                            </div>
+                                            <div className="h-36">
+                                                <ResponsiveContainer width="100%" height="100%">
+                                                    <AreaChart data={aprovadosSparklineData} margin={{ top: 10, right: 16, left: 16, bottom: 10 }}>
+                                                        <defs>
+                                                            <linearGradient id="drawerAprovadosGradient" x1="0" y1="0" x2="0" y2="1">
+                                                                <stop offset="0%" stopColor="#10b981" stopOpacity={0.4} />
+                                                                <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
+                                                            </linearGradient>
+                                                        </defs>
+                                                        <RechartsTooltip content={<SparklineTooltip />} cursor={{ stroke: '#10b981', strokeWidth: 1, strokeOpacity: 0.3 }} />
+                                                        <Area type="monotone" dataKey="value" stroke="#10b981" strokeWidth={2} fill="url(#drawerAprovadosGradient)" dot={{ r: 3, fill: '#10b981', stroke: 'white', strokeWidth: 2 }} activeDot={{ r: 5, fill: '#10b981', stroke: 'white', strokeWidth: 2 }} />
+                                                    </AreaChart>
+                                                </ResponsiveContainer>
+                                            </div>
+                                        </div>
+
+                                        {/* Card 3 - Pendentes */}
+                                        <div className="bg-background rounded-xl p-5 pb-4 border relative overflow-hidden">
+                                            <div className="flex items-center gap-4 mb-4">
+                                                <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg text-amber-600">
+                                                    <AlertCircle className="h-5 w-5" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs text-muted-foreground">Pendentes</p>
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="text-xl font-normal">{stats.pendentes}</p>
+                                                        <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                                                            {stats.pendentes} aguardando
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-1.5 border-t border-border pt-2 mb-4">
+                                                <div className="flex items-center justify-between text-sm">
+                                                    <span className="text-muted-foreground">A pagar</span>
+                                                    <span className="text-foreground font-normal">{formatarValor(stats.valorPendenteTerapeuta)}</span>
+                                                </div>
+                                                <div className="flex items-center justify-between text-sm">
+                                                    <span className="text-muted-foreground">A receber</span>
+                                                    <span className="text-foreground font-normal">{formatarValor(stats.valorPendenteCliente)}</span>
+                                                </div>
+                                            </div>
+                                            <div className="h-36">
+                                                <ResponsiveContainer width="100%" height="100%">
+                                                    <AreaChart data={pendentesSparklineData} margin={{ top: 10, right: 16, left: 16, bottom: 10 }}>
+                                                        <defs>
+                                                            <linearGradient id="drawerPendentesGradient" x1="0" y1="0" x2="0" y2="1">
+                                                                <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.4} />
+                                                                <stop offset="100%" stopColor="#f59e0b" stopOpacity={0} />
+                                                            </linearGradient>
+                                                        </defs>
+                                                        <RechartsTooltip content={<SparklineTooltip />} cursor={{ stroke: '#f59e0b', strokeWidth: 1, strokeOpacity: 0.3 }} />
+                                                        <Area type="monotone" dataKey="value" stroke="#f59e0b" strokeWidth={2} fill="url(#drawerPendentesGradient)" dot={{ r: 3, fill: '#f59e0b', stroke: 'white', strokeWidth: 2 }} activeDot={{ r: 5, fill: '#f59e0b', stroke: 'white', strokeWidth: 2 }} />
+                                                    </AreaChart>
+                                                </ResponsiveContainer>
+                                            </div>
+                                        </div>
+
+                                        {/* Card 4 - Rejeitados */}
+                                        <div className="bg-background rounded-xl p-5 pb-4 border relative overflow-hidden">
+                                            <div className="flex items-center gap-4 mb-4">
+                                                <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg text-red-600">
+                                                    <XCircle className="h-5 w-5" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs text-muted-foreground">Rejeitados</p>
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="text-xl font-normal">{stats.rejeitados}</p>
+                                                        {stats.rejeitados > 0 && (
+                                                            <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                                                                {lancamentos.length > 0 ? Math.round((stats.rejeitados / lancamentos.length) * 100) : 0}%
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-1.5 border-t border-border pt-2 mb-4">
+                                                <div className="flex items-center justify-between text-sm">
+                                                    <span className="text-muted-foreground">A pagar</span>
+                                                    <span className="text-foreground font-normal">{formatarValor(stats.valorRejeitadoTerapeuta)}</span>
+                                                </div>
+                                                <div className="flex items-center justify-between text-sm">
+                                                    <span className="text-muted-foreground">A receber</span>
+                                                    <span className="text-foreground font-normal">{formatarValor(stats.valorRejeitadoCliente)}</span>
+                                                </div>
+                                            </div>
+                                            <div className="h-36">
+                                                <ResponsiveContainer width="100%" height="100%">
+                                                    <AreaChart data={rejeitadosSparklineData} margin={{ top: 10, right: 16, left: 16, bottom: 10 }}>
+                                                        <defs>
+                                                            <linearGradient id="drawerRejeitadosGradient" x1="0" y1="0" x2="0" y2="1">
+                                                                <stop offset="0%" stopColor="#ef4444" stopOpacity={0.4} />
+                                                                <stop offset="100%" stopColor="#ef4444" stopOpacity={0} />
+                                                            </linearGradient>
+                                                        </defs>
+                                                        <RechartsTooltip content={<SparklineTooltip />} cursor={{ stroke: '#ef4444', strokeWidth: 1, strokeOpacity: 0.3 }} />
+                                                        <Area type="monotone" dataKey="value" stroke="#ef4444" strokeWidth={2} fill="url(#drawerRejeitadosGradient)" dot={{ r: 3, fill: '#ef4444', stroke: 'white', strokeWidth: 2 }} activeDot={{ r: 5, fill: '#ef4444', stroke: 'white', strokeWidth: 2 }} />
+                                                    </AreaChart>
+                                                </ResponsiveContainer>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {/* Drawer Unificado - Lançamentos, Aprovados e Pendentes */}
+                                {(drawerType === 'lancamentos' || drawerType === 'aprovados' || drawerType === 'pendentes') && (
+                                    <div className="bg-background rounded-xl p-6 border">
+                                        {/* Resumo - Total, Aprovados, Pendentes */}
+                                        <div className="grid grid-cols-3 gap-4 mb-6">
+                                            <div className="bg-muted/50 rounded-xl p-4 text-center">
+                                                <p className="text-xs text-muted-foreground mb-1">Total</p>
+                                                <p className="text-2xl font-normal">{lancamentos.length}</p>
+                                            </div>
+                                            <div className="bg-muted/50 rounded-xl p-4 text-center">
+                                                <div className="flex items-center justify-center gap-1.5 mb-1">
+                                                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                                    <p className="text-xs text-muted-foreground">Aprovados</p>
+                                                </div>
+                                                <p className="text-2xl font-normal">{stats.aprovados}</p>
+                                            </div>
+                                            <div className="bg-muted/50 rounded-xl p-4 text-center">
+                                                <div className="flex items-center justify-center gap-1.5 mb-1">
+                                                    <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                                                    <p className="text-xs text-muted-foreground">Pendentes</p>
+                                                </div>
+                                                <p className="text-2xl font-normal">{stats.pendentes}</p>
+                                            </div>
+                                        </div>
+                                        
+                                        {/* Gráficos circulares lado a lado */}
+                                        <div className="grid grid-cols-2 gap-6 mb-6">
+                                            {/* Aprovados */}
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-20 h-20 text-emerald-500">
+                                                    <ResponsiveContainer width="100%" height="100%">
+                                                        <RadialBarChart
+                                                            innerRadius="70%"
+                                                            outerRadius="100%"
+                                                            data={[{ value: lancamentos.length > 0 ? Math.round((stats.aprovados / lancamentos.length) * 100) : 0 }]}
+                                                            startAngle={90}
+                                                            endAngle={-270}
+                                                        >
+                                                            <PolarAngleAxis type="number" domain={[0, 100]} angleAxisId={0} tick={false} />
+                                                            <RadialBar
+                                                                background={{ fill: '#e5e7eb' }}
+                                                                dataKey="value"
+                                                                cornerRadius={10}
+                                                                fill="currentColor"
+                                                            />
+                                                        </RadialBarChart>
+                                                    </ResponsiveContainer>
+                                                </div>
+                                                <div className="flex-1">
+                                                    <p className="text-2xl font-normal">{stats.aprovados}</p>
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                                        <p className="text-xs text-muted-foreground">aprovados ({lancamentos.length > 0 ? Math.round((stats.aprovados / lancamentos.length) * 100) : 0}%)</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            {/* Pendentes */}
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-20 h-20 text-amber-500">
+                                                    <ResponsiveContainer width="100%" height="100%">
+                                                        <RadialBarChart
+                                                            innerRadius="70%"
+                                                            outerRadius="100%"
+                                                            data={[{ value: lancamentos.length > 0 ? Math.round((stats.pendentes / lancamentos.length) * 100) : 0 }]}
+                                                            startAngle={90}
+                                                            endAngle={-270}
+                                                        >
+                                                            <PolarAngleAxis type="number" domain={[0, 100]} angleAxisId={0} tick={false} />
+                                                            <RadialBar
+                                                                background={{ fill: '#e5e7eb' }}
+                                                                dataKey="value"
+                                                                cornerRadius={10}
+                                                                fill="currentColor"
+                                                            />
+                                                        </RadialBarChart>
+                                                    </ResponsiveContainer>
+                                                </div>
+                                                <div className="flex-1">
+                                                    <p className="text-2xl font-normal">{stats.pendentes}</p>
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                                                        <p className="text-xs text-muted-foreground">pendentes ({lancamentos.length > 0 ? Math.round((stats.pendentes / lancamentos.length) * 100) : 0}%)</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        {/* Valores - A Pagar e A Receber */}
+                                        <div className="border-t border-border pt-4">
+                                            <div className="flex items-center gap-1.5 mb-3">
+                                                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                                <p className="text-sm font-medium">Valores Aprovados</p>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4 mb-4">
+                                                <div className="bg-muted/50 rounded-xl p-4">
+                                                    <p className="text-xs text-muted-foreground mb-1">A Pagar (Terapeutas)</p>
+                                                    <p className="text-xl font-normal">{formatarValor(stats.valorAprovadoTerapeuta)}</p>
+                                                </div>
+                                                <div className="bg-muted/50 rounded-xl p-4">
+                                                    <p className="text-xs text-muted-foreground mb-1">A Receber (Clientes)</p>
+                                                    <p className="text-xl font-normal">{formatarValor(stats.valorAprovadoCliente)}</p>
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="flex items-center gap-1.5 mb-3">
+                                                <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                                                <p className="text-sm font-medium">Valores Pendentes</p>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="bg-muted/50 rounded-xl p-4">
+                                                    <p className="text-xs text-muted-foreground mb-1">A Pagar (Terapeutas)</p>
+                                                    <p className="text-xl font-normal">{formatarValor(stats.valorPendenteTerapeuta)}</p>
+                                                </div>
+                                                <div className="bg-muted/50 rounded-xl p-4">
+                                                    <p className="text-xs text-muted-foreground mb-1">A Receber (Clientes)</p>
+                                                    <p className="text-xl font-normal">{formatarValor(stats.valorPendenteCliente)}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        {/* Gráfico de linha - Evolução de lançamentos */}
+                                        <div className="border-t border-border pt-4 mt-4">
+                                            <p className="text-sm font-medium mb-4">Lançamentos por Data</p>
+                                            <div className="h-48">
+                                                <ResponsiveContainer width="100%" height="100%">
+                                                    <AreaChart data={lancamentosSparklineData} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
+                                                        <defs>
+                                                            <linearGradient id="drawerLancamentosGradient" x1="0" y1="0" x2="0" y2="1">
+                                                                <stop offset="0%" stopColor="#10b981" stopOpacity={0.3} />
+                                                                <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
+                                                            </linearGradient>
+                                                        </defs>
+                                                        <RechartsTooltip
+                                                            content={({ active, payload }) => {
+                                                                if (!active || !payload || !payload.length) return null;
+                                                                const data = payload[0].payload;
+                                                                return (
+                                                                    <div className="bg-background border border-border rounded-lg shadow-lg px-3 py-2 text-xs">
+                                                                        <p className="font-medium text-foreground">{data.dateFormatted}</p>
+                                                                        <p className="text-emerald-600 font-semibold">{data.value} lançamentos</p>
+                                                                    </div>
+                                                                );
+                                                            }}
+                                                            cursor={{ stroke: '#10b981', strokeWidth: 1, strokeOpacity: 0.3 }}
+                                                        />
+                                                        <Area
+                                                            type="monotone"
+                                                            dataKey="value"
+                                                            stroke="#10b981"
+                                                            strokeWidth={2}
+                                                            fill="url(#drawerLancamentosGradient)"
+                                                            dot={{ r: 4, fill: '#10b981', stroke: 'white', strokeWidth: 2 }}
+                                                            activeDot={{ r: 6, fill: '#10b981', stroke: 'white', strokeWidth: 2 }}
+                                                        />
+                                                    </AreaChart>
+                                                </ResponsiveContainer>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                                
+                            </div>
+                        </div>
+                    </div>
+                </SheetContent>
+            </Sheet>
         </div>
     );
 }
@@ -1333,18 +2110,57 @@ interface TerapeutasTabProps {
     expandedId: string | null;
     onToggleExpand: (id: string) => void;
     onViewDetails: (item: ItemFaturamento) => void;
+    lancamentos: ItemFaturamento[];
 }
 
-function TerapeutasTab({ grupos, expandedId, onToggleExpand, onViewDetails }: TerapeutasTabProps) {
+function TerapeutasTab({ grupos, expandedId, onToggleExpand, onViewDetails, lancamentos }: TerapeutasTabProps) {
     // Estado de filtros de coluna para a tabela expandida
     const [columnFilters, setColumnFilters] = useState<FaturamentoColumnFilters>({
+        firstColumn: undefined,
         tipoAtividade: undefined,
+        especialidade: undefined,
         status: undefined,
     });
+    
+    // Estado para geração de relatório
+    const [isGenerating, setIsGenerating] = useState(false);
+    
+    // Estado para seleção de mês
+    const [mesSelecionado, setMesSelecionado] = useState<string>(() => {
+        const hoje = new Date();
+        const mesAnterior = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
+        return `${mesAnterior.getFullYear()}-${String(mesAnterior.getMonth() + 1).padStart(2, '0')}`;
+    });
+
+    // Gerar lista de meses disponíveis (últimos 12 meses)
+    const mesesDisponiveis = useMemo(() => {
+        const meses: { value: string; label: string }[] = [];
+        const hoje = new Date();
+        
+        for (let i = 0; i < 12; i++) {
+            const data = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+            const value = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
+            const mes = data.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
+            const label = `${mes.charAt(0).toUpperCase() + mes.slice(1)}/${data.getFullYear()}`;
+            meses.push({ value, label });
+        }
+        
+        return meses;
+    }, []);
+
+    // Período do mês selecionado
+    const periodoSelecionado = useMemo(() => {
+        const [ano, mes] = mesSelecionado.split('-').map(Number);
+        return {
+            inicio: new Date(ano, mes - 1, 1),
+            fim: new Date(ano, mes, 0),
+            label: new Date(ano, mes - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
+        };
+    }, [mesSelecionado]);
 
     // Resetar filtros ao mudar de terapeuta
     useEffect(() => {
-        setColumnFilters({ tipoAtividade: undefined, status: undefined });
+        setColumnFilters({ firstColumn: undefined, tipoAtividade: undefined, especialidade: undefined, status: undefined });
     }, [expandedId]);
 
     // Grupo expandido atual
@@ -1352,6 +2168,64 @@ function TerapeutasTab({ grupos, expandedId, onToggleExpand, onViewDetails }: Te
         if (!expandedId) return null;
         return grupos.find(g => g.terapeutaId === expandedId);
     }, [grupos, expandedId]);
+
+    // Lançamentos aprovados do mês selecionado para o terapeuta expandido
+    const lancamentosAprovadosDoMes = useMemo(() => {
+        if (!expandedGrupo) return [];
+        return lancamentos.filter(l => {
+            const data = new Date(l.data);
+            return (
+                l.terapeutaId === expandedGrupo.terapeutaId &&
+                l.status === STATUS_FATURAMENTO.APROVADO &&
+                data >= periodoSelecionado.inicio &&
+                data <= periodoSelecionado.fim
+            );
+        });
+    }, [lancamentos, expandedGrupo, periodoSelecionado]);
+
+    // Handler para gerar relatório do terapeuta
+    const handleGerarRelatorio = useCallback(async () => {
+        if (!expandedGrupo || lancamentosAprovadosDoMes.length === 0) return;
+        
+        setIsGenerating(true);
+        try {
+            await gerarRelatorioFaturamento({
+                tipo: 'terapeuta',
+                terapeutaId: expandedGrupo.terapeutaId,
+                periodoInicio: periodoSelecionado.inicio,
+                periodoFim: periodoSelecionado.fim,
+                lancamentos: lancamentosAprovadosDoMes,
+            });
+            toast.success('Relatório gerado! O download foi iniciado.');
+        } catch (error) {
+            console.error('Erro ao gerar relatório:', error);
+            toast.error(error instanceof Error ? error.message : 'Erro ao gerar relatório');
+        } finally {
+            setIsGenerating(false);
+        }
+    }, [expandedGrupo, lancamentosAprovadosDoMes, periodoSelecionado]);
+
+    // Handler para exportar relatório do terapeuta para Word
+    const handleExportarWord = useCallback(async () => {
+        if (!expandedGrupo || lancamentosAprovadosDoMes.length === 0) return;
+        
+        setIsGenerating(true);
+        try {
+            await exportarRelatorioWord({
+                tipo: 'terapeuta',
+                terapeutaId: expandedGrupo.terapeutaId,
+                periodoInicio: periodoSelecionado.inicio,
+                periodoFim: periodoSelecionado.fim,
+                lancamentos: lancamentosAprovadosDoMes,
+            });
+            toast.success('Documento Word gerado! O download foi iniciado.');
+        } catch (error) {
+            console.error('Erro ao exportar para Word:', error);
+            toast.error(error instanceof Error ? error.message : 'Erro ao exportar para Word');
+        } finally {
+            setIsGenerating(false);
+        }
+    }, [expandedGrupo, lancamentosAprovadosDoMes, periodoSelecionado]);
 
     // Lançamentos filtrados para o grupo expandido
     const filteredLancamentos = useMemo(() => {
@@ -1368,19 +2242,32 @@ function TerapeutasTab({ grupos, expandedId, onToggleExpand, onViewDetails }: Te
 
     // Opções de filtro para a tabela
     const filterOptions: FaturamentoColumnFilterOptions = useMemo(() => {
-        if (!expandedGrupo) return { tipoAtividade: [], status: [] };
+        if (!expandedGrupo) return { firstColumn: [], tipoAtividade: [], especialidade: [], status: [] };
         
+        const firstColumnSet = new Set<string>();
         const tipoSet = new Set<string>();
+        const especialidadeSet = new Set<string>();
         const statusSet = new Set<string>();
         expandedGrupo.lancamentos.forEach(l => {
+            // Na view por terapeuta, primeira coluna é o cliente
+            firstColumnSet.add(l.clienteNome || 'Sem cliente');
             tipoSet.add(l.tipoAtividade);
+            if (l.area) especialidadeSet.add(l.area);
             statusSet.add(l.status);
         });
 
         return {
+            firstColumn: Array.from(firstColumnSet).sort().map(name => ({
+                value: name,
+                label: name,
+            })),
             tipoAtividade: Array.from(tipoSet).map(tipo => ({
                 value: tipo,
                 label: TIPO_ATIVIDADE_FATURAMENTO_LABELS[tipo as keyof typeof TIPO_ATIVIDADE_FATURAMENTO_LABELS] ?? tipo,
+            })),
+            especialidade: Array.from(especialidadeSet).sort().map(esp => ({
+                value: esp,
+                label: esp,
             })),
             status: Array.from(statusSet).map(status => ({
                 value: status,
@@ -1408,7 +2295,7 @@ function TerapeutasTab({ grupos, expandedId, onToggleExpand, onViewDetails }: Te
         return (
             <div className="flex flex-col h-full">
                 {/* Header do terapeuta selecionado - fixo */}
-                <div className="shrink-0">
+                <div className="shrink-0 space-y-3">
                     <div
                         className="flex items-center gap-3 p-4 cursor-pointer hover:bg-muted/30 transition-colors"
                         style={{
@@ -1451,6 +2338,102 @@ function TerapeutasTab({ grupos, expandedId, onToggleExpand, onViewDetails }: Te
                             )}
                         </div>
                     </div>
+                    
+                    {/* Barra de Relatório - Contextual */}
+                    <div 
+                        className="flex items-center justify-between p-3 rounded-lg border border-dashed"
+                        style={{ backgroundColor: 'var(--hub-card-background)' }}
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-primary/10">
+                                <FileText className="h-4 w-4 text-primary" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium">Gerar Relatório de Repasse</p>
+                                <p className="text-xs text-muted-foreground">
+                                    {lancamentosAprovadosDoMes.length > 0 
+                                        ? `${lancamentosAprovadosDoMes.length} lançamento${lancamentosAprovadosDoMes.length > 1 ? 's' : ''} aprovado${lancamentosAprovadosDoMes.length > 1 ? 's' : ''}`
+                                        : 'Nenhum lançamento aprovado'
+                                    }
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Select
+                                value={mesSelecionado}
+                                onValueChange={setMesSelecionado}
+                            >
+                                <SelectTrigger className="h-8 w-[130px] text-xs bg-background" onClick={(e) => e.stopPropagation()}>
+                                    <SelectValue placeholder="Mês" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {mesesDisponiveis.map(mes => (
+                                        <SelectItem key={mes.value} value={mes.value}>
+                                            {mes.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            size="sm"
+                                            variant="default"
+                                            disabled={isGenerating || lancamentosAprovadosDoMes.length === 0}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleGerarRelatorio();
+                                            }}
+                                            className="h-8 gap-1.5"
+                                        >
+                                            {isGenerating ? (
+                                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                            ) : (
+                                                <FileText className="h-3.5 w-3.5" />
+                                            )}
+                                            Gerar PDF
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        {lancamentosAprovadosDoMes.length === 0 
+                                            ? 'Nenhum lançamento aprovado neste período'
+                                            : `Gerar relatório de ${periodoSelecionado.label}`
+                                        }
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            disabled={isGenerating || lancamentosAprovadosDoMes.length === 0}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleExportarWord();
+                                            }}
+                                            className="h-8 gap-1.5"
+                                        >
+                                            {isGenerating ? (
+                                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                            ) : (
+                                                <FileDown className="h-3.5 w-3.5" />
+                                            )}
+                                            Word
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        {lancamentosAprovadosDoMes.length === 0 
+                                            ? 'Nenhum lançamento aprovado neste período'
+                                            : 'Exportar para Word (editável)'
+                                        }
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Tabela com filtros - com scroll */}
@@ -1461,6 +2444,7 @@ function TerapeutasTab({ grupos, expandedId, onToggleExpand, onViewDetails }: Te
                         filterOptions={filterOptions}
                         onColumnFilterChange={setColumnFilters}
                         onViewDetails={onViewDetails}
+                        viewContext="by-therapist"
                     />
                 </div>
             </div>
@@ -1534,18 +2518,58 @@ interface ClientesTabProps {
     expandedId: string | null;
     onToggleExpand: (id: string) => void;
     onViewDetails: (item: ItemFaturamento) => void;
+    lancamentos: ItemFaturamento[];
 }
 
-function ClientesTab({ grupos, expandedId, onToggleExpand, onViewDetails }: ClientesTabProps) {
+function ClientesTab({ grupos, expandedId, onToggleExpand, onViewDetails, lancamentos }: ClientesTabProps) {
     // Estado de filtros de coluna para a tabela expandida
     const [columnFilters, setColumnFilters] = useState<FaturamentoColumnFilters>({
+        firstColumn: undefined,
         tipoAtividade: undefined,
+        especialidade: undefined,
         status: undefined,
     });
+    
+    // Estado para geração de relatório
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [tipoRelatorio, setTipoRelatorio] = useState<'convenio' | 'pais'>('pais');
+    
+    // Estado para seleção de mês
+    const [mesSelecionado, setMesSelecionado] = useState<string>(() => {
+        const hoje = new Date();
+        const mesAnterior = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
+        return `${mesAnterior.getFullYear()}-${String(mesAnterior.getMonth() + 1).padStart(2, '0')}`;
+    });
+
+    // Gerar lista de meses disponíveis (últimos 12 meses)
+    const mesesDisponiveis = useMemo(() => {
+        const meses: { value: string; label: string }[] = [];
+        const hoje = new Date();
+        
+        for (let i = 0; i < 12; i++) {
+            const data = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+            const value = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
+            const mes = data.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
+            const label = `${mes.charAt(0).toUpperCase() + mes.slice(1)}/${data.getFullYear()}`;
+            meses.push({ value, label });
+        }
+        
+        return meses;
+    }, []);
+
+    // Período do mês selecionado
+    const periodoSelecionado = useMemo(() => {
+        const [ano, mes] = mesSelecionado.split('-').map(Number);
+        return {
+            inicio: new Date(ano, mes - 1, 1),
+            fim: new Date(ano, mes, 0),
+            label: new Date(ano, mes - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
+        };
+    }, [mesSelecionado]);
 
     // Resetar filtros ao mudar de cliente
     useEffect(() => {
-        setColumnFilters({ tipoAtividade: undefined, status: undefined });
+        setColumnFilters({ firstColumn: undefined, tipoAtividade: undefined, especialidade: undefined, status: undefined });
     }, [expandedId]);
 
     // Grupo expandido atual
@@ -1553,6 +2577,64 @@ function ClientesTab({ grupos, expandedId, onToggleExpand, onViewDetails }: Clie
         if (!expandedId) return null;
         return grupos.find(g => g.clienteId === expandedId);
     }, [grupos, expandedId]);
+
+    // Lançamentos aprovados do mês selecionado para o cliente expandido
+    const lancamentosAprovadosDoMes = useMemo(() => {
+        if (!expandedGrupo) return [];
+        return lancamentos.filter(l => {
+            const data = new Date(l.data);
+            return (
+                l.clienteId === expandedGrupo.clienteId &&
+                l.status === STATUS_FATURAMENTO.APROVADO &&
+                data >= periodoSelecionado.inicio &&
+                data <= periodoSelecionado.fim
+            );
+        });
+    }, [lancamentos, expandedGrupo, periodoSelecionado]);
+
+    // Handler para gerar relatório do cliente
+    const handleGerarRelatorio = useCallback(async () => {
+        if (!expandedGrupo || lancamentosAprovadosDoMes.length === 0) return;
+        
+        setIsGenerating(true);
+        try {
+            await gerarRelatorioFaturamento({
+                tipo: tipoRelatorio,
+                clienteId: expandedGrupo.clienteId,
+                periodoInicio: periodoSelecionado.inicio,
+                periodoFim: periodoSelecionado.fim,
+                lancamentos: lancamentosAprovadosDoMes,
+            });
+            toast.success('Relatório gerado! O download foi iniciado.');
+        } catch (error) {
+            console.error('Erro ao gerar relatório:', error);
+            toast.error(error instanceof Error ? error.message : 'Erro ao gerar relatório');
+        } finally {
+            setIsGenerating(false);
+        }
+    }, [expandedGrupo, lancamentosAprovadosDoMes, periodoSelecionado, tipoRelatorio]);
+
+    // Handler para exportar relatório do cliente para Word
+    const handleExportarWord = useCallback(async () => {
+        if (!expandedGrupo || lancamentosAprovadosDoMes.length === 0) return;
+        
+        setIsGenerating(true);
+        try {
+            await exportarRelatorioWord({
+                tipo: tipoRelatorio,
+                clienteId: expandedGrupo.clienteId,
+                periodoInicio: periodoSelecionado.inicio,
+                periodoFim: periodoSelecionado.fim,
+                lancamentos: lancamentosAprovadosDoMes,
+            });
+            toast.success('Documento Word gerado! O download foi iniciado.');
+        } catch (error) {
+            console.error('Erro ao exportar para Word:', error);
+            toast.error(error instanceof Error ? error.message : 'Erro ao exportar para Word');
+        } finally {
+            setIsGenerating(false);
+        }
+    }, [expandedGrupo, lancamentosAprovadosDoMes, periodoSelecionado, tipoRelatorio]);
 
     // Lançamentos filtrados para o grupo expandido
     const filteredLancamentos = useMemo(() => {
@@ -1569,19 +2651,32 @@ function ClientesTab({ grupos, expandedId, onToggleExpand, onViewDetails }: Clie
 
     // Opções de filtro para a tabela
     const filterOptions: FaturamentoColumnFilterOptions = useMemo(() => {
-        if (!expandedGrupo) return { tipoAtividade: [], status: [] };
+        if (!expandedGrupo) return { firstColumn: [], tipoAtividade: [], especialidade: [], status: [] };
         
+        const firstColumnSet = new Set<string>();
         const tipoSet = new Set<string>();
+        const especialidadeSet = new Set<string>();
         const statusSet = new Set<string>();
         expandedGrupo.lancamentos.forEach(l => {
+            // Na view por cliente, primeira coluna é o terapeuta
+            firstColumnSet.add(l.terapeutaNome || 'Sem terapeuta');
             tipoSet.add(l.tipoAtividade);
+            if (l.area) especialidadeSet.add(l.area);
             statusSet.add(l.status);
         });
 
         return {
+            firstColumn: Array.from(firstColumnSet).sort().map(name => ({
+                value: name,
+                label: name,
+            })),
             tipoAtividade: Array.from(tipoSet).map(tipo => ({
                 value: tipo,
                 label: TIPO_ATIVIDADE_FATURAMENTO_LABELS[tipo as keyof typeof TIPO_ATIVIDADE_FATURAMENTO_LABELS] ?? tipo,
+            })),
+            especialidade: Array.from(especialidadeSet).sort().map(esp => ({
+                value: esp,
+                label: esp,
             })),
             status: Array.from(statusSet).map(status => ({
                 value: status,
@@ -1609,7 +2704,7 @@ function ClientesTab({ grupos, expandedId, onToggleExpand, onViewDetails }: Clie
         return (
             <div className="flex flex-col h-full">
                 {/* Header do cliente selecionado - fixo */}
-                <div className="shrink-0">
+                <div className="shrink-0 space-y-3">
                     <div
                         className="flex items-center gap-3 p-4 cursor-pointer hover:bg-muted/30 transition-colors"
                         style={{
@@ -1652,6 +2747,116 @@ function ClientesTab({ grupos, expandedId, onToggleExpand, onViewDetails }: Clie
                             )}
                         </div>
                     </div>
+                    
+                    {/* Barra de Relatório - Contextual */}
+                    <div 
+                        className="flex items-center justify-between p-3 rounded-lg border border-dashed"
+                        style={{ backgroundColor: 'var(--hub-card-background)' }}
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-primary/10">
+                                <FileText className="h-4 w-4 text-primary" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium">Gerar Relatório do Cliente</p>
+                                <p className="text-xs text-muted-foreground">
+                                    {lancamentosAprovadosDoMes.length > 0 
+                                        ? `${lancamentosAprovadosDoMes.length} lançamento${lancamentosAprovadosDoMes.length > 1 ? 's' : ''} aprovado${lancamentosAprovadosDoMes.length > 1 ? 's' : ''}`
+                                        : 'Nenhum lançamento aprovado'
+                                    }
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            {/* Seletor de tipo de relatório */}
+                            <Select
+                                value={tipoRelatorio}
+                                onValueChange={(value) => setTipoRelatorio(value as 'convenio' | 'pais')}
+                            >
+                                <SelectTrigger className="h-8 w-[120px] text-xs bg-background" onClick={(e) => e.stopPropagation()}>
+                                    <SelectValue placeholder="Tipo" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="pais">Para Pais</SelectItem>
+                                    <SelectItem value="convenio">Para Convênio</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            {/* Seletor de mês */}
+                            <Select
+                                value={mesSelecionado}
+                                onValueChange={setMesSelecionado}
+                            >
+                                <SelectTrigger className="h-8 w-[130px] text-xs bg-background" onClick={(e) => e.stopPropagation()}>
+                                    <SelectValue placeholder="Mês" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {mesesDisponiveis.map(mes => (
+                                        <SelectItem key={mes.value} value={mes.value}>
+                                            {mes.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            size="sm"
+                                            variant="default"
+                                            disabled={isGenerating || lancamentosAprovadosDoMes.length === 0}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleGerarRelatorio();
+                                            }}
+                                            className="h-8 gap-1.5"
+                                        >
+                                            {isGenerating ? (
+                                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                            ) : (
+                                                <FileText className="h-3.5 w-3.5" />
+                                            )}
+                                            Gerar PDF
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        {lancamentosAprovadosDoMes.length === 0 
+                                            ? 'Nenhum lançamento aprovado neste período'
+                                            : `Gerar relatório ${tipoRelatorio === 'pais' ? 'para Pais' : 'para Convênio'} de ${periodoSelecionado.label}`
+                                        }
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            disabled={isGenerating || lancamentosAprovadosDoMes.length === 0}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleExportarWord();
+                                            }}
+                                            className="h-8 gap-1.5"
+                                        >
+                                            {isGenerating ? (
+                                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                            ) : (
+                                                <FileDown className="h-3.5 w-3.5" />
+                                            )}
+                                            Word
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        {lancamentosAprovadosDoMes.length === 0 
+                                            ? 'Nenhum lançamento aprovado neste período'
+                                            : 'Exportar para Word (editável)'
+                                        }
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Tabela com filtros - com scroll */}
@@ -1662,6 +2867,7 @@ function ClientesTab({ grupos, expandedId, onToggleExpand, onViewDetails }: Clie
                         filterOptions={filterOptions}
                         onColumnFilterChange={setColumnFilters}
                         onViewDetails={onViewDetails}
+                        viewContext="by-client"
                     />
                 </div>
             </div>
@@ -1719,6 +2925,446 @@ function ClientesTab({ grupos, expandedId, onToggleExpand, onViewDetails }: Clie
                     </div>
                 </div>
             ))}
+        </div>
+    );
+}
+
+// ============================================
+// TAB: RELATÓRIOS
+// ============================================
+
+interface RelatoriosTabProps {
+    lancamentos: ItemFaturamento[];
+}
+
+type TipoRelatorio = 'convenio' | 'terapeuta' | 'pais';
+
+function RelatoriosTab({ lancamentos }: RelatoriosTabProps) {
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [searchCliente, setSearchCliente] = useState('');
+    const [searchTerapeuta, setSearchTerapeuta] = useState('');
+    
+    // Estado para seleção de mês (formato: "2026-01")
+    // Por padrão, seleciona o mês anterior (onde geralmente estão os dados para faturamento)
+    const [mesSelecionado, setMesSelecionado] = useState<string>(() => {
+        const hoje = new Date();
+        const mesAnterior = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
+        return `${mesAnterior.getFullYear()}-${String(mesAnterior.getMonth() + 1).padStart(2, '0')}`;
+    });
+
+    // Gerar lista de meses disponíveis (últimos 12 meses)
+    const mesesDisponiveis = useMemo(() => {
+        const meses: { value: string; label: string }[] = [];
+        const hoje = new Date();
+        
+        for (let i = 0; i < 12; i++) {
+            const data = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+            const value = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
+            const label = data.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+            meses.push({ value, label: label.charAt(0).toUpperCase() + label.slice(1) });
+        }
+        
+        return meses;
+    }, []);
+
+    // Período do mês selecionado
+    const periodoSelecionado = useMemo(() => {
+        const [ano, mes] = mesSelecionado.split('-').map(Number);
+        return {
+            inicio: new Date(ano, mes - 1, 1),
+            fim: new Date(ano, mes, 0),
+            label: new Date(ano, mes - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
+        };
+    }, [mesSelecionado]);
+
+    // Filtrar lançamentos aprovados do mês selecionado
+    const lancamentosDoMes = useMemo(() => {
+        return lancamentos.filter(l => {
+            const data = new Date(l.data);
+            return data >= periodoSelecionado.inicio && data <= periodoSelecionado.fim && l.status === STATUS_FATURAMENTO.APROVADO;
+        });
+    }, [lancamentos, periodoSelecionado]);
+
+    // Clientes únicos com lançamentos no mês (para relatório Convênio e Pais)
+    const clientesDisponiveis = useMemo(() => {
+        const clientesMap = new Map<string, { 
+            id: string; 
+            nome: string; 
+            totalHoras: number;
+            totalSessoes: number;
+            valorTotal: number;
+        }>();
+        
+        lancamentosDoMes.forEach(l => {
+            if (l.clienteId && l.clienteNome) {
+                const existing = clientesMap.get(l.clienteId);
+                if (existing) {
+                    existing.totalHoras += l.duracaoMinutos / 60;
+                    existing.totalSessoes += 1;
+                    existing.valorTotal += l.valorTotalCliente ?? 0;
+                } else {
+                    clientesMap.set(l.clienteId, {
+                        id: l.clienteId,
+                        nome: l.clienteNome,
+                        totalHoras: l.duracaoMinutos / 60,
+                        totalSessoes: 1,
+                        valorTotal: l.valorTotalCliente ?? 0,
+                    });
+                }
+            }
+        });
+        
+        return Array.from(clientesMap.values()).sort((a, b) => a.nome.localeCompare(b.nome));
+    }, [lancamentosDoMes]);
+
+    // Terapeutas únicos com lançamentos no mês (inclui todos os clientes atendidos)
+    const terapeutasDisponiveis = useMemo(() => {
+        const terapeutasMap = new Map<string, { 
+            id: string; 
+            nome: string; 
+            totalHoras: number; 
+            totalValor: number;
+            totalSessoes: number;
+            clientesAtendidos: Set<string>;
+        }>();
+        
+        lancamentosDoMes.forEach(l => {
+            const existing = terapeutasMap.get(l.terapeutaId);
+            if (existing) {
+                existing.totalHoras += l.duracaoMinutos / 60;
+                existing.totalValor += l.valorTotal ?? 0;
+                existing.totalSessoes += 1;
+                if (l.clienteNome) existing.clientesAtendidos.add(l.clienteNome);
+            } else {
+                const clientesSet = new Set<string>();
+                if (l.clienteNome) clientesSet.add(l.clienteNome);
+                terapeutasMap.set(l.terapeutaId, {
+                    id: l.terapeutaId,
+                    nome: l.terapeutaNome,
+                    totalHoras: l.duracaoMinutos / 60,
+                    totalValor: l.valorTotal ?? 0,
+                    totalSessoes: 1,
+                    clientesAtendidos: clientesSet,
+                });
+            }
+        });
+        
+        return Array.from(terapeutasMap.values())
+            .map(t => ({ ...t, totalClientes: t.clientesAtendidos.size }))
+            .sort((a, b) => a.nome.localeCompare(b.nome));
+    }, [lancamentosDoMes]);
+
+    // Filtrar clientes pela busca
+    const clientesFiltrados = useMemo(() => {
+        if (!searchCliente.trim()) return clientesDisponiveis;
+        const termo = searchCliente.toLowerCase();
+        return clientesDisponiveis.filter(c => c.nome.toLowerCase().includes(termo));
+    }, [clientesDisponiveis, searchCliente]);
+
+    // Filtrar terapeutas pela busca
+    const terapeutasFiltrados = useMemo(() => {
+        if (!searchTerapeuta.trim()) return terapeutasDisponiveis;
+        const termo = searchTerapeuta.toLowerCase();
+        return terapeutasDisponiveis.filter(t => t.nome.toLowerCase().includes(termo));
+    }, [terapeutasDisponiveis, searchTerapeuta]);
+
+    const handleGerarRelatorio = useCallback(async (
+        tipo: TipoRelatorio,
+        clienteId?: string,
+        terapeutaId?: string
+    ) => {
+        setIsGenerating(true);
+        try {
+            await gerarRelatorioFaturamento({
+                tipo,
+                clienteId,
+                terapeutaId,
+                periodoInicio: periodoSelecionado.inicio,
+                periodoFim: periodoSelecionado.fim,
+                lancamentos: lancamentosDoMes,
+            });
+            toast.success('Relatório gerado! O download foi iniciado.');
+        } catch (error) {
+            console.error('Erro ao gerar relatório:', error);
+            toast.error(error instanceof Error ? error.message : 'Erro ao gerar relatório');
+        } finally {
+            setIsGenerating(false);
+        }
+    }, [periodoSelecionado, lancamentosDoMes]);
+
+    const handleExportarWord = useCallback(async (
+        tipo: TipoRelatorio,
+        clienteId?: string,
+        terapeutaId?: string
+    ) => {
+        setIsGenerating(true);
+        try {
+            await exportarRelatorioWord({
+                tipo,
+                clienteId,
+                terapeutaId,
+                periodoInicio: periodoSelecionado.inicio,
+                periodoFim: periodoSelecionado.fim,
+                lancamentos: lancamentosDoMes,
+            });
+            toast.success('Documento Word gerado! O download foi iniciado.');
+        } catch (error) {
+            console.error('Erro ao exportar para Word:', error);
+            toast.error(error instanceof Error ? error.message : 'Erro ao exportar para Word');
+        } finally {
+            setIsGenerating(false);
+        }
+    }, [periodoSelecionado, lancamentosDoMes]);
+
+    return (
+        <div className="h-full overflow-y-auto">
+            <div className="space-y-6 pb-6">
+                {/* Cabeçalho com seletor de mês */}
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h3 className="text-lg font-medium">Relatórios Mensais</h3>
+                        <p className="text-sm text-muted-foreground">
+                            Gere relatórios para convênios, terapeutas ou pais
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <select
+                            value={mesSelecionado}
+                            onChange={(e) => setMesSelecionado(e.target.value)}
+                            className="h-9 px-3 rounded-lg border border-input bg-background text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary"
+                        >
+                            {mesesDisponiveis.map(mes => (
+                                <option key={mes.value} value={mes.value}>
+                                    {mes.label}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+
+                {lancamentosDoMes.length === 0 ? (
+                    <div className="bg-muted/50 rounded-xl p-8 text-center">
+                        <AlertCircle className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+                        <p className="text-muted-foreground">
+                            Nenhum lançamento aprovado em <span className="font-medium capitalize">{periodoSelecionado.label}</span>
+                        </p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                            Aprove lançamentos primeiro para gerar relatórios.
+                        </p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Coluna: Relatórios por Cliente (Convênio e Pais) */}
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h4 className="font-medium">Por Cliente</h4>
+                                    <p className="text-xs text-muted-foreground">
+                                        Relatórios para Convênio ou Pais
+                                    </p>
+                                </div>
+                                <Badge variant="secondary">{clientesDisponiveis.length} clientes</Badge>
+                            </div>
+                            
+                            {/* Busca de cliente */}
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    placeholder="Buscar cliente..."
+                                    value={searchCliente}
+                                    onChange={(e) => setSearchCliente(e.target.value)}
+                                    className="pl-9 h-9"
+                                />
+                            </div>
+                            
+                            {/* Lista de clientes */}
+                            <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                                {clientesFiltrados.length === 0 ? (
+                                    <p className="text-sm text-muted-foreground text-center py-4">
+                                        Nenhum cliente encontrado
+                                    </p>
+                                ) : (
+                                    clientesFiltrados.map(cliente => (
+                                        <div
+                                            key={cliente.id}
+                                            className="flex items-center justify-between p-3 rounded-lg border bg-background hover:bg-muted/50 transition-colors"
+                                        >
+                                            <div className="flex items-center gap-3 min-w-0 flex-1">
+                                                <Avatar className="h-9 w-9 shrink-0">
+                                                    <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                                                        {getInitials(cliente.nome)}
+                                                    </AvatarFallback>
+                                                </Avatar>
+                                                <div className="min-w-0">
+                                                    <p className="font-medium text-sm truncate">{cliente.nome}</p>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {cliente.totalSessoes} sessões • {cliente.totalHoras.toFixed(1)}h • {formatarValor(cliente.valorTotal)}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-1 shrink-0">
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                disabled={isGenerating}
+                                                                onClick={() => handleGerarRelatorio('convenio', cliente.id)}
+                                                                className="h-8 px-2"
+                                                            >
+                                                                <FileText className="h-4 w-4" />
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>PDF Convênio</TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                disabled={isGenerating}
+                                                                onClick={() => handleExportarWord('convenio', cliente.id)}
+                                                                className="h-8 px-2"
+                                                            >
+                                                                <FileDown className="h-4 w-4" />
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>Word Convênio</TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                disabled={isGenerating}
+                                                                onClick={() => handleGerarRelatorio('pais', cliente.id)}
+                                                                className="h-8 px-2"
+                                                            >
+                                                                <UserCircle className="h-4 w-4" />
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>PDF Pais</TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                disabled={isGenerating}
+                                                                onClick={() => handleExportarWord('pais', cliente.id)}
+                                                                className="h-8 px-2"
+                                                            >
+                                                                <FileDown className="h-4 w-4 text-primary" />
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>Word Pais</TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Coluna: Relatórios por Terapeuta */}
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h4 className="font-medium">Por Terapeuta</h4>
+                                    <p className="text-xs text-muted-foreground">
+                                        Relatório com todos os clientes atendidos
+                                    </p>
+                                </div>
+                                <Badge variant="secondary">{terapeutasDisponiveis.length} terapeutas</Badge>
+                            </div>
+                            
+                            {/* Busca de terapeuta */}
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    placeholder="Buscar terapeuta..."
+                                    value={searchTerapeuta}
+                                    onChange={(e) => setSearchTerapeuta(e.target.value)}
+                                    className="pl-9 h-9"
+                                />
+                            </div>
+                            
+                            {/* Lista de terapeutas */}
+                            <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                                {terapeutasFiltrados.length === 0 ? (
+                                    <p className="text-sm text-muted-foreground text-center py-4">
+                                        Nenhum terapeuta encontrado
+                                    </p>
+                                ) : (
+                                    terapeutasFiltrados.map(terapeuta => (
+                                        <div
+                                            key={terapeuta.id}
+                                            className="flex items-center justify-between p-3 rounded-lg border bg-background hover:bg-muted/50 transition-colors"
+                                        >
+                                            <div className="flex items-center gap-3 min-w-0 flex-1">
+                                                <Avatar className="h-9 w-9 shrink-0">
+                                                    <AvatarFallback className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 text-xs">
+                                                        {getInitials(terapeuta.nome)}
+                                                    </AvatarFallback>
+                                                </Avatar>
+                                                <div className="min-w-0">
+                                                    <p className="font-medium text-sm truncate">{terapeuta.nome}</p>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {terapeuta.totalClientes} clientes • {terapeuta.totalSessoes} sessões • {formatarValor(terapeuta.totalValor)}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-1 shrink-0">
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                disabled={isGenerating}
+                                                                onClick={() => handleGerarRelatorio('terapeuta', undefined, terapeuta.id)}
+                                                                className="h-8 gap-1.5"
+                                                            >
+                                                                <FileText className="h-4 w-4" />
+                                                                PDF
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>Gerar PDF do terapeuta</TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                                <TooltipProvider>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                disabled={isGenerating}
+                                                                onClick={() => handleExportarWord('terapeuta', undefined, terapeuta.id)}
+                                                                className="h-8 px-2"
+                                                            >
+                                                                <FileDown className="h-4 w-4" />
+                                                            </Button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>Exportar para Word</TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

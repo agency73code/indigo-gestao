@@ -27,6 +27,8 @@ import {
     X,
     Check,
     Loader2,
+    Clock,
+    DollarSign,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -81,38 +83,49 @@ interface StatCardProps {
     label: string;
     value: string | number;
     subValue?: string;
+    badge?: {
+        value: string;
+        variant: 'success' | 'warning' | 'default';
+    };
     variant?: 'default' | 'primary' | 'warning' | 'success';
     isActive?: boolean;
     onClick?: () => void;
 }
 
-function StatCard({ icon, label, value, subValue, variant = 'default', isActive, onClick }: StatCardProps) {
+function StatCard({ icon, label, value, subValue, badge, variant = 'default', isActive, onClick }: StatCardProps) {
     const bgColors = {
         default: 'bg-card hover:bg-muted/50',
-        primary: 'bg-zinc-900 dark:bg-zinc-800 hover:bg-zinc-800 dark:hover:bg-zinc-700',
-        warning: 'bg-amber-50 dark:bg-amber-950/30 hover:bg-amber-100 dark:hover:bg-amber-950/50',
-        success: 'bg-emerald-50 dark:bg-emerald-950/30 hover:bg-emerald-100 dark:hover:bg-emerald-950/50',
+        primary: 'bg-primary hover:bg-primary/90',
+        warning: 'bg-card hover:bg-muted/50',
+        success: 'bg-card hover:bg-muted/50',
     };
 
     const iconColors = {
         default: 'bg-muted text-muted-foreground',
-        primary: 'bg-white/10 text-white',
-        warning: 'bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400',
-        success: 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400',
+        primary: 'bg-primary-foreground/10 text-primary-foreground',
+        warning: 'bg-muted text-muted-foreground',
+        success: 'bg-muted text-muted-foreground',
     };
 
     const textColors = {
         default: 'text-foreground',
-        primary: 'text-white',
-        warning: 'text-amber-900 dark:text-amber-100',
-        success: 'text-emerald-900 dark:text-emerald-100',
+        primary: 'text-primary-foreground',
+        warning: 'text-foreground',
+        success: 'text-foreground',
+    };
+    
+    const badgeColors = {
+        success: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+        warning: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+        default: 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-400',
     };
 
     return (
         <div
             className={cn(
-                "rounded-xl p-5 cursor-pointer transition-all border",
+                "rounded-xl p-5 transition-all border",
                 bgColors[variant],
+                onClick && "cursor-pointer",
                 isActive && "ring-2 ring-primary ring-offset-2 ring-offset-background"
             )}
             onClick={onClick}
@@ -121,21 +134,32 @@ function StatCard({ icon, label, value, subValue, variant = 'default', isActive,
                 <div className={cn("p-2 rounded-lg", iconColors[variant])}>
                     {icon}
                 </div>
+                <span className="text-muted-foreground">•••</span>
             </div>
             <div className="mt-4">
                 <p className={cn(
                     "text-xs mb-1",
-                    variant === 'primary' ? 'text-zinc-400' : 'text-muted-foreground'
+                    variant === 'primary' ? 'text-primary-foreground/70' : 'text-muted-foreground'
                 )}>
                     {label}
                 </p>
-                <p className={cn("text-2xl font-normal", textColors[variant])}>
-                    {value}
-                </p>
+                <div className="flex items-center gap-3">
+                    <p className={cn("text-2xl font-normal", textColors[variant])}>
+                        {value}
+                    </p>
+                    {badge && (
+                        <span className={cn(
+                            "text-xs px-2 py-0.5 rounded-full font-medium",
+                            badgeColors[badge.variant]
+                        )}>
+                            {badge.value}
+                        </span>
+                    )}
+                </div>
                 {subValue && (
                     <p className={cn(
                         "text-sm mt-1",
-                        variant === 'primary' ? 'text-zinc-400' : 'text-muted-foreground'
+                        variant === 'primary' ? 'text-primary-foreground/50' : 'text-muted-foreground'
                     )}>
                         {subValue}
                     </p>
@@ -255,7 +279,9 @@ export function FaturamentoGerenteHub() {
     
     // Filtros de coluna
     const [columnFilters, setColumnFilters] = useState<FaturamentoColumnFilters>({
+        firstColumn: undefined,
         tipoAtividade: undefined,
+        especialidade: undefined,
         status: undefined,
     });
 
@@ -355,7 +381,7 @@ export function FaturamentoGerenteHub() {
         });
     }, [lancamentos, viewMode, terapeutaIdFilter]);
 
-    // Agrupar por cliente
+    // Agrupar por cliente - usa valorTotalCliente (quanto o cliente paga à clínica)
     const groupedByCliente = useMemo((): ClienteGroup[] => {
         if (viewMode !== 'por-cliente' || clienteIdFilter) return [];
 
@@ -373,15 +399,26 @@ export function FaturamentoGerenteHub() {
                     clienteAvatarUrl: l.clienteAvatarUrl,
                     lancamentos: [],
                     totalMinutos: 0,
-                    totalValor: 0,
+                    totalValor: 0, // Valor do cliente (quanto o cliente paga)
+                    totalValorTerapeuta: 0, // Valor do terapeuta (quanto pagar)
                     totalLancamentos: 0,
+                    totalPendentes: 0,
+                    totalAprovados: 0,
                 };
             }
 
             grouped[clienteId].lancamentos.push(l);
             grouped[clienteId].totalMinutos += l.duracaoMinutos;
-            grouped[clienteId].totalValor += l.valorTotal ?? 0;
+            // Usar valorTotalCliente para cliente, com fallback para valorTotal
+            grouped[clienteId].totalValor += l.valorTotalCliente ?? l.valorTotal ?? 0;
+            grouped[clienteId].totalValorTerapeuta += l.valorTotal ?? 0;
             grouped[clienteId].totalLancamentos += 1;
+            
+            if (l.status === STATUS_FATURAMENTO.PENDENTE) {
+                grouped[clienteId].totalPendentes += 1;
+            } else if (l.status === STATUS_FATURAMENTO.APROVADO) {
+                grouped[clienteId].totalAprovados += 1;
+            }
         });
 
         return Object.values(grouped).sort((a, b) => {
@@ -420,30 +457,51 @@ export function FaturamentoGerenteHub() {
             avatarUrl: cliente.clienteAvatarUrl,
             totalLancamentos: clienteLancamentos.length,
             totalMinutos: clienteLancamentos.reduce((acc, l) => acc + l.duracaoMinutos, 0),
+            // Valor do cliente (quanto o cliente paga)
+            totalValor: clienteLancamentos.reduce((acc, l) => acc + (l.valorTotalCliente ?? l.valorTotal ?? 0), 0),
+            totalPendentes: clienteLancamentos.filter(l => l.status === STATUS_FATURAMENTO.PENDENTE).length,
+            totalAprovados: clienteLancamentos.filter(l => l.status === STATUS_FATURAMENTO.APROVADO).length,
         };
     }, [clienteIdFilter, lancamentos]);
 
     // Opções de filtro para colunas
     const columnFilterOptions: FaturamentoColumnFilterOptions = useMemo(() => {
+        const firstColumnSet = new Set<string>();
         const tipoSet = new Set<TipoAtividadeFaturamento>();
+        const especialidadeSet = new Set<string>();
         const statusSet = new Set<StatusFaturamento>();
 
         filteredLancamentos.forEach(l => {
+            // Para firstColumn, usa terapeuta ou cliente dependendo do viewMode
+            if (viewMode === 'por-cliente' && clienteIdFilter) {
+                firstColumnSet.add(l.terapeutaNome);
+            } else if (viewMode === 'por-terapeuta' && terapeutaIdFilter) {
+                firstColumnSet.add(l.clienteNome || 'Sem cliente');
+            }
             tipoSet.add(l.tipoAtividade);
+            if (l.area) especialidadeSet.add(l.area);
             statusSet.add(l.status);
         });
 
         return {
+            firstColumn: Array.from(firstColumnSet).sort().map(name => ({
+                value: name,
+                label: name,
+            })),
             tipoAtividade: Array.from(tipoSet).map(tipo => ({
                 value: tipo,
                 label: TIPO_ATIVIDADE_FATURAMENTO_LABELS[tipo] ?? tipo,
+            })),
+            especialidade: Array.from(especialidadeSet).sort().map(esp => ({
+                value: esp,
+                label: esp,
             })),
             status: Array.from(statusSet).map(status => ({
                 value: status,
                 label: STATUS_FATURAMENTO_LABELS[status] ?? status,
             })),
         };
-    }, [filteredLancamentos]);
+    }, [filteredLancamentos, viewMode, clienteIdFilter, terapeutaIdFilter]);
 
     // ============================================
     // CARREGAR DADOS
@@ -514,7 +572,7 @@ export function FaturamentoGerenteHub() {
     const clearFilters = useCallback(() => {
         setSearchParams(new URLSearchParams({ view: viewMode }));
         setSearchValue('');
-        setColumnFilters({ tipoAtividade: undefined, status: undefined });
+        setColumnFilters({ firstColumn: undefined, tipoAtividade: undefined, status: undefined });
         setSelectedIds(new Set());
     }, [setSearchParams, viewMode]);
 
@@ -554,13 +612,20 @@ export function FaturamentoGerenteHub() {
     }, []);
 
     const toggleSelectAll = useCallback(() => {
-        const pendentes = filteredLancamentos.filter(l => l.status === STATUS_FATURAMENTO.PENDENTE);
-        if (selectedIds.size === pendentes.length) {
+        // Selecionar apenas pendentes SEM ajuda de custo (podem ser aprovados em massa)
+        const pendentesSemAjuda = filteredLancamentos.filter(
+            l => l.status === STATUS_FATURAMENTO.PENDENTE && !l.temAjudaCusto
+        );
+        const allSemAjudaSelected = pendentesSemAjuda.every(l => selectedIds.has(l.id));
+        
+        if (allSemAjudaSelected) {
+            // Deselecionar todos
             setSelectedIds(new Set());
         } else {
-            setSelectedIds(new Set(pendentes.map(l => l.id)));
+            // Selecionar apenas os sem ajuda de custo
+            setSelectedIds(new Set(pendentesSemAjuda.map(l => l.id)));
         }
-    }, [filteredLancamentos, selectedIds.size]);
+    }, [filteredLancamentos, selectedIds]);
 
     const handleAprovarSelecionados = useCallback(async () => {
         if (selectedIds.size === 0) return;
@@ -621,8 +686,13 @@ export function FaturamentoGerenteHub() {
     // ============================================
 
     const selectedPendentes = filteredLancamentos.filter(l => l.status === STATUS_FATURAMENTO.PENDENTE);
-    const isAllSelected = selectedPendentes.length > 0 && selectedIds.size === selectedPendentes.length;
-    const isSomeSelected = selectedIds.size > 0 && selectedIds.size < selectedPendentes.length;
+    // Separar pendentes sem ajuda de custo (podem ser selecionados em massa)
+    const pendentesSemAjudaCusto = selectedPendentes.filter(l => !l.temAjudaCusto);
+    const pendentesComAjudaCusto = selectedPendentes.filter(l => l.temAjudaCusto);
+    
+    const isAllSelected = pendentesSemAjudaCusto.length > 0 && 
+        pendentesSemAjudaCusto.every(l => selectedIds.has(l.id));
+    const isSomeSelected = selectedIds.size > 0 && !isAllSelected;
 
     // Valores para FiltersPopover
     const filterValues = {
@@ -639,42 +709,115 @@ export function FaturamentoGerenteHub() {
         <div className="flex flex-col gap-6">
             {/* ========================================
                 CARDS DE ESTATÍSTICAS
+                
+                Layout:
+                - Total Horas: horas totais (pendentes + aprovadas)
+                - Valor Total: separando Terapeuta (pagar) e Cliente (receber)
+                - Total de Lançamentos
+                - Aprovados: valores aprovados
+                - Pendentes: valores pendentes (previsão)
                ======================================== */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                {/* Card 1: Total de Horas */}
+                <StatCard
+                    icon={<Clock className="h-5 w-5" />}
+                    label="Total Horas"
+                    value={resumo?.totalHoras ?? '0h'}
+                    variant="primary"
+                />
+                
+                {/* Card 2: Valor Total - Terapeuta (Pagar) */}
+                <StatCard
+                    icon={<DollarSign className="h-5 w-5" />}
+                    label="Valor Total"
+                    value={resumo ? formatarValor(resumo.totalValorTerapeuta) : 'R$ 0,00'}
+                    variant="default"
+                />
+                
+                {/* Card 3: Total de Lançamentos */}
+                <StatCard
+                    icon={<FileText className="h-5 w-5" />}
+                    label="Total de Lançamentos"
+                    value={lancamentos.length}
+                    variant="default"
+                />
+                
+                {/* Card 4: Aprovados */}
+                <StatCard
+                    icon={<CheckCircle2 className="h-5 w-5" />}
+                    label="Aprovados"
+                    value={resumo?.aprovadosPeriodo ?? 0}
+                    subValue={resumo ? formatarValor(resumo.valorAprovadoTerapeuta) : undefined}
+                    badge={resumo?.aprovadosPeriodo && resumo.aprovadosPeriodo > 0 ? {
+                        value: `${Math.round((resumo.aprovadosPeriodo / lancamentos.length) * 100)}%`,
+                        variant: 'success'
+                    } : undefined}
+                    variant="success"
+                />
+                
+                {/* Card 5: Pendentes (Previsão) */}
                 <StatCard
                     icon={<AlertCircle className="h-5 w-5" />}
-                    label="Pendentes de Aprovação"
+                    label="Pendentes"
                     value={resumo?.pendentesAprovacao ?? 0}
-                    subValue={resumo ? formatarValor(resumo.valorPendente) : undefined}
+                    subValue={resumo ? formatarValor(resumo.valorPendenteTerapeuta) : undefined}
+                    badge={resumo?.pendentesAprovacao && resumo.pendentesAprovacao > 0 ? {
+                        value: `${resumo.pendentesAprovacao} aguardando`,
+                        variant: 'warning'
+                    } : undefined}
                     variant="warning"
                     isActive={viewMode === 'pendentes'}
                     onClick={() => handleViewModeChange('pendentes')}
                 />
-                <StatCard
-                    icon={<CheckCircle2 className="h-5 w-5" />}
-                    label="Aprovados no Período"
-                    value={resumo?.aprovadosPeriodo ?? 0}
-                    subValue={resumo ? formatarValor(resumo.valorAprovado) : undefined}
-                    variant="success"
-                />
-                <StatCard
-                    icon={<Users className="h-5 w-5" />}
-                    label="Por Terapeuta"
-                    value={resumo?.totalTerapeutas ?? 0}
-                    subValue="terapeutas ativos"
-                    variant="default"
-                    isActive={viewMode === 'por-terapeuta'}
+            </div>
+            
+            {/* ========================================
+                ABAS DE NAVEGAÇÃO
+               ======================================== */}
+            <div className="flex items-center gap-1 border-b">
+                <button
+                    className={cn(
+                        "flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors",
+                        viewMode === 'pendentes'
+                            ? "border-primary text-primary"
+                            : "border-transparent text-muted-foreground hover:text-foreground"
+                    )}
+                    onClick={() => handleViewModeChange('pendentes')}
+                >
+                    <CheckCircle2 className="h-4 w-4" />
+                    Aprovar Horas
+                    {(resumo?.pendentesAprovacao ?? 0) > 0 && (
+                        <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs bg-amber-100 text-amber-700">
+                            {resumo?.pendentesAprovacao}
+                        </Badge>
+                    )}
+                </button>
+                <button
+                    className={cn(
+                        "flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors",
+                        viewMode === 'por-terapeuta'
+                            ? "border-primary text-primary"
+                            : "border-transparent text-muted-foreground hover:text-foreground"
+                    )}
                     onClick={() => handleViewModeChange('por-terapeuta')}
-                />
-                <StatCard
-                    icon={<UserCheck className="h-5 w-5" />}
-                    label="Por Cliente"
-                    value={resumo?.totalClientes ?? 0}
-                    subValue="clientes atendidos"
-                    variant="default"
-                    isActive={viewMode === 'por-cliente'}
+                >
+                    <Users className="h-4 w-4" />
+                    Por Terapeuta
+                    <span className="text-muted-foreground">{resumo?.totalTerapeutas ?? 0}</span>
+                </button>
+                <button
+                    className={cn(
+                        "flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors",
+                        viewMode === 'por-cliente'
+                            ? "border-primary text-primary"
+                            : "border-transparent text-muted-foreground hover:text-foreground"
+                    )}
                     onClick={() => handleViewModeChange('por-cliente')}
-                />
+                >
+                    <UserCheck className="h-4 w-4" />
+                    Por Cliente
+                    <span className="text-muted-foreground">{resumo?.totalClientes ?? 0}</span>
+                </button>
             </div>
 
             {/* ========================================
@@ -754,12 +897,16 @@ export function FaturamentoGerenteHub() {
                                             indeterminate={isSomeSelected}
                                             onCheckedChange={toggleSelectAll}
                                         />
-                                        <span className="text-sm text-muted-foreground">
-                                            {selectedIds.size > 0
-                                                ? `${selectedIds.size} de ${selectedPendentes.length} selecionado(s)`
-                                                : `${selectedPendentes.length} lançamento(s) pendente(s)`
-                                            }
-                                        </span>
+                                        <div className="flex flex-col">
+                                            <span className="text-sm text-muted-foreground">
+                                                Selecionar todos ({pendentesSemAjudaCusto.length} sem ajuda de custo)
+                                            </span>
+                                            {pendentesComAjudaCusto.length > 0 && (
+                                                <span className="text-xs text-amber-600 dark:text-amber-400">
+                                                    {pendentesComAjudaCusto.length} item(ns) com ajuda de custo requer(em) aprovação individual
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
 
                                     {/* Lista de pendentes com checkbox */}
@@ -798,17 +945,27 @@ export function FaturamentoGerenteHub() {
                                             {/* Cliente */}
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-sm truncate">{item.clienteNome ?? 'Sem cliente'}</p>
-                                                <Badge
-                                                    variant="outline"
-                                                    className={cn(
-                                                        "text-xs mt-1 border",
-                                                        TIPO_ATIVIDADE_FATURAMENTO_COLORS[item.tipoAtividade]?.bg,
-                                                        TIPO_ATIVIDADE_FATURAMENTO_COLORS[item.tipoAtividade]?.text,
-                                                        TIPO_ATIVIDADE_FATURAMENTO_COLORS[item.tipoAtividade]?.border
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <Badge
+                                                        variant="outline"
+                                                        className={cn(
+                                                            "text-xs border",
+                                                            TIPO_ATIVIDADE_FATURAMENTO_COLORS[item.tipoAtividade]?.bg,
+                                                            TIPO_ATIVIDADE_FATURAMENTO_COLORS[item.tipoAtividade]?.text,
+                                                            TIPO_ATIVIDADE_FATURAMENTO_COLORS[item.tipoAtividade]?.border
+                                                        )}
+                                                    >
+                                                        {TIPO_ATIVIDADE_FATURAMENTO_LABELS[item.tipoAtividade]}
+                                                    </Badge>
+                                                    {item.temAjudaCusto && (
+                                                        <Badge
+                                                            variant="outline"
+                                                            className="text-xs bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400"
+                                                        >
+                                                            📎 Ajuda de custo
+                                                        </Badge>
                                                     )}
-                                                >
-                                                    {TIPO_ATIVIDADE_FATURAMENTO_LABELS[item.tipoAtividade]}
-                                                </Badge>
+                                                </div>
                                             </div>
 
                                             {/* Data e horário */}
@@ -939,6 +1096,7 @@ export function FaturamentoGerenteHub() {
                                 filterOptions={columnFilterOptions}
                                 onColumnFilterChange={handleColumnFilterChange}
                                 onViewDetails={handleViewDetails}
+                                viewContext="by-therapist"
                             />
                         </div>
                     )}
@@ -1029,6 +1187,7 @@ export function FaturamentoGerenteHub() {
                                 filterOptions={columnFilterOptions}
                                 onColumnFilterChange={handleColumnFilterChange}
                                 onViewDetails={handleViewDetails}
+                                viewContext="by-client"
                             />
                         </div>
                     )}

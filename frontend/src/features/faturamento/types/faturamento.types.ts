@@ -133,6 +133,7 @@ export interface ItemFaturamento {
     
     clienteId?: string;
     clienteNome?: string;
+    clienteIdade?: string;
     clienteAvatarUrl?: string;
     
     // Data e horários
@@ -143,10 +144,21 @@ export interface ItemFaturamento {
     // Tipo de atividade
     tipoAtividade: TipoAtividadeFaturamento;
     
-    // Valores calculados
+    // Valores calculados - TERAPEUTA (quanto a clínica paga ao terapeuta)
     duracaoMinutos: number;
     valorHora?: number;
     valorTotal?: number;
+    
+    // ============================================
+    // VALORES DO CLIENTE (quanto o cliente paga à clínica)
+    // Baseado no campo valor_hora_sessao do vínculo
+    // ============================================
+    
+    /** Valor hora da sessão para o cliente (do vínculo) */
+    valorHoraCliente?: number;
+    
+    /** Valor total que o cliente deve pagar */
+    valorTotalCliente?: number;
     
     // Status
     status: StatusFaturamento;
@@ -284,8 +296,13 @@ export interface ClienteGroup {
     clienteAvatarUrl?: string;
     lancamentos: ItemFaturamento[];
     totalMinutos: number;
+    /** Valor total que o cliente paga à clínica (valorTotalCliente) */
     totalValor: number;
+    /** Valor total que a clínica paga ao terapeuta (valorTotal) */
+    totalValorTerapeuta: number;
     totalLancamentos: number;
+    totalPendentes: number;
+    totalAprovados: number;
 }
 
 /** Agrupamento de lançamentos por terapeuta (para visão do gerente) */
@@ -295,6 +312,7 @@ export interface TerapeutaGroup {
     terapeutaAvatarUrl?: string;
     lancamentos: ItemFaturamento[];
     totalMinutos: number;
+    /** Valor total que a clínica paga ao terapeuta */
     totalValor: number;
     totalLancamentos: number;
     totalPendentes: number;
@@ -307,15 +325,44 @@ export interface ResumoGerente {
     totalTerapeutas: number;
     totalClientes: number;
     totalHoras: string;
-    totalValor: number;
     
-    // Pendentes de aprovação
+    // ============================================
+    // VALORES DO TERAPEUTA (quanto a clínica paga)
+    // ============================================
+    
+    /** Valor total a pagar para terapeutas */
+    totalValorTerapeuta: number;
+    
+    // ============================================
+    // VALORES DO CLIENTE (quanto a clínica recebe)
+    // ============================================
+    
+    /** Valor total a receber de clientes */
+    totalValorCliente: number;
+    
+    // ============================================
+    // PENDENTES DE APROVAÇÃO
+    // ============================================
+    
     pendentesAprovacao: number;
-    valorPendente: number;
     
-    // Aprovados no período
+    /** Valor pendente a pagar para terapeutas */
+    valorPendenteTerapeuta: number;
+    
+    /** Valor pendente a receber de clientes (previsão) */
+    valorPendenteCliente: number;
+    
+    // ============================================
+    // APROVADOS NO PERÍODO
+    // ============================================
+    
     aprovadosPeriodo: number;
-    valorAprovado: number;
+    
+    /** Valor aprovado a pagar para terapeutas */
+    valorAprovadoTerapeuta: number;
+    
+    /** Valor aprovado a receber de clientes */
+    valorAprovadoCliente: number;
     
     // Por terapeuta (top 5 com mais pendentes)
     topPendentes: {

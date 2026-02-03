@@ -55,6 +55,10 @@ const MOCK_CLIENTES: ClienteOption[] = [
 
 /**
  * Dados mockados de faturamento (sessões + atas)
+ * 
+ * IMPORTANTE - Valores:
+ * - valorHora / valorTotal: Valor que a clínica PAGA ao terapeuta
+ * - valorHoraCliente / valorTotalCliente: Valor que o CLIENTE paga à clínica (do vínculo)
  */
 const MOCK_LANCAMENTOS: ItemFaturamento[] = [
     // Sessões
@@ -66,6 +70,7 @@ const MOCK_LANCAMENTOS: ItemFaturamento[] = [
         terapeutaNome: MOCK_TERAPEUTA.nome,
         clienteId: 'cli-001',
         clienteNome: 'Miguel Oliveira',
+        clienteIdade: '8 anos',
         data: '2026-01-24',
         horarioInicio: '09:00',
         horarioFim: '10:00',
@@ -73,6 +78,8 @@ const MOCK_LANCAMENTOS: ItemFaturamento[] = [
         duracaoMinutos: 60,
         valorHora: 180,
         valorTotal: 180,
+        valorHoraCliente: 280,
+        valorTotalCliente: 280,
         status: STATUS_FATURAMENTO.APROVADO,
         area: 'Fonoaudiologia',
         programaNome: 'Programa de Linguagem',
@@ -86,6 +93,7 @@ const MOCK_LANCAMENTOS: ItemFaturamento[] = [
         terapeutaNome: MOCK_TERAPEUTA.nome,
         clienteId: 'cli-001',
         clienteNome: 'Miguel Oliveira',
+        clienteIdade: '8 anos',
         data: '2026-01-22',
         horarioInicio: '14:00',
         horarioFim: '15:00',
@@ -93,6 +101,8 @@ const MOCK_LANCAMENTOS: ItemFaturamento[] = [
         duracaoMinutos: 60,
         valorHora: 200,
         valorTotal: 200,
+        valorHoraCliente: 320,
+        valorTotalCliente: 320,
         status: STATUS_FATURAMENTO.APROVADO,
         area: 'Fonoaudiologia',
         programaNome: 'Programa de Linguagem',
@@ -106,6 +116,7 @@ const MOCK_LANCAMENTOS: ItemFaturamento[] = [
         terapeutaNome: MOCK_TERAPEUTA.nome,
         clienteId: 'cli-001',
         clienteNome: 'Miguel Oliveira',
+        clienteIdade: '8 anos',
         data: '2026-01-20',
         horarioInicio: '10:00',
         horarioFim: '11:00',
@@ -113,6 +124,8 @@ const MOCK_LANCAMENTOS: ItemFaturamento[] = [
         duracaoMinutos: 60,
         valorHora: 180,
         valorTotal: 180,
+        valorHoraCliente: 280,
+        valorTotalCliente: 280,
         status: STATUS_FATURAMENTO.PENDENTE,
         area: 'Fonoaudiologia',
         programaNome: 'Programa de Linguagem',
@@ -126,6 +139,7 @@ const MOCK_LANCAMENTOS: ItemFaturamento[] = [
         terapeutaNome: MOCK_TERAPEUTA.nome,
         clienteId: 'cli-002',
         clienteNome: 'Sofia Santos',
+        clienteIdade: '5 anos',
         data: '2026-01-23',
         horarioInicio: '08:00',
         horarioFim: '09:00',
@@ -133,6 +147,8 @@ const MOCK_LANCAMENTOS: ItemFaturamento[] = [
         duracaoMinutos: 60,
         valorHora: 180,
         valorTotal: 180,
+        valorHoraCliente: 300,
+        valorTotalCliente: 300,
         status: STATUS_FATURAMENTO.APROVADO,
         area: 'Terapia Ocupacional',
         programaNome: 'Programa Motor',
@@ -147,6 +163,7 @@ const MOCK_LANCAMENTOS: ItemFaturamento[] = [
         terapeutaNome: MOCK_TERAPEUTA.nome,
         clienteId: 'cli-001',
         clienteNome: 'Miguel Oliveira',
+        clienteIdade: '8 anos',
         data: '2026-01-21',
         horarioInicio: '15:00',
         horarioFim: '16:00',
@@ -154,6 +171,8 @@ const MOCK_LANCAMENTOS: ItemFaturamento[] = [
         duracaoMinutos: 60,
         valorHora: 90,
         valorTotal: 90,
+        valorHoraCliente: 150,
+        valorTotalCliente: 150,
         status: STATUS_FATURAMENTO.APROVADO,
         finalidade: 'orientacao_parental',
         criadoEm: '2026-01-21T16:00:00Z',
@@ -192,6 +211,8 @@ const MOCK_LANCAMENTOS: ItemFaturamento[] = [
         duracaoMinutos: 45,
         valorHora: 120,
         valorTotal: 90,
+        valorHoraCliente: 180,
+        valorTotalCliente: 135,
         status: STATUS_FATURAMENTO.PENDENTE,
         finalidade: 'supervisao_terapeuta',
         criadoEm: '2026-01-18T14:45:00Z',
@@ -211,6 +232,8 @@ const MOCK_LANCAMENTOS: ItemFaturamento[] = [
         duracaoMinutos: 120,
         valorHora: 150,
         valorTotal: 300,
+        valorHoraCliente: 220,
+        valorTotalCliente: 440,
         status: STATUS_FATURAMENTO.PENDENTE,
         finalidade: 'reuniao_escola',
         criadoEm: '2026-01-17T12:00:00Z',
@@ -230,6 +253,8 @@ const MOCK_LANCAMENTOS: ItemFaturamento[] = [
         duracaoMinutos: 60,
         valorHora: 200,
         valorTotal: 200,
+        valorHoraCliente: 320,
+        valorTotalCliente: 320,
         status: STATUS_FATURAMENTO.APROVADO,
         area: 'Fonoaudiologia',
         programaNome: 'Programa de Linguagem',
@@ -249,8 +274,10 @@ const MOCK_LANCAMENTOS: ItemFaturamento[] = [
         horarioFim: '12:00',
         tipoAtividade: TIPO_ATIVIDADE_FATURAMENTO.HOMECARE,
         duracaoMinutos: 60,
-        valorHora: 200,
-        valorTotal: 200,
+        valorHora: 20000,
+        valorTotal: 20000,
+        valorHoraCliente: 320,
+        valorTotalCliente: 320,
         status: STATUS_FATURAMENTO.REJEITADO,
         motivoRejeicao: 'Horário não confere com a agenda do cliente',
         area: 'Fonoaudiologia',
@@ -270,8 +297,10 @@ const MOCK_LANCAMENTOS: ItemFaturamento[] = [
         horarioFim: '15:00',
         tipoAtividade: TIPO_ATIVIDADE_FATURAMENTO.CONSULTORIO,
         duracaoMinutos: 60,
-        valorHora: 180,
-        valorTotal: 180,
+        valorHora: 18000,
+        valorTotal: 18000,
+        valorHoraCliente: 300,
+        valorTotalCliente: 300,
         status: STATUS_FATURAMENTO.REJEITADO,
         motivoRejeicao: 'Dados do atendimento incompletos. Favor revisar o registro da sessão.',
         area: 'Terapia Ocupacional',
@@ -311,6 +340,8 @@ const MOCK_LANCAMENTOS: ItemFaturamento[] = [
         duracaoMinutos: 60,
         valorHora: 90,
         valorTotal: 90,
+        valorHoraCliente: 150,
+        valorTotalCliente: 150,
         status: STATUS_FATURAMENTO.REJEITADO,
         motivoRejeicao: 'Ata de reunião sem assinatura do responsável. Solicitar nova documentação.',
         finalidade: 'reuniao_escola',
@@ -364,7 +395,9 @@ const MOCK_LANCAMENTOS_OUTROS_TERAPEUTAS: ItemFaturamento[] = [
         tipoAtividade: TIPO_ATIVIDADE_FATURAMENTO.CONSULTORIO,
         duracaoMinutos: 60,
         valorHora: 180,
-        valorTotal: 100000,
+        valorTotal: 180,
+        valorHoraCliente: 300,
+        valorTotalCliente: 300,
         status: STATUS_FATURAMENTO.PENDENTE,
         area: 'Psicologia',
         programaNome: 'Programa Comportamental',
@@ -385,6 +418,8 @@ const MOCK_LANCAMENTOS_OUTROS_TERAPEUTAS: ItemFaturamento[] = [
         duracaoMinutos: 90,
         valorHora: 220,
         valorTotal: 330,
+        valorHoraCliente: 350,
+        valorTotalCliente: 525,
         status: STATUS_FATURAMENTO.PENDENTE,
         area: 'Psicologia',
         programaNome: 'Programa Comportamental',
@@ -424,6 +459,8 @@ const MOCK_LANCAMENTOS_OUTROS_TERAPEUTAS: ItemFaturamento[] = [
         duracaoMinutos: 60,
         valorHora: 100,
         valorTotal: 100,
+        valorHoraCliente: 160,
+        valorTotalCliente: 160,
         status: STATUS_FATURAMENTO.APROVADO,
         finalidade: 'orientacao_parental',
         criadoEm: '2026-01-22T17:00:00Z',
@@ -444,6 +481,8 @@ const MOCK_LANCAMENTOS_OUTROS_TERAPEUTAS: ItemFaturamento[] = [
         duracaoMinutos: 60,
         valorHora: 190,
         valorTotal: 190,
+        valorHoraCliente: 280,
+        valorTotalCliente: 280,
         status: STATUS_FATURAMENTO.PENDENTE,
         area: 'Fisioterapia',
         programaNome: 'Programa Motor',
@@ -464,6 +503,8 @@ const MOCK_LANCAMENTOS_OUTROS_TERAPEUTAS: ItemFaturamento[] = [
         duracaoMinutos: 60,
         valorHora: 210,
         valorTotal: 210,
+        valorHoraCliente: 340,
+        valorTotalCliente: 340,
         status: STATUS_FATURAMENTO.PENDENTE,
         area: 'Fisioterapia',
         programaNome: 'Programa Motor Intensivo',
@@ -496,6 +537,8 @@ const MOCK_LANCAMENTOS_OUTROS_TERAPEUTAS: ItemFaturamento[] = [
         duracaoMinutos: 60,
         valorHora: 190,
         valorTotal: 190,
+        valorHoraCliente: 280,
+        valorTotalCliente: 280,
         status: STATUS_FATURAMENTO.APROVADO,
         area: 'Fisioterapia',
         programaNome: 'Programa Motor',
@@ -515,8 +558,10 @@ const MOCK_LANCAMENTOS_OUTROS_TERAPEUTAS: ItemFaturamento[] = [
         horarioFim: '16:00',
         tipoAtividade: TIPO_ATIVIDADE_FATURAMENTO.CONSULTORIO,
         duracaoMinutos: 60,
-        valorHora: 175,
-        valorTotal: 175,
+        valorHora: 175000,
+        valorTotal: 175000,
+        valorHoraCliente: 290000,
+        valorTotalCliente: 290000,
         status: STATUS_FATURAMENTO.APROVADO,
         area: 'Terapia Ocupacional',
         programaNome: 'Programa Sensorial',
@@ -555,8 +600,10 @@ const MOCK_LANCAMENTOS_OUTROS_TERAPEUTAS: ItemFaturamento[] = [
         horarioFim: '10:00',
         tipoAtividade: TIPO_ATIVIDADE_FATURAMENTO.CONSULTORIO,
         duracaoMinutos: 60,
-        valorHora: 180,
-        valorTotal: 180,
+        valorHora: 180000,
+        valorTotal: 180000,
+        valorHoraCliente: 300000,
+        valorTotalCliente: 300000,
         status: STATUS_FATURAMENTO.PENDENTE,
         area: 'Musicoterapia',
         programaNome: 'Programa Musical',
@@ -575,8 +622,10 @@ const MOCK_LANCAMENTOS_OUTROS_TERAPEUTAS: ItemFaturamento[] = [
         horarioFim: '15:00',
         tipoAtividade: TIPO_ATIVIDADE_FATURAMENTO.CONSULTORIO,
         duracaoMinutos: 60,
-        valorHora: 180,
-        valorTotal: 180,
+        valorHora: 18000,
+        valorTotal: 18000,
+        valorHoraCliente: 30000,
+        valorTotalCliente: 30000,
         status: STATUS_FATURAMENTO.APROVADO,
         area: 'Musicoterapia',
         programaNome: 'Programa Musical',
@@ -598,6 +647,8 @@ const MOCK_LANCAMENTOS_OUTROS_TERAPEUTAS: ItemFaturamento[] = [
         duracaoMinutos: 90,
         valorHora: 200,
         valorTotal: 300,
+        valorHoraCliente: 350,
+        valorTotalCliente: 525,
         status: STATUS_FATURAMENTO.REJEITADO,
         motivoRejeicao: 'Comprovante de deslocamento não anexado.',
         area: 'Psicologia',
@@ -619,6 +670,8 @@ const MOCK_LANCAMENTOS_OUTROS_TERAPEUTAS: ItemFaturamento[] = [
         duracaoMinutos: 60,
         valorHora: 190,
         valorTotal: 190,
+        valorHoraCliente: 280,
+        valorTotalCliente: 280,
         status: STATUS_FATURAMENTO.REJEITADO,
         motivoRejeicao: 'Valor da sessão diverge do contrato. Verificar tabela de preços.',
         area: 'Fisioterapia',
@@ -886,15 +939,35 @@ export async function mockGetResumoGerente(
         .sort((a, b) => b.totalPendentes - a.totalPendentes)
         .slice(0, 5);
 
+    // Calcular valores separados: terapeuta (pagar) vs cliente (receber)
+    const totalValorTerapeuta = items.reduce((acc, item) => acc + (item.valorTotal ?? 0), 0);
+    const totalValorCliente = items.reduce((acc, item) => acc + (item.valorTotalCliente ?? item.valorTotal ?? 0), 0);
+    
+    const valorPendenteTerapeuta = pendentes.reduce((acc, item) => acc + (item.valorTotal ?? 0), 0);
+    const valorPendenteCliente = pendentes.reduce((acc, item) => acc + (item.valorTotalCliente ?? item.valorTotal ?? 0), 0);
+    
+    const valorAprovadoTerapeuta = aprovados.reduce((acc, item) => acc + (item.valorTotal ?? 0), 0);
+    const valorAprovadoCliente = aprovados.reduce((acc, item) => acc + (item.valorTotalCliente ?? item.valorTotal ?? 0), 0);
+
     return {
         totalTerapeutas: terapeutasUnicos.size,
         totalClientes: clientesUnicos.size,
         totalHoras,
-        totalValor: items.reduce((acc, item) => acc + (item.valorTotal ?? 0), 0),
+        
+        // Valores separados
+        totalValorTerapeuta,
+        totalValorCliente,
+        
+        // Pendentes
         pendentesAprovacao: pendentes.length,
-        valorPendente: pendentes.reduce((acc, item) => acc + (item.valorTotal ?? 0), 0),
+        valorPendenteTerapeuta,
+        valorPendenteCliente,
+        
+        // Aprovados
         aprovadosPeriodo: aprovados.length,
-        valorAprovado: aprovados.reduce((acc, item) => acc + (item.valorTotal ?? 0), 0),
+        valorAprovadoTerapeuta,
+        valorAprovadoCliente,
+        
         topPendentes,
     };
 }

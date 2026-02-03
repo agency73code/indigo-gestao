@@ -5,7 +5,7 @@
  * Segue o mesmo padrão da PatientTable.
  */
 
-import { memo } from 'react';
+import { memo, useMemo, useCallback } from 'react';
 import { MoreHorizontal, FileText, Eye, AlertCircle } from 'lucide-react';
 import { Button } from '@/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +24,7 @@ import {
     PopoverTrigger,
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
+import { getSpecialtyColors } from '@/utils/specialtyColors';
 
 import type { ItemFaturamento, TipoAtividadeFaturamento } from '../types/faturamento.types';
 import {
@@ -40,14 +41,21 @@ import {
 // ============================================
 
 export interface FaturamentoColumnFilters {
+    firstColumn?: string;
     tipoAtividade?: string;
+    especialidade?: string;
     status?: string;
 }
 
 export interface FaturamentoColumnFilterOptions {
+    firstColumn: FilterOption[];
     tipoAtividade: FilterOption[];
+    especialidade: FilterOption[];
     status: FilterOption[];
 }
+
+/** Contexto de visualização - determina qual informação mostrar na primeira coluna */
+export type FaturamentoViewContext = 'default' | 'by-client' | 'by-therapist';
 
 interface FaturamentoTableProps {
     /** Dados para exibir na tabela */
@@ -64,6 +72,8 @@ interface FaturamentoTableProps {
     onCorrectAndResend?: (item: ItemFaturamento) => void;
     /** Se está carregando */
     loading?: boolean;
+    /** Contexto de visualização - 'by-client' mostra terapeuta, 'by-therapist' mostra cliente */
+    viewContext?: FaturamentoViewContext;
 }
 
 // ============================================
@@ -149,7 +159,68 @@ export const FaturamentoTable = memo(function FaturamentoTable({
     columnFilters,
     filterOptions,
     onColumnFilterChange,
+    viewContext = 'default',
 }: FaturamentoTableProps) {
+    // Determina qual nome e label exibir na primeira coluna baseado no contexto
+    const getFirstColumnData = useCallback((item: ItemFaturamento) => {
+        if (viewContext === 'by-client') {
+            // Se está agrupado por cliente, mostra o terapeuta
+            return { name: item.terapeutaNome || 'Sem terapeuta', label: 'Terapeuta' };
+        }
+        // Por padrão (ou agrupado por terapeuta), mostra o cliente
+        return { name: item.clienteNome || 'Sem cliente', label: 'Cliente' };
+    }, [viewContext]);
+
+    const firstColumnLabel = viewContext === 'by-client' ? 'Terapeuta' : 'Cliente';
+
+    // Handlers para atualizar filtros individuais
+    const handleFirstColumnFilterChange = useCallback((value: string | undefined) => {
+        onColumnFilterChange({
+            ...columnFilters,
+            firstColumn: value,
+        });
+    }, [columnFilters, onColumnFilterChange]);
+
+    const handleTipoFilterChange = useCallback((value: string | undefined) => {
+        onColumnFilterChange({
+            ...columnFilters,
+            tipoAtividade: value,
+        });
+    }, [columnFilters, onColumnFilterChange]);
+
+    const handleEspecialidadeFilterChange = useCallback((value: string | undefined) => {
+        onColumnFilterChange({
+            ...columnFilters,
+            especialidade: value,
+        });
+    }, [columnFilters, onColumnFilterChange]);
+
+    const handleStatusFilterChange = useCallback((value: string | undefined) => {
+        onColumnFilterChange({
+            ...columnFilters,
+            status: value,
+        });
+    }, [columnFilters, onColumnFilterChange]);
+
+    // Filtra os dados baseado nos filtros ativos
+    const filteredData = useMemo(() => {
+        let filtered = data;
+        
+        if (columnFilters.firstColumn) {
+            filtered = filtered.filter(item => {
+                const columnValue = getFirstColumnData(item).name;
+                return columnValue === columnFilters.firstColumn;
+            });
+        }
+        
+        if (columnFilters.especialidade) {
+            filtered = filtered.filter(item => item.area === columnFilters.especialidade);
+        }
+        
+        return filtered;
+    }, [data, columnFilters.firstColumn, columnFilters.especialidade, getFirstColumnData]);
+
+    // Early returns DEPOIS dos hooks
     if (loading) {
         return <LoadingSkeleton />;
     }
@@ -157,21 +228,6 @@ export const FaturamentoTable = memo(function FaturamentoTable({
     if (data.length === 0) {
         return <EmptyState />;
     }
-
-    // Handlers para atualizar filtros individuais
-    const handleTipoFilterChange = (value: string | undefined) => {
-        onColumnFilterChange({
-            ...columnFilters,
-            tipoAtividade: value,
-        });
-    };
-
-    const handleStatusFilterChange = (value: string | undefined) => {
-        onColumnFilterChange({
-            ...columnFilters,
-            status: value,
-        });
-    };
 
     return (
         <div className="flex flex-col min-h-0 rounded-lg" style={{ backgroundColor: 'var(--table-bg)' }}>
@@ -181,7 +237,12 @@ export const FaturamentoTable = memo(function FaturamentoTable({
                     <thead className="sticky top-0 z-10 shadow-sm rounded-lg rounded-br-0 rounded-bl-0" style={{ backgroundColor: 'var(--table-header-bg)' }}>
                         <tr>
                             <th className="text-left p-3 font-medium text-sm first:rounded-tl-lg" style={{ color: 'var(--table-text-secondary)' }}>
-                                Cliente
+                                <ColumnHeaderFilter
+                                    label={firstColumnLabel}
+                                    options={filterOptions.firstColumn}
+                                    value={columnFilters.firstColumn}
+                                    onChange={handleFirstColumnFilterChange}
+                                />
                             </th>
                             <th className="text-left p-3 font-medium text-sm" style={{ color: 'var(--table-text-secondary)' }}>
                                 <ColumnHeaderFilter
@@ -189,6 +250,14 @@ export const FaturamentoTable = memo(function FaturamentoTable({
                                     options={filterOptions.tipoAtividade}
                                     value={columnFilters.tipoAtividade}
                                     onChange={handleTipoFilterChange}
+                                />
+                            </th>
+                            <th className="text-left p-3 font-medium text-sm" style={{ color: 'var(--table-text-secondary)' }}>
+                                <ColumnHeaderFilter
+                                    label="Especialidade"
+                                    options={filterOptions.especialidade}
+                                    value={columnFilters.especialidade}
+                                    onChange={handleEspecialidadeFilterChange}
                                 />
                             </th>
                             <th className="text-left p-3 font-medium text-sm" style={{ color: 'var(--table-text-secondary)' }}>
@@ -217,7 +286,7 @@ export const FaturamentoTable = memo(function FaturamentoTable({
                         </tr>
                     </thead>
                     <tbody>
-                        {data.map((item, index) => {
+                        {filteredData.map((item, index) => {
                             const rowBg = index % 2 === 0 ? 'var(--table-bg)' : 'var(--table-row-alt)';
                             return (
                                 <tr
@@ -231,14 +300,14 @@ export const FaturamentoTable = memo(function FaturamentoTable({
                                         <div className="flex items-center gap-3">
                                             <Avatar className="h-8 w-8">
                                                 <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                                                    {getInitials(item.clienteNome || 'SC')}
+                                                    {getInitials(getFirstColumnData(item).name)}
                                                 </AvatarFallback>
                                             </Avatar>
                                             <span 
                                                 className="font-medium text-[14px] truncate"
                                                 style={{ fontFamily: 'Inter, sans-serif', color: 'var(--table-text)' }}
                                             >
-                                                {item.clienteNome || 'Sem cliente'}
+                                                {getFirstColumnData(item).name}
                                             </span>
                                         </div>
                                     </td>
@@ -254,6 +323,22 @@ export const FaturamentoTable = memo(function FaturamentoTable({
                                         >
                                             {getTipoAtividadeLabel(item.tipoAtividade)}
                                         </Badge>
+                                    </td>
+                                    <td className="p-3">
+                                        {item.area ? (
+                                            <Badge
+                                                variant="outline"
+                                                className="text-xs border-0"
+                                                style={{
+                                                    backgroundColor: getSpecialtyColors(item.area).bg,
+                                                    color: getSpecialtyColors(item.area).text,
+                                                }}
+                                            >
+                                                {item.area}
+                                            </Badge>
+                                        ) : (
+                                            <span className="text-[14px] text-muted-foreground">-</span>
+                                        )}
                                     </td>
                                     <td className="p-3">
                                         <span 
@@ -358,23 +443,23 @@ export const FaturamentoTable = memo(function FaturamentoTable({
 
             {/* Cards Mobile */}
             <div className="md:hidden space-y-3 p-2">
-                {data.map((item) => (
+                {filteredData.map((item) => (
                     <div
                         key={item.id}
                         className="border rounded-lg p-4 space-y-3"
                         style={{ backgroundColor: 'var(--table-bg)' }}
                     >
-                        {/* Header: Cliente + Status */}
+                        {/* Header: Cliente/Terapeuta + Status */}
                         <div className="flex items-start justify-between">
                             <div className="flex items-center gap-3">
                                 <Avatar className="h-10 w-10">
                                     <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                                        {getInitials(item.clienteNome || 'SC')}
+                                        {getInitials(getFirstColumnData(item).name)}
                                     </AvatarFallback>
                                 </Avatar>
                                 <div>
                                     <p className="font-medium text-sm">
-                                        {item.clienteNome || 'Sem cliente'}
+                                        {getFirstColumnData(item).name}
                                     </p>
                                     <Badge
                                         variant="outline"
@@ -402,6 +487,21 @@ export const FaturamentoTable = memo(function FaturamentoTable({
 
                         {/* Detalhes */}
                         <div className="grid grid-cols-2 gap-2 text-sm">
+                            {item.area && (
+                                <div className="col-span-2">
+                                    <span className="text-muted-foreground">Especialidade:</span>
+                                    <Badge
+                                        variant="outline"
+                                        className="text-xs border-0 ml-2"
+                                        style={{
+                                            backgroundColor: getSpecialtyColors(item.area).bg,
+                                            color: getSpecialtyColors(item.area).text,
+                                        }}
+                                    >
+                                        {item.area}
+                                    </Badge>
+                                </div>
+                            )}
                             <div>
                                 <span className="text-muted-foreground">Data:</span>
                                 <span className="ml-2">{formatarData(item.data)}</span>
