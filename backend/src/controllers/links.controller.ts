@@ -4,15 +4,16 @@ import * as LinkNormalizer from '../features/links/old/links.normalizer.js';
 import * as LinkTypes from '../features/links/old/links.types.js';
 import { clientListSchema, clientOptionsSchema } from '../schemas/queries/client.schema.js';
 import { therapistListQuerySchema, therapistSelectQuerySchema } from '../schemas/queries/therapists.schema.js';
-import { linksSchema } from '../features/links/links.schema.js';
+import { linksSchema, linksUpdateSchema, transferResponsibleSchema } from '../features/links/links.schema.js';
+import { listLinksSchema } from '../features/links/schemas/listLinks.js';
+import { unauthenticated } from '../errors/unauthenticated.js';
 
 export async function createLink(req: Request, res: Response, next: NextFunction) {
     try {
         const payload = linksSchema.parse(req.body);
         const created = await LinkService.createLink(payload);
 
-        const normalized = LinkNormalizer.normalizeLink(created);
-        res.status(201).json(normalized);
+        res.status(201).json(created);
     } catch (err) {
         next(err);
     }
@@ -23,25 +24,12 @@ export async function createLink(req: Request, res: Response, next: NextFunction
  * Em caso de sucesso, retorna o vínculo atualizado já normalizado.
  * Em caso de erro, propaga um AppError adequado para tratamento pelo middleware global.
  */
-export async function updateLink(
-    req: Request<unknown, unknown, LinkTypes.UpdateLink>,
-    res: Response,
-    next: NextFunction,
-) {
+export async function updateLink(req: Request, res: Response, next: NextFunction) {
     try {
-        const body = req.body;
-        const updated = await LinkService.updateLink({
-            id: body.id,
-            role: body.role,
-            startDate: body.startDate,
-            endDate: body.endDate,
-            notes: body.notes,
-            status: body.status,
-            actuationArea: body.actuationArea,
-        });
+        const payload = linksUpdateSchema.parse(req.body);
+        const updated = await LinkService.updateLink(payload);
 
-        const normalized = LinkNormalizer.normalizeLink(updated);
-        res.json(normalized);
+        res.json(updated);
     } catch (err) {
         next(err);
     }
@@ -77,19 +65,13 @@ export async function archiveLink(
     }
 }
 
-export async function transferResponsible(
-    req: Request<unknown, unknown, LinkTypes.TransferResponsible>,
-    res: Response,
-    next: NextFunction,
-) {
+export async function transferResponsible(req: Request, res: Response, next: NextFunction) {
     try {
-        const result = await LinkService.transferResponsible(req.body);
-        const normalized = {
-            newResponsible: LinkNormalizer.normalizeLink(result.newResponsible),
-            previousResponsible: LinkNormalizer.normalizeLink(result.previousResponsible),
-        };
+        const payload = transferResponsibleSchema.parse(req.body);
 
-        res.json(normalized);
+        await LinkService.transferResponsible(payload);
+
+        res.status(201).json({ message: 'Transaferencia realizada com sucesso' });
     } catch (err) {
         next(err);
     }
@@ -152,10 +134,13 @@ export async function listTherapists(req: Request, res: Response, next: NextFunc
  */
 export async function getAllLinks(req: Request, res: Response, next: NextFunction) {
     try {
-        const filters = { ...req.query };
-        const data = await LinkService.getAllLinks(req.user!.id, filters);
-        const normalized = LinkNormalizer.getAllLinks(data);
-        res.json(normalized);
+        const userId = req.user!.id;
+        if (!userId) throw unauthenticated();
+
+        const filters = listLinksSchema.parse(req.query);
+        const data = await LinkService.getAllLinks(userId, filters);
+
+        res.json(data);
     } catch (err) {
         next(err);
     }

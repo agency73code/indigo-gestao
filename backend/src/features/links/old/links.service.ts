@@ -2,13 +2,15 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '../../../config/database.js';
 import { AppError } from '../../../errors/AppError.js';
 import * as LinkTypes from './links.types.js';
-import * as list from './actions/list.js';
 import * as clients from './actions/clients.js';
 import * as therapists from './actions/therapist.js';
 import type { TherapistListQuery, TherapistSelectQuery } from '../../../schemas/queries/therapists.schema.js';
 import { normalizeListTherapists, normalizeSelectTherapists } from './links.normalizer.js';
-import type { linksPayload } from '../links.schema.js';
-import { normalizeRoleName } from '../../../utils/normalizeRoleName.js';
+import type { linksPayload, linksUpdatePayload, transferResponsiblePayload } from '../links.schema.js';
+import type { listLinksPayload } from '../schemas/listLinks.js';
+import { ClienteTherapistLinkListSelect } from '../queries/ClienteTherapistLink.js';
+import { getVisibilityScope } from '../../../utils/visibilityFilter.js';
+import { mapLinkToDTO } from '../mappers/mapLinkToDTO.js';
 
 const LINK_SELECT = {
     id: true,
@@ -24,67 +26,6 @@ const LINK_SELECT = {
     atualizado_em: true,
 } as const;
 
-async function resolveTherapistActuation(
-    therapistId: string,
-    actuation: string | null | undefined,
-) {
-    const normalizedActuation = actuation?.trim();
-
-    if (!normalizedActuation) {
-        throw new AppError(
-            'LINK_ACTUATION_REQUIRED',
-            'A área de atuação é obrigatória para o terapeuta selecionado.',
-            400,
-        );
-    }
-
-    const parsedId = Number(normalizedActuation);
-    const isNumericActuation = !Number.isNaN(parsedId) && `${parsedId}` === normalizedActuation;
-
-    const registration = await prisma.registro_profissional.findFirst({
-        where: {
-            terapeuta_id: therapistId,
-            ...(isNumericActuation
-                ? { area_atuacao_id: parsedId }
-                : {
-                      area_atuacao: {
-                          is: {
-                              nome: {
-                                  equals: normalizedActuation,
-                              },
-                          },
-                      },
-                  }),
-        },
-        select: {
-            area_atuacao: {
-                select: {
-                    nome: true,
-                },
-            },
-        },
-    });
-
-    if (!registration) {
-        const therapistExists = await prisma.terapeuta.findUnique({
-            where: { id: therapistId },
-            select: { id: true },
-        });
-
-        if (!therapistExists) {
-            throw new AppError('LINK_THERAPIST_NOT_FOUND', 'Terapeuta não encontrado.', 404);
-        }
-
-        throw new AppError(
-            'LINK_INVALID_ACTUATION',
-            'a área de atuação informada não está cadastrada para o terapeuta selecionado.',
-            400,
-        );
-    }
-
-    return registration.area_atuacao.nome;
-}
-
 /**
  * Service responsável por criar um novo vínculo entre cliente e terapeuta.
  * Resolve a área de atuação conforme o terapeuta informado e persiste o vínculo no banco.
@@ -94,21 +35,6 @@ async function resolveTherapistActuation(
 export async function createLink(payload: linksPayload) {
     try {
         return await prisma.$transaction(async (tx) => {
-            const existingLink = await tx.terapeuta_cliente.findFirst({
-                where: {
-                    cliente_id: payload.patientId,
-                    terapeuta_id: payload.therapistId,
-                },
-            });
-    
-            if (existingLink) {
-                throw new AppError(
-                    'LINK_ALREADY_EXISTS',
-                    'Já existe um vínculo ativo entre o terapeuta e o cliente.',
-                    400,
-                );
-            }
-    
             const actuationArea = await tx.area_atuacao.findFirst({
                 where: { nome: payload.actuationArea },
                 select: { id: true }
@@ -130,22 +56,14 @@ export async function createLink(payload: linksPayload) {
                     status: 'active',
                     data_inicio: new Date(payload.startDate),
                     observacoes: payload.notes ,
-                    area_atuacao: normalizeRoleName(payload.actuationArea),
-                }
-            });
-    
-    
-            await tx.cliente_valor_area.create({
-                data: {
-                    cliente_id: payload.patientId,
                     area_atuacao_id: actuationArea.id,
                     valor_sessao: payload.valorSessao,
-                }
+                },
+                select: ClienteTherapistLinkListSelect
             });
     
-            return created;
+            return mapLinkToDTO(created);
         });
-
     } catch (err) {
         console.error(err)
         throw err;
@@ -177,83 +95,82 @@ export async function listTherapists(userId: string, query: TherapistListQuery) 
     return normalizeListTherapists(records, query.includeNumeroConselho ?? false);
 }
 
-export async function getAllLinks(userId: string, filters?: LinkTypes.LinkFilters) {
-    const links = await list.getAllLinks(userId, filters);
-    return links;
+export async function getAllLinks(userId: string, filters: listLinksPayload) {
+    const { q, status, orderBy, viewBy, page, pageSize } = filters
+
+    const where: Prisma.terapeuta_clienteWhereInput = {
+        ...(q && {
+            OR: [
+                { terapeuta: { nome: { contains: q } } },
+                { cliente: { nome: { contains: q } } },
+            ],
+        }),
+        ...(status !== 'all' && {
+            status: { equals: status }
+        }),
+    };
+
+    const visibility = await getVisibilityScope(userId);
+
+    if (visibility.scope === 'none') {
+        return [];
+    }
+
+    if (visibility.scope === 'partial') {
+        where.terapeuta_id = { in: visibility.therapistIds };
+    }
+
+    let prismaOrder: Prisma.terapeuta_clienteOrderByWithRelationInput;
+
+    if (orderBy === 'recent') {
+        prismaOrder = { criado_em: 'desc' };
+    } else if (viewBy === 'patient') {
+        prismaOrder = { cliente: { nome: 'asc' } };
+    } else {
+        prismaOrder = { terapeuta: { nome: 'asc' } };
+    }
+
+    const links = await prisma.terapeuta_cliente.findMany({
+        where,
+        select: ClienteTherapistLinkListSelect,
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        orderBy: prismaOrder,
+    });
+
+    return links.map(mapLinkToDTO);
 }
 
-export async function updateLink(payload: LinkTypes.UpdateLink) {
-    const linkId = Number(payload.id);
+export async function updateLink(payload: linksUpdatePayload) {
+    const updated = await prisma.$transaction(async (tx) => {
+        const actuationArea = await tx.area_atuacao.findFirst({
+            where: { nome: payload.actuationArea },
+            select: { id: true }
+        });
 
-    if (Number.isNaN(linkId)) {
-        throw new AppError('LINK_INVALID_ID', 'Identificador do vínculo inválido.', 400);
-    }
+        if (!actuationArea) {
+            throw new AppError(
+                'ACTUATION_AREA_NOT_FOUND',
+                'Área de atuação informada não existe.',
+                400,
+            );
+        }
 
-    const existing = await prisma.terapeuta_cliente.findUnique({
-        where: { id: linkId },
-        select: LINK_SELECT,
+        return await tx.terapeuta_cliente.update({
+            where: { id: payload.id },
+            data: {
+                papel: payload.role,
+                data_inicio: payload.startDate,
+                data_fim: payload.endDate,
+                observacoes: payload.notes,
+                area_atuacao_id: actuationArea.id,
+                valor_sessao: payload.valorSessao,
+            },
+            select: ClienteTherapistLinkListSelect,
+        });
     });
 
-    if (!existing) {
-        throw new AppError('LINK_NOT_FOUND', 'Vínculo não encontrado.', 404);
-    }
-
-    const data: Prisma.terapeuta_clienteUpdateInput = {};
-
-    if (payload.startDate) {
-        const parsedStart = new Date(payload.startDate);
-
-        if (Number.isNaN(parsedStart.getTime())) {
-            throw new AppError('LINK_INVALID_START_DATE', 'Data de início inválida.', 400);
-        }
-
-        data.data_inicio = parsedStart;
-    }
-
-    if (Object.prototype.hasOwnProperty.call(payload, 'notes')) {
-        data.observacoes = payload.notes ?? null;
-    }
-
-    if (Object.prototype.hasOwnProperty.call(payload, 'actuationArea')) {
-        const requested = payload.actuationArea;
-        if (!requested?.trim()) {
-            throw new AppError('LINK_ACTUATION_REQUIRED', 'A área de atuação é obrigatória.', 400);
-        }
-
-        data.area_atuacao = await resolveTherapistActuation(existing.terapeuta_id, requested);
-    } else if (!existing.area_atuacao) {
-        throw new AppError('LINK_ACTUATION_REQUIRED', 'A área de atuação é obrigatória.', 400);
-    }
-
-    // Tratamento para reativação: endDate = null e status = 'active'
-    if (Object.prototype.hasOwnProperty.call(payload, 'endDate')) {
-        if (payload.endDate === null) {
-            // Reativar vínculo
-            data.data_fim = null;
-            data.status = 'active';
-        } else if (payload.endDate) {
-            const parsedEnd = new Date(payload.endDate);
-            if (Number.isNaN(parsedEnd.getTime())) {
-                throw new AppError('LINK_INVALID_END_DATE', 'Data de término inválida.', 400);
-            }
-            data.data_fim = parsedEnd;
-        }
-    }
-
-    // Tratamento do status
-    if (Object.prototype.hasOwnProperty.call(payload, 'status')) {
-        data.status = payload.status as 'active' | 'ended' | 'archived';
-    }
-
-    if (Object.keys(data).length === 0) return existing;
-
-    const updated = await prisma.terapeuta_cliente.update({
-        where: { id: linkId },
-        data,
-        select: LINK_SELECT,
-    });
-
-    return updated;
+    return mapLinkToDTO(updated);
 }
 
 /**
@@ -377,9 +294,7 @@ export async function endLink(payload: LinkTypes.EndLink) {
     return updated;
 }
 
-export async function transferResponsible(
-    payload: LinkTypes.TransferResponsible,
-): Promise<LinkTypes.TransferResponsibleResult> {
+export async function transferResponsible(payload: transferResponsiblePayload) {
     if (payload.fromTherapistId === payload.toTherapistId) {
         throw new AppError(
             'LINK_TRANSFER_SAME_THERAPIST',
@@ -388,103 +303,76 @@ export async function transferResponsible(
         );
     }
 
-    const effectiveDate = new Date(payload.effectiveDate);
+    await prisma.$transaction(async (tx) => {
+        const currentResponsible = await tx.terapeuta_cliente.findFirst({
+            where: {
+                cliente_id: payload.patientId,
+                terapeuta_id: payload.fromTherapistId,
+            },
+            select: {
+                id: true,
+                terapeuta: {
+                    select: {
+                        nome: true,
+                    }
+                }
+            },
+        });
+    
+        if (!currentResponsible) {
+            throw new AppError(
+                'LINK_RESPONSIBLE_NOT_FOUND',
+                'Responsável atual não encontrado para o cliente informado.',
+                404,
+            );
+        }
 
-    if (Number.isNaN(effectiveDate.getTime())) {
-        throw new AppError(
-            'LINK_INVALID_EFFECTIVE_DATE',
-            'Data de efetivação da transferência inválida.',
-            400,
-        );
-    }
+        const actuationArea = await tx.area_atuacao.findFirst({
+            where: { nome: payload.newResponsibleActuation },
+            select: { id: true }
+        });
 
-    const currentResponsible = await prisma.terapeuta_cliente.findFirst({
-        where: {
-            cliente_id: payload.patientId,
-            terapeuta_id: payload.fromTherapistId,
-            papel: 'responsible',
-            status: 'active',
-        },
-        select: LINK_SELECT,
-    });
+        if (!actuationArea) {
+            throw new AppError(
+                'ACTUATION_AREA_NOT_FOUND',
+                'Área de atuação informada não existe.',
+                400,
+            );
+        }
 
-    if (!currentResponsible) {
-        throw new AppError(
-            'LINK_RESPONSIBLE_NOT_FOUND',
-            'Responsável atual não encontrado para o cliente informado.',
-            404,
-        );
-    }
-
-    const [newResponsibleArea, previousResponsibleArea] = await Promise.all([
-        resolveTherapistActuation(payload.toTherapistId, payload.newResponsibleActuation),
-        resolveTherapistActuation(payload.fromTherapistId, payload.oldResponsibleActuation),
-    ]);
-
-    const transferResult = await prisma.$transaction(async (trx) => {
-        const existingNewTherapistLink = await trx.terapeuta_cliente.findFirst({
+        const toResponsible = await tx.terapeuta_cliente.findFirst({
             where: {
                 cliente_id: payload.patientId,
                 terapeuta_id: payload.toTherapistId,
-                status: 'active',
             },
-            select: LINK_SELECT,
-            orderBy: { atualizado_em: 'desc' },
-        });
+        })
 
-        if (existingNewTherapistLink?.papel === 'responsible') {
+        if (toResponsible) {
             throw new AppError(
-                'LINK_RESPONSIBLE_EXISTS',
-                'Já existe um responsável principal ativo para este cliente.',
+                'LINK_ALREADY_EXISTS',
+                'Já existe um vínculo entre este cliente e o terapeuta informado.',
                 409,
             );
         }
 
-        let newResponsible: LinkTypes.DBLink;
-
-        if (existingNewTherapistLink) {
-            newResponsible = await trx.terapeuta_cliente.update({
-                where: { id: existingNewTherapistLink.id },
-                data: {
-                    papel: 'responsible',
-                    status: 'active',
-                    data_fim: null,
-                    area_atuacao: newResponsibleArea,
-                    atualizado_em: effectiveDate,
-                },
-                select: LINK_SELECT,
-            });
-        } else {
-            newResponsible = await trx.terapeuta_cliente.create({
-                data: {
-                    cliente_id: payload.patientId,
-                    terapeuta_id: payload.toTherapistId,
-                    papel: 'responsible',
-                    status: 'active',
-                    data_inicio: effectiveDate,
-                    data_fim: null,
-                    observacoes: `Transferido de ${payload.fromTherapistId} em ${payload.effectiveDate}`,
-                    area_atuacao: newResponsibleArea,
-                },
-                select: LINK_SELECT,
-            });
-        }
-
-        const previousResponsible = await trx.terapeuta_cliente.update({
-            where: { id: currentResponsible.id },
-            data: {
-                papel: 'co',
-                area_atuacao: previousResponsibleArea,
-                atualizado_em: effectiveDate,
+        await tx.terapeuta_cliente.update({
+            where: {
+                id: currentResponsible.id,
+                terapeuta_id: payload.fromTherapistId,
+                cliente_id: payload.patientId,
             },
-            select: LINK_SELECT,
+            data: {
+                cliente_id: payload.patientId,
+                terapeuta_id: payload.toTherapistId,
+                papel: 'responsible',
+                status: 'active',
+                data_inicio: payload.effectiveDate,
+                data_fim: null,
+                observacoes: `Transferido de ${currentResponsible.terapeuta.nome} em ${payload.effectiveDate}`,
+                area_atuacao_id: actuationArea.id,
+            },
         });
-
-        return {
-            previousResponsible,
-            newResponsible,
-        } satisfies LinkTypes.TransferResponsibleResult;
     });
 
-    return transferResult;
+    return;
 }

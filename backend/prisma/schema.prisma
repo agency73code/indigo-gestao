@@ -70,7 +70,7 @@ model area_atuacao {
   id                    Int                     @id @default(autoincrement())
   nome                  String                  @db.VarChar(100)
   registro_profissional registro_profissional[]
-  clienteAreas          cliente_valor_area[]
+  terapeutaClientes     terapeuta_cliente[]
 }
 
 model cargo {
@@ -111,7 +111,6 @@ model cliente {
   ocp_prontuarios ocp_prontuario[]
   atas_reuniao    ata_reuniao[]
   faturamentos    faturamento[]
-  clienteAreas    cliente_valor_area[]
 
   @@index([nome], map: "nome_idx")
 }
@@ -914,34 +913,24 @@ model ocp {
   @@index([terapeuta_id], map: "ocp_terapeuta_id_fkey")
 }
 
-model cliente_valor_area {
+model terapeuta_cliente {
   id              Int          @id @default(autoincrement())
+  terapeuta_id    String
+  terapeuta       terapeuta    @relation(fields: [terapeuta_id], references: [id], onDelete: Restrict)
   cliente_id      String
   cliente         cliente      @relation(fields: [cliente_id], references: [id], onDelete: Cascade)
+  data_fim        DateTime?
+  data_inicio     DateTime
+  observacoes     String?      @db.Text
+  papel           String       @default("responsible")
+  status          String       @default("active")
   area_atuacao_id Int
   areaAtuacao     area_atuacao @relation(fields: [area_atuacao_id], references: [id], onDelete: Restrict)
   valor_sessao    Decimal      @db.Decimal(10, 2)
-  criado_em       DateTime     @default(now())
   atualizado_em   DateTime     @updatedAt
+  criado_em       DateTime     @default(now())
 
-  @@index([criado_em])
-}
-
-model terapeuta_cliente {
-  id            Int       @id @default(autoincrement())
-  terapeuta_id  String
-  cliente_id    String
-  atualizado_em DateTime  @updatedAt
-  criado_em     DateTime  @default(now())
-  data_fim      DateTime?
-  data_inicio   DateTime
-  observacoes   String?   @db.Text
-  papel         String    @default("responsible")
-  status        String    @default("active")
-  area_atuacao  String?
-  cliente       cliente   @relation(fields: [cliente_id], references: [id], onDelete: Cascade)
-  terapeuta     terapeuta @relation(fields: [terapeuta_id], references: [id], onDelete: Restrict)
-
+  @@unique([terapeuta_id, cliente_id])
   @@index([terapeuta_id])
   @@index([cliente_id])
 }
