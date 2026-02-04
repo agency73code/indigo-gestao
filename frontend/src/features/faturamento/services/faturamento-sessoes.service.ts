@@ -98,10 +98,11 @@ export async function getResumoFaturamento(
     if (filters?.dataInicio) params.append('dataInicio', filters.dataInicio);
     if (filters?.dataFim) params.append('dataFim', filters.dataFim);
 
-    const res = await authFetch(`/api/faturamento/resumo?${params.toString()}`);
+    const res = await authFetch(`/api/faturamentos/resumo?${params.toString()}`);
     if (!res.ok) {
         throw new Error('Erro ao buscar resumo de faturamento');
     }
+
     return res.json();
 }
 

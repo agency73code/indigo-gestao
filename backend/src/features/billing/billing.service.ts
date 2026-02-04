@@ -8,7 +8,7 @@ import { prisma } from "../../config/database.js";
 import type { BillingParties } from "./types/BillingParties.js";
 import { billingListSelect } from "./queries/billingListSelect.js";
 import { mapBillingListItem } from "./mappers/mapBillingListItem.js";
-import type { listBillingPayload } from "./schemas/listBillingSchema.js";
+import type { billingSummaryPayload, listBillingPayload } from "./schemas/listBillingSchema.js";
 import { endOfDay, startOfDay } from "./utils/scheduleAdjustment.js";
 import { parseYMDToLocalDate } from "../../schemas/utils/parseYMDToLocalDate.js";
 import { toDateOnly } from "../../utils/toDateOnly.js";
@@ -118,6 +118,58 @@ export async function listBilling(params: listBillingPayload, userId: string) {
         page: page,
         pageSize: pageSize,
         totalPages,
+    }
+}
+
+export async function getBillingSummary(params: billingSummaryPayload) {
+    const { terapeutaId, dataInicio, dataFim } = params;
+    const where: Prisma.faturamentoWhereInput = {
+        criado_em: {
+            ...(dataInicio && { gte: startOfDay(parseYMDToLocalDate(toDateOnly(dataInicio))) }),
+            ...(dataFim && { lte: endOfDay(parseYMDToLocalDate(toDateOnly(dataFim))) }),
+        },
+        terapeuta_id: terapeutaId,
+    };
+
+    const data = await prisma.faturamento.findMany({
+        where,
+        select: {
+            inicio_em: true,
+            fim_em: true,
+            tipo_atendimento: true,
+            status: true,
+            terapeuta: {
+                select: {
+                    valor_hora_desenvolvimento_materiais: true,
+                    valor_hora_reuniao: true,
+                    valor_hora_supervisao_dada: true,
+                    valor_hora_supervisao_recebida: true,
+                    valor_sessao_consultorio: true,
+                    valor_sessao_homecare: true,
+                }
+            }
+        }
+    });
+
+    return {
+        // totalMinutos: number,
+        // totalHoras: string, // Formatado: "8h 45min"
+        // totalValor: number,
+        // totalLancamentos: number,
+        
+        porStatus: {
+            pendentes: data.filter((p) => p.status === 'pendente').length,
+            aprovados: data.filter((p) => p.status === 'aprovado').length,
+            rejeitados: data.filter((p) => p.status === 'rejeitado').length,
+        },
+        
+        porTipoAtividade: {
+            tipo: TipoAtividadeFaturamento,
+            label: string,
+            minutos: number,
+            quantidade: number,
+            valor: number,
+        },//[]
     }
 }
 

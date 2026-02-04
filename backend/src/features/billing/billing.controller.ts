@@ -5,7 +5,7 @@ import type { BillingInput } from "./types/BillingInput.js";
 import * as BillingService from './billing.service.js';
 import { AppError } from '../../errors/AppError.js';
 import { streamFileDownload } from '../file/r2/streamDownloadResponse.js';
-import { listBillingSchema } from "./schemas/listBillingSchema.js";
+import { billingSummarySchema, listBillingSchema } from "./schemas/listBillingSchema.js";
 import { unauthenticated } from "../../errors/unauthenticated.js";
 
 export function buildBillingInputFromRequest(req: Request): BillingInput {
@@ -42,6 +42,20 @@ export async function listBilling(req: Request, res: Response, next: NextFunctio
 
         const data = await BillingService.listBilling(params, userId);
 
+        res.status(200).json(data);
+    } catch (err) {
+        next(err);
+    }
+}
+
+export async function getBillingSummary(req: Request, res: Response, next: NextFunction) {
+    try {
+        const userId = req.user?.id;
+        if (!userId) throw unauthenticated();
+
+        const payload = billingSummarySchema.parse(req.query);
+        const data = await BillingService.getBillingSummary(payload);
+        console.log(data);
         res.status(200).json(data);
     } catch (err) {
         next(err);

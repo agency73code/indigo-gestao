@@ -53,6 +53,7 @@ import {
 import {
     listFaturamento,
     getTerapeutaLogado,
+    getResumoFaturamento,
 } from '../services/faturamento-sessoes.service';
 import { FaturamentoTable, type FaturamentoColumnFilters, type FaturamentoColumnFilterOptions } from './FaturamentoTable';
 import { BillingDrawer } from './BillingDrawer';
@@ -253,7 +254,7 @@ export function FaturamentoHub({ mode }: FaturamentoHubProps) {
     // Estados
     const [lancamentos, setLancamentos] = useState<ItemFaturamento[]>([]);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [resumo, _setResumo] = useState<ResumoFaturamento | null>(null);
+    const [resumo, setResumo] = useState<ResumoFaturamento | null>(null);
     const [loading, setLoading] = useState(true);
     const [searchValue, setSearchValue] = useState(searchParams.get('q') ?? '');
     const [terapeutaId, setTerapeutaId] = useState<string | undefined>();
@@ -475,16 +476,13 @@ export function FaturamentoHub({ mode }: FaturamentoHubProps) {
                 params.terapeutaId = terapeutaId;
             }
 
-            const responseList = await listFaturamento(params); // TODO: finalizar o getResumo e descomentar isso aqui
-            console.log(responseList);
-            setLancamentos(responseList.items);
-            // const [responseList, responseResumo] = await Promise.all([
-            //     listFaturamento(params),
-            //     getResumoFaturamento(mode === 'terapeuta' ? terapeutaId : undefined, params),
-            // ]);
+            const [responseList, responseResumo] = await Promise.all([
+                listFaturamento(params),
+                getResumoFaturamento(mode === 'terapeuta' ? terapeutaId : undefined, params),
+            ]);
 
-            // setLancamentos(responseList.items);
-            // setResumo(responseResumo);
+            setLancamentos(responseList.items);
+            setResumo(responseResumo);
         } catch (error) {
             console.error('Erro ao carregar faturamento:', error);
             toast.error('Erro ao carregar dados de faturamento');
