@@ -99,7 +99,7 @@ export async function listBilling(params: listBillingPayload, userId: string) {
     if (visibility.scope === 'partial') {
         where.terapeuta_id = { in: visibility.therapistIds };
     } 
-
+    
     const [items, total] = await prisma.$transaction([
         prisma.faturamento.findMany({
             where,

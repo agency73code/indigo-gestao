@@ -7,10 +7,10 @@ import type { BillingSummaryItem } from "../types/BillingSummaryItem.js";
 const tipoAtividadeLabels: Record<faturamento_tipo_atendimento, { tipo: string; label: string }> = {
     consultorio: { tipo: "consultorio", label: "Consultório" },
     homecare: { tipo: "homecare", label: "Homecare" },
-    hora_reuniao: { tipo: "reuniao", label: "de Reuniões" },
-    hora_supervisao_recebida: { tipo: "supervisao_recebida", label: "Supervisão Recebida" },
-    hora_supervisao_dada: { tipo: "supervisao_dada", label: "Supervisão Dada" },
-    hora_desenvolvimento_materiais: { tipo: "desenvolvimento_materiais", label: "Desenv. Materiais" },
+    reuniao: { tipo: "reuniao", label: "de Reuniões" },
+    supervisao_recebida: { tipo: "supervisao_recebida", label: "Supervisão Recebida" },
+    supervisao_dada: { tipo: "supervisao_dada", label: "Supervisão Dada" },
+    desenvolvimento_materiais: { tipo: "desenvolvimento_materiais", label: "Desenv. Materiais" },
 };
 
 export function mapBillingSummary(data: BillingSummaryItem[]) {
@@ -26,10 +26,10 @@ export function mapBillingSummary(data: BillingSummaryItem[]) {
         const values: Record<faturamento_tipo_atendimento, Prisma.Decimal | null> = {
             consultorio: item.terapeuta.valor_sessao_consultorio,
             homecare: item.terapeuta.valor_sessao_homecare,
-            hora_reuniao: item.terapeuta.valor_hora_reuniao,
-            hora_desenvolvimento_materiais: item.terapeuta.valor_hora_desenvolvimento_materiais,
-            hora_supervisao_dada: item.terapeuta.valor_hora_supervisao_dada,
-            hora_supervisao_recebida: item.terapeuta.valor_hora_supervisao_recebida,
+            reuniao: item.terapeuta.valor_hora_reuniao,
+            desenvolvimento_materiais: item.terapeuta.valor_hora_desenvolvimento_materiais,
+            supervisao_dada: item.terapeuta.valor_hora_supervisao_dada,
+            supervisao_recebida: item.terapeuta.valor_hora_supervisao_recebida,
         };
         const rate = getBillingRateByType(values, item.tipo_atendimento);
         const valor = durationMinutes ? Math.floor(durationMinutes / 60) * rate : 0;

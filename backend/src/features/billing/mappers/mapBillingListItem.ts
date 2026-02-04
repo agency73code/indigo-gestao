@@ -5,6 +5,7 @@ import type { BillingListItem } from "../queries/billingListSelect.js";
 import { buildLocalSessionTime } from "../utils/buildUtcDate.js";
 import { buildBillingFrontId, resolveBillingOrigin } from "../utils/resolveBillingOrigin.js";
 import { getBillingRateByType } from "../utils/getBillingRateByType.js";
+import { calculateAge } from "../../../utils/calculateAge.js";
 
 export function mapBillingListItem(item: BillingListItem) {
     const time = buildLocalSessionTime(
@@ -15,13 +16,15 @@ export function mapBillingListItem(item: BillingListItem) {
     const values: Record<faturamento_tipo_atendimento, Prisma.Decimal | null> = {
         consultorio: item.terapeuta.valor_sessao_consultorio,
         homecare: item.terapeuta.valor_sessao_homecare,
-        hora_reuniao: item.terapeuta.valor_hora_reuniao,
-        hora_desenvolvimento_materiais: item.terapeuta.valor_hora_desenvolvimento_materiais,
-        hora_supervisao_dada: item.terapeuta.valor_hora_supervisao_dada,
-        hora_supervisao_recebida: item.terapeuta.valor_hora_supervisao_recebida,
+        reuniao: item.terapeuta.valor_hora_reuniao,
+        desenvolvimento_materiais: item.terapeuta.valor_hora_desenvolvimento_materiais,
+        supervisao_dada: item.terapeuta.valor_hora_supervisao_dada,
+        supervisao_recebida: item.terapeuta.valor_hora_supervisao_recebida,
     };
-    const rate = getBillingRateByType(values, item.tipo_atendimento);
+    const therapistRate = getBillingRateByType(values, item.tipo_atendimento);
     const durationMinutes = computeDurationMinutes(time.start, time.end);
+    const clientRate = item.cliente.terapeuta.find((link) => link.terapeuta_id === item.terapeuta_id)?.valor_sessao ?? null;
+    const clientRateValue = clientRate ? clientRate.toNumber() : 0;
 
     return {
         id: buildBillingFrontId(ref),
@@ -33,7 +36,7 @@ export function mapBillingListItem(item: BillingListItem) {
         terapeutaAvatarUrl: buildAvatarUrl(item.terapeuta.arquivos),
         clienteId: item.cliente_id,
         clienteNome: item.cliente.nome,
-        clienteIdade: 0, // TODO
+        clienteIdade: calculateAge(item.cliente.dataNascimento),
         clienteAvatarUrl: buildAvatarUrl(item.cliente.arquivos),
 
         data: time.day,
@@ -43,11 +46,11 @@ export function mapBillingListItem(item: BillingListItem) {
         tipoAtividade: item.tipo_atendimento,
 
         duracaoMinutos: durationMinutes,
-        valorHora: rate,
-        valorTotal: durationMinutes ? Math.floor(durationMinutes / 60) * rate : 0,
+        valorHora: therapistRate,
+        valorTotal: durationMinutes ? Math.floor(durationMinutes / 60) * therapistRate : 0,
 
-        valorHoraCliente: 0, // TODO
-        valorTotalCliente: 0, // TODO
+        valorHoraCliente: clientRateValue,
+        valorTotalCliente: durationMinutes ? Math.floor(durationMinutes / 60) * clientRateValue : 0,
 
         status: item.status,
         area: item.sessao?.ocp.area,

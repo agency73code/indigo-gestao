@@ -44,10 +44,17 @@ export const billingListSelect = Prisma.validator<Prisma.faturamentoSelect>()({
     cliente: {
         select: {
             nome: true,
+            dataNascimento: true,
             arquivos: {
                 where: { tipo: 'fotoPerfil' },
                 select: {
                     arquivo_id: true,
+                },
+            },
+            terapeuta: {
+                select: {
+                    terapeuta_id: true,
+                    valor_sessao: true,
                 },
             },
         },
