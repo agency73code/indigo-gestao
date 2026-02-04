@@ -81,8 +81,13 @@ function toBillingCorrecao(data: DadosFaturamentoSessao | null, lancamento: Bill
 // HELPER: Converter DadosFaturamentoCorrecao para DadosFaturamentoSessao
 // ============================================
 
-function fromBillingCorrecao(data: DadosFaturamentoCorrecao): DadosFaturamentoSessao {
-    // Determina tipoAtendimento baseado no tipoAtividade
+interface DadosFaturamentoCorrecaoCompleto extends DadosFaturamentoSessao {
+    tipoAtividade?: string;
+}
+
+function fromBillingCorrecao(data: DadosFaturamentoCorrecao): DadosFaturamentoCorrecaoCompleto {
+    // Determina tipoAtendimento baseado no tipoAtividade (para compatibilidade)
+    // Homecare e Consultório mantêm o tipo, os demais são tratados como consultório na parte de valor
     const tipoAtendimento = data.tipoAtividade === 'homecare' ? 'homecare' : 'consultorio';
     
     return {
@@ -93,6 +98,8 @@ function fromBillingCorrecao(data: DadosFaturamentoCorrecao): DadosFaturamentoSe
         ajudaCusto: data.ajudaCusto,
         observacaoFaturamento: data.observacaoFaturamento,
         arquivosFaturamento: data.arquivosFaturamento,
+        // IMPORTANTE: Preservar o tipoAtividade original para o backend
+        tipoAtividade: data.tipoAtividade,
     };
 }
 

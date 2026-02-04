@@ -93,9 +93,14 @@ function toBillingCorrecao(data: DadosFaturamentoSessao | null, lancamento: Bill
     };
 }
 
+// Interface estendida para incluir tipoAtividade
+interface DadosFaturamentoCorrecaoCompleto extends DadosFaturamentoSessao {
+    tipoAtividade?: string;
+}
+
 // Helper para converter DadosFaturamentoCorrecao para DadosFaturamentoSessao (para salvar)
-function fromBillingCorrecao(data: DadosFaturamentoCorrecao): DadosFaturamentoSessao {
-    // Extrair tipoAtendimento do tipoAtividade (apenas consultorio e homecare são válidos)
+function fromBillingCorrecao(data: DadosFaturamentoCorrecao): DadosFaturamentoCorrecaoCompleto {
+    // Extrair tipoAtendimento do tipoAtividade (apenas consultorio e homecare são válidos para cálculo de valor)
     const tipoAtendimento: TipoAtendimento = (data.tipoAtividade === 'homecare') ? 'homecare' : 'consultorio';
     
     return {
@@ -106,6 +111,8 @@ function fromBillingCorrecao(data: DadosFaturamentoCorrecao): DadosFaturamentoSe
         ajudaCusto: data.ajudaCusto,
         observacaoFaturamento: data.observacaoFaturamento,
         arquivosFaturamento: data.arquivosFaturamento,
+        // IMPORTANTE: Preservar o tipoAtividade original para o backend
+        tipoAtividade: data.tipoAtividade,
     };
 }
 

@@ -53,8 +53,15 @@ export async function correctBillingLancamento(
     // Adicionar dados de faturamento (sem arquivos)
     const { arquivosFaturamento, ...billingData } = payload.faturamento;
     
+    // Extrair tipoAtividade se existir nos dados (adicionado pela correção)
+    const tipoAtividade = (billingData as { tipoAtividade?: string }).tipoAtividade || payload.tipoAtividade;
+    
+    // Remover tipoAtividade do billingData para não duplicar
+    const { tipoAtividade: _, ...billingDataClean } = billingData as { tipoAtividade?: string } & typeof billingData;
+    
     const data = {
-        faturamento: billingData,
+        faturamento: billingDataClean,
+        tipoAtividade: tipoAtividade || null, // Envia o tipo de atividade real para o backend
         comentario: payload.comentario || null,
     };
     

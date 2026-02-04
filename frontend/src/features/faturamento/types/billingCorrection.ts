@@ -73,6 +73,9 @@ export interface CorrectBillingPayload {
     /** Dados de faturamento corrigidos */
     faturamento: DadosFaturamentoSessao;
     
+    /** Tipo de atividade (quando diferente de consultorio/homecare) */
+    tipoAtividade?: string;
+    
     /** Comentário sobre a correção (opcional) */
     comentario?: string;
 }
