@@ -116,7 +116,6 @@ export async function getResumoFaturamento(
 export async function getResumoGerente(
     filters?: FaturamentoListFilters
 ): Promise<ResumoGerente> {
-    console.log('teste')
     if (faturamentoConfig.useMock) {
         return mocks.mockGetResumoGerente(filters);
     }

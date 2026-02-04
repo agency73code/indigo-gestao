@@ -62,11 +62,15 @@ export async function getBillingSummary(req: Request, res: Response, next: NextF
 }
 
 export async function approveLaunch(req: Request, res: Response, next: NextFunction) {
-    console.log(req.params);
-    console.log(req.query);
-    console.log(req.body);
-
-    res.status(201).json({ message: 'teste' });
+    try {
+        console.log(req.params);
+        console.log(req.query);
+        console.log(req.body);
+    
+        res.status(201).json({ message: 'teste' });
+    } catch (err) {
+        next(err)
+    }
 }
 
 // :/

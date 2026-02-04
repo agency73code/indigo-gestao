@@ -33,6 +33,7 @@ export function mapBillingListItem(item: BillingListItem) {
         terapeutaAvatarUrl: buildAvatarUrl(item.terapeuta.arquivos),
         clienteId: item.cliente_id,
         clienteNome: item.cliente.nome,
+        clienteIdade: 0, // TODO
         clienteAvatarUrl: buildAvatarUrl(item.cliente.arquivos),
 
         data: time.day,
@@ -44,6 +45,9 @@ export function mapBillingListItem(item: BillingListItem) {
         duracaoMinutos: durationMinutes,
         valorHora: rate,
         valorTotal: durationMinutes ? Math.floor(durationMinutes / 60) * rate : 0,
+
+        valorHoraCliente: 0, // TODO
+        valorTotalCliente: 0, // TODO
 
         status: item.status,
         area: item.sessao?.ocp.area,

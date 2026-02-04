@@ -54,10 +54,10 @@ enum ata_status {
 enum faturamento_tipo_atendimento {
   consultorio
   homecare
-  hora_reuniao
-  hora_supervisao_recebida
-  hora_supervisao_dada
-  hora_desenvolvimento_materiais
+  reuniao
+  supervisao_recebida
+  supervisao_dada
+  desenvolvimento_materiais
 }
 
 enum faturamento_status {

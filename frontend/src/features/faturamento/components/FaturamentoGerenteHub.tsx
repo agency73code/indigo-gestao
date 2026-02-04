@@ -519,7 +519,6 @@ export function FaturamentoGerenteHub() {
                 pageSize: 500, // Gerente vê mais dados
             };
 
-            console.log('teste')
             const [responseList, responseResumo] = await Promise.all([
                 listFaturamento(params),
                 getResumoGerente(params),
