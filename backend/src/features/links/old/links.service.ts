@@ -97,7 +97,6 @@ export async function listTherapists(userId: string, query: TherapistListQuery) 
 
 export async function getAllLinks(userId: string, filters: listLinksPayload) {
     const { q, status, orderBy, viewBy, page, pageSize } = filters
-    console.log('==============================')
     const where: Prisma.terapeuta_clienteWhereInput = {
         ...(q && {
             OR: [

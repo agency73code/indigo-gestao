@@ -358,10 +358,10 @@ export async function getTherapistsForLinks(): Promise<TherapistListDTO[]> {
 export async function getAllLinks(filters?: LinkFilters): Promise<PatientTherapistLink[]> {
   if (!filters || filters.viewBy === 'supervision') return [];
 
-  // Monta query string a partir do objeto de filtros
-  const query = filters
-   ? '?' + new URLSearchParams(filters as Record<string, string>).toString()
-   : '';
+  const baseQuery =
+    '?' + new URLSearchParams(filters as Record<string, string>).toString();
+
+  const query = `${baseQuery}&orderBy=recent`;
 
   const res = await fetch(`/api/links/getAllLinks${query}`, {
     method: 'GET',
@@ -373,6 +373,7 @@ export async function getAllLinks(filters?: LinkFilters): Promise<PatientTherapi
   }
   
   const json = await res.json();
+
   return json as PatientTherapistLink[];
 }
 

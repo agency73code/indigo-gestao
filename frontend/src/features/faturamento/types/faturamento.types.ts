@@ -372,4 +372,35 @@ export interface ResumoGerente {
         totalPendentes: number;
         valorPendente: number;
     }[];
+    
+    /** Por tipo de atividade (vindo do backend) */
+    porTipoAtividade?: {
+        tipo: string;
+        label: string;
+        minutos: number;
+        quantidade: number;
+        valor: number;
+    }[];
+}
+
+// ============================================
+// TIPOS DE INPUT PARA AÇÕES
+// ============================================
+
+/** Input para aprovação individual */
+export interface AprovarLancamentoInput {
+    valorAjudaCusto?: number;
+    valorTotalCliente?: number;
+}
+
+/** Input para rejeição */
+export interface RejeitarLancamentoInput {
+    motivo: string;
+}
+
+/** Input para aprovação em lote */
+export interface AprovarLoteInput {
+    ids: string[];
+    /** Mapa de ID do lançamento -> valor que o cliente paga */
+    valoresCliente?: Record<string, number>;
 }

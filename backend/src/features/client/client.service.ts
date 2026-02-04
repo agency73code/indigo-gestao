@@ -782,7 +782,6 @@ export async function list(
         where.terapeuta = {
             some: {
                 terapeuta_id: { in: visibility.therapistIds },
-                ...(visibility.maxAccessLevel < MANAGER_LEVEL ? { status: 'active' } : {}),
             },
         };
     }
