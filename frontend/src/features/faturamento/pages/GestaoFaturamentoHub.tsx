@@ -1659,7 +1659,7 @@ function AprovarHorasTab({ lancamentos, selectedIds, onToggleSelect, onToggleSel
             }
 
             // Usar aprovação individual para enviar valorAjudaCusto
-            await aprovarLancamento(lancamento.id, valorNumerico);
+            await aprovarLancamento(lancamento.origemId, valorNumerico);
             toast.success('Lançamento aprovado!', {
                 description: valorNumerico 
                     ? `Ajuda de custo: ${formatarValor(valorNumerico)}`
@@ -1733,6 +1733,7 @@ function AprovarHorasTab({ lancamentos, selectedIds, onToggleSelect, onToggleSel
             setIsApprovingBatch(false);
         }
     };
+    
     if (lancamentos.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-12 text-center">

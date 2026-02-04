@@ -112,6 +112,7 @@ export async function getResumoFaturamento(
 export async function getResumoGerente(
     filters?: FaturamentoListFilters
 ): Promise<ResumoGerente> {
+    console.log('teste')
     if (faturamentoConfig.useMock) {
         return mocks.mockGetResumoGerente(filters);
     }
@@ -180,14 +181,10 @@ export async function getTerapeutaLogado(): Promise<TerapeutaOption> {
  * Aprova lançamento
  */
 export async function aprovarLancamento(
-    id: string, 
+    id: string | number, 
     valorAjudaCusto?: number
 ): Promise<ItemFaturamento | null> {
-    if (faturamentoConfig.useMock) {
-        return mocks.mockAprovarLancamento(id);
-    }
-
-    const res = await authFetch(`/api/faturamento/lancamentos/${id}/aprovar`, {
+    const res = await authFetch(`/api/faturamentos/lancamentos/${id}/aprovar`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ valorAjudaCusto }),

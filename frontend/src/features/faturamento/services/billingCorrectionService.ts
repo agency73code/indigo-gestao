@@ -23,7 +23,7 @@ import type { DadosFaturamentoSessao } from '@/features/programas/core/types/bil
 /**
  * Busca um lançamento de faturamento específico
  * 
- * @param lancamentoId - ID do lançamento
+ * @param lancamentoId - ID do lançamento [ignorar]
  * @returns Dados do lançamento
  */
 export async function fetchBillingLancamento(lancamentoId: string): Promise<BillingLancamento> {

@@ -203,6 +203,7 @@ export function AprovarHorasPage() {
     const loadData = useCallback(async () => {
         setLoading(true);
         try {
+            console.log('teste')
             const [resumoData, lancamentosData] = await Promise.all([
                 getResumoGerente(),
                 listFaturamento({ pageSize: 500 }),

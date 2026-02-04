@@ -39,7 +39,6 @@ export async function listBilling(req: Request, res: Response, next: NextFunctio
         if (!userId) throw unauthenticated();
 
         const params = listBillingSchema.parse(req.query);
-
         const data = await BillingService.listBilling(params, userId);
 
         res.status(200).json(data);
@@ -55,11 +54,19 @@ export async function getBillingSummary(req: Request, res: Response, next: NextF
 
         const payload = billingSummarySchema.parse(req.query);
         const data = await BillingService.getBillingSummary(payload);
-        console.log(data);
+
         res.status(200).json(data);
     } catch (err) {
         next(err);
     }
+}
+
+export async function approveLaunch(req: Request, res: Response, next: NextFunction) {
+    console.log(req.params);
+    console.log(req.query);
+    console.log(req.body);
+
+    res.status(201).json({ message: 'teste' });
 }
 
 // :/

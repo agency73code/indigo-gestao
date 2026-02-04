@@ -8,5 +8,6 @@ router.use(auth);
 router.get('/lancamentos', BillingController.listBilling);
 router.get('/resumo', BillingController.getBillingSummary);
 router.get('/arquivos/:fileId/download', BillingController.downloadBillingFile);
+router.post('/lancamentos/:launchId/aprovar', BillingController.approveLaunch);
 
 export { router as billingRoutes };
