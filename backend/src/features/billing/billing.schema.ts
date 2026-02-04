@@ -5,7 +5,10 @@ export const billingSchema = z.object({
     dataSessao: z.string().min(1),
     horarioInicio: z.string().min(1),
     horarioFim: z.string().min(1),
-    tipoAtendimento: z.enum(faturamento_tipo_atendimento),
+    tipoAtendimento: z.preprocess(
+        (value) => (typeof value === 'string' ? value.replace(/^hora_/, '') : value),
+        z.enum(faturamento_tipo_atendimento),
+    ),
     ajudaCusto: z.boolean().nullable().default(null),
     observacaoFaturamento: z.string().nullable().default(null),
 })
