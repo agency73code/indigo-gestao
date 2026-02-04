@@ -56,10 +56,32 @@ function formatarMesReferencia(periodoInicio: Date): string {
     return `${meses[periodoInicio.getMonth()]}/${periodoInicio.getFullYear()}`;
 }
 
+function obterMesMaiusculo(periodoInicio: Date): string {
+    const meses = [
+        'JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO',
+        'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'
+    ];
+    return meses[periodoInicio.getMonth()];
+}
+
+function formatarDataExtenso(data: string | Date): string {
+    const d = typeof data === 'string' ? new Date(data + 'T12:00:00') : data;
+    const diasSemana = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
+    const meses = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+    
+    const diaSemana = diasSemana[d.getDay()];
+    const dia = d.getDate();
+    const mes = meses[d.getMonth()];
+    const ano = d.getFullYear();
+    
+    return `${diaSemana}, ${dia} de ${mes} de ${ano}`;
+}
+
 function mapearSessoes(lancamentos: ItemFaturamento[]): SessaoRelatorio[] {
     return lancamentos.map(l => ({
         data: l.data,
         dataFormatted: formatarData(l.data),
+        dataExtenso: formatarDataExtenso(l.data),
         horaInicio: l.horarioInicio ?? '',
         horaFim: l.horarioFim ?? '',
         duracao: l.duracaoMinutos,
@@ -77,28 +99,6 @@ function mapearSessoes(lancamentos: ItemFaturamento[]): SessaoRelatorio[] {
 // ============================================
 
 /**
- * Extrai dados do cliente diretamente dos lançamentos (sem chamada à API)
- */
-function extrairDadosCliente(lancamentos: ItemFaturamento[], clienteId: string): ClienteRelatorio {
-    const lancamentoCliente = lancamentos.find(l => l.clienteId === clienteId);
-    
-    if (!lancamentoCliente) {
-        throw new Error('Cliente não encontrado nos lançamentos');
-    }
-
-    return {
-        id: clienteId,
-        nome: lancamentoCliente.clienteNome ?? 'Cliente',
-        // Dados abaixo não estão no mock, mas podem vir do backend futuramente
-        dataNascimento: undefined,
-        idade: undefined,
-        cpf: undefined,
-        convenio: undefined,
-        numeroCarteirinha: undefined,
-    };
-}
-
-/**
  * Extrai dados do terapeuta diretamente dos lançamentos (sem chamada à API)
  */
 function extrairDadosTerapeuta(lancamentos: ItemFaturamento[], terapeutaId: string): TerapeutaRelatorio {
@@ -114,7 +114,28 @@ function extrairDadosTerapeuta(lancamentos: ItemFaturamento[], terapeutaId: stri
         email: undefined,
         especialidades: lancamentoTerapeuta.area ? [lancamentoTerapeuta.area] : [],
         crm: undefined,
-        registroProfissional: undefined,
+        registroProfissional: lancamentoTerapeuta.terapeutaRegistroProfissional,
+    };
+}
+
+/**
+ * Extrai dados do cliente diretamente dos lançamentos (sem chamada à API)
+ */
+function extrairDadosCliente(lancamentos: ItemFaturamento[], clienteId: string): ClienteRelatorio {
+    const lancamentoCliente = lancamentos.find(l => l.clienteId === clienteId);
+    
+    if (!lancamentoCliente) {
+        throw new Error('Cliente não encontrado nos lançamentos');
+    }
+
+    return {
+        id: clienteId,
+        nome: lancamentoCliente.clienteNome ?? 'Cliente',
+        dataNascimento: lancamentoCliente.clienteDataNascimento,
+        idade: lancamentoCliente.clienteIdade,
+        cpf: undefined,
+        convenio: undefined,
+        numeroCarteirinha: undefined,
     };
 }
 
@@ -145,15 +166,33 @@ export function gerarDadosRelatorioConvenio(
     const sessoes = mapearSessoes(lancamentosCliente);
     const totalMinutos = lancamentosCliente.reduce((acc, l) => acc + l.duracaoMinutos, 0);
 
+    // Calcular dias únicos de atendimento
+    const diasUnicos = [...new Set(lancamentosCliente.map(l => {
+        const d = new Date(l.data + 'T12:00:00');
+        return d.getDate();
+    }))].sort((a, b) => a - b);
+
+    // Calcular máximo de sessões por dia
+    const sessoesPorDia = lancamentosCliente.reduce((acc, l) => {
+        const d = new Date(l.data + 'T12:00:00');
+        const dia = d.getDate();
+        acc[dia] = (acc[dia] || 0) + 1;
+        return acc;
+    }, {} as Record<number, number>);
+    const maxSessoesDia = Math.max(...Object.values(sessoesPorDia));
+
     return {
         dataEmissao: formatarData(new Date()),
+        mesReferencia: obterMesMaiusculo(input.periodoInicio),
+        anoReferencia: input.periodoInicio.getFullYear(),
         cliente,
         terapeuta,
         especialidade: terapeuta.especialidades[0] ?? 'Não informado',
         sessoes,
         totalHoras: totalMinutos / 60,
         totalSessoes: sessoes.length,
-        evolucaoClinica: input.evolucaoClinica,
+        diasAtendimento: diasUnicos,
+        sessoesMaxPorDia: maxSessoesDia,
         assinaturaTerapeuta: true,
     };
 }

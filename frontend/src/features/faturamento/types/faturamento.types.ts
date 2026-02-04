@@ -130,11 +130,13 @@ export interface ItemFaturamento {
     terapeutaId: string;
     terapeutaNome: string;
     terapeutaAvatarUrl?: string;
+    terapeutaRegistroProfissional?: string; // CRP, CRFa, etc.
     
     clienteId?: string;
     clienteNome?: string;
     clienteIdade?: string;
     clienteAvatarUrl?: string;
+    clienteDataNascimento?: string;
     
     // Data e horários
     data: string; // YYYY-MM-DD

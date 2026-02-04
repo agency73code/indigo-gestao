@@ -21,6 +21,7 @@ export const TIPO_RELATORIO_DESCRICAO: Record<TipoRelatorioFaturamento, string> 
 export interface SessaoRelatorio {
     data: string;
     dataFormatted: string;
+    dataExtenso: string; // Ex: "quinta-feira, 2 de janeiro de 2025"
     horaInicio: string;
     horaFim: string;
     duracao: number; // em minutos
@@ -55,6 +56,25 @@ export interface TerapeutaRelatorio {
     registroProfissional?: string;
 }
 
+// Dados da dona da clínica (fixo)
+export const DADOS_DONA_CLINICA = {
+    nome: 'Leticia da Silva Sena',
+    titulo: 'Sócia Fundadora da Clínica Instituto Índigo e Supervisora ABA',
+    crfa: 'CRFª 2-21234',
+    certificacoes: [
+        'Certificada no PECS pela Pyramid Educational Consultants',
+        'Certificada no PROMPT nível 1 pela Prompt Institute',
+        'Certificada no PODD pela Cerebral Palsy Education Centre Therapy Services',
+        'Certificada no nível 1 do Protocolo IISCA pelo QABA – análise funcional de comportamentos problema para planejamento de tratamento baseado em habilidades',
+    ],
+    formacao: [
+        'Analista do Comportamento aplicada voltado ao Transtorno do Espectro Autista e Atrasos do Desenvolvimento',
+        'Doutoranda em Ciências pela Universidade Federal de São Paulo',
+        'Especialista em Terapia da Aceitação e do Compromisso pelo Centro Brasileiro de Ciência Comportamental Contextual',
+        'Graduanda em Psicologia pela Anhanguera',
+    ],
+};
+
 // Filtros para geração do relatório
 export interface FiltrosRelatorio {
     tipoRelatorio: TipoRelatorioFaturamento;
@@ -68,13 +88,20 @@ export interface FiltrosRelatorio {
 // Dados gerados para o relatório de convênio
 export interface DadosRelatorioConvenio {
     dataEmissao: string;
+    mesReferencia: string; // Ex: "JANEIRO"
+    anoReferencia: number; // Ex: 2025
     cliente: ClienteRelatorio;
     terapeuta: TerapeutaRelatorio;
     especialidade: string;
     sessoes: SessaoRelatorio[];
     totalHoras: number;
     totalSessoes: number;
-    evolucaoClinica?: string;
+    // Campos para preenchimento manual (grifado)
+    apresentacaoCaso?: string; // Terapeuta preenche
+    desempenhoCrianca?: string; // Terapeuta preenche
+    // Dados calculados
+    diasAtendimento: number[]; // Ex: [2, 3, 6, 8, 9...]
+    sessoesMaxPorDia: number; // máximo de sessões em um único dia
     assinaturaTerapeuta: boolean;
 }
 
