@@ -6,7 +6,7 @@ const API_BASE = import.meta.env.VITE_API_URL || '';
 
 // ✅ Mock ATIVADO para desenvolvimento
 // Para desabilitar: mude para false
-const USE_MOCK = false;
+const USE_MOCK = true   ;
 
 // ============================================
 // EXPORTS

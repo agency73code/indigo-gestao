@@ -40,20 +40,20 @@ export {
 
 // Hooks
 export {
-    useLancamentos,
-    useLancamentoForm,
-    useResumoHoras,
     useBillingCorrection,
 } from './hooks';
 
-// Services - Novos
+// Services - API de faturamento
 export {
     listFaturamento,
     getFaturamentoById,
     getResumoFaturamento,
+    getResumoGerente,
     listClientes,
     getTerapeutaLogado,
     aprovarLancamento,
     rejeitarLancamento,
     aprovarEmLote,
+    aprovarLancamentos,
+    getDownloadUrl,
 } from './services/faturamento-sessoes.service';
