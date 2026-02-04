@@ -712,8 +712,8 @@ export function FaturamentoGerenteHub() {
                 
                 Layout:
                 - Total Horas: horas totais (pendentes + aprovadas)
-                - Valor Total: separando Terapeuta (pagar) e Cliente (receber)
-                - Total de Lançamentos
+                - A Pagar (Terapeuta): quanto a clínica vai pagar
+                - A Receber (Cliente): quanto a clínica vai receber
                 - Aprovados: valores aprovados
                 - Pendentes: valores pendentes (previsão)
                ======================================== */}
@@ -723,23 +723,26 @@ export function FaturamentoGerenteHub() {
                     icon={<Clock className="h-5 w-5" />}
                     label="Total Horas"
                     value={resumo?.totalHoras ?? '0h'}
+                    subValue={`${lancamentos.length} lançamentos`}
                     variant="primary"
                 />
                 
-                {/* Card 2: Valor Total - Terapeuta (Pagar) */}
+                {/* Card 2: A Pagar (Terapeuta) */}
                 <StatCard
                     icon={<DollarSign className="h-5 w-5" />}
-                    label="Valor Total"
+                    label="A Pagar (Terapeuta)"
                     value={resumo ? formatarValor(resumo.totalValorTerapeuta) : 'R$ 0,00'}
+                    subValue={resumo ? `Aprovado: ${formatarValor(resumo.valorAprovadoTerapeuta)}` : undefined}
                     variant="default"
                 />
                 
-                {/* Card 3: Total de Lançamentos */}
+                {/* Card 3: A Receber (Cliente) */}
                 <StatCard
-                    icon={<FileText className="h-5 w-5" />}
-                    label="Total de Lançamentos"
-                    value={lancamentos.length}
-                    variant="default"
+                    icon={<DollarSign className="h-5 w-5" />}
+                    label="A Receber (Cliente)"
+                    value={resumo ? formatarValor(resumo.totalValorCliente) : 'R$ 0,00'}
+                    subValue={resumo ? `Aprovado: ${formatarValor(resumo.valorAprovadoCliente)}` : undefined}
+                    variant="success"
                 />
                 
                 {/* Card 4: Aprovados */}
@@ -747,12 +750,14 @@ export function FaturamentoGerenteHub() {
                     icon={<CheckCircle2 className="h-5 w-5" />}
                     label="Aprovados"
                     value={resumo?.aprovadosPeriodo ?? 0}
-                    subValue={resumo ? formatarValor(resumo.valorAprovadoTerapeuta) : undefined}
+                    subValue={resumo && lancamentos.length > 0 
+                        ? `${Math.round((resumo.aprovadosPeriodo / lancamentos.length) * 100)}% do total`
+                        : undefined}
                     badge={resumo?.aprovadosPeriodo && resumo.aprovadosPeriodo > 0 ? {
-                        value: `${Math.round((resumo.aprovadosPeriodo / lancamentos.length) * 100)}%`,
+                        value: formatarValor(resumo.valorAprovadoTerapeuta),
                         variant: 'success'
                     } : undefined}
-                    variant="success"
+                    variant="default"
                 />
                 
                 {/* Card 5: Pendentes (Previsão) */}
@@ -760,9 +765,9 @@ export function FaturamentoGerenteHub() {
                     icon={<AlertCircle className="h-5 w-5" />}
                     label="Pendentes"
                     value={resumo?.pendentesAprovacao ?? 0}
-                    subValue={resumo ? formatarValor(resumo.valorPendenteTerapeuta) : undefined}
+                    subValue={resumo ? `Pagar: ${formatarValor(resumo.valorPendenteTerapeuta)}` : undefined}
                     badge={resumo?.pendentesAprovacao && resumo.pendentesAprovacao > 0 ? {
-                        value: `${resumo.pendentesAprovacao} aguardando`,
+                        value: `Receber: ${formatarValor(resumo.valorPendenteCliente)}`,
                         variant: 'warning'
                     } : undefined}
                     variant="warning"
@@ -1194,7 +1199,7 @@ export function FaturamentoGerenteHub() {
                 </div>
             )}
 
-            {/* Drawer de Visualização/Correção de Faturamento (igual ao terapeuta) */}
+            {/* Drawer de Visualização de Faturamento (gerente não pode corrigir) */}
             <BillingDrawer
                 isOpen={isDrawerOpen}
                 onClose={closeCorrection}
@@ -1206,6 +1211,7 @@ export function FaturamentoGerenteHub() {
                     loadData();
                 }}
                 isSaving={isSavingCorrection}
+                canEdit={false}
             />
         </div>
     );
