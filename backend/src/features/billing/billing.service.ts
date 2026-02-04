@@ -13,6 +13,7 @@ import { endOfDay, startOfDay } from "./utils/scheduleAdjustment.js";
 import { parseYMDToLocalDate } from "../../schemas/utils/parseYMDToLocalDate.js";
 import { toDateOnly } from "../../utils/toDateOnly.js";
 import { getVisibilityScope } from "../../utils/visibilityFilter.js";
+import { mapBillingSummary } from "./mappers/mapBillingSummary.js";
 
 export async function createBilling(tx: Prisma.TransactionClient, payload: CreateBillingPayload, parties: BillingParties, target: BillingTarget) {
     const { billing, billingFiles } = payload;
@@ -151,26 +152,7 @@ export async function getBillingSummary(params: billingSummaryPayload) {
         }
     });
 
-    return {
-        // totalMinutos: number,
-        // totalHoras: string, // Formatado: "8h 45min"
-        // totalValor: number,
-        // totalLancamentos: number,
-        
-        porStatus: {
-            pendentes: data.filter((p) => p.status === 'pendente').length,
-            aprovados: data.filter((p) => p.status === 'aprovado').length,
-            rejeitados: data.filter((p) => p.status === 'rejeitado').length,
-        },
-        
-        porTipoAtividade: {
-            tipo: TipoAtividadeFaturamento,
-            label: string,
-            minutos: number,
-            quantidade: number,
-            valor: number,
-        },//[]
-    }
+    return mapBillingSummary(data);
 }
 
 // :/
