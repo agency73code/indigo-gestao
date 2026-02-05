@@ -7,6 +7,8 @@ import { AppError } from '../../errors/AppError.js';
 import { streamFileDownload } from '../file/r2/streamDownloadResponse.js';
 import { billingSummarySchema, listBillingSchema } from "./schemas/listBillingSchema.js";
 import { unauthenticated } from "../../errors/unauthenticated.js";
+import { idParam } from "../../schemas/utils/id.js";
+import { correctBillingDataSchema, existingBillingFilesSchema } from "./schemas/correctBillingSchema.js";
 
 export function buildBillingInputFromRequest(req: Request): BillingInput {
     const data = JSON.parse(req.body.data);
@@ -75,10 +77,30 @@ export async function approveLaunch(req: Request, res: Response, next: NextFunct
 
 export async function correctBillingRelease(req: Request, res: Response, next: NextFunction) {
     try {
-        console.log(req.params);
-        console.log(req.body);
+        const userId = req.user?.id;
+        if (!userId) throw unauthenticated();
 
-        res.status(200).json({ message: 'teste' });
+        const launchId = idParam.parse(req.params.launchId);
+
+        const payload = correctBillingDataSchema.parse(JSON.parse(req.body.data));
+
+        const existingFiles = existingBillingFilesSchema
+            .parse(req.body.existingFiles ? JSON.parse(req.body.existingFiles) : []);
+
+        const allFiles = (req.files as Express.Multer.File[]) || [];
+        const billingFiles = allFiles.filter((file) => file.fieldname === 'billingFiles');
+
+        await BillingService.correctBillingRelease({
+            launchId,
+            userId,
+            billing: payload.faturamento,
+            billingFiles,
+            existingFiles,
+            tipoAtividade: payload.tipoAtividade,
+            comentario: payload.comentario,
+        });
+        
+        return { success: true, message: 'Faturamento corrigido com sucesso.' };
     } catch (err) {
         next(err);
     }

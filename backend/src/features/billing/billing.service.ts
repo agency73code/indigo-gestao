@@ -14,6 +14,7 @@ import { parseYMDToLocalDate } from "../../schemas/utils/parseYMDToLocalDate.js"
 import { toDateOnly } from "../../utils/toDateOnly.js";
 import { getVisibilityScope } from "../../utils/visibilityFilter.js";
 import { mapBillingSummary } from "./mappers/mapBillingSummary.js";
+import type { CorrectBillingReleaseInput } from "./types/CorrectBillingReleaseInput.js";
 
 export async function createBilling(tx: Prisma.TransactionClient, payload: CreateBillingPayload, parties: BillingParties, target: BillingTarget) {
     const { billing, billingFiles } = payload;
@@ -155,8 +156,87 @@ export async function getBillingSummary(params: billingSummaryPayload) {
     return mapBillingSummary(data);
 }
 
-export async function correctBillingRelease() { // TODO
+export async function correctBillingRelease(input: CorrectBillingReleaseInput) {
+    const { launchId, userId, billing, billingFiles, existingFiles, tipoAtividade, comentario } = input;
 
+    const inicio_em = buildUtcDate(billing.dataSessao, billing.horarioInicio);
+    const fim_em = buildUtcDate(billing.dataSessao, billing.horarioFim);
+    const tipo_atendimento = tipoAtividade ?? billing.tipoAtendimento;
+
+    return await prisma.$transaction(async (tx) => {
+        const existing = await tx.faturamento.findFirst({
+            where: {
+                id: launchId,
+                terapeuta_id: userId,
+            },
+            select: { id: true },
+        });
+
+        if (!existing) {
+            throw new AppError('BILLING_NOT_FOUND', 'Lançamento não encontrado', 404);
+        }
+
+        await tx.faturamento.update({
+            where: { id: launchId },
+            data: {
+                inicio_em,
+                fim_em,
+                tipo_atendimento,
+                ajuda_custo: billing.ajudaCusto,
+                observacao_faturamento: billing.observacaoFaturamento,
+                motivo_rejeicao: comentario,
+                status: faturamento_status.pendente,
+            },
+        });
+
+        const toRemove = existingFiles.filter((file) => file.remove).map((file) => file.id);
+        if (toRemove.length > 0) {
+            await tx.faturamento_arquivo.deleteMany({
+                where: {
+                    faturamento_id: launchId,
+                    id: { in: toRemove },
+                },
+            });
+        }
+
+        if (billingFiles.length === 0) {
+            return { success: true, message: 'Faturamento corrigido com sucesso.' };
+        }
+
+        const uploaded = await R2GenericUploadService.uploadMany({
+            prefix: `faturamentos/${launchId}`,
+            files: billingFiles.map((f) => ({
+                buffer: f.buffer,
+                mimetype: f.mimetype,
+                originalname: f.originalname,
+                size: f.size,
+            })),
+        });
+
+        if (uploaded.length !== billingFiles.length) {
+            await R2GenericUploadService.deleteMany(uploaded.map((u) => u.key));
+            throw new AppError('UPLOAD_FAILED', 'Falha ao fazer upload dos arquivos do faturamento', 500);
+        }
+
+        try {
+            await tx.faturamento_arquivo.createMany({
+                data: billingFiles.map((f, i) => ({
+                    faturamento_id: launchId,
+                    nome: f.originalname,
+                    caminho: uploaded[i]!.key,
+                    mime_type: uploaded[i]!.tipo,
+                    tamanho: uploaded[i]!.tamanho,
+                })),
+            });
+        } catch (err) {
+            await Promise.allSettled([
+                R2GenericUploadService.deleteMany(uploaded.map((u) => u.key)),
+            ]);
+            throw err;
+        }
+
+        return;
+    });
 }
 
 // :/
