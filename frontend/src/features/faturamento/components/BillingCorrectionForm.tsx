@@ -199,7 +199,22 @@ export function BillingCorrectionForm({
     const handleRemoveFile = useCallback((fileId: string) => {
         onChange({
             ...value,
-            arquivosFaturamento: (value.arquivosFaturamento || []).filter((f: ArquivoFaturamento) => f.id !== fileId),
+            arquivosFaturamento: (value.arquivosFaturamento || [])
+                .map((f: ArquivoFaturamento) => {
+                    if (f.id !== fileId) {
+                        return f;
+                    }
+
+                    if (f.file) {
+                        return null;
+                    }
+
+                    return {
+                        ...f,
+                        removed: true,
+                    };
+                })
+                .filter((f: ArquivoFaturamento | null): f is ArquivoFaturamento => Boolean(f)),
         });
     }, [value, onChange]);
 
@@ -404,9 +419,9 @@ export function BillingCorrectionForm({
                         />
 
                         {/* Lista de arquivos */}
-                        {value.arquivosFaturamento && value.arquivosFaturamento.length > 0 && (
+                        {value.arquivosFaturamento && value.arquivosFaturamento.some((arquivo) => !arquivo.removed) && (
                             <div className="space-y-2">
-                                {value.arquivosFaturamento.map((arquivo: ArquivoFaturamento) => {
+                                {value.arquivosFaturamento.filter((arquivo) => !arquivo.removed).map((arquivo: ArquivoFaturamento) => {
                                     const { Icon, color } = getFileIcon(arquivo.tipo);
                                     const isEditing = editingFileId === arquivo.id;
                                     

@@ -948,6 +948,7 @@ export function GestaoFaturamentoHub() {
     // ============================================
 
     const toggleSelect = useCallback((id: string) => {
+        console.log(id)
         setSelectedIds(prev => {
             const next = new Set(prev);
             if (next.has(id)) next.delete(id);
@@ -1754,7 +1755,7 @@ function AprovarHorasTab({ lancamentos, selectedIds, onToggleSelect, onToggleSel
     const lancamentosSemAjudaCusto = lancamentos.filter(l => !l.temAjudaCusto);
     const lancamentosComAjudaCusto = lancamentos.filter(l => l.temAjudaCusto);
     
-    // Só contar selecionados que NÃO têm ajuda de custo para aprovação em lote
+    // Só contar selecionados que NÃO têm ajuda de custo para aprovação em lote    
     const selectedSemAjudaCusto = Array.from(selectedIds).filter(
         id => !lancamentos.find(l => l.id === id)?.temAjudaCusto
     );

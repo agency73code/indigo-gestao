@@ -15,7 +15,7 @@ import { toDateOnly } from "../../utils/toDateOnly.js";
 import { getVisibilityScope } from "../../utils/visibilityFilter.js";
 import { mapBillingSummary } from "./mappers/mapBillingSummary.js";
 import type { CorrectBillingReleaseInput } from "./types/CorrectBillingReleaseInput.js";
-import type { actionLaunchPayload } from "./schemas/launchActionsSchema.js";
+import type { approveLaunchPayload, rejectLaunchPayload } from "./schemas/launchActionsSchema.js";
 
 export async function createBilling(tx: Prisma.TransactionClient, payload: CreateBillingPayload, parties: BillingParties, target: BillingTarget) {
     const { billing, billingFiles } = payload;
@@ -240,20 +240,34 @@ export async function correctBillingRelease(input: CorrectBillingReleaseInput) {
     });
 }
 
-export async function actionLaunch(launchId: number, params: actionLaunchPayload) {
-    const isReject = params.motivo !== undefined;
+export async function approveLaunch(launchId: number, params: approveLaunchPayload) {
+    const { valorAjudaCusto } = params;
 
-    const data = isReject
-        ? { motivo_rejeicao: params.motivo ?? null, status: faturamento_status.rejeitado }
-        : { valor_ajuda_custo: params.valorAjudaCusto ?? null, status: faturamento_status.aprovado };
-
-    const result = await prisma.faturamento.update({
+    const approve = await prisma.faturamento.update({
         where: { id: launchId },
-        data,
+        data: {
+            valor_ajuda_custo: valorAjudaCusto ?? null,
+            status: faturamento_status.aprovado, 
+        },
         select: billingListSelect,
     });
 
-    return mapBillingListItem(result);
+    return mapBillingListItem(approve);
+} 
+
+export async function rejectLaunch(launchId: number, params: rejectLaunchPayload) {
+    const { motivo } = params;
+
+    const reject = await prisma.faturamento.update({
+        where: { id: launchId },
+        data: {
+            motivo_rejeicao: motivo,
+            status: faturamento_status.rejeitado,
+        },
+        select: billingListSelect,
+    });
+
+    return mapBillingListItem(reject);
 }
 
 // :/

@@ -9,7 +9,7 @@ import { billingSummarySchema, listBillingSchema } from "./schemas/listBillingSc
 import { unauthenticated } from "../../errors/unauthenticated.js";
 import { idParam } from "../../schemas/utils/id.js";
 import { correctBillingDataSchema, existingBillingFilesSchema } from "./schemas/correctBillingSchema.js";
-import { actionLaunchSchema } from "./schemas/launchActionsSchema.js";
+import { approveLaunchSchema, rejectLaunchSchema } from "./schemas/launchActionsSchema.js";
 
 export function buildBillingInputFromRequest(req: Request): BillingInput {
     const data = JSON.parse(req.body.data);
@@ -64,14 +64,25 @@ export async function getBillingSummary(req: Request, res: Response, next: NextF
     }
 }
 
-export async function actionLaunch(req: Request, res: Response, next: NextFunction) {
+export async function approveLaunch(req: Request, res: Response, next: NextFunction) {
     try {
         const launchId = idParam.parse(req.params.launchId);
-        const payload = actionLaunchSchema.parse(req.body);
+        const payload = approveLaunchSchema.parse(req.body);
 
-        const data = await BillingService.actionLaunch(launchId, payload);
+        const data = BillingService.approveLaunch(launchId, payload);
+        res.status(201).json(data);
+    } catch (err) {
+        next(err);
+    }
+}
 
-        res.status(200).json(data);
+export async function rejectLaunch(req: Request, res: Response, next: NextFunction) {
+    try {
+        const launchId = idParam.parse(req.params.launchId);
+        const payload = rejectLaunchSchema.parse(req.body);
+
+        const data = BillingService.rejectLaunch(launchId, payload);
+        return res.status(201).json(data);
     } catch (err) {
         next(err);
     }
@@ -92,11 +103,6 @@ export async function correctBillingRelease(req: Request, res: Response, next: N
         const allFiles = (req.files as Express.Multer.File[]) || [];
         const billingFiles = allFiles.filter((file) => file.fieldname === 'billingFiles');
 
-        console.log(existingFiles)
-        console.log(allFiles, 'allFiles')
-        console.log(billingFiles, 'billingFiles')
-        console.log('====================================================================')
-        
         await BillingService.correctBillingRelease({
             launchId,
             userId,
@@ -108,6 +114,18 @@ export async function correctBillingRelease(req: Request, res: Response, next: N
         });
         
         return res.status(201).json({ success: true, message: 'Faturamento corrigido com sucesso.' });
+    } catch (err) {
+        next(err);
+    }
+}
+
+export async function approveReleases(req: Request, res: Response, next: NextFunction) {
+    try {
+        console.log(req.params);
+        console.log(req.query);
+        console.log(req.body);
+
+        res.status(200).json({ success: 'sucesso' });
     } catch (err) {
         next(err);
     }
