@@ -602,7 +602,7 @@ export function GestaoFaturamentoHub() {
     const handleViewDetails = useCallback((item: ItemFaturamento) => {
         // Converter ItemFaturamento para BillingLancamento e abrir drawer
         const lancamento: BillingLancamento = {
-            id: item.id,
+            id: String(item.origemId),
             clienteId: item.clienteId || '',
             clienteNome: item.clienteNome || 'Cliente',
             terapeutaId: item.terapeutaId || '',

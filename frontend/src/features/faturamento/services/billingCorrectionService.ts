@@ -69,28 +69,21 @@ export async function correctBillingLancamento(
     
     // Adicionar arquivos novos (se houver)
     if (arquivosFaturamento && arquivosFaturamento.length > 0) {
-        const newFiles: File[] = [];
-        const existingFiles: any[] = [];
-        
-        arquivosFaturamento.forEach((arquivo) => {
-            // Se tem 'file', é um arquivo novo
-            if ('file' in arquivo && arquivo.file instanceof File) {
-                newFiles.push(arquivo.file);
-            } else {
-                // Arquivo existente (já no servidor)
-                existingFiles.push({
-                    id: arquivo.id,
-                    nome: arquivo.nome,
-                    tipo: arquivo.tipo,
-                    tamanho: arquivo.tamanho,
-                });
-            }
-        });
+        const existingFiles = arquivosFaturamento
+            .filter((arquivo) => arquivo.id)
+            .map((arquivo) => ({
+                id: arquivo.id,
+                remove: arquivo.removed === true,
+            }));
         
         // Adicionar novos arquivos ao FormData
-        newFiles.forEach((file) => {
-            formData.append('billingFiles', file);
-        });
+        arquivosFaturamento
+            .filter((arquivo) => arquivo.file instanceof File)
+            .forEach((arquivo) => {
+                if (arquivo.file) {
+                    formData.append('billingFiles', arquivo.file);
+                }
+            });
         
         // Adicionar informação sobre arquivos existentes
         if (existingFiles.length > 0) {

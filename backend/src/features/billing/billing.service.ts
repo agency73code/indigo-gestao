@@ -155,6 +155,10 @@ export async function getBillingSummary(params: billingSummaryPayload) {
     return mapBillingSummary(data);
 }
 
+export async function correctBillingRelease() { // TODO
+
+}
+
 // :/
 export async function findBillingFileForDownload(fileId: number) {
     return await prisma.faturamento_arquivo.findUnique({
