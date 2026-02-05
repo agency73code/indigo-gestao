@@ -9,7 +9,8 @@ router.use(auth);
 router.get('/lancamentos', BillingController.listBilling);
 router.get('/resumo', BillingController.getBillingSummary);
 router.get('/arquivos/:fileId/download', BillingController.downloadBillingFile);
-router.post('/lancamentos/:launchId/aprovar', BillingController.approveLaunch);
+router.post('/lancamentos/:launchId/aprovar', BillingController.actionLaunch);
+router.post('/lancamentos/:launchId/rejeitar', BillingController.actionLaunch);
 router.put('/lancamentos/:launchId/corrigir', upload.any(), BillingController.correctBillingRelease);
 
 export { router as billingRoutes };

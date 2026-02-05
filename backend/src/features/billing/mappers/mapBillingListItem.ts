@@ -37,6 +37,7 @@ export function mapBillingListItem(item: BillingListItem) {
         clienteId: item.cliente_id,
         clienteNome: item.cliente.nome,
         clienteIdade: calculateAge(item.cliente.dataNascimento),
+        clienteDataNascimento: item.cliente.dataNascimento,
         clienteAvatarUrl: buildAvatarUrl(item.cliente.arquivos),
 
         data: time.day,

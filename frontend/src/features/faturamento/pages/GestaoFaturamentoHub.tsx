@@ -1659,7 +1659,7 @@ function AprovarHorasTab({ lancamentos, selectedIds, onToggleSelect, onToggleSel
             }
 
             // Usar aprovação individual para enviar valorAjudaCusto
-            await aprovarLancamento(lancamento.id, valorNumerico);
+            await aprovarLancamento(String(lancamento.origemId), valorNumerico);
             toast.success('Lançamento aprovado!', {
                 description: valorNumerico 
                     ? `Ajuda de custo: ${formatarValor(valorNumerico)}`
@@ -1680,7 +1680,7 @@ function AprovarHorasTab({ lancamentos, selectedIds, onToggleSelect, onToggleSel
     };
 
     const handleIniciarRejeicao = (lancamento: ItemFaturamento) => {
-        setRejeitandoId(lancamento.id);
+        setRejeitandoId(String(lancamento.origemId));
         setMotivoRejeicao('');
     };
 
@@ -2033,7 +2033,7 @@ function AprovarHorasTab({ lancamentos, selectedIds, onToggleSelect, onToggleSel
                                 </div>
 
                                 {/* Modal de Rejeição inline */}
-                                {rejeitandoId === lancamento.id && (
+                                {rejeitandoId == lancamento.origemId && (
                                     <div className="rounded-lg border border-destructive/30 bg-card overflow-hidden">
                                         {/* Header */}
                                         <div className="flex items-center gap-2 px-4 py-3 border-b bg-destructive/5">

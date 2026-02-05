@@ -235,7 +235,7 @@ export async function aprovarLancamento(
         throw new Error(error.message ?? 'Erro ao aprovar lançamento');
     }
     
-    return res.json();
+    return await res.json();
 }
 
 /**
@@ -261,7 +261,7 @@ export async function rejeitarLancamento(id: string, motivo: string): Promise<It
         throw new Error(error.message ?? 'Erro ao rejeitar lançamento');
     }
     
-    return res.json();
+    return await res.json();
 }
 
 /**

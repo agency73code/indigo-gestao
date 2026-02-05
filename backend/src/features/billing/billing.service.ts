@@ -15,6 +15,7 @@ import { toDateOnly } from "../../utils/toDateOnly.js";
 import { getVisibilityScope } from "../../utils/visibilityFilter.js";
 import { mapBillingSummary } from "./mappers/mapBillingSummary.js";
 import type { CorrectBillingReleaseInput } from "./types/CorrectBillingReleaseInput.js";
+import type { actionLaunchPayload } from "./schemas/launchActionsSchema.js";
 
 export async function createBilling(tx: Prisma.TransactionClient, payload: CreateBillingPayload, parties: BillingParties, target: BillingTarget) {
     const { billing, billingFiles } = payload;
@@ -182,7 +183,7 @@ export async function correctBillingRelease(input: CorrectBillingReleaseInput) {
                 inicio_em,
                 fim_em,
                 tipo_atendimento,
-                ajuda_custo: billing.ajudaCusto,
+                ajuda_custo: billing.ajudaCusto ?? true,
                 observacao_faturamento: billing.observacaoFaturamento,
                 motivo_rejeicao: comentario,
                 status: faturamento_status.pendente,
@@ -237,6 +238,22 @@ export async function correctBillingRelease(input: CorrectBillingReleaseInput) {
 
         return;
     });
+}
+
+export async function actionLaunch(launchId: number, params: actionLaunchPayload) {
+    const isReject = params.motivo !== undefined;
+
+    const data = isReject
+        ? { motivo_rejeicao: params.motivo ?? null, status: faturamento_status.rejeitado }
+        : { valor_ajuda_custo: params.valorAjudaCusto ?? null, status: faturamento_status.aprovado };
+
+    const result = await prisma.faturamento.update({
+        where: { id: launchId },
+        data,
+        select: billingListSelect,
+    });
+
+    return mapBillingListItem(result);
 }
 
 // :/
