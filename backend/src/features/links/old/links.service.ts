@@ -65,7 +65,17 @@ export async function createLink(payload: linksPayload) {
             return mapLinkToDTO(created);
         });
     } catch (err) {
-        console.error(err)
+        if (
+            err instanceof Prisma.PrismaClientKnownRequestError &&
+            err.code === 'P2002' &&
+            err.meta?.modelName === 'terapeuta_cliente'
+        ) {
+            throw new AppError(
+                'LINK_ALREADY_EXISTS',
+                'Já existe vínculo entre este terapeuta e este cliente.',
+                409,
+            );
+        }
         throw err;
     }
 }
