@@ -5,3 +5,13 @@ export const idParam = z
     .number({ message: 'Id deve ser um número.' })
     .int({ message: 'Id deve ser um inteiro.' })
     .positive({ message: 'Id deve ser positivo.' });
+
+export const idsParam = z.object({
+  ids: z
+    .array(
+        z.coerce
+        .number({ message: 'Id deve ser um número.' })
+        .int({ message: 'Id deve ser um inteiro.' })
+        .positive({ message: 'Id deve ser positivo.' })
+    )
+});

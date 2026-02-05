@@ -947,12 +947,11 @@ export function GestaoFaturamentoHub() {
     // HANDLERS
     // ============================================
 
-    const toggleSelect = useCallback((id: string) => {
-        console.log(id)
+    const toggleSelect = useCallback((origemId: string) => {
         setSelectedIds(prev => {
             const next = new Set(prev);
-            if (next.has(id)) next.delete(id);
-            else next.add(id);
+            if (next.has(origemId)) next.delete(origemId);
+            else next.add(origemId);
             return next;
         });
     }, []);
@@ -961,7 +960,7 @@ export function GestaoFaturamentoHub() {
         if (selectedIds.size === filteredPendentes.length) {
             setSelectedIds(new Set());
         } else {
-            setSelectedIds(new Set(filteredPendentes.map(l => l.id)));
+            setSelectedIds(new Set(filteredPendentes.map(l => String(l.origemId))));
         }
     }, [selectedIds.size, filteredPendentes]);
 
@@ -1757,7 +1756,7 @@ function AprovarHorasTab({ lancamentos, selectedIds, onToggleSelect, onToggleSel
     
     // Só contar selecionados que NÃO têm ajuda de custo para aprovação em lote    
     const selectedSemAjudaCusto = Array.from(selectedIds).filter(
-        id => !lancamentos.find(l => l.id === id)?.temAjudaCusto
+        origemId => !lancamentos.find(l => String(l.origemId) === origemId)?.temAjudaCusto
     );
     const canApproveInBatch = selectedSemAjudaCusto.length > 0;
 
@@ -1805,6 +1804,7 @@ function AprovarHorasTab({ lancamentos, selectedIds, onToggleSelect, onToggleSel
             {lancamentos.map((lancamento) => {
                 const isExpanded = expandedId === lancamento.id;
                 const isLoading = loadingItems.has(lancamento.id);
+                const origemId = String(lancamento.origemId);
                 const temAjudaCusto = lancamento.temAjudaCusto;
                 const temComprovantes = lancamento.comprovantesAjudaCusto && lancamento.comprovantesAjudaCusto.length > 0;
 
@@ -1813,12 +1813,12 @@ function AprovarHorasTab({ lancamentos, selectedIds, onToggleSelect, onToggleSel
                         key={lancamento.id}
                         className={cn(
                             "rounded-lg border transition-all overflow-hidden",
-                            selectedIds.has(lancamento.id) && !isExpanded && "border-primary/30"
+                            selectedIds.has(origemId) && !isExpanded && "border-primary/30"
                         )}
                         style={{
                             backgroundColor: isExpanded 
                                 ? 'var(--hub-card-background)' 
-                                : selectedIds.has(lancamento.id) 
+                                : selectedIds.has(origemId) 
                                     ? 'var(--hub-card-background)' 
                                     : 'var(--hub-card-background)',
                         }}
@@ -1831,8 +1831,8 @@ function AprovarHorasTab({ lancamentos, selectedIds, onToggleSelect, onToggleSel
                             {/* Checkbox para seleção em lote - desabilitado para itens com ajuda de custo */}
                             <div className="relative">
                                 <Checkbox
-                                    checked={selectedIds.has(lancamento.id)}
-                                    onCheckedChange={() => onToggleSelect(lancamento.id)}
+                                    checked={selectedIds.has(origemId)}
+                                    onCheckedChange={() => onToggleSelect(origemId)}
                                     onClick={(e) => e.stopPropagation()}
                                     disabled={temAjudaCusto}
                                     className={temAjudaCusto ? "opacity-50" : ""}

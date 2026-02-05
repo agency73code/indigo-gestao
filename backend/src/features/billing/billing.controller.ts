@@ -7,7 +7,7 @@ import { AppError } from '../../errors/AppError.js';
 import { streamFileDownload } from '../file/r2/streamDownloadResponse.js';
 import { billingSummarySchema, listBillingSchema } from "./schemas/listBillingSchema.js";
 import { unauthenticated } from "../../errors/unauthenticated.js";
-import { idParam } from "../../schemas/utils/id.js";
+import { idParam, idsParam } from "../../schemas/utils/id.js";
 import { correctBillingDataSchema, existingBillingFilesSchema } from "./schemas/correctBillingSchema.js";
 import { approveLaunchSchema, rejectLaunchSchema } from "./schemas/launchActionsSchema.js";
 
@@ -121,11 +121,10 @@ export async function correctBillingRelease(req: Request, res: Response, next: N
 
 export async function approveReleases(req: Request, res: Response, next: NextFunction) {
     try {
-        console.log(req.params);
-        console.log(req.query);
-        console.log(req.body);
-
-        res.status(200).json({ success: 'sucesso' });
+        const body = idsParam.parse(req.body);
+        await BillingService.approveReleases(body.ids);
+        
+        res.status(200).json({ success: 'Lançamentos aprovados com sucesso!' });
     } catch (err) {
         next(err);
     }

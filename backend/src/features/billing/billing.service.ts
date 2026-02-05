@@ -270,6 +270,17 @@ export async function rejectLaunch(launchId: number, params: rejectLaunchPayload
     return mapBillingListItem(reject);
 }
 
+export async function approveReleases(launchIds: number[]) {
+    await prisma.faturamento.updateMany({
+        where: { id: { in: launchIds } },
+        data: {
+            status: faturamento_status.aprovado, 
+        },
+    });
+
+    return;
+}
+
 // :/
 export async function findBillingFileForDownload(fileId: number) {
     return await prisma.faturamento_arquivo.findUnique({
