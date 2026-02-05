@@ -432,14 +432,20 @@ export function FaturamentoHub({ mode }: FaturamentoHubProps) {
                     lancamentos: [],
                     totalMinutos: 0,
                     totalValor: 0,
+                    totalValorTerapeuta: 0,
                     totalLancamentos: 0,
+                    totalPendentes: 0,
+                    totalAprovados: 0,
                 };
             }
 
             grouped[clienteId].lancamentos.push(lancamento);
             grouped[clienteId].totalMinutos += lancamento.duracaoMinutos;
             grouped[clienteId].totalValor += lancamento.valorTotal ?? 0;
+            grouped[clienteId].totalValorTerapeuta += lancamento.valorTotal ?? 0;
             grouped[clienteId].totalLancamentos += 1;
+            if (lancamento.status === 'pendente') grouped[clienteId].totalPendentes += 1;
+            if (lancamento.status === 'aprovado') grouped[clienteId].totalAprovados += 1;
         });
 
         // Ordena: clientes com nome primeiro, "Sem cliente" por último

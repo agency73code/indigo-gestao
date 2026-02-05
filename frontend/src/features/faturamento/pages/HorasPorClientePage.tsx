@@ -36,7 +36,7 @@ import {
     ORIGEM_LANCAMENTO,
 } from '../types/faturamento.types';
 import { listFaturamento } from '../services/faturamento-sessoes.service';
-import { FaturamentoTable, type FaturamentoColumnFilters, type FaturamentoColumnFilterOptions, type FaturamentoViewContext } from '../components/FaturamentoTable';
+import { FaturamentoTable, type FaturamentoColumnFilters, type FaturamentoColumnFilterOptions } from '../components/FaturamentoTable';
 
 // ============================================
 // TIPOS

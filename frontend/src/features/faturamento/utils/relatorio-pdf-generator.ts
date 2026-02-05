@@ -170,7 +170,7 @@ function adicionarCampoInfo(
     valor: string,
     x: number,
     y: number,
-    largura: number
+    _largura: number
 ): number {
     // Label - igual anamnese (pequeno, cinza, maiúsculo)
     doc.setFontSize(9);
@@ -364,23 +364,6 @@ function gerarPdfConvenio(dados: DadosRelatorioConvenio): jsPDF {
         { label: 'Total de Horas', valor: formatarHoras(dados.totalHoras * 60) },
     ], yPos);
     
-    // Evolução clínica (se houver)
-    if (dados.evolucaoClinica) {
-        yPos = adicionarSecao(doc, 'Evolução Clínica do Mês', yPos);
-        
-        doc.setFillColor(240, 253, 244);
-        doc.roundedRect(15, yPos, pageWidth - 30, 25, 2, 2, 'F');
-        
-        doc.setFontSize(9);
-        doc.setTextColor(...CORES.texto);
-        doc.setFont('helvetica', 'normal');
-        
-        const lines = doc.splitTextToSize(dados.evolucaoClinica, pageWidth - 40);
-        doc.text(lines, 20, yPos + 6);
-        
-        yPos += 30;
-    }
-    
     // Assinatura
     if (dados.assinaturaTerapeuta) {
         yPos += 10;
@@ -489,33 +472,79 @@ function gerarPdfTerapeuta(dados: DadosRelatorioTerapeuta): jsPDF {
 
 function gerarPdfPais(dados: DadosRelatorioPais): jsPDF {
     const doc = new jsPDF();
-    
-    // Cabeçalho com logo
-    let yPos = adicionarCabecalhoComLogo(
-        doc,
-        'Relatório para Pais/Responsáveis',
-        `Cliente: ${dados.cliente.nome}`,
-        `Emitido em: ${dados.dataEmissao}`
-    );
-    
     const pageWidth = doc.internal.pageSize.getWidth();
-    const colWidth = (pageWidth - 40) / 2;
     
-    // Seção: Dados do Paciente
-    yPos = adicionarSecao(doc, 'Dados do Paciente', yPos);
-    const yBase = yPos;
-    yPos = adicionarCampoInfo(doc, 'Nome', dados.cliente.nome, 15, yPos, colWidth);
-    adicionarCampoInfo(doc, 'Idade', dados.cliente.idade || '-', 15 + colWidth + 10, yBase, colWidth);
+    // ========== CABEÇALHO COM LOGO (mesmo padrão do Word) ==========
+    // Logo Indigo (lado esquerdo)
+    try {
+        doc.addImage(LOGO_INDIGO, 'PNG', 15, 12, 32, 32);
+    } catch {
+        console.warn('Não foi possível adicionar a logo');
+    }
     
-    yPos += 3;
+    // Título grande (ao lado da logo)
+    doc.setFontSize(24);
+    doc.setTextColor(...CORES.primaria);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Relatório de Atendimento', 52, 22);
     
-    // Seção: Profissional Responsável
-    yPos = adicionarSecao(doc, 'Profissional Responsável', yPos);
-    const yBase2 = yPos;
-    yPos = adicionarCampoInfo(doc, 'Terapeuta', dados.terapeuta.nome, 15, yPos, colWidth);
-    adicionarCampoInfo(doc, 'Especialidade', dados.especialidade, 15 + colWidth + 10, yBase2, colWidth);
+    // Paciente
+    doc.setFontSize(11);
+    doc.setTextColor(...CORES.texto);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Paciente:', 52, 30);
+    doc.setFont('helvetica', 'normal');
+    doc.text(dados.cliente.nome, 75, 30);
     
-    yPos += 3;
+    // Data de Nascimento
+    doc.setFont('helvetica', 'bold');
+    doc.text('Data de Nascimento:', 52, 36);
+    doc.setFont('helvetica', 'normal');
+    doc.text(dados.cliente.dataNascimento ?? '___/___/______', 97, 36);
+    
+    // Idade
+    doc.setFont('helvetica', 'bold');
+    doc.text('Idade:', 52, 42);
+    doc.setFont('helvetica', 'normal');
+    doc.text(dados.cliente.idade ?? '___ anos e ___ meses', 67, 42);
+    
+    // Emitido em
+    doc.setFontSize(10);
+    doc.setTextColor(...CORES.textoClaro);
+    doc.text(`Emitido em: ${dados.dataEmissao}`, 52, 48);
+    
+    // Linha divisória após cabeçalho
+    let yPos = 55;
+    doc.setDrawColor(...CORES.borda);
+    doc.setLineWidth(0.3);
+    doc.line(15, yPos, pageWidth - 15, yPos);
+    yPos += 8;
+    
+    // ========== PROFISSIONAL RESPONSÁVEL ==========
+    doc.setFontSize(11);
+    doc.setTextColor(...CORES.texto);
+    
+    // Terapeuta
+    doc.setFont('helvetica', 'bold');
+    doc.text('Terapeuta:', 15, yPos);
+    doc.setFont('helvetica', 'normal');
+    doc.text(dados.terapeuta.nome, 45, yPos);
+    
+    // Especialidade
+    yPos += 6;
+    doc.setFont('helvetica', 'bold');
+    doc.text('Especialidade:', 15, yPos);
+    doc.setFont('helvetica', 'normal');
+    doc.text(dados.especialidade, 50, yPos);
+    
+    // Registro (CRP)
+    yPos += 6;
+    doc.setFont('helvetica', 'bold');
+    doc.text('Registro:', 15, yPos);
+    doc.setFont('helvetica', 'normal');
+    doc.text(dados.terapeuta.registroProfissional ?? '-', 40, yPos);
+    
+    yPos += 10;
     
     // Seção: Sessões Realizadas
     yPos = adicionarSecao(doc, 'Sessões Realizadas', yPos);
