@@ -361,9 +361,7 @@ export async function getAllLinks(filters?: LinkFilters): Promise<PatientTherapi
   const baseQuery =
     '?' + new URLSearchParams(filters as Record<string, string>).toString();
 
-  const query = `${baseQuery}&orderBy=recent`;
-
-  const res = await fetch(`/api/links/getAllLinks${query}`, {
+  const res = await fetch(`/api/links/getAllLinks${baseQuery}`, {
     method: 'GET',
     credentials: 'include',
   });
