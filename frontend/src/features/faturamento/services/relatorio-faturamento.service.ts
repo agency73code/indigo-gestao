@@ -17,6 +17,8 @@ import type {
 } from '../types/relatorio-faturamento.types';
 import { downloadPdfRelatorio } from '../utils/relatorio-pdf-generator';
 import { downloadWordRelatorio } from '../utils/relatorio-word-generator';
+import { MOCK_CLIENTES_COMPLETOS } from './faturamento.mock';
+import { faturamentoConfig } from './faturamento.config';
 
 // ============================================
 // TIPOS INTERNOS
@@ -54,6 +56,54 @@ function formatarMesReferencia(periodoInicio: Date): string {
         'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
     ];
     return `${meses[periodoInicio.getMonth()]}/${periodoInicio.getFullYear()}`;
+}
+
+/**
+ * Calcula a idade em anos e meses a partir da data de nascimento
+ * @param dataNascimento - Data de nascimento no formato DD/MM/YYYY ou YYYY-MM-DD
+ * @returns Idade formatada em "X anos e Y meses" ou "X anos" se meses = 0
+ */
+function calcularIdadeAnosMeses(dataNascimento: string | undefined): string | undefined {
+    if (!dataNascimento) return undefined;
+    
+    let nascimento: Date;
+    
+    // Verificar formato da data (DD/MM/YYYY ou YYYY-MM-DD)
+    if (dataNascimento.includes('/')) {
+        // Formato DD/MM/YYYY
+        const [dia, mes, ano] = dataNascimento.split('/');
+        nascimento = new Date(parseInt(ano), parseInt(mes) - 1, parseInt(dia));
+    } else if (dataNascimento.includes('-')) {
+        // Formato YYYY-MM-DD
+        nascimento = new Date(dataNascimento + 'T12:00:00');
+    } else {
+        return undefined;
+    }
+    
+    if (isNaN(nascimento.getTime())) return undefined;
+    
+    const hoje = new Date();
+    
+    let anos = hoje.getFullYear() - nascimento.getFullYear();
+    let meses = hoje.getMonth() - nascimento.getMonth();
+    
+    // Ajustar se ainda não fez aniversário esse mês
+    if (meses < 0 || (meses === 0 && hoje.getDate() < nascimento.getDate())) {
+        anos--;
+        meses += 12;
+    }
+    
+    // Ajustar meses se ainda não passou o dia
+    if (hoje.getDate() < nascimento.getDate()) {
+        meses--;
+        if (meses < 0) meses = 11;
+    }
+    
+    if (meses === 0) {
+        return `${anos} ${anos === 1 ? 'ano' : 'anos'}`;
+    }
+    
+    return `${anos} ${anos === 1 ? 'ano' : 'anos'} e ${meses} ${meses === 1 ? 'mês' : 'meses'}`;
 }
 
 function obterMesMaiusculo(periodoInicio: Date): string {
@@ -120,6 +170,7 @@ function extrairDadosTerapeuta(lancamentos: ItemFaturamento[], terapeutaId: stri
 
 /**
  * Extrai dados do cliente diretamente dos lançamentos (sem chamada à API)
+ * Se usando mock e não tiver data de nascimento, busca do MOCK_CLIENTES_COMPLETOS
  */
 function extrairDadosCliente(lancamentos: ItemFaturamento[], clienteId: string): ClienteRelatorio {
     const lancamentoCliente = lancamentos.find(l => l.clienteId === clienteId);
@@ -128,11 +179,25 @@ function extrairDadosCliente(lancamentos: ItemFaturamento[], clienteId: string):
         throw new Error('Cliente não encontrado nos lançamentos');
     }
 
+    // Buscar data de nascimento: primeiro do lançamento, depois do mock se disponível
+    let dataNascimento = lancamentoCliente.clienteDataNascimento;
+    
+    // Se não veio do lançamento e estamos usando mock, buscar dos dados completos
+    if (!dataNascimento && faturamentoConfig.useMock) {
+        const clienteMock = MOCK_CLIENTES_COMPLETOS[clienteId];
+        if (clienteMock) {
+            dataNascimento = clienteMock.dataNascimento;
+        }
+    }
+
+    // Calcular idade em anos e meses se tiver data de nascimento
+    const idadeCalculada = calcularIdadeAnosMeses(dataNascimento);
+
     return {
         id: clienteId,
         nome: lancamentoCliente.clienteNome ?? 'Cliente',
-        dataNascimento: lancamentoCliente.clienteDataNascimento,
-        idade: lancamentoCliente.clienteIdade,
+        dataNascimento: dataNascimento,
+        idade: idadeCalculada ?? lancamentoCliente.clienteIdade,
         cpf: undefined,
         convenio: undefined,
         numeroCarteirinha: undefined,

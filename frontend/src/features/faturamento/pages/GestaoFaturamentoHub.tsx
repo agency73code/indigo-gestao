@@ -9,7 +9,6 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
     Check,
     CheckCircle2,
-    Clock,
     Users,
     UserCircle,
     ChevronRight,
@@ -305,7 +304,7 @@ interface StatsCardSecondaryProps {
     onClick?: () => void;
 }
 
-function StatsCardSecondary({ icon, label, value, subValue, badge, items, sparklineData, bottomSparklineData, progressPercent, progressColor = 'primary', progressLabel, totalCount, onMoreClick, isActive, onClick }: StatsCardSecondaryProps) {
+function StatsCardSecondary({ icon, label, value, badge, items, sparklineData, bottomSparklineData, progressPercent, progressColor = 'primary', progressLabel, totalCount, onMoreClick, isActive, onClick }: StatsCardSecondaryProps) {
     // ID único para o gradiente do sparkline
     const gradientId = `sparklineGradientSecondary-${label.replace(/\s/g, '')}`;
     const bottomGradientId = `bottomSparklineGradient-${label.replace(/\s/g, '')}`;
@@ -2775,7 +2774,7 @@ function ClientesTab({ grupos, expandedId, onToggleExpand, onViewDetails, lancam
                                 value={tipoRelatorio}
                                 onValueChange={(value) => setTipoRelatorio(value as 'convenio' | 'pais')}
                             >
-                                <SelectTrigger className="h-8 w-[120px] text-xs bg-background" onClick={(e) => e.stopPropagation()}>
+                                <SelectTrigger className="h-8 w-[140px] text-xs bg-background" onClick={(e) => e.stopPropagation()}>
                                     <SelectValue placeholder="Tipo" />
                                 </SelectTrigger>
                                 <SelectContent>
