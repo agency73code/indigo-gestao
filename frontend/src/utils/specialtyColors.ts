@@ -18,10 +18,20 @@ export const DEFAULT_SPECIALTY_COLOR = {
     text: 'var(--table-text)' 
 };
 
+// Mapa normalizado para busca case-insensitive
+const SPECIALTY_COLORS_NORMALIZED = Object.fromEntries(
+    Object.entries(SPECIALTY_COLORS).map(([key, value]) => [key.toLowerCase(), value])
+);
+
 /**
  * Retorna as cores (background e text) para uma especialidade específica
+ * Busca case-insensitive para lidar com variações de capitalização
  */
 export function getSpecialtyColors(specialty?: string | null): { bg: string; text: string } {
     if (!specialty) return DEFAULT_SPECIALTY_COLOR;
-    return SPECIALTY_COLORS[specialty] || DEFAULT_SPECIALTY_COLOR;
+    
+    // Primeiro tenta match exato, depois case-insensitive
+    return SPECIALTY_COLORS[specialty] 
+        || SPECIALTY_COLORS_NORMALIZED[specialty.toLowerCase()] 
+        || DEFAULT_SPECIALTY_COLOR;
 }

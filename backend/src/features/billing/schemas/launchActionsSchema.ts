@@ -8,9 +8,9 @@ export const approveLaunchSchema = z.object({
     valorAjudaCusto: z
         .coerce
         .number()
-        .positive()
+        .nonnegative() // Permite 0 ou valores positivos
         .optional()
-        .refine(v => v !== null, { message: 'valor inválido' }),
+        .nullable(),
 });
 
 export type rejectLaunchPayload = z.infer<typeof rejectLaunchSchema>; 

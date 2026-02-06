@@ -29,7 +29,6 @@ import {
     XCircle,
     LayoutList,
     MoreHorizontal,
-    FileBarChart,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AreaChart, Area, ResponsiveContainer, Tooltip as RechartsTooltip, RadialBarChart, RadialBar, PolarAngleAxis } from 'recharts';
@@ -73,7 +72,7 @@ import { ORIGEM_LANCAMENTO } from '../types/faturamento.types';
 // TIPOS
 // ============================================
 
-type TabType = 'aprovar' | 'terapeutas' | 'clientes' | 'relatorios';
+type TabType = 'aprovar' | 'terapeutas' | 'clientes';
 
 interface TerapeutaGroupItem {
     terapeutaId: string;
@@ -94,6 +93,8 @@ interface ClienteGroupItem {
     clienteAvatarUrl?: string;
     totalMinutos: number;
     totalValor: number;
+    /** Valor total que o cliente paga à clínica */
+    totalValorCliente: number;
     totalLancamentos: number;
     pendentes: number;
     aprovados: number;
@@ -587,6 +588,12 @@ export function GestaoFaturamentoHub() {
     const [expandedTerapeutaId, setExpandedTerapeutaId] = useState<string | null>(null);
     const [expandedClienteId, setExpandedClienteId] = useState<string | null>(null);
     
+    // Estado para seleção de mês (por padrão o mês atual)
+    const [mesSelecionado, setMesSelecionado] = useState<string>(() => {
+        const hoje = new Date();
+        return `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
+    });
+    
     // Estado para drawer de detalhes
     const [showDetailsDrawer, setShowDetailsDrawer] = useState(false);
     const [drawerType, setDrawerType] = useState<'valor' | 'lancamentos' | 'aprovados' | 'pendentes'>('valor');
@@ -651,50 +658,90 @@ export function GestaoFaturamentoHub() {
     // DADOS COMPUTADOS
     // ============================================
 
-    const pendentes = useMemo(() => 
-        lancamentos.filter(l => l.status === STATUS_FATURAMENTO.PENDENTE),
-        [lancamentos]
-    );
-
     const aprovados = useMemo(() => 
         lancamentos.filter(l => l.status === STATUS_FATURAMENTO.APROVADO),
         [lancamentos]
     );
 
-    const rejeitados = useMemo(() => 
-        lancamentos.filter(l => l.status === STATUS_FATURAMENTO.REJEITADO),
-        [lancamentos]
+    // Gerar lista de meses disponíveis (últimos 12 meses)
+    const mesesDisponiveis = useMemo(() => {
+        const meses: { value: string; label: string }[] = [];
+        const hoje = new Date();
+        
+        for (let i = 0; i < 12; i++) {
+            const data = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+            const value = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
+            const mes = data.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
+            const label = `${mes.charAt(0).toUpperCase() + mes.slice(1)}/${data.getFullYear()}`;
+            meses.push({ value, label });
+        }
+        
+        return meses;
+    }, []);
+
+    // Período do mês selecionado
+    const periodoMesSelecionado = useMemo(() => {
+        const [ano, mes] = mesSelecionado.split('-').map(Number);
+        return {
+            inicio: new Date(ano, mes - 1, 1),
+            fim: new Date(ano, mes, 0, 23, 59, 59, 999),
+            label: new Date(ano, mes - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
+        };
+    }, [mesSelecionado]);
+
+    // Lançamentos filtrados pelo mês selecionado
+    const lancamentosDoMes = useMemo(() => {
+        return lancamentos.filter(l => {
+            const data = new Date(l.data + 'T00:00:00');
+            return data >= periodoMesSelecionado.inicio && data <= periodoMesSelecionado.fim;
+        });
+    }, [lancamentos, periodoMesSelecionado]);
+
+    // Stats do mês selecionado
+    const pendentesDoMes = useMemo(() => 
+        lancamentosDoMes.filter(l => l.status === STATUS_FATURAMENTO.PENDENTE),
+        [lancamentosDoMes]
+    );
+
+    const aprovadosDoMes = useMemo(() => 
+        lancamentosDoMes.filter(l => l.status === STATUS_FATURAMENTO.APROVADO),
+        [lancamentosDoMes]
+    );
+
+    const rejeitadosDoMes = useMemo(() => 
+        lancamentosDoMes.filter(l => l.status === STATUS_FATURAMENTO.REJEITADO),
+        [lancamentosDoMes]
     );
 
     const stats = useMemo(() => {
-        const totalMinutos = lancamentos.reduce((acc, l) => acc + l.duracaoMinutos, 0);
-        const totalValor = lancamentos.reduce((acc, l) => acc + (l.valorTotal ?? 0), 0);
-        const valorPendente = pendentes.reduce((acc, l) => acc + (l.valorTotal ?? 0), 0);
-        const valorAprovado = aprovados.reduce((acc, l) => acc + (l.valorTotal ?? 0), 0);
+        const totalMinutos = lancamentosDoMes.reduce((acc, l) => acc + l.duracaoMinutos, 0);
+        const totalValor = lancamentosDoMes.reduce((acc, l) => acc + (l.valorTotal ?? 0), 0);
+        const valorPendente = pendentesDoMes.reduce((acc, l) => acc + (l.valorTotal ?? 0), 0);
+        const valorAprovado = aprovadosDoMes.reduce((acc, l) => acc + (l.valorTotal ?? 0), 0);
         
         // Valor do terapeuta (o que a clínica paga ao terapeuta)
-        const totalValorTerapeuta = lancamentos.reduce((acc, l) => acc + (l.valorTotal ?? 0), 0);
+        const totalValorTerapeuta = lancamentosDoMes.reduce((acc, l) => acc + (l.valorTotal ?? 0), 0);
         // Valor do cliente (o que o cliente paga à clínica)
-        const totalValorCliente = lancamentos.reduce((acc, l) => acc + (l.valorTotalCliente ?? l.valorTotal ?? 0), 0);
+        const totalValorCliente = lancamentosDoMes.reduce((acc, l) => acc + (l.valorTotalCliente ?? l.valorTotal ?? 0), 0);
         
         // Valores aprovados separados
-        const valorAprovadoTerapeuta = aprovados.reduce((acc, l) => acc + (l.valorTotal ?? 0), 0);
-        const valorAprovadoCliente = aprovados.reduce((acc, l) => acc + (l.valorTotalCliente ?? l.valorTotal ?? 0), 0);
+        const valorAprovadoTerapeuta = aprovadosDoMes.reduce((acc, l) => acc + (l.valorTotal ?? 0), 0);
+        const valorAprovadoCliente = aprovadosDoMes.reduce((acc, l) => acc + (l.valorTotalCliente ?? l.valorTotal ?? 0), 0);
         
         // Valores pendentes separados
-        const valorPendenteTerapeuta = pendentes.reduce((acc, l) => acc + (l.valorTotal ?? 0), 0);
-        const valorPendenteCliente = pendentes.reduce((acc, l) => acc + (l.valorTotalCliente ?? l.valorTotal ?? 0), 0);
+        const valorPendenteTerapeuta = pendentesDoMes.reduce((acc, l) => acc + (l.valorTotal ?? 0), 0);
+        const valorPendenteCliente = pendentesDoMes.reduce((acc, l) => acc + (l.valorTotalCliente ?? l.valorTotal ?? 0), 0);
         
         // Valores rejeitados
-        const valorRejeitado = rejeitados.reduce((acc, l) => acc + (l.valorTotal ?? 0), 0);
-        const valorRejeitadoTerapeuta = rejeitados.reduce((acc, l) => acc + (l.valorTotal ?? 0), 0);
-        const valorRejeitadoCliente = rejeitados.reduce((acc, l) => acc + (l.valorTotalCliente ?? l.valorTotal ?? 0), 0);
+        const valorRejeitado = rejeitadosDoMes.reduce((acc, l) => acc + (l.valorTotal ?? 0), 0);
+        const valorRejeitadoTerapeuta = rejeitadosDoMes.reduce((acc, l) => acc + (l.valorTotal ?? 0), 0);
+        const valorRejeitadoCliente = rejeitadosDoMes.reduce((acc, l) => acc + (l.valorTotalCliente ?? l.valorTotal ?? 0), 0);
 
         return {
-            totalLancamentos: lancamentos.length,
-            pendentes: pendentes.length,
-            aprovados: aprovados.length,
-            rejeitados: rejeitados.length,
+            totalLancamentos: lancamentosDoMes.length,
+            pendentes: pendentesDoMes.length,
+            aprovados: aprovadosDoMes.length,
+            rejeitados: rejeitadosDoMes.length,
             totalHoras: formatarHoras(totalMinutos),
             totalValor,
             valorPendente,
@@ -709,14 +756,14 @@ export function GestaoFaturamentoHub() {
             valorRejeitadoTerapeuta,
             valorRejeitadoCliente,
         };
-    }, [lancamentos, pendentes, aprovados, rejeitados]);
+    }, [lancamentosDoMes, pendentesDoMes, aprovadosDoMes, rejeitadosDoMes]);
 
-    // Dados para o sparkline - agrupa valores por data (últimos 7 dias)
+    // Dados para o sparkline - agrupa valores por data do mês
     const sparklineData = useMemo(() => {
         // Agrupar lançamentos por data
         const valorPorData: Record<string, number> = {};
         
-        lancamentos.forEach(l => {
+        lancamentosDoMes.forEach(l => {
             const data = l.data;
             valorPorData[data] = (valorPorData[data] || 0) + (l.valorTotal ?? 0);
         });
@@ -730,7 +777,7 @@ export function GestaoFaturamentoHub() {
             dateFormatted: new Date(data + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
             value: valorPorData[data],
         }));
-    }, [lancamentos]);
+    }, [lancamentosDoMes]);
 
     // Dados para o sparkline de lançamentos - agrupa quantidade por data
     const lancamentosSparklineData = useMemo(() => {
@@ -766,12 +813,12 @@ export function GestaoFaturamentoHub() {
             dateFormatted: new Date(data + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
             value: valorPorData[data],
         }));
-    }, [aprovados]);
+    }, [aprovadosDoMes]);
 
     // Sparkline de pendentes por data
     const pendentesSparklineData = useMemo(() => {
         const valorPorData: Record<string, number> = {};
-        pendentes.forEach(l => {
+        pendentesDoMes.forEach(l => {
             const data = l.data;
             valorPorData[data] = (valorPorData[data] || 0) + (l.valorTotal ?? 0);
         });
@@ -781,12 +828,12 @@ export function GestaoFaturamentoHub() {
             dateFormatted: new Date(data + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
             value: valorPorData[data],
         }));
-    }, [pendentes]);
+    }, [pendentesDoMes]);
 
     // Sparkline de rejeitados por data
     const rejeitadosSparklineData = useMemo(() => {
         const valorPorData: Record<string, number> = {};
-        rejeitados.forEach(l => {
+        rejeitadosDoMes.forEach(l => {
             const data = l.data;
             valorPorData[data] = (valorPorData[data] || 0) + (l.valorTotal ?? 0);
         });
@@ -796,13 +843,13 @@ export function GestaoFaturamentoHub() {
             dateFormatted: new Date(data + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
             value: valorPorData[data],
         }));
-    }, [rejeitados]);
+    }, [rejeitadosDoMes]);
 
     // Agrupar por terapeuta
     const groupedByTerapeuta = useMemo((): TerapeutaGroupItem[] => {
         const grouped: Record<string, TerapeutaGroupItem> = {};
 
-        lancamentos.forEach(l => {
+        lancamentosDoMes.forEach(l => {
             if (!grouped[l.terapeutaId]) {
                 grouped[l.terapeutaId] = {
                     terapeutaId: l.terapeutaId,
@@ -840,13 +887,13 @@ export function GestaoFaturamentoHub() {
         }
 
         return result.sort((a, b) => b.pendentes - a.pendentes || b.totalMinutos - a.totalMinutos);
-    }, [lancamentos, searchValue, activeTab]);
+    }, [lancamentosDoMes, searchValue, activeTab]);
 
     // Agrupar por cliente
     const groupedByCliente = useMemo((): ClienteGroupItem[] => {
         const grouped: Record<string, ClienteGroupItem> = {};
 
-        lancamentos.filter(l => l.clienteId && l.clienteNome).forEach(l => {
+        lancamentosDoMes.filter(l => l.clienteId && l.clienteNome).forEach(l => {
             const clienteId = l.clienteId!;
             if (!grouped[clienteId]) {
                 grouped[clienteId] = {
@@ -855,6 +902,7 @@ export function GestaoFaturamentoHub() {
                     clienteAvatarUrl: l.clienteAvatarUrl,
                     totalMinutos: 0,
                     totalValor: 0,
+                    totalValorCliente: 0,
                     totalLancamentos: 0,
                     pendentes: 0,
                     aprovados: 0,
@@ -867,6 +915,7 @@ export function GestaoFaturamentoHub() {
             grouped[clienteId].lancamentos.push(l);
             grouped[clienteId].totalMinutos += l.duracaoMinutos;
             grouped[clienteId].totalValor += l.valorTotal ?? 0;
+            grouped[clienteId].totalValorCliente += l.valorTotalCliente ?? 0;
             grouped[clienteId].totalLancamentos += 1;
 
             if (!grouped[clienteId].terapeutas.includes(l.terapeutaNome)) {
@@ -890,11 +939,11 @@ export function GestaoFaturamentoHub() {
         }
 
         return result.sort((a, b) => a.clienteNome.localeCompare(b.clienteNome));
-    }, [lancamentos, searchValue, activeTab]);
+    }, [lancamentosDoMes, searchValue, activeTab]);
 
     // Pendentes filtrados
     const filteredPendentes = useMemo(() => {
-        let result = pendentes;
+        let result = pendentesDoMes;
         
         // Filtro de busca
         if (searchValue && activeTab === 'aprovar') {
@@ -940,7 +989,7 @@ export function GestaoFaturamentoHub() {
         });
         
         return result;
-    }, [pendentes, searchValue, activeTab, tipoAtividadeFilter, dateRangeValue, orderBy]);
+    }, [pendentesDoMes, searchValue, activeTab, tipoAtividadeFilter, dateRangeValue, orderBy]);
 
     // ============================================
     // HANDLERS
@@ -1084,12 +1133,6 @@ export function GestaoFaturamentoHub() {
                             count={groupedByCliente.length}
                             onClick={() => handleTabChange('clientes')}
                         />
-                        <TabButton
-                            active={activeTab === 'relatorios'}
-                            icon={<FileBarChart className="h-4 w-4" />}
-                            label="Relatórios"
-                            onClick={() => handleTabChange('relatorios')}
-                        />
                     </div>
                 </div>
             </div>
@@ -1130,6 +1173,20 @@ export function GestaoFaturamentoHub() {
 
                                 {/* Filtros - Lado Direito */}
                                 <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap ml-auto">
+                                    {/* Seletor de Mês */}
+                                    <Select value={mesSelecionado} onValueChange={setMesSelecionado}>
+                                        <SelectTrigger className="h-8 w-[140px] text-xs bg-background">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {mesesDisponiveis.map(mes => (
+                                                <SelectItem key={mes.value} value={mes.value}>
+                                                    {mes.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+
                                     <FiltersPopover
                                         filters={[
                                             {
@@ -1202,7 +1259,9 @@ export function GestaoFaturamentoHub() {
                                         expandedId={expandedTerapeutaId}
                                         onToggleExpand={(id) => setExpandedTerapeutaId(prev => prev === id ? null : id)}
                                         onViewDetails={handleViewDetails}
-                                        lancamentos={lancamentos}
+                                        lancamentos={lancamentosDoMes}
+                                        globalTipoAtividadeFilter={tipoAtividadeFilter}
+                                        periodoSelecionado={periodoMesSelecionado}
                                     />
                                 )}
 
@@ -1212,13 +1271,9 @@ export function GestaoFaturamentoHub() {
                                         expandedId={expandedClienteId}
                                         onToggleExpand={(id) => setExpandedClienteId(prev => prev === id ? null : id)}
                                         onViewDetails={handleViewDetails}
-                                        lancamentos={lancamentos}
-                                    />
-                                )}
-
-                                {activeTab === 'relatorios' && (
-                                    <RelatoriosTab
-                                        lancamentos={lancamentos}
+                                        lancamentos={lancamentosDoMes}
+                                        globalTipoAtividadeFilter={tipoAtividadeFilter}
+                                        periodoSelecionado={periodoMesSelecionado}
                                     />
                                 )}
                             </div>
@@ -1647,13 +1702,15 @@ function AprovarHorasTab({ lancamentos, selectedIds, onToggleSelect, onToggleSel
         setLoadingItems(prev => new Set(prev).add(lancamento.id));
         try {
             const valorAjudaCusto = valoresAjudaCusto[lancamento.id];
-            const valorNumerico = valorAjudaCusto 
+            // Converte string para número, permitindo 0 como valor válido
+            const valorNumerico = valorAjudaCusto !== undefined && valorAjudaCusto !== ''
                 ? parseFloat(valorAjudaCusto.replace(',', '.'))
                 : undefined;
 
-            // Se tem ajuda de custo mas não preencheu valor, mostrar erro
-            if (lancamento.temAjudaCusto && (!valorAjudaCusto || valorNumerico === 0)) {
-                toast.error('Informe o valor da ajuda de custo');
+            // Se tem ajuda de custo mas não preencheu nenhum valor, mostrar erro
+            // Nota: valor 0 é permitido (gerente pode decidir não pagar ajuda de custo)
+            if (lancamento.temAjudaCusto && valorNumerico === undefined) {
+                toast.error('Informe o valor da ajuda de custo (pode ser R$ 0,00)');
                 return;
             }
 
@@ -1841,7 +1898,7 @@ function AprovarHorasTab({ lancamentos, selectedIds, onToggleSelect, onToggleSel
                             {/* Avatar terapeuta */}
                             <Avatar className="h-10 w-10 shrink-0">
                                 <AvatarImage
-                                    src={lancamento.terapeutaAvatarUrl ? `${import.meta.env.VITE_API_BASE ?? ''}${lancamento.terapeutaAvatarUrl}` : ''}
+                                    src={lancamento.terapeutaAvatarUrl ? (lancamento.terapeutaAvatarUrl.startsWith('http') ? lancamento.terapeutaAvatarUrl : `${import.meta.env.VITE_API_BASE ?? ''}${lancamento.terapeutaAvatarUrl}`) : ''}
                                     alt={lancamento.terapeutaNome}
                                 />
                                 <AvatarFallback className="bg-primary/10 text-primary text-sm">
@@ -2112,9 +2169,17 @@ interface TerapeutasTabProps {
     onToggleExpand: (id: string) => void;
     onViewDetails: (item: ItemFaturamento) => void;
     lancamentos: ItemFaturamento[];
+    /** Filtro global de tipo de atividade do FiltersPopover */
+    globalTipoAtividadeFilter?: string;
+    /** Período selecionado para filtrar relatórios */
+    periodoSelecionado: {
+        inicio: Date;
+        fim: Date;
+        label: string;
+    };
 }
 
-function TerapeutasTab({ grupos, expandedId, onToggleExpand, onViewDetails, lancamentos }: TerapeutasTabProps) {
+function TerapeutasTab({ grupos, expandedId, onToggleExpand, onViewDetails, lancamentos, globalTipoAtividadeFilter, periodoSelecionado }: TerapeutasTabProps) {
     // Estado de filtros de coluna para a tabela expandida
     const [columnFilters, setColumnFilters] = useState<FaturamentoColumnFilters>({
         firstColumn: undefined,
@@ -2125,39 +2190,6 @@ function TerapeutasTab({ grupos, expandedId, onToggleExpand, onViewDetails, lanc
     
     // Estado para geração de relatório
     const [isGenerating, setIsGenerating] = useState(false);
-    
-    // Estado para seleção de mês
-    const [mesSelecionado, setMesSelecionado] = useState<string>(() => {
-        const hoje = new Date();
-        const mesAnterior = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
-        return `${mesAnterior.getFullYear()}-${String(mesAnterior.getMonth() + 1).padStart(2, '0')}`;
-    });
-
-    // Gerar lista de meses disponíveis (últimos 12 meses)
-    const mesesDisponiveis = useMemo(() => {
-        const meses: { value: string; label: string }[] = [];
-        const hoje = new Date();
-        
-        for (let i = 0; i < 12; i++) {
-            const data = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
-            const value = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
-            const mes = data.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
-            const label = `${mes.charAt(0).toUpperCase() + mes.slice(1)}/${data.getFullYear()}`;
-            meses.push({ value, label });
-        }
-        
-        return meses;
-    }, []);
-
-    // Período do mês selecionado
-    const periodoSelecionado = useMemo(() => {
-        const [ano, mes] = mesSelecionado.split('-').map(Number);
-        return {
-            inicio: new Date(ano, mes - 1, 1),
-            fim: new Date(ano, mes, 0),
-            label: new Date(ano, mes - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
-        };
-    }, [mesSelecionado]);
 
     // Resetar filtros ao mudar de terapeuta
     useEffect(() => {
@@ -2174,7 +2206,8 @@ function TerapeutasTab({ grupos, expandedId, onToggleExpand, onViewDetails, lanc
     const lancamentosAprovadosDoMes = useMemo(() => {
         if (!expandedGrupo) return [];
         return lancamentos.filter(l => {
-            const data = new Date(l.data);
+            // Usar T00:00:00 para garantir que a data seja interpretada no timezone local
+            const data = new Date(l.data + 'T00:00:00');
             return (
                 l.terapeutaId === expandedGrupo.terapeutaId &&
                 l.status === STATUS_FATURAMENTO.APROVADO &&
@@ -2232,6 +2265,11 @@ function TerapeutasTab({ grupos, expandedId, onToggleExpand, onViewDetails, lanc
     const filteredLancamentos = useMemo(() => {
         if (!expandedGrupo) return [];
         let items = expandedGrupo.lancamentos;
+        // Aplicar filtro global primeiro
+        if (globalTipoAtividadeFilter && globalTipoAtividadeFilter !== 'all') {
+            items = items.filter(l => l.tipoAtividade === globalTipoAtividadeFilter);
+        }
+        // Depois aplica filtros de coluna (locais)
         if (columnFilters.tipoAtividade) {
             items = items.filter(l => l.tipoAtividade === columnFilters.tipoAtividade);
         }
@@ -2239,7 +2277,7 @@ function TerapeutasTab({ grupos, expandedId, onToggleExpand, onViewDetails, lanc
             items = items.filter(l => l.status === columnFilters.status);
         }
         return items;
-    }, [expandedGrupo, columnFilters]);
+    }, [expandedGrupo, columnFilters, globalTipoAtividadeFilter]);
 
     // Opções de filtro para a tabela
     const filterOptions: FaturamentoColumnFilterOptions = useMemo(() => {
@@ -2308,7 +2346,7 @@ function TerapeutasTab({ grupos, expandedId, onToggleExpand, onViewDetails, lanc
                         <ChevronLeft className="h-5 w-5 text-muted-foreground shrink-0" />
                         <Avatar className="h-12 w-12 shrink-0">
                             <AvatarImage
-                                src={expandedGrupo.terapeutaAvatarUrl ? `${import.meta.env.VITE_API_BASE ?? ''}${expandedGrupo.terapeutaAvatarUrl}` : ''}
+                                src={expandedGrupo.terapeutaAvatarUrl ? (expandedGrupo.terapeutaAvatarUrl.startsWith('http') ? expandedGrupo.terapeutaAvatarUrl : `${import.meta.env.VITE_API_BASE ?? ''}${expandedGrupo.terapeutaAvatarUrl}`) : ''}
                                 alt={expandedGrupo.terapeutaNome}
                             />
                             <AvatarFallback className="bg-primary/10 text-primary">
@@ -2360,21 +2398,6 @@ function TerapeutasTab({ grupos, expandedId, onToggleExpand, onViewDetails, lanc
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
-                            <Select
-                                value={mesSelecionado}
-                                onValueChange={setMesSelecionado}
-                            >
-                                <SelectTrigger className="h-8 w-[130px] text-xs bg-background" onClick={(e) => e.stopPropagation()}>
-                                    <SelectValue placeholder="Mês" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {mesesDisponiveis.map(mes => (
-                                        <SelectItem key={mes.value} value={mes.value}>
-                                            {mes.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
@@ -2446,6 +2469,7 @@ function TerapeutasTab({ grupos, expandedId, onToggleExpand, onViewDetails, lanc
                         onColumnFilterChange={setColumnFilters}
                         onViewDetails={onViewDetails}
                         viewContext="by-therapist"
+                        managerView={true}
                     />
                 </div>
             </div>
@@ -2469,7 +2493,7 @@ function TerapeutasTab({ grupos, expandedId, onToggleExpand, onViewDetails, lanc
 
                     <Avatar className="h-12 w-12 shrink-0">
                         <AvatarImage
-                            src={grupo.terapeutaAvatarUrl ? `${import.meta.env.VITE_API_BASE ?? ''}${grupo.terapeutaAvatarUrl}` : ''}
+                            src={grupo.terapeutaAvatarUrl ? (grupo.terapeutaAvatarUrl.startsWith('http') ? grupo.terapeutaAvatarUrl : `${import.meta.env.VITE_API_BASE ?? ''}${grupo.terapeutaAvatarUrl}`) : ''}
                             alt={grupo.terapeutaNome}
                         />
                         <AvatarFallback className="bg-primary/10 text-primary">
@@ -2520,9 +2544,17 @@ interface ClientesTabProps {
     onToggleExpand: (id: string) => void;
     onViewDetails: (item: ItemFaturamento) => void;
     lancamentos: ItemFaturamento[];
+    /** Filtro global de tipo de atividade do FiltersPopover */
+    globalTipoAtividadeFilter?: string;
+    /** Período selecionado para filtrar relatórios */
+    periodoSelecionado: {
+        inicio: Date;
+        fim: Date;
+        label: string;
+    };
 }
 
-function ClientesTab({ grupos, expandedId, onToggleExpand, onViewDetails, lancamentos }: ClientesTabProps) {
+function ClientesTab({ grupos, expandedId, onToggleExpand, onViewDetails, lancamentos, globalTipoAtividadeFilter, periodoSelecionado }: ClientesTabProps) {
     // Estado de filtros de coluna para a tabela expandida
     const [columnFilters, setColumnFilters] = useState<FaturamentoColumnFilters>({
         firstColumn: undefined,
@@ -2534,39 +2566,6 @@ function ClientesTab({ grupos, expandedId, onToggleExpand, onViewDetails, lancam
     // Estado para geração de relatório
     const [isGenerating, setIsGenerating] = useState(false);
     const [tipoRelatorio, setTipoRelatorio] = useState<'convenio' | 'pais'>('pais');
-    
-    // Estado para seleção de mês
-    const [mesSelecionado, setMesSelecionado] = useState<string>(() => {
-        const hoje = new Date();
-        const mesAnterior = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
-        return `${mesAnterior.getFullYear()}-${String(mesAnterior.getMonth() + 1).padStart(2, '0')}`;
-    });
-
-    // Gerar lista de meses disponíveis (últimos 12 meses)
-    const mesesDisponiveis = useMemo(() => {
-        const meses: { value: string; label: string }[] = [];
-        const hoje = new Date();
-        
-        for (let i = 0; i < 12; i++) {
-            const data = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
-            const value = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
-            const mes = data.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
-            const label = `${mes.charAt(0).toUpperCase() + mes.slice(1)}/${data.getFullYear()}`;
-            meses.push({ value, label });
-        }
-        
-        return meses;
-    }, []);
-
-    // Período do mês selecionado
-    const periodoSelecionado = useMemo(() => {
-        const [ano, mes] = mesSelecionado.split('-').map(Number);
-        return {
-            inicio: new Date(ano, mes - 1, 1),
-            fim: new Date(ano, mes, 0),
-            label: new Date(ano, mes - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
-        };
-    }, [mesSelecionado]);
 
     // Resetar filtros ao mudar de cliente
     useEffect(() => {
@@ -2583,7 +2582,8 @@ function ClientesTab({ grupos, expandedId, onToggleExpand, onViewDetails, lancam
     const lancamentosAprovadosDoMes = useMemo(() => {
         if (!expandedGrupo) return [];
         return lancamentos.filter(l => {
-            const data = new Date(l.data);
+            // Usar T00:00:00 para garantir que a data seja interpretada no timezone local
+            const data = new Date(l.data + 'T00:00:00');
             return (
                 l.clienteId === expandedGrupo.clienteId &&
                 l.status === STATUS_FATURAMENTO.APROVADO &&
@@ -2641,6 +2641,11 @@ function ClientesTab({ grupos, expandedId, onToggleExpand, onViewDetails, lancam
     const filteredLancamentos = useMemo(() => {
         if (!expandedGrupo) return [];
         let items = expandedGrupo.lancamentos;
+        // Aplicar filtro global primeiro
+        if (globalTipoAtividadeFilter && globalTipoAtividadeFilter !== 'all') {
+            items = items.filter(l => l.tipoAtividade === globalTipoAtividadeFilter);
+        }
+        // Depois aplica filtros de coluna (locais)
         if (columnFilters.tipoAtividade) {
             items = items.filter(l => l.tipoAtividade === columnFilters.tipoAtividade);
         }
@@ -2648,7 +2653,7 @@ function ClientesTab({ grupos, expandedId, onToggleExpand, onViewDetails, lancam
             items = items.filter(l => l.status === columnFilters.status);
         }
         return items;
-    }, [expandedGrupo, columnFilters]);
+    }, [expandedGrupo, columnFilters, globalTipoAtividadeFilter]);
 
     // Opções de filtro para a tabela
     const filterOptions: FaturamentoColumnFilterOptions = useMemo(() => {
@@ -2717,7 +2722,7 @@ function ClientesTab({ grupos, expandedId, onToggleExpand, onViewDetails, lancam
                         <ChevronLeft className="h-5 w-5 text-muted-foreground shrink-0" />
                         <Avatar className="h-12 w-12 shrink-0">
                             <AvatarImage
-                                src={expandedGrupo.clienteAvatarUrl ? `${import.meta.env.VITE_API_BASE ?? ''}${expandedGrupo.clienteAvatarUrl}` : ''}
+                                src={expandedGrupo.clienteAvatarUrl ? (expandedGrupo.clienteAvatarUrl.startsWith('http') ? expandedGrupo.clienteAvatarUrl : `${import.meta.env.VITE_API_BASE ?? ''}${expandedGrupo.clienteAvatarUrl}`) : ''}
                                 alt={expandedGrupo.clienteNome}
                             />
                             <AvatarFallback className="bg-primary/10 text-primary">
@@ -2780,22 +2785,6 @@ function ClientesTab({ grupos, expandedId, onToggleExpand, onViewDetails, lancam
                                 <SelectContent>
                                     <SelectItem value="pais">Para Pais</SelectItem>
                                     <SelectItem value="convenio">Para Convênio</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            {/* Seletor de mês */}
-                            <Select
-                                value={mesSelecionado}
-                                onValueChange={setMesSelecionado}
-                            >
-                                <SelectTrigger className="h-8 w-[130px] text-xs bg-background" onClick={(e) => e.stopPropagation()}>
-                                    <SelectValue placeholder="Mês" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {mesesDisponiveis.map(mes => (
-                                        <SelectItem key={mes.value} value={mes.value}>
-                                            {mes.label}
-                                        </SelectItem>
-                                    ))}
                                 </SelectContent>
                             </Select>
                             <TooltipProvider>
@@ -2869,6 +2858,7 @@ function ClientesTab({ grupos, expandedId, onToggleExpand, onViewDetails, lancam
                         onColumnFilterChange={setColumnFilters}
                         onViewDetails={onViewDetails}
                         viewContext="by-client"
+                        managerView={true}
                     />
                 </div>
             </div>
@@ -2892,7 +2882,7 @@ function ClientesTab({ grupos, expandedId, onToggleExpand, onViewDetails, lancam
 
                     <Avatar className="h-12 w-12 shrink-0">
                         <AvatarImage
-                            src={grupo.clienteAvatarUrl ? `${import.meta.env.VITE_API_BASE ?? ''}${grupo.clienteAvatarUrl}` : ''}
+                            src={grupo.clienteAvatarUrl ? (grupo.clienteAvatarUrl.startsWith('http') ? grupo.clienteAvatarUrl : `${import.meta.env.VITE_API_BASE ?? ''}${grupo.clienteAvatarUrl}`) : ''}
                             alt={grupo.clienteNome}
                         />
                         <AvatarFallback className="bg-primary/10 text-primary">
@@ -2903,7 +2893,7 @@ function ClientesTab({ grupos, expandedId, onToggleExpand, onViewDetails, lancam
                     <div className="flex-1 min-w-0">
                         <h3 className="font-medium truncate">{grupo.clienteNome}</h3>
                         <p className="text-sm text-muted-foreground">
-                            {formatarHoras(grupo.totalMinutos)} • {formatarValor(grupo.totalValor)}
+                            {formatarHoras(grupo.totalMinutos)} • {formatarValor(grupo.totalValorCliente)}
                         </p>
                     </div>
 
@@ -2926,446 +2916,6 @@ function ClientesTab({ grupos, expandedId, onToggleExpand, onViewDetails, lancam
                     </div>
                 </div>
             ))}
-        </div>
-    );
-}
-
-// ============================================
-// TAB: RELATÓRIOS
-// ============================================
-
-interface RelatoriosTabProps {
-    lancamentos: ItemFaturamento[];
-}
-
-type TipoRelatorio = 'convenio' | 'terapeuta' | 'pais';
-
-function RelatoriosTab({ lancamentos }: RelatoriosTabProps) {
-    const [isGenerating, setIsGenerating] = useState(false);
-    const [searchCliente, setSearchCliente] = useState('');
-    const [searchTerapeuta, setSearchTerapeuta] = useState('');
-    
-    // Estado para seleção de mês (formato: "2026-01")
-    // Por padrão, seleciona o mês anterior (onde geralmente estão os dados para faturamento)
-    const [mesSelecionado, setMesSelecionado] = useState<string>(() => {
-        const hoje = new Date();
-        const mesAnterior = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
-        return `${mesAnterior.getFullYear()}-${String(mesAnterior.getMonth() + 1).padStart(2, '0')}`;
-    });
-
-    // Gerar lista de meses disponíveis (últimos 12 meses)
-    const mesesDisponiveis = useMemo(() => {
-        const meses: { value: string; label: string }[] = [];
-        const hoje = new Date();
-        
-        for (let i = 0; i < 12; i++) {
-            const data = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
-            const value = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
-            const label = data.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-            meses.push({ value, label: label.charAt(0).toUpperCase() + label.slice(1) });
-        }
-        
-        return meses;
-    }, []);
-
-    // Período do mês selecionado
-    const periodoSelecionado = useMemo(() => {
-        const [ano, mes] = mesSelecionado.split('-').map(Number);
-        return {
-            inicio: new Date(ano, mes - 1, 1),
-            fim: new Date(ano, mes, 0),
-            label: new Date(ano, mes - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
-        };
-    }, [mesSelecionado]);
-
-    // Filtrar lançamentos aprovados do mês selecionado
-    const lancamentosDoMes = useMemo(() => {
-        return lancamentos.filter(l => {
-            const data = new Date(l.data);
-            return data >= periodoSelecionado.inicio && data <= periodoSelecionado.fim && l.status === STATUS_FATURAMENTO.APROVADO;
-        });
-    }, [lancamentos, periodoSelecionado]);
-
-    // Clientes únicos com lançamentos no mês (para relatório Convênio e Pais)
-    const clientesDisponiveis = useMemo(() => {
-        const clientesMap = new Map<string, { 
-            id: string; 
-            nome: string; 
-            totalHoras: number;
-            totalSessoes: number;
-            valorTotal: number;
-        }>();
-        
-        lancamentosDoMes.forEach(l => {
-            if (l.clienteId && l.clienteNome) {
-                const existing = clientesMap.get(l.clienteId);
-                if (existing) {
-                    existing.totalHoras += l.duracaoMinutos / 60;
-                    existing.totalSessoes += 1;
-                    existing.valorTotal += l.valorTotalCliente ?? 0;
-                } else {
-                    clientesMap.set(l.clienteId, {
-                        id: l.clienteId,
-                        nome: l.clienteNome,
-                        totalHoras: l.duracaoMinutos / 60,
-                        totalSessoes: 1,
-                        valorTotal: l.valorTotalCliente ?? 0,
-                    });
-                }
-            }
-        });
-        
-        return Array.from(clientesMap.values()).sort((a, b) => a.nome.localeCompare(b.nome));
-    }, [lancamentosDoMes]);
-
-    // Terapeutas únicos com lançamentos no mês (inclui todos os clientes atendidos)
-    const terapeutasDisponiveis = useMemo(() => {
-        const terapeutasMap = new Map<string, { 
-            id: string; 
-            nome: string; 
-            totalHoras: number; 
-            totalValor: number;
-            totalSessoes: number;
-            clientesAtendidos: Set<string>;
-        }>();
-        
-        lancamentosDoMes.forEach(l => {
-            const existing = terapeutasMap.get(l.terapeutaId);
-            if (existing) {
-                existing.totalHoras += l.duracaoMinutos / 60;
-                existing.totalValor += l.valorTotal ?? 0;
-                existing.totalSessoes += 1;
-                if (l.clienteNome) existing.clientesAtendidos.add(l.clienteNome);
-            } else {
-                const clientesSet = new Set<string>();
-                if (l.clienteNome) clientesSet.add(l.clienteNome);
-                terapeutasMap.set(l.terapeutaId, {
-                    id: l.terapeutaId,
-                    nome: l.terapeutaNome,
-                    totalHoras: l.duracaoMinutos / 60,
-                    totalValor: l.valorTotal ?? 0,
-                    totalSessoes: 1,
-                    clientesAtendidos: clientesSet,
-                });
-            }
-        });
-        
-        return Array.from(terapeutasMap.values())
-            .map(t => ({ ...t, totalClientes: t.clientesAtendidos.size }))
-            .sort((a, b) => a.nome.localeCompare(b.nome));
-    }, [lancamentosDoMes]);
-
-    // Filtrar clientes pela busca
-    const clientesFiltrados = useMemo(() => {
-        if (!searchCliente.trim()) return clientesDisponiveis;
-        const termo = searchCliente.toLowerCase();
-        return clientesDisponiveis.filter(c => c.nome.toLowerCase().includes(termo));
-    }, [clientesDisponiveis, searchCliente]);
-
-    // Filtrar terapeutas pela busca
-    const terapeutasFiltrados = useMemo(() => {
-        if (!searchTerapeuta.trim()) return terapeutasDisponiveis;
-        const termo = searchTerapeuta.toLowerCase();
-        return terapeutasDisponiveis.filter(t => t.nome.toLowerCase().includes(termo));
-    }, [terapeutasDisponiveis, searchTerapeuta]);
-
-    const handleGerarRelatorio = useCallback(async (
-        tipo: TipoRelatorio,
-        clienteId?: string,
-        terapeutaId?: string
-    ) => {
-        setIsGenerating(true);
-        try {
-            await gerarRelatorioFaturamento({
-                tipo,
-                clienteId,
-                terapeutaId,
-                periodoInicio: periodoSelecionado.inicio,
-                periodoFim: periodoSelecionado.fim,
-                lancamentos: lancamentosDoMes,
-            });
-            toast.success('Relatório gerado! O download foi iniciado.');
-        } catch (error) {
-            console.error('Erro ao gerar relatório:', error);
-            toast.error(error instanceof Error ? error.message : 'Erro ao gerar relatório');
-        } finally {
-            setIsGenerating(false);
-        }
-    }, [periodoSelecionado, lancamentosDoMes]);
-
-    const handleExportarWord = useCallback(async (
-        tipo: TipoRelatorio,
-        clienteId?: string,
-        terapeutaId?: string
-    ) => {
-        setIsGenerating(true);
-        try {
-            await exportarRelatorioWord({
-                tipo,
-                clienteId,
-                terapeutaId,
-                periodoInicio: periodoSelecionado.inicio,
-                periodoFim: periodoSelecionado.fim,
-                lancamentos: lancamentosDoMes,
-            });
-            toast.success('Documento Word gerado! O download foi iniciado.');
-        } catch (error) {
-            console.error('Erro ao exportar para Word:', error);
-            toast.error(error instanceof Error ? error.message : 'Erro ao exportar para Word');
-        } finally {
-            setIsGenerating(false);
-        }
-    }, [periodoSelecionado, lancamentosDoMes]);
-
-    return (
-        <div className="h-full overflow-y-auto">
-            <div className="space-y-6 pb-6">
-                {/* Cabeçalho com seletor de mês */}
-                <div className="flex items-center justify-between">
-                    <div>
-                        <h3 className="text-lg font-medium">Relatórios Mensais</h3>
-                        <p className="text-sm text-muted-foreground">
-                            Gere relatórios para convênios, terapeutas ou pais
-                        </p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <select
-                            value={mesSelecionado}
-                            onChange={(e) => setMesSelecionado(e.target.value)}
-                            className="h-9 px-3 rounded-lg border border-input bg-background text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary"
-                        >
-                            {mesesDisponiveis.map(mes => (
-                                <option key={mes.value} value={mes.value}>
-                                    {mes.label}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-
-                {lancamentosDoMes.length === 0 ? (
-                    <div className="bg-muted/50 rounded-xl p-8 text-center">
-                        <AlertCircle className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-                        <p className="text-muted-foreground">
-                            Nenhum lançamento aprovado em <span className="font-medium capitalize">{periodoSelecionado.label}</span>
-                        </p>
-                        <p className="text-sm text-muted-foreground mt-1">
-                            Aprove lançamentos primeiro para gerar relatórios.
-                        </p>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {/* Coluna: Relatórios por Cliente (Convênio e Pais) */}
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <h4 className="font-medium">Por Cliente</h4>
-                                    <p className="text-xs text-muted-foreground">
-                                        Relatórios para Convênio ou Pais
-                                    </p>
-                                </div>
-                                <Badge variant="secondary">{clientesDisponiveis.length} clientes</Badge>
-                            </div>
-                            
-                            {/* Busca de cliente */}
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                <Input
-                                    placeholder="Buscar cliente..."
-                                    value={searchCliente}
-                                    onChange={(e) => setSearchCliente(e.target.value)}
-                                    className="pl-9 h-9"
-                                />
-                            </div>
-                            
-                            {/* Lista de clientes */}
-                            <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                                {clientesFiltrados.length === 0 ? (
-                                    <p className="text-sm text-muted-foreground text-center py-4">
-                                        Nenhum cliente encontrado
-                                    </p>
-                                ) : (
-                                    clientesFiltrados.map(cliente => (
-                                        <div
-                                            key={cliente.id}
-                                            className="flex items-center justify-between p-3 rounded-lg border bg-background hover:bg-muted/50 transition-colors"
-                                        >
-                                            <div className="flex items-center gap-3 min-w-0 flex-1">
-                                                <Avatar className="h-9 w-9 shrink-0">
-                                                    <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                                                        {getInitials(cliente.nome)}
-                                                    </AvatarFallback>
-                                                </Avatar>
-                                                <div className="min-w-0">
-                                                    <p className="font-medium text-sm truncate">{cliente.nome}</p>
-                                                    <p className="text-xs text-muted-foreground">
-                                                        {cliente.totalSessoes} sessões • {cliente.totalHoras.toFixed(1)}h • {formatarValor(cliente.valorTotal)}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-1 shrink-0">
-                                                <TooltipProvider>
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <Button
-                                                                size="sm"
-                                                                variant="ghost"
-                                                                disabled={isGenerating}
-                                                                onClick={() => handleGerarRelatorio('convenio', cliente.id)}
-                                                                className="h-8 px-2"
-                                                            >
-                                                                <FileText className="h-4 w-4" />
-                                                            </Button>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>PDF Convênio</TooltipContent>
-                                                    </Tooltip>
-                                                </TooltipProvider>
-                                                <TooltipProvider>
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <Button
-                                                                size="sm"
-                                                                variant="ghost"
-                                                                disabled={isGenerating}
-                                                                onClick={() => handleExportarWord('convenio', cliente.id)}
-                                                                className="h-8 px-2"
-                                                            >
-                                                                <FileDown className="h-4 w-4" />
-                                                            </Button>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>Word Convênio</TooltipContent>
-                                                    </Tooltip>
-                                                </TooltipProvider>
-                                                <TooltipProvider>
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <Button
-                                                                size="sm"
-                                                                variant="ghost"
-                                                                disabled={isGenerating}
-                                                                onClick={() => handleGerarRelatorio('pais', cliente.id)}
-                                                                className="h-8 px-2"
-                                                            >
-                                                                <UserCircle className="h-4 w-4" />
-                                                            </Button>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>PDF Pais</TooltipContent>
-                                                    </Tooltip>
-                                                </TooltipProvider>
-                                                <TooltipProvider>
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <Button
-                                                                size="sm"
-                                                                variant="ghost"
-                                                                disabled={isGenerating}
-                                                                onClick={() => handleExportarWord('pais', cliente.id)}
-                                                                className="h-8 px-2"
-                                                            >
-                                                                <FileDown className="h-4 w-4 text-primary" />
-                                                            </Button>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>Word Pais</TooltipContent>
-                                                    </Tooltip>
-                                                </TooltipProvider>
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Coluna: Relatórios por Terapeuta */}
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <h4 className="font-medium">Por Terapeuta</h4>
-                                    <p className="text-xs text-muted-foreground">
-                                        Relatório com todos os clientes atendidos
-                                    </p>
-                                </div>
-                                <Badge variant="secondary">{terapeutasDisponiveis.length} terapeutas</Badge>
-                            </div>
-                            
-                            {/* Busca de terapeuta */}
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                <Input
-                                    placeholder="Buscar terapeuta..."
-                                    value={searchTerapeuta}
-                                    onChange={(e) => setSearchTerapeuta(e.target.value)}
-                                    className="pl-9 h-9"
-                                />
-                            </div>
-                            
-                            {/* Lista de terapeutas */}
-                            <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                                {terapeutasFiltrados.length === 0 ? (
-                                    <p className="text-sm text-muted-foreground text-center py-4">
-                                        Nenhum terapeuta encontrado
-                                    </p>
-                                ) : (
-                                    terapeutasFiltrados.map(terapeuta => (
-                                        <div
-                                            key={terapeuta.id}
-                                            className="flex items-center justify-between p-3 rounded-lg border bg-background hover:bg-muted/50 transition-colors"
-                                        >
-                                            <div className="flex items-center gap-3 min-w-0 flex-1">
-                                                <Avatar className="h-9 w-9 shrink-0">
-                                                    <AvatarFallback className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 text-xs">
-                                                        {getInitials(terapeuta.nome)}
-                                                    </AvatarFallback>
-                                                </Avatar>
-                                                <div className="min-w-0">
-                                                    <p className="font-medium text-sm truncate">{terapeuta.nome}</p>
-                                                    <p className="text-xs text-muted-foreground">
-                                                        {terapeuta.totalClientes} clientes • {terapeuta.totalSessoes} sessões • {formatarValor(terapeuta.totalValor)}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-1 shrink-0">
-                                                <TooltipProvider>
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <Button
-                                                                size="sm"
-                                                                variant="outline"
-                                                                disabled={isGenerating}
-                                                                onClick={() => handleGerarRelatorio('terapeuta', undefined, terapeuta.id)}
-                                                                className="h-8 gap-1.5"
-                                                            >
-                                                                <FileText className="h-4 w-4" />
-                                                                PDF
-                                                            </Button>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>Gerar PDF do terapeuta</TooltipContent>
-                                                    </Tooltip>
-                                                </TooltipProvider>
-                                                <TooltipProvider>
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <Button
-                                                                size="sm"
-                                                                variant="ghost"
-                                                                disabled={isGenerating}
-                                                                onClick={() => handleExportarWord('terapeuta', undefined, terapeuta.id)}
-                                                                className="h-8 px-2"
-                                                            >
-                                                                <FileDown className="h-4 w-4" />
-                                                            </Button>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>Exportar para Word</TooltipContent>
-                                                    </Tooltip>
-                                                </TooltipProvider>
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </div>
         </div>
     );
 }

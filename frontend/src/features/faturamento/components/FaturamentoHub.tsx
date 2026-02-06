@@ -30,6 +30,13 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FiltersPopover } from '@/components/ui/filters-popover';
@@ -42,7 +49,6 @@ import type {
     TipoAtividadeFaturamento,
     ClienteGroup,
     FaturamentoListFilters,
-    ResumoFaturamento,
 } from '../types/faturamento.types';
 import {
     STATUS_FATURAMENTO,
@@ -53,11 +59,11 @@ import {
 import {
     listFaturamento,
     getTerapeutaLogado,
-    getResumoFaturamento,
 } from '../services/faturamento-sessoes.service';
 import { FaturamentoTable, type FaturamentoColumnFilters, type FaturamentoColumnFilterOptions } from './FaturamentoTable';
 import { BillingDrawer } from './BillingDrawer';
 import { useBillingCorrection } from '../hooks/useBillingCorrection';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import type { BillingLancamento } from '../types/billingCorrection';
 import type { FilterOption } from '@/components/ui/column-header-filter';
 
@@ -241,6 +247,25 @@ function getInitials(nome: string): string {
 export function FaturamentoHub({ mode }: FaturamentoHubProps) {
     const [searchParams, setSearchParams] = useSearchParams();
     
+    // Obter usuário logado e sua área de atuação
+    const { user } = useAuth();
+    
+    // Obter especialidade única do usuário (se tiver apenas uma)
+    const userAreaAtuacao = useMemo(() => {
+        if (!user?.area_atuacao) return undefined;
+        
+        // Se for array e tiver apenas 1 item, usar ela
+        if (Array.isArray(user.area_atuacao)) {
+            if (user.area_atuacao.length === 1) {
+                return user.area_atuacao[0];
+            }
+            return undefined; // Múltiplas especialidades
+        }
+        
+        // Se for string única, usar ela
+        return user.area_atuacao;
+    }, [user?.area_atuacao]);
+    
     // Hook de correção de faturamento
     const {
         isOpen: isDrawerOpen,
@@ -253,14 +278,33 @@ export function FaturamentoHub({ mode }: FaturamentoHubProps) {
     } = useBillingCorrection();
     // Estados
     const [lancamentos, setLancamentos] = useState<ItemFaturamento[]>([]);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [resumo, setResumo] = useState<ResumoFaturamento | null>(null);
     const [loading, setLoading] = useState(true);
     const [searchValue, setSearchValue] = useState(searchParams.get('q') ?? '');
     const [terapeutaId, setTerapeutaId] = useState<string | undefined>();
 
     // Filtro de status
     const [statusFilter, setStatusFilter] = useState<StatusFaturamento | 'all'>('all');
+
+    // Seletor de mês global (mês atual por padrão)
+    const mesAtual = useMemo(() => {
+        const now = new Date();
+        return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    }, []);
+    const [mesSelecionado, setMesSelecionado] = useState<string>(mesAtual);
+
+    // Lista dos últimos 12 meses disponíveis
+    const mesesDisponiveis = useMemo(() => {
+        const meses: { value: string; label: string }[] = [];
+        const hoje = new Date();
+        for (let i = 0; i < 12; i++) {
+            const data = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+            const value = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
+            const mes = data.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
+            const label = `${mes.charAt(0).toUpperCase() + mes.slice(1)}/${data.getFullYear()}`;
+            meses.push({ value, label });
+        }
+        return meses;
+    }, []);
 
     // Filtros de coluna da tabela (FaturamentoTable)
     const [columnFilters, setColumnFilters] = useState<FaturamentoColumnFilters>({
@@ -292,43 +336,51 @@ export function FaturamentoHub({ mode }: FaturamentoHubProps) {
     const hasFilters = !!(filters.q || dateFrom || dateTo || statusFilter !== 'all');
     const isViewingClient = !!clienteIdFilter;
 
+    // Lançamentos filtrados pelo mês selecionado
+    const lancamentosDoMes = useMemo(() => {
+        if (!mesSelecionado) return lancamentos;
+        const [ano, mes] = mesSelecionado.split('-').map(Number);
+        return lancamentos.filter(l => {
+            const data = new Date(l.data + 'T00:00:00');
+            return data.getFullYear() === ano && data.getMonth() + 1 === mes;
+        });
+    }, [lancamentos, mesSelecionado]);
+
     // ============================================
     // ESTATÍSTICAS
     // ============================================
 
     const stats = useMemo(() => {
-        if (!resumo) {
-            return {
-                total: 0,
-                pendentes: 0,
-                aprovados: 0,
-                horasRealizadas: '0h',
-                valorTotal: 'R$ 0,00',
-                valorTotalNum: 0,
-                valorPendente: 0,
-                valorAprovado: 0,
-            };
-        }
-
-        // Calcular valores por status baseado nos lançamentos
-        const valorPendente = lancamentos
+        const totalLancamentos = lancamentosDoMes.length;
+        const pendentes = lancamentosDoMes.filter(l => l.status === STATUS_FATURAMENTO.PENDENTE).length;
+        const aprovados = lancamentosDoMes.filter(l => l.status === STATUS_FATURAMENTO.APROVADO).length;
+        
+        // Calcular total de minutos
+        const totalMinutos = lancamentosDoMes.reduce((acc, l) => acc + l.duracaoMinutos, 0);
+        const horas = Math.floor(totalMinutos / 60);
+        const mins = totalMinutos % 60;
+        const horasRealizadas = mins === 0 ? `${horas}h` : `${horas}h ${mins}min`;
+        
+        // Calcular valores
+        const valorTotal = lancamentosDoMes.reduce((acc, l) => acc + (l.valorTotal ?? 0), 0);
+        const valorPendente = lancamentosDoMes
             .filter(l => l.status === STATUS_FATURAMENTO.PENDENTE)
             .reduce((acc, l) => acc + (l.valorTotal ?? 0), 0);
-        const valorAprovado = lancamentos
+        const valorAprovado = lancamentosDoMes
             .filter(l => l.status === STATUS_FATURAMENTO.APROVADO)
             .reduce((acc, l) => acc + (l.valorTotal ?? 0), 0);
 
         return {
-            total: resumo.totalLancamentos,
-            pendentes: resumo.porStatus.pendentes,
-            aprovados: resumo.porStatus.aprovados,
-            horasRealizadas: resumo.totalHoras,
-            valorTotal: formatarValor(resumo.totalValor),
-            valorTotalNum: resumo.totalValor,
+            total: totalLancamentos,
+            pendentes,
+            aprovados,
+            horasRealizadas,
+            valorTotal: formatarValor(valorTotal),
+            valorTotalNum: valorTotal,
             valorPendente,
             valorAprovado,
         };
-    }, [resumo, lancamentos]);
+    }, [lancamentosDoMes]);
 
     // ============================================
     // FILTRAR E AGRUPAR POR CLIENTE
@@ -336,7 +388,7 @@ export function FaturamentoHub({ mode }: FaturamentoHubProps) {
 
     // Lançamentos filtrados apenas pelo cliente (para calcular opções de filtro)
     const clientFilteredLancamentos = useMemo(() => {
-        let result = lancamentos;
+        let result = lancamentosDoMes;
 
         if (statusFilter !== 'all') {
             result = result.filter(l => l.status === statusFilter);
@@ -347,7 +399,7 @@ export function FaturamentoHub({ mode }: FaturamentoHubProps) {
         }
 
         return result;
-    }, [lancamentos, statusFilter, clienteIdFilter]);
+    }, [lancamentosDoMes, statusFilter, clienteIdFilter]);
 
     // Opções para os filtros de coluna (baseadas nos lançamentos disponíveis)
     const columnFilterOptions: FaturamentoColumnFilterOptions = useMemo(() => {
@@ -408,7 +460,7 @@ export function FaturamentoHub({ mode }: FaturamentoHubProps) {
     }, [clientFilteredLancamentos, columnFilters]);
 
     const groupedByClient = useMemo((): ClienteGroup[] => {
-        let lancamentosParaAgrupar = lancamentos;
+        let lancamentosParaAgrupar = lancamentosDoMes;
 
         if (statusFilter !== 'all') {
             lancamentosParaAgrupar = lancamentosParaAgrupar.filter(l => l.status === statusFilter);
@@ -454,7 +506,7 @@ export function FaturamentoHub({ mode }: FaturamentoHubProps) {
             if (b.clienteId === SEM_CLIENTE_KEY) return -1;
             return a.clienteNome.localeCompare(b.clienteNome);
         });
-    }, [lancamentos, statusFilter]);
+    }, [lancamentosDoMes, statusFilter]);
 
     const selectedClientInfo = useMemo(() => {
         if (!clienteIdFilter) return null;
@@ -482,20 +534,32 @@ export function FaturamentoHub({ mode }: FaturamentoHubProps) {
                 params.terapeutaId = terapeutaId;
             }
 
-            const [responseList, responseResumo] = await Promise.all([
-                listFaturamento(params),
-                getResumoFaturamento(mode === 'terapeuta' ? terapeutaId : undefined, params),
-            ]);
+            const responseList = await listFaturamento(params);
 
-            setLancamentos(responseList.items);
-            setResumo(responseResumo);
+            // Enriquecer lançamentos de ata com especialidade do terapeuta
+            // quando não há área preenchida e o terapeuta tem apenas uma especialidade
+            const enrichedItems = responseList.items.map(item => {
+                // Se já tem área preenchida ou não é de ata, manter como está
+                if (item.area || item.origem !== ORIGEM_LANCAMENTO.ATA) {
+                    return item;
+                }
+                
+                // Preencher com especialidade do usuário logado se tiver apenas uma
+                if (userAreaAtuacao) {
+                    return { ...item, area: userAreaAtuacao };
+                }
+                
+                return item;
+            });
+
+            setLancamentos(enrichedItems);
         } catch (error) {
             console.error('Erro ao carregar faturamento:', error);
             toast.error('Erro ao carregar dados de faturamento');
         } finally {
             setLoading(false);
         }
-    }, [filters.q, filters.dataInicio, filters.dataFim, filters.orderBy, mode, terapeutaId]);
+    }, [filters.q, filters.dataInicio, filters.dataFim, filters.orderBy, mode, terapeutaId, userAreaAtuacao]);
 
     // Buscar terapeuta logado
     useEffect(() => {
@@ -680,6 +744,19 @@ export function FaturamentoHub({ mode }: FaturamentoHubProps) {
 
                     {/* Filtros - Lado Direito */}
                     <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap ml-auto">
+                        {/* Seletor de Mês */}
+                        <Select value={mesSelecionado} onValueChange={setMesSelecionado}>
+                            <SelectTrigger className="h-8 w-[140px] text-xs bg-background">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {mesesDisponiveis.map(mes => (
+                                    <SelectItem key={mes.value} value={mes.value}>
+                                        {mes.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                         <FiltersPopover
                             filters={[
                                 {
@@ -765,7 +842,7 @@ export function FaturamentoHub({ mode }: FaturamentoHubProps) {
 
                             <Avatar className="h-12 w-12 shrink-0">
                                 <AvatarImage
-                                    src={selectedClientInfo?.clienteAvatarUrl ? `${import.meta.env.VITE_API_BASE ?? ''}${selectedClientInfo.clienteAvatarUrl}` : ''}
+                                    src={selectedClientInfo?.clienteAvatarUrl ? (selectedClientInfo.clienteAvatarUrl.startsWith('http') ? selectedClientInfo.clienteAvatarUrl : `${import.meta.env.VITE_API_BASE ?? ''}${selectedClientInfo.clienteAvatarUrl}`) : ''}
                                     alt={selectedClientInfo?.clienteNome || ''}
                                 />
                                 <AvatarFallback className="bg-primary/10 text-primary font-regular">
@@ -825,7 +902,7 @@ export function FaturamentoHub({ mode }: FaturamentoHubProps) {
 
                                     <Avatar className="h-12 w-12 shrink-0">
                                         <AvatarImage
-                                            src={clienteAvatarUrl ? `${import.meta.env.VITE_API_BASE ?? ''}${clienteAvatarUrl}` : ''}
+                                            src={clienteAvatarUrl ? (clienteAvatarUrl.startsWith('http') ? clienteAvatarUrl : `${import.meta.env.VITE_API_BASE ?? ''}${clienteAvatarUrl}`) : ''}
                                             alt={clienteNome}
                                         />
                                         <AvatarFallback className="bg-primary/10 text-primary font-regular">

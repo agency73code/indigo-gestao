@@ -7,6 +7,33 @@ import { buildBillingFrontId, resolveBillingOrigin } from "../utils/resolveBilli
 import { getBillingRateByType } from "../utils/getBillingRateByType.js";
 import { calculateAge } from "../../../utils/calculateAge.js";
 
+/** Mapa de áreas em minúsculo para formato capitalizado */
+const AREA_DISPLAY_NAMES: Record<string, string> = {
+    'fonoaudiologia': 'Fonoaudiologia',
+    'fisioterapia': 'Fisioterapia',
+    'terapia ocupacional': 'Terapia Ocupacional',
+    'terapia-ocupacional': 'Terapia Ocupacional',
+    'psicologia': 'Psicologia',
+    'musicoterapia': 'Musicoterapia',
+    'terapia aba': 'Terapia ABA',
+    'neuropsicologia': 'Neuropsicologia',
+    'psicopedagogia': 'Psicopedagogia',
+    'nutrição': 'Nutrição',
+    'educador físico': 'Educador Físico',
+    'pedagogia': 'Pedagogia',
+    'psicomotricidade': 'Psicomotricidade',
+};
+
+/** Normaliza o nome da área para exibição consistente */
+function normalizeAreaName(area: string | null | undefined): string | undefined {
+    if (!area) return undefined;
+    // Se já está no mapa normalizado, retorna o valor capitalizado
+    const normalized = AREA_DISPLAY_NAMES[area.toLowerCase()];
+    if (normalized) return normalized;
+    // Se não encontrar, retorna como está (pode já estar capitalizado)
+    return area;
+}
+
 export function mapBillingListItem(item: BillingListItem) {
     const time = buildLocalSessionTime(
         item.inicio_em,
@@ -54,7 +81,7 @@ export function mapBillingListItem(item: BillingListItem) {
         valorTotalCliente: durationMinutes ? Math.floor(durationMinutes / 60) * clientRateValue : 0,
 
         status: item.status,
-        area: item.sessao?.ocp.area,
+        area: normalizeAreaName(item.sessao?.ocp.area ?? item.ata?.cabecalho_area_atuacao),
         finalidade: item.ata?.finalidade,
         programaNome: item.sessao?.ocp.nome_programa,
 

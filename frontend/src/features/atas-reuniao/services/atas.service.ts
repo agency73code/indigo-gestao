@@ -21,15 +21,35 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 /** Tipos de arquivo permitidos */
 const ALLOWED_FILE_TYPES = [
+    // Imagens
     'image/jpeg',
     'image/png',
     'image/gif',
     'image/webp',
+    'image/bmp',
+    'image/svg+xml',
+    // Vídeos
     'video/mp4',
     'video/webm',
+    'video/quicktime',
+    // Documentos
     'application/pdf',
     'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    // Excel
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    // PowerPoint
+    'application/vnd.ms-powerpoint',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    // Texto
+    'text/plain',
+    'text/csv',
+    // Arquivos compactados
+    'application/zip',
+    'application/x-zip-compressed',
+    'application/x-rar-compressed',
+    'application/vnd.rar',
 ] as const;
 
 /** Valida se arquivo é permitido */
@@ -39,7 +59,8 @@ function validateFile(file: File): { valid: boolean; error?: string } {
     }
 
     if (!ALLOWED_FILE_TYPES.includes(file.type as typeof ALLOWED_FILE_TYPES[number])) {
-        return { valid: false, error: 'Tipo de arquivo não permitido' };
+        console.error('[validateFile] Tipo não permitido:', file.type, 'Nome:', file.name);
+        return { valid: false, error: `Tipo de arquivo não permitido: ${file.type || 'desconhecido'} (${file.name})` };
     }
 
     return { valid: true };

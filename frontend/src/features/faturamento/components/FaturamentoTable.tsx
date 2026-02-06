@@ -74,6 +74,13 @@ interface FaturamentoTableProps {
     loading?: boolean;
     /** Contexto de visualização - 'by-client' mostra terapeuta, 'by-therapist' mostra cliente */
     viewContext?: FaturamentoViewContext;
+    /** 
+     * Visão do gerente - mostra duas colunas de valor:
+     * - "A receber" (valorTotalCliente - o que o cliente paga)
+     * - "A pagar" (valorTotal - o que paga ao terapeuta)
+     * Quando false mostra apenas "A receber" (valorTotal - o que o terapeuta recebe)
+     */
+    managerView?: boolean;
 }
 
 // ============================================
@@ -160,6 +167,7 @@ export const FaturamentoTable = memo(function FaturamentoTable({
     filterOptions,
     onColumnFilterChange,
     viewContext = 'default',
+    managerView = false,
 }: FaturamentoTableProps) {
     // Determina qual nome e label exibir na primeira coluna baseado no contexto
     const getFirstColumnData = useCallback((item: ItemFaturamento) => {
@@ -213,12 +221,20 @@ export const FaturamentoTable = memo(function FaturamentoTable({
             });
         }
         
+        if (columnFilters.tipoAtividade) {
+            filtered = filtered.filter(item => item.tipoAtividade === columnFilters.tipoAtividade);
+        }
+        
         if (columnFilters.especialidade) {
             filtered = filtered.filter(item => item.area === columnFilters.especialidade);
         }
         
+        if (columnFilters.status) {
+            filtered = filtered.filter(item => item.status === columnFilters.status);
+        }
+        
         return filtered;
-    }, [data, columnFilters.firstColumn, columnFilters.especialidade, getFirstColumnData]);
+    }, [data, columnFilters.firstColumn, columnFilters.tipoAtividade, columnFilters.especialidade, columnFilters.status, getFirstColumnData]);
 
     // Early returns DEPOIS dos hooks
     if (loading) {
@@ -269,9 +285,20 @@ export const FaturamentoTable = memo(function FaturamentoTable({
                             <th className="text-left p-3 font-medium text-sm" style={{ color: 'var(--table-text-secondary)' }}>
                                 Duração
                             </th>
-                            <th className="text-left p-3 font-medium text-sm" style={{ color: 'var(--table-text-secondary)' }}>
-                                Valor
-                            </th>
+                            {managerView ? (
+                                <>
+                                    <th className="text-left p-3 font-medium text-sm" style={{ color: 'var(--table-text-secondary)' }}>
+                                        A receber
+                                    </th>
+                                    <th className="text-left p-3 font-medium text-sm" style={{ color: 'var(--table-text-secondary)' }}>
+                                        A pagar
+                                    </th>
+                                </>
+                            ) : (
+                                <th className="text-left p-3 font-medium text-sm" style={{ color: 'var(--table-text-secondary)' }}>
+                                    A receber
+                                </th>
+                            )}
                             <th className="text-left p-3 font-medium text-sm" style={{ color: 'var(--table-text-secondary)' }}>
                                 <ColumnHeaderFilter
                                     label="Status"
@@ -364,14 +391,35 @@ export const FaturamentoTable = memo(function FaturamentoTable({
                                             {formatarDuracao(item.duracaoMinutos)}
                                         </span>
                                     </td>
-                                    <td className="p-3">
-                                        <span 
-                                            className="text-[14px] font-medium"
-                                            style={{ fontFamily: 'Inter, sans-serif', color: 'var(--table-text)' }}
-                                        >
-                                            {item.valorTotal ? formatarValor(item.valorTotal) : '-'}
-                                        </span>
-                                    </td>
+                                    {managerView ? (
+                                        <>
+                                            <td className="p-3">
+                                                <span 
+                                                    className="text-[14px] font-medium text-green-600"
+                                                    style={{ fontFamily: 'Inter, sans-serif' }}
+                                                >
+                                                    {item.valorTotalCliente ? formatarValor(item.valorTotalCliente) : '-'}
+                                                </span>
+                                            </td>
+                                            <td className="p-3">
+                                                <span 
+                                                    className="text-[14px] font-medium text-red-600"
+                                                    style={{ fontFamily: 'Inter, sans-serif' }}
+                                                >
+                                                    {item.valorTotal ? formatarValor(item.valorTotal) : '-'}
+                                                </span>
+                                            </td>
+                                        </>
+                                    ) : (
+                                        <td className="p-3">
+                                            <span 
+                                                className="text-[14px] font-medium text-green-600"
+                                                style={{ fontFamily: 'Inter, sans-serif' }}
+                                            >
+                                                {item.valorTotal ? formatarValor(item.valorTotal) : '-'}
+                                            </span>
+                                        </td>
+                                    )}
                                     <td className="p-3">
                                         <Badge
                                             className={cn(
@@ -514,12 +562,29 @@ export const FaturamentoTable = memo(function FaturamentoTable({
                                 <span className="text-muted-foreground">Duração:</span>
                                 <span className="ml-2">{formatarDuracao(item.duracaoMinutos)}</span>
                             </div>
-                            <div>
-                                <span className="text-muted-foreground">Valor:</span>
-                                <span className="ml-2 font-medium">
-                                    {item.valorTotal ? formatarValor(item.valorTotal) : '-'}
-                                </span>
-                            </div>
+                            {managerView ? (
+                                <>
+                                    <div>
+                                        <span className="text-muted-foreground">A receber:</span>
+                                        <span className="ml-2 font-medium text-green-600">
+                                            {item.valorTotalCliente ? formatarValor(item.valorTotalCliente) : '-'}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span className="text-muted-foreground">A pagar:</span>
+                                        <span className="ml-2 font-medium text-red-600">
+                                            {item.valorTotal ? formatarValor(item.valorTotal) : '-'}
+                                        </span>
+                                    </div>
+                                </>
+                            ) : (
+                                <div>
+                                    <span className="text-muted-foreground">A receber:</span>
+                                    <span className="ml-2 font-medium text-green-600">
+                                        {item.valorTotal ? formatarValor(item.valorTotal) : '-'}
+                                    </span>
+                                </div>
+                            )}
                         </div>
 
                         {/* Ações */}

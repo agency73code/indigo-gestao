@@ -6,6 +6,7 @@ export const billingListSelect = Prisma.validator<Prisma.faturamentoSelect>()({
     ata: {
         select: {
             finalidade: true,
+            cabecalho_area_atuacao: true,
         },
     },
     sessao_id: true,
