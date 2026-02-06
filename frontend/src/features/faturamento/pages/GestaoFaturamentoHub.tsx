@@ -2787,6 +2787,7 @@ function ClientesTab({ grupos, expandedId, onToggleExpand, onViewDetails, lancam
                                     <SelectItem value="convenio">Para Convênio</SelectItem>
                                 </SelectContent>
                             </Select>
+                            {tipoRelatorio === 'pais' && (
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
@@ -2811,11 +2812,12 @@ function ClientesTab({ grupos, expandedId, onToggleExpand, onViewDetails, lancam
                                     <TooltipContent>
                                         {lancamentosAprovadosDoMes.length === 0 
                                             ? 'Nenhum lançamento aprovado neste período'
-                                            : `Gerar relatório ${tipoRelatorio === 'pais' ? 'para Pais' : 'para Convênio'} de ${periodoSelecionado.label}`
+                                            : `Gerar relatório para Pais de ${periodoSelecionado.label}`
                                         }
                                     </TooltipContent>
                                 </Tooltip>
                             </TooltipProvider>
+                            )}
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>

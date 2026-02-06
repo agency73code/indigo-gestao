@@ -52,6 +52,52 @@ const CORES = {
 };
 
 // ============================================
+// MAPEAMENTO DE CONSELHO POR ÁREA
+// ============================================
+
+/** Mapeamento de área de atuação para sigla do conselho profissional */
+const AREA_PARA_SIGLA_CONSELHO: Record<string, string> = {
+    'Fisioterapia': 'CREFITO',
+    'Terapia Ocupacional': 'CREFITO',
+    'Fonoaudiologia': 'CRFa',
+    'Psicologia': 'CRP',
+    'Neuropsicologia': 'CRP',
+    'Psicopedagogia': 'CRP',
+    'Terapia ABA': 'CRP',
+    'Musicoterapia': 'CBMT',
+    'Nutrição': 'CRN',
+    'Enfermagem': 'COREN',
+    'Medicina': 'CRM',
+};
+
+/** Obtém a sigla do conselho com base na área de atuação */
+function getSiglaConselho(areaAtuacao: string | undefined): string {
+    if (!areaAtuacao) return 'CRP';
+    return AREA_PARA_SIGLA_CONSELHO[areaAtuacao] || 'CRP';
+}
+
+/**
+ * Formata data de nascimento para DD/MM/YYYY
+ * Aceita formato ISO (YYYY-MM-DDTHH:mm:ss.sssZ), YYYY-MM-DD, ou já formatado DD/MM/YYYY
+ */
+function formatarDataNascimento(data: string | undefined): string {
+    if (!data) return '___/___/______';
+    
+    // Se já está no formato DD/MM/YYYY, retorna direto
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(data)) return data;
+    
+    // Se está no formato ISO ou YYYY-MM-DD
+    const parsed = new Date(data);
+    if (isNaN(parsed.getTime())) return '___/___/______';
+    
+    return parsed.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+    });
+}
+
+// ============================================
 // FUNÇÕES DE FORMATAÇÃO
 // ============================================
 
@@ -500,7 +546,7 @@ function gerarPdfPais(dados: DadosRelatorioPais): jsPDF {
     doc.setFont('helvetica', 'bold');
     doc.text('Data de Nascimento:', 52, 36);
     doc.setFont('helvetica', 'normal');
-    doc.text(dados.cliente.dataNascimento ?? '___/___/______', 97, 36);
+    doc.text(formatarDataNascimento(dados.cliente.dataNascimento), 97, 36);
     
     // Idade
     doc.setFont('helvetica', 'bold');
@@ -537,12 +583,16 @@ function gerarPdfPais(dados: DadosRelatorioPais): jsPDF {
     doc.setFont('helvetica', 'normal');
     doc.text(dados.especialidade, 50, yPos);
     
-    // Registro (CRP)
+    // Registro profissional (CRP/CRFa/CREFITO)
     yPos += 6;
     doc.setFont('helvetica', 'bold');
     doc.text('Registro:', 15, yPos);
     doc.setFont('helvetica', 'normal');
-    doc.text(dados.terapeuta.registroProfissional ?? '-', 40, yPos);
+    const siglaConselho = getSiglaConselho(dados.especialidade);
+    const registroFormatado = dados.terapeuta.registroProfissional 
+        ? `${siglaConselho} ${dados.terapeuta.registroProfissional}`
+        : '-';
+    doc.text(registroFormatado, 40, yPos);
     
     yPos += 10;
     

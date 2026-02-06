@@ -70,6 +70,71 @@ const CORES = {
 };
 
 // ============================================
+// MAPEAMENTO DE CONSELHO POR ÁREA
+// ============================================
+
+/** Mapeamento de área de atuação para sigla do conselho profissional */
+const AREA_PARA_SIGLA_CONSELHO: Record<string, string> = {
+    'Fisioterapia': 'CREFITO',
+    'Terapia Ocupacional': 'CREFITO',
+    'Fonoaudiologia': 'CRFa',
+    'Psicologia': 'CRP',
+    'Neuropsicologia': 'CRP',
+    'Psicopedagogia': 'CRP',
+    'Terapia ABA': 'CRP',
+    'Musicoterapia': 'CBMT',
+    'Nutrição': 'CRN',
+    'Enfermagem': 'COREN',
+    'Medicina': 'CRM',
+};
+
+/** Obtém a sigla do conselho com base na área de atuação */
+function getSiglaConselho(areaAtuacao: string | undefined): string {
+    if (!areaAtuacao) return 'CRP';
+    return AREA_PARA_SIGLA_CONSELHO[areaAtuacao] || 'CRP';
+}
+
+/** Obtém o título profissional baseado na especialidade */
+function getTituloProfissional(especialidade: string | undefined): string {
+    const titulosMap: Record<string, string> = {
+        'Fisioterapia': 'Fisioterapeuta',
+        'Terapia Ocupacional': 'Terapeuta Ocupacional',
+        'Fonoaudiologia': 'Fonoaudióloga',
+        'Psicologia': 'Psicóloga',
+        'Neuropsicologia': 'Neuropsicóloga',
+        'Psicopedagogia': 'Psicopedagoga',
+        'Terapia ABA': 'Terapeuta ABA',
+        'Musicoterapia': 'Musicoterapeuta',
+        'Nutrição': 'Nutricionista',
+        'Enfermagem': 'Enfermeira',
+        'Medicina': 'Médica',
+    };
+    if (!especialidade) return 'Profissional';
+    return titulosMap[especialidade] || 'Profissional';
+}
+
+/**
+ * Formata data de nascimento para DD/MM/YYYY
+ * Aceita formato ISO (YYYY-MM-DDTHH:mm:ss.sssZ), YYYY-MM-DD, ou já formatado DD/MM/YYYY
+ */
+function formatarDataNascimento(data: string | undefined): string {
+    if (!data) return '___/___/______';
+    
+    // Se já está no formato DD/MM/YYYY, retorna direto
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(data)) return data;
+    
+    // Se está no formato ISO ou YYYY-MM-DD
+    const parsed = new Date(data);
+    if (isNaN(parsed.getTime())) return '___/___/______';
+    
+    return parsed.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+    });
+}
+
+// ============================================
 // FUNÇÕES DE FORMATAÇÃO
 // ============================================
 
@@ -391,7 +456,7 @@ function gerarHtmlConvenio(dados: DadosRelatorioConvenio, logoDataUri: string): 
             <td style="padding: 0pt 2pt; border: 1pt solid ${CORES.borda}; font-size: 7pt; text-align: center; line-height: 1;">${sessao.dataFormatted}</td>
             <td style="padding: 0pt 2pt; border: 1pt solid ${CORES.borda}; font-size: 7pt; text-align: center; white-space: nowrap; line-height: 1;">${dataExtensoAbrev}</td>
             <td style="padding: 0pt 2pt; border: 1pt solid ${CORES.borda}; font-size: 7pt; text-align: center; white-space: nowrap; line-height: 1;">${horaInicioCompacta} às ${horaFimCompacta}</td>
-            <td style="padding: 0pt 2pt; border: 1pt solid ${CORES.borda}; font-size: 7pt; line-height: 1;">Terapia ${dados.especialidade.toLowerCase()} com ${nomeTerapeuta} (${dados.terapeuta.registroProfissional ?? 'CRP -'})</td>
+            <td style="padding: 0pt 2pt; border: 1pt solid ${CORES.borda}; font-size: 7pt; line-height: 1;">Terapia ${dados.especialidade.toLowerCase()} com ${nomeTerapeuta} (${getSiglaConselho(dados.especialidade)} ${dados.terapeuta.registroProfissional ?? '-'})</td>
         </tr>
     `}).join('');
 
@@ -410,7 +475,7 @@ function gerarHtmlConvenio(dados: DadosRelatorioConvenio, logoDataUri: string): 
             <div style="display: table-cell; vertical-align: middle; padding-left: 12pt;">
                 <h1 style="font-size: 24pt; font-weight: 400; color: #395482; margin: 0 0 10pt 0;">Relatório para Convênio</h1>
                 <p style="font-size: 11pt; color: #374151; margin: 4pt 0;"><strong>Paciente:</strong> ${dados.cliente.nome}</p>
-                <p style="font-size: 11pt; color: #374151; margin: 4pt 0;"><strong>Data de Nascimento:</strong> ${dados.cliente.dataNascimento ?? '___/___/______'}</p>
+                <p style="font-size: 11pt; color: #374151; margin: 4pt 0;"><strong>Data de Nascimento:</strong> ${formatarDataNascimento(dados.cliente.dataNascimento)}</p>
                 <p style="font-size: 11pt; color: #374151; margin: 4pt 0;"><strong>Idade:</strong> ${dados.cliente.idade ?? '___ anos e ___ meses'}</p>
                 <p style="font-size: 10pt; color: #6b7280; margin: 4pt 0;">Emitido em: ${dados.dataEmissao}</p>
             </div>
@@ -494,8 +559,8 @@ function gerarHtmlConvenio(dados: DadosRelatorioConvenio, logoDataUri: string): 
                 </table>
                 <div style="padding-top: 6pt;">
                     <p style="font-size: 10pt; font-weight: bold; margin: 0;">${dados.terapeuta.nome}</p>
-                    <p style="font-size: 9pt; margin: 2pt 0;">Psicóloga prestadora de serviços da Clínica Instituto Índigo</p>
-                    <p style="font-size: 9pt; margin: 2pt 0;">Psicóloga ${dados.terapeuta.registroProfissional ?? 'CRP -'}</p>
+                    <p style="font-size: 9pt; margin: 2pt 0;">${getTituloProfissional(dados.especialidade)} prestadora de serviços da Clínica Instituto Índigo</p>
+                    <p style="font-size: 9pt; margin: 2pt 0;">${getTituloProfissional(dados.especialidade)} ${getSiglaConselho(dados.especialidade)} ${dados.terapeuta.registroProfissional ?? '-'}</p>
                 </div>
             </div>
 
@@ -550,7 +615,7 @@ function gerarHtmlPais(dados: DadosRelatorioPais, logoDataUri: string): string {
             <div style="display: table-cell; vertical-align: middle; padding-left: 12pt;">
                 <h1 style="font-size: 24pt; font-weight: 400; color: #395482; margin: 0 0 10pt 0;">Relatório de Atendimento</h1>
                 <p style="font-size: 11pt; color: #374151; margin: 4pt 0;"><strong>Paciente:</strong> ${dados.cliente.nome}</p>
-                <p style="font-size: 11pt; color: #374151; margin: 4pt 0;"><strong>Data de Nascimento:</strong> ${dados.cliente.dataNascimento ?? '___/___/______'}</p>
+                <p style="font-size: 11pt; color: #374151; margin: 4pt 0;"><strong>Data de Nascimento:</strong> ${formatarDataNascimento(dados.cliente.dataNascimento)}</p>
                 <p style="font-size: 11pt; color: #374151; margin: 4pt 0;"><strong>Idade:</strong> ${dados.cliente.idade ?? '___ anos e ___ meses'}</p>
                 <p style="font-size: 10pt; color: #6b7280; margin: 4pt 0;">Emitido em: ${dados.dataEmissao}</p>
             </div>
@@ -561,7 +626,7 @@ function gerarHtmlPais(dados: DadosRelatorioPais, logoDataUri: string): string {
         <div style="margin-bottom: 16pt;">
             <p style="font-size: 11pt; margin: 0;"><strong>Terapeuta:</strong> ${dados.terapeuta.nome}</p>
             <p style="font-size: 11pt; margin: 4pt 0;"><strong>Especialidade:</strong> ${dados.especialidade}</p>
-            <p style="font-size: 11pt; margin: 4pt 0;"><strong>Registro:</strong> ${dados.terapeuta.registroProfissional ?? '-'}</p>
+            <p style="font-size: 11pt; margin: 4pt 0;"><strong>Registro:</strong> ${dados.terapeuta.registroProfissional ? `${getSiglaConselho(dados.especialidade)} ${dados.terapeuta.registroProfissional}` : '-'}</p>
         </div>
 
         <!-- Tabela de Sessões -->

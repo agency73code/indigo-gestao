@@ -34,6 +34,38 @@ function normalizeAreaName(area: string | null | undefined): string | undefined 
     return area;
 }
 
+/**
+ * Busca o registro profissional do terapeuta para a área específica
+ * Compara a área do lançamento com as áreas de atuação do terapeuta
+ */
+function getRegistroProfissional(
+    registros: Array<{ numero_conselho: string | null; area_atuacao: { nome: string } }> | undefined,
+    areaLancamento: string | null | undefined
+): string | undefined {
+    if (!registros || registros.length === 0) return undefined;
+    
+    // Se só tem um registro, retornar ele
+    if (registros.length === 1) {
+        return registros[0]?.numero_conselho ?? undefined;
+    }
+    
+    // Se tem área específica, buscar o registro correspondente
+    if (areaLancamento) {
+        const areaLower = areaLancamento.toLowerCase();
+        const registro = registros.find(r => 
+            r.area_atuacao.nome.toLowerCase() === areaLower ||
+            AREA_DISPLAY_NAMES[r.area_atuacao.nome.toLowerCase()] === areaLancamento
+        );
+        if (registro?.numero_conselho) {
+            return registro.numero_conselho;
+        }
+    }
+    
+    // Fallback: retornar o primeiro registro que tiver número
+    const primeiroComNumero = registros.find(r => r.numero_conselho);
+    return primeiroComNumero?.numero_conselho ?? undefined;
+}
+
 export function mapBillingListItem(item: BillingListItem) {
     const time = buildLocalSessionTime(
         item.inicio_em,
@@ -53,6 +85,13 @@ export function mapBillingListItem(item: BillingListItem) {
     const clientRate = item.cliente.terapeuta.find((link) => link.terapeuta_id === item.terapeuta_id)?.valor_sessao ?? null;
     const clientRateValue = clientRate ? clientRate.toNumber() : 0;
 
+    // Buscar área do lançamento e registro profissional correspondente
+    const areaLancamento = item.sessao?.ocp.area ?? item.ata?.cabecalho_area_atuacao;
+    const registroProfissional = getRegistroProfissional(
+        item.terapeuta.registro_profissional,
+        areaLancamento
+    );
+
     return {
         id: buildBillingFrontId(ref),
         origemId: item.id,
@@ -61,6 +100,7 @@ export function mapBillingListItem(item: BillingListItem) {
         terapeutaId: item.terapeuta_id,
         terapeutaNome: item.terapeuta.nome,
         terapeutaAvatarUrl: buildAvatarUrl(item.terapeuta.arquivos),
+        terapeutaRegistroProfissional: registroProfissional,
         clienteId: item.cliente_id,
         clienteNome: item.cliente.nome,
         clienteIdade: calculateAge(item.cliente.dataNascimento),

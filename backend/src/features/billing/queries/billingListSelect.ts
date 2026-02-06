@@ -33,6 +33,16 @@ export const billingListSelect = Prisma.validator<Prisma.faturamentoSelect>()({
                     arquivo_id: true,
                 },
             },
+            registro_profissional: {
+                select: {
+                    numero_conselho: true,
+                    area_atuacao: {
+                        select: {
+                            nome: true,
+                        },
+                    },
+                },
+            },
             valor_hora_desenvolvimento_materiais: true,
             valor_hora_reuniao: true,
             valor_hora_supervisao_dada: true,
