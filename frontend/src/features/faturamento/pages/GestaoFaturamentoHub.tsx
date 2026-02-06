@@ -1012,6 +1012,16 @@ export function GestaoFaturamentoHub() {
         }
     }, [selectedIds.size, filteredPendentes]);
 
+    // Remove um item da lista local (atualização otimista após aprovar/rejeitar)
+    const handleRemoveItem = useCallback((id: string) => {
+        setLancamentos(prev => prev.filter(l => l.id !== id));
+        setSelectedIds(prev => {
+            const next = new Set(prev);
+            next.delete(id);
+            return next;
+        });
+    }, []);
+
     const handleTabChange = useCallback((tab: TabType) => {
         setActiveTab(tab);
         setSearchValue('');
@@ -1250,6 +1260,7 @@ export function GestaoFaturamentoHub() {
                                         onToggleSelect={toggleSelect}
                                         onToggleSelectAll={toggleSelectAll}
                                         onRefresh={loadData}
+                                        onRemoveItem={handleRemoveItem}
                                     />
                                 )}
 
@@ -1672,10 +1683,11 @@ interface AprovarHorasTabProps {
     selectedIds: Set<string>;
     onToggleSelect: (id: string) => void;
     onToggleSelectAll: () => void;
-    onRefresh: () => void;
+    onRefresh: () => Promise<void> | void;
+    onRemoveItem: (id: string) => void;
 }
 
-function AprovarHorasTab({ lancamentos, selectedIds, onToggleSelect, onToggleSelectAll, onRefresh }: AprovarHorasTabProps) {
+function AprovarHorasTab({ lancamentos, selectedIds, onToggleSelect, onToggleSelectAll, onRefresh, onRemoveItem }: AprovarHorasTabProps) {
     // Estado para item expandido (detalhe)
     const [expandedId, setExpandedId] = useState<string | null>(null);
     // Estado para valores de ajuda de custo por item
@@ -1716,6 +1728,10 @@ function AprovarHorasTab({ lancamentos, selectedIds, onToggleSelect, onToggleSel
 
             // Usar aprovação individual para enviar valorAjudaCusto
             await aprovarLancamento(String(lancamento.origemId), valorNumerico);
+            
+            // Remover item da lista imediatamente (atualização otimista)
+            onRemoveItem(lancamento.id);
+            
             toast.success('Lançamento aprovado!', {
                 description: valorNumerico 
                     ? `Ajuda de custo: ${formatarValor(valorNumerico)}`
@@ -1723,7 +1739,8 @@ function AprovarHorasTab({ lancamentos, selectedIds, onToggleSelect, onToggleSel
             });
             // Fechar expansão e atualizar lista após aprovar
             setExpandedId(null);
-            onRefresh();
+            // Aguardar um pouco antes de refetch para garantir que o backend processou
+            setTimeout(() => onRefresh(), 500);
         } catch (error) {
             toast.error('Erro ao aprovar lançamento');
         } finally {
@@ -1753,16 +1770,26 @@ function AprovarHorasTab({ lancamentos, selectedIds, onToggleSelect, onToggleSel
             return;
         }
 
+        // Encontrar o lançamento para obter o id
+        const lancamentoRejeitado = lancamentos.find(l => String(l.origemId) === rejeitandoId);
+
         setLoadingItems(prev => new Set(prev).add(rejeitandoId));
         try {
             await rejeitarLancamento(rejeitandoId, motivoRejeicao);
+            
+            // Remover item da lista imediatamente (atualização otimista)
+            if (lancamentoRejeitado) {
+                onRemoveItem(lancamentoRejeitado.id);
+            }
+            
             toast.success('Lançamento rejeitado', {
                 description: 'O terapeuta será notificado com o motivo.',
             });
             setRejeitandoId(null);
             setMotivoRejeicao('');
             setExpandedId(null);
-            onRefresh();
+            // Aguardar um pouco antes de refetch
+            setTimeout(() => onRefresh(), 500);
         } catch (error) {
             toast.error('Erro ao rejeitar lançamento');
         } finally {
@@ -1781,8 +1808,16 @@ function AprovarHorasTab({ lancamentos, selectedIds, onToggleSelect, onToggleSel
         setIsApprovingBatch(true);
         try {
             await aprovarLancamentos(ids);
+            
+            // Remover itens aprovados da lista imediatamente (atualização otimista)
+            const idsAprovados = lancamentos
+                .filter(l => ids.includes(String(l.origemId)))
+                .map(l => l.id);
+            idsAprovados.forEach(id => onRemoveItem(id));
+            
             toast.success(`${ids.length} lançamento(s) aprovado(s)!`);
-            onRefresh();
+            // Aguardar um pouco antes de refetch
+            setTimeout(() => onRefresh(), 500);
         } catch (error) {
             toast.error('Erro ao aprovar lançamentos');
         } finally {
