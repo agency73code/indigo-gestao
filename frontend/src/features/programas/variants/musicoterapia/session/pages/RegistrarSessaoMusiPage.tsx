@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import ActionBar from '@/components/ui/action-bar';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 import PatientSelector from '@/features/programas/consultar-programas/components/PatientSelector';
+import { SessionBillingData } from '@/features/programas/nova-sessao/components';
 import {
     MusiProgramSelector,
     MusiHeaderSessionInfo,
@@ -30,7 +31,9 @@ import type {
     MusiSessionAttempt,
     MusiSessionState,
     SessionFile,
+    DadosFaturamentoSessao,
 } from '../types';
+import { DADOS_FATURAMENTO_INITIAL, validarDadosFaturamento } from '../types';
 
 export default function RegistrarSessaoMusiPage() {
     const { setPageTitle } = usePageTitle();
@@ -60,6 +63,7 @@ export default function RegistrarSessaoMusiPage() {
         },
         notes: '',
         files: [],
+        billing: DADOS_FATURAMENTO_INITIAL,
     });
 
     // Estados de carregamento
@@ -162,6 +166,7 @@ export default function RegistrarSessaoMusiPage() {
                 avgSuporte: null,
             },
             files: [],
+            billing: DADOS_FATURAMENTO_INITIAL,
         });
     };
 
@@ -211,8 +216,25 @@ export default function RegistrarSessaoMusiPage() {
         }));
     };
 
+    const handleBillingChange = (billing: DadosFaturamentoSessao) => {
+        setSessionState((prev) => ({
+            ...prev,
+            billing,
+        }));
+    };
+
     const handleSave = async () => {
         if (!canSave) return;
+
+        // Validar dados de faturamento
+        const billingValidation = validarDadosFaturamento(sessionState.billing);
+        if (!billingValidation.valido) {
+            toast.error('Dados de faturamento incompletos', {
+                description: billingValidation.mensagem,
+                duration: 4000,
+            });
+            return;
+        }
 
         setSavingSession(true);
         setError(null);
@@ -224,6 +246,7 @@ export default function RegistrarSessaoMusiPage() {
                 attempts: sessionState.attempts,
                 notes: sessionState.notes,
                 files: sessionState.files,
+                faturamento: sessionState.billing,
             });
 
             toast.success('Sessão registrada com sucesso! 🎵', {
@@ -307,6 +330,13 @@ export default function RegistrarSessaoMusiPage() {
                                 program={programDetail}
                                 attempts={sessionState.attempts}
                                 onAddAttempt={handleAddAttempt}
+                            />
+
+                            {/* Dados de Faturamento da Sessão */}
+                            <SessionBillingData
+                                billing={sessionState.billing || DADOS_FATURAMENTO_INITIAL}
+                                onChange={handleBillingChange}
+                                disabled={savingSession}
                             />
 
                             {/* Observações da sessão */}

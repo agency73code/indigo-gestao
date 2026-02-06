@@ -32,7 +32,7 @@ export async function fetchToPatientById(id: string): Promise<Patient> {
 }
 
 export async function fetchToTherapistById(id: string): Promise<Therapist> {
-    const response = await fetch(`${API_URL}/terapeutas/${id}`, {
+    const response = await fetch(`${API_URL}/terapeutas/${id}/sumario`, {
         credentials: 'include',
     });
 
@@ -41,13 +41,12 @@ export async function fetchToTherapistById(id: string): Promise<Therapist> {
     }
 
     const data = await response.json();
-    const photoUrl = await fetchOwnerAvatar(id, 'terapeuta');
 
     return {
-        id,
+        id: data.id,
         name: data.nome,
-        photoUrl,
-        especialidade: data.dadosProfissionais[0].areaAtuacao,
+        photoUrl: data.photoUrl,
+        especialidade: data.especialidade,
     };
 }
 

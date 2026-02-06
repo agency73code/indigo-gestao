@@ -1,4 +1,5 @@
 import type { AreaType } from "@/contexts/AreaContext";
+import type { DadosFaturamentoSessao } from "@/features/programas/core/types/billing";
 
 export type QueryParamValue = string | number | boolean | null | undefined;
 export type QueryParams = Record<string, QueryParamValue>;
@@ -10,6 +11,7 @@ export type SaveSessionPayload<TAttempt> = {
     area: AreaType;
     notes?: string;
     files?: SessionFile[];
+    faturamento?: DadosFaturamentoSessao;
 }
 
 type SessionFile = {
@@ -33,3 +35,11 @@ export type ListQueryParams = {
     page?: number;
     pageSize?: number;
 };
+
+export type DebugFormDataValue =
+    | string
+    | {
+          name: string;
+          size: number;
+          type: string;
+      };

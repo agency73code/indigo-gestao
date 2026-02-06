@@ -542,17 +542,12 @@ export default function CadastroClientePage() {
     };
 
     const nextStep = () => {
-        console.log('Tentando avançar para próximo passo. Passo atual:', currentStep);
-        console.log('Dados do formulário:', formData);
-
         const isValid = validateCurrentStep();
-        console.log('Validação passou?', isValid);
-        console.log('Erros encontrados:', errors);
 
         if (isValid && currentStep < STEPS.length) {
             setCurrentStep((prev) => prev + 1);
         } else {
-            console.log('Não foi possível avançar. Validação falhou ou chegou ao último passo.');
+            console.error('Não foi possível avançar. Validação falhou ou chegou ao último passo.');
         }
     };
 

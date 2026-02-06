@@ -9,7 +9,7 @@ import { AppError } from '../../errors/AppError.js';
 import { getVisibilityScope } from '../../utils/visibilityFilter.js';
 import { canDownloadFile } from './utils/canDownloadFile.js';
 import { toFileForDownload } from './r2/toFileForDownload.js';
-import { forbidden } from './utils/forbidden.js';
+import { forbidden } from '../../errors/forbidden.js';
 
 type OwnerType = 'cliente' | 'terapeuta';
 

@@ -99,24 +99,26 @@ export function normalizeSelectTherapists(records: LinkTypes.TherapistRecord[]):
 export function normalizeListTherapists(
     records: LinkTypes.TherapistRecord[],
     includeNumeroConselho: boolean,
-): LinkTypes.TherapistListDTO[] {
+) {
     return records.map((therapist) => {
         const avatarFile = therapist.arquivos?.[0]?.arquivo_id ?? null;
-        const professional = therapist.registro_profissional?.[0];
+        const regs = therapist.registro_profissional ?? [];
+
+        const dadosProfissionais = regs
+            .map((rp) => ({
+                cargo: rp.cargo?.nome ?? 'Cargo sem nome',
+                areaAtuacao: rp.area_atuacao?.nome ?? 'Area de atuação sem nome',
+                ...(includeNumeroConselho ? { numeroConselho: rp.numero_conselho ?? null } : {}),
+            }));
 
         return {
             id: therapist.id,
             nome: therapist.nome,
             avatarUrl: buildAvatarUrl(avatarFile),
-            dadosProfissionais: [
-                {
-                    cargo: professional?.cargo?.nome ?? 'Cargo sem nome',
-                    areaAtuacao: professional?.area_atuacao?.nome ?? 'Area de atuação sem nome',
-                    ...(includeNumeroConselho
-                        ? { numeroConselho: professional?.numero_conselho ?? null }
-                        : {}),
-                },
-            ],
+            dadosProfissionais:
+                dadosProfissionais.length > 0
+                    ? dadosProfissionais
+                    : [],
         };
     });
 }

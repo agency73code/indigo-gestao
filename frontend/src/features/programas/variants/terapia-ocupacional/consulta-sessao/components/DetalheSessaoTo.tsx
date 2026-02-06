@@ -4,6 +4,7 @@ import { aggregateByStimulus, sumCounts } from '@/features/programas/consulta-se
 import HeaderSessao from '@/features/programas/consulta-sessao/components/HeaderSessao';
 import SessionNotes from '@/features/programas/consulta-sessao/pages/components/SessionNotes';
 import SessionFiles from '@/features/programas/consulta-sessao/pages/components/SessionFiles';
+import SessionBillingView from '@/features/programas/consulta-sessao/components/SessionBillingView';
 import { getSessionFiles } from '@/features/programas/variants/terapia-ocupacional/session/services';
 import { getToStatus } from '../helpers';
 import ToSessionSummary from './ToSessionSummary';
@@ -109,6 +110,9 @@ export default function DetalheSessaoTo({ sessao, paciente, programa, onBack }: 
                 durationsByActivity={durationsByActivity}
                 defaultSort="severity"
             />
+
+            {/* Dados de Faturamento */}
+            <SessionBillingView billing={sessao.faturamento} />
 
             <SessionFiles files={sessionFiles} />
 

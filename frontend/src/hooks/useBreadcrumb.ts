@@ -45,7 +45,6 @@ const routeToTitleMap: Record<string, string> = {
     '/app/relatorios/lista': 'Relatórios Salvos',
     '/app/relatorios/novo': 'Gerar Relatório',
     '/app/faturamento': 'Faturamento',
-    '/app/faturamento/registrar-lancamento': 'Registrar Lançamento',
     '/app/faturamento/minhas-horas': 'Minhas Horas',
     '/app/faturamento/gestao': 'Gestão de Horas',
 };

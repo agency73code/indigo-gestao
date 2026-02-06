@@ -48,6 +48,11 @@ export type Sessao = {
   files?: SessionFile[];
   registros: RegistroTentativa[];
   area: string; // 'fisioterapia' | 'terapia-ocupacional' | 'fonoaudiologia'
+  /** 
+   * Dados de faturamento da sessão
+   * @see DadosFaturamentoSessao em core/types/billing.ts
+   */
+  faturamento?: import('@/features/programas/core/types/billing').DadosFaturamentoSessao;
 };
 
 export type ResumoSessao = {

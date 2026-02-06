@@ -783,7 +783,7 @@ export default function AnamnesePage() {
         for (let i = currentStep; i < step; i++) {
             const stepData = getStepData(i);
             const validation = validateStep(i, stepData);
-            
+
             if (!validation.isValid) {
                 // Ir para o step com erro
                 setCurrentStep(i);
@@ -815,7 +815,7 @@ export default function AnamnesePage() {
             stepValidation.errors.forEach((err) => {
                 newFieldErrors[err.field] = err.message;
             });
-            
+
             setFieldErrors(newFieldErrors);
             setValidationErrors(stepValidation.errorMessages);
             toast.error('Preencha os campos obrigatórios antes de finalizar.');

@@ -269,7 +269,13 @@ export type TherapistFormValues = {
     dadosProfissionais: ProfessionalDataForm[];
     dataInicio: string;
     dataFim: string;
-    valorHoraAcordado: string;
+    // Valores por tipo de atividade (para faturamento)
+    valorSessaoConsultorio: string;
+    valorSessaoHomecare: string;
+    valorHoraDesenvolvimentoMateriais: string;
+    valorHoraSupervisaoRecebida: string;
+    valorHoraSupervisaoDada: string;
+    valorHoraReuniao: string;
     professorUnindigo: 'sim' | 'nao';
     disciplinaUniindigo: string;
     formacao: FormacaoForm;
