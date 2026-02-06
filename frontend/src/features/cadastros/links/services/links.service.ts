@@ -76,7 +76,7 @@ export async function createLink(input: CreateLinkInput): Promise<PatientTherapi
     },
     body: JSON.stringify(input)
   });
-
+  console.log(input)
   if (!res.ok) {
     let errorMessage = 'Falha ao criar vínculo';
     const errorText = await res.text();
@@ -358,12 +358,10 @@ export async function getTherapistsForLinks(): Promise<TherapistListDTO[]> {
 export async function getAllLinks(filters?: LinkFilters): Promise<PatientTherapistLink[]> {
   if (!filters || filters.viewBy === 'supervision') return [];
 
-  // Monta query string a partir do objeto de filtros
-  const query = filters
-   ? '?' + new URLSearchParams(filters as Record<string, string>).toString()
-   : '';
+  const baseQuery =
+    '?' + new URLSearchParams(filters as Record<string, string>).toString();
 
-  const res = await fetch(`/api/links/getAllLinks${query}`, {
+  const res = await fetch(`/api/links/getAllLinks${baseQuery}`, {
     method: 'GET',
     credentials: 'include',
   });
@@ -373,6 +371,7 @@ export async function getAllLinks(filters?: LinkFilters): Promise<PatientTherapi
   }
   
   const json = await res.json();
+
   return json as PatientTherapistLink[];
 }
 
@@ -398,7 +397,6 @@ export async function getAllSupervisionLinks(filters?: LinkFilters): Promise<The
   }
 
   const json = await res.json();
-  console.log({ 'terapeuta-terapeuta': json })
   return json as TherapistSupervisionLink[];
 }
 

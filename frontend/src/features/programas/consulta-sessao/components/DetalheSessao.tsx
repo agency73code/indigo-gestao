@@ -3,6 +3,7 @@ import HeaderSessao from './HeaderSessao';
 import SessionSummary from '../pages/components/SessionSummary';
 import StimuliPerformanceList from '../pages/components/StimuliPerformanceList';
 import SessionNotes from '../pages/components/SessionNotes';
+import SessionBillingView from './SessionBillingView';
 import type { Sessao, Patient, ProgramDetail } from '../types';
 import { aggregateByStimulus, sumCounts, toStatus } from '../pages/helpers';
 
@@ -66,6 +67,9 @@ export default function DetalheSessao({ sessao, paciente, programa, onBack }: De
                 countsByStimulus={countsByStimulus}
                 defaultSort="severity"
             />
+
+            {/* Dados de Faturamento */}
+            <SessionBillingView billing={sessao.faturamento} />
 
             <SessionNotes notes={sessao.observacoes ?? null} />
         </div>

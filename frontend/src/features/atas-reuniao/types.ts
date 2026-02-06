@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { DadosFaturamentoAta } from './types/billing';
 
 // ============================================
 // ENUMS E CONSTANTES
@@ -11,6 +12,8 @@ export const FINALIDADE_REUNIAO = {
     REUNIAO_ESCOLA: 'reuniao_escola',
     SUPERVISAO_AT: 'supervisao_at',
     SUPERVISAO_TERAPEUTA: 'supervisao_terapeuta',
+    SUPERVISAO_RECEBIDA: 'supervisao_recebida',
+    DESENVOLVIMENTO_MATERIAIS: 'desenvolvimento_materiais',
     OUTROS: 'outros',
 } as const;
 
@@ -23,6 +26,8 @@ export const FINALIDADE_LABELS: Record<FinalidadeReuniao, string> = {
     [FINALIDADE_REUNIAO.REUNIAO_ESCOLA]: 'Reunião com a Escola',
     [FINALIDADE_REUNIAO.SUPERVISAO_AT]: 'Supervisão do AT',
     [FINALIDADE_REUNIAO.SUPERVISAO_TERAPEUTA]: 'Supervisão do Terapeuta',
+    [FINALIDADE_REUNIAO.SUPERVISAO_RECEBIDA]: 'Supervisão Recebida',
+    [FINALIDADE_REUNIAO.DESENVOLVIMENTO_MATERIAIS]: 'Desenvolvimento de Materiais',
     [FINALIDADE_REUNIAO.OUTROS]: 'Outros',
 };
 
@@ -70,7 +75,8 @@ export interface CabecalhoAta {
 
 /** Salvos: id, tipo, nome, descricao, terapeutaId | Derivados: especialidade, cargo, avatarUrl */
 export interface Participante {
-    id: string;
+    id?: number;
+    localId: string;
     tipo: TipoParticipante;
     nome: string;
     descricao?: string;
@@ -79,6 +85,7 @@ export interface Participante {
     cargo?: string;
     /** URL do avatar do participante (apenas para profissionais da clínica) */
     avatarUrl?: string;
+    removed?: true;
 }
 
 /** Link de recomendação (brinquedos, materiais, etc.) */
@@ -101,6 +108,8 @@ export interface AtaFormData {
     clienteId?: string;
     clienteNome?: string;
     links?: LinkRecomendacao[];
+    /** Dados de faturamento da ata (separado do conteúdo) */
+    faturamento?: DadosFaturamentoAta;
 }
 
 /** Anexo - url é derivado */
@@ -204,7 +213,8 @@ export interface ClienteOption {
 // ============================================
 
 export const participanteSchema = z.object({
-    id: z.string().min(1),
+    id: z.number().int().positive().optional(),
+    localId: z.string().min(1),
     tipo: z.enum([
         TIPO_PARTICIPANTE.FAMILIA,
         TIPO_PARTICIPANTE.PROFISSIONAL_EXTERNO,
@@ -215,6 +225,7 @@ export const participanteSchema = z.object({
     terapeutaId: z.string().optional().nullable(),
     especialidade: z.string().optional().nullable(),
     cargo: z.string().optional().nullable(),
+    removed: z.literal(true).optional(),
 });
 
 export const ataFormSchema = z.object({
@@ -228,6 +239,8 @@ export const ataFormSchema = z.object({
         FINALIDADE_REUNIAO.REUNIAO_ESCOLA,
         FINALIDADE_REUNIAO.SUPERVISAO_AT,
         FINALIDADE_REUNIAO.SUPERVISAO_TERAPEUTA,
+        FINALIDADE_REUNIAO.SUPERVISAO_RECEBIDA,
+        FINALIDADE_REUNIAO.DESENVOLVIMENTO_MATERIAIS,
         FINALIDADE_REUNIAO.OUTROS,
     ]),
     finalidadeOutros: z.string().optional(),

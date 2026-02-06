@@ -46,7 +46,7 @@ export async function fetchFisioPatientById(id: string): Promise<Patient> {
 }
 
 export async function fetchFisioTherapistById(id: string): Promise<Therapist> {
-    const response = await fetch(`${API_URL}/terapeutas/${id}`, {
+    const response = await fetch(`${API_URL}/terapeutas/${id}/sumario`, {
         credentials: 'include',
     });
 
@@ -83,7 +83,7 @@ export async function fetchFisioTherapistAvatar(therapistId: string): Promise<st
 
 export async function createFisioProgram(input: CreateProgramInput): Promise<{ id: string }> {
     const area = getArea();
-    
+
     const response = await fetch(`${API_URL}/ocp/create`, {
         method: 'POST',
         headers: {

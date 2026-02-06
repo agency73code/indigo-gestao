@@ -19,6 +19,8 @@ import {
     TIPO_PARTICIPANTE,
     ataFormSchema,
 } from '../types';
+import type { DadosFaturamentoAta } from '../types/billing';
+import { DADOS_FATURAMENTO_ATA_INITIAL, getFaturamentoTypeByFinalidade } from '../types/billing';
 
 import {
     getTerapeutaLogado,
@@ -71,9 +73,12 @@ export interface UseAtaFormReturn {
 
     // Handlers de participantes
     addParticipante: (tipo: keyof typeof TIPO_PARTICIPANTE) => void;
-    updateParticipante: (id: string, updates: Partial<Participante>) => void;
-    removeParticipante: (id: string) => void;
+    updateParticipante: (localId: string, updates: Partial<Participante>) => void;
+    removeParticipante: (localId: string) => void;
     selectTerapeutaParticipante: (participanteId: string, terapeutaId: string) => void;
+
+    // Handler de faturamento
+    handleFaturamentoChange: (faturamento: DadosFaturamentoAta) => void;
 
     // Ações
     handleSubmit: (anexos?: AnexoUpload[], links?: LinkRecomendacao[], finalizar?: boolean) => Promise<void>;
@@ -114,6 +119,7 @@ const getInitialFormData = (): AtaFormData => ({
     conteudo: '',
     clienteId: '',
     clienteNome: '',
+    faturamento: DADOS_FATURAMENTO_ATA_INITIAL,
 });
 
 // ============================================
@@ -206,6 +212,23 @@ export function useAtaForm({
         loadTerapeutas();
     }, []);
 
+    // Atualizar tipo de faturamento automaticamente quando finalidade mudar
+    useEffect(() => {
+        if (!formData.finalidade) return;
+        
+        const novoTipo = getFaturamentoTypeByFinalidade(formData.finalidade);
+        
+        if (formData.faturamento?.tipoFaturamento !== novoTipo) {
+            setFormData((prev) => ({
+                ...prev,
+                faturamento: {
+                    ...(prev.faturamento || DADOS_FATURAMENTO_ATA_INITIAL),
+                    tipoFaturamento: novoTipo,
+                },
+            }));
+        }
+    }, [formData.finalidade, formData.faturamento?.tipoFaturamento, setFormData]);
+
     // ============================================
     // SELEÇÃO DE ÁREA DE ATUAÇÃO
     // ============================================
@@ -270,7 +293,7 @@ export function useAtaForm({
     const addParticipante = useCallback(
         (tipo: keyof typeof TIPO_PARTICIPANTE) => {
             const novoParticipante: Participante = {
-                id: crypto.randomUUID(),
+                localId: crypto.randomUUID(),
                 tipo: TIPO_PARTICIPANTE[tipo],
                 nome: '',
                 descricao: '',
@@ -284,11 +307,11 @@ export function useAtaForm({
     );
 
     const updateParticipante = useCallback(
-        (id: string, updates: Partial<Participante>) => {
+        (localId: string, updates: Partial<Participante>) => {
             setFormData((prev) => ({
                 ...prev,
                 participantes: prev.participantes.map((p) =>
-                    p.id === id ? { ...p, ...updates } : p
+                    p.localId === localId ? { ...p, ...updates } : p
                 ),
             }));
         },
@@ -296,10 +319,12 @@ export function useAtaForm({
     );
 
     const removeParticipante = useCallback(
-        (id: string) => {
+        (localId: string) => {
             setFormData((prev) => ({
                 ...prev,
-                participantes: prev.participantes.filter((p) => p.id !== id),
+                participantes: prev.participantes.map((p) =>
+                    p.localId === localId ? { ...p, removed: true } : p
+                ),
             }));
         },
         [setFormData]
@@ -321,11 +346,28 @@ export function useAtaForm({
     );
 
     // ============================================
+    // HANDLERS - FATURAMENTO
+    // ============================================
+
+    const handleFaturamentoChange = useCallback(
+        (faturamento: DadosFaturamentoAta) => {
+            setFormData((prev) => ({
+                ...prev,
+                faturamento,
+            }));
+        },
+        [setFormData]
+    );
+
+    // ============================================
     // VALIDAÇÃO E SUBMIT
     // ============================================
 
     const validateForm = useCallback((): boolean => {
-        const result = ataFormSchema.safeParse(formData);
+        const result = ataFormSchema.safeParse({
+            ...formData,
+            participantes: formData.participantes.filter((p) => !p.removed),
+        });
 
         if (!result.success) {
             const newErrors: Record<string, string> = {};
@@ -441,6 +483,9 @@ export function useAtaForm({
         updateParticipante,
         removeParticipante,
         selectTerapeutaParticipante,
+
+        // Handler de faturamento
+        handleFaturamentoChange,
 
         // Ações
         handleSubmit,

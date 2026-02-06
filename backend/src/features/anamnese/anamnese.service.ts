@@ -17,7 +17,7 @@ import { buildHeader } from './builders/buildHeader.js';
 import { buildInitialDevelopment } from './builders/buildInitialDevelopment.js';
 import { buildSocialAcademic } from './builders/buildSocialAcademic.js';
 import { canDownloadFile } from '../file/utils/canDownloadFile.js';
-import { forbidden } from '../file/utils/forbidden.js';
+import { forbidden } from '../../errors/forbidden.js';
 
 type SimNao = 'sim' | 'nao' | null | undefined;
 

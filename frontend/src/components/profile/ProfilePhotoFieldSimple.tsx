@@ -282,7 +282,7 @@ export default forwardRef<ProfilePhotoFieldSimpleRef, ProfilePhotoFieldSimplePro
                                         e.stopPropagation();
                                         handleRemove();
                                     }}
-                                    className="absolute -top-1 -right-1 p-1 rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
+                                    className="absolute -top-1 -right-1 p-1 rounded-full bg-destructive text-white hover:bg-destructive/90 transition-colors"
                                 >
                                     <X className="w-3 h-3" />
                                 </button>

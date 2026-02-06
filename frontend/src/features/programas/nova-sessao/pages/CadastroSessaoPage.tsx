@@ -16,6 +16,7 @@ import {
     SessionSummary,
     SessionObservations,
     FonoSessionFiles,
+    SessionBillingData,
 } from '../components/index.ts';
 import type { SessionFile } from '../components/index.ts';
 import {
@@ -30,7 +31,9 @@ import type {
     ProgramDetail,
     SessionAttempt,
     SessionState,
+    DadosFaturamentoSessao,
 } from '../types.ts';
+import { DADOS_FATURAMENTO_INITIAL, validarDadosFaturamento } from '../types.ts';
 
 export default function CadastroSessaoPage() {
     const { setPageTitle } = usePageTitle();
@@ -56,10 +59,14 @@ export default function CadastroSessaoPage() {
             totalAttempts: 0,
         },
         notes: '',
+        billing: DADOS_FATURAMENTO_INITIAL,
     });
 
     // Estado para arquivos da sessão
     const [sessionFiles, setSessionFiles] = useState<SessionFile[]>([]);
+    
+    // Estado para erros de validação de faturamento
+    const [billingErrors, setBillingErrors] = useState<Record<string, string>>({});
 
     // Estados de carregamento
     const [loadingProgram, setLoadingProgram] = useState(false);
@@ -161,7 +168,19 @@ export default function CadastroSessaoPage() {
                 independenceRate: 0,
                 totalAttempts: 0,
             },
+            billing: DADOS_FATURAMENTO_INITIAL,
         });
+        setBillingErrors({});
+    };
+
+    // Handler para dados de faturamento
+    const handleBillingChange = (billing: DadosFaturamentoSessao) => {
+        setSessionState((prev) => ({
+            ...prev,
+            billing,
+        }));
+        // Limpar erros ao editar
+        setBillingErrors({});
     };
 
     const handleProgramSelect = async (program: ProgramListItem) => {
@@ -206,6 +225,19 @@ export default function CadastroSessaoPage() {
     const handleSave = async () => {
         if (!canSave) return;
 
+        // Validar dados de faturamento
+        if (sessionState.billing) {
+            const validacao = validarDadosFaturamento(sessionState.billing);
+            if (!validacao.valido) {
+                setBillingErrors(validacao.erros);
+                toast.error('Dados de faturamento incompletos', {
+                    description: 'Preencha os campos obrigatórios de faturamento.',
+                    duration: 4000,
+                });
+                return;
+            }
+        }
+
         setSavingSession(true);
         setError(null);
 
@@ -216,6 +248,7 @@ export default function CadastroSessaoPage() {
                 attempts: sessionState.attempts,
                 notes: sessionState.notes,
                 files: sessionFiles,
+                faturamento: sessionState.billing,
             });
 
             // Toast de confirmação com mensagem focada na experiência do usuário
@@ -317,6 +350,28 @@ export default function CadastroSessaoPage() {
                                 onFilesChange={setSessionFiles}
                                 disabled={savingSession}
                             />
+
+                            {/* 
+                              * ============================================
+                              * DADOS DE FATURAMENTO
+                              * ============================================
+                              * Seção para captura de dados de faturamento.
+                              * Separada das observações clínicas.
+                              * 
+                              * BACKEND: Os dados são enviados no campo `faturamento`
+                              * do payload de saveSession.
+                              * ============================================
+                              */}
+                            {sessionState.billing && (
+                                <SessionBillingData
+                                    value={sessionState.billing}
+                                    onChange={handleBillingChange}
+                                    errors={billingErrors}
+                                    disabled={savingSession}
+                                    title="Dados de Faturamento"
+                                    defaultExpanded={true}
+                                />
+                            )}
 
                             {/* Registro de tentativas */}
                             <AttemptsRegister attempts={sessionState.attempts} />

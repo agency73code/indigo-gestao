@@ -1,172 +1,102 @@
+/**
+ * HubFaturamentoPage
+ * 
+ * Página Hub de Faturamento - separação de acesso entre Terapeuta e Gerente.
+ */
+
 import { Link } from 'react-router-dom';
-import { FilePlus, Clock, Table2, Download } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitleHub } from '@/components/ui/card';
+import { Clock, Users } from 'lucide-react';
+import { Card, CardHeader, CardTitleHub } from '@/components/ui/card';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 import { useEffect } from 'react';
 
-export default function HubFaturamentoPage() {
+export function HubFaturamentoPage() {
     const { setPageTitle } = usePageTitle();
 
     useEffect(() => {
         setPageTitle('Faturamento');
     }, [setPageTitle]);
 
-    const mainActions = [
+    const accessOptions = [
         {
-            title: 'Registrar Lançamento',
-            description: 'Lançar horas e valores de um atendimento',
-            icon: FilePlus,
-            href: '/app/faturamento/registrar-lancamento',
-            iconColor: 'text-indigo-600',
-            bgColor: 'bg-[#E0E7FF]',
-        },
-        {
-            title: 'Minhas horas',
-            description: 'Histórico e totais das suas sessões',
+            title: 'Minhas Horas',
+            description: 'Visualize suas horas de sessões e atas de reunião registradas no sistema.',
             icon: Clock,
             href: '/app/faturamento/minhas-horas',
-            iconColor: 'text-green-600',
-            bgColor: 'bg-[#D1FAE5]',
+            iconColor: 'text-indigo-600',
+            bgColor: 'bg-[#E0E7FF]',
+            role: 'Terapeuta',
         },
         {
-            title: 'Gestão (gerente)',
-            description: 'Listagem global com filtros por cliente e terapeuta',
-            icon: Table2,
+            title: 'Gestão de Horas',
+            description: 'Visualize os lançamentos de todos os terapeutas, aprove e gere relatórios.',
+            icon: Users,
             href: '/app/faturamento/gestao',
             iconColor: 'text-purple-600',
             bgColor: 'bg-[#E9D5FF]',
-        },
-        {
-            title: 'Relatórios/Exportar',
-            description: 'Exportar lançamentos filtrados',
-            icon: Download,
-            href: '/app/faturamento/relatorios',
-            iconColor: 'text-gray-600',
-            bgColor: 'bg-[#E5E7EB]',
+            role: 'Gerente',
         },
     ];
 
     return (
-        <div className="flex flex-col min-h-full w-full p-1 md:p-4 lg:p-4 space-y-4">
-            {/* Main Action Cards */}
-            <div className="space-y-5 p-0">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {mainActions.map((action, index) => {
-                        const Icon = action.icon;
-                        return (
-                            <Link
-                                key={index}
-                                to={action.href}
-                                className="block"
-                                aria-label={`${action.title}: ${action.description}`}
-                            >
-                                <Card 
-                                    padding="hub" 
-                                    className="cursor-pointer hover:shadow-md transition-all hover:scale-[1.02] border border-border/40 rounded-lg h-full"
-                                    style={{ backgroundColor: 'var(--hub-card-background)' }}
-                                >
-                                    <CardHeader className="space-y-3">
-                                        <div className={`h-14 w-14 rounded-lg ${action.bgColor} flex items-center justify-center`}>
-                                            <Icon className={`h-7 w-7 ${action.iconColor}`} />
-                                        </div>
-                                        <div className="space-y-1">
-                                            <CardTitleHub className="text-lg">
-                                                {action.title}
-                                            </CardTitleHub>
-                                            <p className="text-sm text-muted-foreground">
-                                                {action.description}
-                                            </p>
-                                        </div>
-                                    </CardHeader>
-                                </Card>
-                            </Link>
-                        );
-                    })}
-                </div>
-            </div>
-
-            {/* Quick Stats Cards */}
-            <div className="space-y-4">
-                <h2
+        <div className="flex flex-col min-h-full w-full p-4 md:p-6 lg:p-8">
+            {/* Título e descrição */}
+            <div className="mb-8">
+                <h1 
+                    className="text-2xl md:text-3xl text-foreground mb-2"
                     style={{ 
                         fontFamily: 'Sora, sans-serif',
-                        fontWeight: 'var(--hub-section-title-font-weight)'
+                        fontWeight: 'var(--hub-section-title-font-weight, 400)'
                     }}
-                    className="text-lg sm:text-xl text-foreground"
                 >
-                    Visão Geral
-                </h2>
+                    Faturamento
+                </h1>
+                <p className="text-muted-foreground max-w-2xl">
+                    Gerencie os lançamentos de horas e sessões para controle de repasses e faturamento da clínica.
+                </p>
+            </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <Card 
-                        padding="hub"
-                        className="rounded-lg border-0 shadow-none"
-                        style={{ backgroundColor: 'var(--hub-card-background)' }}
-                    >
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitleHub className="text-base">Horas no Mês</CardTitleHub>
-                            <Clock className="h-5 w-5 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div 
-                                className="text-2xl tracking-tight"
-                                style={{ fontWeight: 'var(--dashboard-number-font-weight)' }}
+            {/* Cards de acesso */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
+                {accessOptions.map((option, index) => {
+                    const Icon = option.icon;
+                    return (
+                        <Link
+                            key={index}
+                            to={option.href}
+                            className="block group"
+                            aria-label={`${option.title}: ${option.description}`}
+                        >
+                            <Card 
+                                padding="hub" 
+                                className="cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02] border border-border/40 rounded-xl h-full"
+                                style={{ backgroundColor: 'var(--hub-card-background)' }}
                             >
-                                45h
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                +8h desde a semana passada
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    <Card 
-                        padding="hub"
-                        className="rounded-lg border-0 shadow-none"
-                        style={{ backgroundColor: 'var(--hub-card-background)' }}
-                    >
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitleHub className="text-base">
-                                Total de Lançamentos
-                            </CardTitleHub>
-                            <FilePlus className="h-5 w-5 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div 
-                                className="text-2xl tracking-tight"
-                                style={{ fontWeight: 'var(--dashboard-number-font-weight)' }}
-                            >
-                                28
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                12 pendentes, 16 aprovados
-                            </p>
-                        </CardContent>
-                    </Card>
-
-                    <Card 
-                        padding="hub"
-                        className="rounded-lg border-0 shadow-none"
-                        style={{ backgroundColor: 'var(--hub-card-background)' }}
-                    >
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitleHub className="text-base">Valor Estimado</CardTitleHub>
-                            <Download className="h-5 w-5 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div 
-                                className="text-2xl tracking-tight"
-                                style={{ fontWeight: 'var(--dashboard-number-font-weight)' }}
-                            >
-                                R$ 2.250
-                            </div>
-                            <p className="text-xs text-muted-foreground">
-                                +12% desde o mês passado
-                            </p>
-                        </CardContent>
-                    </Card>
-                </div>
+                                <CardHeader className="space-y-4 p-6">
+                                    <div className="flex items-start justify-between">
+                                        <div className={`h-16 w-16 rounded-xl ${option.bgColor} flex items-center justify-center transition-transform group-hover:scale-110`}>
+                                            <Icon className={`h-8 w-8 ${option.iconColor}`} />
+                                        </div>
+                                        <span className="text-xs px-2 py-1 bg-muted rounded-full text-muted-foreground">
+                                            {option.role}
+                                        </span>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <CardTitleHub className="text-xl group-hover:text-primary transition-colors">
+                                            {option.title}
+                                        </CardTitleHub>
+                                        <p className="text-sm text-muted-foreground leading-relaxed">
+                                            {option.description}
+                                        </p>
+                                    </div>
+                                </CardHeader>
+                            </Card>
+                        </Link>
+                    );
+                })}
             </div>
         </div>
     );
 }
+
+export default HubFaturamentoPage;

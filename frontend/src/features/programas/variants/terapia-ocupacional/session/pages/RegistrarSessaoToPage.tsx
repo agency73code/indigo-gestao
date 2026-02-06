@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import ActionBar from '@/components/ui/action-bar';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 import PatientSelector from '@/features/programas/consultar-programas/components/PatientSelector';
+import { SessionBillingData } from '@/features/programas/nova-sessao/components';
 import {
     ToProgramSelector,
     ToHeaderSessionInfo,
@@ -30,7 +31,9 @@ import type {
     ToSessionAttempt,
     ToSessionState,
     SessionFile,
+    DadosFaturamentoSessao,
 } from '../types';
+import { DADOS_FATURAMENTO_INITIAL, validarDadosFaturamento } from '../types';
 
 export default function RegistrarSessaoToPage() {
     const { setPageTitle } = usePageTitle();
@@ -58,6 +61,7 @@ export default function RegistrarSessaoToPage() {
         },
         notes: '',
         files: [],
+        billing: DADOS_FATURAMENTO_INITIAL,
     });
 
     // Estados de carregamento
@@ -162,6 +166,7 @@ export default function RegistrarSessaoToPage() {
                 totalAttempts: 0,
             },
             files: [],
+            billing: DADOS_FATURAMENTO_INITIAL,
         });
     };
 
@@ -211,8 +216,25 @@ export default function RegistrarSessaoToPage() {
         }));
     };
 
+    const handleBillingChange = (billing: DadosFaturamentoSessao) => {
+        setSessionState((prev) => ({
+            ...prev,
+            billing,
+        }));
+    };
+
     const handleSave = async () => {
         if (!canSave) return;
+
+        // Validar dados de faturamento
+        const billingValidation = validarDadosFaturamento(sessionState.billing);
+        if (!billingValidation.valido) {
+            toast.error('Dados de faturamento incompletos', {
+                description: billingValidation.mensagem,
+                duration: 4000,
+            });
+            return;
+        }
 
         setSavingSession(true);
         setError(null);
@@ -225,6 +247,7 @@ export default function RegistrarSessaoToPage() {
                 notes: sessionState.notes,
                 files: sessionState.files,
                 area: 'terapia-ocupacional',
+                faturamento: sessionState.billing,
             });
 
             // Toast de confirmação com mensagem focada na experiência do usuário
@@ -314,25 +337,18 @@ export default function RegistrarSessaoToPage() {
                                 onAddAttempt={handleAddAttempt}
                             />
 
+                            {/* Dados de Faturamento da Sessão */}
+                            <SessionBillingData
+                                billing={sessionState.billing || DADOS_FATURAMENTO_INITIAL}
+                                onChange={handleBillingChange}
+                                disabled={savingSession}
+                            />
+
                             {/* Observações da sessão */}
                             <ToSessionObservations
                                 notes={sessionState.notes || ''}
                                 onNotesChange={handleNotesChange}
                             />
-
-                            {/* CARD DE TESTE - DEVE APARECER AQUI */}
-                            <div style={{
-                                padding: '20px',
-                                margin: '20px 0',
-                                backgroundColor: '#ff00ff',
-                                color: 'white',
-                                fontSize: '24px',
-                                fontWeight: 'bold',
-                                textAlign: 'center',
-                                border: '5px solid red'
-                            }}>
-                                🚨 TESTE: Você vê este card ROSA/ROXO?
-                            </div>
 
                             {/* Upload de arquivos da sessão */}
                             <ToSessionFiles

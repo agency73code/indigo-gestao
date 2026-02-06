@@ -1,0 +1,781 @@
+/**
+ * Gerador de Word para relatórios de faturamento
+ * 
+ * Usa HTML compatível com Word para gerar documentos editáveis
+ * Segue o padrão visual da Anamnese
+ */
+
+import { toast } from 'sonner';
+import type {
+    TipoRelatorioFaturamento,
+    DadosRelatorioConvenio,
+    DadosRelatorioTerapeuta,
+    DadosRelatorioPais,
+} from '../types/relatorio-faturamento.types';
+import { DADOS_DONA_CLINICA as DONA_CLINICA } from '../types/relatorio-faturamento.types';
+
+// Logo PNG para compatibilidade com Word
+import LOGO_INDIGO from '@/assets/logos/indigo.png';
+
+// Variável para armazenar logo em base64
+let logoBase64: string | null = null;
+
+/**
+ * Converte a logo PNG para base64 para embutir no documento Word
+ */
+async function getLogoBase64(): Promise<string> {
+    if (logoBase64) return logoBase64;
+    
+    try {
+        const response = await fetch(LOGO_INDIGO);
+        const blob = await response.blob();
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                logoBase64 = reader.result as string;
+                resolve(logoBase64);
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+        });
+    } catch (error) {
+        console.error('Erro ao carregar logo:', error);
+        return '';
+    }
+}
+
+// ============================================
+// INFORMAÇÕES DA CLÍNICA
+// ============================================
+
+const CLINIC_INFO = {
+    name: 'Clínica Instituto Índigo',
+    address: 'Av Vital Brasil, 305, Butantã, CJ 905-909',
+    cep: 'CEP 05503-001',
+    phone: '+55 11 96973-2227',
+    email: 'clinica.indigo@gmail.com',
+    instagram: '@inst.indigo',
+};
+
+// ============================================
+// CORES (padrão Indigo #395482)
+// ============================================
+
+const CORES = {
+    primaria: '#395482',
+    texto: '#374151',
+    textoClaro: '#6b7280',
+    borda: '#e5e7eb',
+    fundoClaro: '#f9fafb',
+};
+
+// ============================================
+// MAPEAMENTO DE CONSELHO POR ÁREA
+// ============================================
+
+/** Mapeamento de área de atuação para sigla do conselho profissional */
+const AREA_PARA_SIGLA_CONSELHO: Record<string, string> = {
+    'Fisioterapia': 'CREFITO',
+    'Terapia Ocupacional': 'CREFITO',
+    'Fonoaudiologia': 'CRFa',
+    'Psicologia': 'CRP',
+    'Neuropsicologia': 'CRP',
+    'Psicopedagogia': 'CRP',
+    'Terapia ABA': 'CRP',
+    'Musicoterapia': 'CBMT',
+    'Nutrição': 'CRN',
+    'Enfermagem': 'COREN',
+    'Medicina': 'CRM',
+};
+
+/** Obtém a sigla do conselho com base na área de atuação */
+function getSiglaConselho(areaAtuacao: string | undefined): string {
+    if (!areaAtuacao) return 'CRP';
+    return AREA_PARA_SIGLA_CONSELHO[areaAtuacao] || 'CRP';
+}
+
+/** Obtém o título profissional baseado na especialidade */
+function getTituloProfissional(especialidade: string | undefined): string {
+    const titulosMap: Record<string, string> = {
+        'Fisioterapia': 'Fisioterapeuta',
+        'Terapia Ocupacional': 'Terapeuta Ocupacional',
+        'Fonoaudiologia': 'Fonoaudióloga',
+        'Psicologia': 'Psicóloga',
+        'Neuropsicologia': 'Neuropsicóloga',
+        'Psicopedagogia': 'Psicopedagoga',
+        'Terapia ABA': 'Terapeuta ABA',
+        'Musicoterapia': 'Musicoterapeuta',
+        'Nutrição': 'Nutricionista',
+        'Enfermagem': 'Enfermeira',
+        'Medicina': 'Médica',
+    };
+    if (!especialidade) return 'Profissional';
+    return titulosMap[especialidade] || 'Profissional';
+}
+
+/**
+ * Formata data de nascimento para DD/MM/YYYY
+ * Aceita formato ISO (YYYY-MM-DDTHH:mm:ss.sssZ), YYYY-MM-DD, ou já formatado DD/MM/YYYY
+ */
+function formatarDataNascimento(data: string | undefined): string {
+    if (!data) return '___/___/______';
+    
+    // Se já está no formato DD/MM/YYYY, retorna direto
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(data)) return data;
+    
+    // Se está no formato ISO ou YYYY-MM-DD
+    const parsed = new Date(data);
+    if (isNaN(parsed.getTime())) return '___/___/______';
+    
+    return parsed.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+    });
+}
+
+// ============================================
+// FUNÇÕES DE FORMATAÇÃO
+// ============================================
+
+function formatarValor(valor: number): string {
+    return valor.toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+    });
+}
+
+function formatarHoras(minutos: number): string {
+    const horas = Math.floor(minutos / 60);
+    const mins = minutos % 60;
+    if (mins === 0) return `${horas}h`;
+    return `${horas}h ${mins}min`;
+}
+
+// ============================================
+// ESTILOS CSS PARA WORD
+// ============================================
+
+const getWordStyles = () => `
+    @page {
+        size: A4;
+        margin: 2cm;
+    }
+    
+    body { 
+        font-family: Arial, Helvetica, sans-serif; 
+        font-size: 11pt; 
+        color: ${CORES.texto};
+        line-height: 1.4;
+        margin: 0;
+        padding: 20pt;
+    }
+    
+    /* Cabeçalho */
+    .header {
+        margin-bottom: 20pt;
+    }
+    
+    .header-title {
+        font-size: 24pt;
+        font-weight: 400;
+        color: ${CORES.primaria};
+        margin: 0 0 8pt 0;
+    }
+    
+    .header-subtitle {
+        font-size: 12pt;
+        color: ${CORES.texto};
+        margin: 0 0 4pt 0;
+    }
+    
+    .header-info {
+        font-size: 10pt;
+        color: ${CORES.textoClaro};
+        margin: 0;
+    }
+    
+    .header-line {
+        border-bottom: 1pt solid ${CORES.borda};
+        margin-top: 12pt;
+    }
+    
+    /* Seções */
+    .section {
+        margin-top: 16pt;
+        margin-bottom: 12pt;
+    }
+    
+    .section-title {
+        font-size: 14pt;
+        font-weight: 400;
+        color: ${CORES.primaria};
+        border-bottom: 1pt solid ${CORES.primaria};
+        padding-bottom: 4pt;
+        margin-bottom: 12pt;
+    }
+    
+    /* Campos */
+    .fields-row {
+        display: table;
+        width: 100%;
+        margin-bottom: 8pt;
+    }
+    
+    .field {
+        display: table-cell;
+        width: 50%;
+        vertical-align: top;
+        padding-right: 16pt;
+    }
+    
+    .field-label {
+        font-size: 9pt;
+        text-transform: uppercase;
+        color: ${CORES.textoClaro};
+        margin-bottom: 2pt;
+    }
+    
+    .field-value {
+        font-size: 11pt;
+        color: ${CORES.texto};
+    }
+    
+    /* Tabela de sessões */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 8pt;
+    }
+    
+    th {
+        background-color: ${CORES.primaria};
+        color: white;
+        font-size: 9pt;
+        font-weight: normal;
+        padding: 8pt 6pt;
+        text-align: left;
+        border: 1pt solid ${CORES.primaria};
+    }
+    
+    td {
+        font-size: 9pt;
+        padding: 6pt;
+        border: 1pt solid ${CORES.borda};
+        vertical-align: top;
+    }
+    
+    tr:nth-child(even) td {
+        background-color: ${CORES.fundoClaro};
+    }
+    
+    .table-footer td {
+        background-color: #ecf0f1 !important;
+        font-weight: bold;
+        color: ${CORES.primaria};
+    }
+    
+    /* Resumo */
+    .summary {
+        margin-top: 16pt;
+    }
+    
+    .summary table {
+        margin-top: 0;
+    }
+    
+    .summary th {
+        font-size: 8pt;
+        padding: 6pt;
+    }
+    
+    .summary td {
+        font-size: 11pt;
+        text-align: center;
+        padding: 8pt;
+    }
+    
+    /* Rodapé */
+    .footer {
+        margin-top: 30pt;
+        padding-top: 12pt;
+        border-top: 1pt solid ${CORES.borda};
+        text-align: center;
+        font-size: 8pt;
+        color: ${CORES.textoClaro};
+    }
+    
+    .footer p {
+        margin: 2pt 0;
+    }
+`;
+
+// ============================================
+// GERADORES DE HTML PARA WORD
+// ============================================
+
+function gerarHtmlTerapeuta(dados: DadosRelatorioTerapeuta): string {
+    const sessoesRows = dados.sessoes.map(sessao => `
+        <tr>
+            <td>${sessao.dataFormatted}</td>
+            <td>${sessao.clienteNome ?? '-'}</td>
+            <td>${sessao.clienteIdade ?? '-'}</td>
+            <td>${sessao.horaInicio} - ${sessao.horaFim}</td>
+            <td>${formatarHoras(sessao.duracao)}</td>
+            <td>${sessao.tipoAtividadeLabel}</td>
+            <td style="text-align: right;">${formatarValor(sessao.valorTerapeuta ?? 0)}</td>
+        </tr>
+    `).join('');
+
+    return `
+        <!-- Cabeçalho -->
+        <div class="header">
+            <h1 class="header-title">Relatório do Terapeuta</h1>
+            <p class="header-subtitle">Terapeuta: ${dados.terapeuta.nome}</p>
+            <p class="header-info">Emitido em: ${dados.dataEmissao}</p>
+            <p class="header-info">Referente ao mês: ${dados.mesReferencia}</p>
+            <div class="header-line"></div>
+        </div>
+
+        <!-- Dados do Terapeuta -->
+        <div class="section">
+            <h2 class="section-title">Dados do Terapeuta</h2>
+            <div class="fields-row">
+                <div class="field">
+                    <div class="field-label">NOME</div>
+                    <div class="field-value">${dados.terapeuta.nome}</div>
+                </div>
+                <div class="field">
+                    <div class="field-label">ESPECIALIDADE</div>
+                    <div class="field-value">${dados.especialidade}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sessões Realizadas -->
+        <div class="section">
+            <h2 class="section-title">Sessões Realizadas</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Cliente</th>
+                        <th>Idade</th>
+                        <th>Horário</th>
+                        <th>Duração</th>
+                        <th>Tipo</th>
+                        <th style="text-align: right;">Valor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${sessoesRows}
+                </tbody>
+                <tfoot>
+                    <tr class="table-footer">
+                        <td colspan="6" style="text-align: right;">TOTAL</td>
+                        <td style="text-align: right;">${formatarValor(dados.valorTotal)}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- Resumo -->
+        <div class="summary">
+            <table>
+                <thead>
+                    <tr>
+                        <th>TOTAL DE SESSÕES</th>
+                        <th>TOTAL DE HORAS</th>
+                        <th>VALOR TOTAL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>${dados.totalSessoes}</td>
+                        <td>${formatarHoras(dados.totalHoras * 60)}</td>
+                        <td>${formatarValor(dados.valorTotal)}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Rodapé -->
+        <div class="footer">
+            <p>${CLINIC_INFO.name} • ${CLINIC_INFO.address} • ${CLINIC_INFO.cep}</p>
+            <p>${CLINIC_INFO.phone} • ${CLINIC_INFO.email} • ${CLINIC_INFO.instagram}</p>
+            <p style="margin-top: 8pt;">Documento gerado automaticamente pelo Sistema Indigo Gestão</p>
+        </div>
+    `;
+}
+
+function gerarHtmlConvenio(dados: DadosRelatorioConvenio, logoDataUri: string): string {
+    // Formatar lista de dias de atendimento
+    const diasFormatados = dados.diasAtendimento.length > 0 
+        ? dados.diasAtendimento.slice(0, -1).join(', ') + ' E ' + dados.diasAtendimento[dados.diasAtendimento.length - 1]
+        : '';
+    
+    // Calcular horário de atendimento (pegar do primeiro e último horário)
+    const horariosInicio = dados.sessoes.map(s => s.horaInicio).filter(Boolean);
+    const horariosFim = dados.sessoes.map(s => s.horaFim).filter(Boolean);
+    const horarioInicioMin = horariosInicio.length > 0 ? horariosInicio.sort()[0] : '08h';
+    const horarioFimMax = horariosFim.length > 0 ? horariosFim.sort().reverse()[0] : '12h';
+    
+    // Gerar linhas da tabela de sessões - formato compacto
+    const sessoesRows = dados.sessoes.map(sessao => {
+        // Formatar horário compacto: "8h às 12h"
+        const horaInicioCompacta = sessao.horaInicio.replace(':00', 'h').replace(':30', 'h30');
+        const horaFimCompacta = sessao.horaFim.replace(':00', 'h').replace(':30', 'h30');
+        
+        // Nome do terapeuta - nome completo
+        const nomeTerapeuta = dados.terapeuta.nome;
+        
+        // Data por extenso abreviada: "qui, 15 de jan de 2026"
+        const dataExtensoAbrev = sessao.dataExtenso
+            .replace('segunda-feira', 'seg')
+            .replace('terça-feira', 'ter')
+            .replace('quarta-feira', 'qua')
+            .replace('quinta-feira', 'qui')
+            .replace('sexta-feira', 'sex')
+            .replace('sábado', 'sáb')
+            .replace('domingo', 'dom')
+            .replace('janeiro', 'jan')
+            .replace('fevereiro', 'fev')
+            .replace('março', 'mar')
+            .replace('abril', 'abr')
+            .replace('maio', 'mai')
+            .replace('junho', 'jun')
+            .replace('julho', 'jul')
+            .replace('agosto', 'ago')
+            .replace('setembro', 'set')
+            .replace('outubro', 'out')
+            .replace('novembro', 'nov')
+            .replace('dezembro', 'dez');
+        
+        return `
+        <tr>
+            <td style="padding: 0pt 2pt; border: 1pt solid ${CORES.borda}; font-size: 7pt; text-align: center; line-height: 1;">${sessao.dataFormatted}</td>
+            <td style="padding: 0pt 2pt; border: 1pt solid ${CORES.borda}; font-size: 7pt; text-align: center; white-space: nowrap; line-height: 1;">${dataExtensoAbrev}</td>
+            <td style="padding: 0pt 2pt; border: 1pt solid ${CORES.borda}; font-size: 7pt; text-align: center; white-space: nowrap; line-height: 1;">${horaInicioCompacta} às ${horaFimCompacta}</td>
+            <td style="padding: 0pt 2pt; border: 1pt solid ${CORES.borda}; font-size: 7pt; line-height: 1;">Terapia ${dados.especialidade.toLowerCase()} com ${nomeTerapeuta} (${getSiglaConselho(dados.especialidade)} ${dados.terapeuta.registroProfissional ?? '-'})</td>
+        </tr>
+    `}).join('');
+
+    // Texto padrão da clínica
+    const textoClinicaPadrao = `Nesta clínica realizamos intervenção comportamental para o desenvolvimento da linguagem, fala e cognição social, baseadas em modelos de aprendizagem da Análise do Comportamento Aplicada (ABA – Applied Behavior Analysis) e modelos de aprendizagem que visam a motivação da criança como base para a aprendizagem – Modelo Denver de Intervenção Precoce (EDSM, que é baseado na ciência ABA). Além disso, em nossas intervenções, realizamos o treino motor de fala, de base motora, visto que o planejamento motor é necessário para a fala - PROMPT, Multigestos e Intervenção da Motricidade Oral. Atuamos também em abordagens específicas para CAA (Comunicação Aumentativa Alternativa) e CSA (Comunicação Suplementar Alternativa), com sistemas robustos e não robustos de comunicação, de baixa e alta tecnologia, tais como COREWORDs, PODD (Pranchas Dinâmicas com Organização Pragmática) e PECS (Sistema de Comunicação por Troca de Figuras) visando a melhora na efetividade da comunicação.`;
+
+    // Texto padrão sobre valores
+    const textoValoresPadrao = `Com relação aos valores praticados pela Clínica, aponte-se que são levados em consideração diversos fatores, dentre os quais o nível de capacitação dos profissionais envolvidos, a estrutura física adequada aos atendimentos, e o nível de especialização exigido da equipe, sempre atualizada, de modo a possibilitar o efetivo atendimento e consequente ajuste e melhoria das condições apresentadas pelos pacientes. Sem mais, agradeço a atenção e coloco-me à disposição para maiores esclarecimentos.`;
+
+    return `
+        <!-- Cabeçalho com Logo -->
+        <div style="display: table; width: 100%; margin-bottom: 20pt;">
+            <div style="display: table-cell; vertical-align: middle; width: 100pt;">
+                ${logoDataUri ? `<img src="${logoDataUri}" alt="Logo Índigo" width="90" height="90" style="width: 90px; height: 90px; max-width: 90px; max-height: 90px;" />` : ''}
+            </div>
+            <div style="display: table-cell; vertical-align: middle; padding-left: 12pt;">
+                <h1 style="font-size: 24pt; font-weight: 400; color: #395482; margin: 0 0 10pt 0;">Relatório para Convênio</h1>
+                <p style="font-size: 11pt; color: #374151; margin: 4pt 0;"><strong>Paciente:</strong> ${dados.cliente.nome}</p>
+                <p style="font-size: 11pt; color: #374151; margin: 4pt 0;"><strong>Data de Nascimento:</strong> ${formatarDataNascimento(dados.cliente.dataNascimento)}</p>
+                <p style="font-size: 11pt; color: #374151; margin: 4pt 0;"><strong>Idade:</strong> ${dados.cliente.idade ?? '___ anos e ___ meses'}</p>
+                <p style="font-size: 10pt; color: #6b7280; margin: 4pt 0;">Emitido em: ${dados.dataEmissao}</p>
+            </div>
+        </div>
+        <div style="border-bottom: 1pt solid #e5e7eb; margin-bottom: 20pt;"></div>
+
+        <!-- Campo para Apresentação do Caso (GRIFADO - Terapeuta preenche) -->
+        <div style="margin-bottom: 16pt;">
+            <p style="font-size: 11pt; margin: 0;"><span style="background-color: #FFFF00; padding: 2pt 4pt;"><strong>Descrever apresentação do caso:</strong></span></p>
+        </div>
+
+        <!-- Texto Padrão da Clínica -->
+        <div style="margin-bottom: 16pt;">
+            <p style="font-size: 11pt; text-align: justify; line-height: 1.5; margin: 0;">
+                ${textoClinicaPadrao}
+            </p>
+        </div>
+
+        <!-- Resumo de Atendimentos (AUTOMÁTICO) -->
+        <div style="margin-bottom: 16pt;">
+            <p style="font-size: 11pt; text-align: justify; line-height: 1.5; margin: 0;">
+                Logo, no mês de <strong>${dados.mesReferencia}</strong> de <strong>${dados.anoReferencia}</strong>, <strong>${dados.cliente.nome}</strong> foi atendida a partir de <strong>${dados.sessoesMaxPorDia} sessões</strong> por dia, nos dias <strong>${diasFormatados}</strong>, das ${horarioInicioMin} às ${horarioFimMax}.
+            </p>
+            <p style="font-size: 11pt; text-align: justify; line-height: 1.5; margin: 8pt 0 0 0;">
+                <strong>Totalizando ${dados.totalSessoes} sessões/ horas de atendimento.</strong>
+            </p>
+        </div>
+
+        <!-- Texto introdutório da tabela -->
+        <div style="margin-bottom: 8pt;">
+            <p style="font-size: 11pt; margin: 0;">Segue abaixo tabela com horários de atendimento já descritos anteriormente:</p>
+        </div>
+
+        <!-- Tabela de Sessões -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 16pt;">
+            <thead>
+                <tr>
+                    <th style="background-color: ${CORES.primaria}; color: white; padding: 0pt 1pt; border: 1pt solid white; border-top: 1pt solid ${CORES.primaria}; border-bottom: 1pt solid ${CORES.primaria}; border-left: 1pt solid ${CORES.primaria}; text-align: center; font-size: 7pt; width: 10%; line-height: 1;">Data</th>
+                    <th style="background-color: ${CORES.primaria}; color: white; padding: 0pt 1pt; border: 1pt solid white; border-top: 1pt solid ${CORES.primaria}; border-bottom: 1pt solid ${CORES.primaria}; text-align: center; font-size: 7pt; width: 22%; line-height: 1;">Data por extenso</th>
+                    <th style="background-color: ${CORES.primaria}; color: white; padding: 0pt 1pt; border: 1pt solid white; border-top: 1pt solid ${CORES.primaria}; border-bottom: 1pt solid ${CORES.primaria}; text-align: center; font-size: 7pt; width: 10%; line-height: 1;">Horários</th>
+                    <th style="background-color: ${CORES.primaria}; color: white; padding: 0pt 1pt; border: 1pt solid white; border-top: 1pt solid ${CORES.primaria}; border-bottom: 1pt solid ${CORES.primaria}; border-right: 1pt solid ${CORES.primaria}; text-align: center; font-size: 7pt; width: 58%; line-height: 1;">Atividade realizada e terapeuta</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${sessoesRows}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="4" style="background-color: #ecf0f1; padding: 2pt; border: 1pt solid ${CORES.borda}; font-weight: bold; text-align: center; font-size: 7pt; line-height: 1;">
+                        TOTALIZANDO ${dados.totalSessoes} HORAS DE TERAPIA ${dados.especialidade.toUpperCase()} BASEADA EM ABA
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <!-- Campo para Desempenho da Criança (GRIFADO - Terapeuta preenche) -->
+        <div style="margin-top: 20pt; margin-bottom: 16pt;">
+            <p style="font-size: 11pt; margin: 0;"><span style="background-color: #FFFF00; padding: 2pt 4pt;"><strong>Desempenho da criança:</strong></span></p>
+        </div>
+
+        <!-- Texto Padrão sobre Valores -->
+        <div style="margin-bottom: 16pt;">
+            <p style="font-size: 11pt; text-align: justify; line-height: 1.5; margin: 0;">
+                ${textoValoresPadrao}
+            </p>
+        </div>
+
+        <!-- Disposição para esclarecimentos -->
+        <div style="text-align: center; margin: 24pt 0 50pt 0;">
+            <p style="font-size: 11pt; margin: 0;">À disposição para quaisquer esclarecimentos,</p>
+        </div>
+
+        <!-- Área de Assinaturas -->
+        <div style="margin-top: 60pt;">
+            <!-- Assinatura do Terapeuta -->
+            <div style="text-align: center; margin-bottom: 40pt;">
+                <table style="width: 50%; margin: 0 auto; border-collapse: collapse;">
+                    <tr>
+                        <td style="border: none; border-top: 1pt solid ${CORES.texto};"></td>
+                    </tr>
+                </table>
+                <div style="padding-top: 6pt;">
+                    <p style="font-size: 10pt; font-weight: bold; margin: 0;">${dados.terapeuta.nome}</p>
+                    <p style="font-size: 9pt; margin: 2pt 0;">${getTituloProfissional(dados.especialidade)} prestadora de serviços da Clínica Instituto Índigo</p>
+                    <p style="font-size: 9pt; margin: 2pt 0;">${getTituloProfissional(dados.especialidade)} ${getSiglaConselho(dados.especialidade)} ${dados.terapeuta.registroProfissional ?? '-'}</p>
+                </div>
+            </div>
+
+            <!-- Assinatura da Dona da Clínica (FIXO) -->
+            <div style="text-align: center; margin-top: 40pt;">
+                <table style="width: 50%; margin: 0 auto; border-collapse: collapse;">
+                    <tr>
+                        <td style="border: none; border-top: 1pt solid ${CORES.texto};"></td>
+                    </tr>
+                </table>
+                <div style="padding-top: 6pt;">
+                    <p style="font-size: 10pt; font-weight: bold; margin: 0;">${DONA_CLINICA.nome}</p>
+                    <p style="font-size: 9pt; margin: 2pt 0;">${DONA_CLINICA.titulo}</p>
+                    <p style="font-size: 9pt; margin: 2pt 0;">Fonoaudióloga ${DONA_CLINICA.crfa}</p>
+                    ${DONA_CLINICA.certificacoes.map(cert => `<p style="font-size: 8pt; margin: 1pt 0;">${cert}</p>`).join('')}
+                </div>
+            </div>
+        </div>
+
+        <!-- Rodapé -->
+        <div style="margin-top: 40pt; padding-top: 12pt; border-top: 1pt solid ${CORES.borda}; text-align: center;">
+            <p style="font-size: 8pt; color: ${CORES.textoClaro}; margin: 2pt 0;">${CLINIC_INFO.name} • ${CLINIC_INFO.address} • ${CLINIC_INFO.cep}</p>
+            <p style="font-size: 8pt; color: ${CORES.textoClaro}; margin: 2pt 0;">${CLINIC_INFO.phone} • ${CLINIC_INFO.email} • ${CLINIC_INFO.instagram}</p>
+            <p style="font-size: 8pt; color: ${CORES.textoClaro}; margin-top: 8pt;">Documento gerado automaticamente pelo Sistema Indigo Gestão</p>
+        </div>
+    `;
+}
+
+function gerarHtmlPais(dados: DadosRelatorioPais, logoDataUri: string): string {
+    // Gerar linhas da tabela de sessões - formato compacto
+    const sessoesRows = dados.sessoes.map(sessao => {
+        // Formatar horário compacto
+        const horaInicioCompacta = sessao.horaInicio.replace(':00', 'h').replace(':30', 'h30');
+        const horaFimCompacta = sessao.horaFim.replace(':00', 'h').replace(':30', 'h30');
+        
+        return `
+        <tr>
+            <td style="padding: 0pt 2pt; border: 1pt solid ${CORES.borda}; font-size: 7pt; text-align: center; line-height: 1;">${sessao.dataFormatted}</td>
+            <td style="padding: 0pt 2pt; border: 1pt solid ${CORES.borda}; font-size: 7pt; text-align: center; white-space: nowrap; line-height: 1;">${horaInicioCompacta} às ${horaFimCompacta}</td>
+            <td style="padding: 0pt 2pt; border: 1pt solid ${CORES.borda}; font-size: 7pt; text-align: center; line-height: 1;">${formatarHoras(sessao.duracao)}</td>
+            <td style="padding: 0pt 2pt; border: 1pt solid ${CORES.borda}; font-size: 7pt; line-height: 1;">${sessao.tipoAtividadeLabel}</td>
+            <td style="padding: 0pt 2pt; border: 1pt solid ${CORES.borda}; font-size: 7pt; text-align: right; line-height: 1;">${formatarValor(sessao.valorCliente ?? 0)}</td>
+        </tr>
+    `}).join('');
+
+    return `
+        <!-- Cabeçalho com Logo -->
+        <div style="display: table; width: 100%; margin-bottom: 20pt;">
+            <div style="display: table-cell; vertical-align: middle; width: 100pt;">
+                ${logoDataUri ? `<img src="${logoDataUri}" alt="Logo Índigo" width="90" height="90" style="width: 90px; height: 90px; max-width: 90px; max-height: 90px;" />` : ''}
+            </div>
+            <div style="display: table-cell; vertical-align: middle; padding-left: 12pt;">
+                <h1 style="font-size: 24pt; font-weight: 400; color: #395482; margin: 0 0 10pt 0;">Relatório de Atendimento</h1>
+                <p style="font-size: 11pt; color: #374151; margin: 4pt 0;"><strong>Paciente:</strong> ${dados.cliente.nome}</p>
+                <p style="font-size: 11pt; color: #374151; margin: 4pt 0;"><strong>Data de Nascimento:</strong> ${formatarDataNascimento(dados.cliente.dataNascimento)}</p>
+                <p style="font-size: 11pt; color: #374151; margin: 4pt 0;"><strong>Idade:</strong> ${dados.cliente.idade ?? '___ anos e ___ meses'}</p>
+                <p style="font-size: 10pt; color: #6b7280; margin: 4pt 0;">Emitido em: ${dados.dataEmissao}</p>
+            </div>
+        </div>
+        <div style="border-bottom: 1pt solid #e5e7eb; margin-bottom: 20pt;"></div>
+
+        <!-- Profissional Responsável -->
+        <div style="margin-bottom: 16pt;">
+            <p style="font-size: 11pt; margin: 0;"><strong>Terapeuta:</strong> ${dados.terapeuta.nome}</p>
+            <p style="font-size: 11pt; margin: 4pt 0;"><strong>Especialidade:</strong> ${dados.especialidade}</p>
+            <p style="font-size: 11pt; margin: 4pt 0;"><strong>Registro:</strong> ${dados.terapeuta.registroProfissional ? `${getSiglaConselho(dados.especialidade)} ${dados.terapeuta.registroProfissional}` : '-'}</p>
+        </div>
+
+        <!-- Tabela de Sessões -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 16pt;">
+            <thead>
+                <tr>
+                    <th style="background-color: ${CORES.primaria}; color: white; padding: 0pt 2pt; border: 1pt solid white; border-top: 1pt solid ${CORES.primaria}; border-bottom: 1pt solid ${CORES.primaria}; border-left: 1pt solid ${CORES.primaria}; text-align: center; font-size: 7pt; width: 12%; line-height: 1;">Data</th>
+                    <th style="background-color: ${CORES.primaria}; color: white; padding: 0pt 2pt; border: 1pt solid white; border-top: 1pt solid ${CORES.primaria}; border-bottom: 1pt solid ${CORES.primaria}; text-align: center; font-size: 7pt; width: 15%; line-height: 1;">Horário</th>
+                    <th style="background-color: ${CORES.primaria}; color: white; padding: 0pt 2pt; border: 1pt solid white; border-top: 1pt solid ${CORES.primaria}; border-bottom: 1pt solid ${CORES.primaria}; text-align: center; font-size: 7pt; width: 10%; line-height: 1;">Duração</th>
+                    <th style="background-color: ${CORES.primaria}; color: white; padding: 0pt 2pt; border: 1pt solid white; border-top: 1pt solid ${CORES.primaria}; border-bottom: 1pt solid ${CORES.primaria}; text-align: center; font-size: 7pt; width: 43%; line-height: 1;">Tipo de Atividade</th>
+                    <th style="background-color: ${CORES.primaria}; color: white; padding: 0pt 2pt; border: 1pt solid white; border-top: 1pt solid ${CORES.primaria}; border-bottom: 1pt solid ${CORES.primaria}; border-right: 1pt solid ${CORES.primaria}; text-align: center; font-size: 7pt; width: 20%; line-height: 1;">Valor</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${sessoesRows}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="4" style="background-color: #ecf0f1; padding: 2pt; border: 1pt solid ${CORES.borda}; font-weight: bold; text-align: right; font-size: 7pt; line-height: 1;">
+                        TOTAL
+                    </td>
+                    <td style="background-color: #ecf0f1; padding: 2pt; border: 1pt solid ${CORES.borda}; font-weight: bold; text-align: right; font-size: 7pt; line-height: 1;">
+                        ${formatarValor(dados.valorTotal)}
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <!-- Resumo -->
+        <div style="margin-bottom: 16pt;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                    <td style="padding: 8pt; border: 1pt solid ${CORES.borda}; text-align: center; width: 33%;">
+                        <p style="font-size: 8pt; color: ${CORES.textoClaro}; margin: 0;">TOTAL DE SESSÕES</p>
+                        <p style="font-size: 14pt; font-weight: bold; color: ${CORES.primaria}; margin: 4pt 0 0 0;">${dados.totalSessoes}</p>
+                    </td>
+                    <td style="padding: 8pt; border: 1pt solid ${CORES.borda}; text-align: center; width: 33%;">
+                        <p style="font-size: 8pt; color: ${CORES.textoClaro}; margin: 0;">TOTAL DE HORAS</p>
+                        <p style="font-size: 14pt; font-weight: bold; color: ${CORES.primaria}; margin: 4pt 0 0 0;">${formatarHoras(dados.totalHoras * 60)}</p>
+                    </td>
+                    <td style="padding: 8pt; border: 1pt solid ${CORES.borda}; text-align: center; width: 34%;">
+                        <p style="font-size: 8pt; color: ${CORES.textoClaro}; margin: 0;">VALOR TOTAL</p>
+                        <p style="font-size: 14pt; font-weight: bold; color: ${CORES.primaria}; margin: 4pt 0 0 0;">${formatarValor(dados.valorTotal)}</p>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        ${dados.evolucaoClinica ? `
+        <!-- Evolução Clínica -->
+        <div style="margin-bottom: 16pt;">
+            <p style="font-size: 11pt; font-weight: bold; color: ${CORES.primaria}; margin: 0 0 8pt 0;">Evolução Clínica do Mês</p>
+            <div style="background-color: #f9fafb; border: 1pt solid ${CORES.borda}; padding: 12pt;">
+                <p style="margin: 0; font-size: 10pt; line-height: 1.5; white-space: pre-wrap;">${dados.evolucaoClinica}</p>
+            </div>
+        </div>
+        ` : ''}
+
+        <!-- Rodapé -->
+        <div style="margin-top: 40pt; padding-top: 12pt; border-top: 1pt solid ${CORES.borda}; text-align: center;">
+            <p style="font-size: 8pt; color: ${CORES.textoClaro}; margin: 2pt 0;">${CLINIC_INFO.name} • ${CLINIC_INFO.address} • ${CLINIC_INFO.cep}</p>
+            <p style="font-size: 8pt; color: ${CORES.textoClaro}; margin: 2pt 0;">${CLINIC_INFO.phone} • ${CLINIC_INFO.email} • ${CLINIC_INFO.instagram}</p>
+            <p style="font-size: 8pt; color: ${CORES.textoClaro}; margin-top: 8pt;">Documento gerado automaticamente pelo Sistema Indigo Gestão</p>
+        </div>
+    `;
+}
+
+// ============================================
+// FUNÇÃO PRINCIPAL DE EXPORTAÇÃO
+// ============================================
+
+interface GerarWordOptions {
+    tipo: TipoRelatorioFaturamento;
+    dados: DadosRelatorioConvenio | DadosRelatorioTerapeuta | DadosRelatorioPais;
+    nomeArquivo?: string;
+}
+
+export async function downloadWordRelatorio(options: GerarWordOptions): Promise<void> {
+    const { tipo, dados, nomeArquivo } = options;
+
+    try {
+        toast.loading('Gerando documento Word...', { id: 'word-export' });
+
+        // Carregar logo em base64 para embutir no documento
+        const logoDataUri = await getLogoBase64();
+
+        // Gerar HTML baseado no tipo
+        let htmlContent: string;
+        switch (tipo) {
+            case 'terapeuta':
+                htmlContent = gerarHtmlTerapeuta(dados as DadosRelatorioTerapeuta);
+                break;
+            case 'convenio':
+                htmlContent = gerarHtmlConvenio(dados as DadosRelatorioConvenio, logoDataUri);
+                break;
+            case 'pais':
+                htmlContent = gerarHtmlPais(dados as DadosRelatorioPais, logoDataUri);
+                break;
+            default:
+                throw new Error('Tipo de relatório inválido');
+        }
+
+        // Criar documento HTML completo compatível com Word
+        const fullHtml = `
+            <html xmlns:o="urn:schemas-microsoft-com:office:office" 
+                  xmlns:w="urn:schemas-microsoft-com:office:word" 
+                  xmlns="http://www.w3.org/TR/REC-html40">
+            <head>
+                <meta charset="UTF-8">
+                <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+                <!--[if gte mso 9]>
+                <xml>
+                    <w:WordDocument>
+                        <w:View>Print</w:View>
+                        <w:Zoom>100</w:Zoom>
+                        <w:DoNotOptimizeForBrowser/>
+                    </w:WordDocument>
+                </xml>
+                <![endif]-->
+                <style>
+                    ${getWordStyles()}
+                </style>
+            </head>
+            <body>
+                ${htmlContent}
+            </body>
+            </html>
+        `;
+
+        // Criar Blob com o conteúdo HTML
+        const blob = new Blob(['\ufeff', fullHtml], {
+            type: 'application/msword'
+        });
+
+        // Criar link de download
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        const filename = nomeArquivo || `relatorio-${tipo}-${Date.now()}`;
+        link.download = filename.endsWith('.doc') ? filename : `${filename}.doc`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        toast.success('Documento Word exportado com sucesso!', { id: 'word-export' });
+    } catch (error) {
+        console.error('Erro ao exportar Word:', error);
+        toast.error('Erro ao exportar documento Word. Tente novamente.', { id: 'word-export' });
+        throw error;
+    }
+}

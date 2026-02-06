@@ -202,6 +202,7 @@ export function FiltersPopover({
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
                 <Button
+                    type="button"
                     variant={buttonVariant}
                     size={buttonSize}
                     disabled={disabled}

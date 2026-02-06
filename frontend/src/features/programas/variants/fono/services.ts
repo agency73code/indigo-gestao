@@ -79,7 +79,7 @@ export async function fetchToClientAvatar(clientId: string): Promise<string | nu
 }
 
 export async function fetchFonoTherapistById(id: string): Promise<Therapist> {
-    const response = await fetch(`${API_URL}/terapeutas/${id}`, {
+    const response = await fetch(`${API_URL}/terapeutas/${id}/sumario`, {
         credentials: 'include',
     });
 
@@ -90,8 +90,8 @@ export async function fetchFonoTherapistById(id: string): Promise<Therapist> {
     const data = await response.json();
     
     return {
-        id,
-        name: data.nome, // Backend retorna 'nome' em português
+        id: data.id,
+        name: data.nome,
         photoUrl: data.photoUrl,
         especialidade: data.especialidade,
     };

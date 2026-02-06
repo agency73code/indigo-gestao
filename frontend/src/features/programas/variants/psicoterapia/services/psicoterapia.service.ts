@@ -50,9 +50,13 @@ function mapMembroFamiliarFromApi(api: ApiMembroNucleoFamiliar): MembroNucleoFam
     return {
         id: api.id,
         nome: api.nome,
+        cpf: api.cpf,
         parentesco: api.parentesco,
+        descricaoRelacao: api.descricao_relacao,
+        dataNascimento: api.data_nascimento,
         idade: api.idade,
         ocupacao: api.ocupacao,
+        origemBanco: api.origem_banco,
     };
 }
 
@@ -117,7 +121,7 @@ function mapProntuarioFromApi(api: ApiProntuarioPsicologico): ProntuarioPsicolog
             id: api.cliente.id,
             nome: api.cliente.nome,
             dataNascimento: api.cliente.data_nascimento,
-            idade: '', // Calculado no frontend
+            idade: api.cliente.idade,
             genero: api.cliente.genero,
             fotoUrl: api.cliente.foto_url,
         } : undefined,
@@ -168,9 +172,13 @@ function mapProntuarioToApi(data: ProntuarioFormData) {
         nucleo_familiar: data.nucleoFamiliar.map(m => ({
             id: m.id,
             nome: m.nome,
+            cpf: m.cpf,
             parentesco: m.parentesco,
+            descricao_relacao: m.descricaoRelacao,
+            data_nascimento: m.dataNascimento,
             idade: m.idade,
             ocupacao: m.ocupacao,
+            origem_banco: m.origemBanco,
         })),
         observacoes_nucleo_familiar: data.observacoesNucleoFamiliar,
         avaliacao_demanda: {
@@ -218,7 +226,7 @@ function buildQueryString(filtros?: ProntuarioListFilters): string {
 // ============================================
 
 /**
- * Listar prontuários
+ * Listar prontuários [feito]
  */
 export async function listarProntuarios(
     filtros: ProntuarioListFilters = {}
@@ -244,7 +252,7 @@ export async function listarProntuarios(
 }
 
 /**
- * Buscar prontuário por ID
+ * Buscar prontuário por ID [feito]
  */
 export async function buscarProntuario(id: string): Promise<ProntuarioPsicologico | null> {
     const res = await authFetch(`${endpoints.prontuarios}/${id}`);
@@ -257,12 +265,13 @@ export async function buscarProntuario(id: string): Promise<ProntuarioPsicologic
     }
     
     const json = await res.json();
+
     const apiData = json.data || json;
     return mapProntuarioFromApi(apiData);
 }
 
 /**
- * Buscar prontuário por ID do cliente
+ * Buscar prontuário por ID do cliente [feito]
  */
 export async function buscarProntuarioPorCliente(clienteId: string): Promise<ProntuarioPsicologico | null> {
     const res = await authFetch(endpoints.porCliente(clienteId));
@@ -280,12 +289,12 @@ export async function buscarProntuarioPorCliente(clienteId: string): Promise<Pro
 }
 
 /**
- * Criar prontuário
+ * Criar prontuário [feito]
  */
 export async function criarProntuario(data: ProntuarioFormData): Promise<ProntuarioResponse> {
     try {
         const payload = mapProntuarioToApi(data);
-        
+
         const res = await authFetch(endpoints.prontuarios, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -359,7 +368,7 @@ export async function atualizarProntuario(
 // ============================================
 
 /**
- * Criar nova evolução (sessão)
+ * Criar nova evolução (sessão) [feito]
  */
 export async function criarEvolucao(data: EvolucaoFormData): Promise<EvolucaoResponse> {
     try {
@@ -369,6 +378,17 @@ export async function criarEvolucao(data: EvolucaoFormData): Promise<EvolucaoRes
             data_evolucao: data.dataEvolucao,
             descricao_sessao: data.descricaoSessao,
         }));
+        
+        fd.append('data', JSON.stringify({
+            faturamento: data.billing ? {
+                dataSessao: data.billing.dataSessao,
+                horarioInicio: data.billing.horarioInicio,
+                horarioFim: data.billing.horarioFim,
+                tipoAtendimento: data.billing.tipoAtendimento,
+                ajudaCusto: data.billing.ajudaCusto,
+                observacaoFaturamento: data.billing.observacaoFaturamento ?? null,
+            } : null,
+        }))
         
         // Adicionar arquivos com validação
         for (const arquivo of data.arquivos) {
@@ -381,9 +401,26 @@ export async function criarEvolucao(data: EvolucaoFormData): Promise<EvolucaoRes
                         message: validation.error || 'Arquivo inválido',
                     };
                 }
-                fd.append(`files[${arquivo.id}]`, arquivo.file, arquivo.file.name);
-                fd.append(`fileNames[${arquivo.id}]`, arquivo.nome);
+                fd.append(`files`, arquivo.file, arquivo.file.name);
+                fd.append(`fileNames`, arquivo.nome);
             }
+        }
+
+        // Adicionar arquivos de faturamento
+        const billingFiles = data.billing?.arquivosFaturamento ?? [];
+        for (const arquivo of billingFiles) {
+            if (!arquivo.file) continue;
+
+            const validation = validateFile(arquivo.file);
+            if (!validation.valid) {
+                return {
+                    success: false,
+                    message: validation.error || 'Arquivo de faturamento inválido',
+                };
+            }
+
+            fd.append(`billingFiles`, arquivo.file, arquivo.file.name);
+            fd.append(`billingFileNames`, arquivo.nome);
         }
         
         const res = await authFetch(endpoints.evolucoes(data.prontuarioId), {
@@ -416,11 +453,11 @@ export async function criarEvolucao(data: EvolucaoFormData): Promise<EvolucaoRes
 }
 
 /**
- * Listar evoluções de um prontuário
+ * Listar evoluções de um prontuário [feito, não é usado]
  */
 export async function listarEvolucoes(prontuarioId: string): Promise<EvolucaoTerapeutica[]> {
     const res = await authFetch(endpoints.evolucoes(prontuarioId));
-    
+
     if (!res.ok) {
         const json = await res.json().catch(() => ({}));
         throw new Error(json.message || 'Erro ao listar evoluções');
@@ -432,7 +469,7 @@ export async function listarEvolucoes(prontuarioId: string): Promise<EvolucaoTer
 }
 
 /**
- * Buscar evolução por ID
+ * Buscar evolução por ID [não feito, Não é usado]
  */
 export async function buscarEvolucao(
     prontuarioId: string, 
@@ -465,7 +502,7 @@ export async function verificarProntuarioExistente(clienteId: string): Promise<b
 }
 
 /**
- * Atualizar evolução existente
+ * Atualizar evolução existente [não feito, Não é usado]
  */
 export async function atualizarEvolucao(
     prontuarioId: string,
@@ -535,7 +572,7 @@ export async function atualizarEvolucao(
 }
 
 /**
- * Deletar evolução
+ * Deletar evolução [não feito, Não é usado]
  */
 export async function deletarEvolucao(
     prontuarioId: string,

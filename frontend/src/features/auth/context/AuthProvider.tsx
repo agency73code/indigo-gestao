@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 setAuthState({ user: null, isAuthenticated: false, isLoading: false, error: null });
                 return;
             }
-            console.log(me)
+
             setAuthState({
                 user: {
                     id: String(me.user.id),

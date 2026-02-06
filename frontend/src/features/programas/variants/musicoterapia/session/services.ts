@@ -7,6 +7,7 @@ import type {
     MusiSessionAttempt,
     MusiSessionSummary,
     SessionFile,
+    DadosFaturamentoSessao,
 } from './types';
 
 const area = MUSI_AREA_ID;
@@ -61,6 +62,7 @@ export async function saveMusiSession(payload: {
     attempts: MusiSessionAttempt[];
     notes?: string;
     files?: SessionFile[];
+    faturamento?: DadosFaturamentoSessao;
 }): Promise<void> {
     const formData = buildSessionFormData({
         ...payload,

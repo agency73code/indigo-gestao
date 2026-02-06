@@ -466,7 +466,8 @@ export function VisualizarAtaPage() {
                                 </h3>
                                 <div className="space-y-2">
                                     {ata.anexos.map((anexo) => {
-                                        const ext = anexo.name.split('.').pop()?.toLowerCase();
+                                        const nome = anexo.name ?? 'naoIdentificado.png'
+                                        const ext = nome.split('.').pop()?.toLowerCase();
                                         const isPdf = ext === 'pdf';
                                         const isImage = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext || '');
                                         
@@ -575,21 +576,21 @@ export function VisualizarAtaPage() {
                                     <div className="space-y-1.5">
                                         {/* Família */}
                                         {participantesFamilia.map((p) => (
-                                            <div key={p.id} className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 rounded-md text-xs border border-blue-100 mr-1.5">
+                                            <div key={p.id ?? p.localId} className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 rounded-md text-xs border border-blue-100 mr-1.5">
                                                 <span className="font-medium text-blue-900">{p.nome}</span>
                                                 {p.descricao && <span className="text-blue-600">({p.descricao})</span>}
                                             </div>
                                         ))}
                                         {/* Externos */}
                                         {participantesExterno.map((p) => (
-                                            <div key={p.id} className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-purple-50 rounded-md text-xs border border-purple-100 mr-1.5">
+                                            <div key={p.id ?? p.localId} className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-purple-50 rounded-md text-xs border border-purple-100 mr-1.5">
                                                 <span className="font-medium text-purple-900">{p.nome}</span>
                                                 {p.descricao && <span className="text-purple-600">({p.descricao})</span>}
                                             </div>
                                         ))}
                                         {/* Clínica */}
                                         {participantesClinica.map((p) => (
-                                            <div key={p.id} className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-50 rounded-md text-xs border border-emerald-100 mr-1.5">
+                                            <div key={p.id ?? p.localId} className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-50 rounded-md text-xs border border-emerald-100 mr-1.5">
                                                 <Avatar className="h-5 w-5">
                                                     <AvatarImage src={p.avatarUrl} alt={p.nome} />
                                                     <AvatarFallback className="bg-emerald-200 text-[10px] font-medium text-emerald-700">

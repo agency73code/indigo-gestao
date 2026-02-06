@@ -3,6 +3,7 @@ import type { Router as ExpressRouter } from 'express';
 import * as OlpController from '../features/olp/olp.controller.js';
 import { auth } from '../middleware/auth.middleware.js';
 import { upload } from '../config/multer.js';
+import * as psychotherapy from '../features/olp/psychotherapy/psychotherapy.controller.js';
 
 const router: ExpressRouter = Router();
 
@@ -34,6 +35,14 @@ router.post('/physiotherapy/sessions/calculatePhysioKpis', OlpController.physioK
 // Musictherapy
 router.post('/musictherapy/programs/:programId/sessions', upload.any(), OlpController.createAreaSession);
 router.post('/musictherapy/sessions/calculateMusicKpis', OlpController.musicKpis);
-router.get('/musictherapy/programs/graficMusicDetails', OlpController.getMusicTherapyEvolutionChart)
+router.get('/musictherapy/programs/graficMusicDetails', OlpController.getMusicTherapyEvolutionChart);
 
+// psychotherapy
+router.post('/prontuarios-psicologicos', psychotherapy.createPsychotherapyRecord);
+router.get('/prontuarios-psicologicos/cliente/:clientId', psychotherapy.searchMedicalRecordByClient);
+router.get('/prontuarios-psicologicos', psychotherapy.listMedicalRecords);
+router.get('/prontuarios-psicologicos/:medicalRecordId', psychotherapy.searchMedicalRecordById);
+router.post('/prontuarios-psicologicos/:medicalRecordId/evolucoes', upload.any(), psychotherapy.createEvolution);
+router.get('/prontuarios-psicologicos/:medicalRecordId/evolucoes', psychotherapy.listEvolutions);
+router.patch('/prontuarios-psicologicos/:medicalRecordId', psychotherapy.updateMedicalRecord);
 export default router;

@@ -28,13 +28,10 @@ import CadastroOcpPage from '../../features/programas/pages/CadastroOcpPage';
 import DetalheProgramaPage from '../../features/programas/pages/DetalheProgramaPage';
 import EditarProgramaPage from '../../features/programas/pages/EditarProgramaPage';
 import { CadastroSessaoPage } from '../../features/programas/nova-sessao';
-import { HubFaturamentoPage } from '../../features/faturamento';
-import RegistrarLancamentoPage from '../../features/faturamento/registrar-lancamento/pages/RegistrarLancamentoPage';
+import { FaturamentoHubPage, MinhasHorasPage, GestaoFaturamentoPage } from '../../features/faturamento';
 import { AnamnesePage } from '../../features/anamnese/Cadastro';
 import { AnamneseListPage } from '../../features/anamnese/Tabela';
 import { AtasHubPage, NovaAtaPage, VisualizarAtaPage } from '../../features/atas-reuniao';
-import MinhasHorasPage from '../../features/faturamento/minhas-horas/pages/MinhasHorasPage';
-import GestaoHorasPage from '../../features/faturamento/gestao/pages/GestaoHorasPage';
 import NotAccessPage from '@/features/shell/pages/NotAccessPage';
 import NotPermissionPage from '@/features/shell/pages/NotPermissionPage';
 import RequireAuth from '@/features/auth/components/RequireAuth';
@@ -862,22 +859,10 @@ export const router = createBrowserRouter([
                                 path: 'faturamento',
                                 element: (
                                     <Suspense fallback={suspenseFallback}>
-                                        <HubFaturamentoPage />
+                                        <FaturamentoHubPage />
                                     </Suspense>
                                 ),
                                 handle: { breadcrumb: 'Faturamento', title: 'Faturamento' },
-                            },
-                            {
-                                path: 'faturamento/registrar-lancamento',
-                                element: (
-                                    <Suspense fallback={suspenseFallback}>
-                                        <RegistrarLancamentoPage />
-                                    </Suspense>
-                                ),
-                                handle: {
-                                    breadcrumb: 'Registrar Lançamento',
-                                    title: 'Registrar Lançamento',
-                                },
                             },
                             {
                                 path: 'faturamento/minhas-horas',
@@ -895,14 +880,15 @@ export const router = createBrowserRouter([
                                 path: 'faturamento/gestao',
                                 element: (
                                     <Suspense fallback={suspenseFallback}>
-                                        <GestaoHorasPage />
+                                        <GestaoFaturamentoPage />
                                     </Suspense>
                                 ),
                                 handle: {
-                                    breadcrumb: 'Gestão de Horas',
-                                    title: 'Gestão de Horas',
+                                    breadcrumb: 'Gestão de Faturamento',
+                                    title: 'Gestão de Faturamento',
                                 },
                             },
+                            // Rotas de lançamento manual removidas - dados vêm de sessões e atas
                         ],
                     },
                 ],

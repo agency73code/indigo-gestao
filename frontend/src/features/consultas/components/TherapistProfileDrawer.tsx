@@ -167,8 +167,23 @@ export default function TherapistProfileDrawer({
             dataFim: terapeutaData.dataFim 
                 ? new Date(terapeutaData.dataFim).toISOString().split('T')[0] 
                 : '',
-            valorHoraAcordado: terapeutaData.valorHoraAcordado 
-                ? terapeutaData.valorHoraAcordado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+            valorSessaoConsultorio: terapeutaData.valorSessaoConsultorio 
+                ? mask.maskCurrencyBR(String(Math.round(Number(terapeutaData.valorSessaoConsultorio) * 100)))
+                : '',
+            valorSessaoHomecare: terapeutaData.valorSessaoHomecare 
+                ? mask.maskCurrencyBR(String(Math.round(Number(terapeutaData.valorSessaoHomecare) * 100)))
+                : '',
+            valorHoraDesenvolvimentoMateriais: terapeutaData.valorHoraDesenvolvimentoMateriais 
+                ? mask.maskCurrencyBR(String(Math.round(Number(terapeutaData.valorHoraDesenvolvimentoMateriais) * 100)))
+                : '',
+            valorHoraSupervisaoRecebida: terapeutaData.valorHoraSupervisaoRecebida 
+                ? mask.maskCurrencyBR(String(Math.round(Number(terapeutaData.valorHoraSupervisaoRecebida) * 100)))
+                : '',
+            valorHoraSupervisaoDada: terapeutaData.valorHoraSupervisaoDada 
+                ? mask.maskCurrencyBR(String(Math.round(Number(terapeutaData.valorHoraSupervisaoDada) * 100)))
+                : '',
+            valorHoraReuniao: terapeutaData.valorHoraReuniao 
+                ? mask.maskCurrencyBR(String(Math.round(Number(terapeutaData.valorHoraReuniao) * 100)))
                 : '',
             professorUnindigo: (terapeutaData.professorUnindigo?.toLowerCase() === 'sim' ? 'sim' : 'nao') as 'sim' | 'nao',
             disciplinaUniindigo: terapeutaData.disciplinaUniindigo || '',
@@ -280,8 +295,23 @@ export default function TherapistProfileDrawer({
                 dataFim: terapeutaData.dataFim 
                     ? new Date(terapeutaData.dataFim).toISOString().split('T')[0] 
                     : '',
-                valorHoraAcordado: terapeutaData.valorHoraAcordado 
-                    ? mask.maskCurrencyBR(String(Math.round(terapeutaData.valorHoraAcordado * 100)))
+                valorSessaoConsultorio: terapeutaData.valorSessaoConsultorio 
+                    ? mask.maskCurrencyBR(String(Math.round(Number(terapeutaData.valorSessaoConsultorio) * 100)))
+                    : '',
+                valorSessaoHomecare: terapeutaData.valorSessaoHomecare 
+                    ? mask.maskCurrencyBR(String(Math.round(Number(terapeutaData.valorSessaoHomecare) * 100)))
+                    : '',
+                valorHoraDesenvolvimentoMateriais: terapeutaData.valorHoraDesenvolvimentoMateriais 
+                    ? mask.maskCurrencyBR(String(Math.round(Number(terapeutaData.valorHoraDesenvolvimentoMateriais) * 100)))
+                    : '',
+                valorHoraSupervisaoRecebida: terapeutaData.valorHoraSupervisaoRecebida 
+                    ? mask.maskCurrencyBR(String(Math.round(Number(terapeutaData.valorHoraSupervisaoRecebida) * 100)))
+                    : '',
+                valorHoraSupervisaoDada: terapeutaData.valorHoraSupervisaoDada 
+                    ? mask.maskCurrencyBR(String(Math.round(Number(terapeutaData.valorHoraSupervisaoDada) * 100)))
+                    : '',
+                valorHoraReuniao: terapeutaData.valorHoraReuniao 
+                    ? mask.maskCurrencyBR(String(Math.round(Number(terapeutaData.valorHoraReuniao) * 100)))
                     : '',
                 professorUnindigo: (terapeutaData.professorUnindigo?.toLowerCase() === 'sim' ? 'sim' : 'nao') as 'sim' | 'nao',
                 disciplinaUniindigo: terapeutaData.disciplinaUniindigo || '',
@@ -501,7 +531,12 @@ export default function TherapistProfileDrawer({
                 dadosProfissionais: data.dadosProfissionais || [],
                 dataInicio: data.dataInicio,
                 dataFim: data.dataFim,
-                valorHoraAcordado: data.valorHoraAcordado ? mask.parseCurrencyBR(data.valorHoraAcordado).toString() : null,
+                valorSessaoConsultorio: data.valorSessaoConsultorio ? mask.parseCurrencyBR(data.valorSessaoConsultorio).toString() : null,
+                valorSessaoHomecare: data.valorSessaoHomecare ? mask.parseCurrencyBR(data.valorSessaoHomecare).toString() : null,
+                valorHoraDesenvolvimentoMateriais: data.valorHoraDesenvolvimentoMateriais ? mask.parseCurrencyBR(data.valorHoraDesenvolvimentoMateriais).toString() : null,
+                valorHoraSupervisaoRecebida: data.valorHoraSupervisaoRecebida ? mask.parseCurrencyBR(data.valorHoraSupervisaoRecebida).toString() : null,
+                valorHoraSupervisaoDada: data.valorHoraSupervisaoDada ? mask.parseCurrencyBR(data.valorHoraSupervisaoDada).toString() : null,
+                valorHoraReuniao: data.valorHoraReuniao ? mask.parseCurrencyBR(data.valorHoraReuniao).toString() : null,
                 professorUnindigo: data.professorUnindigo,
                 disciplinaUniindigo: data.disciplinaUniindigo,
                 formacao: {
@@ -1098,9 +1133,9 @@ export default function TherapistProfileDrawer({
                                             </Tabs>
                                         </div>
 
-                                        {/* Chave PIX e Valor Hora - Grid 3:1 */}
-                                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
-                                            <div className="md:col-span-3 space-y-2">
+                                        {/* Chave PIX */}
+                                        <div className="grid grid-cols-1 gap-4 mt-4">
+                                            <div className="space-y-2">
                                                 <Label htmlFor="chavePix">Chave Pix *</Label>
                                                 <Input
                                                     id="chavePix"
@@ -1132,21 +1167,108 @@ export default function TherapistProfileDrawer({
                                                 )}
                                                 
                                             </div>
+                                        </div>
 
-                                            <div className="space-y-2">
-                                                <Label htmlFor="valorHoraAcordado">Valor hora acordado</Label>
-                                                <Input
-                                                    id="valorHoraAcordado"
-                                                    {...register('valorHoraAcordado')}
-                                                    placeholder="R$ 0,00"
-                                                    className="h-9 rounded-[5px]"
-                                                    onInput={(e: React.FormEvent<HTMLInputElement>) => {
-                                                        const input = e.currentTarget;
-                                                        const masked = mask.maskCurrencyBR(input.value);
-                                                        input.value = masked;
-                                                        setValue('valorHoraAcordado' as any, masked, { shouldDirty: true });
-                                                    }}
-                                                />
+                                        {/* Seção: Valores por Tipo de Atividade */}
+                                        <div className="mt-6">
+                                            <h4 className="text-md font-normal mb-4" style={{fontFamily: "Sora"}}>Valores por Tipo de Atividade</h4>
+                                            
+                                            {/* Linha 1: Sessão Consultório, Sessão Homecare, Desenvolvimento de Materiais */}
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="valorSessaoConsultorio">Valor Sessão Consultório *</Label>
+                                                    <Input
+                                                        id="valorSessaoConsultorio"
+                                                        {...register('valorSessaoConsultorio')}
+                                                        placeholder="R$ 0,00"
+                                                        className="h-9 rounded-[5px]"
+                                                        onInput={(e: React.FormEvent<HTMLInputElement>) => {
+                                                            const input = e.currentTarget;
+                                                            const masked = mask.maskCurrencyBR(input.value);
+                                                            input.value = masked;
+                                                            setValue('valorSessaoConsultorio' as any, masked, { shouldDirty: true });
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="valorSessaoHomecare">Valor Sessão Homecare *</Label>
+                                                    <Input
+                                                        id="valorSessaoHomecare"
+                                                        {...register('valorSessaoHomecare')}
+                                                        placeholder="R$ 0,00"
+                                                        className="h-9 rounded-[5px]"
+                                                        onInput={(e: React.FormEvent<HTMLInputElement>) => {
+                                                            const input = e.currentTarget;
+                                                            const masked = mask.maskCurrencyBR(input.value);
+                                                            input.value = masked;
+                                                            setValue('valorSessaoHomecare' as any, masked, { shouldDirty: true });
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="valorHoraDesenvolvimentoMateriais">Valor Hora Desenv. Materiais *</Label>
+                                                    <Input
+                                                        id="valorHoraDesenvolvimentoMateriais"
+                                                        {...register('valorHoraDesenvolvimentoMateriais')}
+                                                        placeholder="R$ 0,00"
+                                                        className="h-9 rounded-[5px]"
+                                                        onInput={(e: React.FormEvent<HTMLInputElement>) => {
+                                                            const input = e.currentTarget;
+                                                            const masked = mask.maskCurrencyBR(input.value);
+                                                            input.value = masked;
+                                                            setValue('valorHoraDesenvolvimentoMateriais' as any, masked, { shouldDirty: true });
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* Linha 2: Supervisão Recebida, Supervisão Dada, Reunião */}
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="valorHoraSupervisaoRecebida">Valor Hora Supervisão Recebida *</Label>
+                                                    <Input
+                                                        id="valorHoraSupervisaoRecebida"
+                                                        {...register('valorHoraSupervisaoRecebida')}
+                                                        placeholder="R$ 0,00"
+                                                        className="h-9 rounded-[5px]"
+                                                        onInput={(e: React.FormEvent<HTMLInputElement>) => {
+                                                            const input = e.currentTarget;
+                                                            const masked = mask.maskCurrencyBR(input.value);
+                                                            input.value = masked;
+                                                            setValue('valorHoraSupervisaoRecebida' as any, masked, { shouldDirty: true });
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="valorHoraSupervisaoDada">Valor Hora Supervisão Dada *</Label>
+                                                    <Input
+                                                        id="valorHoraSupervisaoDada"
+                                                        {...register('valorHoraSupervisaoDada')}
+                                                        placeholder="R$ 0,00"
+                                                        className="h-9 rounded-[5px]"
+                                                        onInput={(e: React.FormEvent<HTMLInputElement>) => {
+                                                            const input = e.currentTarget;
+                                                            const masked = mask.maskCurrencyBR(input.value);
+                                                            input.value = masked;
+                                                            setValue('valorHoraSupervisaoDada' as any, masked, { shouldDirty: true });
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="valorHoraReuniao">Valor Hora Reunião *</Label>
+                                                    <Input
+                                                        id="valorHoraReuniao"
+                                                        {...register('valorHoraReuniao')}
+                                                        placeholder="R$ 0,00"
+                                                        className="h-9 rounded-[5px]"
+                                                        onInput={(e: React.FormEvent<HTMLInputElement>) => {
+                                                            const input = e.currentTarget;
+                                                            const masked = mask.maskCurrencyBR(input.value);
+                                                            input.value = masked;
+                                                            setValue('valorHoraReuniao' as any, masked, { shouldDirty: true });
+                                                        }}
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
                                     </>
@@ -1166,25 +1288,76 @@ export default function TherapistProfileDrawer({
                                             />
                                         </div>
                                         
-                                        {/* Linha 2: Chave PIX e Valor hora acordado */}
-                                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
-                                            <div className="md:col-span-3">
+                                        {/* Linha 2: Chave PIX */}
+                                        <div className="grid grid-cols-1 gap-4 mt-4">
+                                            <ReadOnlyField
+                                                label="Chave PIX *"
+                                                value={terapeutaData.chavePix 
+                                                    ? mask.maskPixKey(terapeutaData.pixTipo || 'email', terapeutaData.chavePix)
+                                                    : 'N/A'
+                                                }
+                                            />
+                                        </div>
+
+                                        {/* Seção: Valores por Tipo de Atividade */}
+                                        <div className="mt-6">
+                                            <h4 className="text-md font-normal mb-4" style={{fontFamily: "Sora"}}>Valores por tipo de atividade</h4>
+                                            
+                                            {/* Linha 1: Sessão Consultório, Sessão Homecare, Desenvolvimento de Materiais */}
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                                 <ReadOnlyField
-                                                    label="Chave PIX *"
-                                                    value={terapeutaData.chavePix 
-                                                        ? mask.maskPixKey(terapeutaData.pixTipo || 'email', terapeutaData.chavePix)
-                                                        : 'N/A'
+                                                    label="Valor Sessão Consultório *"
+                                                    value={
+                                                        terapeutaData.valorSessaoConsultorio
+                                                            ? Number(terapeutaData.valorSessaoConsultorio).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                                                            : 'Não informado'
+                                                    }
+                                                />
+                                                <ReadOnlyField
+                                                    label="Valor Sessão Homecare *"
+                                                    value={
+                                                        terapeutaData.valorSessaoHomecare
+                                                            ? Number(terapeutaData.valorSessaoHomecare).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                                                            : 'Não informado'
+                                                    }
+                                                />
+                                                <ReadOnlyField
+                                                    label="Valor Hora Desenv. Materiais *"
+                                                    value={
+                                                        terapeutaData.valorHoraDesenvolvimentoMateriais
+                                                            ? Number(terapeutaData.valorHoraDesenvolvimentoMateriais).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                                                            : 'Não informado'
                                                     }
                                                 />
                                             </div>
-                                            <ReadOnlyField
-                                                label="Valor hora acordado"
-                                                value={
-                                                    terapeutaData.valorHoraAcordado
-                                                        ? Number(terapeutaData.valorHoraAcordado).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-                                                        : 'Não informado'
-                                                }
-                                            />
+
+                                            {/* Linha 2: Supervisão Recebida, Supervisão Dada, Reunião */}
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                                                <ReadOnlyField
+                                                    label="Valor Hora Supervisão Recebida *"
+                                                    value={
+                                                        terapeutaData.valorHoraSupervisaoRecebida
+                                                            ? Number(terapeutaData.valorHoraSupervisaoRecebida).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                                                            : 'Não informado'
+                                                    }
+                                                />
+                                                <ReadOnlyField
+                                                    label="Valor Hora Supervisão Dada *"
+                                                    value={
+                                                        terapeutaData.valorHoraSupervisaoDada
+                                                            ? Number(terapeutaData.valorHoraSupervisaoDada).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                                                            : 'Não informado'
+                                                    }
+                                                />
+                                                <ReadOnlyField
+                                                    label="Valor Hora Reunião *"
+                                                    value={
+                                                        terapeutaData.valorHoraReuniao
+                                                            ? Number(terapeutaData.valorHoraReuniao).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                                                            : 'Não informado'
+                                                    }
+                                                />
+                                            </div>
                                         </div>
                                     </>
                                 )}
