@@ -80,20 +80,10 @@ export function BaseCadastroProgramaPage({
             if (user?.id) {
                 try {
                     const therapist = await onFetchTherapist(user.id);
-                    let photoUrl = therapist.photoUrl;
-
-                    // Buscar avatar customizado se disponível
-                    if (onFetchTherapistAvatar) {
-                        try {
-                            photoUrl = await onFetchTherapistAvatar(user.id);
-                        } catch (err) {
-                            console.warn('Erro ao carregar avatar:', err);
-                        }
-                    }
 
                     setFormState((prev) => ({
                         ...prev,
-                        therapist: { ...therapist, photoUrl },
+                        therapist,
                     }));
                 } catch (error) {
                     console.error('Erro ao carregar terapeuta logado:', error);
@@ -489,7 +479,7 @@ export function BaseCadastroProgramaPage({
             </div>
 
             {errors.general && (
-                <div className="fixed top-4 right-4 z-50 bg-destructive text-destructive-foreground p-4 rounded-md shadow-lg">
+                <div className="fixed top-4 right-4 z-50 bg-destructive text-white p-4 rounded-md shadow-lg">
                     {errors.general}
                 </div>
             )}

@@ -177,7 +177,7 @@ export function TimeField({
                     </div>
                 </PopoverTrigger>
                 <PopoverContent className="p-0 w-auto" align="start">
-                    <div className="max-h-[240px] overflow-y-auto p-2">
+                    <div className="max-h-[240px] overflow-y-auto p-2" style={{ scrollbarWidth: 'thin', scrollbarColor: '#999 transparent' }}>
                         <div className="grid gap-1">
                             {timeOptions.map((time) => (
                                 <Button

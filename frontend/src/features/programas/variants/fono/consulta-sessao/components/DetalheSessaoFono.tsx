@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import HeaderSessao from '@/features/programas/consulta-sessao/components/HeaderSessao';
 import SessionNotes from '@/features/programas/consulta-sessao/pages/components/SessionNotes';
 import SessionFiles from '@/features/programas/consulta-sessao/pages/components/SessionFiles';
+import SessionBillingView from '@/features/programas/consulta-sessao/components/SessionBillingView';
 import FonoSessionSummary from './FonoSessionSummary';
 import FonoStimuliPerformanceList from './FonoStimuliPerformanceList';
 import type { Sessao, Patient, ProgramDetail, SessionFile } from '@/features/programas/consulta-sessao/types';
@@ -118,6 +119,9 @@ export default function DetalheSessaoFono({ sessao, paciente, programa, onBack }
                 countsByStimulus={countsByStimulus}
                 defaultSort="severity"
             />
+
+            {/* Dados de Faturamento */}
+            <SessionBillingView billing={sessao.faturamento} />
 
             <SessionFiles files={sessionFiles} />
 

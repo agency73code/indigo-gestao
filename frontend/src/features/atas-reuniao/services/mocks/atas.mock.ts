@@ -97,13 +97,13 @@ const mockAtas: AtaReuniao[] = [
         modalidade: MODALIDADE_REUNIAO.PRESENCIAL,
         participantes: [
             {
-                id: 'part-001',
+                localId: 'part-001',
                 tipo: TIPO_PARTICIPANTE.FAMILIA,
                 nome: 'Maria Oliveira',
                 descricao: 'Mãe',
             },
             {
-                id: 'part-002',
+                localId: 'part-002',
                 tipo: TIPO_PARTICIPANTE.FAMILIA,
                 nome: 'José Oliveira',
                 descricao: 'Pai',
@@ -252,7 +252,7 @@ const mockAtas: AtaReuniao[] = [
         modalidade: MODALIDADE_REUNIAO.ONLINE,
         participantes: [
             {
-                id: 'part-003',
+                localId: 'part-003',
                 tipo: TIPO_PARTICIPANTE.PROFISSIONAL_CLINICA,
                 nome: 'Dra. Ana Paula Silva',
                 terapeutaId: 'ter-001',
@@ -260,7 +260,7 @@ const mockAtas: AtaReuniao[] = [
                 cargo: 'Terapeuta Sênior',
             },
             {
-                id: 'part-004',
+                localId: 'part-004',
                 tipo: TIPO_PARTICIPANTE.PROFISSIONAL_CLINICA,
                 nome: 'Dra. Marina Costa',
                 terapeutaId: 'ter-003',
@@ -390,19 +390,19 @@ const mockAtas: AtaReuniao[] = [
         modalidade: MODALIDADE_REUNIAO.PRESENCIAL,
         participantes: [
             {
-                id: 'part-005',
+                localId: 'part-005',
                 tipo: TIPO_PARTICIPANTE.PROFISSIONAL_EXTERNO,
                 nome: 'Profa. Lucia Ferreira',
                 descricao: 'Coordenadora Pedagógica',
             },
             {
-                id: 'part-006',
+                localId: 'part-006',
                 tipo: TIPO_PARTICIPANTE.PROFISSIONAL_EXTERNO,
                 nome: 'Profa. Sandra Lima',
                 descricao: 'Professora Regente',
             },
             {
-                id: 'part-007',
+                localId: 'part-007',
                 tipo: TIPO_PARTICIPANTE.FAMILIA,
                 nome: 'Carla Santos',
                 descricao: 'Mãe',
@@ -540,7 +540,7 @@ const mockAtas: AtaReuniao[] = [
         modalidade: MODALIDADE_REUNIAO.ONLINE,
         participantes: [
             {
-                id: 'part-008',
+                localId: 'part-008',
                 tipo: TIPO_PARTICIPANTE.PROFISSIONAL_CLINICA,
                 nome: 'Dra. Juliana Mendes',
                 terapeutaId: 'ter-005',
@@ -682,7 +682,7 @@ const mockAtas: AtaReuniao[] = [
         modalidade: MODALIDADE_REUNIAO.ONLINE,
         participantes: [
             {
-                id: 'part-009',
+                localId: 'part-009',
                 tipo: TIPO_PARTICIPANTE.PROFISSIONAL_EXTERNO,
                 nome: 'Dr. Marcos Almeida',
                 descricao: 'Auditor Médico - Unimed',
@@ -825,14 +825,14 @@ const mockAtas: AtaReuniao[] = [
         modalidade: MODALIDADE_REUNIAO.ONLINE,
         participantes: [
             {
-                id: 'part-006-1',
+                localId: 'part-006-1',
                 tipo: TIPO_PARTICIPANTE.PROFISSIONAL_CLINICA,
                 nome: 'Dra. Ana Paula Silva',
                 terapeutaId: 'ter-001',
                 especialidade: 'Fonoaudiologia',
             },
             {
-                id: 'part-006-2',
+                localId: 'part-006-2',
                 tipo: TIPO_PARTICIPANTE.PROFISSIONAL_CLINICA,
                 nome: 'Dr. Carlos Eduardo Santos',
                 terapeutaId: 'ter-002',
@@ -877,7 +877,7 @@ const mockAtas: AtaReuniao[] = [
         modalidade: MODALIDADE_REUNIAO.PRESENCIAL,
         participantes: [
             {
-                id: 'part-007-1',
+                localId: 'part-007-1',
                 tipo: TIPO_PARTICIPANTE.FAMILIA,
                 nome: 'Maria Oliveira',
                 descricao: 'Mãe',
@@ -915,13 +915,13 @@ const mockAtas: AtaReuniao[] = [
         modalidade: MODALIDADE_REUNIAO.ONLINE,
         participantes: [
             {
-                id: 'part-008-1',
+                localId: 'part-008-1',
                 tipo: TIPO_PARTICIPANTE.PROFISSIONAL_EXTERNO,
                 nome: 'Profa. Carla Lima',
                 descricao: 'Professora regente',
             },
             {
-                id: 'part-008-2',
+                localId: 'part-008-2',
                 tipo: TIPO_PARTICIPANTE.PROFISSIONAL_EXTERNO,
                 nome: 'Tatiana Souza',
                 descricao: 'Coordenadora Pedagógica',
@@ -967,13 +967,13 @@ const mockAtas: AtaReuniao[] = [
         modalidade: MODALIDADE_REUNIAO.PRESENCIAL,
         participantes: [
             {
-                id: 'part-009-1',
+                localId: 'part-009-1',
                 tipo: TIPO_PARTICIPANTE.FAMILIA,
                 nome: 'Maria Oliveira',
                 descricao: 'Mãe',
             },
             {
-                id: 'part-009-2',
+                localId: 'part-009-2',
                 tipo: TIPO_PARTICIPANTE.FAMILIA,
                 nome: 'José Oliveira',
                 descricao: 'Pai',
@@ -1019,14 +1019,14 @@ const mockAtas: AtaReuniao[] = [
         modalidade: MODALIDADE_REUNIAO.ONLINE,
         participantes: [
             {
-                id: 'part-010-1',
+                localId: 'part-010-1',
                 tipo: TIPO_PARTICIPANTE.PROFISSIONAL_CLINICA,
                 nome: 'Dra. Ana Paula Silva',
                 terapeutaId: 'ter-001',
                 especialidade: 'Fonoaudiologia',
             },
             {
-                id: 'part-010-2',
+                localId: 'part-010-2',
                 tipo: TIPO_PARTICIPANTE.PROFISSIONAL_CLINICA,
                 nome: 'Dra. Marina Costa',
                 terapeutaId: 'ter-003',
@@ -1072,7 +1072,7 @@ const mockAtas: AtaReuniao[] = [
         modalidade: MODALIDADE_REUNIAO.PRESENCIAL,
         participantes: [
             {
-                id: 'part-011-1',
+                localId: 'part-011-1',
                 tipo: TIPO_PARTICIPANTE.FAMILIA,
                 nome: 'Maria Oliveira',
                 descricao: 'Mãe',
@@ -1373,6 +1373,8 @@ export async function generateWhatsAppSummaryMock(id: string): Promise<string> {
             reuniao_outro_especialista: 'reunião com especialista',
             supervisao_terapeuta: 'supervisão',
             supervisao_at: 'supervisão AT',
+            supervisao_recebida: 'supervisão recebida',
+            desenvolvimento_materiais: 'desenvolvimento de materiais',
             planejamento_terapeutico: 'planejamento terapêutico',
             devolutiva: 'devolutiva',
             devolutiva_avaliacao: 'devolutiva de avaliação',

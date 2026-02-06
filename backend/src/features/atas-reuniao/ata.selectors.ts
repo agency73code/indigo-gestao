@@ -97,7 +97,6 @@ export const ataSelectBase = Prisma.validator<Prisma.ata_reuniaoSelect>()({
             mime_type: true,
             tamanho: true,
             caminho: true,
-            external_id: true,
         },
     },
 });
@@ -193,7 +192,7 @@ export const ataSelectList = Prisma.validator<Prisma.ata_reuniaoSelect>()({
             nome: true,
             mime_type: true,
             tamanho: true,
-            external_id: true,
+            caminho: true,
         },
     },
 });
@@ -219,7 +218,7 @@ export function mapAtaBase(ata: AtaBase) {
             : undefined,
         anexos: ata.anexos.map((a) => ({ 
             ...a, 
-            arquivo_id: a.external_id,
+            arquivo_id: a.caminho,
             url: a.caminho,
         })),
     }
@@ -237,7 +236,7 @@ export function mapAtaListItem(ata: AtaListItem) {
         terapeutaAvatarUrl: terapeutaAvatar 
             ? `/api/arquivos/${encodeURIComponent(terapeutaAvatar)}/view` 
             : undefined,
-        anexos: ata.anexos.map((a) => ({ ...a, arquivo_id: a.external_id })),
+        anexos: ata.anexos.map((a) => ({ ...a, arquivo_id: a.caminho })),
         terapeuta: ata.terapeuta ?? buildFallbackTherapist(ata),
     };
 }

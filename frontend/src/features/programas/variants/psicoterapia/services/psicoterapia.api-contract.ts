@@ -83,6 +83,7 @@ export interface ApiProntuarioPsicologico {
         id: string;
         nome: string;
         data_nascimento: string;
+        idade: string;
         genero?: string;
         foto_url?: string;
     };
@@ -97,9 +98,13 @@ export interface ApiProntuarioPsicologico {
 export interface ApiMembroNucleoFamiliar {
     id: string;
     nome: string;
+    cpf?: string;
     parentesco: string;
+    descricao_relacao?: string;
+    data_nascimento?: string;
     idade?: number | string;
     ocupacao?: string;
+    origem_banco?: boolean;
 }
 
 export interface ApiTerapiaPrevia {
@@ -171,6 +176,14 @@ export interface ApiCreateEvolucaoPayload {
     prontuario_id: string;
     data_evolucao: string;
     descricao_sessao: string;
+    faturamento?: {
+        data_sessao: string;
+        horario_inicio: string;
+        horario_fim: string;
+        tipo_atendimento: string;
+        ajuda_custo: boolean;
+        observacao_faturamento?: string | null;
+    } | null;
 }
 
 // ============================================

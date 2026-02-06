@@ -13,13 +13,21 @@ export interface Terapeuta {
     placaVeiculo?: string;
     modeloVeiculo?: string;
 
-    // Dados bancÃ¡rios
+    // Dados bancários
     banco: string;
     agencia: string;
     conta: string;
     chavePix: string;
     pixTipo?: 'email' | 'telefone' | 'cpf' | 'cnpj' | 'aleatoria';
-    valorHoraAcordado?: number | null;
+    
+    // Valores por tipo de atividade (para faturamento)
+    valorSessaoConsultorio?: string | null;
+    valorSessaoHomecare?: string | null;
+    valorHoraDesenvolvimentoMateriais?: string | null;
+    valorHoraSupervisaoRecebida?: string | null;
+    valorHoraSupervisaoDada?: string | null;
+    valorHoraReuniao?: string | null;
+    
     professorUnindigo?: 'sim' | 'nao';
     disciplinaUniindigo?: string | null;
 

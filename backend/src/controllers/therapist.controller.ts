@@ -4,6 +4,7 @@ import * as TherapistNormalizer from '../features/therapist/therapist.normalizer
 import { sendWelcomeEmail } from '../utils/mail.util.js';
 import { therapistSchema } from '../schemas/therapist.schema.js';
 import { fetchBrazilianBanks } from '../utils/brazilApi.util.js';
+import { uuidParam } from '../schemas/utils/uuid.js';
 
 export async function create(req: Request, res: Response, next: NextFunction) {
     try {
@@ -49,25 +50,16 @@ export async function listBanks(req: Request, res: Response, next: NextFunction)
 
 export async function getById(req: Request, res: Response, next: NextFunction) {
     try {
-        const { therapistId } = req.params;
-        if (!therapistId)
-            return res
-                .status(400)
-                .json({ success: false, message: 'ID do terapeuta é obrigatório!' });
-
+        const therapistId = uuidParam.parse(req.params.therapistId);
         const therapist = await TherapistService.getById(therapistId);
-        if (!therapist)
-            return res.status(400).json({ success: false, message: 'Terapeuta não encontrado!' });
 
-        const normalized = TherapistNormalizer.normalizeTherapistForm(therapist);
-
-        res.json(normalized);
+        return res.status(200).json(therapist);
     } catch (error) {
         next(error);
     }
 }
 
-export async function update(req: Request, res: Response, next: NextFunction) {
+export async function update(req: Request, res: Response, next: NextFunction) { // TODO
     try {
         const { therapistId } = req.params;
         if (!therapistId) {
@@ -137,6 +129,17 @@ export async function list(req: Request, res: Response, next: NextFunction) {
         });
     } catch (error) {
         next(error);
+    }
+}
+
+export async function fetchTherapistSummaryById(req: Request, res: Response, next: NextFunction) {
+    try {
+        const therapistId = uuidParam.parse(req.params.therapistId);
+        const data = await TherapistService.fetchTherapistSummaryById(therapistId);
+
+        return res.status(200).json(data);
+    } catch (err) {
+        next(err);
     }
 }
 

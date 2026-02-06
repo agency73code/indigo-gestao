@@ -1,4 +1,4 @@
-export const onlyDigits = (v: string) => v.replace(/\D/g, "");
+export const onlyDigits = (v?: string | null) => (v ?? '').replace(/\D/g, "");
 
 export function toTitleCaseSimple(name: string) {
   return name
@@ -36,8 +36,10 @@ export function isValidCPF(value: string) {
   return dv1 === +cpf[9] && dv2 === +cpf[10];
 }
 
-export function maskBRPhone(value: string) {
+export function maskBRPhone(value?: string | null) {
   const d = onlyDigits(value).slice(0, 11);
+  if (!d) return '';
+
   if (d.length <= 10) {
     const p1 = d.slice(0, 2);
     const p2 = d.slice(2, 6);

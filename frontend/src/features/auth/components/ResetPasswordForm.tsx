@@ -25,7 +25,8 @@ export function ResetPasswordForm({ onSubmit, isLoading, error }: ResetPasswordF
         handleSubmit,
         formState: { errors, isSubmitting },
     } = useForm<ResetPasswordData>({
-        resolver: zodResolver(resetPasswordSchema),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        resolver: zodResolver(resetPasswordSchema as any),
     });
 
     return (

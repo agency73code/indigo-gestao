@@ -139,13 +139,10 @@ export default function DetalheProntuarioPage() {
 
     // Handler para salvar evolução
     const handleSaveEvolucao = async () => {
-        const result = await evolucaoForm.handleSave();
-        if (result) {
-            // Recarregar prontuário para atualizar lista de evoluções
-            const updated = await buscarProntuario(prontuarioId!);
-            setProntuario(updated);
-            setShowNovaEvolucao(false);
-        }
+        await evolucaoForm.handleSave();
+        const updated = await buscarProntuario(prontuarioId!);
+        setProntuario(updated);
+        setShowNovaEvolucao(false);
     };
 
     return (

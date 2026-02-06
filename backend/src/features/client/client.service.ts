@@ -212,6 +212,7 @@ export async function getById(clientId: string) {
 
             cuidadores: {
                 select: {
+                    id: true,
                     relacao: true,
                     descricaoRelacao: true,
                     nome: true,
@@ -781,7 +782,6 @@ export async function list(
         where.terapeuta = {
             some: {
                 terapeuta_id: { in: visibility.therapistIds },
-                ...(visibility.maxAccessLevel < MANAGER_LEVEL ? { status: 'active' } : {}),
             },
         };
     }

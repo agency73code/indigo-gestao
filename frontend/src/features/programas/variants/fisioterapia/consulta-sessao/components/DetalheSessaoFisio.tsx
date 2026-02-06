@@ -4,6 +4,7 @@ import { aggregateByStimulus, sumCounts } from '@/features/programas/consulta-se
 import HeaderSessao from '@/features/programas/consulta-sessao/components/HeaderSessao';
 import SessionNotes from '@/features/programas/consulta-sessao/pages/components/SessionNotes';
 import SessionFiles from '@/features/programas/consulta-sessao/pages/components/SessionFiles';
+import SessionBillingView from '@/features/programas/consulta-sessao/components/SessionBillingView';
 import { getSessionFiles } from '@/features/programas/variants/fisioterapia/session/services';
 import { getFisioStatus } from '../helpers';
 import FisioActivitiesPerformanceList from './FisioActivitiesPerformanceList';
@@ -146,6 +147,9 @@ export default function DetalheSessaoTo({ sessao, paciente, programa, onBack }: 
                 metadataByActivity={metadataByActivity}
                 defaultSort="severity"
             />
+
+            {/* Dados de Faturamento */}
+            <SessionBillingView billing={sessao.faturamento} />
 
             <SessionFiles files={sessionFiles} />
 

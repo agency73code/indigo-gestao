@@ -4,14 +4,14 @@ import { AIServiceError } from '../ai/ai.errors.js';
 import type { GerarResumoInput } from './ata.schema.js';
 import { prisma } from '../../config/database.js';
 import type { AtaListFilters, AtaListResult, CreateAtaServiceInput, UpdateAtaServiceInput } from './ata.types.js';
-import { toDateOnlyLocal } from './utils/toDateOnlyLocal.js';
 import { computeDurationMinutes } from './utils/computeDurationMinutes.js';
 import { ata_finalidade_reuniao, ata_status, Prisma } from '@prisma/client';
 import { R2GenericUploadService } from '../file/r2/r2-upload-generic.js';
 import { AppError } from '../../errors/AppError.js';
 import { calcularHorasFaturadasPorReuniao } from './utils/calcularHorasFaturadasPorReuniao.js';
 import { ataSelectBase, ataSelectList, mapAtaBase, mapAtaListItem } from './ata.selectors.js';
-import { deleteFromR2 } from '../file/files.service.js';
+import { ensureFilenameWithExt } from '../file/r2/ensureFilenameWithExt.js';
+import { createBilling } from '../billing/billing.service.js';
 
 // Labels para exibição
 const FINALIDADE_LABELS: Record<string, string> = {
@@ -232,163 +232,154 @@ export async function therapistData(_userId: string) {
 }
 
 export async function create(input: CreateAtaServiceInput) {
-    const { payload, anexos } = input;
+    const { payload, billingInput, anexos } = input;
 
-    // normalizações/calculados
-    const dataEntrevista = toDateOnlyLocal(payload.data);
     const duracao = computeDurationMinutes(payload.horario_inicio, payload.horario_fim);
-
-    // TODO: ajustar regra de faturamento
     const horasFaturadas =
         duracao !== null
             ? new Prisma.Decimal(calcularHorasFaturadasPorReuniao(duracao))
             : null;
 
-    // transação: cria ata + filhos (participantes/links)
-    const created = await prisma.$transaction(async (tx) => {
-        const terapeuta = await tx.terapeuta.findUnique({
-            where: { id: payload.terapeuta_id },
-            select: {
-                id: true,
-                nome: true,
-                registro_profissional: {
-                    select: {
-                        numero_conselho: true,
-                        area_atuacao: {
-                            select: {
-                                nome: true,
-                            }
-                        },
-                        cargo: {
-                            select: {
-                                nome: true,
-                            },
-                        },
-                    },
-                },
-            }
-        });
+    return await prisma.$transaction(async (tx) => {
+          try {
+              const terapeuta = await tx.terapeuta.findUnique({
+                  where: { id: payload.terapeuta_id },
+                  select: {
+                      id: true,
+                      nome: true,
+                      registro_profissional: {
+                          select: {
+                              numero_conselho: true,
+                              area_atuacao: {
+                                  select: {
+                                      nome: true,
+                                  }
+                              },
+                              cargo: {
+                                  select: {
+                                      nome: true,
+                                  },
+                              },
+                          },
+                      },
+                  }
+              });
+      
+              if (!terapeuta) {
+                  throw new AppError('THERAPIST_NOT_FOUND', 'Terapeuta não encontrado');
+              }
+      
+              const cabecalho_terapeuta_id = terapeuta.id;
+              const cabecalho_terapeuta_nome = terapeuta.nome;
+              const registro_principal = terapeuta.registro_profissional[0];
+      
+              if (cabecalho_terapeuta_nome.trim().length === 0) {
+                  throw new AppError('THERAPIST_INVALID', 'Terapeuta sem nome válido');
+              }
+      
+              // cria ata + filhos simples
+              const ata = await tx.ata_reuniao.create({
+                  data: {
+                      terapeuta_id: payload.terapeuta_id,
+                      cliente_id: payload.cliente_id,
+      
+                      data: payload.data,
+                      horario_inicio: payload.horario_inicio,
+                      horario_fim: payload.horario_fim,
+      
+                      finalidade: payload.finalidade,
+                      finalidade_outros: payload.finalidade === ata_finalidade_reuniao.outros ? (payload.finalidade_outros ?? null) : null,
+                      
+                      modalidade: payload.modalidade,
+                      conteudo: payload.conteudo,
+                      status: payload.status,
+      
+                      cabecalho_terapeuta_id,
+                      cabecalho_terapeuta_nome,
+                      cabecalho_conselho_numero: registro_principal?.numero_conselho ?? null,
+                      cabecalho_area_atuacao: registro_principal?.area_atuacao?.nome ?? null,
+                      cabecalho_cargo: registro_principal?.cargo?.nome ?? null,
+      
+                      duracao_minutos: duracao ?? null,
+                      horas_faturadas: horasFaturadas,
+                  },
+                  select: ataSelectBase,
+              });
+      
+              // participantes
+              if (payload.participantes.length > 0) {
+                  await tx.ata_participante.createMany({
+                      data: payload.participantes.map((p) => ({
+                          ata_reuniao_id: ata.id,
+                          tipo: p.tipo,
+                          nome: p.nome,
+                          descricao: p.descricao ?? null,
+                          terapeuta_id: p.terapeuta_id ?? null,
+                      })),
+                  });
+              }
+      
+              // links
+              const links = payload.links ?? [];
+              if (Array.isArray(links) && links.length > 0) {
+                  await tx.ata_link_recomendacao.createMany({
+                      data: links.map((l) => ({
+                          ata_reuniao_id: ata.id,
+                          titulo: l.titulo,
+                          url: l.url,
+                      })),
+                  });
+              }
 
-        if (!terapeuta) {
-            throw new AppError('TERAPEUTA_NOT_FOUND', 'Terapeuta não encontrado');
+              const parties = {
+                clienteId: payload.cliente_id!,
+                terapeutaId: payload.terapeuta_id,
+              }
+
+              await createBilling(tx, billingInput, parties, { ataId: ata.id });
+      
+              // anexos: upload + cria registros
+              if (anexos.length === 0) return ata;
+      
+              const uploaded = await R2GenericUploadService.uploadMany({
+                  prefix: `atas/${ata.id}`,
+                  files: anexos.map((a) => ({
+                      buffer: a.buffer,
+                      mimetype: a.mimetype,
+                      originalname: a.originalname,
+                      size: a.size,
+                  })),
+              });
+      
+              if (uploaded.length !== anexos.length) {
+                  await R2GenericUploadService.deleteMany(uploaded.map((u) => u.key));
+                  throw new AppError('UPLOAD_FAILED', 'Falha ao fazer upload dos arquivos do faturamento', 500);
+              }
+      
+              try {
+                  await tx.ata_anexo.createMany({
+                      data: anexos.map((a, i) => ({
+                          ata_reuniao_id: ata.id,
+                          nome: ensureFilenameWithExt({name: a.nome, path: uploaded[i]!.key, mime_type: uploaded[i]!.tipo}),
+                          original_nome: a.originalname,
+                          caminho: uploaded[i]!.key,
+                          mime_type: uploaded[i]!.tipo,
+                          tamanho: uploaded[i]!.tamanho,
+                      })),
+                  });
+              } catch (err) {
+                  await Promise.allSettled([
+                      R2GenericUploadService.deleteMany(uploaded.map((u) => u.key)),
+                  ]);
+                  throw err;
+              }
+      
+              return ata;
+        } catch (err) {
+            console.error('[TX ERROR]', err);
+            throw err;
         }
-
-        const cabecalho_terapeuta_id = terapeuta.id;
-        const cabecalho_terapeuta_nome = terapeuta.nome;
-        const registro_principal = terapeuta.registro_profissional[0];
-
-        if (cabecalho_terapeuta_nome.trim().length === 0) {
-            throw new AppError('TERAPEUTA_INVALID', 'Terapeuta sem nome válido');
-        }
-
-        // cria ata + filhos simples
-        const ata = await tx.ata_reuniao.create({
-            data: {
-                terapeuta_id: payload.terapeuta_id,
-                cliente_id: payload.cliente_id ?? null,
-
-                data: dataEntrevista,
-                horario_inicio: payload.horario_inicio,
-                horario_fim: payload.horario_fim,
-
-                finalidade: payload.finalidade,
-                finalidade_outros: payload.finalidade === ata_finalidade_reuniao.outros ? (payload.finalidade_outros ?? null) : null,
-                
-                modalidade: payload.modalidade,
-                conteudo: payload.conteudo,
-                status: payload.status,
-
-                cabecalho_terapeuta_id,
-                cabecalho_terapeuta_nome,
-                cabecalho_conselho_numero: registro_principal?.numero_conselho ?? null,
-                cabecalho_area_atuacao: registro_principal?.area_atuacao?.nome ?? null,
-                cabecalho_cargo: registro_principal?.cargo?.nome ?? null,
-
-                duracao_minutos: duracao ?? null,
-                horas_faturadas: horasFaturadas,
-            },
-        });
-
-        // participantes
-        if (payload.participantes.length > 0) {
-            await tx.ata_participante.createMany({
-                data: payload.participantes.map((p) => ({
-                    ata_reuniao_id: ata.id,
-                    tipo: p.tipo,
-                    nome: p.nome,
-                    descricao: p.descricao ?? null,
-                    terapeuta_id: p.terapeuta_id ?? null,
-                })),
-            });
-        }
-
-        // links
-        const links = payload.links ?? [];
-        if (Array.isArray(links) && links.length > 0) {
-            await tx.ata_link_recomendacao.createMany({
-                data: links.map((l) => ({
-                    ata_reuniao_id: ata.id,
-                    titulo: l.titulo,
-                    url: l.url,
-                })),
-            });
-        }
-
-        // anexos: upload + cria registros
-        if (anexos.length > 0) {
-            const uploaded = await R2GenericUploadService.uploadMany({
-                prefix: `atas/${ata.id}`,
-                files: anexos.map((a) => ({
-                    buffer: a.file.buffer,
-                    mimetype: a.mime_type,
-                    originalname: a.original_nome,
-                    size: a.tamanho,
-                })),
-            });
-
-            for (let i = 0; i < anexos.length; i += 1) {
-                const a = anexos[i];
-                const u = uploaded[i];
-
-                if (!u) {
-                    throw new Error(`Falha ao fazer upload de anexo`);
-                }
-
-                if (!a) {
-                    throw new AppError('INVALID_PAYLOAD', 'arquivo é obrigatório');
-                }
-
-                await tx.ata_anexo.create({
-                    data: {
-                        ata_reuniao_id: ata.id,
-                        external_id: a.external_id,
-
-                        nome: a.nome ?? null,
-
-                        original_nome: a.original_nome,
-                        mime_type: a.mime_type,
-                        tamanho: a.tamanho,
-
-                        caminho: u.key,
-                    },
-                });
-            }
-        }
-        
-        // retorna ata completa
-        const full = await tx.ata_reuniao.findUnique({
-            where: { id: ata.id },
-            select: ataSelectBase,
-        });
-
-        return full;
     });
-
-    if (!created) {
-        throw new Error('Falha ao criar ata.');
-    }
-
-    return created;
 }
 
 export async function getById(id: number, userId?: string) {
@@ -428,153 +419,150 @@ export async function finalizeAtaById(id: number, userId: string) {
 export async function update(input: UpdateAtaServiceInput) {
     const { id, userId, payload, anexos } = input;
 
-    const existing = await prisma.ata_reuniao.findFirst({
-        where: { id, terapeuta_id: userId },
-        select: {
-            id: true,
-            data: true,
-            horario_inicio: true,
-            horario_fim: true,
-        },
-    });
+    const duracao_minutos = computeDurationMinutes(payload.horario_inicio, payload.horario_fim);
+    const horas_faturadas =
+        duracao_minutos !== null
+            ? new Prisma.Decimal(calcularHorasFaturadasPorReuniao(duracao_minutos))
+            : null;
 
-    if (!existing) return null;
-
-    const dataToSave: Prisma.ata_reuniaoUncheckedUpdateInput = {};
-
-    if (payload.data !== undefined) {
-        dataToSave.data = toDateOnlyLocal(payload.data);
-    }
-
-    const horarioInicio = 
-        payload.horario_inicio !== undefined ? payload.horario_inicio : existing.horario_inicio;
-    const horarioFim = payload.horario_fim !== undefined ? payload.horario_fim : existing.horario_fim;
-
-    if (payload.horario_inicio !== undefined) {
-        dataToSave.horario_inicio = payload.horario_inicio;
-    }
-
-    if (payload.horario_fim !== undefined) {
-        dataToSave.horario_fim = payload.horario_fim;
-    }
-
-    if (payload.horario_inicio !== undefined || payload.horario_fim !== undefined) {
-        const duracao = computeDurationMinutes(horarioInicio, horarioFim);
-        dataToSave.duracao_minutos = duracao ?? null;
-        dataToSave.horas_faturadas =
-            duracao !== null
-                ? new Prisma.Decimal(calcularHorasFaturadasPorReuniao(duracao))
-                : null;
-    }
-
-    if (payload.finalidade !== undefined) {
-        dataToSave.finalidade = payload.finalidade;
-        dataToSave.finalidade_outros =
-            payload.finalidade === ata_finalidade_reuniao.outros
-                ? payload.finalidade_outros ?? null
-                : null;
-    } else if (payload.finalidade_outros !== undefined) {
-        dataToSave.finalidade_outros = payload.finalidade_outros ?? null;
-    }
-
-    if (payload.modalidade !== undefined) {
-        dataToSave.modalidade = payload.modalidade;
-    }
-
-    if (payload.conteudo !== undefined) {
-        dataToSave.conteudo = payload.conteudo;
-    }
-
-    if (payload.status !== undefined) {
-        dataToSave.status = payload.status;
-    }
-
-    if (payload.cliente_id !== undefined) {
-        dataToSave.cliente_id = payload.cliente_id ?? null;
-    }
-
-    const updated = await prisma.$transaction(async (tx) => {
-        if (Object.keys(dataToSave).length > 0) {
-            await tx.ata_reuniao.update({
+    try {
+        return await prisma.$transaction(async (tx) => {
+            const existing = await tx.ata_reuniao.findFirst({
                 where: { id, terapeuta_id: userId },
-                data: dataToSave,
+                select: {
+                    id: true,
+                    data: true,
+                    horario_inicio: true,
+                    horario_fim: true,
+                },
             });
-        }
-
-        if (payload.participantes !== undefined) {
-            await tx.ata_participante.deleteMany({ where: { ata_reuniao_id: id } });
-            if (payload.participantes.length > 0) {
-                await tx.ata_participante.createMany({
-                    data: payload.participantes.map((p) => ({
-                        ata_reuniao_id: id,
-                        tipo: p.tipo,
-                        nome: p.nome,
-                        descricao: p.descricao ?? null,
-                        terapeuta_id: p.terapeuta_id ?? null,
-                    })),
-                });
+    
+            if (!existing) throw new AppError('ATA_NOT_FOUND', 'Ata não encontrada');
+    
+            const ata = await tx.ata_reuniao.update({
+                where: { id, terapeuta_id: userId },
+                data: {
+                    cliente_id: payload.cliente_id,
+                    data: payload.data,
+                    horario_inicio: payload.horario_inicio,
+                    horario_fim: payload.horario_fim,
+                    finalidade: payload.finalidade,
+                    finalidade_outros: payload.finalidade_outros,
+                    modalidade: payload.modalidade,
+                    conteudo: payload.conteudo,
+                    status: payload.status,
+                    duracao_minutos,
+                    horas_faturadas,
+                },
+                select: ataSelectBase
+            });
+    
+            const participants = payload.participantes ?? [];
+            type ParticipantInput = typeof participants[number];
+            type ExistingParticipant = ParticipantInput & { id: number };
+            const hasId = (p: ParticipantInput): p is ExistingParticipant => typeof p.id === 'number';
+    
+            if (participants && participants.length > 0) {
+                const idsToDelete = participants
+                    .filter((p) => p.removed === true)
+                    .filter(hasId)
+                    .map((p) => p.id);
+    
+                if (idsToDelete.length > 0) {
+                    await tx.ata_participante.deleteMany({
+                        where: {
+                            ata_reuniao_id: id,
+                            id: { in: idsToDelete }
+                        }
+                    });
+                }
+    
+                const toUpdate = participants
+                    .filter((p) => p.removed !== true)
+                    .filter(hasId);
+                
+                await Promise.all(
+                    toUpdate.map((p) =>
+                        tx.ata_participante.update({
+                            where: { id: p.id },
+                            data: {
+                                tipo: p.tipo,
+                                nome: p.nome,
+                                descricao: p.descricao,
+                                terapeuta_id: p.terapeuta_id ?? null,
+                            }
+                        })
+                    ),
+                )
+    
+                const toCreate = participants.filter((p) => p.id === undefined);
+                
+                if (toCreate.length > 0) {
+                    await tx.ata_participante.createMany({
+                        data: toCreate.map((p) => ({
+                            ata_reuniao_id: id,
+                            tipo: p.tipo,
+                            nome: p.nome,
+                            descricao: p.descricao,
+                            terapeuta_id: p.terapeuta_id ?? null
+                        })),
+                    });
+                }
             }
-        }
-
-        if (payload.links !== undefined) {
+    
             await tx.ata_link_recomendacao.deleteMany({ where: { ata_reuniao_id: id } });
-            if (Array.isArray(payload.links) && payload.links.length > 0) {
+            if (payload.links && payload.links.length > 0) {
                 await tx.ata_link_recomendacao.createMany({
-                    data: payload.links.map((l) => ({
+                    data: payload.links?.map((l) => ({
                         ata_reuniao_id: id,
                         titulo: l.titulo,
                         url: l.url,
-                    })),
+                    }))
                 });
             }
-        }
-
-        if (anexos.length > 0) {
+    
+            // anexos: upload + cria registros
+            if (anexos.length === 0) return ata;
+    
             const uploaded = await R2GenericUploadService.uploadMany({
                 prefix: `atas/${id}`,
                 files: anexos.map((a) => ({
-                    buffer: a.file.buffer,
-                    mimetype: a.mime_type,
-                    originalname: a.original_nome,
-                    size: a.tamanho,
+                    buffer: a.buffer,
+                    mimetype: a.mimetype,
+                    originalname: a.originalname,
+                    size: a.size,
                 })),
             });
-
-            for (let i = 0; i < anexos.length; i += 1) {
-                const a = anexos[i];
-                const u = uploaded[i];
-
-                if (!u) {
-                    throw new Error(`Falha ao fazer upload de anexo`);
-                }
-
-                if (!a) {
-                    throw new AppError('INVALID_PAYLOAD', 'arquivo é obrigatório');
-                }
-
-                await tx.ata_anexo.create({
-                    data: {
-                        ata_reuniao_id: id,
-                        external_id: a.external_id,
-                        nome: a.nome ?? null,
-                        original_nome: a.original_nome,
-                        mime_type: a.mime_type,
-                        tamanho: a.tamanho,
-                        caminho: u.key,
-                    },
-                });
+    
+            if (uploaded.length !== anexos.length) {
+                await R2GenericUploadService.deleteMany(uploaded.map((u) => u.key));
+                throw new AppError('UPLOAD_FAILED', 'Falha ao fazer upload dos arquivos do faturamento', 500);
             }
-        }
-
-        const full = await tx.ata_reuniao.findUnique({
-            where: { id },
-            select: ataSelectBase,
+    
+            try {
+                await tx.ata_anexo.createMany({
+                    data: anexos.map((a, i) => ({
+                        ata_reuniao_id: id,
+                        nome: ensureFilenameWithExt({name: a.nome, path: uploaded[i]!.key, mime_type: uploaded[i]!.tipo}),
+                        original_nome: a.originalname,
+                        caminho: uploaded[i]!.key,
+                        mime_type: uploaded[i]!.tipo,
+                        tamanho: uploaded[i]!.tamanho,
+                    })),
+                });
+            } catch (err) {
+                await Promise.allSettled([
+                    R2GenericUploadService.deleteMany(uploaded.map((u) => u.key)),
+                ]);
+                throw err;
+            }
+    
+            return ata;
         });
-
-        return full;
-    });
-
-    return updated ? mapAtaBase(updated) : null;
+    }catch (err) {
+        console.error('[TX ERROR]', err);
+        throw err;
+    }
 }
 
 export async function deleteAta(id: number, userId: string) {
@@ -599,22 +587,6 @@ export async function deleteAta(id: number, userId: string) {
     });
 
     if (!ata || ata === 'FORBIDDEN') return ata;
-
-    const paths = Array.from(
-        new Set(
-            ata.anexos
-                .map((anexo) => anexo.caminho)
-                .filter((path) => path.length > 0),
-        ),
-    );
-
-    for (const path of paths) {
-        try {
-            await deleteFromR2(path);
-        } catch (error) {
-            console.error('[atas:delete] falha ao deletar arquivo no R2', { path, error });
-        }
-    }
 
     return true;
 }

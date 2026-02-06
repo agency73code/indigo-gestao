@@ -16,10 +16,13 @@ export type AppAbility = PureAbility<[Actions, Subjects]>;
 const AppAbility = PureAbility as AbilityClass<AppAbility>;
 
 export function defineAbilityFor(perfil_acesso?: string) {
-    const { can, build } = new AbilityBuilder(AppAbility);
-
-    const role = perfil_acesso?.toLocaleLowerCase() ?? '';
+    const role = normalizeRole(perfil_acesso);
     const level = ACCESS_LEVELS[role] ?? 0;
+    return defineAbilityForLevel(level);
+}
+
+export function defineAbilityForLevel(level: number) {
+    const { can, build } = new AbilityBuilder(AppAbility);
 
     // 🧭 Todos podem acessar o Dashboard
     can('read', 'Dashboard');
@@ -38,6 +41,7 @@ export function defineAbilityFor(perfil_acesso?: string) {
 
     if (level >= 4) {
         can('create', 'Vinculos');
+        can('manage', ['Programas', 'Faturamento', 'Configuração']);
     }
 
     // 🧑‍💼 Gerentes e coordenadores executivos têm acesso completo
@@ -46,9 +50,17 @@ export function defineAbilityFor(perfil_acesso?: string) {
     }
 
     // 🔧 Acesso geral a módulos administrativos
-    can('manage', ['Programas', 'Faturamento', 'Configuração']);
+    can('read', ['Programas', 'Faturamento', 'Configuração']);
 
     return build({
         detectSubjectType: (object: { type?: Subjects }) => object?.type as Subjects,
     });
+}
+
+function normalizeRole(role?: string): string {
+  return (role ?? '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .trim();
 }

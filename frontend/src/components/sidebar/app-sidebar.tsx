@@ -85,18 +85,11 @@ const data: {
             url: '/app/relatorios/lista',
             icon: AnimatedIcons.BookOpenText,
         },
-        // Faturamento temporariamente desabilitado - funcionalidade incompleta
-        // {
-        //     title: 'Faturamento',
-        //     url: '/app/faturamento',
-        //     icon: AnimatedIcons.Wallet,
-        //     items: [
-        //         { title: 'Registrar Lançamento', url: '/app/faturamento/registrar-lancamento' },
-        //         { title: 'Minhas Horas', url: '/app/faturamento/minhas-horas' },
-        //         { title: 'Gestão (gerente)', url: '/app/faturamento/gestao' },
-        //         { title: 'Relatórios/Exportar', url: '/app/faturamento/relatorios' },
-        //     ],
-        // },
+        {
+            title: 'Faturamento',
+            url: '/app/faturamento',
+            icon: AnimatedIcons.Wallet,
+        },
         {
             title: 'Configuração',
             url: '/app/configuracoes',

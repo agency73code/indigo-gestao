@@ -30,7 +30,7 @@ const cabecalhoSchema = z.object({
     profissionalId: z.string().min(1, 'Profissional responsável é obrigatório'),
     profissionalNome: z.string().min(1, 'Nome do profissional é obrigatório'),
     cuidadores: z.array(z.object({
-        id: z.string(),
+        id: z.union([z.number(), z.string()]),
         nome: z.string(),
         relacao: z.string(),
         descricaoRelacao: z.string().optional(),

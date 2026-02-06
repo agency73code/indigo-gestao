@@ -10,10 +10,61 @@ import type {
 } from '../types';
 
 import { atasConfig } from './atas.config';
+import { debugFormData } from '@/lib/api';
 
 // ============================================
 // HELPERS - MAPEAMENTO API ↔ FRONTEND
 // ============================================
+
+/** Tamanho máximo de arquivo: 10MB */
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+/** Tipos de arquivo permitidos */
+const ALLOWED_FILE_TYPES = [
+    // Imagens
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+    'image/bmp',
+    'image/svg+xml',
+    // Vídeos
+    'video/mp4',
+    'video/webm',
+    'video/quicktime',
+    // Documentos
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    // Excel
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    // PowerPoint
+    'application/vnd.ms-powerpoint',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    // Texto
+    'text/plain',
+    'text/csv',
+    // Arquivos compactados
+    'application/zip',
+    'application/x-zip-compressed',
+    'application/x-rar-compressed',
+    'application/vnd.rar',
+] as const;
+
+/** Valida se arquivo é permitido */
+function validateFile(file: File): { valid: boolean; error?: string } {
+    if (file.size > MAX_FILE_SIZE) {
+        return { valid: false, error: `Arquivo muito grande. Máximo: ${MAX_FILE_SIZE / 1024 / 1024}MB` };
+    }
+
+    if (!ALLOWED_FILE_TYPES.includes(file.type as typeof ALLOWED_FILE_TYPES[number])) {
+        console.error('[validateFile] Tipo não permitido:', file.type, 'Nome:', file.name);
+        return { valid: false, error: `Tipo de arquivo não permitido: ${file.type || 'desconhecido'} (${file.name})` };
+    }
+
+    return { valid: true };
+}
 
 /** Mapeamento de área de atuação para sigla do conselho profissional */
 const AREA_PARA_SIGLA_CONSELHO: Record<string, string> = {
@@ -54,7 +105,8 @@ function mapAtaFromApi(data: any): AtaReuniao {
         participantes: (data.participantes || []).map((p: any) => {
             const arquivoId = p.terapeuta?.arquivos?.[0]?.arquivo_id;
             return {
-                id: String(p.id),
+                id: p.id,
+                localId: p.id ? String(p.id) : crypto.randomUUID(),
                 tipo: p.tipo,
                 nome: p.nome,
                 descricao: p.descricao ?? '',
@@ -93,6 +145,20 @@ function mapAtaFromApi(data: any): AtaReuniao {
             arquivoId: a.arquivo_id,
             url: `${atasConfig.apiBase}/atas-reuniao/download/${a.id}`,
         })),
+        // Dados de faturamento (ajuda de custo)
+        faturamento: data.tipo_faturamento ? {
+            tipoFaturamento: data.tipo_faturamento,
+            observacaoFaturamento: data.observacao_faturamento || '',
+            temAjudaCusto: Boolean(data.tem_ajuda_custo),
+            motivoAjudaCusto: data.motivo_ajuda_custo || '',
+            arquivosFaturamento: (data.arquivos_faturamento || []).map((a: any) => ({
+                id: String(a.id),
+                nome: a.nome ?? a.original_nome,
+                tipo: a.mime_type,
+                tamanho: a.tamanho,
+                url: a.arquivo_id ? `${atasConfig.apiBase}/arquivos/${encodeURIComponent(a.arquivo_id)}/view` : undefined,
+            })),
+        } : undefined,
     };
 }
 
@@ -112,10 +178,12 @@ function mapCreateAtaToApi(input: CreateAtaInput): Record<string, unknown> {
         conteudo: formData.conteudo,
         status: status || 'rascunho',
         participantes: formData.participantes.map((p) => ({
+            ...(p.id !== undefined ? { id: p.id } : {}),
             tipo: p.tipo,
             nome: p.nome,
             descricao: p.descricao || null,
             terapeuta_id: p.terapeutaId || null,
+            ...(p.removed ? { removed: true } : {}),
         })),
         links: formData.links?.map((l) => ({
             titulo: l.titulo,
@@ -143,10 +211,12 @@ function mapUpdateAtaToApi(input: UpdateAtaInput): Record<string, unknown> {
     if (formData.clienteId !== undefined) payload.cliente_id = formData.clienteId || null;
     if (formData.participantes !== undefined) {
         payload.participantes = formData.participantes.map((p) => ({
+            ...(p.id !== undefined ? { id: p.id } : {}),
             tipo: p.tipo,
             nome: p.nome,
             descricao: p.descricao || null,
             terapeuta_id: p.terapeutaId || null,
+            ...(p.removed ? { removed: true } : {}),
         }));
     }
     if (formData.links !== undefined) {
@@ -155,7 +225,7 @@ function mapUpdateAtaToApi(input: UpdateAtaInput): Record<string, unknown> {
             url: l.url,
         }));
     }
-
+    
     return payload;
 }
 
@@ -213,18 +283,44 @@ export async function createAta(input: CreateAtaInput): Promise<AtaReuniao> {
     // JSON do payload (sem os arquivos)
     fd.append('payload', JSON.stringify(mapCreateAtaToApi(input)));
 
+    // Dados de faturamento (padrão: campo "data")
+    fd.append('data', JSON.stringify({
+        faturamento: input.formData.faturamento ? {
+            tipoAtendimento: input.formData.faturamento.tipoFaturamento,
+            ajudaCusto: input.formData.faturamento.temAjudaCusto,
+            observacaoFaturamento: input.formData.faturamento.motivoAjudaCusto ?? null,
+            dataSessao: input.formData.data,
+            horarioInicio: input.formData.horarioInicio,
+            horarioFim: input.formData.horarioFim,
+        } : null,
+    }));
+
     // Adiciona os arquivos com seus IDs e nomes personalizados
     const anexos = input.anexos ?? [];
     for (const anexo of anexos) {
         if (anexo.file instanceof File) {
+            const validation = validateFile(anexo.file);
+            if (!validation.valid) {
+                throw new Error(validation.error || 'Arquivo inválido');
+            }
             // Formato: files[id] = arquivo, nome enviado separadamente
             fd.append(`files[${anexo.id}]`, anexo.file, anexo.file.name);
             fd.append(`fileNames[${anexo.id}]`, anexo.nome);
         }
     }
 
-    console.log(Array.from(fd.entries()));
-
+    // Adiciona comprovantes de faturamento (ajuda de custo)
+    const billingFiles = input.formData.faturamento?.arquivosFaturamento ?? [];
+    for (const arquivo of billingFiles) {
+        if (!arquivo.file) continue;
+        const validation = validateFile(arquivo.file);
+        if (!validation.valid) {
+            throw new Error(validation.error || 'Arquivo de faturamento inválido');
+        }
+        fd.append(`billingFiles`, arquivo.file, arquivo.file.name);
+        fd.append(`billingFileNames`, arquivo.nome);
+    }
+    
     const res = await authFetch(`${atasConfig.apiBase}/atas-reuniao`, {
         method: 'POST',
         body: fd,
@@ -245,14 +341,47 @@ export async function updateAta(id: string, input: UpdateAtaInput): Promise<AtaR
     // JSON do payload (sem os arquivos)
     fd.append('payload', JSON.stringify(mapUpdateAtaToApi(input)));
 
+    // Dados de faturamento (padrão: campo "data")
+    if (input.formData.faturamento !== undefined) {
+        fd.append('data', JSON.stringify({
+            faturamento: input.formData.faturamento ? {
+                tipoAtendimento: input.formData.faturamento.tipoFaturamento,
+                ajudaCusto: input.formData.faturamento.temAjudaCusto,
+                observacaoFaturamento: input.formData.faturamento.motivoAjudaCusto ?? null,
+                dataSessao: input.formData.data,
+                horarioInicio: input.formData.horarioInicio,
+                horarioFim: input.formData.horarioFim,
+            } : null,
+        }));
+    }
+
     // Adiciona os arquivos com seus IDs e nomes personalizados
     const anexos = input.anexos ?? [];
     for (const anexo of anexos) {
         if (anexo.file instanceof File) {
+            const validation = validateFile(anexo.file);
+            if (!validation.valid) {
+                throw new Error(validation.error || 'Arquivo inválido');
+            }
             fd.append(`files[${anexo.id}]`, anexo.file, anexo.file.name);
             fd.append(`fileNames[${anexo.id}]`, anexo.nome);
         }
     }
+
+    // Adiciona comprovantes de faturamento (ajuda de custo)
+    const billingFiles = input.formData.faturamento?.arquivosFaturamento ?? [];
+    for (const arquivo of billingFiles) {
+        if (!arquivo.file) continue;
+        const validation = validateFile(arquivo.file);
+        if (!validation.valid) {
+            throw new Error(validation.error || 'Arquivo de faturamento inválido');
+        }
+        fd.append(`billingFiles`, arquivo.file, arquivo.file.name);
+        fd.append(`billingFileNames`, arquivo.nome);
+    }
+
+    const debug = debugFormData(fd);
+    console.log(debug);
 
     const res = await authFetch(`${atasConfig.apiBase}/atas-reuniao/${id}`, {
         method: 'PATCH',

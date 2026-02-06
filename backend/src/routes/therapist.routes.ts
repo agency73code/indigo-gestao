@@ -11,6 +11,7 @@ router.get('/', requireAbility('read', 'Consultar'), TherapistController.list);
 router.get('/relatorio', TherapistController.getTherapistReport);
 router.get('/bancos', TherapistController.listBanks);
 router.get('/:therapistId', TherapistController.getById);
+router.get('/:therapistId/sumario', TherapistController.fetchTherapistSummaryById);
 router.patch('/:therapistId', requireAbility('manage', 'Cadastro'), TherapistController.update);
 router.post('/cadastrar', requireAbility('manage', 'Cadastro'), TherapistController.create);
 

@@ -11,7 +11,8 @@
         "build": "concurrently \"pnpm --filter backend build\" \"pnpm --filter frontend build\"",
         "lint": "eslint . --ext .js,.ts,.jsx,.tsx",
         "lint:fix": "eslint . --ext .js,.ts,.jsx,.tsx --fix",
-        "format": "prettier --write ."
+        "format": "prettier --write .",
+        "migrate": "cd backend && pnpm prisma migrate dev --name $npm_config_name"
     },
     "keywords": [],
     "author": "",

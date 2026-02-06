@@ -4,7 +4,9 @@
 
 import type { ata_finalidade_reuniao } from "@prisma/client";
 import type { createAtaPayload, updateAtaPayload } from "./ata.schema.js";
-import type { ParsedAtaAnexo } from "./utils/ata.anexos.js";
+import type { UploadedFile } from "../file/types/UploadedFile.js";
+import type { CreateBillingPayload } from "../billing/types/CreateBillingPayload.js";
+
 
 export const FINALIDADE_REUNIAO = {
     ORIENTACAO_PARENTAL: 'orientacao_parental',
@@ -26,14 +28,15 @@ export type ModalidadeReuniao = typeof MODALIDADE_REUNIAO[keyof typeof MODALIDAD
 
 export type CreateAtaServiceInput = {
     payload: createAtaPayload;
-    anexos: ParsedAtaAnexo[];
+    billingInput: CreateBillingPayload;
+    anexos: UploadedFile[];
 };
 
 export type UpdateAtaServiceInput = {
     id: number;
     userId: string;
     payload: updateAtaPayload;
-    anexos: ParsedAtaAnexo[];
+    anexos: UploadedFile[];
 }
 
 export interface AtaListFilters {
