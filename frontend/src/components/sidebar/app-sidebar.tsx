@@ -89,11 +89,6 @@ const data: {
             title: 'Faturamento',
             url: '/app/faturamento',
             icon: AnimatedIcons.Wallet,
-            items: [
-                { title: 'Registrar Lançamento', url: '/app/faturamento/registrar-lancamento' },
-                { title: 'Minhas Horas', url: '/app/faturamento/minhas-horas' },
-                { title: 'Gestão (gerente)', url: '/app/faturamento/gestao' },
-            ],
         },
         {
             title: 'Configuração',

@@ -1272,6 +1272,7 @@ export function GestaoFaturamentoHub() {
                                         onViewDetails={handleViewDetails}
                                         lancamentos={lancamentosDoMes}
                                         globalTipoAtividadeFilter={tipoAtividadeFilter}
+                                        dateRangeFilter={dateRangeValue}
                                         periodoSelecionado={periodoMesSelecionado}
                                     />
                                 )}
@@ -1284,6 +1285,7 @@ export function GestaoFaturamentoHub() {
                                         onViewDetails={handleViewDetails}
                                         lancamentos={lancamentosDoMes}
                                         globalTipoAtividadeFilter={tipoAtividadeFilter}
+                                        dateRangeFilter={dateRangeValue}
                                         periodoSelecionado={periodoMesSelecionado}
                                     />
                                 )}
@@ -2206,6 +2208,8 @@ interface TerapeutasTabProps {
     lancamentos: ItemFaturamento[];
     /** Filtro global de tipo de atividade do FiltersPopover */
     globalTipoAtividadeFilter?: string;
+    /** Filtro global de período */
+    dateRangeFilter?: { from?: string; to?: string };
     /** Período selecionado para filtrar relatórios */
     periodoSelecionado: {
         inicio: Date;
@@ -2214,7 +2218,7 @@ interface TerapeutasTabProps {
     };
 }
 
-function TerapeutasTab({ grupos, expandedId, onToggleExpand, onViewDetails, lancamentos, globalTipoAtividadeFilter, periodoSelecionado }: TerapeutasTabProps) {
+function TerapeutasTab({ grupos, expandedId, onToggleExpand, onViewDetails, lancamentos, globalTipoAtividadeFilter, dateRangeFilter, periodoSelecionado }: TerapeutasTabProps) {
     // Estado de filtros de coluna para a tabela expandida
     const [columnFilters, setColumnFilters] = useState<FaturamentoColumnFilters>({
         firstColumn: undefined,
@@ -2296,13 +2300,30 @@ function TerapeutasTab({ grupos, expandedId, onToggleExpand, onViewDetails, lanc
         }
     }, [expandedGrupo, lancamentosAprovadosDoMes, periodoSelecionado]);
 
-    // Lançamentos filtrados para o grupo expandido
+    // Lançamentos filtrados para o grupo expandido (TerapeutasTab)
     const filteredLancamentos = useMemo(() => {
         if (!expandedGrupo) return [];
         let items = expandedGrupo.lancamentos;
-        // Aplicar filtro global primeiro
+        // Aplicar filtro global de tipo de atividade
         if (globalTipoAtividadeFilter && globalTipoAtividadeFilter !== 'all') {
             items = items.filter(l => l.tipoAtividade === globalTipoAtividadeFilter);
+        }
+        // Aplicar filtro global de período
+        if (dateRangeFilter?.from) {
+            const fromDate = new Date(dateRangeFilter.from);
+            fromDate.setHours(0, 0, 0, 0);
+            items = items.filter(l => {
+                const itemDate = new Date(l.data + 'T00:00:00');
+                return itemDate >= fromDate;
+            });
+        }
+        if (dateRangeFilter?.to) {
+            const toDate = new Date(dateRangeFilter.to);
+            toDate.setHours(23, 59, 59, 999);
+            items = items.filter(l => {
+                const itemDate = new Date(l.data + 'T00:00:00');
+                return itemDate <= toDate;
+            });
         }
         // Depois aplica filtros de coluna (locais)
         if (columnFilters.tipoAtividade) {
@@ -2312,7 +2333,7 @@ function TerapeutasTab({ grupos, expandedId, onToggleExpand, onViewDetails, lanc
             items = items.filter(l => l.status === columnFilters.status);
         }
         return items;
-    }, [expandedGrupo, columnFilters, globalTipoAtividadeFilter]);
+    }, [expandedGrupo, columnFilters, globalTipoAtividadeFilter, dateRangeFilter]);
 
     // Opções de filtro para a tabela
     const filterOptions: FaturamentoColumnFilterOptions = useMemo(() => {
@@ -2581,6 +2602,8 @@ interface ClientesTabProps {
     lancamentos: ItemFaturamento[];
     /** Filtro global de tipo de atividade do FiltersPopover */
     globalTipoAtividadeFilter?: string;
+    /** Filtro global de período */
+    dateRangeFilter?: { from?: string; to?: string };
     /** Período selecionado para filtrar relatórios */
     periodoSelecionado: {
         inicio: Date;
@@ -2589,7 +2612,7 @@ interface ClientesTabProps {
     };
 }
 
-function ClientesTab({ grupos, expandedId, onToggleExpand, onViewDetails, lancamentos, globalTipoAtividadeFilter, periodoSelecionado }: ClientesTabProps) {
+function ClientesTab({ grupos, expandedId, onToggleExpand, onViewDetails, lancamentos, globalTipoAtividadeFilter, dateRangeFilter, periodoSelecionado }: ClientesTabProps) {
     // Estado de filtros de coluna para a tabela expandida
     const [columnFilters, setColumnFilters] = useState<FaturamentoColumnFilters>({
         firstColumn: undefined,
@@ -2672,13 +2695,30 @@ function ClientesTab({ grupos, expandedId, onToggleExpand, onViewDetails, lancam
         }
     }, [expandedGrupo, lancamentosAprovadosDoMes, periodoSelecionado, tipoRelatorio]);
 
-    // Lançamentos filtrados para o grupo expandido
+    // Lançamentos filtrados para o grupo expandido (ClientesTab)
     const filteredLancamentos = useMemo(() => {
         if (!expandedGrupo) return [];
         let items = expandedGrupo.lancamentos;
-        // Aplicar filtro global primeiro
+        // Aplicar filtro global de tipo de atividade
         if (globalTipoAtividadeFilter && globalTipoAtividadeFilter !== 'all') {
             items = items.filter(l => l.tipoAtividade === globalTipoAtividadeFilter);
+        }
+        // Aplicar filtro global de período
+        if (dateRangeFilter?.from) {
+            const fromDate = new Date(dateRangeFilter.from);
+            fromDate.setHours(0, 0, 0, 0);
+            items = items.filter(l => {
+                const itemDate = new Date(l.data + 'T00:00:00');
+                return itemDate >= fromDate;
+            });
+        }
+        if (dateRangeFilter?.to) {
+            const toDate = new Date(dateRangeFilter.to);
+            toDate.setHours(23, 59, 59, 999);
+            items = items.filter(l => {
+                const itemDate = new Date(l.data + 'T00:00:00');
+                return itemDate <= toDate;
+            });
         }
         // Depois aplica filtros de coluna (locais)
         if (columnFilters.tipoAtividade) {
@@ -2688,7 +2728,7 @@ function ClientesTab({ grupos, expandedId, onToggleExpand, onViewDetails, lancam
             items = items.filter(l => l.status === columnFilters.status);
         }
         return items;
-    }, [expandedGrupo, columnFilters, globalTipoAtividadeFilter]);
+    }, [expandedGrupo, columnFilters, globalTipoAtividadeFilter, dateRangeFilter]);
 
     // Opções de filtro para a tabela
     const filterOptions: FaturamentoColumnFilterOptions = useMemo(() => {
