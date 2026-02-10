@@ -8,7 +8,7 @@ import { Label } from '@/ui/label';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import ReadOnlyField from './ReadOnlyField';
 import { EditingBadge } from './EditingBadge';
-import type { Patient, ClientFormValues } from '../types/consultas.types';
+import type { Patient, ClientFormValues, CaregiverForm } from '../types/consultas.types';
 import { useCliente } from '../hooks/useCliente';
 import DocumentsTable from '../arquivos/components/DocumentsTable';
 import { DocumentsEditor } from '../arquivos/components/DocumentsEditor';
@@ -199,6 +199,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
     const [advogadoEmailErrors, setAdvogadoEmailErrors] = useState<Record<string, string>>({});
     const [escolaEmailError, setEscolaEmailError] = useState<string>('');
     const [contatoEscolaEmailErrors, setContatoEscolaEmailErrors] = useState<Record<number, string>>({});
+    const [removedCaregivers, setRemovedCaregivers] = useState<CaregiverForm[]>([]);
 
     const normalizarEnderecos = (enderecos: any[]) =>
         enderecos.map((item) => {
@@ -237,6 +238,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
             dataEntrada: formatDateForInput(clienteData.dataEntrada ?? null),
             dataSaida: formatDateForInput(clienteData.dataSaida ?? null),
             cuidadores: (clienteData.cuidadores ?? []).map((c) => ({
+                backendId: (c as any).id ? String((c as any).id) : undefined,
                 relacao: c.relacao ?? '',
                 descricaoRelacao: c.descricaoRelacao ?? '',
                 nome: maskPersonName(c.nome ?? ''),
@@ -347,6 +349,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
     useEffect(() => {
         if (clienteFormDefaults && open) {
             reset(clienteFormDefaults);
+            setRemovedCaregivers([]);
         }
     }, [clienteFormDefaults, open, reset]);
 
@@ -432,6 +435,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
 
         setIsEditMode(false);
         setSaveError(null);
+        setRemovedCaregivers([]);
         if (clienteFormDefaults) return(clienteFormDefaults);
         else reset(defaultClientFormValues);
 
@@ -453,6 +457,35 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                 await profilePhotoRef.current?.uploadPhoto();
             }
 
+            const mapCaregiverPayload = (c: CaregiverForm) => ({
+                id: c.backendId || undefined,
+                relacao: c.relacao,
+                descricaoRelacao: emptyToNull(c.descricaoRelacao),
+                dataNascimento: c.dataNascimento,
+                nome: c.nome,
+                cpf: c.cpf,
+                profissao: emptyToNull(c.profissao),
+                escolaridade: emptyToNull(c.escolaridade),
+                telefone: c.telefone,
+                email: c.email,
+                endereco: {
+                    cep: c.endereco.cep,
+                    logradouro: c.endereco.logradouro,
+                    numero: c.endereco.numero,
+                    complemento: emptyToNull(c.endereco.complemento),
+                    bairro: c.endereco.bairro,
+                    cidade: c.endereco.cidade,
+                    uf: c.endereco.uf,
+                },
+                ...(c.backendId ? {} : { isNew: true }),
+            });
+
+            const activeCaregivers = data.cuidadores.map(mapCaregiverPayload);
+            const removedCaregiversPayload = removedCaregivers.map((c) => ({
+                ...mapCaregiverPayload(c),
+                remove: true,
+            }));
+
             await updateCliente(patient.id, {
                 nome: data.nome,
                 emailContato: data.emailContato,
@@ -460,26 +493,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                 dataNascimento: data.dataNascimento,
                 dataEntrada: data.dataEntrada,
                 dataSaida: data.dataSaida || null,
-                cuidadores: data.cuidadores.map((c) => ({
-                    relacao: c.relacao,
-                    descricaoRelacao: emptyToNull(c.descricaoRelacao),
-                    dataNascimento: c.dataNascimento,
-                    nome: c.nome,
-                    cpf: c.cpf,
-                    profissao: emptyToNull(c.profissao),
-                    escolaridade: emptyToNull(c.escolaridade),
-                    telefone: c.telefone,
-                    email: c.email,
-                    endereco: {
-                        cep: c.endereco.cep,
-                        logradouro: c.endereco.logradouro,
-                        numero: c.endereco.numero,
-                        complemento: emptyToNull(c.endereco.complemento),
-                        bairro: c.endereco.bairro,
-                        cidade: c.endereco.cidade,
-                        uf: c.endereco.uf,
-                    },
-                })),
+                cuidadores: [...activeCaregivers, ...removedCaregiversPayload],
                 enderecos: data.enderecos.map((e) => ({
                     cep: e.cep,
                     logradouro: e.logradouro,
@@ -539,8 +553,8 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                             : null,
                     houveNegociacao:
                         data.dadosPagamento.sistemaPagamento === 'particular'
-                            ? (data.dadosPagamento.houveNegociacao || null)
-                            : null,
+                            ? data.dadosPagamento.houveNegociacao
+                            : undefined,
                     valorAcordado:
                         data.dadosPagamento.sistemaPagamento === 'particular' && data.dadosPagamento.houveNegociacao === 'sim'
                             ? emptyToNull(data.dadosPagamento.valorAcordado)
@@ -576,6 +590,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
             );
 
             setIsEditMode(false);
+            setRemovedCaregivers([]);
             // Recarregar dados
             window.location.reload();
         } catch (err: any) {
@@ -853,7 +868,16 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                                                     type="button"
                                                                     variant="ghost"
                                                                     size="sm"
-                                                                    onClick={() => removeCuidador(index)}
+                                                                    onClick={() => {
+                                                                        const caregiver = watchCuidadores?.[index];
+                                                                        if (caregiver?.backendId) {
+                                                                            setRemovedCaregivers((prev) => [
+                                                                                ...prev,
+                                                                                caregiver,
+                                                                            ]);
+                                                                        }
+                                                                        removeCuidador(index);
+                                                                    }}
                                                                     className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
                                                                 >
                                                                     <Trash2 className="h-4 w-4" />
@@ -863,6 +887,10 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                                     </div>
                                                     {isEditMode ? (
                                                         <div className="space-y-4">
+                                                            <input
+                                                                type="hidden"
+                                                                {...register(`cuidadores.${index}.backendId` as const)}
+                                                            />
                                                             {/* Linha 1: Relação (1/4) | CPF (1/4) | Nome (2/4) */}
                                                             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                                                 <div className="space-y-2">

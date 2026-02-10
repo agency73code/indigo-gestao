@@ -129,6 +129,7 @@ export type FormacaoForm = {
 };
 
 export type CaregiverForm = {
+    backendId?: string;
     relacao: string;
     descricaoRelacao: string;
     nome: string;

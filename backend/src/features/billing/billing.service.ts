@@ -10,7 +10,7 @@ import { billingListSelect } from "./queries/billingListSelect.js";
 import { mapBillingListItem } from "./mappers/mapBillingListItem.js";
 import type { billingSummaryPayload, listBillingPayload } from "./schemas/listBillingSchema.js";
 import { endOfDay, startOfDay } from "./utils/scheduleAdjustment.js";
-import { parseYMDToLocalDate } from "../../schemas/utils/parseYMDToLocalDate.js";
+import { parseYMDToLocalDate } from "../../utils/parseYMDToLocalDate.js";
 import { toDateOnly } from "../../utils/toDateOnly.js";
 import { getVisibilityScope } from "../../utils/visibilityFilter.js";
 import { mapBillingSummary } from "./mappers/mapBillingSummary.js";
