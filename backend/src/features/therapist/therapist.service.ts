@@ -64,10 +64,7 @@ export async function create(dto: TherapistSchemaInput) {
         const endereco = buildAddress(dto.endereco);
 
         data.endereco = {
-            connectOrCreate: {
-                where: { unique_endereco: endereco },
-                create: endereco,
-            },
+            create: endereco,
         };
     }
 
@@ -102,10 +99,7 @@ export async function create(dto: TherapistSchemaInput) {
                 cnpj: dto.cnpj.numero,
                 razao_social: dto.cnpj.razaoSocial,
                 endereco: {
-                    connectOrCreate: {
-                        where: { unique_endereco: endereco },
-                        create: endereco,
-                    }
+                    create: endereco,
                 }
             }
         }
@@ -371,27 +365,14 @@ export async function update(id: string, dto: TherapistTypes.TherapistForm) {
             valor_hora_reuniao: dto.valorHoraReuniao,
 
             endereco: {
-                connectOrCreate: {
-                    where: {
-                        unique_endereco: {
-                            cep: dto.endereco.cep,
-                            rua: dto.endereco.rua,
-                            numero: dto.endereco.numero,
-                            complemento: dto.endereco.complemento || '',
-                            bairro: dto.endereco.bairro,
-                            cidade: dto.endereco.cidade,
-                            uf: dto.endereco.estado,
-                        },
-                    },
-                    create: {
-                        cep: dto.endereco.cep,
-                        rua: dto.endereco.rua,
-                        numero: dto.endereco.numero,
-                        complemento: dto.endereco.complemento || '',
-                        bairro: dto.endereco.bairro,
-                        cidade: dto.endereco.cidade,
-                        uf: dto.endereco.estado,
-                    },
+                create: {
+                    cep: dto.endereco.cep,
+                    rua: dto.endereco.rua,
+                    numero: dto.endereco.numero,
+                    complemento: dto.endereco.complemento || '',
+                    bairro: dto.endereco.bairro,
+                    cidade: dto.endereco.cidade,
+                    uf: dto.endereco.estado,
                 },
             },
 

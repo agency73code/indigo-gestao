@@ -259,27 +259,14 @@ async function seedCliente(i: number, senha: string) {
                         telefone: school.phone,
                         email: school.email,
                         endereco: {
-                            connectOrCreate: {
-                                where: {
-                                    unique_endereco: {
-                                        cep: school.address.cep,
-                                        rua: school.address.rua,
-                                        numero: school.address.numero,
-                                        bairro: school.address.bairro,
-                                        cidade: school.address.cidade,
-                                        uf: school.address.uf,
-                                        complemento: school.address.complemento,
-                                    },
-                                },
-                                create: {
-                                    cep: school.address.cep,
-                                    rua: school.address.rua,
-                                    numero: school.address.numero,
-                                    bairro: school.address.bairro,
-                                    cidade: school.address.cidade,
-                                    uf: school.address.uf,
-                                    complemento: school.address.complemento,
-                                },
+                            create: {
+                                cep: school.address.cep,
+                                rua: school.address.rua,
+                                numero: school.address.numero,
+                                bairro: school.address.bairro,
+                                cidade: school.address.cidade,
+                                uf: school.address.uf,
+                                complemento: school.address.complemento,
                             },
                         },
 
