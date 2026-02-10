@@ -16,27 +16,14 @@ async function enderecoData(dto: ClientType.Client) {
         residenciaDe: e.residenciaDe ?? null,
         outroResidencia: e.outroResidencia ?? null,
         endereco: {
-            connectOrCreate: {
-                where: {
-                    unique_endereco: {
-                        cep: e.cep,
-                        rua: e.logradouro,
-                        numero: e.numero,
-                        bairro: e.bairro,
-                        cidade: e.cidade,
-                        uf: e.uf,
-                        complemento: e.complemento ?? '',
-                    },
-                } as Prisma.enderecoWhereUniqueInput,
-                create: {
-                    cep: e.cep ?? null,
-                    rua: e.logradouro ?? null,
-                    numero: e.numero ?? null,
-                    bairro: e.bairro ?? null,
-                    cidade: e.cidade ?? null,
-                    uf: e.uf ?? null,
-                    complemento: e.complemento ?? '',
-                },
+            create: {
+                cep: e.cep ?? null,
+                rua: e.logradouro ?? null,
+                numero: e.numero ?? null,
+                bairro: e.bairro ?? null,
+                cidade: e.cidade ?? null,
+                uf: e.uf ?? null,
+                complemento: e.complemento ?? '',
             },
         },
     }));
@@ -84,27 +71,14 @@ export async function create(dto: ClientType.Client) {
                     dataNascimento: c.dataNascimento!,
 
                     endereco: {
-                        connectOrCreate: {
-                            where: {
-                                unique_endereco: {
-                                    cep: c.endereco.cep,
-                                    rua: c.endereco.logradouro,
-                                    numero: c.endereco.numero,
-                                    bairro: c.endereco.bairro,
-                                    cidade: c.endereco.cidade,
-                                    uf: c.endereco.uf,
-                                    complemento: c.endereco.complemento ?? '',
-                                },
-                            },
-                            create: {
-                                cep: c.endereco.cep,
-                                rua: c.endereco.logradouro,
-                                numero: c.endereco.numero,
-                                bairro: c.endereco.bairro,
-                                cidade: c.endereco.cidade,
-                                uf: c.endereco.uf,
-                                complemento: c.endereco.complemento ?? '',
-                            },
+                        create: {
+                            cep: c.endereco.cep,
+                            rua: c.endereco.logradouro,
+                            numero: c.endereco.numero,
+                            bairro: c.endereco.bairro,
+                            cidade: c.endereco.cidade,
+                            uf: c.endereco.uf,
+                            complemento: c.endereco.complemento ?? '',
                         },
                     },
                 })),
@@ -144,27 +118,14 @@ export async function create(dto: ClientType.Client) {
                     telefone: dto.dadosEscola.telefone ?? null,
                     email: dto.dadosEscola.email ?? null,
                     endereco: {
-                        connectOrCreate: {
-                            where: {
-                                unique_endereco: {
-                                    cep: dto.dadosEscola.endereco.cep ?? '',
-                                    rua: dto.dadosEscola.endereco.logradouro ?? '',
-                                    numero: dto.dadosEscola.endereco.numero ?? '',
-                                    bairro: dto.dadosEscola.endereco.bairro ?? '',
-                                    cidade: dto.dadosEscola.endereco.cidade ?? '',
-                                    uf: dto.dadosEscola.endereco.uf ?? '',
-                                    complemento: dto.dadosEscola.endereco.complemento ?? '',
-                                },
-                            },
-                            create: {
-                                cep: dto.dadosEscola.endereco.cep ?? '',
-                                rua: dto.dadosEscola.endereco.logradouro ?? '',
-                                numero: dto.dadosEscola.endereco.numero ?? '',
-                                bairro: dto.dadosEscola.endereco.bairro ?? '',
-                                cidade: dto.dadosEscola.endereco.cidade ?? '',
-                                uf: dto.dadosEscola.endereco.uf ?? '',
-                                complemento: dto.dadosEscola.endereco.complemento ?? '',
-                            },
+                        create: {
+                            cep: dto.dadosEscola.endereco.cep ?? '',
+                            rua: dto.dadosEscola.endereco.logradouro ?? '',
+                            numero: dto.dadosEscola.endereco.numero ?? '',
+                            bairro: dto.dadosEscola.endereco.bairro ?? '',
+                            cidade: dto.dadosEscola.endereco.cidade ?? '',
+                            uf: dto.dadosEscola.endereco.uf ?? '',
+                            complemento: dto.dadosEscola.endereco.complemento ?? '',
                         },
                     },
 
