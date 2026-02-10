@@ -67,12 +67,12 @@ export const fisioProgramConfig: BaseProgramPageConfig = {
 export const fisioBaseRoutes = {
     create: '/app/programas/novo-fisio',
     list: '/app/programas/lista',
-    detail: (id: string) => `/app/programas/fisioterapia/programa/${id}`,
-    edit: (id: string) => `/app/programas/fisioterapia/ocp/${id}/editar`,
-    newSession: (programId: string, patientId: string) => 
-        `/app/programas/sessoes-fisio/registrar?programaId=${programId}&patientId=${patientId}`,
+    detail: (id: string, area?: string) => `/app/programas/fisioterapia/programa/${id}${area ? `?area=${area}` : ''}`,
+    edit: (id: string, area?: string) => `/app/programas/fisioterapia/ocp/${id}/editar${area ? `?area=${area}` : ''}`,
+    newSession: (programId: string, patientId: string, area?: string) => 
+        `/app/programas/sessoes-fisio/registrar?programaId=${programId}&patientId=${patientId}${area ? `&area=${area}` : ''}`,
     sessions: '/app/programas/sessoes/consultar',
-    sessionDetail: (id: string) => `/app/programas/sessoes-fisio/${id}`,
+    sessionDetail: (id: string, area?: string) => `/app/programas/sessoes-fisio/${id}${area ? `?area=${area}` : ''}`,
 };
 
 /**

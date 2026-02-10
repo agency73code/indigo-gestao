@@ -8,6 +8,8 @@ import type { CreateAreaSessionData } from "../types/olp.schema.js";
 export async function createAreaSessionTx(tx: Tx, input: CreateAreaSessionData & { files: UploadedFile[] }) {
     switch (input.area) {
         case "fonoaudiologia":
+        case "psicopedagogia":
+        case "terapia-aba":
             return await SpeechTherapySessionTx(tx, input);
 
         case "fisioterapia":

@@ -22,6 +22,7 @@ export default function DetalheSessaoPage() {
   const { setPageTitle } = usePageTitle();
 
   const pacienteIdFromQuery = useMemo(() => searchParams.get('pacienteId'), [searchParams]);
+  const areaFromQuery = useMemo(() => searchParams.get('area'), [searchParams]);
 
   const [session, setSession] = useState<Sessao | null>(null);
   const [patient, setPatient] = useState<Patient | null>(null);
@@ -51,12 +52,14 @@ export default function DetalheSessaoPage() {
       try {
         let sessionData: Sessao | null = null;
 
+        const area = areaFromQuery || 'fonoaudiologia';
+
         if (pacienteIdFromQuery) {
-          sessionData = await getSessionById(pacienteIdFromQuery, sessaoId, 'fonoaudiologia');
+          sessionData = await getSessionById(pacienteIdFromQuery, sessaoId, area);
         }
 
         if (!sessionData) {
-          sessionData = await findSessionById(sessaoId, pacienteIdFromQuery || undefined, 'fonoaudiologia');
+          sessionData = await findSessionById(sessaoId, pacienteIdFromQuery || undefined, area);
         }
 
         if (!sessionData) {
@@ -133,11 +136,12 @@ export default function DetalheSessaoPage() {
   }, [sessaoId, pacienteIdFromQuery, navigate, locationState?.sessionDate]);
 
   const handleBack = () => {
-    if (pacienteIdFromQuery) {
-      navigate(`/app/programas/sessoes/consultar?pacienteId=${pacienteIdFromQuery}`);
-    } else {
-      navigate('/app/programas/sessoes/consultar');
-    }
+    const urlParams = new URLSearchParams();
+    if (pacienteIdFromQuery) urlParams.set('pacienteId', pacienteIdFromQuery);
+    if (areaFromQuery) urlParams.set('area', areaFromQuery);
+    
+    const queryString = urlParams.toString();
+    navigate(`/app/programas/sessoes/consultar${queryString ? `?${queryString}` : ''}`);
   };
 
   if (loading) {

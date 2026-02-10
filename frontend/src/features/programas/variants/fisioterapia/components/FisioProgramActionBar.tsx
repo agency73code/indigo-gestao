@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import ActionBar from '@/components/ui/action-bar';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { fisioBaseRoutes } from '../config';
+import { useCurrentArea } from '@/contexts/AreaContext';
 
 interface ToProgramActionBarProps {
     program: {
@@ -14,15 +15,17 @@ interface ToProgramActionBarProps {
 export default function ToProgramActionBar({ program }: ToProgramActionBarProps) {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
+    const area = useCurrentArea('fisioterapia');
 
     const handleRegisterSession = () => {
-        navigate(fisioBaseRoutes.newSession(program.id, program.patientId));
+        const base = fisioBaseRoutes.newSession(program.id, program.patientId, area);
+        navigate(base);
     };
 
     const handleEditProgram = () => {
         const patientId = searchParams.get('patientId');
-        const path = fisioBaseRoutes.edit(program.id);
-        const url = patientId ? `${path}?patientId=${patientId}` : path;
+        const path = fisioBaseRoutes.edit(program.id, area);
+        const url = patientId ? `${path}${path.includes('?') ? '&' : '?'}patientId=${patientId}` : path;
 
         navigate(url);
     };
