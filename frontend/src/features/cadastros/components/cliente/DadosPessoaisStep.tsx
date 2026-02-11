@@ -190,7 +190,7 @@ export default function DadosPessoaisStep({
 
                             {/* Data de Nascimento - 1/4 */}
                             <DateFieldWithLabel
-                                label="Data de Nascimento"
+                                label="Data de Nascimento *"
                                 value={cuidador.dataNascimento || ''}
                                 onChange={(iso) => {
                                     const cuidadores = [...(data.cuidadores || [])];

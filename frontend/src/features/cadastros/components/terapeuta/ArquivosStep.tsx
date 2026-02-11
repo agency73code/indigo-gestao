@@ -4,10 +4,11 @@ import type { Terapeuta } from '../../types/cadastros.types';
 import ProfilePhotoFieldSimple from '@/components/profile/ProfilePhotoFieldSimple';
 import { FileUploadBox } from '@/ui/file-upload-box';
 import { SelectField } from '@/ui/select-field';
+import { Input } from '@/components/ui/input';
 
 interface ArquivosStepProps {
     data: Partial<Terapeuta>;
-    onUpdate: (field: string, value: File | null) => void;
+    onUpdate: (field: string, value: File | string | null) => void;
     errors: Record<string, string>;
 }
 
@@ -21,16 +22,21 @@ const FILE_TYPES = [
 
 export default function ArquivosStep({ data, onUpdate, errors }: ArquivosStepProps) {
     const [selectedFileType, setSelectedFileType] = useState<string>('');
+    const [descricaoOutros, setDescricaoOutros] = useState<string>('');
 
     const removeFile = (field: string) => {
         onUpdate(`arquivos.${field}`, null);
+        if (field === 'outros') {
+            onUpdate('arquivos.descricaoOutros', null);
+        }
     };
 
     const getUploadedFiles = () => {
         return FILE_TYPES.map((type) => ({
             ...type,
             file: data.arquivos?.[type.value as keyof typeof data.arquivos] as File | undefined,
-        })).filter((item) => item.file);
+            descricao: type.value === 'outros' ? (data.arquivos?.descricaoOutros ?? null) : null,
+        })).filter((item) => item.file && item.file instanceof File);
     };
 
     const uploadedFiles = getUploadedFiles();
@@ -73,14 +79,31 @@ export default function ArquivosStep({ data, onUpdate, errors }: ArquivosStepPro
                     </SelectField>
                 </div>
 
-                {selectedFileType && (
+                {/* Campo de descrição para "Outros" */}
+                {selectedFileType === 'outros' && (
+                    <div className="pt-2">
+                        <label className="block text-sm font-medium mb-1.5">Descrição do Documento</label>
+                        <Input
+                            type="text"
+                            placeholder="Ex: Certificado de curso, Declaração..."
+                            value={descricaoOutros}
+                            onChange={(e) => setDescricaoOutros(e.target.value)}
+                        />
+                    </div>
+                )}
+
+                {selectedFileType && !(selectedFileType === 'outros' && !descricaoOutros.trim()) && (
                     <div className="pt-2">
                         <FileUploadBox
                             value={null}
                             onChange={(file) => {
                                 if (file) {
                                     onUpdate(`arquivos.${selectedFileType}`, file);
+                                    if (selectedFileType === 'outros' && descricaoOutros.trim()) {
+                                        onUpdate('arquivos.descricaoOutros', descricaoOutros.trim());
+                                    }
                                     setSelectedFileType('');
+                                    setDescricaoOutros('');
                                 }
                             }}
                             accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
@@ -103,11 +126,13 @@ export default function ArquivosStep({ data, onUpdate, errors }: ArquivosStepPro
                                 <FileText className="w-4 h-4 shrink-0 text-muted-foreground" />
                                 <div className="min-w-0 flex-1">
                                     <p className="text-sm font-medium">
-                                        {item.label}
+                                        {item.descricao || item.label}
                                     </p>
-                                    <span className="text-xs text-muted-foreground block truncate">
-                                        Enviado há 7 dias
-                                    </span>
+                                    {item.descricao && (
+                                        <span className="text-xs text-muted-foreground block">
+                                            {item.label}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                             <button

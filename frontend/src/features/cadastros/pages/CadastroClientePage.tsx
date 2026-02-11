@@ -45,7 +45,7 @@ export default function CadastroClientePage() {
         cpf: null,
         dataNascimento: null,
         emailContato: null,
-        dataEntrada: null,
+        dataEntrada: new Date().toISOString().split('T')[0],
         dataSaida: null,
 
         // Cuidadores - inicializado vazio, será preenchido pelo useEffect do DadosPessoaisStep
@@ -124,6 +124,8 @@ export default function CadastroClientePage() {
             carterinhaPlano: null,
             relatoriosMedicos: null,
             prescricaoMedica: null,
+            outros: null,
+            descricaoOutros: null,
         },
     });
 
@@ -419,6 +421,9 @@ export default function CadastroClientePage() {
                         if (!cuidador.escolaridade?.trim()) {
                             newErrors[`cuidadores.${index}.escolaridade`] = 'Escolaridade é obrigatória';
                         }
+                        if (!cuidador.dataNascimento?.trim()) {
+                            newErrors[`cuidadores.${index}.dataNascimento`] = 'Data de nascimento é obrigatória';
+                        }
                     });
                 }
                 break;
@@ -582,6 +587,10 @@ export default function CadastroClientePage() {
             if (payload.arquivos?.relatoriosMedicos)
                 formDataUpload.append('relatoriosMedicos', payload.arquivos.relatoriosMedicos);
 
+            // Guardar referências do arquivo "outros" antes de deletar
+            const outrosFile = payload.arquivos?.outros;
+            const outrosDescricao = payload.arquivos?.descricaoOutros;
+
             delete payload.arquivos;
 
             const result = await cadastrarCliente(payload);
@@ -607,6 +616,24 @@ export default function CadastroClientePage() {
                 method: 'POST',
                 body: formDataUpload,
             }).then((r) => r.json());
+
+            // Upload separado para "outros" com descrição
+            if (outrosFile && outrosFile instanceof File) {
+                const outrosFormData = new FormData();
+                outrosFormData.append('file', outrosFile);
+                outrosFormData.append('documentType', 'outros');
+                outrosFormData.append('ownerType', 'cliente');
+                outrosFormData.append('ownerId', result.id);
+                outrosFormData.append('fullName', payload.nome!);
+                outrosFormData.append('birthDate', payload.dataNascimento!);
+                if (outrosDescricao && typeof outrosDescricao === 'string') {
+                    outrosFormData.append('descricao_documento', outrosDescricao);
+                }
+                await fetch('/api/arquivos', {
+                    method: 'POST',
+                    body: outrosFormData,
+                }).then((r) => r.json());
+            }
 
             toast.success('Cliente cadastrado com sucesso!', {
                 description: 'O cadastro foi realizado e o cliente foi adicionado ao sistema.',

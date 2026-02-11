@@ -77,6 +77,8 @@ export interface Terapeuta {
         diplomaPosGraduacao?: File | string;
         registroCRP?: File | string;
         comprovanteEndereco?: File | string;
+        outros?: File | string;
+        descricaoOutros?: string | null;
     };
 
     // Dados CNPJ (opcional)
@@ -250,6 +252,8 @@ export interface Cliente {
         carterinhaPlano?: File | string | null;
         relatoriosMedicos?: File | string | null;
         prescricaoMedica?: File | string | null;
+        outros?: File | string | null;
+        descricaoOutros?: string | null;
     };
 }
 
