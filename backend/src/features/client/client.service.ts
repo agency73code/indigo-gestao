@@ -5,6 +5,9 @@ import * as ClientType from './client.types.js';
 import { v4 as uuidv4 } from 'uuid';
 import { getVisibilityScope } from '../../utils/visibilityFilter.js';
 import { ACCESS_LEVELS } from '../../utils/accessLevels.js';
+import type { clientUpdatePayload } from './client.schema.js';
+import type { PrismaTransactionClient } from '../../types/prisma.types.js';
+import { updateCaretakers, updateClientData, updatePaymentData, updateSchoolData } from './actions/clientUpdate.js';
 
 const MANAGER_LEVEL = ACCESS_LEVELS['gerente'] ?? 5;
 
@@ -13,27 +16,14 @@ async function enderecoData(dto: ClientType.Client) {
         residenciaDe: e.residenciaDe ?? null,
         outroResidencia: e.outroResidencia ?? null,
         endereco: {
-            connectOrCreate: {
-                where: {
-                    unique_endereco: {
-                        cep: e.cep,
-                        rua: e.logradouro,
-                        numero: e.numero,
-                        bairro: e.bairro,
-                        cidade: e.cidade,
-                        uf: e.uf,
-                        complemento: e.complemento ?? '',
-                    },
-                } as Prisma.enderecoWhereUniqueInput,
-                create: {
-                    cep: e.cep ?? null,
-                    rua: e.logradouro ?? null,
-                    numero: e.numero ?? null,
-                    bairro: e.bairro ?? null,
-                    cidade: e.cidade ?? null,
-                    uf: e.uf ?? null,
-                    complemento: e.complemento ?? '',
-                },
+            create: {
+                cep: e.cep ?? null,
+                rua: e.logradouro ?? null,
+                numero: e.numero ?? null,
+                bairro: e.bairro ?? null,
+                cidade: e.cidade ?? null,
+                uf: e.uf ?? null,
+                complemento: e.complemento ?? '',
             },
         },
     }));
@@ -81,27 +71,14 @@ export async function create(dto: ClientType.Client) {
                     dataNascimento: c.dataNascimento!,
 
                     endereco: {
-                        connectOrCreate: {
-                            where: {
-                                unique_endereco: {
-                                    cep: c.endereco.cep,
-                                    rua: c.endereco.logradouro,
-                                    numero: c.endereco.numero,
-                                    bairro: c.endereco.bairro,
-                                    cidade: c.endereco.cidade,
-                                    uf: c.endereco.uf,
-                                    complemento: c.endereco.complemento ?? '',
-                                },
-                            },
-                            create: {
-                                cep: c.endereco.cep,
-                                rua: c.endereco.logradouro,
-                                numero: c.endereco.numero,
-                                bairro: c.endereco.bairro,
-                                cidade: c.endereco.cidade,
-                                uf: c.endereco.uf,
-                                complemento: c.endereco.complemento ?? '',
-                            },
+                        create: {
+                            cep: c.endereco.cep,
+                            rua: c.endereco.logradouro,
+                            numero: c.endereco.numero,
+                            bairro: c.endereco.bairro,
+                            cidade: c.endereco.cidade,
+                            uf: c.endereco.uf,
+                            complemento: c.endereco.complemento ?? '',
                         },
                     },
                 })),
@@ -141,27 +118,14 @@ export async function create(dto: ClientType.Client) {
                     telefone: dto.dadosEscola.telefone ?? null,
                     email: dto.dadosEscola.email ?? null,
                     endereco: {
-                        connectOrCreate: {
-                            where: {
-                                unique_endereco: {
-                                    cep: dto.dadosEscola.endereco.cep ?? '',
-                                    rua: dto.dadosEscola.endereco.logradouro ?? '',
-                                    numero: dto.dadosEscola.endereco.numero ?? '',
-                                    bairro: dto.dadosEscola.endereco.bairro ?? '',
-                                    cidade: dto.dadosEscola.endereco.cidade ?? '',
-                                    uf: dto.dadosEscola.endereco.uf ?? '',
-                                    complemento: dto.dadosEscola.endereco.complemento ?? '',
-                                },
-                            },
-                            create: {
-                                cep: dto.dadosEscola.endereco.cep ?? '',
-                                rua: dto.dadosEscola.endereco.logradouro ?? '',
-                                numero: dto.dadosEscola.endereco.numero ?? '',
-                                bairro: dto.dadosEscola.endereco.bairro ?? '',
-                                cidade: dto.dadosEscola.endereco.cidade ?? '',
-                                uf: dto.dadosEscola.endereco.uf ?? '',
-                                complemento: dto.dadosEscola.endereco.complemento ?? '',
-                            },
+                        create: {
+                            cep: dto.dadosEscola.endereco.cep ?? '',
+                            rua: dto.dadosEscola.endereco.logradouro ?? '',
+                            numero: dto.dadosEscola.endereco.numero ?? '',
+                            bairro: dto.dadosEscola.endereco.bairro ?? '',
+                            cidade: dto.dadosEscola.endereco.cidade ?? '',
+                            uf: dto.dadosEscola.endereco.uf ?? '',
+                            complemento: dto.dadosEscola.endereco.complemento ?? '',
                         },
                     },
 
@@ -327,392 +291,47 @@ export async function getById(clientId: string) {
     });
 }
 
-async function UpdateMainData(
-    clientId: string,
-    dadosPrincipais?: Partial<ClientType.UpdateClient>,
-) {
-    if (dadosPrincipais) {
-        const dataSaida = dadosPrincipais.dataSaida;
-        const dataEntrada = dadosPrincipais.dataEntrada;
-        let status: string = 'ativo';
-
-        if (dataSaida && dataEntrada) {
-            if (dataSaida < dataEntrada) {
-                throw new AppError(
-                    'INVALID_EXIT_DATE',
-                    'Data de saida deve ser maior ou igual a data de entrada.',
-                    422,
-                );
-            } else {
-                status = 'inativo';
-            }
-        }
-
-        await prisma.cliente.update({
+export async function update(clientId: string, payload: clientUpdatePayload): Promise<void> {
+    await prisma.$transaction(async (tx: PrismaTransactionClient) => {
+        const client = await tx.cliente.findUnique({
             where: { id: clientId },
-            data: {
-                ...(dadosPrincipais.nome !== undefined && { nome: dadosPrincipais.nome }),
-                ...(dadosPrincipais.cpf !== undefined && { cpf: dadosPrincipais.cpf }),
-                ...(dadosPrincipais.dataNascimento !== undefined && {
-                    dataNascimento: new Date(dadosPrincipais.dataNascimento),
-                }),
-                ...(dadosPrincipais.emailContato !== undefined && {
-                    emailContato: dadosPrincipais.emailContato,
-                }),
-                ...(dataEntrada !== undefined && { dataEntrada: new Date(dataEntrada) }),
-                ...(dataSaida !== undefined && {
-                    dataSaida: dataSaida ? new Date(dataSaida) : null,
-                }),
-                status: status,
-            },
-        });
-    }
-}
-
-async function UpdateCaregiver(
-    clientId: string,
-    cuidadores?: Partial<ClientType.UpdateCaregiver[]>,
-) {
-    if (Array.isArray(cuidadores)) {
-        const current = await prisma.cuidador.findMany({
-            where: { clienteId: clientId },
-            select: { cpf: true, enderecoId: true },
         });
 
-        const currentCpfs = new Set(current.map((c) => c.cpf));
-        const incomingCpfs = new Set<string>(
-            (cuidadores ?? []).flatMap((c) => (c?.cpf ? [c.cpf] : [])),
-        );
-
-        const toDelete = [...currentCpfs].filter((cpf) => !incomingCpfs.has(cpf));
-        const toUpsert = cuidadores;
-
-        await prisma.$transaction(async (tx) => {
-            for (const c of toUpsert) {
-                if (!c?.cpf) {
-                    throw new AppError('CPF_MANDATORY', 'CPF do cuidador é obrigatório.', 422);
-                }
-
-                const e: Partial<ClientType.UpdateAddress> = c.endereco ?? {};
-
-                const enderecoUpdate = {
-                    ...(e.cep !== undefined && { cep: e.cep }),
-                    ...(e.logradouro !== undefined && { rua: e.logradouro }),
-                    ...(e.numero !== undefined && { numero: e.numero }),
-                    ...(e.complemento !== undefined && { complemento: e.complemento ?? '' }),
-                    ...(e.bairro !== undefined && { bairro: e.bairro }),
-                    ...(e.cidade !== undefined && { cidade: e.cidade }),
-                    ...(e.uf !== undefined && { uf: e.uf }),
-                };
-
-                const enderecoCreate = {
-                    ...(e.cep !== undefined && { cep: e.cep }),
-                    ...(e.logradouro !== undefined && { rua: e.logradouro }),
-                    ...(e.numero !== undefined && { numero: e.numero }),
-                    ...(e.complemento !== undefined && { complemento: e.complemento ?? '' }),
-                    ...(e.bairro !== undefined && { bairro: e.bairro }),
-                    ...(e.cidade !== undefined && { cidade: e.cidade }),
-                    ...(e.uf !== undefined && { uf: e.uf }),
-                };
-
-                await tx.cuidador.upsert({
-                    where: {
-                        unique_cuidador: {
-                            clienteId: clientId,
-                            cpf: c.cpf,
-                        },
-                    },
-                    create: {
-                        cliente: { connect: { id: clientId } },
-                        relacao: c.relacao ?? null,
-                        descricaoRelacao: c.descricaoRelacao ?? null,
-                        nome: c.nome,
-                        cpf: c.cpf,
-                        profissao: c.profissao ?? null,
-                        escolaridade: c.escolaridade ?? null,
-                        telefone: c.telefone ?? null,
-                        email: c.email ?? null,
-                        dataNascimento: c.dataNascimento!,
-                        endereco: {
-                            connectOrCreate: {
-                                where: {
-                                    unique_endereco: {
-                                        cep: e.cep ?? '',
-                                        rua: e.logradouro ?? '',
-                                        numero: e.numero ?? '',
-                                        bairro: e.bairro ?? '',
-                                        cidade: e.cidade ?? '',
-                                        uf: e.uf ?? '',
-                                        complemento: e.complemento ?? '',
-                                    },
-                                },
-                                create: enderecoCreate,
-                            }
-                        },
-                    },
-                    update: {
-                        relacao: c.relacao ?? undefined,
-                        descricaoRelacao: c.descricaoRelacao ?? null,
-                        nome: c.nome ?? undefined,
-                        profissao: c.profissao ?? null,
-                        escolaridade: c.escolaridade ?? undefined,
-                        telefone: c.telefone ?? undefined,
-                        email: c.email ?? undefined,
-                        endereco: {
-                            upsert: {
-                                create: enderecoCreate,
-                                update: enderecoUpdate,
-                            },
-                        },
-                    },
-                });
-            }
-
-            if (toDelete.length > 0) {
-                const clientAddress = await tx.cliente_endereco.findFirst({
-                    where: { clienteId: clientId },
-                    select: { enderecoId: true },
-                });
-
-                const addressesFromDeletes = await tx.cuidador.findMany({
-                    where: { clienteId: clientId, cpf: { in: toDelete } },
-                    select: { enderecoId: true },
-                });
-
-                const fallbackCaregiver = await tx.cuidador.findFirst({
-                    where: { clienteId: clientId, cpf: { notIn: toDelete } },
-                    select: {
-                        enderecoId: true,
-                        relacao: true,
-                    },
-                });
-
-                const deletingIds = new Set(
-                    addressesFromDeletes
-                        .map((a) => a.enderecoId)
-                        .filter((id): id is number => id !== null),
-                );
-
-                if (
-                    clientAddress?.enderecoId !== undefined &&
-                    deletingIds.has(clientAddress.enderecoId)
-                ) {
-                    if (!fallbackCaregiver?.enderecoId) {
-                        throw new AppError(
-                            'CAREGIVER_ADDRESS_REQUIRED',
-                            'Cliente deve ter ao menos 1 endereço de um cuidador responsável.',
-                            400,
-                        );
-                    }
-
-                    await tx.cliente_endereco.updateMany({
-                        where: { clienteId: clientId, enderecoId: clientAddress.enderecoId },
-                        data: {
-                            enderecoId: fallbackCaregiver.enderecoId,
-                            residenciaDe: fallbackCaregiver.relacao,
-                        },
-                    });
-                }
-
-                // apaga cuidadores
-                await tx.cuidador.deleteMany({
-                    where: { clienteId: clientId, cpf: { in: toDelete } },
-                });
-
-                // limpa endereços realmente órfãos
-                const candidateIds = [...deletingIds];
-                if (candidateIds.length > 0) {
-                    await tx.endereco.deleteMany({
-                        where: { id: { in: candidateIds } },
-                    });
-                }
-            }
-        });
-    }
-}
-
-async function UpdateAddress(clientId: string, enderecos?: Partial<ClientType.UpdateAddress[]>) {
-    const enderecoId = await prisma.cliente_endereco.findFirst({
-        where: { clienteId: clientId },
-        select: { enderecoId: true },
-    });
-
-    if (enderecoId) {
-        await prisma.endereco.update({
-            where: { id: enderecoId?.enderecoId },
-            data: {
-                ...(enderecos?.[0]?.cep !== undefined && { cep: enderecos?.[0]?.cep }),
-                ...(enderecos?.[0]?.logradouro !== undefined && {
-                    rua: enderecos?.[0]?.logradouro,
-                }),
-                ...(enderecos?.[0]?.numero !== undefined && { numero: enderecos?.[0]?.numero }),
-                ...(enderecos?.[0]?.complemento !== undefined && {
-                    complemento: enderecos?.[0]?.complemento ?? '',
-                }),
-                ...(enderecos?.[0]?.bairro !== undefined && { bairro: enderecos?.[0]?.bairro }),
-                ...(enderecos?.[0]?.cidade !== undefined && { cidade: enderecos?.[0]?.cidade }),
-                ...(enderecos?.[0]?.uf !== undefined && { uf: enderecos?.[0]?.uf }),
-            },
-        });
-    }
-}
-
-async function UpdateDataPayment(
-    clientId: string,
-    dadosPagamento?: Partial<ClientType.UpdateDataPayment>,
-) {
-    await prisma.dados_pagamento.update({
-        where: { clienteId: clientId },
-        data: {
-            ...(dadosPagamento?.nomeTitular !== undefined && {
-                nomeTitular: dadosPagamento.nomeTitular,
-            }),
-            ...(dadosPagamento?.numeroCarteirinha !== undefined && {
-                numeroCarteirinha: dadosPagamento.numeroCarteirinha,
-            }),
-            ...(dadosPagamento?.telefone1 !== undefined && { telefone1: dadosPagamento.telefone1 }),
-            ...(dadosPagamento?.telefone2 !== undefined && { telefone2: dadosPagamento.telefone2 }),
-            ...(dadosPagamento?.telefone3 !== undefined && { telefone3: dadosPagamento.telefone3 }),
-            ...(dadosPagamento?.email1 !== undefined && { email1: dadosPagamento.email1 }),
-            ...(dadosPagamento?.email2 !== undefined && { email2: dadosPagamento.email2 }),
-            ...(dadosPagamento?.email3 !== undefined && { email3: dadosPagamento.email3 }),
-            ...(dadosPagamento?.sistemaPagamento !== undefined && {
-                sistemaPagamento: dadosPagamento.sistemaPagamento,
-            }),
-            ...(dadosPagamento?.prazoReembolso !== undefined && {
-                prazoReembolso: dadosPagamento.prazoReembolso,
-            }),
-            ...(dadosPagamento?.numeroProcesso !== undefined && {
-                numeroProcesso: dadosPagamento.numeroProcesso,
-            }),
-            ...(dadosPagamento?.nomeAdvogado !== undefined && {
-                nomeAdvogado: dadosPagamento.nomeAdvogado,
-            }),
-            ...(dadosPagamento?.telefoneAdvogado1 !== undefined && {
-                telefoneAdvogado1: dadosPagamento.telefoneAdvogado1,
-            }),
-            ...(dadosPagamento?.telefoneAdvogado2 !== undefined && {
-                telefoneAdvogado2: dadosPagamento.telefoneAdvogado2,
-            }),
-            ...(dadosPagamento?.telefoneAdvogado3 !== undefined && {
-                telefoneAdvogado3: dadosPagamento.telefoneAdvogado3,
-            }),
-            ...(dadosPagamento?.emailAdvogado1 !== undefined && {
-                emailAdvogado1: dadosPagamento.emailAdvogado1,
-            }),
-            ...(dadosPagamento?.emailAdvogado2 !== undefined && {
-                emailAdvogado2: dadosPagamento.emailAdvogado2,
-            }),
-            ...(dadosPagamento?.emailAdvogado3 !== undefined && {
-                emailAdvogado3: dadosPagamento.emailAdvogado3,
-            }),
-            ...(dadosPagamento?.houveNegociacao !== undefined && {
-                houveNegociacao: dadosPagamento.houveNegociacao,
-            }),
-            ...(dadosPagamento?.valorAcordado !== undefined && {
-                valorAcordado: dadosPagamento.valorAcordado,
-            }),
-        },
-    });
-}
-
-async function UpdateDataSchool(
-    clientId: string,
-    dadosEscola?: Partial<ClientType.UpdateDataSchool>,
-) {
-    const escola = await prisma.dados_escola.update({
-        where: { clienteId: clientId },
-        data: {
-            ...(dadosEscola?.tipoEscola !== undefined && { tipoEscola: dadosEscola.tipoEscola }),
-            ...(dadosEscola?.nome !== undefined && { nome: dadosEscola.nome }),
-            ...(dadosEscola?.telefone !== undefined && { telefone: dadosEscola.telefone }),
-            ...(dadosEscola?.email !== undefined && { email: dadosEscola.email }),
-
-            ...(dadosEscola?.endereco !== undefined && {
-                endereco: {
-                    connectOrCreate: {
-                        where: {
-                            unique_endereco: {
-                                cep: dadosEscola?.endereco.cep,
-                                rua: dadosEscola?.endereco.logradouro,
-                                numero: dadosEscola?.endereco.numero,
-                                bairro: dadosEscola?.endereco.bairro,
-                                cidade: dadosEscola?.endereco.cidade,
-                                uf: dadosEscola?.endereco.uf,
-                                complemento: dadosEscola?.endereco.complemento ?? '',
-                            },
-                        },
-                        create: {
-                            cep: dadosEscola?.endereco.cep,
-                            rua: dadosEscola?.endereco.logradouro,
-                            numero: dadosEscola?.endereco.numero,
-                            bairro: dadosEscola?.endereco.bairro,
-                            cidade: dadosEscola?.endereco.cidade,
-                            uf: dadosEscola?.endereco.uf,
-                            complemento: dadosEscola?.endereco.complemento ?? '',
-                        },
-                    },
-                },
-            }),
-        },
-        select: { id: true },
-    });
-
-    const contatos = dadosEscola?.contatos ?? [];
-
-    await prisma.$transaction(async (tx) => {
-        for (const contact of contatos) {
-            if (!contact) continue;
-
-            const exists = await tx.escola_contato.findFirst({
-                where: {
-                    dadosEscolaId: escola.id,
-                    ...(contact.email ? { email: contact.email } : { nome: contact.nome }),
-                },
-                orderBy: { id: 'asc' },
-                select: { id: true },
-            });
-
-            if (exists) {
-                await tx.escola_contato.update({
-                    where: { id: exists.id },
-                    data: {
-                        nome: contact.nome,
-                        telefone: contact.telefone,
-                        email: contact.email,
-                        funcao: contact.funcao,
-                    },
-                });
-            } else {
-                await tx.escola_contato.create({
-                    data: {
-                        dadosEscolaId: escola.id,
-                        nome: contact.nome,
-                        telefone: contact.telefone,
-                        email: contact.email,
-                        funcao: contact.funcao,
-                    },
-                });
-            }
+        if (!client) {
+            throw new AppError(
+                'CLIENT_NOT_FOUND',
+                'Cliente não encontrado.',
+                404
+            );
         }
+
+        const address = payload.enderecos[0];
+        if (!address) {
+            throw new AppError(
+                'CLIENT_ADDRESS_REQUIRED', 
+                'Envie pelo menos um endereço.', 
+                400
+            );
+        }
+
+        const addressClient = await tx.cliente_endereco.findFirst({
+            where: { clienteId: clientId },
+            select: { id: true },
+        });
+
+        if (!addressClient) {
+            throw new AppError(
+                'CLIENT_ADDRESS_NOT_FOUND', 
+                'Cliente não possui endereço cadastrado.', 
+                404
+            );
+        }
+
+        await updateClientData(tx, clientId, payload, addressClient.id, address);
+        await updateCaretakers(tx, clientId, payload.cuidadores);
+        await updatePaymentData(tx, clientId, payload.dadosPagamento);
+        await updateSchoolData(tx, clientId, payload.dadosEscola);
     });
-}
-
-export async function update(id: string, dto: Partial<ClientType.UpdateClient>) {
-    const { cuidadores, enderecos, dadosPagamento, dadosEscola, ...dadosPrincipais } = dto;
-
-    const clientId = id;
-
-    const existing = await prisma.cliente.findUnique({ where: { id: clientId } });
-    if (!existing) {
-        throw new AppError('CLIENT_NOT_FOUND', 'Cliente não encontrado.', 404);
-    }
-
-    await UpdateMainData(clientId, dadosPrincipais);
-    await UpdateCaregiver(clientId, cuidadores);
-    await UpdateAddress(clientId, enderecos);
-    await UpdateDataPayment(clientId, dadosPagamento);
-    await UpdateDataSchool(clientId, dadosEscola);
 }
 
 interface ClientListFilters {

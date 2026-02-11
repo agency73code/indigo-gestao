@@ -11,7 +11,7 @@ import { ToListaSessoes } from '../components';
 import * as services from '@/features/programas/consulta-sessao/services';
 import { getPatientById } from '@/features/programas/consultar-programas/services';
 import type { Sessao, SessaoFiltersState } from '@/features/programas/consulta-sessao/types';
-import { useCurrentArea, AREA_LABELS } from '@/contexts/AreaContext';
+import { useCurrentArea, AREA_LABELS, type AreaType } from '@/contexts/AreaContext';
 
 const DEFAULT_FILTERS: SessaoFiltersState = {
     q: '',
@@ -25,7 +25,10 @@ export default function ConsultarSessaoToPage() {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const { setPageTitle, setOnBackClick } = usePageTitle();
-    const area = useCurrentArea('fisioterapia');
+    const contextArea = useCurrentArea('fisioterapia');
+    // Priorizar area da URL para garantir consistência entre navegações
+    const areaFromUrl = searchParams.get('area') as AreaType | null;
+    const area = areaFromUrl || contextArea;
     const areaLabel = AREA_LABELS[area] || 'Fisioterapia';
 
     const [filters, setFilters] = useState<SessaoFiltersState>(DEFAULT_FILTERS);
@@ -65,6 +68,7 @@ export default function ConsultarSessaoToPage() {
         (nextFilters: SessaoFiltersState, patientId: string | null) => {
             setIsUpdatingUrl(true);
             const params = new URLSearchParams();
+            if (areaFromUrl) params.set('area', areaFromUrl);
             if (patientId) params.set('pacienteId', patientId);
             if (nextFilters.q) params.set('q', nextFilters.q);
             if (nextFilters.dateRange !== 'all') params.set('dateRange', nextFilters.dateRange);
@@ -259,16 +263,16 @@ export default function ConsultarSessaoToPage() {
     const handleViewDetails = (sessionId: string) => {
         if (!patient) return;
         const selectedSession = sessions.find((item) => item.id === sessionId);
-        // Usar rota base para não alterar contexto da área
-        navigate(`/app/programas/sessoes-fisio/${sessionId}?pacienteId=${patient.id}`, {
+        const areaParam = areaFromUrl ? `&area=${areaFromUrl}` : '';
+        navigate(`/app/programas/sessoes-fisio/${sessionId}?pacienteId=${patient.id}${areaParam}`, {
             state: selectedSession ? { sessionDate: selectedSession.data } : undefined,
         });
     };
 
     const handleCreateSession = () => {
         if (!patient) return;
-        // Usar rota base para não alterar contexto da área
-        navigate(`/app/programas/sessoes-fisio/registrar?pacienteId=${patient.id}`);
+        const areaParam = areaFromUrl ? `&area=${areaFromUrl}` : '';
+        navigate(`/app/programas/sessoes-fisio/registrar?pacienteId=${patient.id}${areaParam}`);
     };
 
     return (

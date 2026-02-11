@@ -41,6 +41,8 @@ const areaEnum = z.enum([
     "psicomotricidade",
     "educacao-fisica",
     "musicoterapia",
+    "psicopedagogia",
+    "terapia-aba",
 ]);
 
 const performanceTypeSchema = z
@@ -127,7 +129,11 @@ const baseSchema = z.object({
 
 export const createAreaSessionDataSchema = z.discriminatedUnion("area", [
     baseSchema.extend({
-        area: z.literal(areaEnum.enum.fonoaudiologia),
+        area: z.enum([
+            areaEnum.enum.fonoaudiologia,
+            areaEnum.enum.psicopedagogia,
+            areaEnum.enum['terapia-aba'],
+        ]),
         attempts: z.array(speechAttemptSchema).min(1),
     }),
 

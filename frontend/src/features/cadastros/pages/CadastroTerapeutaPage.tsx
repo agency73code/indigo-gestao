@@ -128,6 +128,8 @@ export default function CadastroTerapeutaPage() {
             diplomaPosGraduacao: null,
             registroCRP: null,
             comprovanteEndereco: null,
+            outros: null,
+            descricaoOutros: null,
         },
 
         // CNPJ
@@ -481,6 +483,10 @@ export default function CadastroTerapeutaPage() {
             if (payload.arquivos?.comprovanteEndereco)
                 formDataUpload.append('comprovanteEndereco', payload.arquivos?.comprovanteEndereco);
 
+            // Guardar referências do arquivo "outros" antes de limpar
+            const outrosFile = payload.arquivos?.outros;
+            const outrosDescricao = payload.arquivos?.descricaoOutros;
+
             payload.arquivos = [];
 
             if(payload.cnpj.numero === null) delete payload.cnpj; 
@@ -488,12 +494,10 @@ export default function CadastroTerapeutaPage() {
             const result = await cadastrarTerapeuta(payload);
 
             if (!result.ok) {
-                if (result.code === 'VALIDATION_ERROR') {
-                    result.errors.forEach((e: any) => toast.error(`${e.path}: ${e.message}`));
-                } else if (result.code === 'CPF_DUPLICADO') {
-                    toast.error('CPF já cadastrado!');
-                } else if (result.code === 'EMAIL_DUPLICADO') {
-                    toast.error('E-mail já cadastrado!');
+                if (result.errors?.length) {
+                    result.errors.forEach((e: any) =>
+                        toast.error(`${e.path}: ${e.message}`)
+                    );
                 } else {
                     toast.error(result.message ?? 'Erro inesperado');
                 }
@@ -510,6 +514,24 @@ export default function CadastroTerapeutaPage() {
                 method: 'POST',
                 body: formDataUpload,
             }).then((r) => r.json());
+
+            // Upload separado para "outros" com descrição
+            if (outrosFile && outrosFile instanceof File) {
+                const outrosFormData = new FormData();
+                outrosFormData.append('file', outrosFile);
+                outrosFormData.append('documentType', 'outros');
+                outrosFormData.append('ownerType', 'terapeuta');
+                outrosFormData.append('ownerId', result.id);
+                outrosFormData.append('fullName', payload.nome);
+                outrosFormData.append('birthDate', payload.dataNascimento);
+                if (outrosDescricao && typeof outrosDescricao === 'string') {
+                    outrosFormData.append('descricao_documento', outrosDescricao);
+                }
+                await fetch('/api/arquivos', {
+                    method: 'POST',
+                    body: outrosFormData,
+                }).then((r) => r.json());
+            }
 
             toast.success('Terapeuta cadastrado com sucesso!', {
                 description: 'O cadastro foi realizado e o terapeuta foi adicionado ao sistema.',

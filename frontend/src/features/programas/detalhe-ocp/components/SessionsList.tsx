@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useNavigate } from 'react-router-dom';
+import { useCurrentArea } from '@/contexts/AreaContext';
 import type { SessionListItem, ProgramDetail } from '../types';
 
 interface SessionsListProps {
@@ -122,6 +123,7 @@ function StatusBadge({
 
 export default function SessionsList({ sessions, program }: SessionsListProps) {
     const navigate = useNavigate();
+    const area = useCurrentArea();
 
     const formatDate = (dateString: string) => {
         try {
@@ -142,19 +144,30 @@ export default function SessionsList({ sessions, program }: SessionsListProps) {
     };
 
     const handleViewSession = (session: SessionListItem) => {
-        navigate(`/app/programas/sessoes/${session.id}?pacienteId=${program.patientId}`, {
+        const urlParams = new URLSearchParams();
+        urlParams.set('pacienteId', program.patientId);
+        if (area !== 'fonoaudiologia') urlParams.set('area', area);
+        
+        navigate(`/app/programas/sessoes/${session.id}?${urlParams.toString()}`, {
             state: { sessionDate: session.date },
         });
     };
 
     const handleNewSession = () => {
-        navigate(
-            `/app/programas/sessoes/nova?programaId=${program.id}&patientId=${program.patientId}`,
-        );
+        const urlParams = new URLSearchParams();
+        urlParams.set('programaId', program.id.toString());
+        urlParams.set('patientId', program.patientId);
+        if (area !== 'fonoaudiologia') urlParams.set('area', area);
+        
+        navigate(`/app/programas/sessoes/nova?${urlParams.toString()}`);
     };
 
     const handleSeeAll = () => {
-        navigate(`/app/programas/sessoes/consultar?pacienteId=${program.patientId}`);
+        const urlParams = new URLSearchParams();
+        urlParams.set('pacienteId', program.patientId);
+        if (area !== 'fonoaudiologia') urlParams.set('area', area);
+        
+        navigate(`/app/programas/sessoes/consultar?${urlParams.toString()}`);
     };
 
     const sessionsWithSummaries = useMemo(() => {

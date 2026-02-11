@@ -4,6 +4,7 @@ import * as Api from '../api';
 import { searchPatients } from '@/features/programas/consultar-programas/services';
 import { listPrograms } from '@/features/programas/consultar-programas/services';
 import { buildSessionFormData } from '@/lib/api';
+import type { AreaType } from '@/contexts/AreaContext';
 
 export const searchPatientsForSession = searchPatients;
 export const listProgramsForSession = listPrograms;
@@ -20,6 +21,7 @@ export async function saveSession(sessionData: {
     notes?: string;
     files?: SessionFile[];
     faturamento?: DadosFaturamentoSessao;
+    area?: AreaType;
 }): Promise<{ id: string }> {
 
     // Com arquivos: usar FormData (quando backend suportar)
@@ -29,7 +31,7 @@ export async function saveSession(sessionData: {
         attempts: sessionData.attempts,
         notes: sessionData.notes,
         files: sessionData.files,
-        area: 'fonoaudiologia' as const,
+        area: sessionData.area ?? 'fonoaudiologia',
         faturamento: sessionData.faturamento,
     };
     const formData = buildSessionFormData(payload);

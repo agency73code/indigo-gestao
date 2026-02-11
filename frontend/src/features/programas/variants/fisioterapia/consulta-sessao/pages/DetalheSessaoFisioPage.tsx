@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
-import { useCurrentArea } from '@/contexts/AreaContext';
+import { useCurrentArea, type AreaType } from '@/contexts/AreaContext';
 import type { Patient } from '@/features/programas/consultar-programas/types';
 import { getPatientById } from '@/features/programas/consultar-programas/services';
 import type { ProgramDetail } from '@/features/programas/detalhe-ocp/types';
@@ -21,7 +21,9 @@ export default function DetalheSessaoToPage() {
   const location = useLocation();
   const locationState = location.state as LocationState | null;
   const { setPageTitle } = usePageTitle();
-  const area = useCurrentArea('fisioterapia');
+  const contextArea = useCurrentArea('fisioterapia');
+  const areaFromUrl = useMemo(() => searchParams.get('area') as AreaType | null, [searchParams]);
+  const area = areaFromUrl || contextArea;
 
   const pacienteIdFromQuery = useMemo(() => searchParams.get('pacienteId'), [searchParams]);
 
@@ -144,9 +146,9 @@ export default function DetalheSessaoToPage() {
   };
 
   const handleBack = () => {
-    // Usar rota base para não alterar contexto da área
     if (pacienteIdFromQuery) {
-      navigate(`/app/programas/sessoes/consultar?pacienteId=${pacienteIdFromQuery}`);
+      const areaParam = areaFromUrl ? `&area=${areaFromUrl}` : '';
+      navigate(`/app/programas/sessoes-fisio/consultar?pacienteId=${pacienteIdFromQuery}${areaParam}`);
     } else {
       navigate(areaHubRoutes[area] || '/app/programas/fisioterapia');
     }

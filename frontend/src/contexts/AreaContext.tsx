@@ -97,28 +97,38 @@ export function AreaProvider({ children }: AreaProviderProps) {
             detectedArea = AREA_SLUG_MAP[params.area];
         }
         
-        // 2. Verificar segmentos do path para rotas especiais
-        const pathSegments = location.pathname.split('/').filter(Boolean);
-        
-        // Mapeamento de slugs de URL para tipos de área
-        const urlToAreaMap: Record<string, AreaType> = {
-            'terapia-ocupacional': 'terapia-ocupacional',
-            'fonoaudiologia': 'fonoaudiologia',
-            'psicoterapia': 'psicoterapia',
-            'terapia-aba': 'terapia-aba',
-            'fisioterapia': 'fisioterapia',
-            'psicomotricidade': 'psicomotricidade',
-            'educacao-fisica': 'educacao-fisica',
-            'psicopedagogia': 'psicopedagogia',
-            'musicoterapia': 'musicoterapia',
-            'neuropsicologia': 'neuropsicologia',
-        };
+        // 2. Verificar query param ?area= na URL
+        const searchParams = new URLSearchParams(location.search);
+        const areaFromQuery = searchParams.get('area');
+        if (areaFromQuery && areaFromQuery in AREA_SLUG_MAP) {
+            detectedArea = AREA_SLUG_MAP[areaFromQuery];
+        }
 
-        // Procurar correspondência nos segmentos da URL
-        for (const segment of pathSegments) {
-            if (segment in urlToAreaMap) {
-                detectedArea = urlToAreaMap[segment];
-                break;
+        // 3. Verificar segmentos do path para rotas especiais
+        // Só aplica se não encontrou área via query param (query param tem prioridade)
+        if (!detectedArea) {
+            const pathSegments = location.pathname.split('/').filter(Boolean);
+            
+            // Mapeamento de slugs de URL para tipos de área
+            const urlToAreaMap: Record<string, AreaType> = {
+                'terapia-ocupacional': 'terapia-ocupacional',
+                'fonoaudiologia': 'fonoaudiologia',
+                'psicoterapia': 'psicoterapia',
+                'terapia-aba': 'terapia-aba',
+                'fisioterapia': 'fisioterapia',
+                'psicomotricidade': 'psicomotricidade',
+                'educacao-fisica': 'educacao-fisica',
+                'psicopedagogia': 'psicopedagogia',
+                'musicoterapia': 'musicoterapia',
+                'neuropsicologia': 'neuropsicologia',
+            };
+
+            // Procurar correspondência nos segmentos da URL
+            for (const segment of pathSegments) {
+                if (segment in urlToAreaMap) {
+                    detectedArea = urlToAreaMap[segment];
+                    break;
+                }
             }
         }
 
@@ -126,7 +136,7 @@ export function AreaProvider({ children }: AreaProviderProps) {
             setCurrentAreaState(detectedArea);
             localStorage.setItem('currentArea', detectedArea);
         }
-    }, [params.area, location.pathname, currentArea]);
+    }, [params.area, location.pathname, location.search, currentArea]);
 
     const setCurrentArea = (area: AreaType | null) => {
         setCurrentAreaState(area);

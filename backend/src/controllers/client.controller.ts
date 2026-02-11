@@ -4,6 +4,8 @@ import * as clientNormalize from '../features/client/client.normalizer.js';
 // import { sendWelcomeEmail } from '../utils/mail.util.js';
 import * as clientSchema from '../schemas/client.schema.js';
 import { AppError } from '../errors/AppError.js';
+import { uuidParam } from '../schemas/utils/uuid.js';
+import { clientUpdateSchema } from '../features/client/client.schema.js';
 
 export async function create(req: Request, res: Response, next: NextFunction) {
     try {
@@ -56,22 +58,14 @@ export async function getById(req: Request, res: Response, next: NextFunction) {
 
 export async function update(req: Request, res: Response, next: NextFunction) {
     try {
-        const { id } = req.params;
-        if (!id) return res.status(400).json({ success: false, message: 'ID inválido' });
+        const clientId = uuidParam.parse(req.params.id);
+        const payload = clientUpdateSchema.parse(req.body);
 
-        const parsed = clientSchema.UpdateClientSchema.parse(req.body);
-        if (Object.keys(parsed).length === 0) {
-            return res
-                .status(400)
-                .json({ success: false, message: 'Nenhum dado fornecido para atualização' });
-        }
+        await clientService.update(clientId, payload);
 
-        const updated = await clientService.update(id, parsed);
-
-        return res.json({
+        return res.status(200).json({
             success: true,
             message: 'Cliente atualizado com sucesso!',
-            data: updated,
         });
     } catch (err) {
         next(err);

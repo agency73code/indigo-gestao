@@ -5,6 +5,7 @@ import { Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ActionBar from '@/components/ui/action-bar';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
+import { useCurrentArea } from '@/contexts/AreaContext';
 import {
     PatientSelector,
     ProgramSelector,
@@ -37,6 +38,7 @@ import { DADOS_FATURAMENTO_INITIAL, validarDadosFaturamento } from '../types.ts'
 
 export default function CadastroSessaoPage() {
     const { setPageTitle } = usePageTitle();
+    const area = useCurrentArea();
 
     useEffect(() => {
         setPageTitle('Nova Sessão');
@@ -249,6 +251,7 @@ export default function CadastroSessaoPage() {
                 notes: sessionState.notes,
                 files: sessionFiles,
                 faturamento: sessionState.billing,
+                area,
             });
 
             // Toast de confirmação com mensagem focada na experiência do usuário

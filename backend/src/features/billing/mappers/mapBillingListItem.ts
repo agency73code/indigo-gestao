@@ -1,4 +1,4 @@
-import { faturamento_tipo_atendimento, type Prisma } from "@prisma/client";
+import { faturamento_tipo_atendimento, Prisma } from "@prisma/client";
 import { buildAvatarUrl } from "../../../utils/avatar-url.js";
 import { computeDurationMinutes } from "../../atas-reuniao/utils/computeDurationMinutes.js";
 import type { BillingListItem } from "../queries/billingListSelect.js";
@@ -82,6 +82,18 @@ export function mapBillingListItem(item: BillingListItem) {
     };
     const therapistRate = getBillingRateByType(values, item.tipo_atendimento);
     const durationMinutes = computeDurationMinutes(time.start, time.end);
+
+    const hours = durationMinutes
+        ? new Prisma.Decimal(Math.floor(durationMinutes / 60))
+        : new Prisma.Decimal(0);
+    
+    const totalHoursValue = hours.mul(therapistRate);
+
+    const totalValue = item.valor_ajuda_custo
+        ? totalHoursValue.plus(item.valor_ajuda_custo)
+        : totalHoursValue;
+
+    const totalValueNumber = totalValue.toNumber();
     const clientRate = item.cliente.terapeuta.find((link) => link.terapeuta_id === item.terapeuta_id)?.valor_sessao ?? null;
     const clientRateValue = clientRate ? clientRate.toNumber() : 0;
 
@@ -115,7 +127,7 @@ export function mapBillingListItem(item: BillingListItem) {
 
         duracaoMinutos: durationMinutes,
         valorHora: therapistRate,
-        valorTotal: durationMinutes ? Math.floor(durationMinutes / 60) * therapistRate : 0,
+        valorTotal: totalValueNumber,
 
         valorHoraCliente: clientRateValue,
         valorTotalCliente: durationMinutes ? Math.floor(durationMinutes / 60) * clientRateValue : 0,

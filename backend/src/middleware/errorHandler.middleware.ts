@@ -32,8 +32,61 @@ export const errorHandler = (error: Error, req: Request, res: Response, _next: N
         });
     }
 
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+            const target = error.meta?.target;
+            const targetStr =
+                Array.isArray(target) ? target.join(',') : typeof target === 'string' ? target : '';
+
+            // TERAPEUTA
+            if (targetStr.includes('terapeuta_email_key')) {
+                return res.status(409).json({
+                    success: false,
+                    code: 'THERAPIST_EMAIL_ALREADY_EXISTS',
+                    message: 'Já existe um terapeuta cadastrado com este email.',
+                });
+            }
+
+            if (targetStr.includes('terapeuta_cpf_key')) {
+                return res.status(409).json({
+                    success: false,
+                    code: 'THERAPIST_CPF_ALREADY_EXISTS',
+                    message: 'Já existe um terapeuta cadastrado com este CPF.',
+                });
+            }
+
+            // CLIENTE
+            if (targetStr.includes('cliente_emailContato_key')) {
+                return res.status(409).json({
+                success: false,
+                code: 'CLIENT_EMAIL_ALREADY_EXISTS',
+                message: 'Já existe um cliente cadastrado com este email.',
+                });
+            }
+
+            if (targetStr.includes('cliente_cpf_key')) {
+                return res.status(409).json({
+                success: false,
+                code: 'CLIENT_CPF_ALREADY_EXISTS',
+                message: 'Já existe um cliente cadastrado com este CPF.',
+                });
+            }
+
+            return res.status(409).json({
+                success: false,
+                code: 'UNIQUE_CONSTRAINT_FAILED',
+                message: 'Já existe um registro com estes dados.',
+            });
+        }
+
+        return res.status(500).json({
+            success: false,
+            code: 'PRISMA_KNOWN_ERROR',
+            message: 'Database error',
+        });
+    }
+
     if (
-        error instanceof Prisma.PrismaClientKnownRequestError ||
         error instanceof Prisma.PrismaClientValidationError ||
         error instanceof Prisma.PrismaClientInitializationError ||
         error instanceof Prisma.PrismaClientRustPanicError ||

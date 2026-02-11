@@ -1,5 +1,3 @@
-import type { Prisma } from '@prisma/client';
-
 export interface Caregiver {
     relacao: string;
     descricaoRelacao?: string | null;
@@ -157,50 +155,38 @@ export interface DBClientQueryPage {
     }[];
 }
 
-export type EnderecoInput = {
-    cep?: string | null;
-    rua?: string | null;
-    logradouro?: string | null;
-    numero?: string | null;
-    bairro?: string | null;
-    cidade?: string | null;
-    uf?: string | null;
-    complemento?: string | null;
-};
-
-// Tipos base
-export interface UpdateAddress {
-    id?: number;
+export interface AddressPayload {
     cep: string;
     logradouro: string;
     numero: string;
-    complemento: string | null;
     bairro: string;
     cidade: string;
     uf: string;
+    complemento: string | null;
 }
 
-export interface UpdateAddressClient extends UpdateAddress {
-    id?: number;
-    residenciaDe: string | null;
+export interface ClientAddressPayload extends AddressPayload {
+    residenciaDe: string;
     outroResidencia: string | null;
 }
 
-export interface UpdateCaregiver {
-    id?: number;
+export interface CaretakerPayload {
+    id?: number | undefined;
     relacao: string;
     descricaoRelacao: string | null;
+    dataNascimento: Date;
     nome: string;
     cpf: string;
     profissao: string | null;
-    escolaridade: string;
+    escolaridade: string | null;
     telefone: string;
     email: string;
-    dataNascimento?: Date | null;
-    endereco: UpdateAddress;
+    endereco: AddressPayload;
+    isNew?: boolean | undefined;
+    remove?: boolean | undefined;
 }
 
-export interface UpdateDataPayment {
+export interface PaymentDataPayload {
     nomeTitular: string;
     numeroCarteirinha: string | null;
     telefone1: string;
@@ -209,7 +195,7 @@ export interface UpdateDataPayment {
     email1: string;
     email2: string | null;
     email3: string | null;
-    sistemaPagamento: string;
+    sistemaPagamento: 'reembolso' | 'liminar' | 'particular';
     prazoReembolso: string | null;
     numeroProcesso: string | null;
     nomeAdvogado: string | null;
@@ -219,41 +205,45 @@ export interface UpdateDataPayment {
     emailAdvogado1: string | null;
     emailAdvogado2: string | null;
     emailAdvogado3: string | null;
-    houveNegociacao: string;
+    houveNegociacao: 'sim' | 'nao';
     valorAcordado: string | null;
 }
 
-export interface UpdateSchoolContact {
-    nome: string;
-    funcao: string | null;
+export interface SchoolContactPayload {
+    nome: string | null;
     telefone: string;
     email: string | null;
+    funcao: string | null;
 }
 
-export interface UpdateDataSchool {
-    tipoEscola: string;
+export interface SchoolDataPayload {
+    tipoEscola: 'particular' | 'publica' | 'afastado' | 'clinica-escola';
     nome: string | null;
-    telefone: string | null;
+    telefone: string;
     email: string | null;
-    endereco: UpdateAddress;
-    contatos: UpdateSchoolContact[];
+    endereco: AddressPayload;
+    contatos: SchoolContactPayload[];
 }
 
-export interface UpdateClient {
-    id: string;
+export interface ClientUpdatePayload {
     nome: string;
+    emailContato: string;
     cpf: string;
     dataNascimento: Date;
-    emailContato: string;
     dataEntrada: Date;
     dataSaida: Date | null;
-    status: string;
-    cuidadores: UpdateCaregiver[];
-    enderecos: UpdateAddress[];
-    dadosPagamento: UpdateDataPayment;
-    dadosEscola: UpdateDataSchool;
+    enderecos: ClientAddressPayload[];
+    cuidadores: CaretakerPayload[];
+    dadosPagamento: PaymentDataPayload;
+    dadosEscola: SchoolDataPayload;
 }
 
-// Tipo para o update (todos os campos opcionais)
-export type ClientUpdate = Partial<UpdateClient>;
-export type ClientVisibilityFilter = Prisma.clienteWhereInput;
+export interface AddressData {
+    cep: string;
+    rua: string;
+    numero: string;
+    bairro: string;
+    cidade: string;
+    uf: string;
+    complemento: string;
+}
