@@ -11,22 +11,28 @@ import {
     type SearchAndFiltersState,
 } from '../../../consultar-programas/components';
 import { listFisioPrograms } from '../services';
-import { useCurrentArea, AREA_LABELS } from '@/contexts/AreaContext';
+import { useCurrentArea, AREA_LABELS, type AreaType } from '@/contexts/AreaContext';
 
-// Rotas base que não alteram o contexto de área
-const baseRoutes = {
-    create: '/app/programas/novo-fisio',
-    detail: (id: string) => `/app/programas/fisioterapia/programa/${id}`,
-    newSession: (programId: string, patientId: string) => 
-        `/app/programas/sessoes-fisio/registrar?programaId=${programId}&patientId=${patientId}`,
+// Rotas base - area é adicionada dinamicamente
+const getBaseRoutes = (area: string) => {
+    const areaParam = `&area=${area}`;
+    return {
+        create: '/app/programas/novo-fisio',
+        detail: (id: string) => `/app/programas/fisioterapia/programa/${id}?area=${area}`,
+        newSession: (programId: string, patientId: string) => 
+            `/app/programas/sessoes-fisio/registrar?programaId=${programId}&patientId=${patientId}${areaParam}`,
+    };
 };
 
 export default function ToConsultaProgramasPage() {
     const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
     const { setPageTitle } = usePageTitle();
-    const area = useCurrentArea('fisioterapia');
+    const contextArea = useCurrentArea('fisioterapia');
+    const areaFromUrl = searchParams.get('area') as AreaType | null;
+    const area = areaFromUrl || contextArea;
     const areaLabel = AREA_LABELS[area] || 'Fisioterapia';
+    const baseRoutes = getBaseRoutes(area);
 
     useEffect(() => {
         setPageTitle(`Consultar Programas & Objetivos - ${areaLabel}`);
@@ -51,6 +57,7 @@ export default function ToConsultaProgramasPage() {
         setSearchState(newState);
 
         const params = new URLSearchParams();
+        if (areaFromUrl) params.set('area', areaFromUrl);
         if (newState.q) params.set('q', newState.q);
         if (newState.status !== 'all') params.set('status', newState.status);
         if (newState.sort !== 'recent') params.set('sort', newState.sort);
@@ -64,7 +71,8 @@ export default function ToConsultaProgramasPage() {
             return;
         }
 
-        navigate(`${baseRoutes.create}?patientId=${selectedPatient.id}&patientName=${encodeURIComponent(selectedPatient.name)}`);
+        const areaQuery = area !== 'fisioterapia' ? `&area=${area}` : '';
+        navigate(`${baseRoutes.create}?patientId=${selectedPatient.id}&patientName=${encodeURIComponent(selectedPatient.name)}${areaQuery}`);
     };
 
     const handleOpenProgram = (programId: string) => {

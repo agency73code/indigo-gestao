@@ -5,7 +5,7 @@ import { Save, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ActionBar from '@/components/ui/action-bar';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
-import { useCurrentArea, AREA_LABELS } from '@/contexts/AreaContext';
+import { useCurrentArea, AREA_LABELS, type AreaType } from '@/contexts/AreaContext';
 import { SessionBillingData } from '@/features/programas/nova-sessao/components';
 import type { DadosFaturamentoSessao } from '@/features/programas/core/types/billing';
 import { DADOS_FATURAMENTO_INITIAL } from '@/features/programas/core/types/billing';
@@ -42,14 +42,17 @@ import type {
  */
 export default function RegistrarSessaoToPage() {
     const { setPageTitle } = usePageTitle();
-    const area = useCurrentArea('fisioterapia');
+    const contextArea = useCurrentArea('fisioterapia');
+
+    const [searchParams] = useSearchParams();
+    const areaFromUrl = searchParams.get('area') as AreaType | null;
+    const area = areaFromUrl || contextArea;
     const areaLabel = AREA_LABELS[area] || 'Fisioterapia';
 
     useEffect(() => {
         setPageTitle(`Nova Sessão - ${areaLabel}`);
     }, [setPageTitle, areaLabel]);
 
-    const [searchParams] = useSearchParams();
     const navigate = useNavigate();
 
     // Estados principais

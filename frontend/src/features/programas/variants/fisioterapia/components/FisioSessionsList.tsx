@@ -22,6 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useNavigate } from 'react-router-dom';
+import { useCurrentArea } from '@/contexts/AreaContext';
 import type { SessionListItem, ProgramDetail } from '../../../detalhe-ocp/types';
 
 interface ToSessionsListProps {
@@ -127,6 +128,8 @@ function StatusBadge({
 
 export default function ToSessionsList({ sessions, program }: ToSessionsListProps) {
     const navigate = useNavigate();
+    const area = useCurrentArea('fisioterapia');
+    const areaParam = `&area=${area}`;
 
     const formatDate = (dateString: string) => {
         try {
@@ -147,22 +150,19 @@ export default function ToSessionsList({ sessions, program }: ToSessionsListProp
     };
 
     const handleViewSession = (session: SessionListItem) => {
-        // Usar rota base para não alterar contexto da área
-        navigate(`/app/programas/sessoes-fisio/${session.id}?pacienteId=${program.patientId}`, {
+        navigate(`/app/programas/sessoes-fisio/${session.id}?pacienteId=${program.patientId}${areaParam}`, {
             state: { sessionDate: session.date },
         });
     };
 
     const handleNewSession = () => {
-        // Usar rota base para não alterar contexto da área
         navigate(
-            `/app/programas/sessoes-fisio/registrar?programaId=${program.id}&patientId=${program.patientId}`,
+            `/app/programas/sessoes-fisio/registrar?programaId=${program.id}&patientId=${program.patientId}${areaParam}`,
         );
     };
 
     const handleSeeAll = () => {
-        // Usar rota base para não alterar contexto da área
-        navigate(`/app/programas/sessoes/consultar?pacienteId=${program.patientId}`);
+        navigate(`/app/programas/sessoes-fisio/consultar?pacienteId=${program.patientId}${areaParam}`);
     };
 
     const sessionsWithSummaries = useMemo(() => {

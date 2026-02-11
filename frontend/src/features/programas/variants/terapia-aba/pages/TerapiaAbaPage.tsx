@@ -38,7 +38,7 @@ export default function TerapiaAbaPage() {
             title: 'Consultar Sessão',
             description: 'Visualizar e acompanhar sessões registradas',
             icon: Eye,
-            href: '/app/programas/sessoes/consultar',
+            href: '/app/programas/sessoes/consultar?area=terapia-aba',
             iconColor: 'text-teal-600',
             bgColor: 'bg-[#CCFBF1]',
             available: true,

@@ -369,6 +369,13 @@ export function AtaForm({ ataId, initialData, existingAnexos = [], onSuccess }: 
     // RENDERIZAÇÃO - CONTEÚDO
     // ============================================
 
+    const getPlainTextLength = (html: string): number => {
+        return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim().length;
+    };
+
+    const conteudoLength = getPlainTextLength(formData.conteudo);
+    const CONTEUDO_MIN_CHARS = 50;
+
     const renderConteudo = () => (
         <Card>
             <CardHeader className="pb-4">
@@ -389,6 +396,15 @@ export function AtaForm({ ataId, initialData, existingAnexos = [], onSuccess }: 
                     placeholder="Descreva os tópicos e condutas da reunião..."
                     className={errors['conteudo'] ? 'border-destructive' : ''}
                 />
+                <div className="flex items-center justify-between mt-2">
+                    <p className={`text-xs ${
+                        conteudoLength < CONTEUDO_MIN_CHARS 
+                            ? 'text-destructive' 
+                            : 'text-muted-foreground'
+                    }`}>
+                        {conteudoLength}/{CONTEUDO_MIN_CHARS} caracteres {conteudoLength < CONTEUDO_MIN_CHARS ? '(mínimo obrigatório)' : '✓'}
+                    </p>
+                </div>
             </CardContent>
         </Card>
     );

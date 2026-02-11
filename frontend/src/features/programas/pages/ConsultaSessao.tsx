@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import PatientSelector from '@/features/programas/consultar-programas/components/PatientSelector';
 import type { Patient } from '@/features/programas/consultar-programas/types';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
-import { useArea, useCurrentArea } from '@/contexts/AreaContext';
+import { useArea, useCurrentArea, type AreaType } from '@/contexts/AreaContext';
 import { ListaSessoes, SearchAndFilters } from '../consulta-sessao/components';
 import * as services from '../consulta-sessao/services';
 import { getPatientById } from '../consultar-programas/services';
@@ -25,7 +25,10 @@ export default function ConsultaSessao() {
     const [searchParams, setSearchParams] = useSearchParams();
     const { setPageTitle, setOnBackClick } = usePageTitle();
     const { currentArea } = useArea();
-    const area = useCurrentArea();
+    
+    // 🔄 Prioriza área da URL antes do contexto
+    const areaFromUrl = searchParams.get('area') as AreaType | null;
+    const area = areaFromUrl ?? useCurrentArea();
 
     const [filters, setFilters] = useState<SessaoFiltersState>(DEFAULT_FILTERS);
     const [patient, setPatient] = useState<Patient | null>(null);
@@ -46,9 +49,11 @@ export default function ConsultaSessao() {
     // Configurar botão de voltar para ir para o hub da área correta
     useEffect(() => {
         setOnBackClick(() => () => {
-            if (currentArea) {
+            // 🔄 Usa a área da URL primeiro, depois currentArea
+            const areaToUse = areaFromUrl ?? currentArea;
+            if (areaToUse) {
                 // Volta para o hub da área específica
-                navigate(`/app/programas/${currentArea}`);
+                navigate(`/app/programas/${areaToUse}`);
             } else {
                 // Fallback: volta para o hub geral de programas
                 navigate('/app/programas');
@@ -59,7 +64,7 @@ export default function ConsultaSessao() {
         return () => {
             setOnBackClick(undefined);
         };
-    }, [setOnBackClick, currentArea, navigate]);
+    }, [setOnBackClick, currentArea, areaFromUrl, navigate]);
 
     const syncFiltersToParams = useCallback(
         (nextFilters: SessaoFiltersState, patientId: string | null) => {
@@ -71,10 +76,12 @@ export default function ConsultaSessao() {
             if (nextFilters.program !== 'all') params.set('program', nextFilters.program);
             if (nextFilters.therapist !== 'all') params.set('therapist', nextFilters.therapist);
             if (nextFilters.sort !== 'date-desc') params.set('sort', nextFilters.sort);
+            // 🔄 Preserva o parâmetro area se estiver presente
+            if (areaFromUrl) params.set('area', areaFromUrl);
             setSearchParams(params);
             setTimeout(() => setIsUpdatingUrl(false), 50);
         },
-        [setSearchParams],
+        [setSearchParams, areaFromUrl],
     );
 
     const applyFilters = useCallback(
@@ -263,7 +270,11 @@ export default function ConsultaSessao() {
     const handleViewDetails = (sessionId: string) => {
         if (!patient) return;
         const selectedSession = sessions.find((item) => item.id === sessionId);
-        navigate(`/app/programas/sessoes/${sessionId}?pacienteId=${patient.id}`, {
+        const urlParams = new URLSearchParams();
+        urlParams.set('pacienteId', patient.id);
+        if (areaFromUrl) urlParams.set('area', areaFromUrl);
+        
+        navigate(`/app/programas/sessoes/${sessionId}?${urlParams.toString()}`, {
             state: selectedSession ? { sessionDate: selectedSession.data } : undefined,
         });
     };
@@ -271,10 +282,13 @@ export default function ConsultaSessao() {
     const handleCreateSession = () => {
         if (!patient) return;
 
+        const urlParams = new URLSearchParams();
+        urlParams.set('pacienteId', patient.id);
+        urlParams.set('pacienteName', patient.name);
+        if (areaFromUrl) urlParams.set('area', areaFromUrl);
+
         // Navegar para página de criação de sessão passando o ID do paciente como query param
-        navigate(
-            `/app/programas/sessoes/nova?pacienteId=${patient.id}&pacienteName=${encodeURIComponent(patient.name)}`,
-        );
+        navigate(`/app/programas/sessoes/nova?${urlParams.toString()}`);
     };
 
     return (

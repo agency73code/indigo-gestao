@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { InputField } from '@/ui/input-field';
 import { SelectField } from '@/ui/select-field';
 import { DateFieldWithLabel } from '@/ui/date-field-with-label';
@@ -41,43 +41,48 @@ export default function CabecalhoAnamnese({ data, onChange, fieldErrors = {} }: 
     const { user } = useAuth();
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
 
-    // Preencher data da entrevista e profissional automaticamente
+    // Ref para sempre acessar o data mais recente dentro de callbacks assíncronos
+    const dataRef = useRef(data);
+    dataRef.current = data;
+
+    const terapeutaLoadedRef = useRef(false);
+
+    // Preencher data da entrevista automaticamente (apenas na montagem)
     useEffect(() => {
         if (!data.dataEntrevista) {
             onChange({ ...data, dataEntrevista: getDataHoje() });
         }
-    }, [data, onChange]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Carregar terapeuta logado e preencher profissional automaticamente
     useEffect(() => {
-        async function loadTerapeutaLogado() {
-            if (!user || data.profissionalId) {
-                return;
-            }
+        if (terapeutaLoadedRef.current || !user || dataRef.current.profissionalId) return;
+        terapeutaLoadedRef.current = true;
 
+        async function loadTerapeutaLogado() {
             try {
-                const terapeuta = await buscarTerapeutaPorId(user.id);
+                const terapeuta = await buscarTerapeutaPorId(user!.id);
                 onChange({
-                    ...data,
-                    dataEntrevista: data.dataEntrevista || getDataHoje(),
-                    profissionalId: terapeuta.id!,
+                    ...dataRef.current,
+                    dataEntrevista: dataRef.current.dataEntrevista || getDataHoje(),
+                    profissionalId: user!.id,
                     profissionalNome: terapeuta.nome,
                 });
             } catch (error) {
                 console.error('Erro ao carregar terapeuta:', error);
                 // Em caso de erro, ainda tenta usar os dados do usuário logado
-                if (user && !data.profissionalId) {
-                    onChange({
-                        ...data,
-                        dataEntrevista: data.dataEntrevista || getDataHoje(),
-                        profissionalId: user.id,
-                        profissionalNome: user.name ?? 'Terapeuta',
-                    });
-                }
+                onChange({
+                    ...dataRef.current,
+                    dataEntrevista: dataRef.current.dataEntrevista || getDataHoje(),
+                    profissionalId: user!.id,
+                    profissionalNome: user!.name ?? 'Terapeuta',
+                });
             }
         }
         loadTerapeutaLogado();
-    }, [user, data, onChange]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user?.id]);
 
     // Quando seleciona um cliente pelo PatientSelector
     const handlePatientSelect = async (patient: Patient) => {
@@ -119,7 +124,7 @@ export default function CabecalhoAnamnese({ data, onChange, fieldErrors = {} }: 
             })) || [];
             
             onChange({
-                ...data,
+                ...dataRef.current,
                 clienteId: clienteCompleto.id || patient.id,
                 clienteNome: clienteCompleto.nome || patient.name,
                 dataNascimento: clienteCompleto.dataNascimento || patient.birthDate || '',
@@ -133,7 +138,7 @@ export default function CabecalhoAnamnese({ data, onChange, fieldErrors = {} }: 
             console.error('Erro ao buscar cliente:', error);
             // Usa os dados básicos do patient se falhar
             onChange({
-                ...data,
+                ...dataRef.current,
                 clienteId: patient.id,
                 clienteNome: patient.name,
                 dataNascimento: patient.birthDate || '',

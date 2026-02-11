@@ -246,7 +246,13 @@ export const ataFormSchema = z.object({
     finalidadeOutros: z.string().optional(),
     modalidade: z.enum([MODALIDADE_REUNIAO.ONLINE, MODALIDADE_REUNIAO.PRESENCIAL]),
     participantes: z.array(participanteSchema).min(1, 'Adicione pelo menos um participante'),
-    conteudo: z.string().min(10, 'Descreva os tópicos e condutas da reunião'),
+    conteudo: z.string().refine(
+        (val) => {
+            const text = val.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+            return text.length >= 50;
+        },
+        { message: 'O conteúdo deve ter no mínimo 50 caracteres para garantir o preenchimento profissional da ata' }
+    ),
     clienteId: z.string().optional(),
     clienteNome: z.string().optional(),
 }).refine(

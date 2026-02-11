@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
+import { AREA_LABELS, type AreaType } from '@/contexts/AreaContext';
 import type { Patient } from '@/features/programas/consultar-programas/types';
 import { getPatientById } from '@/features/programas/consultar-programas/services';
 import type { ProgramDetail } from '@/features/programas/detalhe-ocp/types';
@@ -22,6 +23,8 @@ export default function DetalheSessaoFonoPage() {
   const { setPageTitle } = usePageTitle();
 
   const pacienteIdFromQuery = useMemo(() => searchParams.get('pacienteId'), [searchParams]);
+  const areaFromQuery = useMemo(() => (searchParams.get('area') as AreaType) || 'fonoaudiologia', [searchParams]);
+  const areaLabel = AREA_LABELS[areaFromQuery] || 'Fonoaudiologia';
 
   const [session, setSession] = useState<Sessao | null>(null);
   const [patient, setPatient] = useState<Patient | null>(null);
@@ -31,11 +34,11 @@ export default function DetalheSessaoFonoPage() {
 
   useEffect(() => {
     if (patient) {
-      setPageTitle(`Sessão - Fonoaudiologia de ${patient.name}`);
+      setPageTitle(`Sessão - ${areaLabel} de ${patient.name}`);
     } else {
-      setPageTitle('Detalhes da Sessão - Fonoaudiologia');
+      setPageTitle(`Detalhes da Sessão - ${areaLabel}`);
     }
-  }, [patient, setPageTitle]);
+  }, [patient, setPageTitle, areaLabel]);
 
   useEffect(() => {
     let cancelled = false;
@@ -54,11 +57,11 @@ export default function DetalheSessaoFonoPage() {
         let sessionData: Sessao | null = null;
 
         if (pacienteIdFromQuery) {
-          sessionData = await getSessionById(pacienteIdFromQuery, sessaoId, 'fonoaudiologia');
+          sessionData = await getSessionById(pacienteIdFromQuery, sessaoId, areaFromQuery);
         }
 
         if (!sessionData) {
-          sessionData = await findSessionById(sessaoId, undefined, 'fonoaudiologia');
+          sessionData = await findSessionById(sessaoId, undefined, areaFromQuery);
         }
 
         if (!sessionData) {
@@ -83,7 +86,7 @@ export default function DetalheSessaoFonoPage() {
           }
         }
 
-        const mockProgramDetail: ProgramDetail | null = await findProgramSessionById(sessaoId, 'fonoaudiologia');
+        const mockProgramDetail: ProgramDetail | null = await findProgramSessionById(sessaoId, areaFromQuery);
         
         if (!mockProgramDetail) {
           if (!cancelled) {
@@ -149,11 +152,12 @@ export default function DetalheSessaoFonoPage() {
   }, [sessaoId, pacienteIdFromQuery, navigate, locationState?.sessionDate]);
 
   const handleBack = () => {
-    if (pacienteIdFromQuery) {
-      navigate(`/app/programas/sessoes/consultar?pacienteId=${pacienteIdFromQuery}`);
-    } else {
-      navigate('/app/programas/sessoes/consultar');
-    }
+    const urlParams = new URLSearchParams();
+    if (pacienteIdFromQuery) urlParams.set('pacienteId', pacienteIdFromQuery);
+    if (areaFromQuery !== 'fonoaudiologia') urlParams.set('area', areaFromQuery);
+    
+    const queryString = urlParams.toString();
+    navigate(`/app/programas/sessoes/consultar${queryString ? `?${queryString}` : ''}`);
   };
 
   if (loading) {

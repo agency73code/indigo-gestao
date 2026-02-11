@@ -5,6 +5,7 @@ export type BillingSummaryItem = {
     fim_em: Date;
     tipo_atendimento: faturamento_tipo_atendimento;
     status: "pendente" | "aprovado" | "rejeitado";
+    valor_ajuda_custo: Prisma.Decimal | null;
     terapeuta: {
         valor_hora_desenvolvimento_materiais: Prisma.Decimal | null;
         valor_hora_reuniao: Prisma.Decimal | null;

@@ -1,5 +1,5 @@
 import z from "zod";
-import { removeNonAlphanumeric } from "./removeNonAlphanumeric.js";
+import { removeNonAlphanumeric } from "../../utils/removeNonAlphanumeric.js";
 
 export const addressSchema = z.object({
     cep: z.string().min(1, 'Informe o CEP').transform(removeNonAlphanumeric),

@@ -2,7 +2,7 @@ import z from 'zod';
 import { makeEmailSchema } from './utils/email.js';
 import { cnpjDigits, cpfDigits } from './utils/cpfDigits.js';
 import { dateStringToDate, nullableDateStringToDate } from './utils/dateStringToDate.js';
-import { removeNonAlphanumeric } from './utils/removeNonAlphanumeric.js';
+import { removeNonAlphanumeric } from '../utils/removeNonAlphanumeric.js';
 import { addressSchema } from './utils/address.js';
 import { idParam } from './utils/id.js';
 

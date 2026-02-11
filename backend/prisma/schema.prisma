@@ -269,7 +269,6 @@ model endereco {
   pessoa_juridica    pessoa_juridica[]
   terapeuta_endereco terapeuta[]
 
-  @@unique([cep, rua, numero, bairro, cidade, uf, complemento], name: "unique_endereco")
   @@index([cep])
   @@index([cidade, uf])
 }
