@@ -1,4 +1,4 @@
-import type { Prisma, faturamento_tipo_atendimento } from "@prisma/client";
+import { Prisma, type faturamento_tipo_atendimento } from "@prisma/client";
 import { buildLocalSessionTime } from "../utils/buildUtcDate.js";
 import { computeDurationMinutes } from "../../atas-reuniao/utils/computeDurationMinutes.js";
 import { getBillingRateByType } from "../utils/getBillingRateByType.js";
@@ -14,10 +14,10 @@ const tipoAtividadeLabels: Record<faturamento_tipo_atendimento, { tipo: string; 
 };
 
 export function mapBillingSummary(data: BillingSummaryItem[]) {
-    const porTipoMap = new Map<string, { minutos: number; quantidade: number; valor: number; label: string }>();
+    const porTipoMap = new Map<string, { minutos: number; quantidade: number; valor: Prisma.Decimal; label: string }>();
 
     let totalMinutos = 0;
-    let totalValor = 0;
+    let totalValor = new Prisma.Decimal(0);
 
     for (const item of data) {
         const time = buildLocalSessionTime(item.inicio_em, item.fim_em);
@@ -31,23 +31,33 @@ export function mapBillingSummary(data: BillingSummaryItem[]) {
             supervisao_dada: item.terapeuta.valor_hora_supervisao_dada,
             supervisao_recebida: item.terapeuta.valor_hora_supervisao_recebida,
         };
+
         const rate = getBillingRateByType(values, item.tipo_atendimento);
-        const valor = durationMinutes ? Math.floor(durationMinutes / 60) * rate : 0;
+
+        const hours = durationMinutes
+            ? new Prisma.Decimal(Math.floor(durationMinutes / 60))
+            : new Prisma.Decimal(0);
+
+        const valorHoras = hours.mul(rate);
+
+        const valor = item.valor_ajuda_custo
+            ? valorHoras.plus(item.valor_ajuda_custo)
+            : valorHoras;
 
         totalMinutos += durationMinutes;
-        totalValor += valor;
+        totalValor = totalValor.plus(valor);
 
         const tipoInfo = tipoAtividadeLabels[item.tipo_atendimento];
         const current = porTipoMap.get(tipoInfo.tipo) ?? {
             minutos: 0,
             quantidade: 0,
-            valor: 0,
+            valor: new Prisma.Decimal(0),
             label: tipoInfo.label,
         };
         porTipoMap.set(tipoInfo.tipo, {
             minutos: current.minutos + durationMinutes,
             quantidade: current.quantidade + 1,
-            valor: current.valor + valor,
+            valor: current.valor.plus(valor),
             label: tipoInfo.label,
         });
     }
@@ -71,7 +81,7 @@ export function mapBillingSummary(data: BillingSummaryItem[]) {
             label: entry.label,
             minutos: entry.minutos,
             quantidade: entry.quantidade,
-            valor: entry.valor,
+            valor: entry.valor.toNumber(),
         })),
     };
 }
