@@ -488,12 +488,10 @@ export default function CadastroTerapeutaPage() {
             const result = await cadastrarTerapeuta(payload);
 
             if (!result.ok) {
-                if (result.code === 'VALIDATION_ERROR') {
-                    result.errors.forEach((e: any) => toast.error(`${e.path}: ${e.message}`));
-                } else if (result.code === 'CPF_DUPLICADO') {
-                    toast.error('CPF já cadastrado!');
-                } else if (result.code === 'EMAIL_DUPLICADO') {
-                    toast.error('E-mail já cadastrado!');
+                if (result.errors?.length) {
+                    result.errors.forEach((e: any) =>
+                        toast.error(`${e.path}: ${e.message}`)
+                    );
                 } else {
                     toast.error(result.message ?? 'Erro inesperado');
                 }
