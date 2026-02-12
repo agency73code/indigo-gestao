@@ -546,9 +546,7 @@ export default function CadastroTerapeutaPage() {
                     onClick: () => {},
                 },
             });
-
-            console.log(payload);
-
+            
             setTimeout(() => {
                 navigate('/app/consultar/terapeutas');
             }, 1000);

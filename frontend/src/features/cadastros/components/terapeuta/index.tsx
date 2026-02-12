@@ -59,7 +59,6 @@ export default function TerapeutaWizard() {
             telefone: onlyDigits(data.telefone || ''),
         };
 
-        // TODO: aqui você chama sua API ou vai para o próximo step
         console.log('payload pronto:', payload);
     };
 

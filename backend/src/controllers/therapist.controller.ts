@@ -59,7 +59,7 @@ export async function getById(req: Request, res: Response, next: NextFunction) {
     }
 }
 
-export async function update(req: Request, res: Response, next: NextFunction) { // TODO
+export async function update(req: Request, res: Response, next: NextFunction) {
     try {
         const { therapistId } = req.params;
         if (!therapistId) {
