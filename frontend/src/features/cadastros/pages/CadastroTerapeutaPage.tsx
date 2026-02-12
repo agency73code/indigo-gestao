@@ -255,14 +255,43 @@ export default function CadastroTerapeutaPage() {
             return;
         }
 
-        // [restante] mantém sua lógica original para campos com dot-notation
+        // [cnpj.endereco.*] handler explícito para endereço do CNPJ (imutável)
+        if (field.startsWith('cnpj.endereco.')) {
+            const subfield = field.replace('cnpj.endereco.', '');
+            setFormData((prev: any) => ({
+                ...prev,
+                cnpj: {
+                    ...(prev.cnpj || {}),
+                    endereco: {
+                        ...(prev.cnpj?.endereco || {}),
+                        [subfield]: value,
+                    },
+                },
+            }));
+            return;
+        }
+
+        // [cnpj.*] handler genérico para outros campos cnpj (imutável)
+        if (field.startsWith('cnpj.')) {
+            const subfield = field.replace('cnpj.', '');
+            setFormData((prev: any) => ({
+                ...prev,
+                cnpj: {
+                    ...(prev.cnpj || {}),
+                    [subfield]: value,
+                },
+            }));
+            return;
+        }
+
+        // [restante] lógica para campos com dot-notation (com clone imutável em cada nível)
         const keys = field.split('.');
         setFormData((prev: any) => {
             const newData = { ...prev };
             let current: any = newData;
             for (let i = 0; i < keys.length - 1; i++) {
                 const key = keys[i];
-                if (current[key] === undefined || current[key] === null) current[key] = {};
+                current[key] = { ...(current[key] ?? {}) };
                 current = current[key];
             }
             current[keys[keys.length - 1]] = value;
@@ -419,6 +448,9 @@ export default function CadastroTerapeutaPage() {
                 });
                 break;
 
+            case 5: // Arquivos (sem validação obrigatória)
+                break;
+
             case 6: {
                 // Dados CNPJ (opcional)
                 const num = formData.cnpj?.numero?.trim();
@@ -441,6 +473,25 @@ export default function CadastroTerapeutaPage() {
     };
     const prevStep = () => {
         if (currentStep > 1) setCurrentStep((s) => s - 1);
+    };
+
+    const handleClearCNPJ = () => {
+        setFormData((prev: any) => ({
+            ...prev,
+            cnpj: {
+                numero: null,
+                razaoSocial: null,
+                endereco: {
+                    cep: null,
+                    rua: null,
+                    numero: null,
+                    complemento: '',
+                    bairro: null,
+                    cidade: null,
+                    estado: null,
+                },
+            },
+        }));
     };
 
     const handleSubmit = async () => {
@@ -489,7 +540,7 @@ export default function CadastroTerapeutaPage() {
 
             payload.arquivos = [];
 
-            if(payload.cnpj.numero === null) delete payload.cnpj; 
+            if(payload.cnpj?.numero === null || payload.cnpj?.numero === '') delete payload.cnpj; 
 
             const result = await cadastrarTerapeuta(payload);
 
@@ -603,7 +654,7 @@ export default function CadastroTerapeutaPage() {
                 );
             case 6:
                 return (
-                    <DadosCNPJStep data={formData} onUpdate={handleInputChange} errors={errors} />
+                    <DadosCNPJStep data={formData} onUpdate={handleInputChange} onClearCNPJ={handleClearCNPJ} errors={errors} />
                 );
             default:
                 return null;
@@ -642,6 +693,7 @@ export default function CadastroTerapeutaPage() {
                 {/* Navigation Buttons */}
                 <div className="flex justify-between pt-4 border-t border-border">
                     <Button
+                        type="button"
                         variant="outline"
                         onClick={prevStep}
                         disabled={currentStep === 1 || isLoading}
@@ -651,12 +703,12 @@ export default function CadastroTerapeutaPage() {
                     </Button>
 
                     {currentStep < STEPS.length ? (
-                        <Button onClick={nextStep} disabled={isLoading}>
+                        <Button type="button" onClick={nextStep} disabled={isLoading}>
                             Próximo
                             <ArrowRight className="w-4 h-4 ml-2" />
                         </Button>
                     ) : (
-                        <Button onClick={handleSubmit} disabled={isLoading}>
+                        <Button type="button" onClick={handleSubmit} disabled={isLoading}>
                             {isLoading ? (
                                 <>
                                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>

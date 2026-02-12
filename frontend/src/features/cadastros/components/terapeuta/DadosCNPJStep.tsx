@@ -7,10 +7,11 @@ import { SelectFieldRadix, SelectItem } from '@/ui/select-field-radix';
 interface DadosCNPJStepProps {
     data: Partial<Terapeuta>;
     onUpdate: (field: string, value: string) => void;
+    onClearCNPJ: () => void;
     errors: Record<string, string>;
 }
 
-export default function DadosCNPJStep({ data, onUpdate, errors }: DadosCNPJStepProps) {
+export default function DadosCNPJStep({ data, onUpdate, onClearCNPJ, errors }: DadosCNPJStepProps) {
     const [temCNPJ, setTemCNPJ] = useState(!!data.cnpj?.numero);
     const { data: cepData, error: cepError } = useCepLookup(
         data.cnpj?.endereco?.cep || ''
@@ -27,17 +28,7 @@ export default function DadosCNPJStep({ data, onUpdate, errors }: DadosCNPJStepP
     const toggleCNPJ = (value: boolean) => {
         setTemCNPJ(value);
         if (!value) {
-            // Limpar dados do CNPJ se desabilitado
-            onUpdate('cnpj.numero', '');
-            onUpdate('cnpj.razaoSocial', '');
-            onUpdate('cnpj.nomeFantasia', '');
-            onUpdate('cnpj.endereco.cep', '');
-            onUpdate('cnpj.endereco.rua', '');
-            onUpdate('cnpj.endereco.numero', '');
-            onUpdate('cnpj.endereco.complemento', '');
-            onUpdate('cnpj.endereco.bairro', '');
-            onUpdate('cnpj.endereco.cidade', '');
-            onUpdate('cnpj.endereco.estado', '');
+            onClearCNPJ();
         }
     };
 
