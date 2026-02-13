@@ -11,6 +11,7 @@ export interface AuthUser {
 
 export interface UserRow extends AuthUser {
     senha: string | null;
+    table: Tables;
 }
 
 export interface ResetTokenData {
@@ -30,4 +31,4 @@ export const AREA_NAME_TO_PROGRAM_ID: Record<string, string> = {
     'educacao fisica': 'educacao-fisica',
     musicoterapia: 'musicoterapia',
     neuropsicologia: 'neuropsicologia',
-}
+};

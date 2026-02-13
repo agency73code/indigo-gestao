@@ -66,6 +66,11 @@ enum faturamento_status {
   rejeitado
 }
 
+enum auth_user_type {
+  terapeuta
+  cliente
+}
+
 model area_atuacao {
   id                    Int                     @id @default(autoincrement())
   nome                  String                  @db.VarChar(100)
@@ -77,6 +82,24 @@ model cargo {
   id                    Int                     @id @default(autoincrement())
   nome                  String                  @db.VarChar(100)
   registro_profissional registro_profissional[]
+}
+
+model auth_refresh_token {
+  id         String         @id @default(uuid())
+  userId     String
+  userType   auth_user_type
+  tokenHash  String         @db.Char(64)
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  deviceName String?        @db.VarChar(255)
+  ip         String?        @db.VarChar(45)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@unique([tokenHash])
+  @@index([userId, userType])
+  @@index([expiresAt])
+  @@index([revokedAt])
 }
 
 model cliente {
