@@ -14,6 +14,7 @@ import aiRoutes from '../features/ai/ai.routes.js';
 import anamneseRoutes from './anamnese.routes.js';
 import atasReuniaoRoutes from '../features/atas-reuniao/ata.routes.js';
 import { billingRoutes } from '../features/billing/billing.routes.js';
+import { mobileRoutes } from '../features/mobile/mobile.routes.js';
 
 const router: ExpressRouter = Router();
 
@@ -31,5 +32,6 @@ router.use('/ai', aiRoutes);
 router.use('/anamneses', anamneseRoutes);
 router.use('/atas-reuniao', atasReuniaoRoutes);
 router.use('/faturamentos', billingRoutes);
+router.use('/mobile', mobileRoutes);
 
 export default router;
