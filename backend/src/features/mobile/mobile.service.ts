@@ -1,10 +1,11 @@
 import { prisma } from "../../config/database.js";
+import { AppError } from "../../errors/AppError.js";
+import { mapBootstrapBase, mapBootstrapEstimulos, mapBootstrapProgramas, mapBootstrapSessoes } from "./mappers/mobile.mapper.js";
 
 export async function getBootstrapBase(therapistId: string) {
     const therapist = await prisma.terapeuta.findFirst({
         where: {
             id: therapistId,
-            atividade: true,
         },
         select: {
             id: true,
@@ -15,6 +16,10 @@ export async function getBootstrapBase(therapistId: string) {
             atualizado_em: true,
         },
     });
+
+    if (!therapist) {
+        throw new AppError('THERAPIST_NOT_FOUND', 'Terapeuta não encontrado ou inativo.', 404);
+    }
 
     const activeLinks = await prisma.terapeuta_cliente.findMany({
         where: {
@@ -54,15 +59,7 @@ export async function getBootstrapBase(therapistId: string) {
         },
     });
 
-    const clientsById = new Map(activeLinks.map((link) => [link.cliente.id, link.cliente]));
-    const areaById = new Map(activeLinks.map((link) => [link.areaAtuacao.id, link.areaAtuacao]));
-
-    return {
-        terapeuta: therapist,
-        clientes: Array.from(clientsById.values()),
-        terapeuta_cliente: activeLinks.map(({ cliente: _cliente, areaAtuacao: _areaAtuacao, ...link }) => link),
-        area_atuacao: Array.from(areaById.values()),
-    };
+    return mapBootstrapBase(therapist, activeLinks);
 }
 
 export async function getBootstrapPrograms(therapistId: string) {
@@ -85,7 +82,7 @@ export async function getBootstrapPrograms(therapistId: string) {
         },
     });
 
-    return { ocps };
+    return mapBootstrapProgramas(ocps);
 }
 
 export async function getBootstrapStimuli(therapistId: string) {
@@ -102,10 +99,7 @@ export async function getBootstrapStimuli(therapistId: string) {
     const ocpIds = activeOcps.map((ocp) => ocp.id);
 
     if (ocpIds.length === 0) {
-        return {
-            estimulo_ocp: [],
-            estimulos: [],
-        };
+        return mapBootstrapEstimulos([], []);
     }
 
     const stimulusOcp = await prisma.estimulo_ocp.findMany({
@@ -140,10 +134,7 @@ export async function getBootstrapStimuli(therapistId: string) {
         })
         : [];
     
-    return {
-        estimulo_ocp: stimulusOcp,
-        estimulos: stimuli,
-    };
+    return mapBootstrapEstimulos(stimulusOcp, stimuli);
 }
 
 export async function getBootstrapSessions(therapistId: string, days: number) {
@@ -177,12 +168,7 @@ export async function getBootstrapSessions(therapistId: string, days: number) {
     const sessionsIds = sessions.map((session) => session.id);
 
     if (sessionsIds.length === 0) {
-        return {
-            sessoes: [],
-            sessao_trials: [],
-            faturamentos: [],
-            sessao_arquivos: [],
-        };
+        return mapBootstrapSessoes([], [], [], []);
     }
 
     const [sessionTrials, billings, sessionFiles] = await Promise.all([
@@ -245,10 +231,5 @@ export async function getBootstrapSessions(therapistId: string, days: number) {
         }),
     ]);
 
-    return {
-        sessoes: sessions,
-        sessao_trial: sessionTrials,
-        faturamentos: billings,
-        sessao_arquivos: sessionFiles,
-    };
+    return mapBootstrapSessoes(sessions, sessionTrials, billings, sessionFiles);
 }
