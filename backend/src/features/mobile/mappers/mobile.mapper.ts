@@ -1,3 +1,4 @@
+import { buildAvatarUrl } from '../../../utils/avatar-url.js';
 import type {
     BaseLink,
     BaseTherapist,
@@ -39,6 +40,8 @@ export function mapBootstrapBase(therapist: BaseTherapist, activeLinks: BaseLink
             nome: client.nome,
             status: client.status,
             emailContato: client.emailContato,
+            dataNascimento: client.dataNascimento,
+            avatarUrl: buildAvatarUrl(client.arquivos),
             atualizadoEm: toIsoOrNull(client.atualizado_em),
         })),
         terapeutaClientes: activeLinks.map(({ cliente: _cliente, areaAtuacao: _areaAtuacao, ...link }) => ({

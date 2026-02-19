@@ -24,7 +24,11 @@ export type BaseLink = {
         nome: string | null;
         status: string | null;
         emailContato: string | null;
+        dataNascimento: Date | null;
         atualizado_em: Date;
+        arquivos: {
+            arquivo_id: string | null;
+        }[];
     };
     areaAtuacao: {
         id: number;

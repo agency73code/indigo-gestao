@@ -47,7 +47,15 @@ export async function getBootstrapBase(therapistId: string) {
                     nome: true,
                     status: true,
                     emailContato: true,
+                    dataNascimento: true,
                     atualizado_em: true,
+                    arquivos: {
+                        where: { tipo: 'fotoPerfil' },
+                        select: {
+                            arquivo_id: true,
+                        },
+                        take: 1,
+                    },
                 },
             },
             areaAtuacao: {
