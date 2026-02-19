@@ -16,6 +16,7 @@ import {
   mockSupervisionLinks,
 } from '../mocks/links.mock';
 import type { TherapistListDTO, TherapistSelectDTO } from '@/features/therapists/types';
+import { authFetch } from '@/lib/http';
 
 export async function searchTherapists(role: 'supervisor' | 'clinico' | 'all', search: string): Promise<TherapistSelectDTO[]> {
   try {
@@ -361,9 +362,8 @@ export async function getAllLinks(filters?: LinkFilters): Promise<PatientTherapi
   const baseQuery =
     '?' + new URLSearchParams(filters as Record<string, string>).toString();
 
-  const res = await fetch(`/api/links/getAllLinks${baseQuery}`, {
+  const res = await authFetch(`/api/links/getAllLinks${baseQuery}`, {
     method: 'GET',
-    credentials: 'include',
   });
 
   if (!res.ok) {

@@ -58,7 +58,7 @@ export async function findValidRefreshTokenByHash(tokenHash: string): Promise<Re
 export async function revokeRefreshTokenById(id: string) {
     await prisma.$executeRaw`
         UPDATE auth_refresh_token
-        SET revokedAt = NOW(3), updateAt = NOW(3)
+        SET revokedAt = NOW(3), updatedAt = NOW(3)
         WHERE id = ${id} AND revokedAt IS NULL
     `;
 }
@@ -66,7 +66,7 @@ export async function revokeRefreshTokenById(id: string) {
 export async function revokeRefreshTokenByHash(tokenHash: string) {
     await prisma.$executeRaw`
         UPDATE auth_refresh_token
-        SET revokedAt = NOW(3), updateAt = NOW(3)
+        SET revokedAt = NOW(3), updatedAt = NOW(3)
         WHERE tokenHash = ${tokenHash} AND revokedAt IS NULL
     `;
 }
