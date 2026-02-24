@@ -12,7 +12,13 @@ export const ClienteTherapistLinkListSelect = Prisma.validator<Prisma.terapeuta_
     areaAtuacao: {
         select: { nome: true },
     },
-    valor_sessao: true,
+    valor_cliente_sessao: true,
+    valor_sessao_consultorio: true,
+    valor_sessao_homecare: true,
+    valor_hora_desenvolvimento_materiais: true,
+    valor_hora_supervisao_recebida: true,
+    valor_hora_supervisao_dada: true,
+    valor_hora_reuniao: true,
     criado_em: true,
     atualizado_em: true,
 });

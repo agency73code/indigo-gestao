@@ -72,13 +72,14 @@ export function mapBillingListItem(item: BillingListItem) {
         item.fim_em,
     );
     const ref = resolveBillingOrigin(item);
+    const link = item.cliente.terapeuta.find((l) => l.terapeuta_id === item.terapeuta_id);
     const values: Record<faturamento_tipo_atendimento, Prisma.Decimal | null> = {
-        consultorio: item.terapeuta.valor_sessao_consultorio,
-        homecare: item.terapeuta.valor_sessao_homecare,
-        reuniao: item.terapeuta.valor_hora_reuniao,
-        desenvolvimento_materiais: item.terapeuta.valor_hora_desenvolvimento_materiais,
-        supervisao_dada: item.terapeuta.valor_hora_supervisao_dada,
-        supervisao_recebida: item.terapeuta.valor_hora_supervisao_recebida,
+        consultorio: link?.valor_sessao_consultorio ?? null,
+        homecare: link?.valor_sessao_homecare ?? null,
+        reuniao: link?.valor_hora_reuniao ?? null,
+        desenvolvimento_materiais: link?.valor_hora_desenvolvimento_materiais ?? null,
+        supervisao_dada: link?.valor_hora_supervisao_dada ?? null,
+        supervisao_recebida: link?.valor_hora_supervisao_recebida ?? null,
     };
     const therapistRate = getBillingRateByType(values, item.tipo_atendimento);
     const durationMinutes = computeDurationMinutes(time.start, time.end);
@@ -94,7 +95,7 @@ export function mapBillingListItem(item: BillingListItem) {
         : totalHoursValue;
 
     const totalValueNumber = totalValue.toNumber();
-    const clientRate = item.cliente.terapeuta.find((link) => link.terapeuta_id === item.terapeuta_id)?.valor_sessao ?? null;
+    const clientRate = item.cliente.terapeuta.find((l) => l.terapeuta_id === item.terapeuta_id)?.valor_cliente_sessao ?? null;
     const clientRateValue = clientRate ? clientRate.toNumber() : 0;
 
     // Buscar área do lançamento e registro profissional correspondente

@@ -142,17 +142,23 @@ export async function getBillingSummary(params: billingSummaryPayload) {
             tipo_atendimento: true,
             status: true,
             valor_ajuda_custo: true,
-            terapeuta: {
+            terapeuta_id: true,
+            cliente: {
                 select: {
-                    valor_hora_desenvolvimento_materiais: true,
-                    valor_hora_reuniao: true,
-                    valor_hora_supervisao_dada: true,
-                    valor_hora_supervisao_recebida: true,
-                    valor_sessao_consultorio: true,
-                    valor_sessao_homecare: true,
-                }
-            }
-        }
+                    terapeuta: {
+                        select: {
+                            terapeuta_id: true,
+                            valor_sessao_consultorio: true,
+                            valor_sessao_homecare: true,
+                            valor_hora_desenvolvimento_materiais: true,
+                            valor_hora_supervisao_recebida: true,
+                            valor_hora_supervisao_dada: true,
+                            valor_hora_reuniao: true,
+                        },
+                    },
+                },
+            },
+        },
     });
 
     return mapBillingSummary(data);
