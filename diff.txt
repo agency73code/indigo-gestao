@@ -1,0 +1,1432 @@
+diff --git a/backend/prisma/migrations/20260223000000_mover_valores_para_terapeuta_cliente/migration.sql b/backend/prisma/migrations/20260223000000_mover_valores_para_terapeuta_cliente/migration.sql
+new file mode 100644
+index 0000000..c5ebcae
+--- /dev/null
++++ b/backend/prisma/migrations/20260223000000_mover_valores_para_terapeuta_cliente/migration.sql
+@@ -0,0 +1,19 @@
++-- Renomeia valor_sessao para valor_cliente_sessao e adiciona os 6 campos de valor por tipo de atendimento
++ALTER TABLE `terapeuta_cliente`
++  CHANGE COLUMN `valor_sessao` `valor_cliente_sessao` DECIMAL(10,2) NOT NULL,
++  ADD COLUMN `valor_sessao_consultorio`             DECIMAL(10,2) NOT NULL DEFAULT 0.00,
++  ADD COLUMN `valor_sessao_homecare`                DECIMAL(10,2) NOT NULL DEFAULT 0.00,
++  ADD COLUMN `valor_hora_desenvolvimento_materiais` DECIMAL(10,2) NOT NULL DEFAULT 0.00,
++  ADD COLUMN `valor_hora_supervisao_recebida`       DECIMAL(10,2) NOT NULL DEFAULT 0.00,
++  ADD COLUMN `valor_hora_supervisao_dada`           DECIMAL(10,2) NOT NULL DEFAULT 0.00,
++  ADD COLUMN `valor_hora_reuniao`                   DECIMAL(10,2) NOT NULL DEFAULT 0.00;
++
++-- Remove os campos de valor da tabela terapeuta (agora pertencem ao vínculo terapeuta_cliente)
++ALTER TABLE `terapeuta`
++  DROP COLUMN `valor_hora`,
++  DROP COLUMN `valor_sessao_consultorio`,
++  DROP COLUMN `valor_sessao_homecare`,
++  DROP COLUMN `valor_hora_desenvolvimento_materiais`,
++  DROP COLUMN `valor_hora_supervisao_recebida`,
++  DROP COLUMN `valor_hora_supervisao_dada`,
++  DROP COLUMN `valor_hora_reuniao`;
+\ No newline at end of file
+diff --git a/backend/prisma/schema.prisma b/backend/prisma/schema.prisma
+index f47d949..1f87bdc 100644
+--- a/backend/prisma/schema.prisma
++++ b/backend/prisma/schema.prisma
+@@ -313,13 +313,6 @@ model terapeuta {
+   agencia                              String?
+   conta                                String?
+   chave_pix                            String?
+-  valor_hora                           Decimal?                @db.Decimal(10, 2)
+-  valor_sessao_consultorio             Decimal?                @db.Decimal(10, 2)
+-  valor_sessao_homecare                Decimal?                @db.Decimal(10, 2)
+-  valor_hora_desenvolvimento_materiais Decimal?                @db.Decimal(10, 2)
+-  valor_hora_supervisao_recebida       Decimal?                @db.Decimal(10, 2)
+-  valor_hora_supervisao_dada           Decimal?                @db.Decimal(10, 2)
+-  valor_hora_reuniao                   Decimal?                @db.Decimal(10, 2)
+   professor_uni                        Boolean                 @default(false)
+   endereco_id                          Int?
+   data_entrada                         DateTime
+@@ -948,9 +941,15 @@ model terapeuta_cliente {
+   status          String       @default("active")
+   area_atuacao_id Int
+   areaAtuacao     area_atuacao @relation(fields: [area_atuacao_id], references: [id], onDelete: Restrict)
+-  valor_sessao    Decimal      @db.Decimal(10, 2)
+-  atualizado_em   DateTime     @updatedAt
+-  criado_em       DateTime     @default(now())
++  valor_cliente_sessao                 Decimal      @db.Decimal(10, 2)
++  valor_sessao_consultorio             Decimal      @db.Decimal(10, 2)
++  valor_sessao_homecare                Decimal      @db.Decimal(10, 2)
++  valor_hora_desenvolvimento_materiais Decimal      @db.Decimal(10, 2)
++  valor_hora_supervisao_recebida       Decimal      @db.Decimal(10, 2)
++  valor_hora_supervisao_dada           Decimal      @db.Decimal(10, 2)
++  valor_hora_reuniao                   Decimal      @db.Decimal(10, 2)
++  atualizado_em                        DateTime     @updatedAt
++  criado_em                            DateTime     @default(now())
+ 
+   @@unique([terapeuta_id, cliente_id])
+   @@index([terapeuta_id])
+diff --git a/backend/prisma/seed-therapist.ts b/backend/prisma/seed-therapist.ts
+index c066ff7..b726d7f 100644
+--- a/backend/prisma/seed-therapist.ts
++++ b/backend/prisma/seed-therapist.ts
+@@ -176,7 +176,6 @@ async function seedTherapist(i: number, senha: string) {
+                 conta: faker.helpers.replaceSymbols('#########'),
+                 chave_pix: therapist.cpf,
+                 pix_tipo: 'cpf',
+-                valor_hora: faker.finance.amount({ min: 120, max: 600, dec: 2 }),
+                 professor_uni: false,
+ 
+                 endereco: {
+diff --git a/backend/src/features/billing/billing.service.ts b/backend/src/features/billing/billing.service.ts
+index 070024c..6304091 100644
+--- a/backend/src/features/billing/billing.service.ts
++++ b/backend/src/features/billing/billing.service.ts
+@@ -142,17 +142,23 @@ export async function getBillingSummary(params: billingSummaryPayload) {
+             tipo_atendimento: true,
+             status: true,
+             valor_ajuda_custo: true,
+-            terapeuta: {
++            terapeuta_id: true,
++            cliente: {
+                 select: {
+-                    valor_hora_desenvolvimento_materiais: true,
+-                    valor_hora_reuniao: true,
+-                    valor_hora_supervisao_dada: true,
+-                    valor_hora_supervisao_recebida: true,
+-                    valor_sessao_consultorio: true,
+-                    valor_sessao_homecare: true,
+-                }
+-            }
+-        }
++                    terapeuta: {
++                        select: {
++                            terapeuta_id: true,
++                            valor_sessao_consultorio: true,
++                            valor_sessao_homecare: true,
++                            valor_hora_desenvolvimento_materiais: true,
++                            valor_hora_supervisao_recebida: true,
++                            valor_hora_supervisao_dada: true,
++                            valor_hora_reuniao: true,
++                        },
++                    },
++                },
++            },
++        },
+     });
+ 
+     return mapBillingSummary(data);
+diff --git a/backend/src/features/billing/mappers/mapBillingListItem.ts b/backend/src/features/billing/mappers/mapBillingListItem.ts
+index 76e31b0..32459cc 100644
+--- a/backend/src/features/billing/mappers/mapBillingListItem.ts
++++ b/backend/src/features/billing/mappers/mapBillingListItem.ts
+@@ -72,13 +72,14 @@ export function mapBillingListItem(item: BillingListItem) {
+         item.fim_em,
+     );
+     const ref = resolveBillingOrigin(item);
++    const link = item.cliente.terapeuta.find((l) => l.terapeuta_id === item.terapeuta_id);
+     const values: Record<faturamento_tipo_atendimento, Prisma.Decimal | null> = {
+-        consultorio: item.terapeuta.valor_sessao_consultorio,
+-        homecare: item.terapeuta.valor_sessao_homecare,
+-        reuniao: item.terapeuta.valor_hora_reuniao,
+-        desenvolvimento_materiais: item.terapeuta.valor_hora_desenvolvimento_materiais,
+-        supervisao_dada: item.terapeuta.valor_hora_supervisao_dada,
+-        supervisao_recebida: item.terapeuta.valor_hora_supervisao_recebida,
++        consultorio: link?.valor_sessao_consultorio ?? null,
++        homecare: link?.valor_sessao_homecare ?? null,
++        reuniao: link?.valor_hora_reuniao ?? null,
++        desenvolvimento_materiais: link?.valor_hora_desenvolvimento_materiais ?? null,
++        supervisao_dada: link?.valor_hora_supervisao_dada ?? null,
++        supervisao_recebida: link?.valor_hora_supervisao_recebida ?? null,
+     };
+     const therapistRate = getBillingRateByType(values, item.tipo_atendimento);
+     const durationMinutes = computeDurationMinutes(time.start, time.end);
+@@ -94,11 +95,11 @@ export function mapBillingListItem(item: BillingListItem) {
+         : totalHoursValue;
+ 
+     const totalValueNumber = totalValue.toNumber();
+-    const clientRate = item.cliente.terapeuta.find((link) => link.terapeuta_id === item.terapeuta_id)?.valor_sessao ?? null;
++    const clientRate = item.cliente.terapeuta.find((l) => l.terapeuta_id === item.terapeuta_id)?.valor_cliente_sessao ?? null;
+     const clientRateValue = clientRate ? clientRate.toNumber() : 0;
+ 
+     // Buscar área do lançamento e registro profissional correspondente
+-    const areaLancamento = item.sessao?.ocp.area ?? item.ata?.cabecalho_area_atuacao;
++    const areaLancamento = item.sessao?.ocp?.area ?? item.ata?.cabecalho_area_atuacao;
+     const registroProfissional = getRegistroProfissional(
+         item.terapeuta.registro_profissional,
+         areaLancamento
+diff --git a/backend/src/features/billing/mappers/mapBillingSummary.ts b/backend/src/features/billing/mappers/mapBillingSummary.ts
+index 910e0a2..5e76681 100644
+--- a/backend/src/features/billing/mappers/mapBillingSummary.ts
++++ b/backend/src/features/billing/mappers/mapBillingSummary.ts
+@@ -23,13 +23,14 @@ export function mapBillingSummary(data: BillingSummaryItem[]) {
+         const time = buildLocalSessionTime(item.inicio_em, item.fim_em);
+         const durationMinutes = computeDurationMinutes(time.start, time.end) ?? 0;
+ 
++        const link = item.cliente.terapeuta.find((l) => l.terapeuta_id === item.terapeuta_id);
+         const values: Record<faturamento_tipo_atendimento, Prisma.Decimal | null> = {
+-            consultorio: item.terapeuta.valor_sessao_consultorio,
+-            homecare: item.terapeuta.valor_sessao_homecare,
+-            reuniao: item.terapeuta.valor_hora_reuniao,
+-            desenvolvimento_materiais: item.terapeuta.valor_hora_desenvolvimento_materiais,
+-            supervisao_dada: item.terapeuta.valor_hora_supervisao_dada,
+-            supervisao_recebida: item.terapeuta.valor_hora_supervisao_recebida,
++            consultorio: link?.valor_sessao_consultorio ?? null,
++            homecare: link?.valor_sessao_homecare ?? null,
++            reuniao: link?.valor_hora_reuniao ?? null,
++            desenvolvimento_materiais: link?.valor_hora_desenvolvimento_materiais ?? null,
++            supervisao_dada: link?.valor_hora_supervisao_dada ?? null,
++            supervisao_recebida: link?.valor_hora_supervisao_recebida ?? null,
+         };
+ 
+         const rate = getBillingRateByType(values, item.tipo_atendimento);
+diff --git a/backend/src/features/billing/queries/billingListSelect.ts b/backend/src/features/billing/queries/billingListSelect.ts
+index 8dc8410..4770792 100644
+--- a/backend/src/features/billing/queries/billingListSelect.ts
++++ b/backend/src/features/billing/queries/billingListSelect.ts
+@@ -43,12 +43,6 @@ export const billingListSelect = Prisma.validator<Prisma.faturamentoSelect>()({
+                     },
+                 },
+             },
+-            valor_hora_desenvolvimento_materiais: true,
+-            valor_hora_reuniao: true,
+-            valor_hora_supervisao_dada: true,
+-            valor_hora_supervisao_recebida: true,
+-            valor_sessao_consultorio: true,
+-            valor_sessao_homecare: true,
+         },
+     },
+     cliente_id: true,
+@@ -65,7 +59,13 @@ export const billingListSelect = Prisma.validator<Prisma.faturamentoSelect>()({
+             terapeuta: {
+                 select: {
+                     terapeuta_id: true,
+-                    valor_sessao: true,
++                    valor_cliente_sessao: true,
++                    valor_sessao_consultorio: true,
++                    valor_sessao_homecare: true,
++                    valor_hora_desenvolvimento_materiais: true,
++                    valor_hora_supervisao_recebida: true,
++                    valor_hora_supervisao_dada: true,
++                    valor_hora_reuniao: true,
+                 },
+             },
+         },
+diff --git a/backend/src/features/billing/types/BillingSummaryItem.ts b/backend/src/features/billing/types/BillingSummaryItem.ts
+index 0f651ea..0a5b68d 100644
+--- a/backend/src/features/billing/types/BillingSummaryItem.ts
++++ b/backend/src/features/billing/types/BillingSummaryItem.ts
+@@ -6,12 +6,16 @@ export type BillingSummaryItem = {
+     tipo_atendimento: faturamento_tipo_atendimento;
+     status: "pendente" | "aprovado" | "rejeitado";
+     valor_ajuda_custo: Prisma.Decimal | null;
+-    terapeuta: {
+-        valor_hora_desenvolvimento_materiais: Prisma.Decimal | null;
+-        valor_hora_reuniao: Prisma.Decimal | null;
+-        valor_hora_supervisao_dada: Prisma.Decimal | null;
+-        valor_hora_supervisao_recebida: Prisma.Decimal | null;
+-        valor_sessao_consultorio: Prisma.Decimal | null;
+-        valor_sessao_homecare: Prisma.Decimal | null;
++    terapeuta_id: string;
++    cliente: {
++        terapeuta: Array<{
++            terapeuta_id: string;
++            valor_sessao_consultorio: Prisma.Decimal;
++            valor_sessao_homecare: Prisma.Decimal;
++            valor_hora_desenvolvimento_materiais: Prisma.Decimal;
++            valor_hora_supervisao_recebida: Prisma.Decimal;
++            valor_hora_supervisao_dada: Prisma.Decimal;
++            valor_hora_reuniao: Prisma.Decimal;
++        }>;
+     };
+ };
+\ No newline at end of file
+diff --git a/backend/src/features/billing/utils/getBillingRateByType.ts b/backend/src/features/billing/utils/getBillingRateByType.ts
+index 8c4c7c2..11a744e 100644
+--- a/backend/src/features/billing/utils/getBillingRateByType.ts
++++ b/backend/src/features/billing/utils/getBillingRateByType.ts
+@@ -1,4 +1,4 @@
+-import type { faturamento_tipo_atendimento, Prisma } from "@prisma/client";
++import { Prisma, type faturamento_tipo_atendimento } from "@prisma/client";
+ 
+ export function getBillingRateByType(
+     values: Record<faturamento_tipo_atendimento, Prisma.Decimal | null>,
+@@ -7,7 +7,7 @@ export function getBillingRateByType(
+     const value = values[typeService];
+ 
+     if (!value) {
+-        throw new Error(`Valor não configurado para o tipo ${typeService}`);
++        return new Prisma.Decimal(0);
+     }
+ 
+     return value;
+diff --git a/backend/src/features/links/links.schema.ts b/backend/src/features/links/links.schema.ts
+index 8ccc75e..4382e31 100644
+--- a/backend/src/features/links/links.schema.ts
++++ b/backend/src/features/links/links.schema.ts
+@@ -11,7 +11,13 @@ export const linksSchema = z.object({
+     startDate: dateStringToDate,
+     notes: z.string().nullable().default(null),
+     actuationArea: z.string({ message: 'Informe a area de atuação' }),
+-    valorSessao: z.number({ message: 'Informe o valor da sessão' }).positive({ message: 'Informe um valor da sessão positivo' }),
++    valorClienteSessao: z.number({ message: 'Informe o valor da sessão do cliente' }).positive({ message: 'Informe um valor da sessão do cliente positivo' }),
++    valorSessaoConsultorio: z.number({ message: 'Informe o valor da sessão em consultório' }).positive({ message: 'Informe um valor positivo' }),
++    valorSessaoHomecare: z.number({ message: 'Informe o valor da sessão homecare' }).positive({ message: 'Informe um valor positivo' }),
++    valorHoraDesenvolvimentoMateriais: z.number({ message: 'Informe o valor/hora de desenvolvimento de materiais' }).positive({ message: 'Informe um valor positivo' }),
++    valorHoraSupervisaoRecebida: z.number({ message: 'Informe o valor/hora de supervisão recebida' }).positive({ message: 'Informe um valor positivo' }),
++    valorHoraSupervisaoDada: z.number({ message: 'Informe o valor/hora de supervisão dada' }).positive({ message: 'Informe um valor positivo' }),
++    valorHoraReuniao: z.number({ message: 'Informe o valor/hora de reunião' }).positive({ message: 'Informe um valor positivo' }),
+ });
+ 
+ export const transferResponsibleSchema = z.object({
+@@ -30,7 +36,13 @@ export const linksUpdateSchema = z.object({
+     endDate: nullableDateStringToDate,
+     notes: z.string().nullable().default(null),
+     actuationArea: z.string({ message: 'Informe a area de atuação' }),
+-    valorSessao: z.number({ message: 'Informe o valor da sessão' }).positive({ message: 'Informe um valor da sessão positivo' }),
++    valorClienteSessao: z.number({ message: 'Informe o valor da sessão do cliente' }).positive({ message: 'Informe um valor da sessão do cliente positivo' }),
++    valorSessaoConsultorio: z.number({ message: 'Informe o valor da sessão em consultório' }).positive({ message: 'Informe um valor positivo' }),
++    valorSessaoHomecare: z.number({ message: 'Informe o valor da sessão homecare' }).positive({ message: 'Informe um valor positivo' }),
++    valorHoraDesenvolvimentoMateriais: z.number({ message: 'Informe o valor/hora de desenvolvimento de materiais' }).positive({ message: 'Informe um valor positivo' }),
++    valorHoraSupervisaoRecebida: z.number({ message: 'Informe o valor/hora de supervisão recebida' }).positive({ message: 'Informe um valor positivo' }),
++    valorHoraSupervisaoDada: z.number({ message: 'Informe o valor/hora de supervisão dada' }).positive({ message: 'Informe um valor positivo' }),
++    valorHoraReuniao: z.number({ message: 'Informe o valor/hora de reunião' }).positive({ message: 'Informe um valor positivo' }),
+ })
+ 
+ 
+diff --git a/backend/src/features/links/mappers/mapLinkToDTO.ts b/backend/src/features/links/mappers/mapLinkToDTO.ts
+index c3e6bb9..1ed751d 100644
+--- a/backend/src/features/links/mappers/mapLinkToDTO.ts
++++ b/backend/src/features/links/mappers/mapLinkToDTO.ts
+@@ -11,7 +11,13 @@ export function mapLinkToDTO(link: ClienteTherapistLinkListItem) {
+         status: link.status,
+         notes: link.observacoes ?? undefined,
+         actuationArea: link.areaAtuacao.nome,
+-        valorSessao: link.valor_sessao,
++        valorClienteSessao: link.valor_cliente_sessao,
++        valorSessaoConsultorio: link.valor_sessao_consultorio,
++        valorSessaoHomecare: link.valor_sessao_homecare,
++        valorHoraDesenvolvimentoMateriais: link.valor_hora_desenvolvimento_materiais,
++        valorHoraSupervisaoRecebida: link.valor_hora_supervisao_recebida,
++        valorHoraSupervisaoDada: link.valor_hora_supervisao_dada,
++        valorHoraReuniao: link.valor_hora_reuniao,
+         createdAt: link.criado_em,
+         updatedAt: link.atualizado_em,
+     };
+diff --git a/backend/src/features/links/old/links.service.ts b/backend/src/features/links/old/links.service.ts
+index d73421e..cab3bb0 100644
+--- a/backend/src/features/links/old/links.service.ts
++++ b/backend/src/features/links/old/links.service.ts
+@@ -55,9 +55,15 @@ export async function createLink(payload: linksPayload) {
+                     papel: payload.role,
+                     status: 'active',
+                     data_inicio: new Date(payload.startDate),
+-                    observacoes: payload.notes ,
++                    observacoes: payload.notes,
+                     area_atuacao_id: actuationArea.id,
+-                    valor_sessao: payload.valorSessao,
++                    valor_cliente_sessao: payload.valorClienteSessao,
++                    valor_sessao_consultorio: payload.valorSessaoConsultorio,
++                    valor_sessao_homecare: payload.valorSessaoHomecare,
++                    valor_hora_desenvolvimento_materiais: payload.valorHoraDesenvolvimentoMateriais,
++                    valor_hora_supervisao_recebida: payload.valorHoraSupervisaoRecebida,
++                    valor_hora_supervisao_dada: payload.valorHoraSupervisaoDada,
++                    valor_hora_reuniao: payload.valorHoraReuniao,
+                 },
+                 select: ClienteTherapistLinkListSelect
+             });
+@@ -173,7 +179,13 @@ export async function updateLink(payload: linksUpdatePayload) {
+                 data_fim: payload.endDate,
+                 observacoes: payload.notes,
+                 area_atuacao_id: actuationArea.id,
+-                valor_sessao: payload.valorSessao,
++                valor_cliente_sessao: payload.valorClienteSessao,
++                valor_sessao_consultorio: payload.valorSessaoConsultorio,
++                valor_sessao_homecare: payload.valorSessaoHomecare,
++                valor_hora_desenvolvimento_materiais: payload.valorHoraDesenvolvimentoMateriais,
++                valor_hora_supervisao_recebida: payload.valorHoraSupervisaoRecebida,
++                valor_hora_supervisao_dada: payload.valorHoraSupervisaoDada,
++                valor_hora_reuniao: payload.valorHoraReuniao,
+             },
+             select: ClienteTherapistLinkListSelect,
+         });
+diff --git a/backend/src/features/links/old/links.types.ts b/backend/src/features/links/old/links.types.ts
+index 03889f7..e2d5572 100644
+--- a/backend/src/features/links/old/links.types.ts
++++ b/backend/src/features/links/old/links.types.ts
+@@ -90,7 +90,6 @@ export interface DBTherapist {
+     agencia: string | null;
+     conta: string | null;
+     chave_pix: string | null;
+-    valor_hora: unknown;
+     professor_uni: boolean;
+     data_entrada: Date;
+     data_saida: Date | null;
+@@ -134,6 +133,13 @@ export type CreateLink = {
+     endDate?: string | null | undefined;
+     notes?: string | null | undefined;
+     actuationArea: string;
++    valorClienteSessao: number;
++    valorSessaoConsultorio: number;
++    valorSessaoHomecare: number;
++    valorHoraDesenvolvimentoMateriais: number;
++    valorHoraSupervisaoRecebida: number;
++    valorHoraSupervisaoDada: number;
++    valorHoraReuniao: number;
+ };
+ 
+ export type ArchiveLink = {
+@@ -153,6 +159,13 @@ export type UpdateLink = {
+     notes?: string | null | undefined;
+     status?: 'active' | 'ended' | 'archived' | undefined;
+     actuationArea?: string | undefined;
++    valorClienteSessao?: number;
++    valorSessaoConsultorio?: number;
++    valorSessaoHomecare?: number;
++    valorHoraDesenvolvimentoMateriais?: number;
++    valorHoraSupervisaoRecebida?: number;
++    valorHoraSupervisaoDada?: number;
++    valorHoraReuniao?: number;
+ };
+ 
+ export type TransferResponsible = {
+diff --git a/backend/src/features/links/queries/ClienteTherapistLink.ts b/backend/src/features/links/queries/ClienteTherapistLink.ts
+index bfcfe0b..81e9d5f 100644
+--- a/backend/src/features/links/queries/ClienteTherapistLink.ts
++++ b/backend/src/features/links/queries/ClienteTherapistLink.ts
+@@ -12,7 +12,13 @@ export const ClienteTherapistLinkListSelect = Prisma.validator<Prisma.terapeuta_
+     areaAtuacao: {
+         select: { nome: true },
+     },
+-    valor_sessao: true,
++    valor_cliente_sessao: true,
++    valor_sessao_consultorio: true,
++    valor_sessao_homecare: true,
++    valor_hora_desenvolvimento_materiais: true,
++    valor_hora_supervisao_recebida: true,
++    valor_hora_supervisao_dada: true,
++    valor_hora_reuniao: true,
+     criado_em: true,
+     atualizado_em: true,
+ });
+diff --git a/backend/src/features/mobile/mappers/mobile.mapper.ts b/backend/src/features/mobile/mappers/mobile.mapper.ts
+index 9c287a4..eec8b7d 100644
+--- a/backend/src/features/mobile/mappers/mobile.mapper.ts
++++ b/backend/src/features/mobile/mappers/mobile.mapper.ts
+@@ -49,7 +49,13 @@ export function mapBootstrapBase(therapist: BaseTherapist, activeLinks: BaseLink
+             terapeutaId: link.terapeuta_id,
+             clienteId: link.cliente_id,
+             areaAtuacaoId: link.area_atuacao_id,
+-            valorSessao: decimalToNumber(link.valor_sessao),
++            valorClienteSessao: decimalToNumber(link.valor_cliente_sessao),
++            valorSessaoConsultorio: decimalToNumber(link.valor_sessao_consultorio),
++            valorSessaoHomecare: decimalToNumber(link.valor_sessao_homecare),
++            valorHoraDesenvolvimentoMateriais: decimalToNumber(link.valor_hora_desenvolvimento_materiais),
++            valorHoraSupervisaoRecebida: decimalToNumber(link.valor_hora_supervisao_recebida),
++            valorHoraSupervisaoDada: decimalToNumber(link.valor_hora_supervisao_dada),
++            valorHoraReuniao: decimalToNumber(link.valor_hora_reuniao),
+             dataInicio: link.data_inicio.toISOString(),
+             dataFim: toIsoOrNull(link.data_fim),
+             papel: link.papel,
+diff --git a/backend/src/features/mobile/mappers/mobile.mapper.types.ts b/backend/src/features/mobile/mappers/mobile.mapper.types.ts
+index dab8bff..d0b5208 100644
+--- a/backend/src/features/mobile/mappers/mobile.mapper.types.ts
++++ b/backend/src/features/mobile/mappers/mobile.mapper.types.ts
+@@ -12,7 +12,13 @@ export type BaseLink = {
+     terapeuta_id: string;
+     cliente_id: string;
+     area_atuacao_id: number;
+-    valor_sessao: unknown;
++    valor_cliente_sessao: unknown;
++    valor_sessao_consultorio: unknown;
++    valor_sessao_homecare: unknown;
++    valor_hora_desenvolvimento_materiais: unknown;
++    valor_hora_supervisao_recebida: unknown;
++    valor_hora_supervisao_dada: unknown;
++    valor_hora_reuniao: unknown;
+     data_inicio: Date;
+     data_fim: Date | null;
+     papel: string;
+diff --git a/backend/src/features/mobile/mobile.service.ts b/backend/src/features/mobile/mobile.service.ts
+index f743788..4bfdd6b 100644
+--- a/backend/src/features/mobile/mobile.service.ts
++++ b/backend/src/features/mobile/mobile.service.ts
+@@ -34,7 +34,13 @@ export async function getBootstrapBase(therapistId: string) {
+             terapeuta_id: true,
+             cliente_id: true,
+             area_atuacao_id: true,
+-            valor_sessao: true,
++            valor_cliente_sessao: true,
++            valor_sessao_consultorio: true,
++            valor_sessao_homecare: true,
++            valor_hora_desenvolvimento_materiais: true,
++            valor_hora_supervisao_recebida: true,
++            valor_hora_supervisao_dada: true,
++            valor_hora_reuniao: true,
+             data_inicio: true,
+             data_fim: true,
+             papel: true,
+diff --git a/backend/src/features/therapist/mappers/mapTherapist.ts b/backend/src/features/therapist/mappers/mapTherapist.ts
+index 31c503d..83407ed 100644
+--- a/backend/src/features/therapist/mappers/mapTherapist.ts
++++ b/backend/src/features/therapist/mappers/mapTherapist.ts
+@@ -35,12 +35,6 @@ export function mapTherapist(dto: TherapistRow) {
+ 
+         dataInicio: toDateOnly(dto.data_entrada),
+         dataFim: dto.data_saida ? toDateOnly(dto.data_saida) : undefined,
+-        valorSessaoConsultorio: dto.valor_sessao_consultorio,
+-        valorSessaoHomecare: dto.valor_sessao_homecare,
+-        valorHoraDesenvolvimentoMateriais: dto.valor_hora_desenvolvimento_materiais,
+-        valorHoraSupervisaoRecebida: dto.valor_hora_supervisao_recebida,
+-        valorHoraSupervisaoDada: dto.valor_hora_supervisao_dada,
+-        valorHoraReuniao: dto.valor_hora_reuniao,
+         professorUnindigo: dto.professor_uni ? 'sim' : 'nao',
+         disciplinaUniindigo: dto.disciplina[0]?.nome,
+ 
+diff --git a/backend/src/features/therapist/querys/queryTherapist.ts b/backend/src/features/therapist/querys/queryTherapist.ts
+index fe21d8b..79e8afb 100644
+--- a/backend/src/features/therapist/querys/queryTherapist.ts
++++ b/backend/src/features/therapist/querys/queryTherapist.ts
+@@ -42,12 +42,6 @@ export const queryTherapist = {
+ 
+     data_entrada: true,
+     data_saida: true,
+-    valor_sessao_consultorio: true,
+-    valor_sessao_homecare: true,
+-    valor_hora_desenvolvimento_materiais: true,
+-    valor_hora_supervisao_recebida: true,
+-    valor_hora_supervisao_dada: true,
+-    valor_hora_reuniao: true,
+     professor_uni: true,
+     disciplina: { select: { nome: true } },
+ 
+diff --git a/backend/src/features/therapist/therapist.normalizer.ts b/backend/src/features/therapist/therapist.normalizer.ts
+index 7ea7382..a61a98d 100644
+--- a/backend/src/features/therapist/therapist.normalizer.ts
++++ b/backend/src/features/therapist/therapist.normalizer.ts
+@@ -37,7 +37,6 @@ export function normalizeTherapistForm(db: TherapistTypes.TherapistDB) {
+         conta: db.conta ?? '',
+         chavePix: db.chave_pix ?? '',
+         pixTipo: db.pix_tipo ?? '',
+-        valorHoraAcordado: db.valor_hora?.toString() ?? '',
+         professorUnindigo: db.professor_uni ? 'Sim' : 'Não',
+         disciplinaUniindigo: db.disciplina?.map((d) => d.nome).join(', ') ?? '',
+         endereco: {
+@@ -153,7 +152,6 @@ export function normalizeTherapistSession(db: TherapistTypes.TherapistDB) {
+             cargaHorariaSemanal: 0,
+             atendeConvenio: false,
+             especialidades: specialties.length > 0 ? specialties : ['Presencial'],
+-            valorConsulta: Number(db.valor_hora),
+             formasAtendimento: ['Presencial'],
+         },
+ 
+diff --git a/backend/src/features/therapist/therapist.service.ts b/backend/src/features/therapist/therapist.service.ts
+index 489cbb0..89cacfc 100644
+--- a/backend/src/features/therapist/therapist.service.ts
++++ b/backend/src/features/therapist/therapist.service.ts
+@@ -35,12 +35,6 @@ export async function create(dto: TherapistSchemaInput) {
+         conta: dto.conta,
+         pix_tipo: dto.pixTipo,
+         chave_pix: dto.chavePix,
+-        valor_sessao_consultorio: dto.valorSessaoConsultorio,
+-        valor_sessao_homecare: dto.valorSessaoHomecare,
+-        valor_hora_desenvolvimento_materiais: dto.valorHoraDesenvolvimentoMateriais,
+-        valor_hora_supervisao_recebida: dto.valorHoraSupervisaoRecebida,
+-        valor_hora_supervisao_dada: dto.valorHoraSupervisaoDada,
+-        valor_hora_reuniao: dto.valorHoraReuniao,
+         professor_uni: dto.professorUnindigo,
+         data_entrada: dto.dataInicio,
+         data_saida: dto.dataFim,
+@@ -357,12 +351,6 @@ export async function update(id: string, dto: TherapistTypes.TherapistForm) {
+             conta: dto.conta,
+             chave_pix: dto.chavePix,
+             pix_tipo: dto.pixTipo,
+-            valor_sessao_consultorio: dto.valorSessaoConsultorio,
+-            valor_sessao_homecare: dto.valorSessaoHomecare,
+-            valor_hora_desenvolvimento_materiais: dto.valorHoraDesenvolvimentoMateriais,
+-            valor_hora_supervisao_recebida: dto.valorHoraSupervisaoRecebida,
+-            valor_hora_supervisao_dada: dto.valorHoraSupervisaoDada,
+-            valor_hora_reuniao: dto.valorHoraReuniao,
+ 
+             endereco: {
+                 create: {
+@@ -392,7 +380,6 @@ export async function update(id: string, dto: TherapistTypes.TherapistForm) {
+             data_entrada: dto.dataInicio,
+             data_saida: dto.dataFim ?? null,
+             atividade,
+-            valor_hora: dto.valorHoraAcordado || null,
+             professor_uni: typeof dto.professorUnindigo === 'boolean' ? dto.professorUnindigo : dto.professorUnindigo === 'sim',
+             perfil_acesso: getHighestAccessRole(dto.dadosProfissionais),
+ 
+diff --git a/backend/src/features/therapist/therapist.types.ts b/backend/src/features/therapist/therapist.types.ts
+index c256ab0..75176b6 100644
+--- a/backend/src/features/therapist/therapist.types.ts
++++ b/backend/src/features/therapist/therapist.types.ts
+@@ -33,13 +33,6 @@ export type TherapistForm = {
+     conta: string;
+     chavePix: string;
+     pixTipo: 'email' | 'telefone' | 'cpf' | 'cnpj' | 'aleatoria';
+-    valorHoraAcordado?: string;
+-    valorSessaoConsultorio: string | number;
+-    valorSessaoHomecare: string | number;
+-    valorHoraDesenvolvimentoMateriais: string | number;
+-    valorHoraSupervisaoRecebida: string | number;
+-    valorHoraSupervisaoDada: string | number;
+-    valorHoraReuniao: string | number;
+     professorUnindigo: string | boolean;
+     disciplinaUniindigo?: string | null | undefined;
+ 
+@@ -111,7 +104,6 @@ export interface TherapistDB {
+     conta?: string | null;
+     chave_pix?: string | null;
+     pix_tipo?: string | null;
+-    valor_hora?: Decimal | null;
+     professor_uni: boolean;
+     endereco_id?: number | null;
+     data_entrada: Date | null;
+diff --git a/backend/src/schemas/therapist.schema.ts b/backend/src/schemas/therapist.schema.ts
+index a5b0b38..fffd311 100644
+--- a/backend/src/schemas/therapist.schema.ts
++++ b/backend/src/schemas/therapist.schema.ts
+@@ -33,30 +33,6 @@ export const therapistSchema = z.object({
+     conta: z.string().trim().min(1, 'A conta é obrigatória').transform(removeNonAlphanumeric),
+     pixTipo: z.enum(['email', 'telefone', 'cpf', 'cnpj', 'aleatoria']),
+     chavePix: z.string(),
+-    valorSessaoConsultorio: z
+-        .coerce.number()
+-        .positive()
+-        .min(1, { message: 'Informe o valor da sessão em consultório' }),
+-    valorSessaoHomecare: z
+-        .coerce.number()
+-        .positive()
+-        .min(1, { message: 'Informe o valor da sessão em home care' }),
+-    valorHoraDesenvolvimentoMateriais: z
+-        .coerce.number()
+-        .positive()
+-        .min(1, { message: 'Informe o valor por hora de desenvolvimento de materiais' }),
+-    valorHoraSupervisaoRecebida: z
+-        .coerce.number()
+-        .positive()
+-        .min(1, { message: 'Informe o valor por hora da supervisão recebida' }),
+-    valorHoraSupervisaoDada: z
+-        .coerce.number()
+-        .positive()
+-        .min(1, { message: 'Informe o valor por hora da supervisão prestada' }),
+-    valorHoraReuniao: z
+-        .coerce.number()
+-        .positive()
+-        .min(1, { message: 'Informe o valor por hora de reunião' }),
+     professorUnindigo: z
+         .enum(['sim', 'nao'])
+         .transform((v) => v === 'sim'),
+diff --git a/frontend/src/features/cadastros/components/terapeuta/DadosPessoaisStep.tsx b/frontend/src/features/cadastros/components/terapeuta/DadosPessoaisStep.tsx
+index 88e6b5c..f4b2dcd 100644
+--- a/frontend/src/features/cadastros/components/terapeuta/DadosPessoaisStep.tsx
++++ b/frontend/src/features/cadastros/components/terapeuta/DadosPessoaisStep.tsx
+@@ -14,7 +14,6 @@ import {
+     onlyDigits,
+     maskPlate,
+     maskPersonName,
+-    maskBRL,
+     maskPixKey,
+     validatePixKey,
+ } from '@/common/utils/mask';
+@@ -377,76 +376,7 @@ export default function DadosPessoaisStep({
+                 </div>
+             </div>
+ 
+-            {/* Seção: Valores por Tipo de Atividade */}
+-            <div className="pt-2">
+-                <h4 className="text-sm font-normal text-muted-foreground mb-3" style={{fontFamily: "Sora"}}>Valores por Tipo de Atividade</h4>
+-                
+-                {/* Linha 1: 3 campos */}
+-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 md:gap-4 mb-3">
+-                    <InputField
+-                        label="Sessão em Consultório *"
+-                        id="valorSessaoConsultorio"
+-                        type="text"
+-                        value={data.valorSessaoConsultorio ?? ''}
+-                        onChange={(e) => onUpdate('valorSessaoConsultorio', maskBRL(e.target.value))}
+-                        placeholder="R$ 0,00"
+-                        error={errors.valorSessaoConsultorio}
+-                    />
+-                    
+-                    <InputField
+-                        label="Sessão em Homecare *"
+-                        id="valorSessaoHomecare"
+-                        type="text"
+-                        value={data.valorSessaoHomecare ?? ''}
+-                        onChange={(e) => onUpdate('valorSessaoHomecare', maskBRL(e.target.value))}
+-                        placeholder="R$ 0,00"
+-                        error={errors.valorSessaoHomecare}
+-                    />
+-                    
+-                    <InputField
+-                        label="Hora Desenvolvimento Materiais *"
+-                        id="valorHoraDesenvolvimentoMateriais"
+-                        type="text"
+-                        value={data.valorHoraDesenvolvimentoMateriais ?? ''}
+-                        onChange={(e) => onUpdate('valorHoraDesenvolvimentoMateriais', maskBRL(e.target.value))}
+-                        placeholder="R$ 0,00"
+-                        error={errors.valorHoraDesenvolvimentoMateriais}
+-                    />
+-                </div>
+-                
+-                {/* Linha 2: 3 campos */}
+-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 md:gap-4">
+-                    <InputField
+-                        label="Hora Supervisão Recebida *"
+-                        id="valorHoraSupervisaoRecebida"
+-                        type="text"
+-                        value={data.valorHoraSupervisaoRecebida ?? ''}
+-                        onChange={(e) => onUpdate('valorHoraSupervisaoRecebida', maskBRL(e.target.value))}
+-                        placeholder="R$ 0,00"
+-                        error={errors.valorHoraSupervisaoRecebida}
+-                    />
+-                    
+-                    <InputField
+-                        label="Hora Supervisão Dada *"
+-                        id="valorHoraSupervisaoDada"
+-                        type="text"
+-                        value={data.valorHoraSupervisaoDada ?? ''}
+-                        onChange={(e) => onUpdate('valorHoraSupervisaoDada', maskBRL(e.target.value))}
+-                        placeholder="R$ 0,00"
+-                        error={errors.valorHoraSupervisaoDada}
+-                    />
+-                    
+-                    <InputField
+-                        label="Hora de Reuniões *"
+-                        id="valorHoraReuniao"
+-                        type="text"
+-                        value={data.valorHoraReuniao ?? ''}
+-                        onChange={(e) => onUpdate('valorHoraReuniao', maskBRL(e.target.value))}
+-                        placeholder="R$ 0,00"
+-                        error={errors.valorHoraReuniao}
+-                    />
+-                </div>
+-            </div>
++
+         </div>
+     );
+ }
+diff --git a/frontend/src/features/cadastros/links/components/LinkFormModal.tsx b/frontend/src/features/cadastros/links/components/LinkFormModal.tsx
+index a8c5811..7290a88 100644
+--- a/frontend/src/features/cadastros/links/components/LinkFormModal.tsx
++++ b/frontend/src/features/cadastros/links/components/LinkFormModal.tsx
+@@ -3,7 +3,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
+ import { Button } from '@/components/ui/button';
+ import { Input } from '@/components/ui/input';
+ import { Label } from '@/components/ui/label';
+-import { User, Users, Search, Loader2 } from 'lucide-react';
++import { User, Users, Search, Loader2, DollarSign, Briefcase } from 'lucide-react';
+ import { format } from 'date-fns';
+ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+ import { cn } from '@/lib/utils';
+@@ -82,6 +82,14 @@ export default function LinkFormModal({
+     const [startDate, setStartDate] = useState<string>('');
+     const [valorSessao, setValorSessao] = useState<string>('');
+ 
++    // Valores pagos ao terapeuta por tipo de atividade
++    const [valorSessaoConsultorio, setValorSessaoConsultorio] = useState<string>('');
++    const [valorSessaoHomecare, setValorSessaoHomecare] = useState<string>('');
++    const [valorHoraDesenvolvimentoMateriais, setValorHoraDesenvolvimentoMateriais] = useState<string>('');
++    const [valorHoraSupervisaoRecebida, setValorHoraSupervisaoRecebida] = useState<string>('');
++    const [valorHoraSupervisaoDada, setValorHoraSupervisaoDada] = useState<string>('');
++    const [valorHoraReuniao, setValorHoraReuniao] = useState<string>('');
++
+     // Estados para busca de pacientes/terapeutas
+     const [patientSearch, setPatientSearch] = useState('');
+     const [therapistSearch, setTherapistSearch] = useState('');
+@@ -100,6 +108,28 @@ export default function LinkFormModal({
+     const isNewTherapistCreation = !!initialData && !!(initialData as any)?._isNewTherapistCreation;
+     const isNewPatientCreation = !!initialData && !!(initialData as any)?._isNewPatientCreation;
+ 
++    // helper to load currency value from initialData
++    const loadCurrencyValue = (val: number | null | undefined) =>
++        val ? maskCurrencyBR(String(Math.round(val * 100))) : '';
++
++    const resetTherapistValues = () => {
++        setValorSessaoConsultorio('');
++        setValorSessaoHomecare('');
++        setValorHoraDesenvolvimentoMateriais('');
++        setValorHoraSupervisaoRecebida('');
++        setValorHoraSupervisaoDada('');
++        setValorHoraReuniao('');
++    };
++
++    const loadTherapistValues = (data: any) => {
++        setValorSessaoConsultorio(loadCurrencyValue(data.valorSessaoConsultorio));
++        setValorSessaoHomecare(loadCurrencyValue(data.valorSessaoHomecare));
++        setValorHoraDesenvolvimentoMateriais(loadCurrencyValue(data.valorHoraDesenvolvimentoMateriais));
++        setValorHoraSupervisaoRecebida(loadCurrencyValue(data.valorHoraSupervisaoRecebida));
++        setValorHoraSupervisaoDada(loadCurrencyValue(data.valorHoraSupervisaoDada));
++        setValorHoraReuniao(loadCurrencyValue(data.valorHoraReuniao));
++    };
++
+     // Efeito para carregar dados iniciais no modo edição
+     useEffect(() => {
+         if (open && initialData && isEdit) {
+@@ -108,12 +138,15 @@ export default function LinkFormModal({
+             setActuationArea(initialData.actuationArea || '');
+             setStartDate(initialData.startDate);
+             // Carregar valor da sessão se existir
+-            if (initialData.valorSessao) {
+-                setValorSessao(maskCurrencyBR(String(Math.round(initialData.valorSessao * 100))));
++            if (initialData.valorClienteSessao) {
++                setValorSessao(maskCurrencyBR(String(Math.round(initialData.valorClienteSessao * 100))));
+             } else {
+                 setValorSessao('');
+             }
+ 
++            // Carregar valores do terapeuta
++            loadTherapistValues(initialData);
++
+             // Buscar dados completos do paciente e terapeuta
+             const patient = patients.find((p) => p.id === initialData.patientId);
+             const therapist = therapists.find((t) => t.id === initialData.therapistId);
+@@ -131,8 +164,9 @@ export default function LinkFormModal({
+             setPatientId(initialData.patientId);
+             setTherapistId('');
+             setActuationArea('');
+-            setStartDate(format(new Date(), 'yyyy-MM-dd')); // Data atual como padrão
++            setStartDate(format(new Date(), 'yyyy-MM-dd'));
+             setValorSessao('');
++            resetTherapistValues();
+             setSelectedTherapist(null);
+             setTherapistSearch('');
+             setErrors({});
+@@ -148,8 +182,9 @@ export default function LinkFormModal({
+             setTherapistId(initialData.therapistId);
+             setPatientId('');
+             setActuationArea('');
+-            setStartDate(format(new Date(), 'yyyy-MM-dd')); // Data atual como padrão
++            setStartDate(format(new Date(), 'yyyy-MM-dd'));
+             setValorSessao('');
++            resetTherapistValues();
+             setSelectedPatient(null);
+             setPatientSearch('');
+             setErrors({});
+@@ -165,8 +200,9 @@ export default function LinkFormModal({
+             setPatientId('');
+             setTherapistId('');
+             setActuationArea('');
+-            setStartDate(format(new Date(), 'yyyy-MM-dd')); // Data atual como padrão
++            setStartDate(format(new Date(), 'yyyy-MM-dd'));
+             setValorSessao('');
++            resetTherapistValues();
+             setSelectedPatient(null);
+             setSelectedTherapist(null);
+             setPatientSearch('');
+@@ -273,6 +309,31 @@ export default function LinkFormModal({
+             newErrors.startDate = 'Selecione a data de início';
+         }
+ 
++        // Valor da sessão do cliente (obrigatório)
++        if (!valorSessao?.trim()) {
++            newErrors.valorSessao = 'Informe o valor da sessão';
++        }
++
++        // Valores pagos ao terapeuta (todos obrigatórios)
++        if (!valorSessaoConsultorio?.trim()) {
++            newErrors.valorSessaoConsultorio = 'Campo obrigatório';
++        }
++        if (!valorSessaoHomecare?.trim()) {
++            newErrors.valorSessaoHomecare = 'Campo obrigatório';
++        }
++        if (!valorHoraDesenvolvimentoMateriais?.trim()) {
++            newErrors.valorHoraDesenvolvimentoMateriais = 'Campo obrigatório';
++        }
++        if (!valorHoraSupervisaoRecebida?.trim()) {
++            newErrors.valorHoraSupervisaoRecebida = 'Campo obrigatório';
++        }
++        if (!valorHoraSupervisaoDada?.trim()) {
++            newErrors.valorHoraSupervisaoDada = 'Campo obrigatório';
++        }
++        if (!valorHoraReuniao?.trim()) {
++            newErrors.valorHoraReuniao = 'Campo obrigatório';
++        }
++
+         setErrors(newErrors);
+         return Object.keys(newErrors).length === 0;
+     };
+@@ -286,6 +347,16 @@ export default function LinkFormModal({
+         // Converter valor da sessão para número
+         const valorSessaoNumerico = valorSessao ? parseCurrencyBR(valorSessao) : null;
+ 
++        // Converter valores do terapeuta para números
++        const valoresTerapeuta = {
++            valorSessaoConsultorio: valorSessaoConsultorio ? parseCurrencyBR(valorSessaoConsultorio) : null,
++            valorSessaoHomecare: valorSessaoHomecare ? parseCurrencyBR(valorSessaoHomecare) : null,
++            valorHoraDesenvolvimentoMateriais: valorHoraDesenvolvimentoMateriais ? parseCurrencyBR(valorHoraDesenvolvimentoMateriais) : null,
++            valorHoraSupervisaoRecebida: valorHoraSupervisaoRecebida ? parseCurrencyBR(valorHoraSupervisaoRecebida) : null,
++            valorHoraSupervisaoDada: valorHoraSupervisaoDada ? parseCurrencyBR(valorHoraSupervisaoDada) : null,
++            valorHoraReuniao: valorHoraReuniao ? parseCurrencyBR(valorHoraReuniao) : null,
++        };
++
+         if (!isEdit) {
+             const createData: CreateLinkInput = {
+                 patientId: patientId,
+@@ -293,7 +364,8 @@ export default function LinkFormModal({
+                 role,
+                 startDate: startDate,
+                 actuationArea: actuationArea,
+-                valorSessao: valorSessaoNumerico,
++                valorClienteSessao: valorSessaoNumerico,
++                ...valoresTerapeuta,
+             };
+             onSubmit(createData);
+         } else {
+@@ -302,7 +374,8 @@ export default function LinkFormModal({
+                 role,
+                 startDate: startDate,
+                 actuationArea: actuationArea,
+-                valorSessao: valorSessaoNumerico,
++                valorClienteSessao: valorSessaoNumerico,
++                ...valoresTerapeuta,
+             };
+             onSubmit(updateData);
+         }
+@@ -387,7 +460,7 @@ export default function LinkFormModal({
+                 <div className="space-y-6">
+                     {/* Seleção de Paciente */}
+                     <div className="space-y-2">
+-                        <Label className="text-sm font-medium">Cliente *</Label>
++                        <Label className="text-sm font-medium">Cliente <span className="text-destructive">*</span></Label>
+                         <Popover open={showPatientSearch} onOpenChange={setShowPatientSearch}>
+                             <PopoverTrigger asChild disabled={isEdit || isNewTherapistCreation}>
+                                 <div
+@@ -499,7 +572,7 @@ export default function LinkFormModal({
+ 
+                     {/* Seleção de Terapeuta */}
+                     <div className="space-y-2">
+-                        <Label className="text-sm font-medium">Terapeuta *</Label>
++                        <Label className="text-sm font-medium">Terapeuta <span className="text-destructive">*</span></Label>
+                         <Popover open={showTherapistSearch} onOpenChange={setShowTherapistSearch}>
+                             <PopoverTrigger asChild disabled={isEdit || isNewPatientCreation}>
+                                 <div
+@@ -633,7 +706,7 @@ export default function LinkFormModal({
+ 
+                     {/* Campo de Atuação do Terapeuta */}
+                     <div className="space-y-2">
+-                        <Label className="text-sm font-medium">Área de Atuação *</Label>
++                        <Label className="text-sm font-medium">Área de Atuação <span className="text-destructive">*</span></Label>
+                         <Combobox
+                             options={actuationOptions}
+                             value={actuationArea}
+@@ -653,25 +726,9 @@ export default function LinkFormModal({
+                         )}
+                     </div>
+ 
+-                    {/* Valor da Sessão */}
+-                    <div className="space-y-2">
+-                        <Label className="text-sm font-medium">Valor da Sessão</Label>
+-                        <Input
+-                            type="text"
+-                            inputMode="numeric"
+-                            placeholder="R$ 0,00"
+-                            value={valorSessao}
+-                            onChange={(e) => setValorSessao(maskCurrencyBR(e.target.value))}
+-                            className="rounded-lg bg-background"
+-                        />
+-                        <p className="text-xs text-muted-foreground">
+-                            Valor cobrado do cliente para sessões desta especialidade
+-                        </p>
+-                    </div>
+-
+                     {/* Data de Início */}
+                     <div className="space-y-2">
+-                        <Label className="text-sm font-medium">Data de Início *</Label>
++                        <Label className="text-sm font-medium">Data de Início <span className="text-destructive">*</span></Label>
+                         <DateField
+                             value={startDate}
+                             onChange={(iso) => {
+@@ -685,6 +742,209 @@ export default function LinkFormModal({
+                             maxDate={new Date(new Date().getFullYear() + 10, 11, 31)}
+                         />
+                     </div>
++
++                    {/* Separador visual */}
++                    <div className="border-t border-border" />
++
++                    {/* ─── Seção: Valor cobrado do cliente ─── */}
++                    <div className="space-y-4">
++                        <div className="flex items-center gap-2">
++                            <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-emerald-500/10">
++                                <DollarSign className="h-4 w-4 text-emerald-600" />
++                            </div>
++                            <div>
++                                <h4 className="text-sm font-medium text-foreground">Valor cobrado do cliente</h4>
++                                <p className="text-xs text-muted-foreground">
++                                    Quanto o cliente paga pela sessão nesta especialidade
++                                </p>
++                            </div>
++                        </div>
++
++                        <div className="space-y-2">
++                            <Label className="text-sm font-medium">Valor da Sessão <span className="text-destructive">*</span></Label>
++                            <Input
++                                type="text"
++                                inputMode="numeric"
++                                placeholder="R$ 0,00"
++                                value={valorSessao}
++                                onChange={(e) => {
++                                    setValorSessao(maskCurrencyBR(e.target.value));
++                                    if (errors.valorSessao) {
++                                        setErrors((prev) => ({ ...prev, valorSessao: '' }));
++                                    }
++                                }}
++                                className={cn(
++                                    'rounded-lg bg-background',
++                                    errors.valorSessao && 'border-destructive',
++                                )}
++                            />
++                            {errors.valorSessao && (
++                                <p className="text-sm text-destructive">{errors.valorSessao}</p>
++                            )}
++                        </div>
++                    </div>
++
++                    {/* Separador visual */}
++                    <div className="border-t border-border" />
++
++                    {/* ─── Seção: Valores pagos ao terapeuta ─── */}
++                    <div className="space-y-4">
++                        <div className="flex items-center gap-2">
++                            <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-blue-500/10">
++                                <Briefcase className="h-4 w-4 text-blue-600" />
++                            </div>
++                            <div>
++                                <h4 className="text-sm font-medium text-foreground">Valores pagos ao terapeuta</h4>
++                                <p className="text-xs text-muted-foreground">
++                                    Quanto será pago ao terapeuta por cada tipo de atividade
++                                </p>
++                            </div>
++                        </div>
++
++                        {/* Linha 1: Sessão Consultório, Sessão Homecare */}
++                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
++                            <div className="space-y-2">
++                                <Label className="text-sm font-medium">Sessão em Consultório <span className="text-destructive">*</span></Label>
++                                <Input
++                                    type="text"
++                                    inputMode="numeric"
++                                    placeholder="R$ 0,00"
++                                    value={valorSessaoConsultorio}
++                                    onChange={(e) => {
++                                        setValorSessaoConsultorio(maskCurrencyBR(e.target.value));
++                                        if (errors.valorSessaoConsultorio) {
++                                            setErrors((prev) => ({ ...prev, valorSessaoConsultorio: '' }));
++                                        }
++                                    }}
++                                    className={cn(
++                                        'rounded-lg bg-background',
++                                        errors.valorSessaoConsultorio && 'border-destructive',
++                                    )}
++                                />
++                                {errors.valorSessaoConsultorio && (
++                                    <p className="text-sm text-destructive">{errors.valorSessaoConsultorio}</p>
++                                )}
++                            </div>
++                            <div className="space-y-2">
++                                <Label className="text-sm font-medium">Sessão em Homecare <span className="text-destructive">*</span></Label>
++                                <Input
++                                    type="text"
++                                    inputMode="numeric"
++                                    placeholder="R$ 0,00"
++                                    value={valorSessaoHomecare}
++                                    onChange={(e) => {
++                                        setValorSessaoHomecare(maskCurrencyBR(e.target.value));
++                                        if (errors.valorSessaoHomecare) {
++                                            setErrors((prev) => ({ ...prev, valorSessaoHomecare: '' }));
++                                        }
++                                    }}
++                                    className={cn(
++                                        'rounded-lg bg-background',
++                                        errors.valorSessaoHomecare && 'border-destructive',
++                                    )}
++                                />
++                                {errors.valorSessaoHomecare && (
++                                    <p className="text-sm text-destructive">{errors.valorSessaoHomecare}</p>
++                                )}
++                            </div>
++                        </div>
++
++                        {/* Linha 2: Desenvolvimento Materiais, Supervisão Recebida */}
++                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
++                            <div className="space-y-2">
++                                <Label className="text-sm font-medium">Hora Desenv. Materiais <span className="text-destructive">*</span></Label>
++                                <Input
++                                    type="text"
++                                    inputMode="numeric"
++                                    placeholder="R$ 0,00"
++                                    value={valorHoraDesenvolvimentoMateriais}
++                                    onChange={(e) => {
++                                        setValorHoraDesenvolvimentoMateriais(maskCurrencyBR(e.target.value));
++                                        if (errors.valorHoraDesenvolvimentoMateriais) {
++                                            setErrors((prev) => ({ ...prev, valorHoraDesenvolvimentoMateriais: '' }));
++                                        }
++                                    }}
++                                    className={cn(
++                                        'rounded-lg bg-background',
++                                        errors.valorHoraDesenvolvimentoMateriais && 'border-destructive',
++                                    )}
++                                />
++                                {errors.valorHoraDesenvolvimentoMateriais && (
++                                    <p className="text-sm text-destructive">{errors.valorHoraDesenvolvimentoMateriais}</p>
++                                )}
++                            </div>
++                            <div className="space-y-2">
++                                <Label className="text-sm font-medium">Hora Supervisão Recebida <span className="text-destructive">*</span></Label>
++                                <Input
++                                    type="text"
++                                    inputMode="numeric"
++                                    placeholder="R$ 0,00"
++                                    value={valorHoraSupervisaoRecebida}
++                                    onChange={(e) => {
++                                        setValorHoraSupervisaoRecebida(maskCurrencyBR(e.target.value));
++                                        if (errors.valorHoraSupervisaoRecebida) {
++                                            setErrors((prev) => ({ ...prev, valorHoraSupervisaoRecebida: '' }));
++                                        }
++                                    }}
++                                    className={cn(
++                                        'rounded-lg bg-background',
++                                        errors.valorHoraSupervisaoRecebida && 'border-destructive',
++                                    )}
++                                />
++                                {errors.valorHoraSupervisaoRecebida && (
++                                    <p className="text-sm text-destructive">{errors.valorHoraSupervisaoRecebida}</p>
++                                )}
++                            </div>
++                        </div>
++
++                        {/* Linha 3: Supervisão Dada, Reunião */}
++                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
++                            <div className="space-y-2">
++                                <Label className="text-sm font-medium">Hora Supervisão Dada <span className="text-destructive">*</span></Label>
++                                <Input
++                                    type="text"
++                                    inputMode="numeric"
++                                    placeholder="R$ 0,00"
++                                    value={valorHoraSupervisaoDada}
++                                    onChange={(e) => {
++                                        setValorHoraSupervisaoDada(maskCurrencyBR(e.target.value));
++                                        if (errors.valorHoraSupervisaoDada) {
++                                            setErrors((prev) => ({ ...prev, valorHoraSupervisaoDada: '' }));
++                                        }
++                                    }}
++                                    className={cn(
++                                        'rounded-lg bg-background',
++                                        errors.valorHoraSupervisaoDada && 'border-destructive',
++                                    )}
++                                />
++                                {errors.valorHoraSupervisaoDada && (
++                                    <p className="text-sm text-destructive">{errors.valorHoraSupervisaoDada}</p>
++                                )}
++                            </div>
++                            <div className="space-y-2">
++                                <Label className="text-sm font-medium">Hora de Reuniões <span className="text-destructive">*</span></Label>
++                                <Input
++                                    type="text"
++                                    inputMode="numeric"
++                                    placeholder="R$ 0,00"
++                                    value={valorHoraReuniao}
++                                    onChange={(e) => {
++                                        setValorHoraReuniao(maskCurrencyBR(e.target.value));
++                                        if (errors.valorHoraReuniao) {
++                                            setErrors((prev) => ({ ...prev, valorHoraReuniao: '' }));
++                                        }
++                                    }}
++                                    className={cn(
++                                        'rounded-lg bg-background',
++                                        errors.valorHoraReuniao && 'border-destructive',
++                                    )}
++                                />
++                                {errors.valorHoraReuniao && (
++                                    <p className="text-sm text-destructive">{errors.valorHoraReuniao}</p>
++                                )}
++                            </div>
++                        </div>
++                    </div>
+                 </div>
+             </SlidePanel>
+         </>
+diff --git a/frontend/src/features/cadastros/links/types.ts b/frontend/src/features/cadastros/links/types.ts
+index 1d7a694..b26f904 100644
+--- a/frontend/src/features/cadastros/links/types.ts
++++ b/frontend/src/features/cadastros/links/types.ts
+@@ -43,7 +43,14 @@ export interface PatientTherapistLink {
+   status: LinkStatus;               // active | ended | archived
+   notes?: string | null;
+   actuationArea?: string | null;    // Área de atuação do terapeuta no vínculo
+-  valorSessao?: number | null;      // Valor da sessão cobrado do cliente para esta especialidade
++  valorClienteSessao?: number | null;      // Valor da sessão cobrado do cliente para esta especialidade
++  // Valores pagos ao terapeuta por tipo de atividade
++  valorSessaoConsultorio?: number | null;
++  valorSessaoHomecare?: number | null;
++  valorHoraDesenvolvimentoMateriais?: number | null;
++  valorHoraSupervisaoRecebida?: number | null;
++  valorHoraSupervisaoDada?: number | null;
++  valorHoraReuniao?: number | null;
+   createdAt: IsoDate;
+   updatedAt: IsoDate;
+ }
+@@ -56,7 +63,14 @@ export interface CreateLinkInput {
+   endDate?: IsoDate | null;
+   notes?: string | null;
+   actuationArea?: string;   // Atuação específica para co-terapeuta
+-  valorSessao?: number | null;  // Valor da sessão cobrado do cliente
++  valorClienteSessao?: number | null;  // Valor da sessão cobrado do cliente
++  // Valores pagos ao terapeuta por tipo de atividade
++  valorSessaoConsultorio?: number | null;
++  valorSessaoHomecare?: number | null;
++  valorHoraDesenvolvimentoMateriais?: number | null;
++  valorHoraSupervisaoRecebida?: number | null;
++  valorHoraSupervisaoDada?: number | null;
++  valorHoraReuniao?: number | null;
+ }
+ 
+ export interface UpdateLinkInput {
+@@ -67,7 +81,14 @@ export interface UpdateLinkInput {
+   notes?: string | null;
+   status?: LinkStatus;
+   actuationArea?: string;   // Atuação específica para co-terapeuta
+-  valorSessao?: number | null;  // Valor da sessão cobrado do cliente
++  valorClienteSessao?: number | null;  // Valor da sessão cobrado do cliente
++  // Valores pagos ao terapeuta por tipo de atividade
++  valorSessaoConsultorio?: number | null;
++  valorSessaoHomecare?: number | null;
++  valorHoraDesenvolvimentoMateriais?: number | null;
++  valorHoraSupervisaoRecebida?: number | null;
++  valorHoraSupervisaoDada?: number | null;
++  valorHoraReuniao?: number | null;
+ }
+ 
+ export interface TransferResponsibleInput {
+diff --git a/frontend/src/features/cadastros/pages/CadastroTerapeutaPage.tsx b/frontend/src/features/cadastros/pages/CadastroTerapeutaPage.tsx
+index 64e468d..e61718f 100644
+--- a/frontend/src/features/cadastros/pages/CadastroTerapeutaPage.tsx
++++ b/frontend/src/features/cadastros/pages/CadastroTerapeutaPage.tsx
+@@ -86,14 +86,6 @@ export default function CadastroTerapeutaPage() {
+         pixTipo: 'email',
+         chavePix: null,
+         
+-        // Valores por tipo de atividade
+-        valorSessaoConsultorio: null,
+-        valorSessaoHomecare: null,
+-        valorHoraDesenvolvimentoMateriais: null,
+-        valorHoraSupervisaoRecebida: null,
+-        valorHoraSupervisaoDada: null,
+-        valorHoraReuniao: null,
+-        
+         professorUnindigo: 'nao' as 'sim' | 'nao',
+         disciplinaUniindigo: null,
+ 
+@@ -386,19 +378,6 @@ export default function CadastroTerapeutaPage() {
+                     }
+                 }
+ 
+-                // Validação dos valores por tipo de atividade
+-                if (!formData.valorSessaoConsultorio?.trim())
+-                    newErrors.valorSessaoConsultorio = 'Campo obrigatório';
+-                if (!formData.valorSessaoHomecare?.trim())
+-                    newErrors.valorSessaoHomecare = 'Campo obrigatório';
+-                if (!formData.valorHoraDesenvolvimentoMateriais?.trim())
+-                    newErrors.valorHoraDesenvolvimentoMateriais = 'Campo obrigatório';
+-                if (!formData.valorHoraSupervisaoRecebida?.trim())
+-                    newErrors.valorHoraSupervisaoRecebida = 'Campo obrigatório';
+-                if (!formData.valorHoraSupervisaoDada?.trim())
+-                    newErrors.valorHoraSupervisaoDada = 'Campo obrigatório';
+-                if (!formData.valorHoraReuniao?.trim())
+-                    newErrors.valorHoraReuniao = 'Campo obrigatório';
+                 break;
+ 
+             case 2: // Endereço
+diff --git a/frontend/src/features/consultas/components/TherapistProfileDrawer.tsx b/frontend/src/features/consultas/components/TherapistProfileDrawer.tsx
+index f7e9744..f96d352 100644
+--- a/frontend/src/features/consultas/components/TherapistProfileDrawer.tsx
++++ b/frontend/src/features/consultas/components/TherapistProfileDrawer.tsx
+@@ -1169,108 +1169,6 @@ export default function TherapistProfileDrawer({
+                                             </div>
+                                         </div>
+ 
+-                                        {/* Seção: Valores por Tipo de Atividade */}
+-                                        <div className="mt-6">
+-                                            <h4 className="text-md font-normal mb-4" style={{fontFamily: "Sora"}}>Valores por Tipo de Atividade</h4>
+-                                            
+-                                            {/* Linha 1: Sessão Consultório, Sessão Homecare, Desenvolvimento de Materiais */}
+-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+-                                                <div className="space-y-2">
+-                                                    <Label htmlFor="valorSessaoConsultorio">Valor Sessão Consultório *</Label>
+-                                                    <Input
+-                                                        id="valorSessaoConsultorio"
+-                                                        {...register('valorSessaoConsultorio')}
+-                                                        placeholder="R$ 0,00"
+-                                                        className="h-9 rounded-[5px]"
+-                                                        onInput={(e: React.FormEvent<HTMLInputElement>) => {
+-                                                            const input = e.currentTarget;
+-                                                            const masked = mask.maskCurrencyBR(input.value);
+-                                                            input.value = masked;
+-                                                            setValue('valorSessaoConsultorio' as any, masked, { shouldDirty: true });
+-                                                        }}
+-                                                    />
+-                                                </div>
+-                                                <div className="space-y-2">
+-                                                    <Label htmlFor="valorSessaoHomecare">Valor Sessão Homecare *</Label>
+-                                                    <Input
+-                                                        id="valorSessaoHomecare"
+-                                                        {...register('valorSessaoHomecare')}
+-                                                        placeholder="R$ 0,00"
+-                                                        className="h-9 rounded-[5px]"
+-                                                        onInput={(e: React.FormEvent<HTMLInputElement>) => {
+-                                                            const input = e.currentTarget;
+-                                                            const masked = mask.maskCurrencyBR(input.value);
+-                                                            input.value = masked;
+-                                                            setValue('valorSessaoHomecare' as any, masked, { shouldDirty: true });
+-                                                        }}
+-                                                    />
+-                                                </div>
+-                                                <div className="space-y-2">
+-                                                    <Label htmlFor="valorHoraDesenvolvimentoMateriais">Valor Hora Desenv. Materiais *</Label>
+-                                                    <Input
+-                                                        id="valorHoraDesenvolvimentoMateriais"
+-                                                        {...register('valorHoraDesenvolvimentoMateriais')}
+-                                                        placeholder="R$ 0,00"
+-                                                        className="h-9 rounded-[5px]"
+-                                                        onInput={(e: React.FormEvent<HTMLInputElement>) => {
+-                                                            const input = e.currentTarget;
+-                                                            const masked = mask.maskCurrencyBR(input.value);
+-                                                            input.value = masked;
+-                                                            setValue('valorHoraDesenvolvimentoMateriais' as any, masked, { shouldDirty: true });
+-                                                        }}
+-                                                    />
+-                                                </div>
+-                                            </div>
+-
+-                                            {/* Linha 2: Supervisão Recebida, Supervisão Dada, Reunião */}
+-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+-                                                <div className="space-y-2">
+-                                                    <Label htmlFor="valorHoraSupervisaoRecebida">Valor Hora Supervisão Recebida *</Label>
+-                                                    <Input
+-                                                        id="valorHoraSupervisaoRecebida"
+-                                                        {...register('valorHoraSupervisaoRecebida')}
+-                                                        placeholder="R$ 0,00"
+-                                                        className="h-9 rounded-[5px]"
+-                                                        onInput={(e: React.FormEvent<HTMLInputElement>) => {
+-                                                            const input = e.currentTarget;
+-                                                            const masked = mask.maskCurrencyBR(input.value);
+-                                                            input.value = masked;
+-                                                            setValue('valorHoraSupervisaoRecebida' as any, masked, { shouldDirty: true });
+-                                                        }}
+-                                                    />
+-                                                </div>
+-                                                <div className="space-y-2">
+-                                                    <Label htmlFor="valorHoraSupervisaoDada">Valor Hora Supervisão Dada *</Label>
+-                                                    <Input
+-                                                        id="valorHoraSupervisaoDada"
+-                                                        {...register('valorHoraSupervisaoDada')}
+-                                                        placeholder="R$ 0,00"
+-                                                        className="h-9 rounded-[5px]"
+-                                                        onInput={(e: React.FormEvent<HTMLInputElement>) => {
+-                                                            const input = e.currentTarget;
+-                                                            const masked = mask.maskCurrencyBR(input.value);
+-                                                            input.value = masked;
+-                                                            setValue('valorHoraSupervisaoDada' as any, masked, { shouldDirty: true });
+-                                                        }}
+-                                                    />
+-                                                </div>
+-                                                <div className="space-y-2">
+-                                                    <Label htmlFor="valorHoraReuniao">Valor Hora Reunião *</Label>
+-                                                    <Input
+-                                                        id="valorHoraReuniao"
+-                                                        {...register('valorHoraReuniao')}
+-                                                        placeholder="R$ 0,00"
+-                                                        className="h-9 rounded-[5px]"
+-                                                        onInput={(e: React.FormEvent<HTMLInputElement>) => {
+-                                                            const input = e.currentTarget;
+-                                                            const masked = mask.maskCurrencyBR(input.value);
+-                                                            input.value = masked;
+-                                                            setValue('valorHoraReuniao' as any, masked, { shouldDirty: true });
+-                                                        }}
+-                                                    />
+-                                                </div>
+-                                            </div>
+-                                        </div>
+                                     </>
+                                 ) : (
+                                     <>
+@@ -1298,67 +1196,6 @@ export default function TherapistProfileDrawer({
+                                                 }
+                                             />
+                                         </div>
+-
+-                                        {/* Seção: Valores por Tipo de Atividade */}
+-                                        <div className="mt-6">
+-                                            <h4 className="text-md font-normal mb-4" style={{fontFamily: "Sora"}}>Valores por tipo de atividade</h4>
+-                                            
+-                                            {/* Linha 1: Sessão Consultório, Sessão Homecare, Desenvolvimento de Materiais */}
+-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+-                                                <ReadOnlyField
+-                                                    label="Valor Sessão Consultório *"
+-                                                    value={
+-                                                        terapeutaData.valorSessaoConsultorio
+-                                                            ? Number(terapeutaData.valorSessaoConsultorio).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+-                                                            : 'Não informado'
+-                                                    }
+-                                                />
+-                                                <ReadOnlyField
+-                                                    label="Valor Sessão Homecare *"
+-                                                    value={
+-                                                        terapeutaData.valorSessaoHomecare
+-                                                            ? Number(terapeutaData.valorSessaoHomecare).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+-                                                            : 'Não informado'
+-                                                    }
+-                                                />
+-                                                <ReadOnlyField
+-                                                    label="Valor Hora Desenv. Materiais *"
+-                                                    value={
+-                                                        terapeutaData.valorHoraDesenvolvimentoMateriais
+-                                                            ? Number(terapeutaData.valorHoraDesenvolvimentoMateriais).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+-                                                            : 'Não informado'
+-                                                    }
+-                                                />
+-                                            </div>
+-
+-                                            {/* Linha 2: Supervisão Recebida, Supervisão Dada, Reunião */}
+-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+-                                                <ReadOnlyField
+-                                                    label="Valor Hora Supervisão Recebida *"
+-                                                    value={
+-                                                        terapeutaData.valorHoraSupervisaoRecebida
+-                                                            ? Number(terapeutaData.valorHoraSupervisaoRecebida).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+-                                                            : 'Não informado'
+-                                                    }
+-                                                />
+-                                                <ReadOnlyField
+-                                                    label="Valor Hora Supervisão Dada *"
+-                                                    value={
+-                                                        terapeutaData.valorHoraSupervisaoDada
+-                                                            ? Number(terapeutaData.valorHoraSupervisaoDada).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+-                                                            : 'Não informado'
+-                                                    }
+-                                                />
+-                                                <ReadOnlyField
+-                                                    label="Valor Hora Reunião *"
+-                                                    value={
+-                                                        terapeutaData.valorHoraReuniao
+-                                                            ? Number(terapeutaData.valorHoraReuniao).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+-                                                            : 'Não informado'
+-                                                    }
+-                                                />
+-                                            </div>
+-                                        </div>
+                                     </>
+                                 )}
+                             </div>
+diff --git a/frontend/src/features/faturamento/services/faturamento-sessoes.service.ts b/frontend/src/features/faturamento/services/faturamento-sessoes.service.ts
+index 7012bae..321bbd0 100644
+--- a/frontend/src/features/faturamento/services/faturamento-sessoes.service.ts
++++ b/frontend/src/features/faturamento/services/faturamento-sessoes.service.ts
+@@ -58,7 +58,7 @@ export async function listFaturamento(
+     }
+     
+     const data = await res.json();
+-
++    console.log(data)
+     return data;
+ }
+ 

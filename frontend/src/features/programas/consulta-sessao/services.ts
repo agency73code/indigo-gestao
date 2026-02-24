@@ -128,7 +128,7 @@ export async function findProgramSessionById(sessionId: string, _area?: string):
 
     if (!res.ok) throw new Error(`Erro ao buscar a sessão: ${res.statusText}`);
     const data = await res.json();
-    console.log(data);
+
     if (!data) return null;
     return data.data;
   } catch (error) {
