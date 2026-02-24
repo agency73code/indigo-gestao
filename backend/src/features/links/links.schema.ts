@@ -11,7 +11,13 @@ export const linksSchema = z.object({
     startDate: dateStringToDate,
     notes: z.string().nullable().default(null),
     actuationArea: z.string({ message: 'Informe a area de atuação' }),
-    valorSessao: z.number({ message: 'Informe o valor da sessão' }).positive({ message: 'Informe um valor da sessão positivo' }),
+    valorClienteSessao: z.number({ message: 'Informe o valor da sessão do cliente' }).positive({ message: 'Informe um valor da sessão do cliente positivo' }),
+    valorSessaoConsultorio: z.number({ message: 'Informe o valor da sessão em consultório' }).positive({ message: 'Informe um valor positivo' }),
+    valorSessaoHomecare: z.number({ message: 'Informe o valor da sessão homecare' }).positive({ message: 'Informe um valor positivo' }),
+    valorHoraDesenvolvimentoMateriais: z.number({ message: 'Informe o valor/hora de desenvolvimento de materiais' }).positive({ message: 'Informe um valor positivo' }),
+    valorHoraSupervisaoRecebida: z.number({ message: 'Informe o valor/hora de supervisão recebida' }).positive({ message: 'Informe um valor positivo' }),
+    valorHoraSupervisaoDada: z.number({ message: 'Informe o valor/hora de supervisão dada' }).positive({ message: 'Informe um valor positivo' }),
+    valorHoraReuniao: z.number({ message: 'Informe o valor/hora de reunião' }).positive({ message: 'Informe um valor positivo' }),
 });
 
 export const transferResponsibleSchema = z.object({
@@ -30,7 +36,13 @@ export const linksUpdateSchema = z.object({
     endDate: nullableDateStringToDate,
     notes: z.string().nullable().default(null),
     actuationArea: z.string({ message: 'Informe a area de atuação' }),
-    valorSessao: z.number({ message: 'Informe o valor da sessão' }).positive({ message: 'Informe um valor da sessão positivo' }),
+    valorClienteSessao: z.number({ message: 'Informe o valor da sessão do cliente' }).positive({ message: 'Informe um valor da sessão do cliente positivo' }),
+    valorSessaoConsultorio: z.number({ message: 'Informe o valor da sessão em consultório' }).positive({ message: 'Informe um valor positivo' }),
+    valorSessaoHomecare: z.number({ message: 'Informe o valor da sessão homecare' }).positive({ message: 'Informe um valor positivo' }),
+    valorHoraDesenvolvimentoMateriais: z.number({ message: 'Informe o valor/hora de desenvolvimento de materiais' }).positive({ message: 'Informe um valor positivo' }),
+    valorHoraSupervisaoRecebida: z.number({ message: 'Informe o valor/hora de supervisão recebida' }).positive({ message: 'Informe um valor positivo' }),
+    valorHoraSupervisaoDada: z.number({ message: 'Informe o valor/hora de supervisão dada' }).positive({ message: 'Informe um valor positivo' }),
+    valorHoraReuniao: z.number({ message: 'Informe o valor/hora de reunião' }).positive({ message: 'Informe um valor positivo' }),
 })
 
 

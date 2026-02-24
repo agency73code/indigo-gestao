@@ -90,7 +90,6 @@ export interface DBTherapist {
     agencia: string | null;
     conta: string | null;
     chave_pix: string | null;
-    valor_hora: unknown;
     professor_uni: boolean;
     data_entrada: Date;
     data_saida: Date | null;
@@ -134,6 +133,13 @@ export type CreateLink = {
     endDate?: string | null | undefined;
     notes?: string | null | undefined;
     actuationArea: string;
+    valorClienteSessao: number;
+    valorSessaoConsultorio: number;
+    valorSessaoHomecare: number;
+    valorHoraDesenvolvimentoMateriais: number;
+    valorHoraSupervisaoRecebida: number;
+    valorHoraSupervisaoDada: number;
+    valorHoraReuniao: number;
 };
 
 export type ArchiveLink = {
@@ -153,6 +159,13 @@ export type UpdateLink = {
     notes?: string | null | undefined;
     status?: 'active' | 'ended' | 'archived' | undefined;
     actuationArea?: string | undefined;
+    valorClienteSessao?: number;
+    valorSessaoConsultorio?: number;
+    valorSessaoHomecare?: number;
+    valorHoraDesenvolvimentoMateriais?: number;
+    valorHoraSupervisaoRecebida?: number;
+    valorHoraSupervisaoDada?: number;
+    valorHoraReuniao?: number;
 };
 
 export type TransferResponsible = {

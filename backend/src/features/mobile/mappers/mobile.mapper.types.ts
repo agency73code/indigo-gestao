@@ -12,7 +12,13 @@ export type BaseLink = {
     terapeuta_id: string;
     cliente_id: string;
     area_atuacao_id: number;
-    valor_sessao: unknown;
+    valor_cliente_sessao: unknown;
+    valor_sessao_consultorio: unknown;
+    valor_sessao_homecare: unknown;
+    valor_hora_desenvolvimento_materiais: unknown;
+    valor_hora_supervisao_recebida: unknown;
+    valor_hora_supervisao_dada: unknown;
+    valor_hora_reuniao: unknown;
     data_inicio: Date;
     data_fim: Date | null;
     papel: string;

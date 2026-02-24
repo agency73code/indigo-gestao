@@ -313,13 +313,6 @@ model terapeuta {
   agencia                              String?
   conta                                String?
   chave_pix                            String?
-  valor_hora                           Decimal?                @db.Decimal(10, 2)
-  valor_sessao_consultorio             Decimal?                @db.Decimal(10, 2)
-  valor_sessao_homecare                Decimal?                @db.Decimal(10, 2)
-  valor_hora_desenvolvimento_materiais Decimal?                @db.Decimal(10, 2)
-  valor_hora_supervisao_recebida       Decimal?                @db.Decimal(10, 2)
-  valor_hora_supervisao_dada           Decimal?                @db.Decimal(10, 2)
-  valor_hora_reuniao                   Decimal?                @db.Decimal(10, 2)
   professor_uni                        Boolean                 @default(false)
   endereco_id                          Int?
   data_entrada                         DateTime
@@ -948,9 +941,15 @@ model terapeuta_cliente {
   status          String       @default("active")
   area_atuacao_id Int
   areaAtuacao     area_atuacao @relation(fields: [area_atuacao_id], references: [id], onDelete: Restrict)
-  valor_sessao    Decimal      @db.Decimal(10, 2)
-  atualizado_em   DateTime     @updatedAt
-  criado_em       DateTime     @default(now())
+  valor_cliente_sessao                 Decimal      @db.Decimal(10, 2)
+  valor_sessao_consultorio             Decimal      @db.Decimal(10, 2)
+  valor_sessao_homecare                Decimal      @db.Decimal(10, 2)
+  valor_hora_desenvolvimento_materiais Decimal      @db.Decimal(10, 2)
+  valor_hora_supervisao_recebida       Decimal      @db.Decimal(10, 2)
+  valor_hora_supervisao_dada           Decimal      @db.Decimal(10, 2)
+  valor_hora_reuniao                   Decimal      @db.Decimal(10, 2)
+  atualizado_em                        DateTime     @updatedAt
+  criado_em                            DateTime     @default(now())
 
   @@unique([terapeuta_id, cliente_id])
   @@index([terapeuta_id])

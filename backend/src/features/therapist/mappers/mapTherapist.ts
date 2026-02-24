@@ -35,12 +35,6 @@ export function mapTherapist(dto: TherapistRow) {
 
         dataInicio: toDateOnly(dto.data_entrada),
         dataFim: dto.data_saida ? toDateOnly(dto.data_saida) : undefined,
-        valorSessaoConsultorio: dto.valor_sessao_consultorio,
-        valorSessaoHomecare: dto.valor_sessao_homecare,
-        valorHoraDesenvolvimentoMateriais: dto.valor_hora_desenvolvimento_materiais,
-        valorHoraSupervisaoRecebida: dto.valor_hora_supervisao_recebida,
-        valorHoraSupervisaoDada: dto.valor_hora_supervisao_dada,
-        valorHoraReuniao: dto.valor_hora_reuniao,
         professorUnindigo: dto.professor_uni ? 'sim' : 'nao',
         disciplinaUniindigo: dto.disciplina[0]?.nome,
 

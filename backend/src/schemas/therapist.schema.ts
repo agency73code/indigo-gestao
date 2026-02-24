@@ -33,30 +33,6 @@ export const therapistSchema = z.object({
     conta: z.string().trim().min(1, 'A conta é obrigatória').transform(removeNonAlphanumeric),
     pixTipo: z.enum(['email', 'telefone', 'cpf', 'cnpj', 'aleatoria']),
     chavePix: z.string(),
-    valorSessaoConsultorio: z
-        .coerce.number()
-        .positive()
-        .min(1, { message: 'Informe o valor da sessão em consultório' }),
-    valorSessaoHomecare: z
-        .coerce.number()
-        .positive()
-        .min(1, { message: 'Informe o valor da sessão em home care' }),
-    valorHoraDesenvolvimentoMateriais: z
-        .coerce.number()
-        .positive()
-        .min(1, { message: 'Informe o valor por hora de desenvolvimento de materiais' }),
-    valorHoraSupervisaoRecebida: z
-        .coerce.number()
-        .positive()
-        .min(1, { message: 'Informe o valor por hora da supervisão recebida' }),
-    valorHoraSupervisaoDada: z
-        .coerce.number()
-        .positive()
-        .min(1, { message: 'Informe o valor por hora da supervisão prestada' }),
-    valorHoraReuniao: z
-        .coerce.number()
-        .positive()
-        .min(1, { message: 'Informe o valor por hora de reunião' }),
     professorUnindigo: z
         .enum(['sim', 'nao'])
         .transform((v) => v === 'sim'),

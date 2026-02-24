@@ -86,14 +86,6 @@ export default function CadastroTerapeutaPage() {
         pixTipo: 'email',
         chavePix: null,
         
-        // Valores por tipo de atividade
-        valorSessaoConsultorio: null,
-        valorSessaoHomecare: null,
-        valorHoraDesenvolvimentoMateriais: null,
-        valorHoraSupervisaoRecebida: null,
-        valorHoraSupervisaoDada: null,
-        valorHoraReuniao: null,
-        
         professorUnindigo: 'nao' as 'sim' | 'nao',
         disciplinaUniindigo: null,
 
@@ -386,19 +378,6 @@ export default function CadastroTerapeutaPage() {
                     }
                 }
 
-                // Validação dos valores por tipo de atividade
-                if (!formData.valorSessaoConsultorio?.trim())
-                    newErrors.valorSessaoConsultorio = 'Campo obrigatório';
-                if (!formData.valorSessaoHomecare?.trim())
-                    newErrors.valorSessaoHomecare = 'Campo obrigatório';
-                if (!formData.valorHoraDesenvolvimentoMateriais?.trim())
-                    newErrors.valorHoraDesenvolvimentoMateriais = 'Campo obrigatório';
-                if (!formData.valorHoraSupervisaoRecebida?.trim())
-                    newErrors.valorHoraSupervisaoRecebida = 'Campo obrigatório';
-                if (!formData.valorHoraSupervisaoDada?.trim())
-                    newErrors.valorHoraSupervisaoDada = 'Campo obrigatório';
-                if (!formData.valorHoraReuniao?.trim())
-                    newErrors.valorHoraReuniao = 'Campo obrigatório';
                 break;
 
             case 2: // Endereço

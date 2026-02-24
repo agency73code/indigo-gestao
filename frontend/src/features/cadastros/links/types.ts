@@ -43,7 +43,14 @@ export interface PatientTherapistLink {
   status: LinkStatus;               // active | ended | archived
   notes?: string | null;
   actuationArea?: string | null;    // Área de atuação do terapeuta no vínculo
-  valorSessao?: number | null;      // Valor da sessão cobrado do cliente para esta especialidade
+  valorClienteSessao?: number | null;      // Valor da sessão cobrado do cliente para esta especialidade
+  // Valores pagos ao terapeuta por tipo de atividade
+  valorSessaoConsultorio?: number | null;
+  valorSessaoHomecare?: number | null;
+  valorHoraDesenvolvimentoMateriais?: number | null;
+  valorHoraSupervisaoRecebida?: number | null;
+  valorHoraSupervisaoDada?: number | null;
+  valorHoraReuniao?: number | null;
   createdAt: IsoDate;
   updatedAt: IsoDate;
 }
@@ -56,7 +63,14 @@ export interface CreateLinkInput {
   endDate?: IsoDate | null;
   notes?: string | null;
   actuationArea?: string;   // Atuação específica para co-terapeuta
-  valorSessao?: number | null;  // Valor da sessão cobrado do cliente
+  valorClienteSessao?: number | null;  // Valor da sessão cobrado do cliente
+  // Valores pagos ao terapeuta por tipo de atividade
+  valorSessaoConsultorio?: number | null;
+  valorSessaoHomecare?: number | null;
+  valorHoraDesenvolvimentoMateriais?: number | null;
+  valorHoraSupervisaoRecebida?: number | null;
+  valorHoraSupervisaoDada?: number | null;
+  valorHoraReuniao?: number | null;
 }
 
 export interface UpdateLinkInput {
@@ -67,7 +81,14 @@ export interface UpdateLinkInput {
   notes?: string | null;
   status?: LinkStatus;
   actuationArea?: string;   // Atuação específica para co-terapeuta
-  valorSessao?: number | null;  // Valor da sessão cobrado do cliente
+  valorClienteSessao?: number | null;  // Valor da sessão cobrado do cliente
+  // Valores pagos ao terapeuta por tipo de atividade
+  valorSessaoConsultorio?: number | null;
+  valorSessaoHomecare?: number | null;
+  valorHoraDesenvolvimentoMateriais?: number | null;
+  valorHoraSupervisaoRecebida?: number | null;
+  valorHoraSupervisaoDada?: number | null;
+  valorHoraReuniao?: number | null;
 }
 
 export interface TransferResponsibleInput {

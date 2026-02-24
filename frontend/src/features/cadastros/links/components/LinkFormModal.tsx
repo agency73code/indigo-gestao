@@ -3,7 +3,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { User, Users, Search, Loader2 } from 'lucide-react';
+import { User, Users, Search, Loader2, DollarSign, Briefcase } from 'lucide-react';
 import { format } from 'date-fns';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
@@ -82,6 +82,14 @@ export default function LinkFormModal({
     const [startDate, setStartDate] = useState<string>('');
     const [valorSessao, setValorSessao] = useState<string>('');
 
+    // Valores pagos ao terapeuta por tipo de atividade
+    const [valorSessaoConsultorio, setValorSessaoConsultorio] = useState<string>('');
+    const [valorSessaoHomecare, setValorSessaoHomecare] = useState<string>('');
+    const [valorHoraDesenvolvimentoMateriais, setValorHoraDesenvolvimentoMateriais] = useState<string>('');
+    const [valorHoraSupervisaoRecebida, setValorHoraSupervisaoRecebida] = useState<string>('');
+    const [valorHoraSupervisaoDada, setValorHoraSupervisaoDada] = useState<string>('');
+    const [valorHoraReuniao, setValorHoraReuniao] = useState<string>('');
+
     // Estados para busca de pacientes/terapeutas
     const [patientSearch, setPatientSearch] = useState('');
     const [therapistSearch, setTherapistSearch] = useState('');
@@ -100,6 +108,28 @@ export default function LinkFormModal({
     const isNewTherapistCreation = !!initialData && !!(initialData as any)?._isNewTherapistCreation;
     const isNewPatientCreation = !!initialData && !!(initialData as any)?._isNewPatientCreation;
 
+    // helper to load currency value from initialData
+    const loadCurrencyValue = (val: number | null | undefined) =>
+        val ? maskCurrencyBR(String(Math.round(val * 100))) : '';
+
+    const resetTherapistValues = () => {
+        setValorSessaoConsultorio('');
+        setValorSessaoHomecare('');
+        setValorHoraDesenvolvimentoMateriais('');
+        setValorHoraSupervisaoRecebida('');
+        setValorHoraSupervisaoDada('');
+        setValorHoraReuniao('');
+    };
+
+    const loadTherapistValues = (data: any) => {
+        setValorSessaoConsultorio(loadCurrencyValue(data.valorSessaoConsultorio));
+        setValorSessaoHomecare(loadCurrencyValue(data.valorSessaoHomecare));
+        setValorHoraDesenvolvimentoMateriais(loadCurrencyValue(data.valorHoraDesenvolvimentoMateriais));
+        setValorHoraSupervisaoRecebida(loadCurrencyValue(data.valorHoraSupervisaoRecebida));
+        setValorHoraSupervisaoDada(loadCurrencyValue(data.valorHoraSupervisaoDada));
+        setValorHoraReuniao(loadCurrencyValue(data.valorHoraReuniao));
+    };
+
     // Efeito para carregar dados iniciais no modo edição
     useEffect(() => {
         if (open && initialData && isEdit) {
@@ -108,11 +138,14 @@ export default function LinkFormModal({
             setActuationArea(initialData.actuationArea || '');
             setStartDate(initialData.startDate);
             // Carregar valor da sessão se existir
-            if (initialData.valorSessao) {
-                setValorSessao(maskCurrencyBR(String(Math.round(initialData.valorSessao * 100))));
+            if (initialData.valorClienteSessao) {
+                setValorSessao(maskCurrencyBR(String(Math.round(initialData.valorClienteSessao * 100))));
             } else {
                 setValorSessao('');
             }
+
+            // Carregar valores do terapeuta
+            loadTherapistValues(initialData);
 
             // Buscar dados completos do paciente e terapeuta
             const patient = patients.find((p) => p.id === initialData.patientId);
@@ -131,8 +164,9 @@ export default function LinkFormModal({
             setPatientId(initialData.patientId);
             setTherapistId('');
             setActuationArea('');
-            setStartDate(format(new Date(), 'yyyy-MM-dd')); // Data atual como padrão
+            setStartDate(format(new Date(), 'yyyy-MM-dd'));
             setValorSessao('');
+            resetTherapistValues();
             setSelectedTherapist(null);
             setTherapistSearch('');
             setErrors({});
@@ -148,8 +182,9 @@ export default function LinkFormModal({
             setTherapistId(initialData.therapistId);
             setPatientId('');
             setActuationArea('');
-            setStartDate(format(new Date(), 'yyyy-MM-dd')); // Data atual como padrão
+            setStartDate(format(new Date(), 'yyyy-MM-dd'));
             setValorSessao('');
+            resetTherapistValues();
             setSelectedPatient(null);
             setPatientSearch('');
             setErrors({});
@@ -165,8 +200,9 @@ export default function LinkFormModal({
             setPatientId('');
             setTherapistId('');
             setActuationArea('');
-            setStartDate(format(new Date(), 'yyyy-MM-dd')); // Data atual como padrão
+            setStartDate(format(new Date(), 'yyyy-MM-dd'));
             setValorSessao('');
+            resetTherapistValues();
             setSelectedPatient(null);
             setSelectedTherapist(null);
             setPatientSearch('');
@@ -273,6 +309,31 @@ export default function LinkFormModal({
             newErrors.startDate = 'Selecione a data de início';
         }
 
+        // Valor da sessão do cliente (obrigatório)
+        if (!valorSessao?.trim()) {
+            newErrors.valorSessao = 'Informe o valor da sessão';
+        }
+
+        // Valores pagos ao terapeuta (todos obrigatórios)
+        if (!valorSessaoConsultorio?.trim()) {
+            newErrors.valorSessaoConsultorio = 'Campo obrigatório';
+        }
+        if (!valorSessaoHomecare?.trim()) {
+            newErrors.valorSessaoHomecare = 'Campo obrigatório';
+        }
+        if (!valorHoraDesenvolvimentoMateriais?.trim()) {
+            newErrors.valorHoraDesenvolvimentoMateriais = 'Campo obrigatório';
+        }
+        if (!valorHoraSupervisaoRecebida?.trim()) {
+            newErrors.valorHoraSupervisaoRecebida = 'Campo obrigatório';
+        }
+        if (!valorHoraSupervisaoDada?.trim()) {
+            newErrors.valorHoraSupervisaoDada = 'Campo obrigatório';
+        }
+        if (!valorHoraReuniao?.trim()) {
+            newErrors.valorHoraReuniao = 'Campo obrigatório';
+        }
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -286,6 +347,16 @@ export default function LinkFormModal({
         // Converter valor da sessão para número
         const valorSessaoNumerico = valorSessao ? parseCurrencyBR(valorSessao) : null;
 
+        // Converter valores do terapeuta para números
+        const valoresTerapeuta = {
+            valorSessaoConsultorio: valorSessaoConsultorio ? parseCurrencyBR(valorSessaoConsultorio) : null,
+            valorSessaoHomecare: valorSessaoHomecare ? parseCurrencyBR(valorSessaoHomecare) : null,
+            valorHoraDesenvolvimentoMateriais: valorHoraDesenvolvimentoMateriais ? parseCurrencyBR(valorHoraDesenvolvimentoMateriais) : null,
+            valorHoraSupervisaoRecebida: valorHoraSupervisaoRecebida ? parseCurrencyBR(valorHoraSupervisaoRecebida) : null,
+            valorHoraSupervisaoDada: valorHoraSupervisaoDada ? parseCurrencyBR(valorHoraSupervisaoDada) : null,
+            valorHoraReuniao: valorHoraReuniao ? parseCurrencyBR(valorHoraReuniao) : null,
+        };
+
         if (!isEdit) {
             const createData: CreateLinkInput = {
                 patientId: patientId,
@@ -293,7 +364,8 @@ export default function LinkFormModal({
                 role,
                 startDate: startDate,
                 actuationArea: actuationArea,
-                valorSessao: valorSessaoNumerico,
+                valorClienteSessao: valorSessaoNumerico,
+                ...valoresTerapeuta,
             };
             onSubmit(createData);
         } else {
@@ -302,7 +374,8 @@ export default function LinkFormModal({
                 role,
                 startDate: startDate,
                 actuationArea: actuationArea,
-                valorSessao: valorSessaoNumerico,
+                valorClienteSessao: valorSessaoNumerico,
+                ...valoresTerapeuta,
             };
             onSubmit(updateData);
         }
@@ -387,7 +460,7 @@ export default function LinkFormModal({
                 <div className="space-y-6">
                     {/* Seleção de Paciente */}
                     <div className="space-y-2">
-                        <Label className="text-sm font-medium">Cliente *</Label>
+                        <Label className="text-sm font-medium">Cliente <span className="text-destructive">*</span></Label>
                         <Popover open={showPatientSearch} onOpenChange={setShowPatientSearch}>
                             <PopoverTrigger asChild disabled={isEdit || isNewTherapistCreation}>
                                 <div
@@ -499,7 +572,7 @@ export default function LinkFormModal({
 
                     {/* Seleção de Terapeuta */}
                     <div className="space-y-2">
-                        <Label className="text-sm font-medium">Terapeuta *</Label>
+                        <Label className="text-sm font-medium">Terapeuta <span className="text-destructive">*</span></Label>
                         <Popover open={showTherapistSearch} onOpenChange={setShowTherapistSearch}>
                             <PopoverTrigger asChild disabled={isEdit || isNewPatientCreation}>
                                 <div
@@ -633,7 +706,7 @@ export default function LinkFormModal({
 
                     {/* Campo de Atuação do Terapeuta */}
                     <div className="space-y-2">
-                        <Label className="text-sm font-medium">Área de Atuação *</Label>
+                        <Label className="text-sm font-medium">Área de Atuação <span className="text-destructive">*</span></Label>
                         <Combobox
                             options={actuationOptions}
                             value={actuationArea}
@@ -653,25 +726,9 @@ export default function LinkFormModal({
                         )}
                     </div>
 
-                    {/* Valor da Sessão */}
-                    <div className="space-y-2">
-                        <Label className="text-sm font-medium">Valor da Sessão</Label>
-                        <Input
-                            type="text"
-                            inputMode="numeric"
-                            placeholder="R$ 0,00"
-                            value={valorSessao}
-                            onChange={(e) => setValorSessao(maskCurrencyBR(e.target.value))}
-                            className="rounded-lg bg-background"
-                        />
-                        <p className="text-xs text-muted-foreground">
-                            Valor cobrado do cliente para sessões desta especialidade
-                        </p>
-                    </div>
-
                     {/* Data de Início */}
                     <div className="space-y-2">
-                        <Label className="text-sm font-medium">Data de Início *</Label>
+                        <Label className="text-sm font-medium">Data de Início <span className="text-destructive">*</span></Label>
                         <DateField
                             value={startDate}
                             onChange={(iso) => {
@@ -684,6 +741,209 @@ export default function LinkFormModal({
                             error={errors.startDate}
                             maxDate={new Date(new Date().getFullYear() + 10, 11, 31)}
                         />
+                    </div>
+
+                    {/* Separador visual */}
+                    <div className="border-t border-border" />
+
+                    {/* ─── Seção: Valor cobrado do cliente ─── */}
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2">
+                            <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-emerald-500/10">
+                                <DollarSign className="h-4 w-4 text-emerald-600" />
+                            </div>
+                            <div>
+                                <h4 className="text-sm font-medium text-foreground">Valor cobrado do cliente</h4>
+                                <p className="text-xs text-muted-foreground">
+                                    Quanto o cliente paga pela sessão nesta especialidade
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label className="text-sm font-medium">Valor da Sessão <span className="text-destructive">*</span></Label>
+                            <Input
+                                type="text"
+                                inputMode="numeric"
+                                placeholder="R$ 0,00"
+                                value={valorSessao}
+                                onChange={(e) => {
+                                    setValorSessao(maskCurrencyBR(e.target.value));
+                                    if (errors.valorSessao) {
+                                        setErrors((prev) => ({ ...prev, valorSessao: '' }));
+                                    }
+                                }}
+                                className={cn(
+                                    'rounded-lg bg-background',
+                                    errors.valorSessao && 'border-destructive',
+                                )}
+                            />
+                            {errors.valorSessao && (
+                                <p className="text-sm text-destructive">{errors.valorSessao}</p>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Separador visual */}
+                    <div className="border-t border-border" />
+
+                    {/* ─── Seção: Valores pagos ao terapeuta ─── */}
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2">
+                            <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-blue-500/10">
+                                <Briefcase className="h-4 w-4 text-blue-600" />
+                            </div>
+                            <div>
+                                <h4 className="text-sm font-medium text-foreground">Valores pagos ao terapeuta</h4>
+                                <p className="text-xs text-muted-foreground">
+                                    Quanto será pago ao terapeuta por cada tipo de atividade
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Linha 1: Sessão Consultório, Sessão Homecare */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="space-y-2">
+                                <Label className="text-sm font-medium">Sessão em Consultório <span className="text-destructive">*</span></Label>
+                                <Input
+                                    type="text"
+                                    inputMode="numeric"
+                                    placeholder="R$ 0,00"
+                                    value={valorSessaoConsultorio}
+                                    onChange={(e) => {
+                                        setValorSessaoConsultorio(maskCurrencyBR(e.target.value));
+                                        if (errors.valorSessaoConsultorio) {
+                                            setErrors((prev) => ({ ...prev, valorSessaoConsultorio: '' }));
+                                        }
+                                    }}
+                                    className={cn(
+                                        'rounded-lg bg-background',
+                                        errors.valorSessaoConsultorio && 'border-destructive',
+                                    )}
+                                />
+                                {errors.valorSessaoConsultorio && (
+                                    <p className="text-sm text-destructive">{errors.valorSessaoConsultorio}</p>
+                                )}
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-sm font-medium">Sessão em Homecare <span className="text-destructive">*</span></Label>
+                                <Input
+                                    type="text"
+                                    inputMode="numeric"
+                                    placeholder="R$ 0,00"
+                                    value={valorSessaoHomecare}
+                                    onChange={(e) => {
+                                        setValorSessaoHomecare(maskCurrencyBR(e.target.value));
+                                        if (errors.valorSessaoHomecare) {
+                                            setErrors((prev) => ({ ...prev, valorSessaoHomecare: '' }));
+                                        }
+                                    }}
+                                    className={cn(
+                                        'rounded-lg bg-background',
+                                        errors.valorSessaoHomecare && 'border-destructive',
+                                    )}
+                                />
+                                {errors.valorSessaoHomecare && (
+                                    <p className="text-sm text-destructive">{errors.valorSessaoHomecare}</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Linha 2: Desenvolvimento Materiais, Supervisão Recebida */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="space-y-2">
+                                <Label className="text-sm font-medium">Hora Desenv. Materiais <span className="text-destructive">*</span></Label>
+                                <Input
+                                    type="text"
+                                    inputMode="numeric"
+                                    placeholder="R$ 0,00"
+                                    value={valorHoraDesenvolvimentoMateriais}
+                                    onChange={(e) => {
+                                        setValorHoraDesenvolvimentoMateriais(maskCurrencyBR(e.target.value));
+                                        if (errors.valorHoraDesenvolvimentoMateriais) {
+                                            setErrors((prev) => ({ ...prev, valorHoraDesenvolvimentoMateriais: '' }));
+                                        }
+                                    }}
+                                    className={cn(
+                                        'rounded-lg bg-background',
+                                        errors.valorHoraDesenvolvimentoMateriais && 'border-destructive',
+                                    )}
+                                />
+                                {errors.valorHoraDesenvolvimentoMateriais && (
+                                    <p className="text-sm text-destructive">{errors.valorHoraDesenvolvimentoMateriais}</p>
+                                )}
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-sm font-medium">Hora Supervisão Recebida <span className="text-destructive">*</span></Label>
+                                <Input
+                                    type="text"
+                                    inputMode="numeric"
+                                    placeholder="R$ 0,00"
+                                    value={valorHoraSupervisaoRecebida}
+                                    onChange={(e) => {
+                                        setValorHoraSupervisaoRecebida(maskCurrencyBR(e.target.value));
+                                        if (errors.valorHoraSupervisaoRecebida) {
+                                            setErrors((prev) => ({ ...prev, valorHoraSupervisaoRecebida: '' }));
+                                        }
+                                    }}
+                                    className={cn(
+                                        'rounded-lg bg-background',
+                                        errors.valorHoraSupervisaoRecebida && 'border-destructive',
+                                    )}
+                                />
+                                {errors.valorHoraSupervisaoRecebida && (
+                                    <p className="text-sm text-destructive">{errors.valorHoraSupervisaoRecebida}</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Linha 3: Supervisão Dada, Reunião */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="space-y-2">
+                                <Label className="text-sm font-medium">Hora Supervisão Dada <span className="text-destructive">*</span></Label>
+                                <Input
+                                    type="text"
+                                    inputMode="numeric"
+                                    placeholder="R$ 0,00"
+                                    value={valorHoraSupervisaoDada}
+                                    onChange={(e) => {
+                                        setValorHoraSupervisaoDada(maskCurrencyBR(e.target.value));
+                                        if (errors.valorHoraSupervisaoDada) {
+                                            setErrors((prev) => ({ ...prev, valorHoraSupervisaoDada: '' }));
+                                        }
+                                    }}
+                                    className={cn(
+                                        'rounded-lg bg-background',
+                                        errors.valorHoraSupervisaoDada && 'border-destructive',
+                                    )}
+                                />
+                                {errors.valorHoraSupervisaoDada && (
+                                    <p className="text-sm text-destructive">{errors.valorHoraSupervisaoDada}</p>
+                                )}
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-sm font-medium">Hora de Reuniões <span className="text-destructive">*</span></Label>
+                                <Input
+                                    type="text"
+                                    inputMode="numeric"
+                                    placeholder="R$ 0,00"
+                                    value={valorHoraReuniao}
+                                    onChange={(e) => {
+                                        setValorHoraReuniao(maskCurrencyBR(e.target.value));
+                                        if (errors.valorHoraReuniao) {
+                                            setErrors((prev) => ({ ...prev, valorHoraReuniao: '' }));
+                                        }
+                                    }}
+                                    className={cn(
+                                        'rounded-lg bg-background',
+                                        errors.valorHoraReuniao && 'border-destructive',
+                                    )}
+                                />
+                                {errors.valorHoraReuniao && (
+                                    <p className="text-sm text-destructive">{errors.valorHoraReuniao}</p>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </SlidePanel>
