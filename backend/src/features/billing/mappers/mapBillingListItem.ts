@@ -99,7 +99,7 @@ export function mapBillingListItem(item: BillingListItem) {
     const clientRateValue = clientRate ? clientRate.toNumber() : 0;
 
     // Buscar área do lançamento e registro profissional correspondente
-    const areaLancamento = item.sessao?.ocp.area ?? item.ata?.cabecalho_area_atuacao;
+    const areaLancamento = item.sessao?.ocp?.area ?? item.ata?.cabecalho_area_atuacao;
     const registroProfissional = getRegistroProfissional(
         item.terapeuta.registro_profissional,
         areaLancamento

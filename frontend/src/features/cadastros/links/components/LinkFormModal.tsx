@@ -138,8 +138,8 @@ export default function LinkFormModal({
             setActuationArea(initialData.actuationArea || '');
             setStartDate(initialData.startDate);
             // Carregar valor da sessão se existir
-            if (initialData.valorSessao) {
-                setValorSessao(maskCurrencyBR(String(Math.round(initialData.valorSessao * 100))));
+            if (initialData.valorClienteSessao) {
+                setValorSessao(maskCurrencyBR(String(Math.round(initialData.valorClienteSessao * 100))));
             } else {
                 setValorSessao('');
             }
@@ -364,7 +364,7 @@ export default function LinkFormModal({
                 role,
                 startDate: startDate,
                 actuationArea: actuationArea,
-                valorSessao: valorSessaoNumerico,
+                valorClienteSessao: valorSessaoNumerico,
                 ...valoresTerapeuta,
             };
             onSubmit(createData);
@@ -374,7 +374,7 @@ export default function LinkFormModal({
                 role,
                 startDate: startDate,
                 actuationArea: actuationArea,
-                valorSessao: valorSessaoNumerico,
+                valorClienteSessao: valorSessaoNumerico,
                 ...valoresTerapeuta,
             };
             onSubmit(updateData);
