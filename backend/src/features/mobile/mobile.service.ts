@@ -1,5 +1,6 @@
 import { prisma } from "../../config/database.js";
 import { AppError } from "../../errors/AppError.js";
+import { getVisibilityScope } from "../../utils/visibilityFilter.js";
 import { mapBootstrapBase, mapBootstrapEstimulos, mapBootstrapProgramas, mapBootstrapSessoes } from "./mappers/mobile.mapper.js";
 
 export async function getBootstrapBase(therapistId: string) {
@@ -77,9 +78,14 @@ export async function getBootstrapBase(therapistId: string) {
 }
 
 export async function getBootstrapPrograms(therapistId: string) {
+    const visibility = await getVisibilityScope(therapistId);
+    const terapeutaFilter = visibility.scope === 'all'
+        ? {}
+        : { terapeuta_id: { in: visibility.therapistIds } };
+
     const ocps = await prisma.ocp.findMany({
         where: {
-            terapeuta_id: therapistId,
+            ...terapeutaFilter,
             status: 'ativado',
         },
         select: {
@@ -100,9 +106,14 @@ export async function getBootstrapPrograms(therapistId: string) {
 }
 
 export async function getBootstrapStimuli(therapistId: string) {
+    const visibility = await getVisibilityScope(therapistId);
+    const terapeutaFilter = visibility.scope === 'all'
+        ? {}
+        : { terapeuta_id: { in: visibility.therapistIds } };
+    
     const activeOcps = await prisma.ocp.findMany({
         where: {
-            terapeuta_id: therapistId,
+            ...terapeutaFilter,
             status: 'ativado',
         },
         select: {
@@ -154,6 +165,10 @@ export async function getBootstrapStimuli(therapistId: string) {
 export async function getBootstrapSessions(therapistId: string, days: number) {
     const threshold = new Date();
     threshold.setDate(threshold.getDate() - days);
+    const visibility = await getVisibilityScope(therapistId);
+    const ocpTerapeutaFilter = visibility.scope === 'all'
+        ? {}
+        : { terapeuta_id: { in: visibility.therapistIds } };
 
     const sessions = await prisma.sessao.findMany({
         where: {
@@ -162,7 +177,7 @@ export async function getBootstrapSessions(therapistId: string, days: number) {
                 gte: threshold,
             },
             ocp: {
-                terapeuta_id: therapistId,
+                ...ocpTerapeutaFilter,
                 status: 'ativado',
             },
         },

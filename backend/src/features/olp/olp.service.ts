@@ -448,7 +448,7 @@ export async function listClientsByTherapist(therapistId: string, q?: string) {
 
 export async function listProgramsByClientId(
     clientId: string,
-    userId: string,
+    therapistIds: string[] | null,
     page = 1,
     pageSize = 10,
     area: string,
@@ -461,7 +461,7 @@ export async function listProgramsByClientId(
     // cria o objeto base
     const where: Prisma.ocpWhereInput = {
         cliente_id: clientId,
-        terapeuta_id: userId,
+        ...(therapistIds && { terapeuta_id: { in: therapistIds } }),
         area,
         ...(translateResult && { status: translateResult }), // só inclui se existir
     };
