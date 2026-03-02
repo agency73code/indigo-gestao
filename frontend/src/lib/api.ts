@@ -1,5 +1,5 @@
 import type { User } from "@/features/auth/types/auth.types";
-import { authFetch } from "./http";
+import { authFetch, getStoredRefreshToken, storeRefreshToken } from "./http";
 import type { Terapeuta, Cliente } from "@/features/cadastros/types/cadastros.types";
 import type { Bank } from '@/common/constants/banks';
 import type { Therapist as TerapeutaConsulta, Patient } from '@/features/consultas/types/consultas.types'
@@ -208,6 +208,7 @@ export async function resetPassword(token: string, password: string, confirmPass
 
 export async function signIn(accessInfo: string, password: string) {
   if (AUTH_BYPASS) {
+    storeRefreshToken('dev.bypass.refresh-token');
     return {
       success: true,
       token: 'dev.bypass.token',
@@ -229,8 +230,16 @@ export async function signIn(accessInfo: string, password: string) {
       const msg = data?.error ?? data?.message ?? `Falha (${res.status})`;
       throw new Error(msg);
   }
+
+  if (data?.refreshToken) {
+    storeRefreshToken(data.refreshToken);
+  }
   
-  return data as { success: true; token: string; user?: { id: string; name?: string; email?: string } };
+  return data as {
+    success: true;
+    token: string;
+    refreshToken?: string;
+    user?: { id: string; name?: string; email?: string } };
 }
 
 export async function forgotPassword(email: string) {
@@ -264,7 +273,14 @@ export async function getMe(): Promise<ApiMeResponse | null> {
 }
 
 export async function apiLogout() {
-  const res = await authFetch('/api/auth/logout', { method: 'POST' });
+  const refreshToken = getStoredRefreshToken();
+  const res = await authFetch('/api/auth/logout', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(refreshToken ? { refreshToken } : {}),
+  });
+
+  storeRefreshToken(null);
   return res.ok;
 }
 

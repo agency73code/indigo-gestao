@@ -184,10 +184,6 @@ export async function update(req: Request, res: Response, next: NextFunction) {
                 return { ...file, nome, size:file.size };
             });
 
-        console.log('------------------ INIT ------------------');
-        console.log(payload);
-        console.log('------------------ END ------------------');
-
         const updated = await AtaService.update({
             id: ataId,
             userId: req.user.id,

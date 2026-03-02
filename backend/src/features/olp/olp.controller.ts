@@ -39,6 +39,7 @@ import {
     prepareToAttentionActivities,
     prepareToAutonomyByCategory,
  } from './occupationaltherapy/reports/index.js';
+import { getVisibilityScope } from '../../utils/visibilityFilter.js';
 
 export async function createProgram(req: Request, res: Response) {
     try {
@@ -211,7 +212,9 @@ export async function listClientPrograms(req: Request, res: Response) {
     if (!clientId) return res.status(400).json({ success: false, message: 'ClientId é obrigatório' });
     if (!userId) return res.status(400).json({ success: false, message: 'Id do usuário é obrigatório' });
 
-    const rows = await OcpService.listProgramsByClientId(clientId, userId, page, 10, area, status, q, sort);
+    const visibility = await getVisibilityScope(userId);
+    const therapistIds = visibility.scope === 'all' ? null : visibility.therapistIds;
+    const rows = await OcpService.listProgramsByClientId(clientId, therapistIds, page, 10, area, status, q, sort);
 
     return res.json({ success: true, data: rows.map(OcpNormalizer.mapOcpReturn) });
 }

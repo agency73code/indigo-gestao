@@ -23,13 +23,14 @@ export function mapBillingSummary(data: BillingSummaryItem[]) {
         const time = buildLocalSessionTime(item.inicio_em, item.fim_em);
         const durationMinutes = computeDurationMinutes(time.start, time.end) ?? 0;
 
+        const link = item.cliente.terapeuta.find((l) => l.terapeuta_id === item.terapeuta_id);
         const values: Record<faturamento_tipo_atendimento, Prisma.Decimal | null> = {
-            consultorio: item.terapeuta.valor_sessao_consultorio,
-            homecare: item.terapeuta.valor_sessao_homecare,
-            reuniao: item.terapeuta.valor_hora_reuniao,
-            desenvolvimento_materiais: item.terapeuta.valor_hora_desenvolvimento_materiais,
-            supervisao_dada: item.terapeuta.valor_hora_supervisao_dada,
-            supervisao_recebida: item.terapeuta.valor_hora_supervisao_recebida,
+            consultorio: link?.valor_sessao_consultorio ?? null,
+            homecare: link?.valor_sessao_homecare ?? null,
+            reuniao: link?.valor_hora_reuniao ?? null,
+            desenvolvimento_materiais: link?.valor_hora_desenvolvimento_materiais ?? null,
+            supervisao_dada: link?.valor_hora_supervisao_dada ?? null,
+            supervisao_recebida: link?.valor_hora_supervisao_recebida ?? null,
         };
 
         const rate = getBillingRateByType(values, item.tipo_atendimento);

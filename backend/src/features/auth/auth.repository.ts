@@ -157,6 +157,7 @@ export async function loginUserByAccessInformation(
             avatar_url: row.arquivos[0]
                 ? `${process.env.API_URL}/api/arquivos/${encodeURIComponent(row.arquivos[0].arquivo_id!)}/view/`
                 : null,
+            table: 'terapeuta',
         };
     } else {
         const row = await prisma.cliente.findFirst({
@@ -194,6 +195,7 @@ export async function loginUserByAccessInformation(
             avatar_url: row.arquivos[0]
                 ? `${process.env.API_URL}/api/arquivos/${encodeURIComponent(row.arquivos[0].arquivo_id!)}/view/`
                 : null,
+            table: 'cliente',
         };
     }
 }
