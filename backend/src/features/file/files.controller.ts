@@ -167,6 +167,28 @@ export async function downloadFile(req: Request, res: Response, next: NextFuncti
 }
 
 /**
+ * Download de arquivo de sessão (tabela sessao_arquivo).
+ */
+export async function downloadSessionFile(req: Request, res: Response, next: NextFunction) {
+    try {
+        if (!req.user) {
+            throw new AppError('UNAUTHENTICATED', 'Não autenticado', 401);
+        }
+
+        const { id: fileId } = arquivoIdParamSchema.parse(req.params);
+
+        const dbFile = await FilesService.findSessionFileForDownload(fileId, req.user.id);
+        if (!dbFile) {
+            throw new AppError('FILE_NOT_FOUND', 'Arquivo não encontrado', 404);
+        }
+
+        await streamFileDownload(res, dbFile);
+    } catch (err) {
+        next(err);
+    }
+}
+
+/**
  * Controller: exclui um arquivo do banco e do Google R2.
  */
 export async function deleteFile(req: Request, res: Response) {
