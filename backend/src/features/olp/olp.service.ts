@@ -51,6 +51,11 @@ export async function createProgram(data: OcpType.CreateProgramPayload) {
             area: data.area,
             desempenho_atual: isTO ? (data.currentPerformanceLevel ?? null) : null,
         },
+        include: {
+            estimulo_ocp: {
+                select: { id: true, estimulo_id: true, nome: true },
+            },
+        },
     });
 }
 
