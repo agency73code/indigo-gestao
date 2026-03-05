@@ -53,7 +53,11 @@ export async function createProgram(data: OcpType.CreateProgramPayload) {
         },
         include: {
             estimulo_ocp: {
-                select: { id: true, estimulo_id: true, nome: true },
+                select: {
+                    id: true,
+                    nome: true,
+                    estimulo: { select: { id: true } },
+                },
             },
         },
     });

@@ -54,7 +54,7 @@ export async function createProgram(req: Request, res: Response) {
             id: ocp.id,
             estimulos: ocp.estimulo_ocp.map((e) => ({
                 id: e.id,
-                estimuloId: e.estimulo_id,
+                estimuloId: e.estimulo.id,
                 nome: e.nome,
             })),
         });
