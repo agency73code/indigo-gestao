@@ -53,6 +53,12 @@ export type OcpItem = {
     data_fim: Date;
     criado_em: Date;
     atualizado_em: Date;
+    objetivo_programa: string | null;
+    objetivo_descricao: string | null;
+    criterio_aprendizagem: string | null;
+    objetivo_curto: string | null;
+    descricao_aplicacao: string | null;
+    observacao_geral: string | null;
 };
 
 export type EstimuloOcpItem = {

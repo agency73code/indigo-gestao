@@ -99,6 +99,12 @@ export async function getBootstrapPrograms(therapistId: string) {
             data_fim: true,
             criado_em: true,
             atualizado_em: true,
+            objetivo_programa: true,
+            objetivo_descricao: true,
+            criterio_aprendizagem: true,
+            objetivo_curto: true,
+            descricao_aplicacao: true,
+            observacao_geral: true,
         },
     });
 
