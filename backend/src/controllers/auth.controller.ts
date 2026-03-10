@@ -187,7 +187,6 @@ export async function validateLogin(req: Request, res: Response, next: NextFunct
                 area_atuacao: user.area_atuacao,
                 avatar_url: user.avatar_url,
                 birth_date: user.birth_date ?? null,
-                owner_type: user.owner_type ?? null,
             },
         });
     } catch (error) {
@@ -236,7 +235,6 @@ export async function refreshAccessToken(req: Request, res: Response, next: Next
                 area_atuacao: user.area_atuacao,
                 avatar_url: user.avatar_url,
                 birth_date: user.birth_date ?? null,
-                owner_type: user.owner_type ?? null,
             },
         });
     } catch (error) {
