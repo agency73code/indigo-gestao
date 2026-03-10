@@ -5,6 +5,7 @@ export type BaseTherapist = {
     perfil_acesso: string;
     atividade: boolean;
     atualizado_em: Date;
+    data_nascimento: Date | null;
 };
 
 export type BaseLink = {

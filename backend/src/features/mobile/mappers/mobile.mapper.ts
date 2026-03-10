@@ -34,6 +34,7 @@ export function mapBootstrapBase(therapist: BaseTherapist, activeLinks: BaseLink
             perfilAcesso: therapist.perfil_acesso,
             atividade: therapist.atividade,
             atualizadoEm: toIsoOrNull(therapist.atualizado_em),
+            dataNascimento: toIsoOrNull(therapist.data_nascimento),
         },
         clientes: Array.from(clientsById.values()).map((client) => ({
             id: client.id,

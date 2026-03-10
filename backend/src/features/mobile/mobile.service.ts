@@ -10,11 +10,12 @@ export async function getBootstrapBase(therapistId: string) {
         },
         select: {
             id: true,
-            nome: true, 
+            nome: true,
             email_indigo: true,
             perfil_acesso: true,
             atividade: true,
             atualizado_em: true,
+            data_nascimento: true,
         },
     });
 
