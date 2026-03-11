@@ -137,7 +137,6 @@ export async function getBootstrapStimuli(therapistId: string) {
     const stimulusOcp = await prisma.estimulo_ocp.findMany({
         where: {
             id_ocp: { in: ocpIds },
-            status: true,
         },
         select: {
             id: true,
