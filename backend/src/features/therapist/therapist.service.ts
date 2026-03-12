@@ -12,6 +12,7 @@ import { getAccessLevelFromRoles } from '../../utils/normalizeRoleName.js';
 import { queryTherapist } from './querys/queryTherapist.js';
 import { mapTherapist } from './mappers/mapTherapist.js';
 import { getPrimaryAreaFromAreaRoles } from '../../utils/getPrimaryAreaFromAreaRoles.js';
+import { revokeAllRefreshTokensByUserId } from '../auth/refresh-token.repository.js';
 
 const MANAGER_LEVEL = ACCESS_LEVELS['gerente'] ?? 5;
 
@@ -331,9 +332,18 @@ export async function update(id: string, dto: TherapistTypes.TherapistForm) {
         }
     }
 
+    const current = await prisma.terapeuta.findUnique({
+        where: { id },
+        select: { email: true, email_indigo: true },
+    });
+
+    const emailChanged =
+        current &&
+        (current.email !== dto.email || current.email_indigo !== dto.emailIndigo);
+
     invalidateTherapistCache(id);
 
-    return prisma.terapeuta.update({
+    const updated = await prisma.terapeuta.update({
         where: { id },
         data: {
             nome: dto.nome,
@@ -486,6 +496,12 @@ export async function update(id: string, dto: TherapistTypes.TherapistForm) {
                 : {}),
         },
     });
+
+    if (emailChanged) {
+        await revokeAllRefreshTokensByUserId(id, 'terapeuta');
+    }
+
+    return updated;
 }
 
 function getHighestAccessRole(
