@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button } from '@/ui/button';
 import { ArrowLeft, ArrowRight, Check, CheckCircle, XCircle, X } from 'lucide-react';
+import { authFetch } from '@/lib/http';
 import {
     DadosPessoaisStep,
     EnderecoStep,
@@ -612,7 +613,7 @@ export default function CadastroClientePage() {
             formDataUpload.append('birthDate', payload.dataNascimento!);
             formDataUpload.append('cpf', payload.cpf!);
 
-            await fetch('/api/arquivos', {
+            await authFetch('/api/arquivos', {
                 method: 'POST',
                 body: formDataUpload,
             }).then((r) => r.json());
@@ -629,7 +630,7 @@ export default function CadastroClientePage() {
                 if (outrosDescricao && typeof outrosDescricao === 'string') {
                     outrosFormData.append('descricao_documento', outrosDescricao);
                 }
-                await fetch('/api/arquivos', {
+                await authFetch('/api/arquivos', {
                     method: 'POST',
                     body: outrosFormData,
                 }).then((r) => r.json());

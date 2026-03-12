@@ -1,5 +1,6 @@
 // Services para Sessão de Musicoterapia
 import { buildSessionFormData } from '@/lib/api';
+import { authFetch } from '@/lib/http';
 import { MUSI_AREA_ID } from '../constants';
 import type {
     Patient,
@@ -69,7 +70,7 @@ export async function saveMusiSession(payload: {
         area,
     });
 
-    const response = await fetch(`/api/ocp/musictherapy/programs/${payload.programId}/sessions`, {
+    const response = await authFetch(`/api/ocp/musictherapy/programs/${payload.programId}/sessions`, {
         method: 'POST',
         credentials: 'include',
         body: formData,

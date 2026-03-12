@@ -1,5 +1,6 @@
 // Services para Sessão de Terapia Ocupacional
 import { buildSessionFormData } from '@/lib/api';
+import { authFetch } from '@/lib/http';
 import type {
     Patient,
     ToProgramDetail,
@@ -70,7 +71,7 @@ export async function saveToSession(payload: {
 }): Promise<void> {
     const formData = buildSessionFormData(payload);
 
-    const response = await fetch(`/api/ocp/to/programs/${payload.programId}/sessions`, {
+    const response = await authFetch(`/api/ocp/to/programs/${payload.programId}/sessions`, {
         method: 'POST',
         credentials: 'include',
         body: formData,

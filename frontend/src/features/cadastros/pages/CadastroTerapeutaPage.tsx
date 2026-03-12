@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button } from '@/ui/button';
 import { ArrowLeft, ArrowRight, Check, CheckCircle, XCircle, X, User, MapPin, Briefcase, GraduationCap, FileText, Building2 } from 'lucide-react';
+import { authFetch } from '@/lib/http';
 import type { Terapeuta } from '../types/cadastros.types';
 import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 import {
@@ -540,7 +541,7 @@ export default function CadastroTerapeutaPage() {
             formDataUpload.append('birthDate', payload.dataNascimento);
             formDataUpload.append('cpf', payload.cpf);
 
-            await fetch('/api/arquivos', {
+            await authFetch('/api/arquivos', {
                 method: 'POST',
                 body: formDataUpload,
             }).then((r) => r.json());
@@ -557,7 +558,7 @@ export default function CadastroTerapeutaPage() {
                 if (outrosDescricao && typeof outrosDescricao === 'string') {
                     outrosFormData.append('descricao_documento', outrosDescricao);
                 }
-                await fetch('/api/arquivos', {
+                await authFetch('/api/arquivos', {
                     method: 'POST',
                     body: outrosFormData,
                 }).then((r) => r.json());

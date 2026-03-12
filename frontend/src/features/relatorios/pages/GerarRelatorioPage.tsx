@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { authFetch } from '@/lib/http';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Save, FileDown, FileText, Sparkles, Loader2 } from 'lucide-react';
@@ -127,7 +128,7 @@ export function GerarRelatorioPage() {
 
     // Carregar terapeutas
     useEffect(() => {
-        fetch('/api/terapeutas/relatorio')
+        authFetch('/api/terapeutas/relatorio')
             .then(res => {
                 return res.json();
             })
@@ -146,7 +147,7 @@ export function GerarRelatorioPage() {
     useEffect(() => {
         if (filters.pacienteId && selectedArea) {
             const areaParam = encodeURIComponent(selectedArea);
-            fetch(`/api/ocp/reports/filters/programs?clientId=${filters.pacienteId}&area=${areaParam}`)
+            authFetch(`/api/ocp/reports/filters/programs?clientId=${filters.pacienteId}&area=${areaParam}`)
                 .then(res => {
                     return res.json();
                 })
@@ -166,7 +167,7 @@ export function GerarRelatorioPage() {
     useEffect(() => {
         if (filters.pacienteId && selectedArea) {
             const url = `/api/ocp/reports/filters/stimulus?clientId=${filters.pacienteId}${filters.programaId ? `&programaId=${filters.programaId}` : ''}&area=${selectedArea}`;
-            fetch(url)
+            authFetch(url)
                 .then(res => {
                     return res.json();
                 })

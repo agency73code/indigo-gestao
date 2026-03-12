@@ -7,6 +7,7 @@ import type {
   ReportFiltersApplied,
 } from '../types';
 import type { TherapistListDTO } from '@/features/therapists/types';
+import { authFetch } from '@/lib/http';
 
 /**
  * Resposta paginada da API de relatórios
@@ -48,7 +49,7 @@ export async function getAllReports(filters?: ReportListFilters): Promise<Report
       // NÃO envia page/pageSize por enquanto (backend pode não suportar)
     }
 
-    const res = await fetch(`/api/relatorios?${queryParams.toString()}`, {
+    const res = await authFetch(`/api/relatorios?${queryParams.toString()}`, {
       method: 'GET',
       credentials: 'include',
       headers: {
@@ -99,7 +100,7 @@ export async function getAllReports(filters?: ReportListFilters): Promise<Report
 export async function getReportById(id: string): Promise<SavedReport | null> {
   const url = `/api/relatorios/${id}`;
   
-  const res = await fetch(url, {
+  const res = await authFetch(url, {
     method: 'GET',
     credentials: 'include',
     headers: {
@@ -122,7 +123,7 @@ export async function getReportById(id: string): Promise<SavedReport | null> {
  * Cria novo relatório
  */
 export async function createReport(input: CreateReportInput): Promise<SavedReport> {
-  const res = await fetch('/api/relatorios', {
+  const res = await authFetch('/api/relatorios', {
     method: 'POST',
     credentials: 'include',
     headers: {
@@ -157,7 +158,7 @@ export async function createReport(input: CreateReportInput): Promise<SavedRepor
  * Arquiva relatório (status='archived')
  */
 export async function archiveReport(id: string): Promise<void> {
-  const res = await fetch(`/api/reports/${id}/archive`, {
+  const res = await authFetch(`/api/reports/${id}/archive`, {
     method: 'POST',
     credentials: 'include',
     headers: {
@@ -188,7 +189,7 @@ export async function archiveReport(id: string): Promise<void> {
  * Gera PDF do relatório
  */
 export async function generateReportPdf(id: string): Promise<string> {
-  const res = await fetch(`/api/reports/${id}/pdf`, {
+  const res = await authFetch(`/api/reports/${id}/pdf`, {
     method: 'POST',
     credentials: 'include',
     headers: {
@@ -211,7 +212,7 @@ export async function generateReportPdf(id: string): Promise<string> {
 export async function fetchReportData(filters: ReportFiltersApplied): Promise<ReportGeneratedData> {
   try {
     const filtersParam = encodeURIComponent(JSON.stringify(filters));
-    const res = await fetch(`/api/ocp/reports/kpis/${filtersParam}`, {
+    const res = await authFetch(`/api/ocp/reports/kpis/${filtersParam}`, {
       method: 'GET',
       credentials: 'include'
     });
@@ -238,7 +239,7 @@ export async function fetchReportData(filters: ReportFiltersApplied): Promise<Re
  */
 export async function getAllPatients(): Promise<Paciente[]> {
   try {
-    const res = await fetch('/api/links/clients?includeResponsavel=true', {
+    const res = await authFetch('/api/links/clients?includeResponsavel=true', {
       method: 'GET',
       credentials: 'include',
       headers: {
@@ -275,7 +276,7 @@ export async function getTherapistsForReports(includeNumeroConselho = false): Pr
   const query = new URLSearchParams();
   if (includeNumeroConselho) query.set('includeNumeroConselho', 'true');
 
-  const res = await fetch(`/api/links/therapists/list?${query.toString()}`, {
+  const res = await authFetch(`/api/links/therapists/list?${query.toString()}`, {
     method: 'GET',
     credentials: 'include',
     headers: {

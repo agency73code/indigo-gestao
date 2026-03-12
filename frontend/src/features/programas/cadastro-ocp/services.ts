@@ -1,8 +1,9 @@
+import { authFetch } from '@/lib/http';
 import { fetchClients, fetchTherapists } from '../api';
 import type { Patient, Therapist, CreateProgramInput } from './types';
 
 export async function fetchPatientById(id: string): Promise<Patient> {
-    const res = await fetch(`/api/ocp/clients/${id}`, {
+    const res = await authFetch(`/api/ocp/clients/${id}`, {
         method: 'GET',
         credentials: 'include',
     });
@@ -20,7 +21,7 @@ export async function fetchTherapistById(_id: string): Promise<Therapist> {
 }
 
 export async function createProgram(payload: CreateProgramInput): Promise<{ id: string }> {
-    const res = await fetch('/api/ocp/create', {
+    const res = await authFetch('/api/ocp/create', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
