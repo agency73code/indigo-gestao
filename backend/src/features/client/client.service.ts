@@ -2,7 +2,7 @@ import { prisma } from '../../config/database.js';
 import { Prisma } from '@prisma/client';
 import { AppError } from '../../errors/AppError.js';
 import * as ClientType from './client.types.js';
-import { v4 as uuidv4 } from 'uuid';
+import { generateResetToken } from '../../utils/resetToken.js';
 import { getVisibilityScope } from '../../utils/visibilityFilter.js';
 import { ACCESS_LEVELS } from '../../utils/accessLevels.js';
 import type { clientUpdatePayload } from './client.schema.js';
@@ -484,9 +484,3 @@ export async function countActiveClients() {
     });
 }
 
-function generateResetToken() {
-    const token = uuidv4();
-    const expiry = new Date();
-    expiry.setDate(expiry.getDate() + 1);
-    return { token, expiry };
-}

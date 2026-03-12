@@ -10,8 +10,8 @@ import {
     revokeRefreshTokenById
 } from './refresh-token.repository.js';
 
-const ACCESS_TOKEN_EXPIRES_IN = '1h';
-const ACCESS_TOKEN_MAX_AGE_MS = 10 * 60 * 1000;
+const ACCESS_TOKEN_EXPIRES_IN = '15m';
+const ACCESS_TOKEN_MAX_AGE_MS = 15 * 60 * 1000;
 const REFRESH_TOKEN_TTL_MS = 3 * 24 * 60 * 60 * 1000;
 
 export function getAccessTokenMaxAgeMs() {
