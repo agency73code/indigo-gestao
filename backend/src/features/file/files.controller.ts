@@ -8,19 +8,45 @@ import { R2GenericUploadService } from './r2/r2-upload-generic.js';
 import { AppError } from '../../errors/AppError.js';
 import { streamFileDownload } from './r2/streamDownloadResponse.js';
 import { arquivoIdParamSchema } from './files.schema.js';
+import { getVisibilityScope } from '../../utils/visibilityFilter.js';
+import { canDownloadFile } from './utils/canDownloadFile.js';
 
 /**
  * Controller responsável pelos uploads de arquivos.
  * Totalmente integrado ao novo fluxo de pastas no R2.
  */
-export async function uploadFile(req: Request, res: Response) {
+export async function uploadFile(req: Request, res: Response, next: NextFunction) {
     try {
+        if (!req.user) {
+            return res.status(401).json({ error: 'Não autenticado.' });
+        }
+
         const { ownerType, ownerId, fullName, birthDate } = req.body as {
             ownerType: 'cliente' | 'terapeuta';
             ownerId: string;
             fullName: string;
             birthDate: string;
         };
+
+        if (!ownerType || !ownerId) {
+            return res.status(400).json({ error: 'Campos obrigatórios ausentes.' });
+        }
+
+        if (ownerType === 'terapeuta') {
+            if (ownerId !== req.user.id) {
+                return res.status(403).json({ error: 'Sem permissão para fazer upload para este terapeuta.' });
+            }
+        } else if (ownerType === 'cliente') {
+            const visibility = await getVisibilityScope(req.user.id);
+            const allowed = await canDownloadFile({
+                file: { clienteId: ownerId, terapeutaId: null },
+                userId: req.user.id,
+                visibility,
+            });
+            if (!allowed) {
+                return res.status(403).json({ error: 'Sem permissão para fazer upload para este cliente.' });
+            }
+        }
 
         const normalizeBodyString = (value: unknown) => {
             if (typeof value === 'string') {
@@ -41,7 +67,7 @@ export async function uploadFile(req: Request, res: Response) {
         );
         const descricaoNormalizada = descricaoFromBody?.trim() ?? '';
 
-        if (!ownerType || !ownerId || !fullName || !birthDate) {
+        if (!fullName || !birthDate) {
             return res.status(400).json({ error: 'Campos obrigatórios ausentes.' });
         }
 
@@ -77,8 +103,7 @@ export async function uploadFile(req: Request, res: Response) {
 
         return res.json({ arquivos: uploads });
     } catch (error) {
-        console.error('Erro no upload:', error);
-        return res.status(500).json({ error: 'Falha ao processar upload' });
+        return next(error);
     }
 }
 
