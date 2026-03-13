@@ -39,10 +39,14 @@ export async function create(req: Request, res: Response, next: NextFunction) {
 
 export async function getById(req: Request, res: Response, next: NextFunction) {
     try {
+        if (!req.user) {
+            throw new AppError('UNAUTHENTICATED', 'Não autenticado', 401);
+        }
+
         const { id } = req.params;
         if (!id) return res.status(400).json({ success: false, message: 'ID inválido' });
 
-        const data = await clientService.getById(id);
+        const data = await clientService.getById(id, req.user.id);
         if (!data)
             return res.status(404).json({ success: false, message: 'Cliente não encontrado' });
 

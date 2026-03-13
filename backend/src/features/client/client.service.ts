@@ -165,11 +165,21 @@ export async function create(dto: ClientType.Client) {
     });
 }
 
-export async function getById(clientId: string) {
-    return prisma.cliente.findUnique({
-        where: {
-            id: clientId,
-        },
+export async function getById(clientId: string, therapistId: string) {
+    const visibility = await getVisibilityScope(therapistId);
+
+    if (visibility.scope === 'none') return null;
+
+    const where: Prisma.clienteWhereInput = { id: clientId };
+
+    if (visibility.scope === 'partial') {
+        where.terapeuta = {
+            some: { terapeuta_id: { in: visibility.therapistIds } },
+        };
+    }
+
+    return prisma.cliente.findFirst({
+        where,
         select: {
             id: true,
             nome: true,
