@@ -34,7 +34,7 @@ export type BaseLink = {
         dataNascimento: Date | null;
         atualizado_em: Date;
         arquivos: {
-            arquivo_id: string | null;
+            id: number;
         }[];
     };
     areaAtuacao: {

@@ -96,6 +96,7 @@ export interface Client {
 
     // Arquivos
     arquivos?: Array<{
+        id?: number;
         tipo: string | null;
         arquivo_id: string | null;
         mime_type: string | null;
@@ -127,6 +128,7 @@ export interface DBClientQueryPage {
         };
     }[];
     arquivos: {
+        id: number;
         tipo: string | null;
         mime_type: string | null;
         arquivo_id: string | null;

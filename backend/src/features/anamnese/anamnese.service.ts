@@ -227,6 +227,7 @@ export async function list(
                         },
                         arquivos: {
                             select: {
+                                id: true,
                                 tipo: true,
                                 arquivo_id: true,
                             },
@@ -252,8 +253,8 @@ export async function list(
             id: String(record.id),
             clienteId: record.cliente.id,
             clienteNome: record.cliente.nome ?? '',
-            clienteAvatarUrl: avatar?.arquivo_id
-                ? `/api/arquivos/${encodeURIComponent(avatar.arquivo_id)}/view`
+            clienteAvatarUrl: avatar?.id
+                ? `/api/arquivos/${avatar.id}/view`
                 : undefined,
             telefone: cuidador?.telefone ?? undefined,
             dataNascimento: record.cliente.dataNascimento
@@ -308,6 +309,7 @@ export async function getAnamneseById(anamneseId: number) {
                     },
                     arquivos: {
                         select: {
+                            id: true,
                             tipo: true,
                             arquivo_id: true,
                         },
@@ -608,8 +610,8 @@ export async function getAnamneseById(anamneseId: number) {
         dataEntrevista: toDateOnly(anamnese.data_entrevista),
         clienteId: anamnese.cliente_id,
         clienteNome: anamnese.cliente.nome,
-        clienteAvatarUrl: avatar?.arquivo_id
-            ? `/api/arquivos/${encodeURIComponent(avatar.arquivo_id)}/view`
+        clienteAvatarUrl: avatar?.id
+            ? `/api/arquivos/${avatar.id}/view`
             : undefined,
         dataNascimento: toDateOnly(anamnese.cliente.dataNascimento),
         idade: calculateAge(anamnese.cliente.dataNascimento),

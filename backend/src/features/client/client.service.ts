@@ -285,6 +285,7 @@ export async function getById(clientId: string) {
 
             arquivos: {
                 select: {
+                    id: true,
                     tipo: true,
                     mime_type: true,
                     arquivo_id: true,
@@ -454,6 +455,7 @@ export async function list(
                 },
                 arquivos: {
                     select: {
+                        id: true,
                         tipo: true,
                         mime_type: true,
                         arquivo_id: true,
