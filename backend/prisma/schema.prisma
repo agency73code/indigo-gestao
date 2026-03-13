@@ -143,7 +143,7 @@ model cuidador {
   relacao          String?
   descricaoRelacao String?
   nome             String?
-  cpf              String    @db.Char(11)
+  cpf              String?   @db.Char(11)
   profissao        String?
   escolaridade     String?
   telefone         String?

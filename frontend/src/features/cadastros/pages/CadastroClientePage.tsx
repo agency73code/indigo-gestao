@@ -211,11 +211,7 @@ export default function CadastroClientePage() {
         // Validação de CPF do cliente
         if (field === 'cpf') {
             const value = formData?.cpf ?? '';
-
-            if (!String(value).trim()) {
-                setErrors((prev) => ({ ...prev, [field]: 'CPF é obrigatório' }));
-                return;
-            }
+            if (!String(value).trim()) return;
 
             const has11 = onlyDigits(value).length === 11;
             const valid = isValidCPF(value);
@@ -232,10 +228,7 @@ export default function CadastroClientePage() {
             const idx = Number(parts[1] ?? -1);
             const value = formData?.cuidadores?.[idx]?.cpf ?? '';
 
-            if (!String(value).trim()) {
-                setErrors((prev) => ({ ...prev, [field]: 'CPF é obrigatório' }));
-                return;
-            }
+            if (!String(value).trim()) return;
 
             const has11 = onlyDigits(value).length === 11;
             const valid = isValidCPF(value);
@@ -380,20 +373,11 @@ export default function CadastroClientePage() {
         switch (currentStep) {
             case 1: // Dados Pessoais
                 if (!formData.nome?.trim()) newErrors.nome = 'Nome é obrigatório';
-                if (!formData.cpf?.trim()) {
-                    newErrors.cpf = 'CPF é obrigatório';
-                } else if (!isValidCPF(formData.cpf)) {
+                if (formData.cpf?.trim() && !isValidCPF(formData.cpf)) {
                     newErrors.cpf = 'CPF inválido';
                 }
-                if (!formData.dataNascimento?.trim())
-                    newErrors.dataNascimento = 'Data de nascimento é obrigatória';
-                if (!formData.emailContato?.trim())
-                    newErrors.emailContato = 'E-mail de contato é obrigatório';
-                if (!formData.dataEntrada?.trim())
-                    newErrors.dataEntrada = 'Data de entrada é obrigatória';
 
                 // Validação dos cuidadores
-
                 if (!formData.cuidadores?.length) {
                     newErrors.cuidadores = 'Pelo menos um cuidador é obrigatório';
                 } else {
@@ -414,16 +398,11 @@ export default function CadastroClientePage() {
                         if (!cuidador.email?.trim()) {
                             newErrors[`cuidadores.${index}.email`] = 'E-mail é obrigatório';
                         }
-                        if (!cuidador.cpf?.trim()) {
-                            newErrors[`cuidadores.${index}.cpf`] = 'CPF é obrigatório';
-                        } else if (!isValidCPF(cuidador.cpf)) {
+                        if (cuidador.cpf?.trim() && !isValidCPF(cuidador.cpf)) {
                             newErrors[`cuidadores.${index}.cpf`] = 'CPF inválido';
                         }
                         if (!cuidador.escolaridade?.trim()) {
                             newErrors[`cuidadores.${index}.escolaridade`] = 'Escolaridade é obrigatória';
-                        }
-                        if (!cuidador.dataNascimento?.trim()) {
-                            newErrors[`cuidadores.${index}.dataNascimento`] = 'Data de nascimento é obrigatória';
                         }
                     });
                 }
@@ -474,7 +453,6 @@ export default function CadastroClientePage() {
                 break;
 
             case 4: // Dados Pagamento
-                // Campos obrigatórios básicos
                 if (!formData.dadosPagamento?.nomeTitular?.trim())
                     newErrors['dadosPagamento.nomeTitular'] = 'Nome do titular é obrigatório';
                 if (!formData.dadosPagamento?.telefone1?.trim())
@@ -484,16 +462,6 @@ export default function CadastroClientePage() {
                 if (!formData.dadosPagamento?.sistemaPagamento?.trim())
                     newErrors['dadosPagamento.sistemaPagamento'] =
                         'Sistema de pagamento é obrigatório';
-
-                // Validações condicionais baseadas no sistema de pagamento
-                if (formData.dadosPagamento?.sistemaPagamento === 'liminar') {
-                    if (!formData.dadosPagamento?.telefoneAdvogado1?.trim())
-                        newErrors['dadosPagamento.telefoneAdvogado1'] =
-                            'Telefone do advogado é obrigatório';
-                    if (!formData.dadosPagamento?.emailAdvogado1?.trim())
-                        newErrors['dadosPagamento.emailAdvogado1'] =
-                            'E-mail do advogado é obrigatório';
-                }
 
                 if (
                     formData.dadosPagamento?.sistemaPagamento === 'particular' &&
@@ -509,17 +477,8 @@ export default function CadastroClientePage() {
                 const tipo = formData.dadosEscola?.tipoEscola;
                 if (!tipo) newErrors['dadosEscola.tipoEscola'] = 'Tipo da escola é obrigatório';
 
-                const isAfastado = tipo === 'afastado';
-                if (!isAfastado) {
-                    if (!formData.dadosEscola?.nome?.trim())
-                        newErrors['dadosEscola.nome'] = 'Nome da escola é obrigatório';
-                    if (!formData.dadosEscola?.telefone?.trim())
-                        newErrors['dadosEscola.telefone'] = 'Telefone da escola é obrigatório';
-                    if (!formData.dadosEscola?.email?.trim())
-                        newErrors['dadosEscola.email'] = 'E-mail é obrigatório';
-                    if (formData.dadosEscola?.email && !isValidEmail(formData.dadosEscola.email))
-                        newErrors['dadosEscola.email'] = 'E-mail inválido';
-                }
+                if (formData.dadosEscola?.email?.trim() && !isValidEmail(formData.dadosEscola.email))
+                    newErrors['dadosEscola.email'] = 'E-mail inválido';
 
                 // Contatos da escola (mantém como está)
                 if (formData.dadosEscola?.contatos?.length) {
@@ -609,9 +568,9 @@ export default function CadastroClientePage() {
 
             formDataUpload.append('ownerType', 'cliente');
             formDataUpload.append('ownerId', result.id);
-            formDataUpload.append('fullName', payload.nome!);
-            formDataUpload.append('birthDate', payload.dataNascimento!);
-            formDataUpload.append('cpf', payload.cpf!);
+            formDataUpload.append('fullName', payload.nome ?? '');
+            formDataUpload.append('birthDate', payload.dataNascimento ?? '');
+            formDataUpload.append('cpf', payload.cpf ?? '');
 
             await authFetch('/api/arquivos', {
                 method: 'POST',
@@ -625,8 +584,8 @@ export default function CadastroClientePage() {
                 outrosFormData.append('documentType', 'outros');
                 outrosFormData.append('ownerType', 'cliente');
                 outrosFormData.append('ownerId', result.id);
-                outrosFormData.append('fullName', payload.nome!);
-                outrosFormData.append('birthDate', payload.dataNascimento!);
+                outrosFormData.append('fullName', payload.nome ?? '');
+                outrosFormData.append('birthDate', payload.dataNascimento ?? '');
                 if (outrosDescricao && typeof outrosDescricao === 'string') {
                     outrosFormData.append('descricao_documento', outrosDescricao);
                 }

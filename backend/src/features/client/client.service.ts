@@ -30,13 +30,17 @@ async function enderecoData(dto: ClientType.Client) {
 }
 
 export async function create(dto: ClientType.Client) {
-    const existsCpf = await prisma.cliente.findFirst({ where: { cpf: dto.cpf } });
-    if (existsCpf) throw new AppError('CPF_DUPLICADO', 'CPF já cadastrado', 409);
+    if (dto.cpf) {
+        const existsCpf = await prisma.cliente.findFirst({ where: { cpf: dto.cpf } });
+        if (existsCpf) throw new AppError('CPF_DUPLICADO', 'CPF já cadastrado', 409);
+    }
 
-    const existsEmail = await prisma.cliente.findUnique({
-        where: { emailContato: dto.emailContato },
-    });
-    if (existsEmail) throw new AppError('EMAIL_DUPLICADO', 'E-mail já cadastrado', 409);
+    if (dto.emailContato) {
+        const existsEmail = await prisma.cliente.findFirst({
+            where: { emailContato: dto.emailContato },
+        });
+        if (existsEmail) throw new AppError('EMAIL_DUPLICADO', 'E-mail já cadastrado', 409);
+    }
 
     const { token, expiry } = generateResetToken();
     const now = new Date();
