@@ -14,7 +14,7 @@ export async function getUserInfos(req: Request, res: Response) {
         throw error;
     }
 
-    if (req.user.id !== id) {
+    if (req.user!.id !== id) {
         return res.status(403).json({ error: 'Acesso negado.' });
     }
 
