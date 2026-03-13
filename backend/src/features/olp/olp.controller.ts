@@ -147,8 +147,17 @@ export async function getProgramById(req: Request, res: Response) {
                 .status(400)
                 .json({ success: false, message: 'ID do programa não informado' });
 
+        const userId = req.user!.id;
+        const visibility = await getVisibilityScope(userId);
+
+        if (visibility.scope === 'none')
+            return res.status(403).json({ success: false, message: 'Sem permissão para acessar este programa' });
+
         const ocp = await OcpService.getProgramById(programId);
         if (!ocp) return res.status(404).json({ success: false, message: 'OCP não encontrado' });
+
+        if (visibility.scope === 'partial' && !visibility.therapistIds.includes(ocp.terapeuta_id))
+            return res.status(403).json({ success: false, message: 'Sem permissão para acessar este programa' });
 
         return res.status(201).json({ data: OcpNormalizer.mapOcpDetail(ocp as unknown as OcpDetailDTO) });
     } catch (error) {
