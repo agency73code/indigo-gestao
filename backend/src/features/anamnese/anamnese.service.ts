@@ -1510,7 +1510,7 @@ export async function updateAnamneseById(anamneseId: number, therapistId: string
         });
     }
 
-    return getAnamneseById(anamneseId);
+    return getAnamneseById(anamneseId, therapistId);
 }
 
 export async function getExamePrevioArquivoForDownload(
