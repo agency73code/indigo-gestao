@@ -75,7 +75,7 @@ export default function DadosPessoaisStep({
 
                 {/* Data de Nascimento - 1/4 */}
                 <DateFieldWithLabel
-                    label="Data de nascimento"
+                    label="Data de nascimento *"
                     value={data.dataNascimento || ''}
                     onChange={(iso) => onUpdate('dataNascimento', iso)}
                     placeholder="dd/mm/aaaa"
