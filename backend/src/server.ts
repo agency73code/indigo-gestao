@@ -52,11 +52,10 @@ app.use(express.urlencoded({ extended: true }));
 // Rotas
 app.use('/api', routes);
 
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
     res.json({
         status: 'ok',
         timestamp: new Date().toISOString(),
-        environment: env.NODE_ENV,
     });
 });
 
