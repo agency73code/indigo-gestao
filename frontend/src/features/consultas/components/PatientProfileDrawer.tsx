@@ -839,9 +839,9 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                     <>
                                         <ReadOnlyField label="Nome *" value={maskPersonName(clienteData.nome ?? '')} />
                                         <ReadOnlyField label="Data de nascimento *" value={formatDate(clienteData.dataNascimento ?? '')} />
-                                        <ReadOnlyField label="CPF *" value={maskCPF(clienteData.cpf ?? '')} />
-                                        <ReadOnlyField label="E-mail de contato *" value={normalizeEmail(clienteData.emailContato ?? '')} />
-                                        <ReadOnlyField label="Data Entrada *" value={formatDate(clienteData.dataEntrada ?? '')} />
+                                        <ReadOnlyField label="CPF" value={maskCPF(clienteData.cpf ?? '')} />
+                                        <ReadOnlyField label="E-mail de contato" value={normalizeEmail(clienteData.emailContato ?? '')} />
+                                        <ReadOnlyField label="Data Entrada" value={formatDate(clienteData.dataEntrada ?? '')} />
                                         <ReadOnlyField label="Data Saída" value={formatDate(clienteData.dataSaida ?? '')} />
                                     </>
                                 )}
@@ -2511,8 +2511,8 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                                           : 'Não informado'
                                             }
                                         />
-                                        <ReadOnlyField label="Nome *" value={maskPersonName(schoolData?.nome ?? '')} />
-                                        <ReadOnlyField label="Telefone *" value={maskBRPhone(schoolData?.telefone ?? '')} />
+                                        <ReadOnlyField label="Nome" value={maskPersonName(schoolData?.nome ?? '')} />
+                                        <ReadOnlyField label="Telefone" value={maskBRPhone(schoolData?.telefone ?? '')} />
                                         <ReadOnlyField label="E-mail" value={normalizeEmail(schoolData?.email ?? '')} />
                                     </div>
                                     {schoolData?.endereco && (
