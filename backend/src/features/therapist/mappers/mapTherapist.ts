@@ -63,6 +63,7 @@ export function mapTherapist(dto: TherapistRow) {
         },
 
         arquivos: dto.arquivos?.map((a) => ({
+            id: a.id,
             nome: a.tipo,
             arquivo_id: a.arquivo_id,
             mime_type: a.mime_type,

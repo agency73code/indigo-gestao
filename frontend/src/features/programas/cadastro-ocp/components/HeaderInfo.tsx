@@ -285,11 +285,9 @@ export default function HeaderInfo({
                                                 alt={`Foto de ${patient.name}`}
                                                 className={imageLoading ? 'opacity-0' : 'opacity-100 transition-opacity'}
                                                 onLoad={() => {
-                                                    console.log('✅ Patient image loaded:', patient.name, patient.photoUrl);
                                                     setImageLoading(false);
                                                 }}
                                                 onError={() => {
-                                                    console.error('❌ Patient image error:', patient.name, patient.photoUrl);
                                                     setImageLoading(false);
                                                 }}
                                             />
