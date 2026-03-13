@@ -58,10 +58,14 @@ export async function getById(req: Request, res: Response, next: NextFunction) {
 
 export async function update(req: Request, res: Response, next: NextFunction) {
     try {
+        if (!req.user) {
+            throw new AppError('UNAUTHENTICATED', 'Não autenticado', 401);
+        }
+
         const clientId = uuidParam.parse(req.params.id);
         const payload = clientUpdateSchema.parse(req.body);
 
-        await clientService.update(clientId, payload);
+        await clientService.update(clientId, req.user.id, payload);
 
         return res.status(200).json({
             success: true,

@@ -307,10 +307,24 @@ export async function getById(clientId: string, therapistId: string) {
     });
 }
 
-export async function update(clientId: string, payload: clientUpdatePayload): Promise<void> {
+export async function update(clientId: string, therapistId: string, payload: clientUpdatePayload): Promise<void> {
+    const visibility = await getVisibilityScope(therapistId);
+
+    if (visibility.scope === 'none') {
+        throw new AppError('FORBIDDEN', 'Sem permissão para editar este cliente.', 403);
+    }
+
     await prisma.$transaction(async (tx: PrismaTransactionClient) => {
-        const client = await tx.cliente.findUnique({
-            where: { id: clientId },
+        const clientWhere: Prisma.clienteWhereInput = { id: clientId };
+
+        if (visibility.scope === 'partial') {
+            clientWhere.terapeuta = {
+                some: { terapeuta_id: { in: visibility.therapistIds } },
+            };
+        }
+
+        const client = await tx.cliente.findFirst({
+            where: clientWhere,
         });
 
         if (!client) {
