@@ -303,6 +303,7 @@ export async function findBillingFileForDownload(fileId: number) {
                     id: true,
                     sessao_id: true,
                     evolucao_id: true,
+                    terapeuta_id: true,
                 }
             }
         }

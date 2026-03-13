@@ -10,6 +10,7 @@ import { unauthenticated } from "../../errors/unauthenticated.js";
 import { idParam, idsParam } from "../../schemas/utils/id.js";
 import { correctBillingDataSchema, existingBillingFilesSchema } from "./schemas/correctBillingSchema.js";
 import { approveLaunchSchema, rejectLaunchSchema } from "./schemas/launchActionsSchema.js";
+import { getVisibilityScope } from '../../utils/visibilityFilter.js';
 
 export function buildBillingInputFromRequest(req: Request): BillingInput {
     const data = JSON.parse(req.body.data);
@@ -146,6 +147,16 @@ export async function downloadBillingFile(req: Request, res: Response, next: Nex
 
         if (!billingFile) {
             throw new AppError('FILE_NOT_FOUND', 'Arquivo de faturamento não encontrado', 404);
+        }
+
+        const visibility = await getVisibilityScope(req.user.id);
+        const ownerTerapeutaId = billingFile.faturamento.terapeuta_id;
+        const canAccess =
+            visibility.scope === 'all' ||
+            (visibility.scope === 'partial' && ownerTerapeutaId !== null && visibility.therapistIds.includes(ownerTerapeutaId));
+
+        if (!canAccess) {
+            throw new AppError('FORBIDDEN', 'Acesso negado', 403);
         }
 
         if (!billingFile.caminho) {
