@@ -355,6 +355,7 @@ export default function CadastroClientePage() {
         switch (currentStep) {
             case 1: // Dados Pessoais
                 if (!formData.nome?.trim()) newErrors.nome = 'Nome é obrigatório';
+                if (!formData.dataNascimento) newErrors.dataNascimento = 'Data de nascimento é obrigatória';
                 if (formData.cpf?.trim() && !isValidCPF(formData.cpf)) {
                     newErrors.cpf = 'CPF inválido';
                 }
@@ -385,6 +386,24 @@ export default function CadastroClientePage() {
                         }
                         if (!cuidador.escolaridade?.trim()) {
                             newErrors[`cuidadores.${index}.escolaridade`] = 'Escolaridade é obrigatória';
+                        }
+                        if (!cuidador.endereco?.cep?.trim()) {
+                            newErrors[`cuidadores.${index}.endereco.cep`] = 'CEP é obrigatório';
+                        }
+                        if (!cuidador.endereco?.logradouro?.trim()) {
+                            newErrors[`cuidadores.${index}.endereco.logradouro`] = 'Logradouro é obrigatório';
+                        }
+                        if (!cuidador.endereco?.numero?.trim()) {
+                            newErrors[`cuidadores.${index}.endereco.numero`] = 'Número é obrigatório';
+                        }
+                        if (!cuidador.endereco?.bairro?.trim()) {
+                            newErrors[`cuidadores.${index}.endereco.bairro`] = 'Bairro é obrigatório';
+                        }
+                        if (!cuidador.endereco?.cidade?.trim()) {
+                            newErrors[`cuidadores.${index}.endereco.cidade`] = 'Cidade é obrigatória';
+                        }
+                        if (!cuidador.endereco?.uf?.trim()) {
+                            newErrors[`cuidadores.${index}.endereco.uf`] = 'UF é obrigatório';
                         }
                     });
                 }

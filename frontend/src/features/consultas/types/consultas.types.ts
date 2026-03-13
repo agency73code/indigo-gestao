@@ -201,7 +201,7 @@ export type SchoolContactForm = {
 };
 
 export type SchoolForm = {
-    tipoEscola: 'particular' | 'publica' | 'afastado' | 'clinica-escola';
+    tipoEscola: 'particular' | 'publica' | 'afastado' | 'clinica-escola' | '';
     nome: string;
     telefone: string;
     email: string;

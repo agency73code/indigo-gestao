@@ -126,7 +126,7 @@ const defaultClientFormValues: ClientFormValues = {
         valorAcordado: '',
     },
     dadosEscola: {
-        tipoEscola: 'particular',
+        tipoEscola: '',
         nome: '',
         telefone: '',
         email: '',
@@ -300,7 +300,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                 valorAcordado: clienteData.dadosPagamento?.valorAcordado ?? '',
             },
             dadosEscola: {
-                tipoEscola: clienteData.dadosEscola?.tipoEscola ?? 'particular',
+                tipoEscola: clienteData.dadosEscola?.tipoEscola ?? '',
                 nome: maskPersonName(clienteData.dadosEscola?.nome ?? ''),
                 telefone: maskBRPhone(clienteData.dadosEscola?.telefone ?? ''),
                 email: normalizeEmail(clienteData.dadosEscola?.email ?? ''),
@@ -560,27 +560,29 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                             ? emptyToNull(data.dadosPagamento.valorAcordado)
                             : null,
                 },
-                dadosEscola: {
-                    tipoEscola: data.dadosEscola.tipoEscola,
-                    nome: emptyToNull(data.dadosEscola.nome),
-                    telefone: emptyToNull(data.dadosEscola.telefone),
-                    email: emptyToNull(data.dadosEscola.email),
-                    endereco: {
-                        cep: data.dadosEscola.endereco.cep,
-                        logradouro: data.dadosEscola.endereco.logradouro,
-                        numero: data.dadosEscola.endereco.numero,
-                        complemento: emptyToNull(data.dadosEscola.endereco.complemento),
-                        bairro: data.dadosEscola.endereco.bairro,
-                        cidade: data.dadosEscola.endereco.cidade,
-                        uf: data.dadosEscola.endereco.uf,
+                ...(data.dadosEscola.tipoEscola ? {
+                    dadosEscola: {
+                        tipoEscola: data.dadosEscola.tipoEscola,
+                        nome: emptyToNull(data.dadosEscola.nome),
+                        telefone: emptyToNull(data.dadosEscola.telefone),
+                        email: emptyToNull(data.dadosEscola.email),
+                        endereco: {
+                            cep: data.dadosEscola.endereco.cep,
+                            logradouro: data.dadosEscola.endereco.logradouro,
+                            numero: data.dadosEscola.endereco.numero,
+                            complemento: emptyToNull(data.dadosEscola.endereco.complemento),
+                            bairro: data.dadosEscola.endereco.bairro,
+                            cidade: data.dadosEscola.endereco.cidade,
+                            uf: data.dadosEscola.endereco.uf,
+                        },
+                        contatos: (data.dadosEscola.contatos ?? []).map((c) => ({
+                            nome: emptyToNull(c.nome),
+                            telefone: emptyToNull(c.telefone),
+                            email: emptyToNull(c.email),
+                            funcao: emptyToNull(c.funcao),
+                        })),
                     },
-                    contatos: (data.dadosEscola.contatos ?? []).map((c) => ({
-                        nome: emptyToNull(c.nome),
-                        telefone: emptyToNull(c.telefone),
-                        email: emptyToNull(c.email),
-                        funcao: emptyToNull(c.funcao),
-                    })),
-                },
+                } : {}),
             });
 
             window.dispatchEvent(

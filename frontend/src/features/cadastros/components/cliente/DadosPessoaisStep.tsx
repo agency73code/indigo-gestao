@@ -368,7 +368,7 @@ export default function DadosPessoaisStep({
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 {/* CEP - 1/3 */}
                                 <InputField
-                                    label="CEP"
+                                    label="CEP *"
                                     id={`cep-cuidador-${index}`}
                                     value={cuidador.endereco?.cep || ''}
                                     onChange={async (e) => {
@@ -413,7 +413,7 @@ export default function DadosPessoaisStep({
                                 {/* Logradouro - 2/3 */}
                                 <div className="md:col-span-2">
                                     <InputField
-                                        label="Logradouro"
+                                        label="Logradouro *"
                                         id={`logradouro-cuidador-${index}`}
                                         value={cuidador.endereco?.logradouro || ''}
                                         onChange={(e) => {
@@ -433,7 +433,7 @@ export default function DadosPessoaisStep({
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 {/* Número - 1/3 */}
                                 <InputField
-                                    label="Número"
+                                    label="Número *"
                                     id={`numero-cuidador-${index}`}
                                     value={cuidador.endereco?.numero || ''}
                                     onChange={(e) => {
@@ -465,7 +465,7 @@ export default function DadosPessoaisStep({
 
                                 {/* Bairro - 1/3 */}
                                 <InputField
-                                    label="Bairro"
+                                    label="Bairro *"
                                     id={`bairro-cuidador-${index}`}
                                     value={cuidador.endereco?.bairro || ''}
                                     onChange={(e) => {
@@ -485,7 +485,7 @@ export default function DadosPessoaisStep({
                                 {/* Cidade - 2/3 */}
                                 <div className="md:col-span-2">
                                     <InputField
-                                        label="Cidade"
+                                        label="Cidade *"
                                         id={`cidade-cuidador-${index}`}
                                         value={cuidador.endereco?.cidade || ''}
                                         onChange={(e) => {
@@ -502,7 +502,7 @@ export default function DadosPessoaisStep({
 
                                 {/* UF - 1/3 */}
                                 <SelectField
-                                    label="UF"
+                                    label="UF *"
                                     id={`uf-cuidador-${index}`}
                                     value={cuidador.endereco?.uf || ''}
                                     onChange={(e) => {
