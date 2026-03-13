@@ -69,9 +69,11 @@ export async function logout(req: Request, res: Response, next: NextFunction) {
     try {
         const { refreshToken } = req.body as { refreshToken?: string };
 
-        if (refreshToken) {
-            await revokeRefreshToken(refreshToken);
+        if (!refreshToken) {
+            return res.status(400).json({ success: false, message: 'Refresh token é obrigatório para logout' });
         }
+
+        await revokeRefreshToken(refreshToken);
 
         res.clearCookie('token', {
             httpOnly: true,
