@@ -100,7 +100,7 @@ export const clientUpdateSchema = z.object({
                 funcao: z.string().nullable().default(null),
             }),
         ),
-    }),
+    }).optional(),
 });
 
 export type clientUpdatePayload = z.infer<typeof clientUpdateSchema>;

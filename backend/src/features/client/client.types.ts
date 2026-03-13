@@ -92,27 +92,7 @@ export interface Client {
     };
 
     // Dados escola
-    dadosEscola: {
-        tipoEscola: 'particular' | 'publica' | 'afastado' | 'clinica-escola';
-        nome: string | null;
-        telefone: string | null;
-        email?: string | null;
-        endereco: {
-            cep?: string | null;
-            logradouro?: string | null;
-            numero?: string | null;
-            complemento?: string | null;
-            bairro?: string | null;
-            cidade?: string | null;
-            uf?: string | null;
-        };
-        contatos: Array<{
-            nome: string | null;
-            telefone: string | null;
-            email?: string | null;
-            funcao: string | null;
-        }>;
-    };
+    dadosEscola?: SchoolDataPayload | undefined;
 
     // Arquivos
     arquivos?: Array<{
@@ -235,7 +215,7 @@ export interface ClientUpdatePayload {
     enderecos: ClientAddressPayload[];
     cuidadores: CaretakerPayload[];
     dadosPagamento: PaymentDataPayload;
-    dadosEscola: SchoolDataPayload;
+    dadosEscola?: SchoolDataPayload | undefined;
 }
 
 export interface AddressData {

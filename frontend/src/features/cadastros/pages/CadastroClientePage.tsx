@@ -46,7 +46,7 @@ export default function CadastroClientePage() {
         cpf: null,
         dataNascimento: null,
         emailContato: null,
-        dataEntrada: new Date().toISOString().split('T')[0],
+        dataEntrada: null,
         dataSaida: null,
 
         // Cuidadores - inicializado vazio, será preenchido pelo useEffect do DadosPessoaisStep
@@ -96,24 +96,6 @@ export default function CadastroClientePage() {
             emailAdvogado3: null,
             houveNegociacao: 'nao' as 'sim' | 'nao',
             valorAcordado: null,
-        },
-
-        // Dados escola
-        dadosEscola: {
-            tipoEscola: 'particular',
-            nome: null,
-            telefone: null,
-            email: null,
-            endereco: {
-                cep: null,
-                logradouro: null,
-                numero: null,
-                complemento: null,
-                bairro: null,
-                cidade: null,
-                uf: null,
-            },
-            contatos: [],
         },
 
         // Arquivos
@@ -473,14 +455,9 @@ export default function CadastroClientePage() {
                 break;
 
             case 5: {
-                // Dados Escola
-                const tipo = formData.dadosEscola?.tipoEscola;
-                if (!tipo) newErrors['dadosEscola.tipoEscola'] = 'Tipo da escola é obrigatório';
-
                 if (formData.dadosEscola?.email?.trim() && !isValidEmail(formData.dadosEscola.email))
                     newErrors['dadosEscola.email'] = 'E-mail inválido';
 
-                // Contatos da escola (mantém como está)
                 if (formData.dadosEscola?.contatos?.length) {
                     formData.dadosEscola.contatos.forEach((contato, index) => {
                         if (!contato.nome?.trim())
@@ -528,7 +505,11 @@ export default function CadastroClientePage() {
         setIsLoading(true);
 
         try {
-            const payload = formData;
+            const payload = { ...formData };
+
+            if (!payload.dadosEscola?.tipoEscola) {
+                delete payload.dadosEscola;
+            }
 
             const formDataUpload = new FormData();
 

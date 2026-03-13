@@ -168,7 +168,7 @@ export const ClientSchema = z.object({
     cuidadores: z.array(caregiverSchema).min(1, 'Deve haver pelo menos um cuidador'),
     enderecos: z.array(clientAddressSchema).min(1, 'Deve haver pelo menos um endereço'),
     dadosPagamento: paymentSchema,
-    dadosEscola: schoolSchema,
+    dadosEscola: schoolSchema.optional(),
     arquivos: z.array(fileSchema).optional().default([]),
 });
 
@@ -209,7 +209,7 @@ export const UpdateClientSchema = z
         cuidadores: z.array(caregiverSchema),
         enderecos: z.array(clientAddressSchema),
         dadosPagamento: paymentSchema,
-        dadosEscola: schoolSchema,
+        dadosEscola: schoolSchema.optional(),
         arquivos: z.array(optionalFileSchema).optional(),
     })
     .strict()

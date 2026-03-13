@@ -64,7 +64,7 @@ export default function DadosPessoaisStep({
 
                 {/* CPF - 1/4 */}
                 <InputField
-                    label="CPF *"
+                    label="CPF"
                     id="cpf"
                     value={data.cpf || ''}
                     onChange={(e) => onUpdate('cpf', mask.maskCPF(e.target.value))}
@@ -75,7 +75,7 @@ export default function DadosPessoaisStep({
 
                 {/* Data de Nascimento - 1/4 */}
                 <DateFieldWithLabel
-                    label="Data de nascimento *"
+                    label="Data de nascimento"
                     value={data.dataNascimento || ''}
                     onChange={(iso) => onUpdate('dataNascimento', iso)}
                     placeholder="dd/mm/aaaa"
@@ -85,7 +85,7 @@ export default function DadosPessoaisStep({
                 {/* E-mail de contato - 2/4 */}
                 <div className="md:col-span-2">
                     <InputField
-                        label="E-mail de contato *"
+                        label="E-mail de contato"
                         id="emailContato"
                         type="email"
                         value={mask.normalizeEmail(data.emailContato || '')}
@@ -99,7 +99,7 @@ export default function DadosPessoaisStep({
 
                 {/* Data Entrada - 1/4 */}
                 <DateFieldWithLabel
-                    label="Data Entrada *"
+                    label="Data Entrada"
                     value={data.dataEntrada || ''}
                     onChange={(iso) => onUpdate('dataEntrada', iso)}
                     placeholder="dd/mm/aaaa"
@@ -172,7 +172,7 @@ export default function DadosPessoaisStep({
 
                             {/* CPF - 1/4 */}
                             <InputField
-                                label="CPF *"
+                                label="CPF"
                                 id={`cpf-${index}`}
                                 value={cuidador.cpf || ''}
                                 onChange={(e) => {
@@ -190,7 +190,7 @@ export default function DadosPessoaisStep({
 
                             {/* Data de Nascimento - 1/4 */}
                             <DateFieldWithLabel
-                                label="Data de Nascimento *"
+                                label="Data de Nascimento"
                                 value={cuidador.dataNascimento || ''}
                                 onChange={(iso) => {
                                     const cuidadores = [...(data.cuidadores || [])];
