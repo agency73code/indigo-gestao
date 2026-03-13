@@ -105,37 +105,53 @@ export async function listFiles(req: Request, res: Response) {
 
 /**
  * Controller: streama um arquivo diretamente do R2 para o navegador.
+ * Usa ID numérico do banco para evitar expor a chave do R2 na URL.
  */
-export async function viewFile(req: Request, res: Response) {
-    const storageId = req.params.id ?? req.params.storageId;
-
-    if (!storageId) {
-        return res.status(400).json({ error: 'storageId é obrigatório.' });
-    }
-
+export async function viewFile(req: Request, res: Response, next: NextFunction) {
     try {
-        const { metadata, stream } = await getFileStreamFromR2(storageId);
-
-        if (!stream) {
-            return res.status(500).json({ error: 'Falha ao obter stream do arquivo.' });
+        if (!req.user) {
+            throw new AppError('UNAUTHENTICATED', 'Não autenticado', 401);
         }
 
-        // Define os cabeçalhos corretos pro navegador renderizar
-        res.setHeader('Content-Type', metadata.mimeType);
+        const { id: fileId } = arquivoIdParamSchema.parse(req.params);
+
+        const dbFile = await FilesService.findFileByIdAuthorized(fileId, req.user.id);
+        if (!dbFile) {
+            throw new AppError('FILE_NOT_FOUND', 'Arquivo não encontrado', 404);
+        }
+
+        const { metadata, stream } = await getFileStreamFromR2(dbFile.storage_id!);
+
+        if (!stream) {
+            throw new AppError('FILE_STREAM_ERROR', 'Falha ao obter stream do arquivo', 500);
+        }
+
+        const SAFE_INLINE_MIME_TYPES = new Set([
+            'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml',
+            'image/heic', 'image/heif', // Apple HEIC (iPhone)
+            'application/pdf',
+            'video/mp4', 'video/webm',
+            'audio/mpeg', 'audio/ogg', 'audio/wav',
+        ]);
+        const safeMime = SAFE_INLINE_MIME_TYPES.has(metadata.mimeType)
+            ? metadata.mimeType
+            : 'application/octet-stream';
+
+        res.setHeader('Content-Type', safeMime);
+        res.setHeader('Content-Disposition', 'inline');
+        res.setHeader('X-Content-Type-Options', 'nosniff');
         res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
         res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
-        res.setHeader('Cache-Control', 'public, must-revalidate, max-age=0');
+        res.setHeader('Cache-Control', 'private, max-age=300');
 
-        // Envia o stream diretamente
         (stream as NodeJS.ReadableStream).on('error', (err) => {
             console.error('Erro ao streamar arquivo:', err);
             res.sendStatus(500);
         });
 
         return (stream as NodeJS.ReadableStream).pipe(res);
-    } catch (error) {
-        console.error('Erro ao visualizar arquivo:', error);
-        return res.status(404).json({ error: 'Arquivo não encontrado no R2.' });
+    } catch (err) {
+        return next(err);
     }
 }
 
@@ -151,7 +167,7 @@ export async function downloadFile(req: Request, res: Response, next: NextFuncti
         const { id: fileId } = arquivoIdParamSchema.parse(req.params);
         
         // Busca no banco pelo ID lógico (seguro)
-        const dbFile = await FilesService.findByIdForDownload(fileId, req.user.id);
+        const dbFile = await FilesService.findFileByIdAuthorized(fileId, req.user.id);
         if (!dbFile) {
             throw new AppError('FILE_NOT_FOUND', 'Arquivo não encontrado', 404);
         }
@@ -191,28 +207,38 @@ export async function downloadSessionFile(req: Request, res: Response, next: Nex
 /**
  * Controller: exclui um arquivo do banco e do Google R2.
  */
-export async function deleteFile(req: Request, res: Response) {
+export async function deleteFile(req: Request, res: Response, next: NextFunction) {
     try {
+        if (!req.user) {
+            throw new AppError('UNAUTHENTICATED', 'Não autenticado', 401);
+        }
+
         const { id: fileId } = arquivoIdParamSchema.parse(req.params);
 
-        const existing = await FilesService.findFileById(fileId);
-
-        if (!existing) {
-            return res.status(404).json({ error: 'Arquivo não encontrado.' });
+        // Verifica existência e permissão antes de deletar (reutiliza mesma lógica de autorização do download)
+        let authorized;
+        try {
+            authorized = await FilesService.findFileByIdAuthorized(fileId, req.user.id);
+        } catch (err) {
+            if (err instanceof AppError && err.code === 'REQUIRED_THERAPIST_REGISTER') {
+                throw new AppError('FORBIDDEN', 'Sem permissão para excluir este arquivo', 403);
+            }
+            throw err;
         }
 
-        // Tenta excluir do R2, se houver arquivo remoto
-        if (existing.arquivo_id) {
-            await FilesService.deleteFromR2(existing.arquivo_id);
+        if (!authorized) {
+            throw new AppError('FILE_NOT_FOUND', 'Arquivo não encontrado', 404);
         }
 
-        // Remove o registro do banco
-        await FilesService.deleteFromDatabase(existing.id);
+        if (authorized.storage_id) {
+            await FilesService.deleteFromR2(authorized.storage_id);
+        }
+
+        await FilesService.deleteFromDatabase(authorized.id);
 
         return res.status(204).send();
-    } catch (error) {
-        console.error('Erro ao excluir arquivo:', error);
-        return res.status(500).json({ error: 'Falha ao excluir arquivo.' });
+    } catch (err) {
+        return next(err);
     }
 }
 
@@ -238,8 +264,7 @@ export async function getAvatar(req: Request, res: Response) {
             return res.status(200).json({ avatarUrl: null });
         }
 
-        const encoded = encodeURIComponent(avatar.storageId);
-        const avatarUrl = `/api/arquivos/${encoded}/view`;
+        const avatarUrl = `/api/arquivos/${avatar.id}/view`;
         return res.json({ avatarUrl });
     } catch (error) {
         console.error('Erro ao obter avatar:', error);
