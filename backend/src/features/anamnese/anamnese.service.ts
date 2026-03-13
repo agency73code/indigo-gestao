@@ -276,7 +276,7 @@ export async function list(
     };
 }
 
-export async function getAnamneseById(anamneseId: number) {
+export async function getAnamneseById(anamneseId: number, therapistId: string) {
     const anamnese = await prisma.anamnese.findUnique({
         where: { id: anamneseId },
         select: {
@@ -590,6 +590,14 @@ export async function getAnamneseById(anamneseId: number) {
     });
 
     if (!anamnese) return null;
+
+    const visibility = await getVisibilityScope(therapistId);
+    if (visibility.scope === 'none') return null;
+    if (
+        visibility.scope === 'partial' &&
+        anamnese.terapeuta_id &&
+        !visibility.therapistIds.includes(anamnese.terapeuta_id)
+    ) return null;
 
     const avatar = anamnese.cliente.arquivos.find((file) => file.tipo === 'fotoPerfil');
 
@@ -1248,11 +1256,12 @@ function buildReplaceList<T>(items?: Prisma.Enumerable<T>): { deleteMany: object
     return result;
 }
 
-export async function updateAnamneseById(anamneseId: number, payload: AnamnesePayload) {
+export async function updateAnamneseById(anamneseId: number, therapistId: string, payload: AnamnesePayload) {
     const existing = await prisma.anamnese.findUnique({
         where: { id: anamneseId },
         select: {
             id: true,
+            terapeuta_id: true,
             queixa_diagnostico: {
                 select: {
                     exames_previos: {
@@ -1273,6 +1282,18 @@ export async function updateAnamneseById(anamneseId: number, payload: AnamnesePa
 
     if (!existing) {
         return null;
+    }
+
+    const visibility = await getVisibilityScope(therapistId);
+    if (visibility.scope === 'none') {
+        throw new AppError('FORBIDDEN', 'Sem permissão para editar esta anamnese.', 403);
+    }
+    if (
+        visibility.scope === 'partial' &&
+        existing.terapeuta_id &&
+        !visibility.therapistIds.includes(existing.terapeuta_id)
+    ) {
+        throw new AppError('FORBIDDEN', 'Sem permissão para editar esta anamnese.', 403);
     }
 
     const normalizeId = (id?: string | number | null): string | null => {
