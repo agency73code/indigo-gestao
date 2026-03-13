@@ -368,11 +368,9 @@ export default function HeaderInfo({
                                                 alt={`Foto de ${therapist.name}`}
                                                 className={therapistImageLoading ? 'opacity-0' : 'opacity-100 transition-opacity'}
                                                 onLoad={() => {
-                                                    console.log('✅ Therapist image loaded:', therapist.name, therapist.photoUrl);
                                                     setTherapistImageLoading(false);
                                                 }}
                                                 onError={() => {
-                                                    console.error('❌ Therapist image error:', therapist.name, therapist.photoUrl);
                                                     setTherapistImageLoading(false);
                                                 }}
                                             />

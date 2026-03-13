@@ -24,6 +24,10 @@ import {
 
 const RESET_TOKEN_EXPIRATION_MS = 60 * 60 * 1000;
 
+// Hash dummy usado para equalizar o tempo de resposta quando o usuário não existe,
+// evitando timing attack por enumeração de usuários válidos.
+const DUMMY_HASH = '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy';
+
 function getRequestIp(req: Request) {
     const forwardedFor = req.headers['x-forwarded-for'];
     if (typeof forwardedFor === 'string') {
@@ -148,8 +152,10 @@ export async function validateLogin(req: Request, res: Response, next: NextFunct
             (await loginUserByAccessInformation(normalized, 'terapeuta')) ??
             (await loginUserByAccessInformation(normalized, 'cliente'));
 
-        if (!user)
+        if (!user) {
+            await comparePassword(password, DUMMY_HASH); // equaliza tempo para evitar timing attack
             return res.status(401).json({ success: false, message: 'Credenciais inválidas' });
+        }
         if (!user.senha)
             return res
                 .status(400)
