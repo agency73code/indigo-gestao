@@ -327,9 +327,14 @@ export async function getSessionsByProgram(programId: number, limit: number) {
     return sessions.map(OcpNormalizer.mapSessionReturn);
 }
 
-export async function getClientById(clientId: string) {
-    const client = await prisma.cliente.findUnique({
-        where: { id: clientId },
+export async function getClientById(clientId: string, therapistIds: string[] | null) {
+    const client = await prisma.cliente.findFirst({
+        where: {
+            id: clientId,
+            ...(therapistIds !== null && {
+                terapeuta: { some: { terapeuta_id: { in: therapistIds } } },
+            }),
+        },
         include: {
             cuidadores: {
                 take: 1,

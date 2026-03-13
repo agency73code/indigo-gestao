@@ -185,7 +185,15 @@ export async function getClientById(req: Request, res: Response) {
     if (!clientId)
         return res.status(400).json({ success: false, message: 'clientId é obrigatório' });
 
-    const patient = await OcpService.getClientById(clientId);
+    const userId = req.user!.id;
+    const visibility = await getVisibilityScope(userId);
+
+    if (visibility.scope === 'none')
+        return res.status(403).json({ success: false, message: 'Sem permissão para acessar este paciente' });
+
+    const therapistIds = visibility.scope === 'partial' ? visibility.therapistIds : null;
+
+    const patient = await OcpService.getClientById(clientId, therapistIds);
     if (!patient)
         return res.status(404).json({ success: false, message: 'Paciente não encontrado' });
 
