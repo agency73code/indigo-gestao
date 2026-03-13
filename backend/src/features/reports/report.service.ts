@@ -220,7 +220,7 @@ function mapToSavedReport(record: ReportRecord): SavedReport {
         }),
 
         ...(record.pdf_arquivo_id && {
-            pdfUrl: `/api/arquivos/${encodeURIComponent(record.pdf_arquivo_id)}/view`,
+            pdfUrl: `/api/relatorios/${record.id}/pdf`,
         }),
         ...(record.pdf_nome && { pdfFilename: record.pdf_nome }),
         ...(record.pasta_relatorios_drive && {

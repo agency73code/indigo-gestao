@@ -263,6 +263,7 @@ export async function fetchTherapistSummaryById(therapistId: string) {
             arquivos: {
                 where: { tipo: 'fotoPerfil' },
                 select: {
+                    id: true,
                     arquivo_id: true,
                 },
             }

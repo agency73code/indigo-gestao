@@ -51,7 +51,7 @@ export async function findClientOptions(userId: string, search?: string, limit =
             nome: true,
             arquivos: {
                 where: { tipo: 'fotoPerfil' },
-                select: { arquivo_id: true },
+                select: { id: true },
                 take: 1,
             },
         },
@@ -117,7 +117,7 @@ export async function findClientList(
 
             arquivos: {
                 where: { tipo: 'fotoPerfil' },
-                select: { arquivo_id: true },
+                select: { id: true },
                 take: 1,
             },
         },

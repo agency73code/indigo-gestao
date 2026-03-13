@@ -48,7 +48,7 @@ export const queryPsychologicalRecord = {
             arquivos: {
                 where: { tipo: 'fotoPerfil' },
                 select: {
-                    arquivo_id: true,
+                    id: true,
                 },
                 take: 1,
             }
@@ -78,7 +78,7 @@ export const queryPsychologicalRecord = {
             arquivos: {
                 where: { tipo: 'fotoPerfil' },
                 select: {
-                    arquivo_id: true,
+                    id: true,
                 },
                 take: 1,
             },

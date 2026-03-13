@@ -60,7 +60,7 @@ export async function getBootstrapBase(therapistId: string) {
                     arquivos: {
                         where: { tipo: 'fotoPerfil' },
                         select: {
-                            arquivo_id: true,
+                            id: true,
                         },
                         take: 1,
                     },
