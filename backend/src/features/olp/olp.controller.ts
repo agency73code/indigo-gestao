@@ -50,7 +50,14 @@ export async function createProgram(req: Request, res: Response) {
         }
 
         const ocp = await OcpService.createProgram(body);
-        return res.status(201).json(ocp);
+        return res.status(201).json({
+            id: ocp.id,
+            estimulos: ocp.estimulo_ocp.map((e) => ({
+                id: e.id,
+                estimuloId: e.estimulo.id,
+                nome: e.nome,
+            })),
+        });
     } catch (error) {
         console.error('Erro ao criar programa:', error);
 

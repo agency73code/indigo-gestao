@@ -433,7 +433,7 @@ export default function DadosPagamentoStep({
                         {/* Telefones do Advogado - 4/12 */}
                         <div className="space-y-3 md:col-span-4">
                             <InputFieldWithAddButton
-                                label="Telefone advogado *"
+                                label="Telefone advogado"
                                 id="telefoneAdvogado1"
                                 value={dadosPagamento.telefoneAdvogado1 || ''}
                                 onChange={(e) =>
@@ -492,7 +492,7 @@ export default function DadosPagamentoStep({
                         {/* E-mails do Advogado - 8/12 */}
                         <div className="space-y-3 md:col-span-8">
                             <InputFieldWithAddButton
-                                label="E-mail advogado *"
+                                label="E-mail advogado"
                                 id="emailAdvogado1"
                                 type="email"
                                 value={dadosPagamento.emailAdvogado1 || ''}

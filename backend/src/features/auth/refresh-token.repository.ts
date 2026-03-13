@@ -70,3 +70,11 @@ export async function revokeRefreshTokenByHash(tokenHash: string) {
         WHERE tokenHash = ${tokenHash} AND revokedAt IS NULL
     `;
 }
+
+export async function revokeAllRefreshTokensByUserId(userId: string, userType: Tables) {
+    await prisma.$executeRaw`
+        UPDATE auth_refresh_token
+        SET revokedAt = NOW(3), updatedAt = NOW(3)
+        WHERE userId = ${userId} AND userType = ${userType} AND revokedAt IS NULL
+    `;
+}

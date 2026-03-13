@@ -1,4 +1,5 @@
 import type { SavedReport } from '../types';
+import { authFetch } from '@/lib/http';
 
 export interface SaveReportPayload {
     // Arquivo PDF
@@ -54,7 +55,7 @@ export class ReportApiService {
         formData.append('data', JSON.stringify(payload.structuredData));
 
         try {
-            const response = await fetch(this.BASE_URL, {
+            const response = await authFetch(this.BASE_URL, {
                 method: 'POST',
                 body: formData,
                 credentials: 'include',
@@ -100,7 +101,7 @@ export class ReportApiService {
         const url = `${this.BASE_URL}?${params.toString()}`;
 
         try {
-            const response = await fetch(url, {
+            const response = await authFetch(url, {
                 method: 'GET',
                 credentials: 'include',
             });
@@ -125,7 +126,7 @@ export class ReportApiService {
      */
     static async getReport(reportId: string): Promise<SavedReport> {
         try {
-            const response = await fetch(`${this.BASE_URL}/${reportId}`, {
+            const response = await authFetch(`${this.BASE_URL}/${reportId}`, {
                 method: 'GET',
                 credentials: 'include',
             });
@@ -149,7 +150,7 @@ export class ReportApiService {
      */
     static async deleteReport(reportId: string): Promise<void> {
         try {
-            const response = await fetch(`${this.BASE_URL}/${reportId}`, {
+            const response = await authFetch(`${this.BASE_URL}/${reportId}`, {
                 method: 'DELETE',
                 credentials: 'include',
             });

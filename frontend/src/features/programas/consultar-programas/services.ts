@@ -1,4 +1,5 @@
 import { buildApiUrl } from '@/lib/api';
+import { authFetch } from '@/lib/http';
 import { fetchClients } from '../api';
 import type { Patient, ProgramListItem } from './types';
 import { getCurrentAreaFromStorage } from '@/utils/apiWithArea';
@@ -31,7 +32,7 @@ export async function listPrograms(params: {
         area,
     });
 
-    const res = await fetch(url, {
+    const res = await authFetch(url, {
         credentials: 'include',
         headers: { Accept: 'application/json' },
     });
@@ -43,7 +44,7 @@ export async function listPrograms(params: {
 }
 
 export async function getPatientById(patientId: string): Promise<Patient | null> {
-    const res = await fetch(`/api/ocp/clients/${patientId}`, {
+    const res = await authFetch(`/api/ocp/clients/${patientId}`, {
         method: 'GET',
         credentials: 'include',
         headers: { 'Accept': 'application/json' },
@@ -61,7 +62,7 @@ export async function getPatientById(patientId: string): Promise<Patient | null>
 
     try {
         // 🔄 mesma chamada que o fetchClients faz
-        const avatarRes = await fetch(
+        const avatarRes = await authFetch(
             `${import.meta.env.VITE_API_URL}/arquivos/getAvatar?ownerId=${data.id}&ownerType=cliente`,
             { credentials: 'include' }
         );

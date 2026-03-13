@@ -17,19 +17,21 @@ const caregiverSchema = z.object({
     relacao: z.string().min(1, 'Relação é obrigatória'),
     descricaoRelacao: z.string().optional().nullable().default(null),
     nome: z.string().min(1, 'Nome é obrigatório'),
-    cpf: z
-        .string()
-        .transform(strip)
-        .refine((val) => cpf.isValid(val), { message: 'CPF do responsável inválido' }),
+    cpf: z.preprocess(
+        (val) => (val === '' || val == null ? null : String(val).replace(/\D/g, '') || null),
+        z.string()
+            .refine((val) => val === null || cpf.isValid(val), { message: 'CPF do responsável inválido' })
+            .nullable()
+            .default(null),
+    ),
     profissao: z.string().optional().nullable().default(null),
     escolaridade: z.string().min(1, 'Escolaridade é obrigatório'),
     telefone: z.string().min(1, 'Telefone do responsável é obrigatório').transform(strip),
     email: z.email({ message: 'E-mail inválido' }),
-    dataNascimento: z.coerce
-        .date({ error: 'Data de nascimento do cuidador é obrigatória' })
-        .refine((d) => !Number.isNaN(d.getTime()), {
-            error: 'Data de nascimento do cuidador inválida',
-        }),
+    dataNascimento: z.preprocess(
+        (val) => (val === '' || val == null ? null : val),
+        z.coerce.date().nullable().default(null),
+    ),
     endereco: caregiverAddressSchema,
 });
 
@@ -94,13 +96,16 @@ const paymentSchema = z.object({
 });
 
 const schoolAddressSchema = z.object({
-    cep: z.string().min(1, 'CEP é obrigatório').transform(strip),
-    logradouro: z.string().min(1, 'Rua é obrigatório'),
-    numero: z.string().min(1, 'Numero é obrigatório'),
+    cep: z.preprocess(
+        (val) => (val === '' || val == null ? null : String(val).replace(/\D/g, '') || null),
+        z.string().nullable().default(null),
+    ),
+    logradouro: z.string().optional().nullable().default(null),
+    numero: z.string().optional().nullable().default(null),
     complemento: z.string().optional().nullable().default(''),
-    bairro: z.string().min(1, 'Bairro é obrigatório'),
-    cidade: z.string().min(1, 'Cidade é obrigatório'),
-    uf: z.string().min(1, 'Estado é obrigatório'),
+    bairro: z.string().optional().nullable().default(null),
+    cidade: z.string().optional().nullable().default(null),
+    uf: z.string().optional().nullable().default(null),
 });
 
 const schoolContactSchema = z.object({
@@ -139,19 +144,31 @@ const fileSchema = z.object({
 
 export const ClientSchema = z.object({
     nome: z.string().min(1, 'Nome é obrigatório'),
-    cpf: z
-        .string()
-        .transform(strip)
-        .refine((val) => cpf.isValid(val), { message: 'CPF inválido' }),
-    dataNascimento: z.coerce.date(),
-    emailContato: z.email({ message: 'E-mail inválido' }),
-    dataEntrada: z.coerce.date(),
+    cpf: z.preprocess(
+        (val) => (val === '' || val == null ? null : String(val).replace(/\D/g, '') || null),
+        z.string()
+            .refine((val) => val === null || cpf.isValid(val), { message: 'CPF inválido' })
+            .nullable()
+            .default(null),
+    ),
+    dataNascimento: z.preprocess(
+        (val) => (val === '' || val == null ? null : val),
+        z.coerce.date().nullable().default(null),
+    ),
+    emailContato: z.preprocess(
+        (val) => (val === '' || val == null ? null : val),
+        z.email({ message: 'E-mail inválido' }).nullable().default(null),
+    ),
+    dataEntrada: z.preprocess(
+        (val) => (val === '' || val == null ? null : val),
+        z.coerce.date().nullable().default(null),
+    ),
     dataSaida: z.coerce.date().optional().nullable().default(null),
 
     cuidadores: z.array(caregiverSchema).min(1, 'Deve haver pelo menos um cuidador'),
     enderecos: z.array(clientAddressSchema).min(1, 'Deve haver pelo menos um endereço'),
     dadosPagamento: paymentSchema,
-    dadosEscola: schoolSchema,
+    dadosEscola: schoolSchema.optional(),
     arquivos: z.array(fileSchema).optional().default([]),
 });
 
@@ -169,22 +186,34 @@ const optionalFileSchema = fileSchema.partial();
 export const UpdateClientSchema = z
     .object({
         nome: z.string().min(1, 'Nome é obrigatório'),
-        cpf: z
-            .string()
-            .transform(strip)
-            .refine((val) => cpf.isValid(val), { message: 'CPF principal inválido' }),
-        dataNascimento: z.coerce.date({ message: 'Data de nascimento é obrigatória' }),
-        emailContato: z.email({ message: 'E-mail inválido' }),
-        dataEntrada: z.coerce.date({ message: 'Data de entrada é obrigatória' }),
+        cpf: z.preprocess(
+            (val) => (val === '' || val == null ? null : String(val).replace(/\D/g, '') || null),
+            z.string()
+                .refine((val) => val === null || cpf.isValid(val), { message: 'CPF principal inválido' })
+                .nullable()
+                .default(null),
+        ),
+        dataNascimento: z.preprocess(
+            (val) => (val === '' || val == null ? null : val),
+            z.coerce.date().nullable().default(null),
+        ),
+        emailContato: z.preprocess(
+            (val) => (val === '' || val == null ? null : val),
+            z.email({ message: 'E-mail inválido' }).nullable().default(null),
+        ),
+        dataEntrada: z.preprocess(
+            (val) => (val === '' || val == null ? null : val),
+            z.coerce.date().nullable().default(null),
+        ),
         dataSaida: nullableDate.default(null),
         cuidadores: z.array(caregiverSchema),
         enderecos: z.array(clientAddressSchema),
         dadosPagamento: paymentSchema,
-        dadosEscola: schoolSchema,
+        dadosEscola: schoolSchema.optional(),
         arquivos: z.array(optionalFileSchema).optional(),
     })
     .strict()
-    .refine((data) => !data.dataSaida || data.dataSaida >= data.dataEntrada, {
+    .refine((data) => !data.dataSaida || !data.dataEntrada || data.dataSaida >= data.dataEntrada, {
         message: 'A data de saída não pode ser anterior à data de entrada',
         path: ['dataSaida'],
     });

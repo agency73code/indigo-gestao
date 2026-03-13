@@ -1,10 +1,12 @@
+import { authFetch } from '@/lib/http';
+
 export async function fetchAndSet<T>(
   url: string,
   setter: React.Dispatch<React.SetStateAction<T>>,
   label: string
 ) {
   try {
-    const res = await fetch(url, { credentials: "include" });
+    const res = await authFetch(url, { credentials: "include" });
     if (!res.ok) throw new Error("Erro de API");
     const data = await res.json();
     

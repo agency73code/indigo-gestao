@@ -51,6 +51,15 @@ export async function createProgram(data: OcpType.CreateProgramPayload) {
             area: data.area,
             desempenho_atual: isTO ? (data.currentPerformanceLevel ?? null) : null,
         },
+        include: {
+            estimulo_ocp: {
+                select: {
+                    id: true,
+                    nome: true,
+                    estimulo: { select: { id: true } },
+                },
+            },
+        },
     });
 }
 
@@ -91,14 +100,14 @@ export async function updateProgram(programId: number, input: OcpType.UpdateProg
     if (name) data.nome_programa = name;
     if (prazoInicio) data.data_inicio = new Date(prazoInicio);
     if (prazoFim) data.data_fim = new Date(prazoFim);
-    if (goalTitle) data.objetivo_programa = goalTitle;
-    if (goalDescription) data.objetivo_descricao = goalDescription;
-    if (shortTermGoalDescription) data.objetivo_curto = shortTermGoalDescription;
-    if (stimuliApplicationDescription) data.descricao_aplicacao = stimuliApplicationDescription;
-    if (currentPerformanceLevel) data.desempenho_atual = currentPerformanceLevel;
+    if (goalTitle !== undefined) data.objetivo_programa = goalTitle;
+    if (goalDescription !== undefined) data.objetivo_descricao = goalDescription;
+    if (shortTermGoalDescription !== undefined) data.objetivo_curto = shortTermGoalDescription;
+    if (stimuliApplicationDescription !== undefined) data.descricao_aplicacao = stimuliApplicationDescription;
+    if (currentPerformanceLevel !== undefined) data.desempenho_atual = currentPerformanceLevel;
     if (status) data.status = status === 'active' ? 'ativado' : 'arquivado';
-    if (criteria) data.criterio_aprendizagem = criteria;
-    if (notes) data.observacao_geral = notes;
+    if (criteria !== undefined) data.criterio_aprendizagem = criteria;
+    if (notes !== undefined) data.observacao_geral = notes;
 
     return await prisma.$transaction(async (tx) => {
         const newStimuliIds = input.stimuli

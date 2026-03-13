@@ -56,6 +56,7 @@ export async function me(req: Request, res: Response) {
             perfil_acesso: user.perfil_acesso,
             area_atuacao: user.area_atuacao,
             avatar_url: user.avatar_url,
+            birth_date: user.birth_date ?? null,
         },
     });
 }
@@ -185,6 +186,7 @@ export async function validateLogin(req: Request, res: Response, next: NextFunct
                 perfil_acesso: user.perfil_acesso,
                 area_atuacao: user.area_atuacao,
                 avatar_url: user.avatar_url,
+                birth_date: user.birth_date ?? null,
             },
         });
     } catch (error) {
@@ -232,6 +234,7 @@ export async function refreshAccessToken(req: Request, res: Response, next: Next
                 perfil_acesso: user.perfil_acesso,
                 area_atuacao: user.area_atuacao,
                 avatar_url: user.avatar_url,
+                birth_date: user.birth_date ?? null,
             },
         });
     } catch (error) {

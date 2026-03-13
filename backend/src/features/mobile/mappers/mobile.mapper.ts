@@ -34,6 +34,7 @@ export function mapBootstrapBase(therapist: BaseTherapist, activeLinks: BaseLink
             perfilAcesso: therapist.perfil_acesso,
             atividade: therapist.atividade,
             atualizadoEm: toIsoOrNull(therapist.atualizado_em),
+            dataNascimento: toIsoOrNull(therapist.data_nascimento),
         },
         clientes: Array.from(clientsById.values()).map((client) => ({
             id: client.id,
@@ -83,6 +84,12 @@ export function mapBootstrapProgramas(ocps: OcpItem[]) {
             dataFim: ocp.data_fim.toISOString(),
             criadoEm: ocp.criado_em.toISOString(),
             atualizadoEm: ocp.atualizado_em.toISOString(),
+            objetivoLongoTitulo: ocp.objetivo_programa ?? null,
+            objetivoLongoDescricao: ocp.objetivo_descricao ?? null,
+            criterioAprendizagem: ocp.criterio_aprendizagem ?? null,
+            objetivoCurtoDescricao: ocp.objetivo_curto ?? null,
+            aplicacaoDescricao: ocp.descricao_aplicacao ?? null,
+            observacoes: ocp.observacao_geral ?? null,
         })),
     };
 }

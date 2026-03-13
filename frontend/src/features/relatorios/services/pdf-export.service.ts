@@ -1,6 +1,7 @@
 import { toast } from 'sonner';
 import type { SavedReport, ReportFiltersApplied, ReportGeneratedData } from '../types';
 import type { AreaType } from '@/contexts/AreaContext';
+import { authFetch } from '@/lib/http';
 
 /**
  * Interface para os parâmetros de salvamento do relatório
@@ -161,7 +162,7 @@ export async function saveReportToBackend(
   try {
     const apiBase = import.meta.env.VITE_API_BASE || '';
     const url = `${apiBase}/api/relatorios`;  
-    const response = await fetch(url, {
+    const response = await authFetch(url, {
       method: 'POST',
       body: formData,
       credentials: 'include',

@@ -8,6 +8,7 @@ const router: Router = Router();
 // Rotas principais (mantêm os caminhos originais, mas usam a nova lógica)
 router.get('/', FileController.listFiles);
 router.get('/:storageId/view', FileController.viewFile);
+router.get('/sessoes/:id/download', auth, FileController.downloadSessionFile);
 router.get('/:id/download', auth, FileController.downloadFile);
 router.get('/getAvatar', FileController.getAvatar);
 

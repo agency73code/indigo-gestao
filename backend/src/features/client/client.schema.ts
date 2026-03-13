@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { cpfDigits } from '../../schemas/utils/cpfDigits.js';
-import { dateStringToDate, nullableDateStringToDate } from '../../schemas/utils/dateStringToDate.js';
+import { nullableCpfDigits } from '../../schemas/utils/cpfDigits.js';
+import { nullableDateStringToDate } from '../../schemas/utils/dateStringToDate.js';
 import { phoneSchema, phoneSchemaNullable } from '../../schemas/utils/phone.js';
 import { optionalIdParam } from '../../schemas/utils/id.js';
 
@@ -14,6 +14,19 @@ const addressSchema = z.object({
     uf: z.string().trim().min(1, 'Informe o estado'),
 })
 
+const schoolAddressSchema = z.object({
+    cep: z.preprocess(
+        (val) => (val === '' || val == null ? null : String(val).replace(/\D/g, '') || null),
+        z.string().nullable().default(null),
+    ),
+    logradouro: z.string().trim().nullable().default(null),
+    numero: z.string().trim().nullable().default(null),
+    complemento: z.string().nullable().default(''),
+    bairro: z.string().trim().nullable().default(null),
+    cidade: z.string().trim().nullable().default(null),
+    uf: z.string().trim().nullable().default(null),
+})
+
 const addressClientSchema = addressSchema.extend({
     residenciaDe: z.string().trim().min(1, 'Informe de quem é a residencia'),
     outroResidencia: z.string().trim().nullable().default(null),
@@ -21,10 +34,13 @@ const addressClientSchema = addressSchema.extend({
 
 export const clientUpdateSchema = z.object({
     nome: z.string().trim().min(1, 'Informe o nome do cliente'),
-    emailContato: z.email('Informe um email de contato válido'),
-    cpf: cpfDigits,
-    dataNascimento: dateStringToDate,
-    dataEntrada: dateStringToDate,
+    emailContato: z.preprocess(
+        (val) => (val === '' ? null : val),
+        z.email('Informe um email de contato válido').nullable().default(null),
+    ),
+    cpf: nullableCpfDigits,
+    dataNascimento: nullableDateStringToDate,
+    dataEntrada: nullableDateStringToDate,
     dataSaida: nullableDateStringToDate,
 
     cuidadores: z.array(
@@ -32,9 +48,9 @@ export const clientUpdateSchema = z.object({
             id: optionalIdParam,
             relacao: z.string().trim().min(1, 'Informe a relação do cuidador com o cliente'),
             descricaoRelacao: z.string().nullable().default(null),
-            dataNascimento: dateStringToDate,
+            dataNascimento: nullableDateStringToDate,
             nome: z.string().trim().min(1, 'Informe o nome do cuidador'),
-            cpf: cpfDigits,
+            cpf: nullableCpfDigits,
             profissao: z.string().nullable().default(null),
             escolaridade: z.string().nullable().default(null),
             telefone: phoneSchema('telefone de contato do cuidador'),
@@ -59,7 +75,7 @@ export const clientUpdateSchema = z.object({
         sistemaPagamento: z.enum(['reembolso', 'liminar', 'particular'], 'Informe um sistema de pagamento válido'),
         prazoReembolso: z.string().nullable().default(null),
         numeroProcesso: z.string().nullable().default(null),
-        nomeAdvogado:z.string().nullable().default(null),
+        nomeAdvogado: z.string().nullable().default(null),
         telefoneAdvogado1: phoneSchemaNullable('telefone de contato principal do advogado'),
         telefoneAdvogado2: phoneSchemaNullable('telefone de contato alternativo do advogado'),
         telefoneAdvogado3: phoneSchemaNullable('telefone de contato alternativo do advogado'),
@@ -73,9 +89,9 @@ export const clientUpdateSchema = z.object({
     dadosEscola: z.object({
         tipoEscola: z.enum(['particular', 'publica', 'afastado', 'clinica-escola'], 'Informe um tipo válido de escola do cliente'),
         nome: z.string().nullable().default(null),
-        telefone: phoneSchema('telefone de contato da escola'),
+        telefone: phoneSchemaNullable('telefone de contato da escola'),
         email: z.string().nullable().default(null),
-        endereco: addressSchema,
+        endereco: schoolAddressSchema,
         contatos: z.array(
             z.object({
                 nome: z.string().nullable().default(null),
@@ -84,7 +100,7 @@ export const clientUpdateSchema = z.object({
                 funcao: z.string().nullable().default(null),
             }),
         ),
-    }),
+    }).optional(),
 });
 
 export type clientUpdatePayload = z.infer<typeof clientUpdateSchema>;

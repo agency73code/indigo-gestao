@@ -5,12 +5,12 @@ import { AppError } from "../../../errors/AppError.js";
 
 function buildAddressData(address: AddressPayload): AddressData {
     return {
-        cep: address.cep,
-        rua: address.logradouro,
-        numero: address.numero,
-        bairro: address.bairro,
-        cidade: address.cidade,
-        uf: address.uf,
+        cep: address.cep ?? null,
+        rua: address.logradouro ?? null,
+        numero: address.numero ?? null,
+        bairro: address.bairro ?? null,
+        cidade: address.cidade ?? null,
+        uf: address.uf ?? null,
         complemento: address.complemento ?? '',
     }
 }
@@ -75,16 +75,25 @@ async function deleteCaretaker(
 ): Promise<void> {
     if (caretaker.id !== undefined) {
         await tx.cuidador.delete({ where: { id: caretaker.id } });
-    } else {
-        await tx.cuidador.delete({
-            where: {
-                unique_cuidador: {
-                    clienteId: clientId,
-                    cpf: caretaker.cpf
-                }
-            },
-        });
+        return;
     }
+
+    if (!caretaker.cpf) {
+        throw new AppError(
+            'CARETAKER_IDENTIFIER_REQUIRED',
+            'ID ou CPF do cuidador é obrigatório para remoção.',
+            400,
+        );
+    }
+
+    await tx.cuidador.delete({
+        where: {
+            unique_cuidador: {
+                clienteId: clientId,
+                cpf: caretaker.cpf,
+            },
+        },
+    });
 }
 
 async function createCaretaker(
@@ -186,13 +195,30 @@ export async function updateSchoolData(
 ): Promise<void> {
     const addressData = buildAddressData(dadosEscola.endereco);
 
-    await tx.dados_escola.update({
+    const schoolData = {
+        tipoEscola: dadosEscola.tipoEscola,
+        nome: dadosEscola.nome,
+        telefone: dadosEscola.telefone,
+        email: dadosEscola.email,
+    };
+
+    await tx.dados_escola.upsert({
         where: { clienteId: clientId },
-        data: {
-            tipoEscola: dadosEscola.tipoEscola,
-            nome: dadosEscola.nome,
-            telefone: dadosEscola.telefone,
-            email: dadosEscola.email,
+        create: {
+            ...schoolData,
+            cliente: { connect: { id: clientId } },
+            endereco: { create: addressData },
+            contatos: {
+                create: dadosEscola.contatos.map((c) => ({
+                    nome: c.nome,
+                    telefone: c.telefone,
+                    email: c.email,
+                    funcao: c.funcao,
+                })),
+            },
+        },
+        update: {
+            ...schoolData,
             endereco: {
                 upsert: {
                     create: addressData,

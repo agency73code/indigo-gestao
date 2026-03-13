@@ -134,6 +134,7 @@ export async function loginUserByAccessInformation(
                 nome: true,
                 email_indigo: true,
                 perfil_acesso: true,
+                data_nascimento: true,
                 registro_profissional: {
                     select: { area_atuacao: { select: { nome: true } } },
                 },
@@ -157,6 +158,7 @@ export async function loginUserByAccessInformation(
             avatar_url: row.arquivos[0]
                 ? `${process.env.API_URL}/api/arquivos/${encodeURIComponent(row.arquivos[0].arquivo_id!)}/view/`
                 : null,
+            birth_date: row.data_nascimento?.toISOString() ?? null,
             table: 'terapeuta',
         };
     } else {
@@ -177,6 +179,7 @@ export async function loginUserByAccessInformation(
                 nome: true,
                 emailContato: true,
                 perfil_acesso: true,
+                dataNascimento: true,
                 arquivos: {
                     where: { tipo: 'fotoPerfil' },
                     select: { arquivo_id: true },
@@ -195,6 +198,7 @@ export async function loginUserByAccessInformation(
             avatar_url: row.arquivos[0]
                 ? `${process.env.API_URL}/api/arquivos/${encodeURIComponent(row.arquivos[0].arquivo_id!)}/view/`
                 : null,
+            birth_date: row.dataNascimento?.toISOString() ?? null,
             table: 'cliente',
         };
     }
@@ -225,6 +229,7 @@ export async function findUserById(id: string, table: Tables) {
                 nome: true,
                 email_indigo: true,
                 perfil_acesso: true,
+                data_nascimento: true,
                 registro_profissional: {
                     select: { area_atuacao: { select: { nome: true } } },
                 },
@@ -247,6 +252,7 @@ export async function findUserById(id: string, table: Tables) {
             avatar_url: row.arquivos[0]
                 ? `${process.env.API_URL}/api/arquivos/${encodeURIComponent(row.arquivos[0].arquivo_id!)}/view`
                 : null,
+            birth_date: row.data_nascimento?.toISOString() ?? null,
         };
     } else {
         const row = await prisma.cliente.findUnique({
@@ -256,6 +262,7 @@ export async function findUserById(id: string, table: Tables) {
                 nome: true,
                 emailContato: true,
                 perfil_acesso: true,
+                dataNascimento: true,
                 arquivos: {
                     where: {
                         tipo: 'fotoPerfil',
@@ -276,6 +283,7 @@ export async function findUserById(id: string, table: Tables) {
             avatar_url: row.arquivos[0]
                 ? `${process.env.API_URL}/api/arquivos/${encodeURIComponent(row.arquivos[0].arquivo_id!)}/view`
                 : null,
+            birth_date: row.dataNascimento?.toISOString() ?? null,
         };
     }
 }

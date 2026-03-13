@@ -2,7 +2,7 @@ import { prisma } from '../../config/database.js';
 import { Prisma } from '@prisma/client';
 import { AppError } from '../../errors/AppError.js';
 import * as ClientType from './client.types.js';
-import { v4 as uuidv4 } from 'uuid';
+import { generateResetToken } from '../../utils/resetToken.js';
 import { getVisibilityScope } from '../../utils/visibilityFilter.js';
 import { ACCESS_LEVELS } from '../../utils/accessLevels.js';
 import type { clientUpdatePayload } from './client.schema.js';
@@ -30,13 +30,17 @@ async function enderecoData(dto: ClientType.Client) {
 }
 
 export async function create(dto: ClientType.Client) {
-    const existsCpf = await prisma.cliente.findFirst({ where: { cpf: dto.cpf } });
-    if (existsCpf) throw new AppError('CPF_DUPLICADO', 'CPF já cadastrado', 409);
+    if (dto.cpf) {
+        const existsCpf = await prisma.cliente.findFirst({ where: { cpf: dto.cpf } });
+        if (existsCpf) throw new AppError('CPF_DUPLICADO', 'CPF já cadastrado', 409);
+    }
 
-    const existsEmail = await prisma.cliente.findUnique({
-        where: { emailContato: dto.emailContato },
-    });
-    if (existsEmail) throw new AppError('EMAIL_DUPLICADO', 'E-mail já cadastrado', 409);
+    if (dto.emailContato) {
+        const existsEmail = await prisma.cliente.findFirst({
+            where: { emailContato: dto.emailContato },
+        });
+        if (existsEmail) throw new AppError('EMAIL_DUPLICADO', 'E-mail já cadastrado', 409);
+    }
 
     const { token, expiry } = generateResetToken();
     const now = new Date();
@@ -68,7 +72,7 @@ export async function create(dto: ClientType.Client) {
                     escolaridade: c.escolaridade ?? null,
                     telefone: c.telefone,
                     email: c.email,
-                    dataNascimento: c.dataNascimento!,
+                    dataNascimento: c.dataNascimento ?? null,
 
                     endereco: {
                         create: {
@@ -111,34 +115,35 @@ export async function create(dto: ClientType.Client) {
                 },
             },
 
-            dadosEscola: {
-                create: {
-                    tipoEscola: dto.dadosEscola.tipoEscola,
-                    nome: dto.dadosEscola.nome ?? null,
-                    telefone: dto.dadosEscola.telefone ?? null,
-                    email: dto.dadosEscola.email ?? null,
-                    endereco: {
-                        create: {
-                            cep: dto.dadosEscola.endereco.cep ?? '',
-                            rua: dto.dadosEscola.endereco.logradouro ?? '',
-                            numero: dto.dadosEscola.endereco.numero ?? '',
-                            bairro: dto.dadosEscola.endereco.bairro ?? '',
-                            cidade: dto.dadosEscola.endereco.cidade ?? '',
-                            uf: dto.dadosEscola.endereco.uf ?? '',
-                            complemento: dto.dadosEscola.endereco.complemento ?? '',
+            ...(dto.dadosEscola ? {
+                dadosEscola: {
+                    create: {
+                        tipoEscola: dto.dadosEscola.tipoEscola,
+                        nome: dto.dadosEscola.nome ?? null,
+                        telefone: dto.dadosEscola.telefone ?? null,
+                        email: dto.dadosEscola.email ?? null,
+                        endereco: {
+                            create: {
+                                cep: dto.dadosEscola.endereco.cep ?? null,
+                                rua: dto.dadosEscola.endereco.logradouro ?? null,
+                                numero: dto.dadosEscola.endereco.numero ?? null,
+                                bairro: dto.dadosEscola.endereco.bairro ?? null,
+                                cidade: dto.dadosEscola.endereco.cidade ?? null,
+                                uf: dto.dadosEscola.endereco.uf ?? null,
+                                complemento: dto.dadosEscola.endereco.complemento ?? '',
+                            },
+                        },
+                        contatos: {
+                            create: dto.dadosEscola.contatos.map((c) => ({
+                                nome: c.nome,
+                                telefone: c.telefone,
+                                email: c.email,
+                                funcao: c.funcao,
+                            })),
                         },
                     },
-
-                    contatos: {
-                        create: dto.dadosEscola.contatos.map((c) => ({
-                            nome: c.nome,
-                            telefone: c.telefone,
-                            email: c.email,
-                            funcao: c.funcao,
-                        })),
-                    },
                 },
-            },
+            } : {}),
 
             arquivos: {
                 create:
@@ -330,7 +335,9 @@ export async function update(clientId: string, payload: clientUpdatePayload): Pr
         await updateClientData(tx, clientId, payload, addressClient.id, address);
         await updateCaretakers(tx, clientId, payload.cuidadores);
         await updatePaymentData(tx, clientId, payload.dadosPagamento);
-        await updateSchoolData(tx, clientId, payload.dadosEscola);
+        if (payload.dadosEscola) {
+            await updateSchoolData(tx, clientId, payload.dadosEscola);
+        }
     });
 }
 
@@ -484,9 +491,3 @@ export async function countActiveClients() {
     });
 }
 
-function generateResetToken() {
-    const token = uuidv4();
-    const expiry = new Date();
-    expiry.setDate(expiry.getDate() + 1);
-    return { token, expiry };
-}

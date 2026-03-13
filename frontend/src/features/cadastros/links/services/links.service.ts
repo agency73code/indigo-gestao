@@ -25,7 +25,7 @@ export async function searchTherapists(role: 'supervisor' | 'clinico' | 'all', s
     if (search.trim()) query.set('search', search.trim());
     query.set('limit', '50');
 
-    const res = await fetch(`/api/links/therapists/select?${query.toString()}`, {
+    const res = await authFetch(`/api/links/therapists/select?${query.toString()}`, {
       method: 'GET',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
@@ -45,7 +45,7 @@ export async function searchPatients(search: string): Promise<ClientOption[]> {
     const query = new URLSearchParams();
     if (search.trim()) query.set('search', search.trim());
 
-    const res = await fetch(`/api/links/clientOptions?${query.toString()}`, {
+    const res = await authFetch(`/api/links/clientOptions?${query.toString()}`, {
       method: 'GET',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
@@ -69,7 +69,7 @@ export async function searchPatients(search: string): Promise<ClientOption[]> {
  * Regras: Apenas 1 responsible ativo por paciente
  */
 export async function createLink(input: CreateLinkInput): Promise<PatientTherapistLink> {
-  const res = await fetch('/api/links/createLink', {
+  const res = await authFetch('/api/links/createLink', {
     method: 'POST',
     credentials: 'include',
     headers: {
@@ -105,7 +105,7 @@ export async function createLink(input: CreateLinkInput): Promise<PatientTherapi
  */
 export async function updateLink(input: UpdateLinkInput): Promise<PatientTherapistLink> {
   try {
-    const res = await fetch('/api/links/updateLink', {
+    const res = await authFetch('/api/links/updateLink', {
       method: 'PATCH',
       credentials: 'include',
       headers: {
@@ -146,7 +146,7 @@ export async function updateLink(input: UpdateLinkInput): Promise<PatientTherapi
  */
 export async function transferResponsible(input: TransferResponsibleInput): Promise<void> {
   try {
-    const res = await fetch('/api/links/transferResponsible', {
+    const res = await authFetch('/api/links/transferResponsible', {
       method: 'POST',
       credentials: 'include',
       headers: {
@@ -186,7 +186,7 @@ export async function transferResponsible(input: TransferResponsibleInput): Prom
  */
 export async function endLink(id: string, endDate: string): Promise<void> {
   try {
-    const res = await fetch('/api/links/endLink', {
+    const res = await authFetch('/api/links/endLink', {
       method: 'POST',
       credentials: 'include',
       headers: {
@@ -226,7 +226,7 @@ export async function endLink(id: string, endDate: string): Promise<void> {
  */
 export async function archiveLink(id: string): Promise<void> {
   try {
-    const res = await fetch('/api/links/archiveLink', {
+    const res = await authFetch('/api/links/archiveLink', {
       method: 'POST',
       credentials: 'include',
       headers: {
@@ -262,14 +262,14 @@ export async function archiveLink(id: string): Promise<void> {
  */
 export async function reactivateLink(id: string, actuationArea?: string | null): Promise<void> {
   try {
-    const res = await fetch('/api/links/updateLink', {
+    const res = await authFetch('/api/links/updateLink', {
       method: 'PATCH',
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ 
-        id, 
+      body: JSON.stringify({
+        id,
         endDate: null,
         status: 'active',
         actuationArea: actuationArea || undefined
@@ -306,7 +306,7 @@ export async function reactivateLink(id: string, actuationArea?: string | null):
  */
 export async function getAllPatients(): Promise<ClientListItem[]> {
   try {
-    const res = await fetch('/api/links/clients', {
+    const res = await authFetch('/api/links/clients', {
       method: 'GET',
       credentials: 'include',
       headers: {
@@ -332,7 +332,7 @@ export async function getAllPatients(): Promise<ClientListItem[]> {
  */
 export async function getTherapistsForLinks(): Promise<TherapistListDTO[]> {
   try {
-    const res = await fetch('/api/links/therapists/list', {
+    const res = await authFetch('/api/links/therapists/list', {
       method: 'GET',
       credentials: 'include',
       headers: {
@@ -383,7 +383,7 @@ export async function getAllLinks(filters?: LinkFilters): Promise<PatientTherapi
 export async function getAllSupervisionLinks(filters?: LinkFilters): Promise<TherapistSupervisionLink[]> {
   if (!filters || filters.viewBy !== 'supervision') return [];
 
-  const res = await fetch('/api/links/getAllSupervisionLinks', {
+  const res = await authFetch('/api/links/getAllSupervisionLinks', {
     method: 'POST',
     credentials: 'include',
     headers: {
@@ -413,7 +413,7 @@ export async function createSupervisionLink(input: CreateSupervisionLinkInput): 
     throw new Error('A data de término não pode ser anterior à data de início.');
   }
 
-  const res = await fetch('/api/links/createSupervisionLink', {
+  const res = await authFetch('/api/links/createSupervisionLink', {
     method: 'POST',
     credentials: 'include',
     headers: {
@@ -451,7 +451,7 @@ export async function createSupervisionLink(input: CreateSupervisionLinkInput): 
  * Atualiza vínculo de supervisão existente [feito]
  */
 export async function updateSupervisionLink(input: UpdateSupervisionLinkInput): Promise<TherapistSupervisionLink> {
-  const res = await fetch('/api/links/updateSupervisionLink', {
+  const res = await authFetch('/api/links/updateSupervisionLink', {
     method: 'PATCH',
     credentials: 'include',
     headers: {
@@ -486,7 +486,7 @@ export async function updateSupervisionLink(input: UpdateSupervisionLinkInput): 
  * Encerra vínculo de supervisão (seta endDate e status='ended') [feito]
  */
 export async function endSupervisionLink(id: string, endDate: string): Promise<void> {
-  const res = await fetch('/api/links/endSupervisionLink', {
+  const res = await authFetch('/api/links/endSupervisionLink', {
     method: 'POST',
     credentials: 'include',
     headers: {
@@ -520,7 +520,7 @@ export async function endSupervisionLink(id: string, endDate: string): Promise<v
  * Arquiva vínculo de supervisão (status='archived') [feito]
  */
 export async function archiveSupervisionLink(id: string): Promise<void> {
-  const res = await fetch('/api/links/archiveSupervisionLink', {
+  const res = await authFetch('/api/links/archiveSupervisionLink', {
     method: 'POST',
     credentials: 'include',
     headers: {
@@ -554,14 +554,14 @@ export async function archiveSupervisionLink(id: string): Promise<void> {
  * Reativa vínculo de supervisão encerrado (remove endDate e volta status para 'active')
  */
 export async function reactivateSupervisionLink(id: string): Promise<void> {
-  const res = await fetch('/api/links/updateSupervisionLink', {
+  const res = await authFetch('/api/links/updateSupervisionLink', {
     method: 'PATCH',
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ 
-      id, 
+    body: JSON.stringify({
+      id,
       endDate: null,
       status: 'active'
     })
@@ -595,7 +595,7 @@ export async function getSupervisionHierarchy(
   supervisorId: string
 ): Promise<SupervisionHierarchy | null> {
   try {
-    const response = await fetch(
+    const response = await authFetch(
       `/api/links/getSupervisionHierarchy?supervisorId=${supervisorId}`,
       {
         method: 'GET',
@@ -643,7 +643,7 @@ export async function canSuperviseTherapist(
   therapistId: string
 ): Promise<boolean> {
   try {
-    const response = await fetch(
+    const response = await authFetch(
       `/api/links/canSupervise?supervisorId=${supervisorId}&therapistId=${therapistId}`,
       {
         method: 'GET',

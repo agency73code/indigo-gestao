@@ -64,7 +64,7 @@ export default function DadosPessoaisStep({
 
                 {/* CPF - 1/4 */}
                 <InputField
-                    label="CPF *"
+                    label="CPF"
                     id="cpf"
                     value={data.cpf || ''}
                     onChange={(e) => onUpdate('cpf', mask.maskCPF(e.target.value))}
@@ -85,7 +85,7 @@ export default function DadosPessoaisStep({
                 {/* E-mail de contato - 2/4 */}
                 <div className="md:col-span-2">
                     <InputField
-                        label="E-mail de contato *"
+                        label="E-mail de contato"
                         id="emailContato"
                         type="email"
                         value={mask.normalizeEmail(data.emailContato || '')}
@@ -99,7 +99,7 @@ export default function DadosPessoaisStep({
 
                 {/* Data Entrada - 1/4 */}
                 <DateFieldWithLabel
-                    label="Data Entrada *"
+                    label="Data Entrada"
                     value={data.dataEntrada || ''}
                     onChange={(iso) => onUpdate('dataEntrada', iso)}
                     placeholder="dd/mm/aaaa"
@@ -172,7 +172,7 @@ export default function DadosPessoaisStep({
 
                             {/* CPF - 1/4 */}
                             <InputField
-                                label="CPF *"
+                                label="CPF"
                                 id={`cpf-${index}`}
                                 value={cuidador.cpf || ''}
                                 onChange={(e) => {
@@ -190,7 +190,7 @@ export default function DadosPessoaisStep({
 
                             {/* Data de Nascimento - 1/4 */}
                             <DateFieldWithLabel
-                                label="Data de Nascimento *"
+                                label="Data de Nascimento"
                                 value={cuidador.dataNascimento || ''}
                                 onChange={(iso) => {
                                     const cuidadores = [...(data.cuidadores || [])];
@@ -368,7 +368,7 @@ export default function DadosPessoaisStep({
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 {/* CEP - 1/3 */}
                                 <InputField
-                                    label="CEP"
+                                    label="CEP *"
                                     id={`cep-cuidador-${index}`}
                                     value={cuidador.endereco?.cep || ''}
                                     onChange={async (e) => {
@@ -413,7 +413,7 @@ export default function DadosPessoaisStep({
                                 {/* Logradouro - 2/3 */}
                                 <div className="md:col-span-2">
                                     <InputField
-                                        label="Logradouro"
+                                        label="Logradouro *"
                                         id={`logradouro-cuidador-${index}`}
                                         value={cuidador.endereco?.logradouro || ''}
                                         onChange={(e) => {
@@ -433,7 +433,7 @@ export default function DadosPessoaisStep({
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 {/* Número - 1/3 */}
                                 <InputField
-                                    label="Número"
+                                    label="Número *"
                                     id={`numero-cuidador-${index}`}
                                     value={cuidador.endereco?.numero || ''}
                                     onChange={(e) => {
@@ -465,7 +465,7 @@ export default function DadosPessoaisStep({
 
                                 {/* Bairro - 1/3 */}
                                 <InputField
-                                    label="Bairro"
+                                    label="Bairro *"
                                     id={`bairro-cuidador-${index}`}
                                     value={cuidador.endereco?.bairro || ''}
                                     onChange={(e) => {
@@ -485,7 +485,7 @@ export default function DadosPessoaisStep({
                                 {/* Cidade - 2/3 */}
                                 <div className="md:col-span-2">
                                     <InputField
-                                        label="Cidade"
+                                        label="Cidade *"
                                         id={`cidade-cuidador-${index}`}
                                         value={cuidador.endereco?.cidade || ''}
                                         onChange={(e) => {
@@ -502,7 +502,7 @@ export default function DadosPessoaisStep({
 
                                 {/* UF - 1/3 */}
                                 <SelectField
-                                    label="UF"
+                                    label="UF *"
                                     id={`uf-cuidador-${index}`}
                                     value={cuidador.endereco?.uf || ''}
                                     onChange={(e) => {

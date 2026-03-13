@@ -5,6 +5,7 @@ export type BaseTherapist = {
     perfil_acesso: string;
     atividade: boolean;
     atualizado_em: Date;
+    data_nascimento: Date | null;
 };
 
 export type BaseLink = {
@@ -53,6 +54,12 @@ export type OcpItem = {
     data_fim: Date;
     criado_em: Date;
     atualizado_em: Date;
+    objetivo_programa: string | null;
+    objetivo_descricao: string | null;
+    criterio_aprendizagem: string | null;
+    objetivo_curto: string | null;
+    descricao_aplicacao: string | null;
+    observacao_geral: string | null;
 };
 
 export type EstimuloOcpItem = {

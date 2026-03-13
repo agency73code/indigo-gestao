@@ -10,11 +10,12 @@ export async function getBootstrapBase(therapistId: string) {
         },
         select: {
             id: true,
-            nome: true, 
+            nome: true,
             email_indigo: true,
             perfil_acesso: true,
             atividade: true,
             atualizado_em: true,
+            data_nascimento: true,
         },
     });
 
@@ -99,6 +100,12 @@ export async function getBootstrapPrograms(therapistId: string) {
             data_fim: true,
             criado_em: true,
             atualizado_em: true,
+            objetivo_programa: true,
+            objetivo_descricao: true,
+            criterio_aprendizagem: true,
+            objetivo_curto: true,
+            descricao_aplicacao: true,
+            observacao_geral: true,
         },
     });
 
@@ -130,7 +137,6 @@ export async function getBootstrapStimuli(therapistId: string) {
     const stimulusOcp = await prisma.estimulo_ocp.findMany({
         where: {
             id_ocp: { in: ocpIds },
-            status: true,
         },
         select: {
             id: true,

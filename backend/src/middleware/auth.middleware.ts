@@ -22,7 +22,7 @@ export function auth(req: Request, res: Response, next: NextFunction) {
     }
 
     try {
-        const decoded = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+        const decoded = jwt.verify(token, env.JWT_SECRET, { algorithms: ['HS256'] }) as JwtPayload;
 
         const baseUser = { id: decoded.sub } as Express.UserPayload;
         if (decoded.perfil_acesso) baseUser.perfil_acesso = decoded.perfil_acesso;

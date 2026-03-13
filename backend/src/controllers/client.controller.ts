@@ -14,10 +14,6 @@ export async function create(req: Request, res: Response, next: NextFunction) {
 
         if (!client)
             return res.status(500).json({ success: false, message: 'Erro ao cadastrar cliente' });
-        if (!client.emailContato)
-            return res
-                .status(422)
-                .json({ success: false, message: 'Email de contato é obrigatório!' });
         if (!client.nome)
             return res
                 .status(422)

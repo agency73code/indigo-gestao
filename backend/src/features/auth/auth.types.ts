@@ -7,6 +7,7 @@ export interface AuthUser {
     perfil_acesso: string;
     avatar_url?: string | null;
     area_atuacao?: string[];
+    birth_date?: string | null;
 }
 
 export interface UserRow extends AuthUser {
