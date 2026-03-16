@@ -81,6 +81,13 @@ export async function update(req: Request, res: Response, next: NextFunction) {
                 .json({ success: false, message: 'ID do terapeuta é obrigatório!' });
         }
 
+        const requesterId = req.user!.id;
+        if (requesterId !== therapistId) {
+            const visibility = await getVisibilityScope(requesterId);
+            if (visibility.scope !== 'all')
+                return res.status(403).json({ success: false, message: 'Sem permissão para modificar dados deste terapeuta' });
+        }
+
         const parsed = therapistSchema.parse(TherapistNormalizer.emptyStringsToNull(req.body));
         if (Object.keys(parsed).length === 0) {
             return res
