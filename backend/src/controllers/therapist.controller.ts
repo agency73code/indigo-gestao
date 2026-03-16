@@ -148,6 +148,18 @@ export async function list(req: Request, res: Response, next: NextFunction) {
 export async function fetchTherapistSummaryById(req: Request, res: Response, next: NextFunction) {
     try {
         const therapistId = uuidParam.parse(req.params.therapistId);
+        const requesterId = req.user!.id;
+
+        if (requesterId !== therapistId) {
+            const visibility = await getVisibilityScope(requesterId);
+
+            if (visibility.scope === 'none')
+                return res.status(403).json({ success: false, message: 'Sem permissão para acessar este terapeuta' });
+
+            if (visibility.scope === 'partial' && !visibility.therapistIds.includes(therapistId))
+                return res.status(403).json({ success: false, message: 'Sem permissão para acessar este terapeuta' });
+        }
+
         const data = await TherapistService.fetchTherapistSummaryById(therapistId);
 
         return res.status(200).json(data);
