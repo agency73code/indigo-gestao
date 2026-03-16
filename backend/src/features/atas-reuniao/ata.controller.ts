@@ -126,13 +126,12 @@ export async function therapistData(req: Request, res: Response, next: NextFunct
         if (!userId) return res.status(401).json({ message: 'Não autenticado' });
 
         const requesterId = req.user!.id;
-        const visibility = await getVisibilityScope(requesterId);
 
-        if (visibility.scope === 'none')
-            return res.status(403).json({ success: false, message: 'Sem permissão para acessar dados deste terapeuta' });
-
-        if (visibility.scope === 'partial' && !visibility.therapistIds.includes(userId))
-            return res.status(403).json({ success: false, message: 'Sem permissão para acessar dados deste terapeuta' });
+        if (requesterId !== userId) {
+            const visibility = await getVisibilityScope(requesterId);
+            if (visibility.scope !== 'all')
+                return res.status(403).json({ success: false, message: 'Sem permissão para acessar dados deste terapeuta' });
+        }
 
         const data = await AtaService.therapistData(userId);
 
