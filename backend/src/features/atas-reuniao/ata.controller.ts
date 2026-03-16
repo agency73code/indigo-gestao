@@ -4,6 +4,7 @@ import { AIServiceError } from '../ai/ai.errors.js';
 import { ataIdSchema, createAtaPayloadSchema, gerarResumoSchema, listAtaSchema, listTherapistSchema, updateAtaPayloadSchema } from './ata.schema.js';
 import * as AtaService from './ata.service.js';
 import { getAccessLevel } from '../../utils/getAccessLevel.js';
+import { getVisibilityScope } from '../../utils/visibilityFilter.js';
 import { getFileStreamFromR2 } from '../file/r2/getFileStream.js';
 import { unauthenticated } from '../../errors/unauthenticated.js';
 import { buildBillingInputFromRequest } from '../billing/billing.controller.js';
@@ -123,8 +124,18 @@ export async function therapistData(req: Request, res: Response, next: NextFunct
     try {
         const { userId } = req.params;
         if (!userId) return res.status(401).json({ message: 'Não autenticado' });
+
+        const requesterId = req.user!.id;
+        const visibility = await getVisibilityScope(requesterId);
+
+        if (visibility.scope === 'none')
+            return res.status(403).json({ success: false, message: 'Sem permissão para acessar dados deste terapeuta' });
+
+        if (visibility.scope === 'partial' && !visibility.therapistIds.includes(userId))
+            return res.status(403).json({ success: false, message: 'Sem permissão para acessar dados deste terapeuta' });
+
         const data = await AtaService.therapistData(userId);
-        
+
         res.status(200).json(data);
     } catch(err) {
         next(err);
