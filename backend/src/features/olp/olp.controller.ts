@@ -84,6 +84,19 @@ export async function createAreaSession(req: Request, res: Response, next: NextF
         const therapistId = req.user?.id;
         if (!therapistId) throw unauthenticated();
 
+        const visibility = await getVisibilityScope(therapistId);
+
+        if (visibility.scope === 'none')
+            return res.status(403).json({ success: false, message: 'Sem permissão para acessar este programa' });
+
+        if (visibility.scope === 'partial') {
+            const program = await OcpService.getProgramById(String(programId));
+            if (!program)
+                return res.status(404).json({ success: false, message: 'Programa não encontrado' });
+            if (!visibility.therapistIds.includes(program.terapeuta_id))
+                return res.status(403).json({ success: false, message: 'Sem permissão para acessar este programa' });
+        }
+
         const data = JSON.parse(req.body.data);
 
         const meta = req.body.filesMeta 
