@@ -354,6 +354,7 @@ export interface AttentionStimulusItem {
 
 export type ListSessionsFilters = {
     clientId: string;
+    userId: string;
     area: string;
     periodMode: string;
     sort: string;

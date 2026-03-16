@@ -276,8 +276,12 @@ export async function listSessionsByClient(req: Request, res: Response) {
 
         if (!clientId) return res.status(400).json({ sucess: false, message: 'ID do paciente é obrigatório' });
 
+        const userId = req.user?.id;
+        if (!userId) throw unauthenticated();
+
         const result = await OcpService.listSessionsByClient({
             clientId,
+            userId,
             area,
             periodMode,
             sort,

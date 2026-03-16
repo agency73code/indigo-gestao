@@ -514,6 +514,7 @@ export async function listProgramsByClientId(
 export async function listSessionsByClient(filters: OcpType.ListSessionsFilters) {
     const {
         clientId,
+        userId,
         area,
         periodMode,
         sort,
@@ -529,9 +530,20 @@ export async function listSessionsByClient(filters: OcpType.ListSessionsFilters)
     const where: Prisma.sessaoWhereInput = {};
     const order = sort === 'date-asc' ? 'asc' : 'desc';
 
+    const visibility = await getVisibilityScope(userId);
+    if (visibility.scope === 'none') return { items: [], total: 0 };
+
     if (clientId) where.cliente_id = clientId;
     if (area) where.area = area;
-    if (therapistId) where.terapeuta_id = therapistId;
+
+    if (visibility.scope === 'partial') {
+        const allowed = therapistId
+            ? visibility.therapistIds.filter((id) => id === therapistId)
+            : visibility.therapistIds;
+        where.terapeuta_id = { in: allowed };
+    } else if (therapistId) {
+        where.terapeuta_id = therapistId;
+    }
     if (programId) where.ocp_id = Number(programId);
 
     if (stimulusId) {

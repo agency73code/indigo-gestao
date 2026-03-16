@@ -10,6 +10,7 @@ router.use(auth);
 router.get('/lancamentos', BillingController.listBilling);
 router.get('/resumo', BillingController.getBillingSummary);
 router.get('/arquivos/:fileId/download', BillingController.downloadBillingFile);
+// Gestores têm acesso irrestrito a todos os lançamentos por design (sistema single-tenant).
 router.post('/lancamentos/:launchId/aprovar', requireAbility('manage', 'Faturamento'), BillingController.approveLaunch);
 router.post('/lancamentos/:launchId/rejeitar', requireAbility('manage', 'Faturamento'), BillingController.rejectLaunch);
 router.post('/aprovar-lote', requireAbility('manage', 'Faturamento'), BillingController.approveReleases);
