@@ -22,7 +22,6 @@ export function calcPerformanceLine(sessions: PhysioSession[]) {
     result.push({
         x: format(new Date(session.data_criacao), "dd/MM", { locale: ptBR }),
         acerto: performancePercent,
-        independencia: promptedPercent,
         ajuda: promptedPercent,
         erro: failedPercent,
     });
