@@ -5,6 +5,7 @@ import { sendWelcomeEmail } from '../utils/mail.util.js';
 import { therapistSchema } from '../schemas/therapist.schema.js';
 import { fetchBrazilianBanks } from '../utils/brazilApi.util.js';
 import { uuidParam } from '../schemas/utils/uuid.js';
+import { getVisibilityScope } from '../utils/visibilityFilter.js';
 
 export async function create(req: Request, res: Response, next: NextFunction) {
     try {
@@ -51,6 +52,18 @@ export async function listBanks(req: Request, res: Response, next: NextFunction)
 export async function getById(req: Request, res: Response, next: NextFunction) {
     try {
         const therapistId = uuidParam.parse(req.params.therapistId);
+        const requesterId = req.user!.id;
+
+        if (requesterId !== therapistId) {
+            const visibility = await getVisibilityScope(requesterId);
+
+            if (visibility.scope === 'none')
+                return res.status(403).json({ success: false, message: 'Sem permissão para acessar este terapeuta' });
+
+            if (visibility.scope === 'partial' && !visibility.therapistIds.includes(therapistId))
+                return res.status(403).json({ success: false, message: 'Sem permissão para acessar este terapeuta' });
+        }
+
         const therapist = await TherapistService.getById(therapistId);
 
         return res.status(200).json(therapist);
