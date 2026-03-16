@@ -136,6 +136,22 @@ export async function updateProgram(req: Request, res: Response, next: NextFunct
         if (!req.params.programId) return res.status(400).json({ success: false, message: 'ID do programa não informado' });
         const programId = parseInt(req.params.programId, 10);
 
+        const userId = req.user?.id;
+        if (!userId) throw unauthenticated();
+
+        const visibility = await getVisibilityScope(userId);
+
+        if (visibility.scope === 'none')
+            return res.status(403).json({ success: false, message: 'Sem permissão para acessar este programa' });
+
+        if (visibility.scope === 'partial') {
+            const program = await OcpService.getProgramById(String(programId));
+            if (!program)
+                return res.status(404).json({ success: false, message: 'Programa não encontrado' });
+            if (!visibility.therapistIds.includes(program.terapeuta_id))
+                return res.status(403).json({ success: false, message: 'Sem permissão para acessar este programa' });
+        }
+
         if (req.body.area === 'musicoterapia') {
             const ocp = await OcpService.updateMusicProgram(programId, req.body);
             if (!ocp) return res.status(404).json({ success: false, message: 'OCP não encontrado' });
