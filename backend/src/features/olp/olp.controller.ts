@@ -170,7 +170,23 @@ export async function getSessionByProgram(req: Request, res: Response) {
     try {
         if (!req.params.programId)
             return res.status(400).json({ success: false, message: 'programId é obrigatório' });
+
+        const userId = req.user!.id;
+        const visibility = await getVisibilityScope(userId);
+
+        if (visibility.scope === 'none')
+            return res.status(403).json({ success: false, message: 'Sem permissão para acessar este programa' });
+
         const programId = parseInt(req.params.programId, 10);
+
+        if (visibility.scope === 'partial') {
+            const program = await OcpService.getProgramById(String(programId));
+            if (!program)
+                return res.status(404).json({ success: false, message: 'Programa não encontrado' });
+            if (!visibility.therapistIds.includes(program.terapeuta_id))
+                return res.status(403).json({ success: false, message: 'Sem permissão para acessar este programa' });
+        }
+
         const limit = parseInt(req.query.limit as string, 10) || 5;
         const sessions = await OcpService.getSessionsByProgram(programId, limit);
         res.json({ data: sessions });
