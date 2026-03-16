@@ -706,7 +706,9 @@ export async function getKpis(filtros: OcpType.KpisFilters) {
     // ---------------------------------------
     const where: Prisma.sessaoWhereInput = {
         ...(filtros.pacienteId && { cliente_id: filtros.pacienteId }),
-        ...(filtros.terapeutaId && { terapeuta_id: filtros.terapeutaId }),
+        ...(filtros.terapeutaId
+            ? { terapeuta_id: filtros.terapeutaId }
+            : filtros.therapistIdsScope && { terapeuta_id: { in: filtros.therapistIdsScope } }),
         ...(filtros.programaId && { ocp_id: Number(filtros.programaId) }),
         ...(filtros.area && { area: filtros.area }),
     };

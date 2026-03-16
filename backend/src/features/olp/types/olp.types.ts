@@ -416,6 +416,7 @@ export type KpisFilters = {
     programaId?: string;
     estimuloId?: string;
     terapeutaId?: string;
+    therapistIdsScope?: string[];
     comparar?: boolean;
     area?: string;
 };

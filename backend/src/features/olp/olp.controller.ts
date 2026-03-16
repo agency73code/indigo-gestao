@@ -341,8 +341,23 @@ export async function listSessionsByClient(req: Request, res: Response) {
 
 export async function getKpis(req: Request, res: Response) {
     try {
+        const userId = req.user?.id;
+        if (!userId) throw unauthenticated();
+
+        const visibility = await getVisibilityScope(userId);
+
+        if (visibility.scope === 'none')
+            return res.status(403).json({ success: false, message: 'Sem permissão para acessar este relatório' });
+
         const raw = decodeURIComponent(req.params.filters ?? '');
         const filtros = JSON.parse(raw);
+
+        if (visibility.scope === 'partial') {
+            if (filtros.terapeutaId && !visibility.therapistIds.includes(filtros.terapeutaId))
+                return res.status(403).json({ success: false, message: 'Sem permissão para acessar este relatório' });
+            filtros.therapistIdsScope = visibility.therapistIds;
+        }
+
         const data = await OcpService.getKpis(filtros);
 
         return res.json(data);
