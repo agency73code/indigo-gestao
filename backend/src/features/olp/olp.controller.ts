@@ -581,13 +581,20 @@ export async function physioKpis(req: Request, res: Response, next: NextFunction
 // Musictherapy reports
 export async function musicKpis(req: Request, res: Response, next: NextFunction) {
     try {
+        const userId = req.user?.id;
+        if (!userId) return res.status(401).json({ error: 'Não autenticado' });
+
         const { sessionIds, stimulusIds } = req.body;
 
         if (!Array.isArray(sessionIds) || sessionIds.length === 0) {
             return res.status(400).json({ error: "sessionIds é obrigatório e deve ser um array" });
         }
-        
-        const sessions = await getMusicSessionsData(sessionIds, stimulusIds || []);
+
+        const visibility = await getVisibilityScope(userId);
+        if (visibility.scope === 'none') return res.status(403).json({ error: 'Sem permissão para acessar estes dados' });
+        const therapistIdsScope = visibility.scope === 'partial' ? visibility.therapistIds : undefined;
+
+        const sessions = await getMusicSessionsData(sessionIds, stimulusIds || [], therapistIdsScope);
         
         const result = {
             kpis: calcMusicKpis(sessions),
