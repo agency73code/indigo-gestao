@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { FileDown, Calendar, User, FileText, Target, Sparkles, Users } from 'lucide-react';
+import { FileDown, FileType, Calendar, User, FileText, Target, Sparkles, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
@@ -33,6 +33,7 @@ import { usePageTitle } from '@/features/shell/layouts/AppLayout';
 import { AREA_LABELS } from '@/contexts/AreaContext';
 import { ReportExporter } from '../gerar-relatorio/print/ReportExporter';
 import { exportPdfDirectly, sanitizeForFileName } from '../services/pdf-export.service';
+import { exportReportToWord } from '../services/word-export.service';
 
 export function VisualizarRelatorioPage() {
   const navigate = useNavigate();
@@ -143,6 +144,37 @@ export function VisualizarRelatorioPage() {
     }
   }, [patient]);
 
+  // Handler para exportar Word
+  const handleExportWord = useCallback(async () => {
+    const reportElement = document.querySelector('[data-report-exporter]') as HTMLElement;
+    if (!reportElement || !report) {
+      toast.error('Conteúdo do relatório não encontrado');
+      return;
+    }
+
+    try {
+      // Encontrar os dados profissionais que correspondem à área do relatório
+      const areaLabel = report.area ? AREA_LABELS[report.area] : undefined;
+      const dadosProfissionaisArea = therapist?.dadosProfissionais?.find(
+        dp => dp.areaAtuacao === areaLabel
+      ) || therapist?.dadosProfissionais?.[0];
+
+      await exportReportToWord({
+        report,
+        patientName: patient?.nome || 'cliente',
+        patientAge: patient?.dataNascimento ? calculateAge(patient.dataNascimento) : null,
+        therapistInfo: therapist ? {
+          nome: therapist.nome,
+          areaAtuacao: areaLabel || dadosProfissionaisArea?.areaAtuacao,
+          numeroConselho: dadosProfissionaisArea?.numeroConselho ?? undefined,
+        } : null,
+        reportElement,
+      });
+    } catch (error) {
+      console.error('Erro ao exportar Word:', error);
+    }
+  }, [report, patient, therapist]);
+
   const getInitials = (nome: string) => {
     return nome
       .split(' ')
@@ -191,6 +223,14 @@ export function VisualizarRelatorioPage() {
       setHeaderActions(
         <div className="flex items-center gap-3">
           <Button
+            variant="outline"
+            className="h-10 rounded-full gap-2"
+            onClick={handleExportWord}
+          >
+            <FileType className="h-4 w-4" />
+            Exportar Word
+          </Button>
+          <Button
             variant="default"
             className="h-10 rounded-full gap-2"
             onClick={handleExportPdf}
@@ -205,7 +245,7 @@ export function VisualizarRelatorioPage() {
     }
 
     return () => setHeaderActions(null);
-  }, [report, setHeaderActions, handleExportPdf]);
+  }, [report, setHeaderActions, handleExportPdf, handleExportWord]);
 
   if (loading) {
     console.log('⏳ Componente em loading...');
