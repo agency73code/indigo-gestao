@@ -617,13 +617,20 @@ export async function musicKpis(req: Request, res: Response, next: NextFunction)
 
 export async function getMusicTherapyEvolutionChart(req: Request, res: Response, next: NextFunction) {
     try {
+        const userId = req.user?.id;
+        if (!userId) return res.status(401).json({ success: false, message: 'Não autenticado' });
+
         const programId = getQueryString(req.query.programId);
         const stimulusId = getQueryString(req.query.stimulusId);
         const sort = getQueryString(req.query.sort) === 'desc' ? 'desc' : 'asc';
 
         if (!programId) return res.status(400).json({ success: false, message: 'programId é obrigatório' });
 
-        const sessions = await fetchMusicSessionsForChart(programId, stimulusId, sort);
+        const visibility = await getVisibilityScope(userId);
+        if (visibility.scope === 'none') return res.status(403).json({ success: false, message: 'Sem permissão para acessar estes dados' });
+        const therapistIdsScope = visibility.scope === 'partial' ? visibility.therapistIds : undefined;
+
+        const sessions = await fetchMusicSessionsForChart(programId, stimulusId, sort, therapistIdsScope);
 
         const chartData = sessions.map(mapMusicSessionToChartPoint);
 

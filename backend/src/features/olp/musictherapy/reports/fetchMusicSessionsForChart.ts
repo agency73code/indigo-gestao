@@ -1,10 +1,11 @@
 import { prisma } from "../../../../config/database.js";
 
-export async function fetchMusicSessionsForChart(programId: string, stimulusId?: string, sort: 'asc' | 'desc' = 'asc') {
+export async function fetchMusicSessionsForChart(programId: string, stimulusId?: string, sort: 'asc' | 'desc' = 'asc', therapistIdsScope?: string[]) {
   const sessions = await prisma.sessao.findMany({
     where: {
       ocp_id: Number(programId),
       area: "musicoterapia",
+      ...(therapistIdsScope && { terapeuta_id: { in: therapistIdsScope } }),
 
       ...(stimulusId && {
         trials: {
