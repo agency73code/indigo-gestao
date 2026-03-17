@@ -111,39 +111,53 @@ export default function VinculosPage() {
         orderBy: 'recent',
     });
 
-    const loadData = useCallback(async (filters?: LinkFiltersType) => {
-    try {
-        setLoading(true);
-        const [linksData, supervisionLinksData, patientsData, therapistsData] = await Promise.all([
-            getAllLinks(filters),
-            getAllSupervisionLinks(filters),
-            getAllPatients(),
-            getTherapistsForLinks(),
-        ]);
-        setLinks(linksData);
-        setSupervisionLinks(supervisionLinksData);
-        setPatients(patientsData);
-        setTherapists(therapistsData);
-    } catch (error) {
-        console.error('Erro ao carregar dados:', error);
-    } finally {
-        setLoading(false);
-    }
+    const loadStaticData = useCallback(async () => {
+        try {
+            const [patientsData, therapistsData] = await Promise.all([
+                getAllPatients(),
+                getTherapistsForLinks(),
+            ]);
+            setPatients(patientsData);
+            setTherapists(therapistsData);
+        } catch (error) {
+            console.error('Erro ao carregar dados estáticos:', error);
+        }
     }, []);
 
-    // Carregar dados iniciais e reagir aos filtros
+    const loadLinks = useCallback(async (filters?: LinkFiltersType) => {
+        try {
+            setLoading(true);
+            const [linksData, supervisionLinksData] = await Promise.all([
+                getAllLinks(filters),
+                getAllSupervisionLinks(filters),
+            ]);
+            setLinks(linksData);
+            setSupervisionLinks(supervisionLinksData);
+        } catch (error) {
+            console.error('Erro ao carregar vínculos:', error);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    // Carrega pacientes e terapeutas uma única vez no mount
+    useEffect(() => {
+        loadStaticData();
+    }, [loadStaticData]);
+
+    // Recarrega vínculos a cada mudança de filtro
     useEffect(() => {
         setLoading(true);
-        
+
         // Debounce apenas para busca de texto (campo 'q')
         const debounceTime = filters.q ? 500 : 0;
-        
+
         const timeout = setTimeout(() => {
-            loadData(filters);
+            loadLinks(filters);
         }, debounceTime);
 
         return () => clearTimeout(timeout);
-    }, [filters, loadData]);
+    }, [filters, loadLinks]);
 
     const handleCreateLink = () => {
         setEditingLink(null);
@@ -212,7 +226,7 @@ export default function VinculosPage() {
                     duration: 4000,
                 });
             }
-            await loadData(filters); // Recarregar dados
+            await loadLinks(filters); // Recarregar dados
             setShowModal(false);
         } catch (error: any) {
             console.error('Erro ao salvar vínculo:', error);
@@ -270,7 +284,7 @@ export default function VinculosPage() {
             await endLink(endingLink.id, endDate);
 
             // Recarregar dados para refletir a mudança
-            await loadData(filters);
+            await loadLinks(filters);
 
             // Fechar diálogo
             setShowEndDialog(false);
@@ -297,7 +311,7 @@ export default function VinculosPage() {
             await archiveLink(archivingLink.id);
 
             // Recarregar dados para refletir a mudança
-            await loadData(filters);
+            await loadLinks(filters);
 
             // Fechar diálogo
             setShowArchiveDialog(false);
@@ -328,7 +342,7 @@ export default function VinculosPage() {
             await transferResponsible(data);
 
             // Recarregar dados para refletir a mudança
-            await loadData(filters);
+            await loadLinks(filters);
 
             // Fechar diálogo
             setShowTransferDialog(false);
@@ -372,7 +386,7 @@ export default function VinculosPage() {
                     duration: 4000,
                 });
             }
-            await loadData(filters);
+            await loadLinks(filters);
             setShowSupervisionModal(false);
         } catch (error: any) {
             console.error('Erro ao salvar vínculo de supervisão:', error);
@@ -412,7 +426,7 @@ export default function VinculosPage() {
         try {
             setEndSupervisionLoading(true);
             await endSupervisionLink(endingSupervisionLink.id, endDate);
-            await loadData(filters);
+            await loadLinks(filters);
             setShowEndSupervisionDialog(false);
             setEndingSupervisionLink(null);
             toast.success('Vínculo de supervisão encerrado', {
@@ -441,7 +455,7 @@ export default function VinculosPage() {
         try {
             setArchiveSupervisionLoading(true);
             await archiveSupervisionLink(archivingSupervisionLink.id);
-            await loadData(filters);
+            await loadLinks(filters);
             setShowArchiveSupervisionDialog(false);
             setArchivingSupervisionLink(null);
             toast.success('Vínculo de supervisão arquivado', {
@@ -468,7 +482,7 @@ export default function VinculosPage() {
     const handleReactivateSupervisionLink = async (link: TherapistSupervisionLink) => {
         try {
             await reactivateSupervisionLink(link.id);
-            await loadData(filters);
+            await loadLinks(filters);
             toast.success('Vínculo de supervisão reativado', {
                 description: 'O vínculo foi reativado com sucesso.',
                 duration: 3000,
@@ -492,7 +506,7 @@ export default function VinculosPage() {
                 supervisionScope: newScope,
             });
             
-            await loadData(filters);
+            await loadLinks(filters);
             toast.success('Tipo de supervisão alterado', {
                 description: `O vínculo foi alterado para ${scopeLabel}.`,
                 duration: 3000,
@@ -509,7 +523,7 @@ export default function VinculosPage() {
     const handleReactivateLink = async (link: PatientTherapistLink) => {
         try {
             await reactivateLink(link.id, link.actuationArea);
-            await loadData(filters);
+            await loadLinks(filters);
             toast.success('Vínculo reativado', {
                 description: 'O vínculo foi reativado com sucesso.',
                 duration: 3000,
@@ -536,7 +550,7 @@ export default function VinculosPage() {
             setBulkEndSupervisionLoading(true);
             const endDate = new Date().toISOString();
             await Promise.all(bulkEndingSupervisionLinks.map(link => endSupervisionLink(link.id, endDate)));
-            await loadData(filters);
+            await loadLinks(filters);
             toast.success(`${bulkEndingSupervisionLinks.length} vínculo${bulkEndingSupervisionLinks.length > 1 ? 's' : ''} encerrado${bulkEndingSupervisionLinks.length > 1 ? 's' : ''}`, {
                 description: `${bulkEndingSupervisionLinks.length} vínculo${bulkEndingSupervisionLinks.length > 1 ? 's de supervisão foram encerrados' : ' de supervisão foi encerrado'} com sucesso.`,
                 duration: 3000,
@@ -565,7 +579,7 @@ export default function VinculosPage() {
         try {
             setBulkArchiveSupervisionLoading(true);
             await Promise.all(bulkArchivingSupervisionLinks.map(link => archiveSupervisionLink(link.id)));
-            await loadData(filters);
+            await loadLinks(filters);
             toast.success(`${bulkArchivingSupervisionLinks.length} vínculo${bulkArchivingSupervisionLinks.length > 1 ? 's' : ''} arquivado${bulkArchivingSupervisionLinks.length > 1 ? 's' : ''}`, {
                 description: `${bulkArchivingSupervisionLinks.length} vínculo${bulkArchivingSupervisionLinks.length > 1 ? 's de supervisão foram arquivados' : ' de supervisão foi arquivado'} com sucesso.`,
                 duration: 3000,
@@ -586,7 +600,7 @@ export default function VinculosPage() {
     const handleBulkReactivateSupervisionLinks = async (links: TherapistSupervisionLink[]) => {
         try {
             await Promise.all(links.map(link => reactivateSupervisionLink(link.id)));
-            await loadData(filters);
+            await loadLinks(filters);
             toast.success(`${links.length} vínculo${links.length > 1 ? 's' : ''} reativado${links.length > 1 ? 's' : ''}`, {
                 description: `${links.length} vínculo${links.length > 1 ? 's de supervisão foram reativados' : ' de supervisão foi reativado'} com sucesso.`,
                 duration: 3000,
@@ -613,7 +627,7 @@ export default function VinculosPage() {
             setBulkEndLoading(true);
             const currentDate = new Date().toISOString();
             await Promise.all(bulkEndingLinks.map(link => endLink(link.id, currentDate)));
-            await loadData(filters);
+            await loadLinks(filters);
             toast.success(`${bulkEndingLinks.length} vínculo${bulkEndingLinks.length > 1 ? 's' : ''} encerrado${bulkEndingLinks.length > 1 ? 's' : ''}`, {
                 description: `${bulkEndingLinks.length} vínculo${bulkEndingLinks.length > 1 ? 's foram encerrados' : ' foi encerrado'} com sucesso.`,
                 duration: 3000,
@@ -642,7 +656,7 @@ export default function VinculosPage() {
         try {
             setBulkArchiveLoading(true);
             await Promise.all(bulkArchivingLinks.map(link => archiveLink(link.id)));
-            await loadData(filters);
+            await loadLinks(filters);
             toast.success(`${bulkArchivingLinks.length} vínculo${bulkArchivingLinks.length > 1 ? 's' : ''} arquivado${bulkArchivingLinks.length > 1 ? 's' : ''}`, {
                 description: `${bulkArchivingLinks.length} vínculo${bulkArchivingLinks.length > 1 ? 's foram arquivados' : ' foi arquivado'} com sucesso.`,
                 duration: 3000,
@@ -663,7 +677,7 @@ export default function VinculosPage() {
     const handleBulkReactivateLinks = async (links: PatientTherapistLink[]) => {
         try {
             await Promise.all(links.map(link => reactivateLink(link.id, link.actuationArea)));
-            await loadData(filters);
+            await loadLinks(filters);
             toast.success(`${links.length} vínculo${links.length > 1 ? 's' : ''} reativado${links.length > 1 ? 's' : ''}`, {
                 description: `${links.length} vínculo${links.length > 1 ? 's foram reativados' : ' foi reativado'} com sucesso.`,
                 duration: 3000,
