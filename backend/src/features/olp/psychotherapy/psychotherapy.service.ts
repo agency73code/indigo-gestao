@@ -296,7 +296,7 @@ export async function createEvolution(input: CreateEvolutionServiceInput) {
         };
 
         const visibility = await getVisibilityScope(userId);
-        const ownership = { therapistId: medicalRecord.terapeuta_id };
+        const ownership = { therapistId: medicalRecord.terapeuta_id, clientId: medicalRecord.cliente_id };
         const allowed = await canAccessThis({ ownership, userId, visibility });
         if (!allowed) throw forbidden();
 
@@ -418,7 +418,7 @@ export async function updateMedicalRecord(payload: PsychoUpdatePayload, medicalR
         };
 
         const visibility = await getVisibilityScope(userId);
-        const ownership = { therapistId: medicalRecord.terapeuta_id };
+        const ownership = { therapistId: medicalRecord.terapeuta_id, clientId: medicalRecord.cliente_id };
         const allowed = await canAccessThis({ ownership, userId, visibility });
         if (!allowed) throw forbidden();
 
