@@ -845,13 +845,14 @@ export async function getStimulusReport(
     programId?: string,
     area?: string,
     therapistId?: string,
+    therapistIdsScope?: string[],
 ) {
     const where: {
         ocp: {
             cliente_id?: string;
             id?: number;
             area?: string;
-            terapeuta_id?: string;
+            terapeuta_id?: string | { in: string[] };
         };
     } = {
         ocp: {},
@@ -860,7 +861,11 @@ export async function getStimulusReport(
     if (clientId) where.ocp.cliente_id = clientId;
     if (programId) where.ocp.id = Number(programId);
     if (area) where.ocp.area = area;
-    if (therapistId) where.ocp.terapeuta_id = therapistId;
+    if (therapistIdsScope) {
+        where.ocp.terapeuta_id = { in: therapistIdsScope };
+    } else if (therapistId) {
+        where.ocp.terapeuta_id = therapistId;
+    }
 
     return prisma.estimulo_ocp.findMany({
         where,
@@ -879,6 +884,7 @@ export async function getProgramsReport(
     area?: string,
     stimulusId?: string,
     therapistId?: string,
+    therapistIdsScope?: string[],
 ) {
     const where: Prisma.ocpWhereInput = {};
 
@@ -891,7 +897,11 @@ export async function getProgramsReport(
             },
         };
     }
-    if (therapistId) where.terapeuta_id = therapistId;
+    if (therapistIdsScope) {
+        where.terapeuta_id = { in: therapistIdsScope };
+    } else if (therapistId) {
+        where.terapeuta_id = therapistId;
+    }
 
     const ocps = await prisma.ocp.findMany({
         where,
@@ -916,6 +926,7 @@ export async function getAttentionStimuli({
     periodMode = '30d',
     periodStart,
     periodEnd,
+    therapistIdsScope,
 }: {
     clientId: string;
     lastSessions: 1 | 3 | 5;
@@ -925,6 +936,7 @@ export async function getAttentionStimuli({
     periodMode?: '30d' | '90d' | 'custom' | undefined;
     periodStart?: string | undefined;
     periodEnd?: string | undefined;
+    therapistIdsScope?: string[] | undefined;
 }) {
     const where: Prisma.sessaoWhereInput = {
         cliente_id: clientId,
@@ -932,7 +944,11 @@ export async function getAttentionStimuli({
 
     if (area) where.area = area;
     if (programId) where.ocp_id = programId;
-    if (therapistId) where.terapeuta_id = therapistId;
+    if (therapistIdsScope) {
+        where.terapeuta_id = { in: therapistIdsScope };
+    } else if (therapistId) {
+        where.terapeuta_id = therapistId;
+    }
 
     if (periodMode) {
         if (periodMode === '30d') {

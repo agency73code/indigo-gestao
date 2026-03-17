@@ -372,6 +372,13 @@ export async function getKpis(req: Request, res: Response) {
 
 export async function getProgramsReport(req: Request, res: Response) {
     try {
+        const userId = req.user?.id;
+        if (!userId) throw unauthenticated();
+
+        const visibility = await getVisibilityScope(userId);
+        if (visibility.scope === 'none')
+            return res.status(403).json({ success: false, message: 'Sem permissão para acessar este relatório' });
+
         const clientId = typeof req.query.clientId === 'string' ? req.query.clientId : undefined;
         const area = typeof req.query.area === 'string' ? req.query.area : undefined;
         const stimulusId =
@@ -379,7 +386,9 @@ export async function getProgramsReport(req: Request, res: Response) {
         const therapistId =
             typeof req.query.therapistId === 'string' ? req.query.therapistId : undefined;
 
-        const data = await OcpService.getProgramsReport(clientId, area, stimulusId, therapistId);
+        const therapistIdsScope = visibility.scope === 'partial' ? visibility.therapistIds : undefined;
+
+        const data = await OcpService.getProgramsReport(clientId, area, stimulusId, therapistId, therapistIdsScope);
         res.json({ data });
     } catch (error) {
         console.error(error);
@@ -392,11 +401,21 @@ export async function getProgramsReport(req: Request, res: Response) {
 
 export async function getStimulusReport(req: Request, res: Response) {
     try {
+        const userId = req.user?.id;
+        if (!userId) throw unauthenticated();
+
+        const visibility = await getVisibilityScope(userId);
+        if (visibility.scope === 'none')
+            return res.status(403).json({ success: false, message: 'Sem permissão para acessar este relatório' });
+
         const area = typeof req.query.area === 'string' ? req.query.area : undefined;
         const clientId = req.query.clientId as string | undefined;
         const programId = req.query.programId as string | undefined;
         const therapistId = req.query.therapistId as string | undefined;
-        const data = await OcpService.getStimulusReport(clientId, programId, area, therapistId);
+
+        const therapistIdsScope = visibility.scope === 'partial' ? visibility.therapistIds : undefined;
+
+        const data = await OcpService.getStimulusReport(clientId, programId, area, therapistId, therapistIdsScope);
 
         res.json({ data });
     } catch (error) {
@@ -410,6 +429,15 @@ export async function getStimulusReport(req: Request, res: Response) {
 
 export async function getAttentionStimuli(req: Request, res: Response) {
     try {
+        const userId = req.user?.id;
+        if (!userId) throw unauthenticated();
+
+        const visibility = await getVisibilityScope(userId);
+        if (visibility.scope === 'none')
+            return res.status(403).json({ success: false, message: 'Sem permissão para acessar este relatório' });
+
+        const therapistIdsScope = visibility.scope === 'partial' ? visibility.therapistIds : undefined;
+
         const {
             programId,
             clientId,
@@ -460,6 +488,7 @@ export async function getAttentionStimuli(req: Request, res: Response) {
             periodMode: parsedPeriodMode,
             periodStart: periodStartStr,
             periodEnd: periodEndStr,
+            therapistIdsScope,
         });
 
         return res.json(data);
