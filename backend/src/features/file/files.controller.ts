@@ -285,6 +285,10 @@ export async function deleteFile(req: Request, res: Response, next: NextFunction
  * Endpoint: GET /api/arquivos/getAvatar?ownerType=cliente&ownerId=123
  */
 export async function getAvatar(req: Request, res: Response) {
+    if (!req.user) {
+        return res.status(401).json({ error: 'Não autenticado.' });
+    }
+
     const ownerType = req.query.ownerType as 'cliente' | 'terapeuta';
     const ownerId = req.query.ownerId as string;
 
@@ -293,6 +297,15 @@ export async function getAvatar(req: Request, res: Response) {
     }
 
     try {
+        const visibility = await getVisibilityScope(req.user.id);
+        const file = ownerType === 'terapeuta'
+            ? { clienteId: null, terapeutaId: ownerId }
+            : { clienteId: ownerId, terapeutaId: null };
+        const allowed = await canDownloadFile({ file, userId: req.user.id, visibility });
+        if (!allowed) {
+            return res.status(403).json({ error: 'Sem permissão para acessar o avatar deste proprietário.' });
+        }
+
         // Busca os arquivos desse usuário
         const files = await FilesService.listFiles(ownerType, ownerId);
 
