@@ -113,11 +113,24 @@ export async function uploadFile(req: Request, res: Response, next: NextFunction
  */
 export async function listFiles(req: Request, res: Response) {
     try {
+        if (!req.user) {
+            return res.status(401).json({ error: 'Não autenticado.' });
+        }
+
         const ownerType = req.query.ownerType as 'cliente' | 'terapeuta';
         const ownerId = req.query.ownerId as string;
 
         if (!ownerType || !ownerId) {
             return res.status(400).json({ error: 'Parâmetros obrigatórios ausentes.' });
+        }
+
+        const visibility = await getVisibilityScope(req.user.id);
+        const file = ownerType === 'terapeuta'
+            ? { clienteId: null, terapeutaId: ownerId }
+            : { clienteId: ownerId, terapeutaId: null };
+        const allowed = await canDownloadFile({ file, userId: req.user.id, visibility });
+        if (!allowed) {
+            return res.status(403).json({ error: 'Sem permissão para listar arquivos deste proprietário.' });
         }
 
         const files = await FilesService.listFiles(ownerType, ownerId);
