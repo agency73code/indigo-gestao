@@ -83,8 +83,26 @@ function buildMamadeiraDetalhes(ha?: string | null, vezesAoDia?: number | null) 
     return parts.length > 0 ? parts.join(' - ') : null;
 }
 
-export async function create(payload: AnamnesePayload) {
+export async function create(payload: AnamnesePayload, userId: string) {
     const header = payload.cabecalho;
+
+    const visibility = await getVisibilityScope(userId);
+
+    if (visibility.scope === 'none') {
+        throw new AppError('FORBIDDEN', 'Sem permissão para criar anamnese.', 403);
+    }
+
+    if (visibility.scope === 'partial') {
+        const clientAccessible = await prisma.cliente.count({
+            where: {
+                id: header.clienteId,
+                terapeuta: { some: { terapeuta_id: { in: visibility.therapistIds } } },
+            },
+        });
+        if (!clientAccessible) {
+            throw new AppError('FORBIDDEN', 'Sem permissão para criar anamnese para este cliente.', 403);
+        }
+    }
 
     const existingAnamnesesCount = await prisma.anamnese.count({
         where: {

@@ -83,7 +83,7 @@ export async function create(req: Request, res: Response, next: NextFunction) {
         }
 
         // chama o service já com caminho preenchido
-        const created = await anamneseService.create(payload);
+        const created = await anamneseService.create(payload, req.user.id);
 
         return res.status(201).json({
             success: true,
