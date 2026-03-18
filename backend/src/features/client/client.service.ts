@@ -500,8 +500,23 @@ export async function list(
     };
 }
 
-export async function getClientReport() {
+export async function getClientReport(userId: string) {
+    const visibility = await getVisibilityScope(userId);
+
+    if (visibility.scope === 'none') return [];
+
+    const where: Prisma.clienteWhereInput = {};
+
+    if (visibility.scope === 'partial') {
+        where.terapeuta = {
+            some: {
+                terapeuta_id: { in: visibility.therapistIds },
+            },
+        };
+    }
+
     return prisma.cliente.findMany({
+        where,
         select: {
             id: true,
             nome: true,

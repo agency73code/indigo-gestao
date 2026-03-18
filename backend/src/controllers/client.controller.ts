@@ -78,7 +78,10 @@ export async function update(req: Request, res: Response, next: NextFunction) {
 
 export async function getClientReport(req: Request, res: Response, next: NextFunction) {
     try {
-        const data = await clientService.getClientReport();
+        if (!req.user) {
+            throw new AppError('UNAUTHENTICATED', 'Não autenticado', 401);
+        }
+        const data = await clientService.getClientReport(req.user.id);
         res.json({ data });
     } catch (err) {
         next(err);
