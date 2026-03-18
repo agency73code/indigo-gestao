@@ -57,7 +57,7 @@ export async function getBillingSummary(req: Request, res: Response, next: NextF
         if (!userId) throw unauthenticated();
 
         const payload = billingSummarySchema.parse(req.query);
-        const data = await BillingService.getBillingSummary(payload);
+        const data = await BillingService.getBillingSummary(payload, userId);
 
         res.status(200).json(data);
     } catch (err) {
