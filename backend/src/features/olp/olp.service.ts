@@ -1,6 +1,7 @@
 import { prisma } from '../../config/database.js';
 import { Prisma } from '@prisma/client';
 import * as OcpType from './types/olp.types.js';
+import { AppError } from '../../errors/AppError.js';
 import * as OcpNormalizer from './olp.normalizer.js';
 import { endOfDay, format, parseISO, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -14,7 +15,25 @@ const MANAGER_LEVEL = ACCESS_LEVELS['gerente'] ?? 5;
 const DAY = 1000 * 60 * 60 * 24;
 const DAYS = (n: number) => n * DAY;
 
-export async function createProgram(data: OcpType.CreateProgramPayload) {
+export async function createProgram(data: OcpType.CreateProgramPayload, userId: string) {
+    const visibility = await getVisibilityScope(userId);
+
+    if (visibility.scope === 'none') {
+        throw new AppError('FORBIDDEN', 'Sem permissão para criar programa.', 403);
+    }
+
+    if (visibility.scope === 'partial') {
+        const clientAccessible = await prisma.cliente.count({
+            where: {
+                id: data.patientId,
+                terapeuta: { some: { terapeuta_id: { in: visibility.therapistIds } } },
+            },
+        });
+        if (!clientAccessible) {
+            throw new AppError('FORBIDDEN', 'Sem permissão para criar programa para este cliente.', 403);
+        }
+    }
+
     const isTO = data.area === 'terapia-ocupacional';
 
     return prisma.ocp.create({

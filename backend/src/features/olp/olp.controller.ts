@@ -43,13 +43,18 @@ import { getVisibilityScope } from '../../utils/visibilityFilter.js';
 
 export async function createProgram(req: Request, res: Response) {
     try {
+        if (!req.user) throw unauthenticated();
+
         const body = req.body as CreateProgramPayload;
 
         if (!body.area) {
             return res.status(400).json({ error: 'Campo area é obrigatório' });
         }
 
-        const ocp = await OcpService.createProgram(body);
+        // Força therapistId a ser o usuário logado, ignorando o que vier do body
+        body.therapistId = req.user.id;
+
+        const ocp = await OcpService.createProgram(body, req.user.id);
         return res.status(201).json({
             id: ocp.id,
             estimulos: ocp.estimulo_ocp.map((e) => ({
