@@ -134,3 +134,12 @@ export type SessaoArquivoItem = {
     criado_em: Date;
     atualizado_em: Date;
 };
+
+export type FaturamentoArquivoItem = {
+    id: number;
+    faturamento_id: number;
+    nome: string;
+    caminho: string;
+    tamanho: number;
+    criado_em: Date;
+};

@@ -4,6 +4,7 @@ import type {
     BaseTherapist,
     EstimuloItem,
     EstimuloOcpItem,
+    FaturamentoArquivoItem,
     FaturamentoItem,
     OcpItem,
     SessaoArquivoItem,
@@ -123,6 +124,7 @@ export function mapBootstrapSessoes(
     sessaoTrials: SessaoTrialItem[],
     faturamentos: FaturamentoItem[],
     sessaoArquivos: SessaoArquivoItem[],
+    faturamentoArquivos: FaturamentoArquivoItem[],
 ) {
     return {
         sessoes: sessoes.map((sessao) => ({
@@ -178,6 +180,14 @@ export function mapBootstrapSessoes(
             tamanho: file.tamanho,
             criadoEm: file.criado_em.toISOString(),
             atualizadoEm: file.atualizado_em.toISOString(),
+        })),
+        faturamentoArquivos: faturamentoArquivos.map((file) => ({
+            id: file.id,
+            faturamentoId: file.faturamento_id,
+            nome: file.nome,
+            caminho: file.caminho,
+            tamanho: file.tamanho,
+            criadoEm: file.criado_em.toISOString(),
         })),
     };
 }
