@@ -156,7 +156,7 @@ export async function loginUserByAccessInformation(
             perfil_acesso: row.perfil_acesso,
             area_atuacao: mapAreaAtuacaoTOIds(row.registro_profissional),
             avatar_url: row.arquivos[0]
-                ? `${process.env.API_URL}/api/arquivos/${row.arquivos[0].id}/view`
+                ? `/api/arquivos/${row.arquivos[0].id}/view`
                 : null,
             birth_date: row.data_nascimento?.toISOString() ?? null,
             table: 'terapeuta',
@@ -196,7 +196,7 @@ export async function loginUserByAccessInformation(
             email: row.emailContato ?? null,
             perfil_acesso: row.perfil_acesso!,
             avatar_url: row.arquivos[0]
-                ? `${process.env.API_URL}/api/arquivos/${row.arquivos[0].id}/view`
+                ? `/api/arquivos/${row.arquivos[0].id}/view`
                 : null,
             birth_date: row.dataNascimento?.toISOString() ?? null,
             table: 'cliente',
@@ -250,7 +250,7 @@ export async function findUserById(id: string, table: Tables) {
             perfil_acesso: row.perfil_acesso,
             area_atuacao: mapAreaAtuacaoTOIds(row.registro_profissional),
             avatar_url: row.arquivos[0]
-                ? `${process.env.API_URL}/api/arquivos/${row.arquivos[0].id}/view`
+                ? `/api/arquivos/${row.arquivos[0].id}/view`
                 : null,
             birth_date: row.data_nascimento?.toISOString() ?? null,
         };
@@ -281,7 +281,7 @@ export async function findUserById(id: string, table: Tables) {
             email: row.emailContato,
             perfil_acesso: row.perfil_acesso,
             avatar_url: row.arquivos[0]
-                ? `${process.env.API_URL}/api/arquivos/${row.arquivos[0].id}/view`
+                ? `/api/arquivos/${row.arquivos[0].id}/view`
                 : null,
             birth_date: row.dataNascimento?.toISOString() ?? null,
         };
