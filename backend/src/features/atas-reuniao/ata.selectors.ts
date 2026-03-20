@@ -32,7 +32,7 @@ export const ataSelectBase = Prisma.validator<Prisma.ata_reuniaoSelect>()({
             nome: true,
             arquivos: {
                 where: { tipo: 'fotoPerfil' },
-                select: { arquivo_id: true },
+                select: { id: true },
                 take: 1,
             },
         },
@@ -44,7 +44,7 @@ export const ataSelectBase = Prisma.validator<Prisma.ata_reuniaoSelect>()({
             nome: true,
             arquivos: {
                 where: { tipo: 'fotoPerfil' },
-                select: { arquivo_id: true },
+                select: { id: true },
                 take: 1,
             },
             registro_profissional: {
@@ -70,7 +70,7 @@ export const ataSelectBase = Prisma.validator<Prisma.ata_reuniaoSelect>()({
                     nome: true,
                     arquivos: {
                         where: { tipo: 'fotoPerfil' },
-                        select: { arquivo_id: true },
+                        select: { id: true },
                         take: 1,
                     },
                     registro_profissional: {
@@ -132,7 +132,7 @@ export const ataSelectList = Prisma.validator<Prisma.ata_reuniaoSelect>()({
             nome: true,
             arquivos: {
                 where: { tipo: 'fotoPerfil' },
-                select: { arquivo_id: true },
+                select: { id: true },
                 take: 1,
             },
         } 
@@ -143,7 +143,7 @@ export const ataSelectList = Prisma.validator<Prisma.ata_reuniaoSelect>()({
             nome: true,
             arquivos: {
                 where: { tipo: 'fotoPerfil' },
-                select: { arquivo_id: true },
+                select: { id: true },
                 take: 1,
             },
             registro_profissional: {
@@ -169,7 +169,7 @@ export const ataSelectList = Prisma.validator<Prisma.ata_reuniaoSelect>()({
                     nome: true,
                     arquivos: {
                         where: { tipo: 'fotoPerfil' },
-                        select: { arquivo_id: true },
+                        select: { id: true },
                         take: 1,
                     },
                     registro_profissional: {
@@ -204,17 +204,17 @@ export type AtaBase = Prisma.ata_reuniaoGetPayload<{
 export type AtaListItem = Prisma.ata_reuniaoGetPayload<{ select: typeof ataSelectList }>;
 
 export function mapAtaBase(ata: AtaBase) {
-    const clienteAvatar = ata.cliente?.arquivos?.[0]?.arquivo_id;
-    const terapeutaAvatar = ata.terapeuta?.arquivos?.[0]?.arquivo_id;
+    const clienteAvatar = ata.cliente?.arquivos?.[0]?.id;
+    const terapeutaAvatar = ata.terapeuta?.arquivos?.[0]?.id;
     
     return {
         ...ata,
         data: toDateOnly(ata.data),
         clienteAvatarUrl: clienteAvatar 
-            ? `/api/arquivos/${encodeURIComponent(clienteAvatar)}/view` 
+            ? `/api/arquivos/${clienteAvatar}/view`
             : undefined,
-        terapeutaAvatarUrl: terapeutaAvatar 
-            ? `/api/arquivos/${encodeURIComponent(terapeutaAvatar)}/view` 
+        terapeutaAvatarUrl: terapeutaAvatar
+            ? `/api/arquivos/${terapeutaAvatar}/view`
             : undefined,
         anexos: ata.anexos.map((a) => ({ 
             ...a, 
@@ -225,16 +225,16 @@ export function mapAtaBase(ata: AtaBase) {
 }
 
 export function mapAtaListItem(ata: AtaListItem) {
-    const clienteAvatar = ata.cliente?.arquivos?.[0]?.arquivo_id;
-    const terapeutaAvatar = ata.terapeuta?.arquivos?.[0]?.arquivo_id;
+    const clienteAvatar = ata.cliente?.arquivos?.[0]?.id;
+    const terapeutaAvatar = ata.terapeuta?.arquivos?.[0]?.id;
     
     return {
         ...ata,
         clienteAvatarUrl: clienteAvatar 
-            ? `/api/arquivos/${encodeURIComponent(clienteAvatar)}/view` 
+            ? `/api/arquivos/${clienteAvatar}/view`
             : undefined,
-        terapeutaAvatarUrl: terapeutaAvatar 
-            ? `/api/arquivos/${encodeURIComponent(terapeutaAvatar)}/view` 
+        terapeutaAvatarUrl: terapeutaAvatar
+            ? `/api/arquivos/${terapeutaAvatar}/view`
             : undefined,
         anexos: ata.anexos.map((a) => ({ ...a, arquivo_id: a.caminho })),
         terapeuta: ata.terapeuta ?? buildFallbackTherapist(ata),

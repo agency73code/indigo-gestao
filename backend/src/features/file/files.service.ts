@@ -1,4 +1,4 @@
-import { createFolder } from './r2/createFolder.js';
+import { createFolder, sanitizeFolderName } from './r2/createFolder.js';
 import { prisma } from '../../config/database.js';
 import { s3 } from '../../config/r2.js';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
@@ -63,10 +63,13 @@ export async function uploadAndPersistFile(
     // Determina o nome do arquivo
     const ext = path.extname(input.file.originalname || '').toLowerCase() || '';
 
+    const safeDocumentType = sanitizeFolderName(input.documentType);
+    const safeDescription = normalizedDescription ? sanitizeFolderName(normalizedDescription) : null;
+
     const driveLabel =
-        normalizedDescription && input.documentType === 'outros'
-            ? `${input.documentType}-${normalizedDescription}`
-            : input.documentType;
+        safeDescription && safeDocumentType === 'outros'
+            ? `${safeDocumentType}-${safeDescription}`
+            : safeDocumentType;
 
     const finalName = `${driveLabel}${ext}`;
 
@@ -249,7 +252,7 @@ export async function findSessionFileForDownload(
     };
 }
 
-export async function findByIdForDownload(
+export async function findFileByIdAuthorized(
     fileId: number,
     userId: string,
 ): Promise<FileForDownload | null> {

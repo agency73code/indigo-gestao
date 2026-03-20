@@ -1,10 +1,21 @@
 import type { Request, Response } from 'express';
+import { ZodError } from 'zod';
+import { uuidParam } from '../../schemas/utils/uuid.js';
 import * as GenericsService from './generics.service.js';
 
 export async function getUserInfos(req: Request, res: Response) {
-    const { id } = req.params;
-    if (!id) {
-        return res.status(400).json({ error: 'ID do usuário é obrigatório.' });
+    let id: string;
+    try {
+        id = uuidParam.parse(req.params.id);
+    } catch (error) {
+        if (error instanceof ZodError) {
+            return res.status(400).json({ error: 'ID inválido.' });
+        }
+        throw error;
+    }
+
+    if (req.user!.id !== id) {
+        return res.status(403).json({ error: 'Acesso negado.' });
     }
 
     try {

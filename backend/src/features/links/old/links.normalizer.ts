@@ -11,9 +11,9 @@ function normalizeStatus(status: string | null | undefined): 'active' | 'ended' 
     return 'active';
 }
 
-function buildAvatarUrl(fileId: string | null | undefined) {
+function buildAvatarUrl(fileId: number | null | undefined) {
     if (!fileId) return null;
-    return `/api/arquivos/${encodeURIComponent(fileId)}/view`;
+    return `/api/arquivos/${fileId}/view`;
 }
 
 export function normalizeLink(link: LinkTypes.DBLink) {
@@ -39,8 +39,8 @@ export function normalizeClientOptions(dto: LinkTypes.DBClientOption[]): LinkTyp
         return {
             id: client.id,
             nome: client.nome ?? '',
-            avatarUrl: avatarFile?.arquivo_id
-                ? `/api/arquivos/${encodeURIComponent(avatarFile.arquivo_id)}/view`
+            avatarUrl: avatarFile?.id
+                ? `/api/arquivos/${avatarFile.id}/view`
                 : null,
         };
     });
@@ -52,7 +52,7 @@ export function normalizeClientList(
         nome: string | null;
         dataNascimento: Date | null;
         cuidadores?: Array <{ nome: string | null }> | null;
-        arquivos?: Array<{ arquivo_id: string | null }> | null;
+        arquivos?: Array<{ id: number }> | null;
     }>,
     includeResponsavel: boolean,
 ): LinkTypes.ClientListDTO[] {
@@ -66,8 +66,8 @@ export function normalizeClientList(
             dataNascimento: client.dataNascimento
                 ? client.dataNascimento.toISOString().split('T')[0]
                 : null,
-            avatarUrl: avatarFile?.arquivo_id
-                ? `/api/arquivos/${encodeURIComponent(avatarFile.arquivo_id)}/view`
+            avatarUrl: avatarFile?.id
+                ? `/api/arquivos/${avatarFile.id}/view`
                 : null,
             ...(includeResponsavel ? { responsavelNome: caregiver?.nome ?? null }: {}),
         };
@@ -76,7 +76,7 @@ export function normalizeClientList(
 
 export function normalizeSelectTherapists(records: LinkTypes.TherapistRecord[]): LinkTypes.TherapistSelectDTO[] {
     return records.map((therapist) => {
-        const avatarFile = therapist.arquivos?.[0]?.arquivo_id ?? null;
+        const avatarFile = therapist.arquivos?.[0]?.id ?? null;
         const regs = therapist.registro_profissional ?? [];
 
         const dadosProfissionais = regs.map((rp) => ({
@@ -101,7 +101,7 @@ export function normalizeListTherapists(
     includeNumeroConselho: boolean,
 ) {
     return records.map((therapist) => {
-        const avatarFile = therapist.arquivos?.[0]?.arquivo_id ?? null;
+        const avatarFile = therapist.arquivos?.[0]?.id ?? null;
         const regs = therapist.registro_profissional ?? [];
 
         const dadosProfissionais = regs

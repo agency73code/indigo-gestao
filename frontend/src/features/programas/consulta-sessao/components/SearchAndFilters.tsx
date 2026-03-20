@@ -12,7 +12,7 @@ import type { SessaoFiltersState } from '../types';
 
 interface SearchAndFiltersProps extends SessaoFiltersState {
   disabled?: boolean;
-  programOptions: string[];
+  programOptions: { id: string; label: string }[];
   therapistOptions: string[];
   onChange: (next: Partial<SessaoFiltersState>) => void;
   renderButton?: ReactNode;
@@ -109,8 +109,8 @@ export default function SearchAndFilters({
             <SelectContent>
               <SelectItem value="all">Todos os programas</SelectItem>
               {programOptions.map((option) => (
-                <SelectItem key={option} value={option}>
-                  {option}
+                <SelectItem key={option.id} value={option.id}>
+                  {option.label}
                 </SelectItem>
               ))}
             </SelectContent>

@@ -13,8 +13,8 @@ export async function normalizeList(db: ClientType.DBClientQueryPage[]) {
             telefone: cuidador?.telefone ?? '',
             responsavel: cuidador?.nome ?? '',
             status: c.status === 'ativo' ? 'ATIVO' : 'INATIVO',
-            avatarUrl: fotoPerfil?.arquivo_id
-                ? `/api/arquivos/${encodeURIComponent(fotoPerfil.arquivo_id)}/view`
+            avatarUrl: fotoPerfil?.id
+                ? `/api/arquivos/${fotoPerfil.id}/view`
                 : '',
             pessoa: {
                 cpf: cuidador?.cpf ?? '',

@@ -155,3 +155,9 @@ pids/
 *.bak
 *.old
 *.orig
+
+# ===================================
+# SEGURANÇA (uso local)
+# ===================================
+CLAUDE.md
+docs/security/

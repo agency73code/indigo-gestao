@@ -76,6 +76,7 @@ export const queryTherapist = {
 
     arquivos: {
         select: {
+            id: true,
             arquivo_id: true,
             tipo: true,
             mime_type: true,

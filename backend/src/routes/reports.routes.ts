@@ -9,6 +9,7 @@ router.use(auth);
 
 router.post('/', upload.single('pdf'), ReportController.saveReport);
 router.get('/', ReportController.listReports);
+router.get('/:id/pdf', ReportController.streamPdf);
 router.get('/:id', ReportController.getReport);
 router.delete('/:id', ReportController.deleteReport);
 

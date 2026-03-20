@@ -263,6 +263,7 @@ export async function fetchTherapistSummaryById(therapistId: string) {
             arquivos: {
                 where: { tipo: 'fotoPerfil' },
                 select: {
+                    id: true,
                     arquivo_id: true,
                 },
             }
@@ -277,7 +278,7 @@ export async function fetchTherapistSummaryById(therapistId: string) {
         );
     }
 
-    const therapistAvatar = therapist.arquivos[0] ? therapist.arquivos[0].arquivo_id : null;
+    const therapistAvatarId = therapist.arquivos[0]?.id ?? null;
 
     return {
         id: therapist.id,
@@ -288,7 +289,7 @@ export async function fetchTherapistSummaryById(therapistId: string) {
                 role: r.cargo?.nome ?? null,
             }))
         ).area,
-        photoUrl: therapistAvatar ? `/api/arquivos/${encodeURIComponent(therapistAvatar)}/view` : null,
+        photoUrl: therapistAvatarId ? `/api/arquivos/${therapistAvatarId}/view` : null,
     }
 }
 

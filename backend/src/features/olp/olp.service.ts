@@ -1,6 +1,7 @@
 import { prisma } from '../../config/database.js';
 import { Prisma } from '@prisma/client';
 import * as OcpType from './types/olp.types.js';
+import { AppError } from '../../errors/AppError.js';
 import * as OcpNormalizer from './olp.normalizer.js';
 import { endOfDay, format, parseISO, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -14,7 +15,25 @@ const MANAGER_LEVEL = ACCESS_LEVELS['gerente'] ?? 5;
 const DAY = 1000 * 60 * 60 * 24;
 const DAYS = (n: number) => n * DAY;
 
-export async function createProgram(data: OcpType.CreateProgramPayload) {
+export async function createProgram(data: OcpType.CreateProgramPayload, userId: string) {
+    const visibility = await getVisibilityScope(userId);
+
+    if (visibility.scope === 'none') {
+        throw new AppError('FORBIDDEN', 'Sem permissão para criar programa.', 403);
+    }
+
+    if (visibility.scope === 'partial') {
+        const clientAccessible = await prisma.cliente.count({
+            where: {
+                id: data.patientId,
+                terapeuta: { some: { terapeuta_id: { in: visibility.therapistIds } } },
+            },
+        });
+        if (!clientAccessible) {
+            throw new AppError('FORBIDDEN', 'Sem permissão para criar programa para este cliente.', 403);
+        }
+    }
+
     const isTO = data.area === 'terapia-ocupacional';
 
     return prisma.ocp.create({
@@ -327,9 +346,14 @@ export async function getSessionsByProgram(programId: number, limit: number) {
     return sessions.map(OcpNormalizer.mapSessionReturn);
 }
 
-export async function getClientById(clientId: string) {
-    const client = await prisma.cliente.findUnique({
-        where: { id: clientId },
+export async function getClientById(clientId: string, therapistIds: string[] | null) {
+    const client = await prisma.cliente.findFirst({
+        where: {
+            id: clientId,
+            ...(therapistIds !== null && {
+                terapeuta: { some: { terapeuta_id: { in: therapistIds } } },
+            }),
+        },
         include: {
             cuidadores: {
                 take: 1,
@@ -509,6 +533,7 @@ export async function listProgramsByClientId(
 export async function listSessionsByClient(filters: OcpType.ListSessionsFilters) {
     const {
         clientId,
+        userId,
         area,
         periodMode,
         sort,
@@ -524,9 +549,20 @@ export async function listSessionsByClient(filters: OcpType.ListSessionsFilters)
     const where: Prisma.sessaoWhereInput = {};
     const order = sort === 'date-asc' ? 'asc' : 'desc';
 
+    const visibility = await getVisibilityScope(userId);
+    if (visibility.scope === 'none') return { items: [], total: 0 };
+
     if (clientId) where.cliente_id = clientId;
     if (area) where.area = area;
-    if (therapistId) where.terapeuta_id = therapistId;
+
+    if (visibility.scope === 'partial') {
+        const allowed = therapistId
+            ? visibility.therapistIds.filter((id) => id === therapistId)
+            : visibility.therapistIds;
+        where.terapeuta_id = { in: allowed };
+    } else if (therapistId) {
+        where.terapeuta_id = therapistId;
+    }
     if (programId) where.ocp_id = Number(programId);
 
     if (stimulusId) {
@@ -689,7 +725,9 @@ export async function getKpis(filtros: OcpType.KpisFilters) {
     // ---------------------------------------
     const where: Prisma.sessaoWhereInput = {
         ...(filtros.pacienteId && { cliente_id: filtros.pacienteId }),
-        ...(filtros.terapeutaId && { terapeuta_id: filtros.terapeutaId }),
+        ...(filtros.terapeutaId
+            ? { terapeuta_id: filtros.terapeutaId }
+            : filtros.therapistIdsScope && { terapeuta_id: { in: filtros.therapistIdsScope } }),
         ...(filtros.programaId && { ocp_id: Number(filtros.programaId) }),
         ...(filtros.area && { area: filtros.area }),
     };
@@ -826,13 +864,14 @@ export async function getStimulusReport(
     programId?: string,
     area?: string,
     therapistId?: string,
+    therapistIdsScope?: string[],
 ) {
     const where: {
         ocp: {
             cliente_id?: string;
             id?: number;
             area?: string;
-            terapeuta_id?: string;
+            terapeuta_id?: string | { in: string[] };
         };
     } = {
         ocp: {},
@@ -841,7 +880,11 @@ export async function getStimulusReport(
     if (clientId) where.ocp.cliente_id = clientId;
     if (programId) where.ocp.id = Number(programId);
     if (area) where.ocp.area = area;
-    if (therapistId) where.ocp.terapeuta_id = therapistId;
+    if (therapistIdsScope) {
+        where.ocp.terapeuta_id = { in: therapistIdsScope };
+    } else if (therapistId) {
+        where.ocp.terapeuta_id = therapistId;
+    }
 
     return prisma.estimulo_ocp.findMany({
         where,
@@ -860,6 +903,7 @@ export async function getProgramsReport(
     area?: string,
     stimulusId?: string,
     therapistId?: string,
+    therapistIdsScope?: string[],
 ) {
     const where: Prisma.ocpWhereInput = {};
 
@@ -872,7 +916,11 @@ export async function getProgramsReport(
             },
         };
     }
-    if (therapistId) where.terapeuta_id = therapistId;
+    if (therapistIdsScope) {
+        where.terapeuta_id = { in: therapistIdsScope };
+    } else if (therapistId) {
+        where.terapeuta_id = therapistId;
+    }
 
     const ocps = await prisma.ocp.findMany({
         where,
@@ -897,6 +945,7 @@ export async function getAttentionStimuli({
     periodMode = '30d',
     periodStart,
     periodEnd,
+    therapistIdsScope,
 }: {
     clientId: string;
     lastSessions: 1 | 3 | 5;
@@ -906,6 +955,7 @@ export async function getAttentionStimuli({
     periodMode?: '30d' | '90d' | 'custom' | undefined;
     periodStart?: string | undefined;
     periodEnd?: string | undefined;
+    therapistIdsScope?: string[] | undefined;
 }) {
     const where: Prisma.sessaoWhereInput = {
         cliente_id: clientId,
@@ -913,7 +963,11 @@ export async function getAttentionStimuli({
 
     if (area) where.area = area;
     if (programId) where.ocp_id = programId;
-    if (therapistId) where.terapeuta_id = therapistId;
+    if (therapistIdsScope) {
+        where.terapeuta_id = { in: therapistIdsScope };
+    } else if (therapistId) {
+        where.terapeuta_id = therapistId;
+    }
 
     if (periodMode) {
         if (periodMode === '30d') {

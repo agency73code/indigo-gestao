@@ -617,7 +617,7 @@ export default function TherapistProfileDrawer({
         : null;
 
     const displayAvatar = fotoPerfil
-        ? `${import.meta.env.VITE_API_URL}/arquivos/${encodeURIComponent(fotoPerfil.arquivo_id!)}/view`
+        ? `${import.meta.env.VITE_API_URL}/arquivos/${fotoPerfil.id}/view`
         : null;
 
     const formatDate = (dateString?: string) => {

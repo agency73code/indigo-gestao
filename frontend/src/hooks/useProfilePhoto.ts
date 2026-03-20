@@ -92,12 +92,10 @@ export const useProfilePhoto = (): UseProfilePhotoReturn => {
       // Precisamos extrair o primeiro arquivo e formatar como ProfilePhotoDTO
       if (responseData?.arquivos && responseData.arquivos.length > 0) {
         const arquivo = responseData.arquivos[0];
-        const storageId = encodeURIComponent(arquivo.storageId || arquivo.id);
-
         const profileDto: ProfilePhotoDTO = {
-          fileId: arquivo.storageId || arquivo.id,
-          webViewLink: `/api/arquivos/${storageId}/view`,
-          thumbnailLink: `/api/arquivos/${storageId}/view`,
+          fileId: arquivo.id,
+          webViewLink: `/api/arquivos/${arquivo.id}/view`,
+          thumbnailLink: `/api/arquivos/${arquivo.id}/view`,
         };
         
         return profileDto;

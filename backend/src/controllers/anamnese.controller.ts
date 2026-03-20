@@ -19,6 +19,10 @@ function extractFileId(fieldname: string): string | null {
 
 export async function create(req: Request, res: Response, next: NextFunction) {
     try {
+        if (!req.user) {
+            return res.status(401).json({ success: false, message: 'Não autenticado' });
+        }
+
         const rawPayload = req.body?.payload;
 
         if (typeof rawPayload !== 'string') {
@@ -31,12 +35,15 @@ export async function create(req: Request, res: Response, next: NextFunction) {
         const parsedPayload = JSON.parse(rawPayload);
         const payload = AnamneseSchema.parse(parsedPayload);
 
-        if (!payload?.cabecalho?.clienteId || !payload?.cabecalho?.profissionalId) {
+        if (!payload?.cabecalho?.clienteId) {
             return res.status(400).json({
                 success: false,
-                message: 'clienteId e profissionalId são obrigatórios.',
+                message: 'clienteId é obrigatório.',
             });
         }
+
+        // Força profissionalId a ser o usuário logado, ignorando o que vier do body
+        payload.cabecalho.profissionalId = req.user.id;
 
         // mapeia uploads: id -> key
         const files = (Array.isArray(req.files) ? req.files : []) as Express.Multer.File[];
@@ -76,7 +83,7 @@ export async function create(req: Request, res: Response, next: NextFunction) {
         }
 
         // chama o service já com caminho preenchido
-        const created = await anamneseService.create(payload);
+        const created = await anamneseService.create(payload, req.user.id);
 
         return res.status(201).json({
             success: true,
@@ -120,9 +127,13 @@ export async function list(req: Request, res: Response, next: NextFunction) {
 
 export async function getAnamneseById(req: Request, res: Response, next: NextFunction) {
     try {
+        if (!req.user) {
+            return res.status(401).json({ success: false, message: 'Não autenticado' });
+        }
+
         const parsed = anamneseIdSchema.parse(req.params);
-        
-        const result = await anamneseService.getAnamneseById(parsed.id);
+
+        const result = await anamneseService.getAnamneseById(parsed.id, req.user.id);
 
         if (!result) {
             return res.status(404).json({ success: false, message: 'Anamnese não encontrada' });
@@ -136,6 +147,10 @@ export async function getAnamneseById(req: Request, res: Response, next: NextFun
 
 export async function updateAnamneseById(req: Request, res: Response, next: NextFunction) {
     try {
+        if (!req.user) {
+            return res.status(401).json({ success: false, message: 'Não autenticado' });
+        }
+
         const parsed = anamneseIdSchema.parse(req.params);
         const rawPayload = req.body?.payload ?? req.body;
 
@@ -203,7 +218,7 @@ export async function updateAnamneseById(req: Request, res: Response, next: Next
             }
         }
 
-        const updated = await anamneseService.updateAnamneseById(parsed.id, payload);
+        const updated = await anamneseService.updateAnamneseById(parsed.id, req.user.id, payload);
 
         if (!updated) {
             return res.status(404).json({ success: false, message: 'Anamnese não encontrada' });

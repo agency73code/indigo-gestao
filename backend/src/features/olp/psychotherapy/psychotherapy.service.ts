@@ -276,11 +276,11 @@ export async function searchMedicalRecordById(medicalRecordId: number, userId: s
 }
 
 export async function createEvolution(input: CreateEvolutionServiceInput) {
-    const { payload, attachments, medicalRecordId, billingPayload } = input;
+    const { payload, attachments, medicalRecordId, billingPayload, userId } = input;
     return await prisma.$transaction(async (tx) => {
         const medicalRecord = await tx.ocp_prontuario.findUnique({
             where: { id: medicalRecordId },
-            select: { 
+            select: {
                 id: true,
                 terapeuta_id: true,
                 cliente_id: true,
@@ -294,6 +294,11 @@ export async function createEvolution(input: CreateEvolutionServiceInput) {
                 404,
             );
         };
+
+        const visibility = await getVisibilityScope(userId);
+        const ownership = { therapistId: medicalRecord.terapeuta_id, clientId: medicalRecord.cliente_id };
+        const allowed = await canAccessThis({ ownership, userId, visibility });
+        if (!allowed) throw forbidden();
 
         const evolution = await tx.prontuario_evolucao.create({
             data: {
@@ -398,12 +403,12 @@ export async function listEvolutions(medicalRecordId: number, userId: string) {
     }));
 }
 
-export async function updateMedicalRecord(payload: PsychoUpdatePayload, medicalRecordId: number, _userId: string) {
+export async function updateMedicalRecord(payload: PsychoUpdatePayload, medicalRecordId: number, userId: string) {
     await prisma.$transaction(async (tx) => {
         const medicalRecord = await tx.ocp_prontuario.findUnique({
             where: { id: medicalRecordId },
         });
-    
+
         if (!medicalRecord) {
             throw new AppError(
                 'MEDICAL_RECORD_NOT_FOUND',
@@ -411,6 +416,11 @@ export async function updateMedicalRecord(payload: PsychoUpdatePayload, medicalR
                 404,
             )
         };
+
+        const visibility = await getVisibilityScope(userId);
+        const ownership = { therapistId: medicalRecord.terapeuta_id, clientId: medicalRecord.cliente_id };
+        const allowed = await canAccessThis({ ownership, userId, visibility });
+        if (!allowed) throw forbidden();
 
         const anamnese = await tx.anamnese.findFirst({
             where: { cliente_id: payload.clienteId },

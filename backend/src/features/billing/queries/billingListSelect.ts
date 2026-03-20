@@ -30,7 +30,7 @@ export const billingListSelect = Prisma.validator<Prisma.faturamentoSelect>()({
             arquivos: {
                 where: { tipo: 'fotoPerfil' },
                 select: {
-                    arquivo_id: true,
+                    id: true,
                 },
             },
             registro_profissional: {
@@ -53,7 +53,7 @@ export const billingListSelect = Prisma.validator<Prisma.faturamentoSelect>()({
             arquivos: {
                 where: { tipo: 'fotoPerfil' },
                 select: {
-                    arquivo_id: true,
+                    id: true,
                 },
             },
             terapeuta: {

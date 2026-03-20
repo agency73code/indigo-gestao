@@ -12,6 +12,7 @@ import { calcularHorasFaturadasPorReuniao } from './utils/calcularHorasFaturadas
 import { ataSelectBase, ataSelectList, mapAtaBase, mapAtaListItem } from './ata.selectors.js';
 import { ensureFilenameWithExt } from '../file/r2/ensureFilenameWithExt.js';
 import { createBilling } from '../billing/billing.service.js';
+import { getVisibilityScope } from '../../utils/visibilityFilter.js';
 
 // Labels para exibição
 const FINALIDADE_LABELS: Record<string, string> = {
@@ -177,9 +178,19 @@ export async function list(therapistId: string | null, filters: AtaListFilters =
     };
 }
 
-export async function therapistsList(_userId: string, activity: boolean = true) {
+export async function therapistsList(userId: string, activity: boolean = true) {
+    const visibility = await getVisibilityScope(userId);
+
+    if (visibility.scope === 'none') return [];
+
+    const where: Prisma.terapeutaWhereInput = { atividade: activity };
+
+    if (visibility.scope === 'partial') {
+        where.id = { in: visibility.therapistIds };
+    }
+
     const therapists = await prisma.terapeuta.findMany({
-        where: { atividade: activity },
+        where,
         select: {
             id: true,
             nome: true,

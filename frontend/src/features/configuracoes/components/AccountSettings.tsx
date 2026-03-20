@@ -61,8 +61,7 @@ export function AccountSettings() {
     }, []);
 
     const handlePhotoUploaded = useCallback((dto: ProfilePhotoDTO) => {
-        const encodedId = encodeURIComponent(dto.fileId);
-        const newAvatarUrl = `/api/arquivos/${encodedId}/view`;
+        const newAvatarUrl = `/api/arquivos/${dto.fileId}/view`;
 
         setProfilePhoto(newAvatarUrl);
         updateAvatar(newAvatarUrl);

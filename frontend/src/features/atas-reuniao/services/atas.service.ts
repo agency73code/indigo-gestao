@@ -103,7 +103,7 @@ function mapAtaFromApi(data: any): AtaReuniao {
         clienteAvatarUrl: data.clienteAvatarUrl ?? undefined,
         terapeutaAvatarUrl: data.terapeutaAvatarUrl ?? undefined,
         participantes: (data.participantes || []).map((p: any) => {
-            const arquivoId = p.terapeuta?.arquivos?.[0]?.arquivo_id;
+            const arquivoId = p.terapeuta?.arquivos?.[0]?.id;
             return {
                 id: p.id,
                 localId: p.id ? String(p.id) : crypto.randomUUID(),
@@ -113,8 +113,8 @@ function mapAtaFromApi(data: any): AtaReuniao {
                 terapeutaId: p.terapeuta_id,
                 especialidade: p.terapeuta?.especialidade,
                 cargo: p.terapeuta?.cargo,
-                avatarUrl: arquivoId 
-                    ? `${atasConfig.apiBase}/arquivos/${encodeURIComponent(arquivoId)}/view`
+                avatarUrl: arquivoId
+                    ? `${atasConfig.apiBase}/arquivos/${arquivoId}/view`
                     : undefined,
             };
         }),
@@ -156,7 +156,7 @@ function mapAtaFromApi(data: any): AtaReuniao {
                 nome: a.nome ?? a.original_nome,
                 tipo: a.mime_type,
                 tamanho: a.tamanho,
-                url: a.arquivo_id ? `${atasConfig.apiBase}/arquivos/${encodeURIComponent(a.arquivo_id)}/view` : undefined,
+                url: a.id ? `${atasConfig.apiBase}/arquivos/${a.id}/view` : undefined,
             })),
         } : undefined,
     };

@@ -10,17 +10,12 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, ReferenceLine, Legend } f
 import type { SerieLinha } from '../../../relatorio-geral/types';
 import { CardDescription } from '@/ui/card';
 
-// Configuração do gráfico para Fisio com terminologia específica
-// IMPORTANTE: Fisio não usa "acerto" ou "erro" - usamos terminologia de desempenho funcional
-// acerto (dataKey) = Desempenhou (paciente realizou a atividade de forma independente)
-// independencia (dataKey) = Desempenhou com Ajuda (paciente realizou com suporte do terapeuta)
-// erro (dataKey calculado) = Não Desempenhou (paciente não conseguiu realizar a atividade)
 const chartConfig = {
     acerto: {
         label: 'Desempenhou',
         color: 'hsl(var(--chart-1))',
     },
-    independencia: {
+    ajuda: {
         label: 'Desempenhou com Ajuda',
         color: 'hsl(var(--chart-2))',
     },
@@ -39,34 +34,6 @@ interface ToPerformanceChartProps {
     className?: string;
 }
 
-/**
- * ATENÇÃO — MAPEAMENTO LEGADO CONSCIENTE
- *
- * O backend fornece:
- * - ajuda = percentual de "Desempenhou com ajuda"
- *
- * Este gráfico legado utiliza o campo `independencia` para representar
- * "Desempenhou com ajuda". Por esse motivo, o valor de `ajuda` é
- * propositalmente atribuído a `independencia` aqui.
- *
- * Isso NÃO representa independência clínica.
- * NÃO alterar este mapeamento sem revisar todos os gráficos dependentes.
- *
- * Este ajuste é intencional para manter compatibilidade visual com o frontend atual.
- */
-const addErrorData = (data: SerieLinha[]) => {
-    if (!Array.isArray(data)) return [];
-    return data.map((item) => {
-        const ajuda = item.ajuda ?? 0;
-        const erro = item.erro ?? 0;
-
-        return {
-            ...item,
-            independencia: ajuda,
-            erro,
-        };
-    });
-};
 
 export default function ToPerformanceChart({
     data,
@@ -89,7 +56,7 @@ export default function ToPerformanceChart({
     }
 
     // Adicionar campo de erro calculado aos dados
-    const dataWithError = addErrorData(data || []);
+    const chartData = Array.isArray(data) ? data : [];
 
     const chartTitle = title ?? 'Evolução do desempenho';
     const chartMetaLabel = metaLabel ?? 'Meta: Convergência';
@@ -124,7 +91,7 @@ export default function ToPerformanceChart({
             <CardContent className="pt-6">
                 <ChartContainer config={chartConfig} className="aspect-[16/9] h-[300px] w-full">
                     <LineChart
-                        data={dataWithError}
+                        data={chartData}
                         margin={{ left: 24, right: 8, top: 26, bottom: 0 }}
                     >
                         <CartesianGrid vertical={false} strokeDasharray="1 1" opacity={0.1} />
@@ -148,7 +115,7 @@ export default function ToPerformanceChart({
                                         // Traduzir os dataKeys para labels corretos
                                         const labels: Record<string, string> = {
                                             acerto: 'Desempenhou',
-                                            independencia: 'Desempenhou com Ajuda',
+                                            ajuda: 'Desempenhou com Ajuda',
                                             erro: 'Não Desempenhou',
                                         };
                                         const displayName = labels[name as string] || name;
@@ -204,7 +171,7 @@ export default function ToPerformanceChart({
                                         // Traduzir os dataKeys para labels corretos
                                         const labels: Record<string, string> = {
                                             acerto: 'Desempenhou',
-                                            independencia: 'Desempenhou com Ajuda',
+                                            ajuda: 'Desempenhou com Ajuda',
                                             erro: 'Não Desempenhou',
                                         };
                                         const displayName = labels[entry.dataKey as string] || entry.value;
@@ -236,7 +203,7 @@ export default function ToPerformanceChart({
 
                         <Line
                             type="linear"
-                            dataKey="independencia"
+                            dataKey="ajuda"
                             stroke="var(--chart-primary-foreground)"
                             fill="var(--chart-primary-foreground)"
                             strokeWidth={2}

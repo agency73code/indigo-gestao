@@ -60,7 +60,7 @@ export async function getBootstrapBase(therapistId: string) {
                     arquivos: {
                         where: { tipo: 'fotoPerfil' },
                         select: {
-                            arquivo_id: true,
+                            id: true,
                         },
                         take: 1,
                     },
@@ -203,7 +203,7 @@ export async function getBootstrapSessions(therapistId: string, days: number) {
     const sessionsIds = sessions.map((session) => session.id);
 
     if (sessionsIds.length === 0) {
-        return mapBootstrapSessoes([], [], [], []);
+        return mapBootstrapSessoes([], [], [], [], []);
     }
 
     const [sessionTrials, billings, sessionFiles] = await Promise.all([
@@ -266,5 +266,22 @@ export async function getBootstrapSessions(therapistId: string, days: number) {
         }),
     ]);
 
-    return mapBootstrapSessoes(sessions, sessionTrials, billings, sessionFiles);
+    const billingIds = billings.map((b) => b.id);
+    const billingFiles = billingIds.length > 0
+        ? await prisma.faturamento_arquivo.findMany({
+            where: {
+                faturamento_id: { in: billingIds },
+            },
+            select: {
+                id: true,
+                faturamento_id: true,
+                nome: true,
+                caminho: true,
+                tamanho: true,
+                criado_em: true,
+            },
+        })
+        : [];
+
+    return mapBootstrapSessoes(sessions, sessionTrials, billings, sessionFiles, billingFiles);
 }

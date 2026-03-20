@@ -83,8 +83,26 @@ function buildMamadeiraDetalhes(ha?: string | null, vezesAoDia?: number | null) 
     return parts.length > 0 ? parts.join(' - ') : null;
 }
 
-export async function create(payload: AnamnesePayload) {
+export async function create(payload: AnamnesePayload, userId: string) {
     const header = payload.cabecalho;
+
+    const visibility = await getVisibilityScope(userId);
+
+    if (visibility.scope === 'none') {
+        throw new AppError('FORBIDDEN', 'Sem permissão para criar anamnese.', 403);
+    }
+
+    if (visibility.scope === 'partial') {
+        const clientAccessible = await prisma.cliente.count({
+            where: {
+                id: header.clienteId,
+                terapeuta: { some: { terapeuta_id: { in: visibility.therapistIds } } },
+            },
+        });
+        if (!clientAccessible) {
+            throw new AppError('FORBIDDEN', 'Sem permissão para criar anamnese para este cliente.', 403);
+        }
+    }
 
     const existingAnamnesesCount = await prisma.anamnese.count({
         where: {
@@ -227,6 +245,7 @@ export async function list(
                         },
                         arquivos: {
                             select: {
+                                id: true,
                                 tipo: true,
                                 arquivo_id: true,
                             },
@@ -252,8 +271,8 @@ export async function list(
             id: String(record.id),
             clienteId: record.cliente.id,
             clienteNome: record.cliente.nome ?? '',
-            clienteAvatarUrl: avatar?.arquivo_id
-                ? `/api/arquivos/${encodeURIComponent(avatar.arquivo_id)}/view`
+            clienteAvatarUrl: avatar?.id
+                ? `/api/arquivos/${avatar.id}/view`
                 : undefined,
             telefone: cuidador?.telefone ?? undefined,
             dataNascimento: record.cliente.dataNascimento
@@ -275,7 +294,7 @@ export async function list(
     };
 }
 
-export async function getAnamneseById(anamneseId: number) {
+export async function getAnamneseById(anamneseId: number, therapistId: string) {
     const anamnese = await prisma.anamnese.findUnique({
         where: { id: anamneseId },
         select: {
@@ -308,6 +327,7 @@ export async function getAnamneseById(anamneseId: number) {
                     },
                     arquivos: {
                         select: {
+                            id: true,
                             tipo: true,
                             arquivo_id: true,
                         },
@@ -589,6 +609,14 @@ export async function getAnamneseById(anamneseId: number) {
 
     if (!anamnese) return null;
 
+    const visibility = await getVisibilityScope(therapistId);
+    if (visibility.scope === 'none') return null;
+    if (
+        visibility.scope === 'partial' &&
+        anamnese.terapeuta_id &&
+        !visibility.therapistIds.includes(anamnese.terapeuta_id)
+    ) return null;
+
     const avatar = anamnese.cliente.arquivos.find((file) => file.tipo === 'fotoPerfil');
 
     const cuidadores = (anamnese.cliente.cuidadores ?? []).map((c) => ({
@@ -608,8 +636,8 @@ export async function getAnamneseById(anamneseId: number) {
         dataEntrevista: toDateOnly(anamnese.data_entrevista),
         clienteId: anamnese.cliente_id,
         clienteNome: anamnese.cliente.nome,
-        clienteAvatarUrl: avatar?.arquivo_id
-            ? `/api/arquivos/${encodeURIComponent(avatar.arquivo_id)}/view`
+        clienteAvatarUrl: avatar?.id
+            ? `/api/arquivos/${avatar.id}/view`
             : undefined,
         dataNascimento: toDateOnly(anamnese.cliente.dataNascimento),
         idade: calculateAge(anamnese.cliente.dataNascimento),
@@ -1246,11 +1274,12 @@ function buildReplaceList<T>(items?: Prisma.Enumerable<T>): { deleteMany: object
     return result;
 }
 
-export async function updateAnamneseById(anamneseId: number, payload: AnamnesePayload) {
+export async function updateAnamneseById(anamneseId: number, therapistId: string, payload: AnamnesePayload) {
     const existing = await prisma.anamnese.findUnique({
         where: { id: anamneseId },
         select: {
             id: true,
+            terapeuta_id: true,
             queixa_diagnostico: {
                 select: {
                     exames_previos: {
@@ -1271,6 +1300,18 @@ export async function updateAnamneseById(anamneseId: number, payload: AnamnesePa
 
     if (!existing) {
         return null;
+    }
+
+    const visibility = await getVisibilityScope(therapistId);
+    if (visibility.scope === 'none') {
+        throw new AppError('FORBIDDEN', 'Sem permissão para editar esta anamnese.', 403);
+    }
+    if (
+        visibility.scope === 'partial' &&
+        existing.terapeuta_id &&
+        !visibility.therapistIds.includes(existing.terapeuta_id)
+    ) {
+        throw new AppError('FORBIDDEN', 'Sem permissão para editar esta anamnese.', 403);
     }
 
     const normalizeId = (id?: string | number | null): string | null => {
@@ -1487,7 +1528,7 @@ export async function updateAnamneseById(anamneseId: number, payload: AnamnesePa
         });
     }
 
-    return getAnamneseById(anamneseId);
+    return getAnamneseById(anamneseId, therapistId);
 }
 
 export async function getExamePrevioArquivoForDownload(

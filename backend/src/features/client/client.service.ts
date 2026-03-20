@@ -165,11 +165,21 @@ export async function create(dto: ClientType.Client) {
     });
 }
 
-export async function getById(clientId: string) {
-    return prisma.cliente.findUnique({
-        where: {
-            id: clientId,
-        },
+export async function getById(clientId: string, therapistId: string) {
+    const visibility = await getVisibilityScope(therapistId);
+
+    if (visibility.scope === 'none') return null;
+
+    const where: Prisma.clienteWhereInput = { id: clientId };
+
+    if (visibility.scope === 'partial') {
+        where.terapeuta = {
+            some: { terapeuta_id: { in: visibility.therapistIds } },
+        };
+    }
+
+    return prisma.cliente.findFirst({
+        where,
         select: {
             id: true,
             nome: true,
@@ -285,6 +295,7 @@ export async function getById(clientId: string) {
 
             arquivos: {
                 select: {
+                    id: true,
                     tipo: true,
                     mime_type: true,
                     arquivo_id: true,
@@ -296,10 +307,24 @@ export async function getById(clientId: string) {
     });
 }
 
-export async function update(clientId: string, payload: clientUpdatePayload): Promise<void> {
+export async function update(clientId: string, therapistId: string, payload: clientUpdatePayload): Promise<void> {
+    const visibility = await getVisibilityScope(therapistId);
+
+    if (visibility.scope === 'none') {
+        throw new AppError('FORBIDDEN', 'Sem permissão para editar este cliente.', 403);
+    }
+
     await prisma.$transaction(async (tx: PrismaTransactionClient) => {
-        const client = await tx.cliente.findUnique({
-            where: { id: clientId },
+        const clientWhere: Prisma.clienteWhereInput = { id: clientId };
+
+        if (visibility.scope === 'partial') {
+            clientWhere.terapeuta = {
+                some: { terapeuta_id: { in: visibility.therapistIds } },
+            };
+        }
+
+        const client = await tx.cliente.findFirst({
+            where: clientWhere,
         });
 
         if (!client) {
@@ -454,6 +479,7 @@ export async function list(
                 },
                 arquivos: {
                     select: {
+                        id: true,
                         tipo: true,
                         mime_type: true,
                         arquivo_id: true,
@@ -474,8 +500,23 @@ export async function list(
     };
 }
 
-export async function getClientReport() {
+export async function getClientReport(userId: string) {
+    const visibility = await getVisibilityScope(userId);
+
+    if (visibility.scope === 'none') return [];
+
+    const where: Prisma.clienteWhereInput = {};
+
+    if (visibility.scope === 'partial') {
+        where.terapeuta = {
+            some: {
+                terapeuta_id: { in: visibility.therapistIds },
+            },
+        };
+    }
+
     return prisma.cliente.findMany({
+        where,
         select: {
             id: true,
             nome: true,

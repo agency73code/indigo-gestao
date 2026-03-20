@@ -127,8 +127,8 @@ export function normalizeTherapistSession(db: TherapistTypes.TherapistDB) {
         cargo: db.registro_profissional?.[0]?.cargo?.nome ?? '',
         conselho: 'CRP',
         registroConselho: db.registro_profissional?.[0]?.numero_conselho ?? '',
-        avatarUrl: fotoPerfil?.arquivo_id
-            ? `/api/arquivos/${encodeURIComponent(fotoPerfil.arquivo_id!)}/view`
+        avatarUrl: fotoPerfil?.id
+            ? `/api/arquivos/${fotoPerfil.id}/view`
             : '',
 
         pessoa: {

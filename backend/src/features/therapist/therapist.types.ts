@@ -79,6 +79,7 @@ export type TherapistForm = {
 
     // Arquivos
     arquivos?: Array<{
+        id?: number;
         tipo: string | null;
         arquivo_id: string | null;
         mime_type: string | null;
@@ -168,6 +169,7 @@ export interface TherapistDB {
     }[];
     // Arquivos
     arquivos?: Array<{
+        id: number;
         tipo: string | null;
         arquivo_id: string | null;
         mime_type: string | null;

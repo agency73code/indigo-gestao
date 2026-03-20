@@ -55,7 +55,7 @@ export async function listTherapists(userId: string, query: TherapistListQuery) 
             nome: true,
             arquivos: {
                 where: { tipo: 'fotoPerfil' },
-                select: { arquivo_id: true },
+                select: { id: true },
                 take: 1,
             },
             registro_profissional: {
@@ -111,7 +111,7 @@ export async function selectTherapists(userId: string, query: TherapistSelectQue
             nome: true,
             arquivos: {
                 where: { tipo: 'fotoPerfil' },
-                select: { arquivo_id: true },
+                select: { id: true },
                 take: 1,
             },
             registro_profissional: {

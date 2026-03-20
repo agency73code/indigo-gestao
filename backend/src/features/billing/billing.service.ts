@@ -124,8 +124,19 @@ export async function listBilling(params: listBillingPayload, userId: string) {
     }
 }
 
-export async function getBillingSummary(params: billingSummaryPayload) {
+export async function getBillingSummary(params: billingSummaryPayload, userId: string) {
     const { terapeutaId, dataInicio, dataFim } = params;
+
+    const visibility = await getVisibilityScope(userId);
+
+    if (visibility.scope === 'none') {
+        throw new AppError('FORBIDDEN', 'Sem permissão para acessar este resumo de faturamento.', 403);
+    }
+
+    if (visibility.scope === 'partial' && terapeutaId && !visibility.therapistIds.includes(terapeutaId)) {
+        throw new AppError('FORBIDDEN', 'Sem permissão para acessar o faturamento deste terapeuta.', 403);
+    }
+
     const where: Prisma.faturamentoWhereInput = {
         criado_em: {
             ...(dataInicio && { gte: startOfDay(parseYMDToLocalDate(toDateOnly(dataInicio))) }),
@@ -303,6 +314,7 @@ export async function findBillingFileForDownload(fileId: number) {
                     id: true,
                     sessao_id: true,
                     evolucao_id: true,
+                    terapeuta_id: true,
                 }
             }
         }
