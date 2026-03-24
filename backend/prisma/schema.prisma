@@ -1191,3 +1191,12 @@ model faturamento_arquivo {
 
   @@index([faturamento_id])
 }
+
+model AuditLog {
+  id Int @id @default(autoincrement())
+  usuarioId String
+  model String
+  registroId String
+  acao String
+  criadoEm DateTime @default(now())
+}

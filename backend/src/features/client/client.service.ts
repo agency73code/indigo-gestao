@@ -235,6 +235,7 @@ export async function getById(clientId: string, therapistId: string) {
 
             dadosPagamento: {
                 select: {
+                    id: true,
                     nomeTitular: true,
                     numeroCarteirinha: true,
 

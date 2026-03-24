@@ -1,6 +1,8 @@
-import { PrismaClient } from '@prisma/client';
+import type { prisma } from '../config/database.js';
 
 export type PrismaTransactionClient = Omit<
-    PrismaClient,
-    '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'
+    typeof prisma,
+    '$connect' | '$disconnect' | '$on' | '$transaction' | '$extends'
 >;
+
+export type TransactionClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];

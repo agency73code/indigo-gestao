@@ -3,10 +3,11 @@ import type { Router as ExpressRouter } from 'express';
 import { auth } from '../../middleware/auth.middleware.js';
 import * as AtaController from './ata.controller.js';
 import { ataUpload } from './ata.multer.js';
+import { auditMiddleware } from '../../utils/auditContext.js';
 
 const router: ExpressRouter = Router();
-
 router.use(auth);
+router.use(auditMiddleware);
 
 // ============================================
 // ROTAS DE IA

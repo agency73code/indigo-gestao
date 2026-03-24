@@ -3,10 +3,12 @@ import { auth } from '../../middleware/auth.middleware.js';
 import { requireAbility } from '../../middleware/requireAbility.js';
 import * as BillingController from './billing.controller.js';
 import { upload } from '../../config/multer.js';
+import { auditMiddleware } from '../../utils/auditContext.js';
 
 const router: Router = Router();
-
 router.use(auth);
+router.use(auditMiddleware);
+
 router.get('/lancamentos', BillingController.listBilling);
 router.get('/resumo', BillingController.getBillingSummary);
 router.get('/arquivos/:fileId/download', BillingController.downloadBillingFile);

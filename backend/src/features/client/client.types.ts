@@ -169,6 +169,7 @@ export interface CaretakerPayload {
 }
 
 export interface PaymentDataPayload {
+    id?: number | undefined;
     nomeTitular: string;
     numeroCarteirinha: string | null;
     telefone1: string;

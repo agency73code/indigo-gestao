@@ -64,6 +64,7 @@ export const clientUpdateSchema = z.object({
     enderecos: z.array(addressClientSchema),
 
     dadosPagamento: z.object({
+        id: optionalIdParam,
         nomeTitular: z.string().trim().min(1, 'Informe o nome do titular'),
         numeroCarteirinha: z.string().nullable().default(null),
         telefone1: phoneSchema('telefone de contato principal para pagamento'),

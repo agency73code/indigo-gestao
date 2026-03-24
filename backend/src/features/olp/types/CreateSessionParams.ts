@@ -1,6 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import type { CreateBillingPayload } from "../../billing/types/CreateBillingPayload.js";
 import type { CreateAreaSessionData } from "./olp.schema.js"
+import type { TransactionClient } from "../../../types/prisma.types.js";
 
 export type UploadedFile = Express.Multer.File & { size: number };
 
@@ -9,4 +10,4 @@ export type CreateSessionParams = {
     billingInput: CreateBillingPayload;
 }
 
-export type Tx = Prisma.TransactionClient;
+export type Tx = TransactionClient;
