@@ -2,7 +2,7 @@ export interface Caregiver {
     relacao: string;
     descricaoRelacao?: string | null;
     nome: string;
-    cpf: string;
+    cpf: string | null;
     profissao?: string | null;
     escolaridade?: string | null;
     telefone: string;
@@ -26,7 +26,7 @@ export interface Client {
     nome: string;
     cpf: string | null;
     dataNascimento: Date | null;
-    emailContato: string;
+    emailContato: string | null;
     dataEntrada: Date | null;
     dataSaida?: Date | null;
 
@@ -92,30 +92,11 @@ export interface Client {
     };
 
     // Dados escola
-    dadosEscola: {
-        tipoEscola: 'particular' | 'publica' | 'afastado' | 'clinica-escola';
-        nome: string | null;
-        telefone: string | null;
-        email?: string | null;
-        endereco: {
-            cep?: string | null;
-            logradouro?: string | null;
-            numero?: string | null;
-            complemento?: string | null;
-            bairro?: string | null;
-            cidade?: string | null;
-            uf?: string | null;
-        };
-        contatos: Array<{
-            nome: string | null;
-            telefone: string | null;
-            email?: string | null;
-            funcao: string | null;
-        }>;
-    };
+    dadosEscola?: SchoolDataPayload | undefined;
 
     // Arquivos
     arquivos?: Array<{
+        id?: number;
         tipo: string | null;
         arquivo_id: string | null;
         mime_type: string | null;
@@ -147,6 +128,7 @@ export interface DBClientQueryPage {
         };
     }[];
     arquivos: {
+        id: number;
         tipo: string | null;
         mime_type: string | null;
         arquivo_id: string | null;
@@ -156,12 +138,12 @@ export interface DBClientQueryPage {
 }
 
 export interface AddressPayload {
-    cep: string;
-    logradouro: string;
-    numero: string;
-    bairro: string;
-    cidade: string;
-    uf: string;
+    cep: string | null;
+    logradouro: string | null;
+    numero: string | null;
+    bairro: string | null;
+    cidade: string | null;
+    uf: string | null;
     complemento: string | null;
 }
 
@@ -174,9 +156,9 @@ export interface CaretakerPayload {
     id?: number | undefined;
     relacao: string;
     descricaoRelacao: string | null;
-    dataNascimento: Date;
+    dataNascimento: Date | null;
     nome: string;
-    cpf: string;
+    cpf: string | null;
     profissao: string | null;
     escolaridade: string | null;
     telefone: string;
@@ -187,6 +169,7 @@ export interface CaretakerPayload {
 }
 
 export interface PaymentDataPayload {
+    id?: number | undefined;
     nomeTitular: string;
     numeroCarteirinha: string | null;
     telefone1: string;
@@ -205,7 +188,7 @@ export interface PaymentDataPayload {
     emailAdvogado1: string | null;
     emailAdvogado2: string | null;
     emailAdvogado3: string | null;
-    houveNegociacao: 'sim' | 'nao';
+    houveNegociacao: 'sim' | 'nao' | null;
     valorAcordado: string | null;
 }
 
@@ -217,9 +200,9 @@ export interface SchoolContactPayload {
 }
 
 export interface SchoolDataPayload {
-    tipoEscola: 'particular' | 'publica' | 'afastado' | 'clinica-escola';
+    tipoEscola: 'particular' | 'publica' | 'afastado' | 'clinica-escola' | null;
     nome: string | null;
-    telefone: string;
+    telefone: string | null;
     email: string | null;
     endereco: AddressPayload;
     contatos: SchoolContactPayload[];
@@ -227,23 +210,23 @@ export interface SchoolDataPayload {
 
 export interface ClientUpdatePayload {
     nome: string;
-    emailContato: string;
-    cpf: string;
-    dataNascimento: Date;
-    dataEntrada: Date;
+    emailContato: string | null;
+    cpf: string | null;
+    dataNascimento: Date | null;
+    dataEntrada: Date | null;
     dataSaida: Date | null;
     enderecos: ClientAddressPayload[];
     cuidadores: CaretakerPayload[];
     dadosPagamento: PaymentDataPayload;
-    dadosEscola: SchoolDataPayload;
+    dadosEscola?: SchoolDataPayload | undefined;
 }
 
 export interface AddressData {
-    cep: string;
-    rua: string;
-    numero: string;
-    bairro: string;
-    cidade: string;
-    uf: string;
+    cep: string | null;
+    rua: string | null;
+    numero: string | null;
+    bairro: string | null;
+    cidade: string | null;
+    uf: string | null;
     complemento: string;
 }

@@ -40,6 +40,7 @@ export type Sessao = {
   terapeutaId: string;
   terapeutaNome?: string;
   data: string; // ISO
+  programId: number;
   programa: string;
   objetivo: string;
   prazoInicio: string; // ISO

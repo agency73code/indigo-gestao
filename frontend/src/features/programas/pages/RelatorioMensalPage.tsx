@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { authFetch } from '@/lib/http';
 import { FiltersBar } from '../relatorio-geral/components/FiltersBar';
 import { KpiCards } from '../relatorio-geral/components/KpiCards';
 import { DualLineProgress } from '../relatorio-geral/components/DualLineProgress';
@@ -51,9 +52,9 @@ export default function RelatorioMensalPage() {
         const fetchFilterOptions = async () => {
             try {
                 const [programasRes, estimulosRes, terapeutasRes] = await Promise.all([
-                    fetch('/api/ocp/reports/filters/programs', { credentials: 'include' }),
-                    fetch('/api/ocp/reports/filters/stimulus', { credentials: 'include' }),
-                    fetch('/api/terapeutas/relatorio', { credentials: 'include' }),
+                    authFetch('/api/ocp/reports/filters/programs', { credentials: 'include' }),
+                    authFetch('/api/ocp/reports/filters/stimulus', { credentials: 'include' }),
+                    authFetch('/api/terapeutas/relatorio', { credentials: 'include' }),
                 ]);
 
                 const programasData = await programasRes.json();

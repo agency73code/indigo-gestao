@@ -56,9 +56,8 @@ export async function listFiles(params: { ownerType: "cliente" | "terapeuta"; ow
 }
 
 // Funções para construir URLs
-export function buildViewUrl(fileId: string, storageId?: string): string {
-  const idToUse = encodeURIComponent(storageId || fileId);
-  return `${API_BASE_URL}/arquivos/${idToUse}/view`;
+export function buildViewUrl(fileId: string): string {
+  return `${API_BASE_URL}/arquivos/${encodeURIComponent(fileId)}/view`;
 }
 
 export function buildDownloadUrl(fileId: string, _storageId?: string): string {

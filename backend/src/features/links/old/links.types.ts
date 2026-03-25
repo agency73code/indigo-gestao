@@ -32,7 +32,7 @@ export interface DBClient {
     cuidadores: DBCarregiver[];
     enderecos: DBClientAddress[];
     arquivos?: {
-        arquivo_id: string | null;
+        id: number;
     }[];
 }
 
@@ -90,7 +90,6 @@ export interface DBTherapist {
     agencia: string | null;
     conta: string | null;
     chave_pix: string | null;
-    valor_hora: unknown;
     professor_uni: boolean;
     data_entrada: Date;
     data_saida: Date | null;
@@ -100,7 +99,7 @@ export interface DBTherapist {
     formacao: DBFormation | null;
     pessoa_juridica: DBLegalPerson | null;
     arquivos?: {
-        arquivo_id: string | null;
+        id: number;
     }[];
 }
 
@@ -134,6 +133,13 @@ export type CreateLink = {
     endDate?: string | null | undefined;
     notes?: string | null | undefined;
     actuationArea: string;
+    valorClienteSessao: number;
+    valorSessaoConsultorio: number;
+    valorSessaoHomecare: number;
+    valorHoraDesenvolvimentoMateriais: number;
+    valorHoraSupervisaoRecebida: number;
+    valorHoraSupervisaoDada: number;
+    valorHoraReuniao: number;
 };
 
 export type ArchiveLink = {
@@ -153,6 +159,13 @@ export type UpdateLink = {
     notes?: string | null | undefined;
     status?: 'active' | 'ended' | 'archived' | undefined;
     actuationArea?: string | undefined;
+    valorClienteSessao?: number;
+    valorSessaoConsultorio?: number;
+    valorSessaoHomecare?: number;
+    valorHoraDesenvolvimentoMateriais?: number;
+    valorHoraSupervisaoRecebida?: number;
+    valorHoraSupervisaoDada?: number;
+    valorHoraReuniao?: number;
 };
 
 export type TransferResponsible = {
@@ -194,7 +207,7 @@ export type LinkFilters = {
 export interface DBClientOption {
     id: string;
     nome: string | null;
-    arquivos?: Array<{ arquivo_id: string | null }> | null;
+    arquivos?: Array<{ id: number }> | null;
 }
 
 export interface ClientOptionDTO {
@@ -214,7 +227,7 @@ export interface ClientListDTO {
 export type TherapistRecord = {
     id: string;
     nome: string;
-    arquivos: Array<{ arquivo_id:  string | null }>;
+    arquivos: Array<{ id: number }>;
     registro_profissional: Array<{
         cargo: { nome: string | null } | null;
         area_atuacao: { nome: string | null } | null;

@@ -1,5 +1,6 @@
 // Services para Sessão de Fisioterapia
 import { buildSessionFormData } from '@/lib/api';
+import { authFetch } from '@/lib/http';
 import type {
     Patient,
     FisioProgramDetail,
@@ -82,7 +83,7 @@ export async function saveFisioSession(payload: {
         }
     }
 
-    const response = await fetch(`/api/ocp/physiotherapy/programs/${payload.programId}/sessions`, {
+    const response = await authFetch(`/api/ocp/physiotherapy/programs/${payload.programId}/sessions`, {
         method: 'POST',
         credentials: 'include',
         body: formData,

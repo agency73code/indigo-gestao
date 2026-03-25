@@ -4,10 +4,12 @@ import * as OlpController from '../features/olp/olp.controller.js';
 import { auth } from '../middleware/auth.middleware.js';
 import { upload } from '../config/multer.js';
 import * as psychotherapy from '../features/olp/psychotherapy/psychotherapy.controller.js';
+import { requireAbility } from '../middleware/requireAbility.js';
+import { auditMiddleware } from '../utils/auditContext.js';
 
 const router: ExpressRouter = Router();
-
 router.use(auth);
+router.use(auditMiddleware);
 
 router.get('/clients', OlpController.listTherapistClients);
 router.get('/clients/:clientId', OlpController.getClientById);
@@ -20,9 +22,9 @@ router.get('/reports/kpis/:filters', OlpController.getKpis);
 router.get('/reports/filters/programs', OlpController.getProgramsReport);
 router.get('/reports/filters/stimulus', OlpController.getStimulusReport);
 router.get('/reports/attention-stimuli', OlpController.getAttentionStimuli);
-router.post('/create', OlpController.createProgram);
+router.post('/create', requireAbility('create', 'Programas'), OlpController.createProgram);
 router.post('/programs/:programId/sessions', upload.any(), OlpController.createAreaSession);
-router.patch('/programs/:programId', OlpController.updateProgram);
+router.patch('/programs/:programId', requireAbility('update', 'Programas'), OlpController.updateProgram);
 
 // TO
 router.post('/to/programs/:programId/sessions', upload.any(), OlpController.createAreaSession);

@@ -30,7 +30,7 @@ export const billingListSelect = Prisma.validator<Prisma.faturamentoSelect>()({
             arquivos: {
                 where: { tipo: 'fotoPerfil' },
                 select: {
-                    arquivo_id: true,
+                    id: true,
                 },
             },
             registro_profissional: {
@@ -43,12 +43,6 @@ export const billingListSelect = Prisma.validator<Prisma.faturamentoSelect>()({
                     },
                 },
             },
-            valor_hora_desenvolvimento_materiais: true,
-            valor_hora_reuniao: true,
-            valor_hora_supervisao_dada: true,
-            valor_hora_supervisao_recebida: true,
-            valor_sessao_consultorio: true,
-            valor_sessao_homecare: true,
         },
     },
     cliente_id: true,
@@ -59,13 +53,19 @@ export const billingListSelect = Prisma.validator<Prisma.faturamentoSelect>()({
             arquivos: {
                 where: { tipo: 'fotoPerfil' },
                 select: {
-                    arquivo_id: true,
+                    id: true,
                 },
             },
             terapeuta: {
                 select: {
                     terapeuta_id: true,
-                    valor_sessao: true,
+                    valor_cliente_sessao: true,
+                    valor_sessao_consultorio: true,
+                    valor_sessao_homecare: true,
+                    valor_hora_desenvolvimento_materiais: true,
+                    valor_hora_supervisao_recebida: true,
+                    valor_hora_supervisao_dada: true,
+                    valor_hora_reuniao: true,
                 },
             },
         },

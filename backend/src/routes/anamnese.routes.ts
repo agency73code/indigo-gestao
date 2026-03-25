@@ -3,9 +3,11 @@ import type { Router as ExpressRouter } from 'express';
 import { auth } from '../middleware/auth.middleware.js';
 import * as AnamneseController from '../controllers/anamnese.controller.js';
 import { upload } from '../config/multer.js';
+import { auditMiddleware } from '../utils/auditContext.js';
 
 const router: ExpressRouter = Router();
 router.use(auth);
+router.use(auditMiddleware);
 
 router.post('/', upload.any(), AnamneseController.create);
 router.get('/', AnamneseController.list);

@@ -1,4 +1,4 @@
-import type { faturamento_tipo_atendimento, Prisma } from "@prisma/client";
+import { Prisma, type faturamento_tipo_atendimento } from "@prisma/client";
 
 export function getBillingRateByType(
     values: Record<faturamento_tipo_atendimento, Prisma.Decimal | null>,
@@ -7,7 +7,7 @@ export function getBillingRateByType(
     const value = values[typeService];
 
     if (!value) {
-        throw new Error(`Valor não configurado para o tipo ${typeService}`);
+        return new Prisma.Decimal(0);
     }
 
     return value;

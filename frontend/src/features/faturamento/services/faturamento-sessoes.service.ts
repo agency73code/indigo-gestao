@@ -58,7 +58,7 @@ export async function listFaturamento(
     }
     
     const data = await res.json();
-
+    
     return data;
 }
 

@@ -39,17 +39,30 @@ import {
     prepareToAttentionActivities,
     prepareToAutonomyByCategory,
  } from './occupationaltherapy/reports/index.js';
+import { getVisibilityScope } from '../../utils/visibilityFilter.js';
 
 export async function createProgram(req: Request, res: Response) {
     try {
+        if (!req.user) throw unauthenticated();
+
         const body = req.body as CreateProgramPayload;
 
         if (!body.area) {
             return res.status(400).json({ error: 'Campo area é obrigatório' });
         }
 
-        const ocp = await OcpService.createProgram(body);
-        return res.status(201).json(ocp);
+        // Força therapistId a ser o usuário logado, ignorando o que vier do body
+        body.therapistId = req.user.id;
+
+        const ocp = await OcpService.createProgram(body, req.user.id);
+        return res.status(201).json({
+            id: ocp.id,
+            estimulos: ocp.estimulo_ocp.map((e) => ({
+                id: e.id,
+                estimuloId: e.estimulo.id,
+                nome: e.nome,
+            })),
+        });
     } catch (error) {
         console.error('Erro ao criar programa:', error);
 
@@ -75,6 +88,19 @@ export async function createAreaSession(req: Request, res: Response, next: NextF
 
         const therapistId = req.user?.id;
         if (!therapistId) throw unauthenticated();
+
+        const visibility = await getVisibilityScope(therapistId);
+
+        if (visibility.scope === 'none')
+            return res.status(403).json({ success: false, message: 'Sem permissão para acessar este programa' });
+
+        if (visibility.scope === 'partial') {
+            const program = await OcpService.getProgramById(String(programId));
+            if (!program)
+                return res.status(404).json({ success: false, message: 'Programa não encontrado' });
+            if (!visibility.therapistIds.includes(program.terapeuta_id))
+                return res.status(403).json({ success: false, message: 'Sem permissão para acessar este programa' });
+        }
 
         const data = JSON.parse(req.body.data);
 
@@ -115,6 +141,22 @@ export async function updateProgram(req: Request, res: Response, next: NextFunct
         if (!req.params.programId) return res.status(400).json({ success: false, message: 'ID do programa não informado' });
         const programId = parseInt(req.params.programId, 10);
 
+        const userId = req.user?.id;
+        if (!userId) throw unauthenticated();
+
+        const visibility = await getVisibilityScope(userId);
+
+        if (visibility.scope === 'none')
+            return res.status(403).json({ success: false, message: 'Sem permissão para acessar este programa' });
+
+        if (visibility.scope === 'partial') {
+            const program = await OcpService.getProgramById(String(programId));
+            if (!program)
+                return res.status(404).json({ success: false, message: 'Programa não encontrado' });
+            if (!visibility.therapistIds.includes(program.terapeuta_id))
+                return res.status(403).json({ success: false, message: 'Sem permissão para acessar este programa' });
+        }
+
         if (req.body.area === 'musicoterapia') {
             const ocp = await OcpService.updateMusicProgram(programId, req.body);
             if (!ocp) return res.status(404).json({ success: false, message: 'OCP não encontrado' });
@@ -139,8 +181,17 @@ export async function getProgramById(req: Request, res: Response) {
                 .status(400)
                 .json({ success: false, message: 'ID do programa não informado' });
 
+        const userId = req.user!.id;
+        const visibility = await getVisibilityScope(userId);
+
+        if (visibility.scope === 'none')
+            return res.status(403).json({ success: false, message: 'Sem permissão para acessar este programa' });
+
         const ocp = await OcpService.getProgramById(programId);
         if (!ocp) return res.status(404).json({ success: false, message: 'OCP não encontrado' });
+
+        if (visibility.scope === 'partial' && !visibility.therapistIds.includes(ocp.terapeuta_id))
+            return res.status(403).json({ success: false, message: 'Sem permissão para acessar este programa' });
 
         return res.status(201).json({ data: OcpNormalizer.mapOcpDetail(ocp as unknown as OcpDetailDTO) });
     } catch (error) {
@@ -153,7 +204,23 @@ export async function getSessionByProgram(req: Request, res: Response) {
     try {
         if (!req.params.programId)
             return res.status(400).json({ success: false, message: 'programId é obrigatório' });
+
+        const userId = req.user!.id;
+        const visibility = await getVisibilityScope(userId);
+
+        if (visibility.scope === 'none')
+            return res.status(403).json({ success: false, message: 'Sem permissão para acessar este programa' });
+
         const programId = parseInt(req.params.programId, 10);
+
+        if (visibility.scope === 'partial') {
+            const program = await OcpService.getProgramById(String(programId));
+            if (!program)
+                return res.status(404).json({ success: false, message: 'Programa não encontrado' });
+            if (!visibility.therapistIds.includes(program.terapeuta_id))
+                return res.status(403).json({ success: false, message: 'Sem permissão para acessar este programa' });
+        }
+
         const limit = parseInt(req.query.limit as string, 10) || 5;
         const sessions = await OcpService.getSessionsByProgram(programId, limit);
         res.json({ data: sessions });
@@ -168,7 +235,15 @@ export async function getClientById(req: Request, res: Response) {
     if (!clientId)
         return res.status(400).json({ success: false, message: 'clientId é obrigatório' });
 
-    const patient = await OcpService.getClientById(clientId);
+    const userId = req.user!.id;
+    const visibility = await getVisibilityScope(userId);
+
+    if (visibility.scope === 'none')
+        return res.status(403).json({ success: false, message: 'Sem permissão para acessar este paciente' });
+
+    const therapistIds = visibility.scope === 'partial' ? visibility.therapistIds : null;
+
+    const patient = await OcpService.getClientById(clientId, therapistIds);
     if (!patient)
         return res.status(404).json({ success: false, message: 'Paciente não encontrado' });
 
@@ -181,9 +256,18 @@ export async function getProgramId(req: Request, res: Response) {
         if (!programId)
             return res.status(400).json({ success: false, message: 'programId é obrigatório' });
 
+        const userId = req.user!.id;
+        const visibility = await getVisibilityScope(userId);
+
+        if (visibility.scope === 'none')
+            return res.status(403).json({ success: false, message: 'Sem permissão para acessar esta sessão' });
+
         const session = await OcpService.getProgramId(programId);
         if (!session)
             return res.status(404).json({ success: false, message: 'Programa não encontrada' });
+
+        if (visibility.scope === 'partial' && !visibility.therapistIds.includes(session.therapistId))
+            return res.status(403).json({ success: false, message: 'Sem permissão para acessar esta sessão' });
 
         res.json({ data: session });
     } catch (err) {
@@ -211,7 +295,9 @@ export async function listClientPrograms(req: Request, res: Response) {
     if (!clientId) return res.status(400).json({ success: false, message: 'ClientId é obrigatório' });
     if (!userId) return res.status(400).json({ success: false, message: 'Id do usuário é obrigatório' });
 
-    const rows = await OcpService.listProgramsByClientId(clientId, userId, page, 10, area, status, q, sort);
+    const visibility = await getVisibilityScope(userId);
+    const therapistIds = visibility.scope === 'all' ? null : visibility.therapistIds;
+    const rows = await OcpService.listProgramsByClientId(clientId, therapistIds, page, 10, area, status, q, sort);
 
     return res.json({ success: true, data: rows.map(OcpNormalizer.mapOcpReturn) });
 }
@@ -224,8 +310,12 @@ export async function listSessionsByClient(req: Request, res: Response) {
 
         if (!clientId) return res.status(400).json({ sucess: false, message: 'ID do paciente é obrigatório' });
 
+        const userId = req.user?.id;
+        if (!userId) throw unauthenticated();
+
         const result = await OcpService.listSessionsByClient({
             clientId,
+            userId,
             area,
             periodMode,
             sort,
@@ -256,8 +346,23 @@ export async function listSessionsByClient(req: Request, res: Response) {
 
 export async function getKpis(req: Request, res: Response) {
     try {
+        const userId = req.user?.id;
+        if (!userId) throw unauthenticated();
+
+        const visibility = await getVisibilityScope(userId);
+
+        if (visibility.scope === 'none')
+            return res.status(403).json({ success: false, message: 'Sem permissão para acessar este relatório' });
+
         const raw = decodeURIComponent(req.params.filters ?? '');
         const filtros = JSON.parse(raw);
+
+        if (visibility.scope === 'partial') {
+            if (filtros.terapeutaId && !visibility.therapistIds.includes(filtros.terapeutaId))
+                return res.status(403).json({ success: false, message: 'Sem permissão para acessar este relatório' });
+            filtros.therapistIdsScope = visibility.therapistIds;
+        }
+
         const data = await OcpService.getKpis(filtros);
 
         return res.json(data);
@@ -272,6 +377,13 @@ export async function getKpis(req: Request, res: Response) {
 
 export async function getProgramsReport(req: Request, res: Response) {
     try {
+        const userId = req.user?.id;
+        if (!userId) throw unauthenticated();
+
+        const visibility = await getVisibilityScope(userId);
+        if (visibility.scope === 'none')
+            return res.status(403).json({ success: false, message: 'Sem permissão para acessar este relatório' });
+
         const clientId = typeof req.query.clientId === 'string' ? req.query.clientId : undefined;
         const area = typeof req.query.area === 'string' ? req.query.area : undefined;
         const stimulusId =
@@ -279,7 +391,9 @@ export async function getProgramsReport(req: Request, res: Response) {
         const therapistId =
             typeof req.query.therapistId === 'string' ? req.query.therapistId : undefined;
 
-        const data = await OcpService.getProgramsReport(clientId, area, stimulusId, therapistId);
+        const therapistIdsScope = visibility.scope === 'partial' ? visibility.therapistIds : undefined;
+
+        const data = await OcpService.getProgramsReport(clientId, area, stimulusId, therapistId, therapistIdsScope);
         res.json({ data });
     } catch (error) {
         console.error(error);
@@ -292,11 +406,21 @@ export async function getProgramsReport(req: Request, res: Response) {
 
 export async function getStimulusReport(req: Request, res: Response) {
     try {
+        const userId = req.user?.id;
+        if (!userId) throw unauthenticated();
+
+        const visibility = await getVisibilityScope(userId);
+        if (visibility.scope === 'none')
+            return res.status(403).json({ success: false, message: 'Sem permissão para acessar este relatório' });
+
         const area = typeof req.query.area === 'string' ? req.query.area : undefined;
         const clientId = req.query.clientId as string | undefined;
         const programId = req.query.programId as string | undefined;
         const therapistId = req.query.therapistId as string | undefined;
-        const data = await OcpService.getStimulusReport(clientId, programId, area, therapistId);
+
+        const therapistIdsScope = visibility.scope === 'partial' ? visibility.therapistIds : undefined;
+
+        const data = await OcpService.getStimulusReport(clientId, programId, area, therapistId, therapistIdsScope);
 
         res.json({ data });
     } catch (error) {
@@ -310,6 +434,15 @@ export async function getStimulusReport(req: Request, res: Response) {
 
 export async function getAttentionStimuli(req: Request, res: Response) {
     try {
+        const userId = req.user?.id;
+        if (!userId) throw unauthenticated();
+
+        const visibility = await getVisibilityScope(userId);
+        if (visibility.scope === 'none')
+            return res.status(403).json({ success: false, message: 'Sem permissão para acessar este relatório' });
+
+        const therapistIdsScope = visibility.scope === 'partial' ? visibility.therapistIds : undefined;
+
         const {
             programId,
             clientId,
@@ -360,6 +493,7 @@ export async function getAttentionStimuli(req: Request, res: Response) {
             periodMode: parsedPeriodMode,
             periodStart: periodStartStr,
             periodEnd: periodEndStr,
+            therapistIdsScope,
         });
 
         return res.json(data);
@@ -386,13 +520,20 @@ function getQueryString(value: unknown): string | undefined {
 // Occupational therapy reports
 export async function occupationalKpis(req: Request, res: Response, next: NextFunction) {
     try {
+        const userId = req.user?.id;
+        if (!userId) return res.status(401).json({ error: 'Não autenticado' });
+
         const { sessionIds, stimulusIds } = req.body;
 
         if (!Array.isArray(sessionIds) || sessionIds.length === 0) {
             return res.status(400).json({ error: "sessionIds é obrigatório e deve ser um array" });
         }
-        
-        const sessions = await getOccupationalSessionData(sessionIds, stimulusIds || []);
+
+        const visibility = await getVisibilityScope(userId);
+        if (visibility.scope === 'none') return res.status(403).json({ error: 'Sem permissão para acessar estes dados' });
+        const therapistIdsScope = visibility.scope === 'partial' ? visibility.therapistIds : undefined;
+
+        const sessions = await getOccupationalSessionData(sessionIds, stimulusIds || [], therapistIdsScope);
 
         const result = {
             kpis: calcOcuppationalKpis(sessions),
@@ -412,13 +553,20 @@ export async function occupationalKpis(req: Request, res: Response, next: NextFu
 // Physiotherapy reports
 export async function physioKpis(req: Request, res: Response, next: NextFunction) {
     try {
+        const userId = req.user?.id;
+        if (!userId) return res.status(401).json({ error: 'Não autenticado' });
+
         const { sessionIds, stimulusIds } = req.body;
 
         if (!Array.isArray(sessionIds) || sessionIds.length === 0) {
             return res.status(400).json({ error: "sessionIds é obrigatório e deve ser um array" });
         }
-        
-        const sessions = await getPhysioSessionData(sessionIds, stimulusIds || []);
+
+        const visibility = await getVisibilityScope(userId);
+        if (visibility.scope === 'none') return res.status(403).json({ error: 'Sem permissão para acessar estes dados' });
+        const therapistIdsScope = visibility.scope === 'partial' ? visibility.therapistIds : undefined;
+
+        const sessions = await getPhysioSessionData(sessionIds, stimulusIds || [], therapistIdsScope);
 
         const result = {
             activityDuration: calcActivityDuration(sessions),
@@ -438,13 +586,20 @@ export async function physioKpis(req: Request, res: Response, next: NextFunction
 // Musictherapy reports
 export async function musicKpis(req: Request, res: Response, next: NextFunction) {
     try {
+        const userId = req.user?.id;
+        if (!userId) return res.status(401).json({ error: 'Não autenticado' });
+
         const { sessionIds, stimulusIds } = req.body;
 
         if (!Array.isArray(sessionIds) || sessionIds.length === 0) {
             return res.status(400).json({ error: "sessionIds é obrigatório e deve ser um array" });
         }
-        
-        const sessions = await getMusicSessionsData(sessionIds, stimulusIds || []);
+
+        const visibility = await getVisibilityScope(userId);
+        if (visibility.scope === 'none') return res.status(403).json({ error: 'Sem permissão para acessar estes dados' });
+        const therapistIdsScope = visibility.scope === 'partial' ? visibility.therapistIds : undefined;
+
+        const sessions = await getMusicSessionsData(sessionIds, stimulusIds || [], therapistIdsScope);
         
         const result = {
             kpis: calcMusicKpis(sessions),
@@ -467,13 +622,20 @@ export async function musicKpis(req: Request, res: Response, next: NextFunction)
 
 export async function getMusicTherapyEvolutionChart(req: Request, res: Response, next: NextFunction) {
     try {
+        const userId = req.user?.id;
+        if (!userId) return res.status(401).json({ success: false, message: 'Não autenticado' });
+
         const programId = getQueryString(req.query.programId);
         const stimulusId = getQueryString(req.query.stimulusId);
         const sort = getQueryString(req.query.sort) === 'desc' ? 'desc' : 'asc';
 
         if (!programId) return res.status(400).json({ success: false, message: 'programId é obrigatório' });
 
-        const sessions = await fetchMusicSessionsForChart(programId, stimulusId, sort);
+        const visibility = await getVisibilityScope(userId);
+        if (visibility.scope === 'none') return res.status(403).json({ success: false, message: 'Sem permissão para acessar estes dados' });
+        const therapistIdsScope = visibility.scope === 'partial' ? visibility.therapistIds : undefined;
+
+        const sessions = await fetchMusicSessionsForChart(programId, stimulusId, sort, therapistIdsScope);
 
         const chartData = sessions.map(mapMusicSessionToChartPoint);
 

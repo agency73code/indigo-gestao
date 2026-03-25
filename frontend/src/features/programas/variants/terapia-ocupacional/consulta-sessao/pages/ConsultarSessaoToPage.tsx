@@ -188,14 +188,16 @@ export default function ConsultarSessaoToPage() {
     }, [patient, filters, area]);
 
     const programOptions = useMemo(() => {
-        if (!patient) return [] as string[];
-        const unique = new Set<string>();
+        if (!patient) return [] as { id: string; label: string }[];
+        const seen = new Map<string, string>();
         sessions.forEach((sessao) => {
-            if (sessao.programa) {
-                unique.add(sessao.programa);
+            if (sessao.programId && sessao.programa) {
+                seen.set(sessao.programId.toString(), sessao.programa);
             }
         });
-        return Array.from(unique).sort((a, b) => a.localeCompare(b));
+        return Array.from(seen.entries())
+            .map(([id, label]) => ({ id, label }))
+            .sort((a, b) => a.label.localeCompare(b.label));
     }, [patient, sessions]);
 
     const therapistOptions = useMemo(() => {
@@ -211,7 +213,7 @@ export default function ConsultarSessaoToPage() {
 
     useEffect(() => {
         if (!patient) return;
-        if (filters.program !== 'all' && !programOptions.includes(filters.program)) {
+        if (filters.program !== 'all' && !programOptions.some((o) => o.id === filters.program)) {
             applyFilters((prev) => ({ ...prev, program: 'all' }));
         }
     }, [patient, filters.program, programOptions, applyFilters]);

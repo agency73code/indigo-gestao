@@ -42,12 +42,6 @@ export const queryTherapist = {
 
     data_entrada: true,
     data_saida: true,
-    valor_sessao_consultorio: true,
-    valor_sessao_homecare: true,
-    valor_hora_desenvolvimento_materiais: true,
-    valor_hora_supervisao_recebida: true,
-    valor_hora_supervisao_dada: true,
-    valor_hora_reuniao: true,
     professor_uni: true,
     disciplina: { select: { nome: true } },
 
@@ -82,6 +76,7 @@ export const queryTherapist = {
 
     arquivos: {
         select: {
+            id: true,
             arquivo_id: true,
             tipo: true,
             mime_type: true,

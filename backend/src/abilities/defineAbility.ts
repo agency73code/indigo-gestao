@@ -33,15 +33,22 @@ export function defineAbilityForLevel(level: number) {
         can('read', 'Vinculos');
     }
 
-    // 👥 Supervisores e terapeutas clínicos podem criar/editar clientes
-    if (level >= 2 && level < 5) {
-        can('create', 'Cadastro');
+    // 👥 Terapeutas clínicos: podem ler/atualizar consultar e criar/editar programas
+    if (level >= 2) {
         can(['update', 'read'], 'Consultar');
+        can('create', 'Programas');
+        can('update', 'Programas');
+    }
+
+    // 👥 Coordenadores e acima: podem criar e editar clientes
+    if (level >= 3) {
+        can('create', 'Cadastro');
+        can('update', 'Cadastro');
     }
 
     if (level >= 4) {
         can('create', 'Vinculos');
-        can('manage', ['Programas', 'Faturamento', 'Configuração']);
+        can('manage', ['Programas', 'Faturamento', 'Configuração'])
     }
 
     // 🧑‍💼 Gerentes e coordenadores executivos têm acesso completo

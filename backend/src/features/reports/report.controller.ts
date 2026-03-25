@@ -4,6 +4,7 @@ import { reportPayloadSchema, reportListQuerySchema } from '../../schemas/report
 import { userCanSeeAllReports } from './report.utils.js';
 import * as ReportService from './report.service.js';
 import type { ReportListFilters } from './report.types.js';
+import { getFileStreamFromR2 } from '../file/r2/getFileStream.js';
 
 export async function saveReport(req: Request, res: Response, next: NextFunction) {
     try {
@@ -148,5 +149,47 @@ export async function deleteReport(req: Request, res: Response, next: NextFuncti
         return res.status(204).send();
     } catch (error) {
         next(error);
+    }
+}
+
+export async function streamPdf(req: Request, res: Response, next: NextFunction) {
+    try {
+        const requester = req.user;
+        if (!requester) {
+            throw new AppError('AUTH_REQUIRED', 'Usuário não autenticado.', 401);
+        }
+
+        const { id } = req.params;
+        if (!id) {
+            throw new AppError('INVALID_ID', 'Parâmetro id é obrigatório.', 400);
+        }
+
+        const record = await ReportService.getReportRecord(id);
+        if (!record) {
+            throw new AppError('REPORT_NOT_FOUND', 'Relatório não encontrado.', 404);
+        }
+
+        const canSeeAll = userCanSeeAllReports(requester.perfil_acesso);
+        if (!canSeeAll && record.terapeutaId !== requester.id) {
+            throw new AppError('REPORT_FORBIDDEN', 'Você não tem permissão para acessar este relatório.', 403);
+        }
+
+        if (!record.pdf_arquivo_id) {
+            throw new AppError('REPORT_NO_PDF', 'Este relatório não possui PDF.', 404);
+        }
+
+        const { metadata, stream } = await getFileStreamFromR2(record.pdf_arquivo_id);
+
+        if (!stream) {
+            throw new AppError('REPORT_STREAM_ERROR', 'Falha ao obter stream do PDF.', 500);
+        }
+
+        res.setHeader('Content-Type', metadata.mimeType || 'application/pdf');
+        res.setHeader('Cache-Control', 'private, max-age=300');
+
+        (stream as NodeJS.ReadableStream).on('error', () => res.sendStatus(500));
+        return (stream as NodeJS.ReadableStream).pipe(res);
+    } catch (error) {
+        return next(error);
     }
 }

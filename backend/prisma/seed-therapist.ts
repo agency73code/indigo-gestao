@@ -176,7 +176,6 @@ async function seedTherapist(i: number, senha: string) {
                 conta: faker.helpers.replaceSymbols('#########'),
                 chave_pix: therapist.cpf,
                 pix_tipo: 'cpf',
-                valor_hora: faker.finance.amount({ min: 120, max: 600, dec: 2 }),
                 professor_uni: false,
 
                 endereco: {

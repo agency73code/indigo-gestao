@@ -126,7 +126,7 @@ const defaultClientFormValues: ClientFormValues = {
         valorAcordado: '',
     },
     dadosEscola: {
-        tipoEscola: 'particular',
+        tipoEscola: '',
         nome: '',
         telefone: '',
         email: '',
@@ -300,7 +300,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                 valorAcordado: clienteData.dadosPagamento?.valorAcordado ?? '',
             },
             dadosEscola: {
-                tipoEscola: clienteData.dadosEscola?.tipoEscola ?? 'particular',
+                tipoEscola: clienteData.dadosEscola?.tipoEscola ?? '',
                 nome: maskPersonName(clienteData.dadosEscola?.nome ?? ''),
                 telefone: maskBRPhone(clienteData.dadosEscola?.telefone ?? ''),
                 email: normalizeEmail(clienteData.dadosEscola?.email ?? ''),
@@ -368,8 +368,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
 
             if (fotoPerfil) {
                 // Construir URL da foto de perfil existente
-                const encoded = encodeURIComponent(fotoPerfil.storageId || fotoPerfil.id);
-                const fotoUrl = `${import.meta.env.VITE_API_URL}/arquivos/${encoded}/view`;
+                const fotoUrl = `${import.meta.env.VITE_API_URL}/arquivos/${fotoPerfil.id}/view`;
                 setProfilePhoto(fotoUrl as any); // URL como string para preview
             }
         }
@@ -560,27 +559,29 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                             ? emptyToNull(data.dadosPagamento.valorAcordado)
                             : null,
                 },
-                dadosEscola: {
-                    tipoEscola: data.dadosEscola.tipoEscola,
-                    nome: emptyToNull(data.dadosEscola.nome),
-                    telefone: emptyToNull(data.dadosEscola.telefone),
-                    email: emptyToNull(data.dadosEscola.email),
-                    endereco: {
-                        cep: data.dadosEscola.endereco.cep,
-                        logradouro: data.dadosEscola.endereco.logradouro,
-                        numero: data.dadosEscola.endereco.numero,
-                        complemento: emptyToNull(data.dadosEscola.endereco.complemento),
-                        bairro: data.dadosEscola.endereco.bairro,
-                        cidade: data.dadosEscola.endereco.cidade,
-                        uf: data.dadosEscola.endereco.uf,
+                ...(data.dadosEscola.tipoEscola ? {
+                    dadosEscola: {
+                        tipoEscola: data.dadosEscola.tipoEscola,
+                        nome: emptyToNull(data.dadosEscola.nome),
+                        telefone: emptyToNull(data.dadosEscola.telefone),
+                        email: emptyToNull(data.dadosEscola.email),
+                        endereco: {
+                            cep: data.dadosEscola.endereco.cep,
+                            logradouro: data.dadosEscola.endereco.logradouro,
+                            numero: data.dadosEscola.endereco.numero,
+                            complemento: emptyToNull(data.dadosEscola.endereco.complemento),
+                            bairro: data.dadosEscola.endereco.bairro,
+                            cidade: data.dadosEscola.endereco.cidade,
+                            uf: data.dadosEscola.endereco.uf,
+                        },
+                        contatos: (data.dadosEscola.contatos ?? []).map((c) => ({
+                            nome: emptyToNull(c.nome),
+                            telefone: emptyToNull(c.telefone),
+                            email: emptyToNull(c.email),
+                            funcao: emptyToNull(c.funcao),
+                        })),
                     },
-                    contatos: (data.dadosEscola.contatos ?? []).map((c) => ({
-                        nome: emptyToNull(c.nome),
-                        telefone: emptyToNull(c.telefone),
-                        email: emptyToNull(c.email),
-                        funcao: emptyToNull(c.funcao),
-                    })),
-                },
+                } : {}),
             });
 
             window.dispatchEvent(
@@ -686,9 +687,7 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                 <AvatarWithSkeleton
                                     src={
                                         arquivosMap.has('fotoPerfil')
-                                            ? `${import.meta.env.VITE_API_URL}/arquivos/${encodeURIComponent(
-                                                arquivosMap.get('fotoPerfil')!.arquivo_id
-                                            )}/view/`
+                                            ? `${import.meta.env.VITE_API_URL}/arquivos/${arquivosMap.get('fotoPerfil')!.id}/view`
                                             : undefined
                                     }
                                     alt={patient.nome}
@@ -837,9 +836,9 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                     <>
                                         <ReadOnlyField label="Nome *" value={maskPersonName(clienteData.nome ?? '')} />
                                         <ReadOnlyField label="Data de nascimento *" value={formatDate(clienteData.dataNascimento ?? '')} />
-                                        <ReadOnlyField label="CPF *" value={maskCPF(clienteData.cpf ?? '')} />
-                                        <ReadOnlyField label="E-mail de contato *" value={normalizeEmail(clienteData.emailContato ?? '')} />
-                                        <ReadOnlyField label="Data Entrada *" value={formatDate(clienteData.dataEntrada ?? '')} />
+                                        <ReadOnlyField label="CPF" value={maskCPF(clienteData.cpf ?? '')} />
+                                        <ReadOnlyField label="E-mail de contato" value={normalizeEmail(clienteData.emailContato ?? '')} />
+                                        <ReadOnlyField label="Data Entrada" value={formatDate(clienteData.dataEntrada ?? '')} />
                                         <ReadOnlyField label="Data Saída" value={formatDate(clienteData.dataSaida ?? '')} />
                                     </>
                                 )}
@@ -2509,8 +2508,8 @@ export default function PatientProfileDrawer({ patient, open, onClose }: Patient
                                                           : 'Não informado'
                                             }
                                         />
-                                        <ReadOnlyField label="Nome *" value={maskPersonName(schoolData?.nome ?? '')} />
-                                        <ReadOnlyField label="Telefone *" value={maskBRPhone(schoolData?.telefone ?? '')} />
+                                        <ReadOnlyField label="Nome" value={maskPersonName(schoolData?.nome ?? '')} />
+                                        <ReadOnlyField label="Telefone" value={maskBRPhone(schoolData?.telefone ?? '')} />
                                         <ReadOnlyField label="E-mail" value={normalizeEmail(schoolData?.email ?? '')} />
                                     </div>
                                     {schoolData?.endereco && (

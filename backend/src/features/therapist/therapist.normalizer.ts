@@ -37,7 +37,6 @@ export function normalizeTherapistForm(db: TherapistTypes.TherapistDB) {
         conta: db.conta ?? '',
         chavePix: db.chave_pix ?? '',
         pixTipo: db.pix_tipo ?? '',
-        valorHoraAcordado: db.valor_hora?.toString() ?? '',
         professorUnindigo: db.professor_uni ? 'Sim' : 'Não',
         disciplinaUniindigo: db.disciplina?.map((d) => d.nome).join(', ') ?? '',
         endereco: {
@@ -128,8 +127,8 @@ export function normalizeTherapistSession(db: TherapistTypes.TherapistDB) {
         cargo: db.registro_profissional?.[0]?.cargo?.nome ?? '',
         conselho: 'CRP',
         registroConselho: db.registro_profissional?.[0]?.numero_conselho ?? '',
-        avatarUrl: fotoPerfil?.arquivo_id
-            ? `/api/arquivos/${encodeURIComponent(fotoPerfil.arquivo_id!)}/view`
+        avatarUrl: fotoPerfil?.id
+            ? `/api/arquivos/${fotoPerfil.id}/view`
             : '',
 
         pessoa: {
@@ -153,7 +152,6 @@ export function normalizeTherapistSession(db: TherapistTypes.TherapistDB) {
             cargaHorariaSemanal: 0,
             atendeConvenio: false,
             especialidades: specialties.length > 0 ? specialties : ['Presencial'],
-            valorConsulta: Number(db.valor_hora),
             formasAtendimento: ['Presencial'],
         },
 

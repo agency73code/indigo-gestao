@@ -1,10 +1,10 @@
-import { createFolder } from './r2/createFolder.js';
+import { createFolder, sanitizeFolderName } from './r2/createFolder.js';
 import { prisma } from '../../config/database.js';
 import { s3 } from '../../config/r2.js';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { DeleteObjectCommand } from '@aws-sdk/client-s3';
 import path from 'path';
-import type { FileForDownload } from './types/files.types.js';
+import type { FileForDownload, dbFileType } from './types/files.types.js';
 import { AppError } from '../../errors/AppError.js';
 import { getVisibilityScope } from '../../utils/visibilityFilter.js';
 import { canDownloadFile } from './utils/canDownloadFile.js';
@@ -63,10 +63,13 @@ export async function uploadAndPersistFile(
     // Determina o nome do arquivo
     const ext = path.extname(input.file.originalname || '').toLowerCase() || '';
 
+    const safeDocumentType = sanitizeFolderName(input.documentType);
+    const safeDescription = normalizedDescription ? sanitizeFolderName(normalizedDescription) : null;
+
     const driveLabel =
-        normalizedDescription && input.documentType === 'outros'
-            ? `${input.documentType}-${normalizedDescription}`
-            : input.documentType;
+        safeDescription && safeDocumentType === 'outros'
+            ? `${safeDocumentType}-${safeDescription}`
+            : safeDocumentType;
 
     const finalName = `${driveLabel}${ext}`;
 
@@ -209,7 +212,47 @@ export async function deleteFromDatabase(id: number) {
     await prisma.arquivos.delete({ where: { id } });
 }
 
-export async function findByIdForDownload(
+export async function findSessionFileForDownload(
+    fileId: number,
+    userId: string,
+): Promise<dbFileType | null> {
+    const sessionFile = await prisma.sessao_arquivo.findUnique({
+        where: { id: fileId },
+        select: {
+            caminho: true,
+            nome: true,
+            sessao: {
+                select: {
+                    cliente_id: true,
+                    terapeuta_id: true,
+                },
+            },
+        },
+    });
+
+    if (!sessionFile) return null;
+
+    const visibility = await getVisibilityScope(userId);
+
+    const allowed = await canDownloadFile({
+        file: {
+            clienteId: sessionFile.sessao.cliente_id,
+            terapeutaId: sessionFile.sessao.terapeuta_id,
+        },
+        userId,
+        visibility,
+    });
+
+    if (!allowed) throw forbidden();
+
+    return {
+        storage_id: sessionFile.caminho,
+        name: sessionFile.nome,
+        mime_type: null,
+    };
+}
+
+export async function findFileByIdAuthorized(
     fileId: number,
     userId: string,
 ): Promise<FileForDownload | null> {

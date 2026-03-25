@@ -19,21 +19,6 @@ export default function DadosEscolaStep({ data, onUpdate, errors, onBlur }: Dado
         onUpdate(`dadosEscola.${field}`, value);
     };
 
-    // Inicializar com pelo menos um contato se não existir
-    useEffect(() => {
-        if (!data.dadosEscola?.contatos || data.dadosEscola.contatos.length === 0) {
-            updateDadosEscola('contatos', [
-                {
-                    nome: '',
-                    telefone: '',
-                    email: '',
-                    funcao: '',
-                },
-            ]);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [data.dadosEscola?.contatos]);
-
     const updateEnderecoEscola = (field: string, value: any) => {
         onUpdate(`dadosEscola.endereco.${field}`, value);
     };
@@ -58,7 +43,7 @@ export default function DadosEscolaStep({ data, onUpdate, errors, onBlur }: Dado
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Tipo escola */}
                 <SelectField
-                    label="Tipo escola *"
+                    label="Tipo escola"
                     id="tipoEscola"
                     value={data.dadosEscola?.tipoEscola || ''}
                     onChange={(e) => updateDadosEscola('tipoEscola', e.target.value)}
@@ -73,7 +58,7 @@ export default function DadosEscolaStep({ data, onUpdate, errors, onBlur }: Dado
 
                 {/* Nome */}
                 <InputField
-                    label="Nome *"
+                    label="Nome"
                     id="nomeEscola"
                     value={data.dadosEscola?.nome || ''}
                     onChange={(e) => updateDadosEscola('nome', e.target.value)}
@@ -83,7 +68,7 @@ export default function DadosEscolaStep({ data, onUpdate, errors, onBlur }: Dado
 
                 {/* Telefone */}
                 <InputField
-                    label="Telefone *"
+                    label="Telefone"
                     id="telefoneEscola"
                     value={data.dadosEscola?.telefone || ''}
                     onChange={(e) =>
@@ -96,7 +81,7 @@ export default function DadosEscolaStep({ data, onUpdate, errors, onBlur }: Dado
 
                 {/* E-mail */}
                 <InputField
-                    label="E-mail *"
+                    label="E-mail"
                     id="emailEscola"
                     type="email"
                     value={data.dadosEscola?.email || ''}

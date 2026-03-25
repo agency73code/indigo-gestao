@@ -1,6 +1,7 @@
 import type * as OcpTypes from './types/olp.types.js';
 import { differenceInYears } from 'date-fns';
 import { lookup as mimeLookup } from 'mime-types';
+import { buildLocalSessionTime } from '../billing/utils/buildUtcDate.js';
 
 export function mapOcpDetail(dto: OcpTypes.OcpDetailDTO) {
     return {
@@ -90,10 +91,11 @@ export function mapSessionList(dto: OcpTypes.SessionDTO[]): OcpTypes.Session[] {
         // Adicionar dados de faturamento se existirem
         if (s.faturamentos?.[0]) {
             const faturamento = s.faturamentos[0];
+            const time = buildLocalSessionTime(faturamento.inicio_em, faturamento.fim_em);
             session.faturamento = {
-                dataSessao: faturamento.inicio_em.toISOString().split('T')[0] || '',
-                horarioInicio: faturamento.inicio_em.toTimeString().slice(0, 5),
-                horarioFim: faturamento.fim_em.toTimeString().slice(0, 5),
+                dataSessao: time.day,
+                horarioInicio: time.start,
+                horarioFim: time.end,
                 tipoAtendimento: faturamento.tipo_atendimento,
                 ajudaCusto: faturamento.ajuda_custo,
                 arquivosFaturamento: faturamento.arquivos.map((arquivo) => ({

@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { createFileFromBlob } from '@/utils/image';
+import { authFetch } from '@/lib/http';
 
 export interface ProfilePhotoDTO {
   fileId: string;
@@ -67,7 +68,7 @@ export const useProfilePhoto = (): UseProfilePhotoReturn => {
       formData.append('birthDate', birthDate);
 
       // Fazer upload para o endpoint do backend
-      const response = await fetch(url, {
+      const response = await authFetch(url, {
         method: 'POST',
         body: formData,
       });
@@ -91,12 +92,10 @@ export const useProfilePhoto = (): UseProfilePhotoReturn => {
       // Precisamos extrair o primeiro arquivo e formatar como ProfilePhotoDTO
       if (responseData?.arquivos && responseData.arquivos.length > 0) {
         const arquivo = responseData.arquivos[0];
-        const storageId = encodeURIComponent(arquivo.storageId || arquivo.id);
-
         const profileDto: ProfilePhotoDTO = {
-          fileId: arquivo.storageId || arquivo.id,
-          webViewLink: `/api/arquivos/${storageId}/view`,
-          thumbnailLink: `/api/arquivos/${storageId}/view`,
+          fileId: arquivo.id,
+          webViewLink: `/api/arquivos/${arquivo.id}/view`,
+          thumbnailLink: `/api/arquivos/${arquivo.id}/view`,
         };
         
         return profileDto;

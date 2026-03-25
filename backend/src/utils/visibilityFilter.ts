@@ -66,8 +66,18 @@ export async function getVisibilityScope(therapistId: string): Promise<Visibilit
     // --- Junta todos os IDs ---
     const allIds = new Set<string>([therapistId, ...firstIds, ...secondIds]);
 
-    // --- Níveis clínico/AT: só ele mesmo ---
-    if (maxLevel <= 2) {
+    // --- AT: ele mesmo + supervisor(es) ---
+    if (maxLevel === 1) {
+        const supervisors = await prisma.vinculo_supervisao.findMany({
+            where: { clinico_id: therapistId },
+            select: { supervisor_id: true },
+        });
+        const supervisorIds = supervisors.map((v) => v.supervisor_id);
+        return { scope: 'partial', therapistIds: [therapistId, ...supervisorIds], maxAccessLevel: maxLevel };
+    }
+
+    // --- Terapeuta clínico: só ele mesmo ---
+    if (maxLevel === 2) {
         return { scope: 'partial', therapistIds: [therapistId], maxAccessLevel: maxLevel };
     }
 

@@ -71,7 +71,7 @@ export default function SessionFiles({ files }: SessionFilesProps) {
     const handleDownload = (file: SessionFile) => {
         // Criar link temporário para download usando o ID do arquivo
         const link = document.createElement('a');
-        link.href = `/api/arquivos/${file.id}/download`;
+        link.href = `/api/arquivos/sessoes/${file.id}/download`;
         link.download = file.fileName;
         document.body.appendChild(link);
         link.click();

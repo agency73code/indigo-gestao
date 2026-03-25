@@ -33,13 +33,6 @@ export type TherapistForm = {
     conta: string;
     chavePix: string;
     pixTipo: 'email' | 'telefone' | 'cpf' | 'cnpj' | 'aleatoria';
-    valorHoraAcordado?: string;
-    valorSessaoConsultorio: string | number;
-    valorSessaoHomecare: string | number;
-    valorHoraDesenvolvimentoMateriais: string | number;
-    valorHoraSupervisaoRecebida: string | number;
-    valorHoraSupervisaoDada: string | number;
-    valorHoraReuniao: string | number;
     professorUnindigo: string | boolean;
     disciplinaUniindigo?: string | null | undefined;
 
@@ -86,6 +79,7 @@ export type TherapistForm = {
 
     // Arquivos
     arquivos?: Array<{
+        id?: number;
         tipo: string | null;
         arquivo_id: string | null;
         mime_type: string | null;
@@ -111,7 +105,6 @@ export interface TherapistDB {
     conta?: string | null;
     chave_pix?: string | null;
     pix_tipo?: string | null;
-    valor_hora?: Decimal | null;
     professor_uni: boolean;
     endereco_id?: number | null;
     data_entrada: Date | null;
@@ -176,6 +169,7 @@ export interface TherapistDB {
     }[];
     // Arquivos
     arquivos?: Array<{
+        id: number;
         tipo: string | null;
         arquivo_id: string | null;
         mime_type: string | null;

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SettingsContent } from './SettingsContent';
+import { authFetch } from '@/lib/http';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 
@@ -24,7 +25,7 @@ export function SecuritySettings() {
         const fetchPasswordInfo = async () => {
             setIsLoading(true);
             try {
-                const response = await fetch(`/api/auth/password-info`, {
+                const response = await authFetch(`/api/auth/password-info`, {
                     credentials: 'include',
                 });
 

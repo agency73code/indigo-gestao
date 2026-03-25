@@ -16,8 +16,9 @@ import { getVisibilityScope } from "../../utils/visibilityFilter.js";
 import { mapBillingSummary } from "./mappers/mapBillingSummary.js";
 import type { CorrectBillingReleaseInput } from "./types/CorrectBillingReleaseInput.js";
 import type { approveLaunchPayload, rejectLaunchPayload } from "./schemas/launchActionsSchema.js";
+import type { TransactionClient } from "../../types/prisma.types.js";
 
-export async function createBilling(tx: Prisma.TransactionClient, payload: CreateBillingPayload, parties: BillingParties, target: BillingTarget) {
+export async function createBilling(tx: TransactionClient, payload: CreateBillingPayload, parties: BillingParties, target: BillingTarget) {
     const { billing, billingFiles } = payload;
     const { sessionId, evolutionId, ataId } = target;
     const inicio_em = buildUtcDate(billing.dataSessao, billing.horarioInicio);
@@ -124,8 +125,19 @@ export async function listBilling(params: listBillingPayload, userId: string) {
     }
 }
 
-export async function getBillingSummary(params: billingSummaryPayload) {
+export async function getBillingSummary(params: billingSummaryPayload, userId: string) {
     const { terapeutaId, dataInicio, dataFim } = params;
+
+    const visibility = await getVisibilityScope(userId);
+
+    if (visibility.scope === 'none') {
+        throw new AppError('FORBIDDEN', 'Sem permissão para acessar este resumo de faturamento.', 403);
+    }
+
+    if (visibility.scope === 'partial' && terapeutaId && !visibility.therapistIds.includes(terapeutaId)) {
+        throw new AppError('FORBIDDEN', 'Sem permissão para acessar o faturamento deste terapeuta.', 403);
+    }
+
     const where: Prisma.faturamentoWhereInput = {
         criado_em: {
             ...(dataInicio && { gte: startOfDay(parseYMDToLocalDate(toDateOnly(dataInicio))) }),
@@ -142,17 +154,23 @@ export async function getBillingSummary(params: billingSummaryPayload) {
             tipo_atendimento: true,
             status: true,
             valor_ajuda_custo: true,
-            terapeuta: {
+            terapeuta_id: true,
+            cliente: {
                 select: {
-                    valor_hora_desenvolvimento_materiais: true,
-                    valor_hora_reuniao: true,
-                    valor_hora_supervisao_dada: true,
-                    valor_hora_supervisao_recebida: true,
-                    valor_sessao_consultorio: true,
-                    valor_sessao_homecare: true,
-                }
-            }
-        }
+                    terapeuta: {
+                        select: {
+                            terapeuta_id: true,
+                            valor_sessao_consultorio: true,
+                            valor_sessao_homecare: true,
+                            valor_hora_desenvolvimento_materiais: true,
+                            valor_hora_supervisao_recebida: true,
+                            valor_hora_supervisao_dada: true,
+                            valor_hora_reuniao: true,
+                        },
+                    },
+                },
+            },
+        },
     });
 
     return mapBillingSummary(data);
@@ -297,6 +315,7 @@ export async function findBillingFileForDownload(fileId: number) {
                     id: true,
                     sessao_id: true,
                     evolucao_id: true,
+                    terapeuta_id: true,
                 }
             }
         }

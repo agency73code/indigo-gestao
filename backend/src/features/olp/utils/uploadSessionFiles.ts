@@ -16,7 +16,7 @@ export async function uploadSessionFiles(files: UploadedFile[], programId: numbe
     uploadedFiles.push({
       nome: file.originalname,
       caminho: uploaded.key,
-      tamanho: file.size,
+      tamanho: file.buffer.length,
     });
   }
 

@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { authFetch } from '@/lib/http';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import ProfilePhotoFieldSimple, { type ProfilePhotoFieldSimpleRef } from '@/components/profile/ProfilePhotoFieldSimple';
 import { type ProfilePhotoDTO } from '@/hooks/useProfilePhoto';
@@ -30,7 +31,7 @@ export function AccountSettings() {
 
         const url = `/api/usuarios/${user.id}`;
 
-        fetch(url, { credentials: 'include' })
+        authFetch(url, { credentials: 'include' })
             .then((res) => {
                 if (!res.ok) {
                     throw new Error(`Erro HTTP ${res.status}`);
@@ -60,8 +61,7 @@ export function AccountSettings() {
     }, []);
 
     const handlePhotoUploaded = useCallback((dto: ProfilePhotoDTO) => {
-        const encodedId = encodeURIComponent(dto.fileId);
-        const newAvatarUrl = `/api/arquivos/${encodedId}/view`;
+        const newAvatarUrl = `/api/arquivos/${dto.fileId}/view`;
 
         setProfilePhoto(newAvatarUrl);
         updateAvatar(newAvatarUrl);
@@ -88,7 +88,7 @@ export function AccountSettings() {
 
         setIsDeleting(true);
         try {
-            const response = await fetch(`/api/arquivos/${encodeURIComponent(fileId)}`, {
+            const response = await authFetch(`/api/arquivos/${encodeURIComponent(fileId)}`, {
                 method: 'DELETE',
                 credentials: 'include',
             });

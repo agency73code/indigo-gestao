@@ -1,4 +1,5 @@
 import type { ProgramDetail } from './detalhe-ocp/types';
+import { authFetch } from '@/lib/http';
 import { fetchWithArea, addAreaToUrl, getCurrentAreaFromStorage } from '@/utils/apiWithArea';
 
 type Patient = {
@@ -32,7 +33,7 @@ export async function fetchProgram(programId: string): Promise<ProgramDetail> {
     
     // Buscar avatar do cliente
     try {
-        const clientAvatarRes = await fetch(`${import.meta.env.VITE_API_URL}/arquivos/getAvatar?ownerId=${program.patientId}&ownerType=cliente`, {
+        const clientAvatarRes = await authFetch(`${import.meta.env.VITE_API_URL}/arquivos/getAvatar?ownerId=${program.patientId}&ownerType=cliente`, {
             credentials: 'include',
         });
         const clientAvatarData = await clientAvatarRes.json();
@@ -43,7 +44,7 @@ export async function fetchProgram(programId: string): Promise<ProgramDetail> {
     
     // Buscar avatar do terapeuta
     try {
-        const avatarRes = await fetch(`${import.meta.env.VITE_API_URL}/arquivos/getAvatar?ownerId=${program.therapistId}&ownerType=terapeuta`, {
+        const avatarRes = await authFetch(`${import.meta.env.VITE_API_URL}/arquivos/getAvatar?ownerId=${program.therapistId}&ownerType=terapeuta`, {
             credentials: 'include',
         });
         const avatarData = await avatarRes.json();
@@ -60,7 +61,7 @@ export async function fetchClients(q?: string): Promise<Patient[]> {
     let url = q ? `/api/ocp/clients?q=${encodeURIComponent(q)}` : '/api/ocp/clients';
     url = addAreaToUrl(url, area);
     
-    const res = await fetch(url, {
+    const res = await authFetch(url, {
         method: 'GET',
         credentials: 'include',
         headers: { 'Accept': 'application/json' },
@@ -82,7 +83,7 @@ export async function fetchClients(q?: string): Promise<Patient[]> {
     const clientsWithAvatar = await Promise.all(
         data.map(async (p) => {
             try {
-                const avatarRes = await fetch(`${import.meta.env.VITE_API_URL}/arquivos/getAvatar?ownerId=${p.id}&ownerType=cliente`, {
+                const avatarRes = await authFetch(`${import.meta.env.VITE_API_URL}/arquivos/getAvatar?ownerId=${p.id}&ownerType=cliente`, {
                     credentials: 'include',
                 });
                 const avatarData = await avatarRes.json();
@@ -114,7 +115,7 @@ export async function fetchClients(q?: string): Promise<Patient[]> {
 export async function fetchTherapists(q?: string): Promise<Therapist[]> {
     const baseUrl = `${import.meta.env.VITE_API_URL}/terapeutas`;
     const url = q ? `${baseUrl}?q=${encodeURIComponent(q)}` : baseUrl;
-    const res = await fetch(url, {
+    const res = await authFetch(url, {
         method: 'GET',
         credentials: 'include',
         headers: { 'Accept': 'application/json' },
@@ -134,7 +135,7 @@ export async function fetchTherapists(q?: string): Promise<Therapist[]> {
     const therapistsWithAvatar = await Promise.all(
         data.map(async (t) => {
             try {
-                const avatarRes = await fetch(`${import.meta.env.VITE_API_URL}/arquivos/getAvatar?ownerId=${t.id}&ownerType=terapeuta`, {
+                const avatarRes = await authFetch(`${import.meta.env.VITE_API_URL}/arquivos/getAvatar?ownerId=${t.id}&ownerType=terapeuta`, {
                     credentials: 'include',
                 });
                 const avatarData = await avatarRes.json();

@@ -1,4 +1,5 @@
 import { ageCalculation, buildApiUrl, fetchOwnerAvatar } from '@/lib/api';
+import { authFetch } from '@/lib/http';
 import type { Patient, Therapist, CreateProgramInput } from '../../../core/types';
 import { getCurrentAreaFromStorage } from '@/utils/apiWithArea';
 
@@ -84,12 +85,11 @@ export async function fetchFisioTherapistAvatar(therapistId: string): Promise<st
 export async function createFisioProgram(input: CreateProgramInput): Promise<{ id: string }> {
     const area = getArea();
 
-    const response = await fetch(`${API_URL}/ocp/create`, {
+    const response = await authFetch('/api/ocp/create', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        credentials: 'include',
         body: JSON.stringify({
             ...input,
             area,

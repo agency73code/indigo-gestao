@@ -12,6 +12,7 @@ import { getAccessLevelFromRoles } from '../../utils/normalizeRoleName.js';
 import { queryTherapist } from './querys/queryTherapist.js';
 import { mapTherapist } from './mappers/mapTherapist.js';
 import { getPrimaryAreaFromAreaRoles } from '../../utils/getPrimaryAreaFromAreaRoles.js';
+import { revokeAllRefreshTokensByUserId } from '../auth/refresh-token.repository.js';
 
 const MANAGER_LEVEL = ACCESS_LEVELS['gerente'] ?? 5;
 
@@ -35,12 +36,6 @@ export async function create(dto: TherapistSchemaInput) {
         conta: dto.conta,
         pix_tipo: dto.pixTipo,
         chave_pix: dto.chavePix,
-        valor_sessao_consultorio: dto.valorSessaoConsultorio,
-        valor_sessao_homecare: dto.valorSessaoHomecare,
-        valor_hora_desenvolvimento_materiais: dto.valorHoraDesenvolvimentoMateriais,
-        valor_hora_supervisao_recebida: dto.valorHoraSupervisaoRecebida,
-        valor_hora_supervisao_dada: dto.valorHoraSupervisaoDada,
-        valor_hora_reuniao: dto.valorHoraReuniao,
         professor_uni: dto.professorUnindigo,
         data_entrada: dto.dataInicio,
         data_saida: dto.dataFim,
@@ -268,6 +263,7 @@ export async function fetchTherapistSummaryById(therapistId: string) {
             arquivos: {
                 where: { tipo: 'fotoPerfil' },
                 select: {
+                    id: true,
                     arquivo_id: true,
                 },
             }
@@ -282,7 +278,7 @@ export async function fetchTherapistSummaryById(therapistId: string) {
         );
     }
 
-    const therapistAvatar = therapist.arquivos[0] ? therapist.arquivos[0].arquivo_id : null;
+    const therapistAvatarId = therapist.arquivos[0]?.id ?? null;
 
     return {
         id: therapist.id,
@@ -293,7 +289,7 @@ export async function fetchTherapistSummaryById(therapistId: string) {
                 role: r.cargo?.nome ?? null,
             }))
         ).area,
-        photoUrl: therapistAvatar ? `/api/arquivos/${encodeURIComponent(therapistAvatar)}/view` : null,
+        photoUrl: therapistAvatarId ? `/api/arquivos/${therapistAvatarId}/view` : null,
     }
 }
 
@@ -337,9 +333,18 @@ export async function update(id: string, dto: TherapistTypes.TherapistForm) {
         }
     }
 
+    const current = await prisma.terapeuta.findUnique({
+        where: { id },
+        select: { email: true, email_indigo: true },
+    });
+
+    const emailChanged =
+        current &&
+        (current.email !== dto.email || current.email_indigo !== dto.emailIndigo);
+
     invalidateTherapistCache(id);
 
-    return prisma.terapeuta.update({
+    const updated = await prisma.terapeuta.update({
         where: { id },
         data: {
             nome: dto.nome,
@@ -357,12 +362,6 @@ export async function update(id: string, dto: TherapistTypes.TherapistForm) {
             conta: dto.conta,
             chave_pix: dto.chavePix,
             pix_tipo: dto.pixTipo,
-            valor_sessao_consultorio: dto.valorSessaoConsultorio,
-            valor_sessao_homecare: dto.valorSessaoHomecare,
-            valor_hora_desenvolvimento_materiais: dto.valorHoraDesenvolvimentoMateriais,
-            valor_hora_supervisao_recebida: dto.valorHoraSupervisaoRecebida,
-            valor_hora_supervisao_dada: dto.valorHoraSupervisaoDada,
-            valor_hora_reuniao: dto.valorHoraReuniao,
 
             endereco: {
                 create: {
@@ -392,7 +391,6 @@ export async function update(id: string, dto: TherapistTypes.TherapistForm) {
             data_entrada: dto.dataInicio,
             data_saida: dto.dataFim ?? null,
             atividade,
-            valor_hora: dto.valorHoraAcordado || null,
             professor_uni: typeof dto.professorUnindigo === 'boolean' ? dto.professorUnindigo : dto.professorUnindigo === 'sim',
             perfil_acesso: getHighestAccessRole(dto.dadosProfissionais),
 
@@ -499,6 +497,12 @@ export async function update(id: string, dto: TherapistTypes.TherapistForm) {
                 : {}),
         },
     });
+
+    if (emailChanged) {
+        await revokeAllRefreshTokensByUserId(id, 'terapeuta');
+    }
+
+    return updated;
 }
 
 function getHighestAccessRole(

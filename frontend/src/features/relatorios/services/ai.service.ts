@@ -2,6 +2,7 @@
  * Serviço para integração com API de IA
  * @module features/relatorios/services
  */
+import { authFetch } from '@/lib/http';
 
 export interface GenerateSummaryParams {
     observations: Array<{
@@ -28,7 +29,7 @@ export interface GenerateSummaryResponse {
 export async function generateClinicalSummaryWithAI(
     params: GenerateSummaryParams
 ): Promise<GenerateSummaryResponse> {
-    const response = await fetch('/api/ai/generate-summary', {
+    const response = await authFetch('/api/ai/generate-summary', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

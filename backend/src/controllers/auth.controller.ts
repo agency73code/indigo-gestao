@@ -14,8 +14,28 @@ import {
     passwordResetToken,
     lastPasswordChange,
 } from '../features/auth/auth.repository.js';
+import {
+    generateAccessToken,
+    getAccessTokenMaxAgeMs,
+    issueRefreshToken,
+    revokeRefreshToken,
+    rotateRefreshToken
+} from '../features/auth/refresh-token.service.js';
 
 const RESET_TOKEN_EXPIRATION_MS = 60 * 60 * 1000;
+
+// Hash dummy usado para equalizar o tempo de resposta quando o usuário não existe,
+// evitando timing attack por enumeração de usuários válidos.
+const DUMMY_HASH = '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy';
+
+function getRequestIp(req: Request) {
+    const forwardedFor = req.headers['x-forwarded-for'];
+    if (typeof forwardedFor === 'string') {
+        return forwardedFor.split(',')[0]?.trim();
+    }
+
+    return req.ip;
+}
 
 export async function me(req: Request, res: Response) {
     const userCtx = req.user;
@@ -40,21 +60,34 @@ export async function me(req: Request, res: Response) {
             perfil_acesso: user.perfil_acesso,
             area_atuacao: user.area_atuacao,
             avatar_url: user.avatar_url,
+            birth_date: user.birth_date ?? null,
         },
     });
 }
 
-export async function logout(req: Request, res: Response) {
-    res.clearCookie('token', {
-        httpOnly: true,
-        sameSite: 'lax',
-        secure: env.NODE_ENV === 'production',
-    });
+export async function logout(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { refreshToken } = req.body as { refreshToken?: string };
 
-    return res.status(200).json({
-        success: true,
-        message: 'Logout realizado com sucesso',
-    });
+        if (!refreshToken) {
+            return res.status(400).json({ success: false, message: 'Refresh token é obrigatório para logout' });
+        }
+
+        await revokeRefreshToken(refreshToken);
+
+        res.clearCookie('token', {
+            httpOnly: true,
+            sameSite: 'lax',
+            secure: env.NODE_ENV === 'production',
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: 'Logout realizado com sucesso',
+        });
+    } catch (error) {
+        next(error);
+    }
 }
 
 export async function validateToken(req: Request, res: Response, next: NextFunction) {
@@ -114,40 +147,46 @@ export async function definePassword(req: Request, res: Response, next: NextFunc
 
 export async function validateLogin(req: Request, res: Response, next: NextFunction) {
     try {
-        const { accessInfo, password } = req.body;
+        const { accessInfo, password, deviceName } = req.body;
         const normalized = normalizeAccessInfo(accessInfo);
 
         const user =
             (await loginUserByAccessInformation(normalized, 'terapeuta')) ??
             (await loginUserByAccessInformation(normalized, 'cliente'));
 
-        if (!user)
+        if (!user) {
+            await comparePassword(password, DUMMY_HASH); // equaliza tempo para evitar timing attack
             return res.status(401).json({ success: false, message: 'Credenciais inválidas' });
+        }
         if (!user.senha)
             return res
                 .status(400)
                 .json({ seccess: false, message: 'Você não possui uma senha cadastrada.' });
 
-        const ok = await comparePassword(password, user.senha!);
+        const ok = await comparePassword(password, user.senha);
         if (!ok) return res.status(401).json({ success: false, message: 'Credenciais inválidas' });
 
-        const token = jwt.sign(
-            { sub: user.id, perfil_acesso: user.perfil_acesso },
-            env.JWT_SECRET,
-            { expiresIn: '1d' },
-        );
+        const accessToken = generateAccessToken(user);
+        const refreshToken = await issueRefreshToken({
+            userId: user.id.toString(),
+            userType: user.table,
+            deviceName,
+            ip: getRequestIp(req),
+        });
 
-        res.cookie('token', token, {
+        res.cookie('token', accessToken, {
             httpOnly: true,
             sameSite: 'lax',
             secure: env.NODE_ENV === 'production',
-            maxAge: 24 * 60 * 60 * 1000,
+            maxAge: getAccessTokenMaxAgeMs(),
         });
 
         return res.status(200).json({
             success: true,
             message: 'Login realizado com sucesso',
-            token,
+            token: accessToken,
+            accessToken,
+            refreshToken,
             user: {
                 id: user.id,
                 name: user.nome,
@@ -155,9 +194,62 @@ export async function validateLogin(req: Request, res: Response, next: NextFunct
                 perfil_acesso: user.perfil_acesso,
                 area_atuacao: user.area_atuacao,
                 avatar_url: user.avatar_url,
+                birth_date: user.birth_date ?? null,
             },
         });
     } catch (error) {
+        next(error);
+    }
+}
+
+export async function refreshAccessToken(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { refreshToken, deviceName } = req.body as { refreshToken: string; deviceName?: string };
+        const rotatedToken = await rotateRefreshToken(refreshToken, deviceName, getRequestIp(req));
+
+        if (!rotatedToken) {
+            return res.status(401).json({ success: false, message: 'Refresh token inválido ou expirado' });
+        }
+
+        const user =
+            (await findUserById(rotatedToken.userId, 'terapeuta')) ??
+            (await findUserById(rotatedToken.userId, 'cliente'));
+
+        if (!user) {
+            return res.status(401).json({ success: false, message: 'Usuário inválido para refresh token' });
+        }
+
+        const accessToken = generateAccessToken({
+            id: user.id,
+            perfil_acesso: user.perfil_acesso!,
+        });
+
+        res.cookie('token', accessToken, {
+            httpOnly: true,
+            sameSite: 'lax',
+            secure: env.NODE_ENV === 'production',
+            maxAge: getAccessTokenMaxAgeMs(),
+        });
+
+        return res.status(200).json({
+            success: true,
+            accessToken,
+            refreshToken: rotatedToken.refreshToken,
+            user: {
+                id: user.id,
+                name: user.nome,
+                email: user.email,
+                perfil_acesso: user.perfil_acesso,
+                area_atuacao: user.area_atuacao,
+                avatar_url: user.avatar_url,
+                birth_date: user.birth_date ?? null,
+            },
+        });
+    } catch (error) {
+        if (error instanceof jwt.JsonWebTokenError) {
+            return res.status(401).json({ success: false, message: 'Refresh token inválido' });
+        }
+
         next(error);
     }
 }

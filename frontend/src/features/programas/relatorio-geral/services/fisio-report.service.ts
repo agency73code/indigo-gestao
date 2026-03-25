@@ -4,6 +4,7 @@ import type { FisioActivityLoadData } from '../components/fisio/FisioActivityDur
 import type { FisioAttentionActivityItem } from '../components/fisio/FisioAttentionActivitiesCard';
 import type { FisioPerformanceRateData } from '../components/fisio/FisioAutonomyByCategoryChart';
 import { extractStimulusIds } from '../utils/extractStimulusIds';
+import { authFetch } from '@/lib/http';
 
 export interface FisioKpisData {
   desempenhou: number;
@@ -38,7 +39,7 @@ export async function fetchPhysioReports(sessoes: Sessao[]) {
   const sessionIds = sessoes.map(s => Number(s.id));
   const stimulusIds = extractStimulusIds(sessoes)
 
-  const response = await fetch('/api/ocp/physiotherapy/sessions/calculatePhysioKpis', {
+  const response = await authFetch('/api/ocp/physiotherapy/sessions/calculatePhysioKpis', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ sessionIds, stimulusIds }),
@@ -74,7 +75,7 @@ export async function calculateFisioKpis(sessoes: Sessao[]) {
   const sessionIds = sessoes.map(s => Number(s.id));
   const stimulusIds = extractStimulusIds(sessoes);
 
-  const response = await fetch('/api/ocp/physiotherapy/sessions/calculatePhysioKpis', {
+  const response = await authFetch('/api/ocp/physiotherapy/sessions/calculatePhysioKpis', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -117,7 +118,7 @@ export async function prepareFisioPerformanceLineData(sessoes: Sessao[]) {
   const sessionIds = sessoes.map(s => Number(s.id));
   const stimulusIds = extractStimulusIds(sessoes);
 
-  const response = await fetch('/api/ocp/physiotherapy/sessions/performanceLine', {
+  const response = await authFetch('/api/ocp/physiotherapy/sessions/performanceLine', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -212,7 +213,7 @@ export async function prepareFisioActivityDurationData(sessoes: Sessao[]) {
   const sessionIds = sessoes.map(s => Number(s.id));
   const stimulusIds = extractStimulusIds(sessoes);
 
-  const response = await fetch('/api/ocp/physiotherapy/sessions/activityDurationData', {
+  const response = await authFetch('/api/ocp/physiotherapy/sessions/activityDurationData', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -417,7 +418,7 @@ export async function prepareFisioAutonomyByCategory(sessoes: Sessao[]) {
   const sessionIds = sessoes.map(s => Number(s.id));
   const stimulusIds = extractStimulusIds(sessoes);
 
-  const response = await fetch('/api/ocp/physiotherapy/sessions/autonomyByCategory', {
+  const response = await authFetch('/api/ocp/physiotherapy/sessions/autonomyByCategory', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

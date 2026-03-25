@@ -14,6 +14,7 @@
  */
 
 import type { AreaType } from '@/contexts/AreaContext';
+import { authFetch } from '@/lib/http';
 
 /**
  * Recupera a área atual do localStorage
@@ -57,7 +58,7 @@ export async function fetchWithArea(
     const area = getCurrentAreaFromStorage();
     const urlWithArea = addAreaToUrl(url, area);
     
-    return fetch(urlWithArea, options);
+    return authFetch(urlWithArea, options ?? {});
 }
 
 /**
