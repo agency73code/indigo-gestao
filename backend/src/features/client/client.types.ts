@@ -194,7 +194,7 @@ export interface PaymentDataPayload {
 
 export interface SchoolContactPayload {
     nome: string | null;
-    telefone: string;
+    telefone: string | null;
     email: string | null;
     funcao: string | null;
 }

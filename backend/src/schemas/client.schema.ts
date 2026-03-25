@@ -109,15 +109,15 @@ const schoolAddressSchema = z.object({
 });
 
 const schoolContactSchema = z.object({
-    nome: z.string().min(1, 'Nome de contanto da escola é obrigatório'),
-    telefone: z.string().min(1, 'Telefone de contanto da escola é obrigatório').transform(strip),
+    nome: z.string().optional().nullable().default(null),
+    telefone: z.string().transform(strip).optional().nullable().default(null),
     email: z
         .string()
         .email({ message: 'E-mail de contato da escola inválido' })
         .optional()
         .nullable()
         .default(null),
-    funcao: z.string().nullable(),
+    funcao: z.string().optional().nullable().default(null),
 });
 
 const schoolSchema = z.object({
