@@ -96,7 +96,7 @@ export const clientUpdateSchema = z.object({
         contatos: z.array(
             z.object({
                 nome: z.string().nullable().default(null),
-                telefone: phoneSchema('telefone do contato da escola'),
+                telefone: phoneSchemaNullable('telefone do contato da escola'),
                 email: z.email('Informe um e-mail do contato da escola válido').nullable().default(null),
                 funcao: z.string().nullable().default(null),
             }),

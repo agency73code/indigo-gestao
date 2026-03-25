@@ -476,18 +476,7 @@ export default function CadastroClientePage() {
 
                 if (formData.dadosEscola?.contatos?.length) {
                     formData.dadosEscola.contatos.forEach((contato, index) => {
-                        if (!contato.nome?.trim())
-                            newErrors[`dadosEscola.contatos.${index}.nome`] = 'Nome é obrigatório';
-                        if (!contato.telefone?.trim())
-                            newErrors[`dadosEscola.contatos.${index}.telefone`] =
-                                'Telefone é obrigatório';
-                        if (!contato.funcao?.trim())
-                            newErrors[`dadosEscola.contatos.${index}.funcao`] =
-                                'Função é obrigatória';
-                        if (!contato.email?.trim())
-                            newErrors[`dadosEscola.contatos.${index}.email`] =
-                                'E-mail é obrigatório';
-                        if (contato.email && !isValidEmail(contato.email))
+                        if (contato.email?.trim() && !isValidEmail(contato.email))
                             newErrors[`dadosEscola.contatos.${index}.email`] = 'E-mail inválido';
                     });
                 }
