@@ -222,7 +222,7 @@ export interface Cliente {
     
     // Dados escola
     dadosEscola: {
-        tipoEscola: 'particular' | 'publica' | 'afastado' | 'clinica-escola';
+        tipoEscola?: 'particular' | 'publica' | 'afastado' | 'clinica-escola' | '';
         nome: string | null;
         telefone: string | null;
         email?: string | null;

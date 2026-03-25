@@ -315,7 +315,7 @@ export default function DadosPessoaisStep({
                             {/* Escolaridade - 2/4 */}
                             <div className="md:col-span-2">
                                 <SelectField
-                                    label="Escolaridade *"
+                                    label="Escolaridade"
                                     id={`escolaridade-${index}`}
                                     value={cuidador.escolaridade || ''}
                                     onChange={(e) => {

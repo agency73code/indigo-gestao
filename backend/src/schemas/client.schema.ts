@@ -25,7 +25,7 @@ const caregiverSchema = z.object({
             .default(null),
     ),
     profissao: z.string().optional().nullable().default(null),
-    escolaridade: z.string().min(1, 'Escolaridade é obrigatório'),
+    escolaridade: z.string().optional().nullable().default(null),
     telefone: z.string().min(1, 'Telefone do responsável é obrigatório').transform(strip),
     email: z.email({ message: 'E-mail inválido' }),
     dataNascimento: z.preprocess(
@@ -121,7 +121,7 @@ const schoolContactSchema = z.object({
 });
 
 const schoolSchema = z.object({
-    tipoEscola: z.enum(['particular', 'publica', 'afastado', 'clinica-escola']),
+    tipoEscola: z.enum(['particular', 'publica', 'afastado', 'clinica-escola']).optional().nullable().default(null),
     nome: z.string().optional().nullable().default(null),
     telefone: z.string().transform(strip).optional().nullable().default(null),
     email: z

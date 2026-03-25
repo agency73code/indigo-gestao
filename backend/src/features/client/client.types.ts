@@ -200,7 +200,7 @@ export interface SchoolContactPayload {
 }
 
 export interface SchoolDataPayload {
-    tipoEscola: 'particular' | 'publica' | 'afastado' | 'clinica-escola';
+    tipoEscola?: 'particular' | 'publica' | 'afastado' | 'clinica-escola' | null;
     nome: string | null;
     telefone: string | null;
     email: string | null;

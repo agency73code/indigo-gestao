@@ -88,7 +88,7 @@ export const clientUpdateSchema = z.object({
     }),
 
     dadosEscola: z.object({
-        tipoEscola: z.enum(['particular', 'publica', 'afastado', 'clinica-escola'], 'Informe um tipo válido de escola do cliente'),
+        tipoEscola: z.enum(['particular', 'publica', 'afastado', 'clinica-escola'], 'Informe um tipo válido de escola do cliente').optional().nullable().default(null),
         nome: z.string().nullable().default(null),
         telefone: phoneSchemaNullable('telefone de contato da escola'),
         email: z.string().nullable().default(null),
