@@ -118,7 +118,7 @@ export async function create(dto: ClientType.Client) {
             ...(dto.dadosEscola ? {
                 dadosEscola: {
                     create: {
-                        tipoEscola: dto.dadosEscola.tipoEscola,
+                        tipoEscola: dto.dadosEscola.tipoEscola ?? null,
                         nome: dto.dadosEscola.nome ?? null,
                         telefone: dto.dadosEscola.telefone ?? null,
                         email: dto.dadosEscola.email ?? null,
@@ -235,6 +235,7 @@ export async function getById(clientId: string, therapistId: string) {
 
             dadosPagamento: {
                 select: {
+                    id: true,
                     nomeTitular: true,
                     numeroCarteirinha: true,
 

@@ -202,7 +202,7 @@ model dados_pagamento {
 model dados_escola {
   id         Int              @id @default(autoincrement())
   clienteId  String           @unique
-  tipoEscola String
+  tipoEscola String?
   nome       String?
   telefone   String?
   email      String?
@@ -1190,4 +1190,13 @@ model faturamento_arquivo {
   criado_em      DateTime    @default(now())
 
   @@index([faturamento_id])
+}
+
+model AuditLog {
+  id Int @id @default(autoincrement())
+  usuarioId String
+  model String
+  registroId String
+  acao String
+  criadoEm DateTime @default(now())
 }

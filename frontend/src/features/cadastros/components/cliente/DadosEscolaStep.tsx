@@ -43,7 +43,7 @@ export default function DadosEscolaStep({ data, onUpdate, errors, onBlur }: Dado
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Tipo escola */}
                 <SelectField
-                    label="Tipo escola *"
+                    label="Tipo escola"
                     id="tipoEscola"
                     value={data.dadosEscola?.tipoEscola || ''}
                     onChange={(e) => updateDadosEscola('tipoEscola', e.target.value)}

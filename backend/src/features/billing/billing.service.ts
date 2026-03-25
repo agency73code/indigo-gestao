@@ -16,8 +16,9 @@ import { getVisibilityScope } from "../../utils/visibilityFilter.js";
 import { mapBillingSummary } from "./mappers/mapBillingSummary.js";
 import type { CorrectBillingReleaseInput } from "./types/CorrectBillingReleaseInput.js";
 import type { approveLaunchPayload, rejectLaunchPayload } from "./schemas/launchActionsSchema.js";
+import type { TransactionClient } from "../../types/prisma.types.js";
 
-export async function createBilling(tx: Prisma.TransactionClient, payload: CreateBillingPayload, parties: BillingParties, target: BillingTarget) {
+export async function createBilling(tx: TransactionClient, payload: CreateBillingPayload, parties: BillingParties, target: BillingTarget) {
     const { billing, billingFiles } = payload;
     const { sessionId, evolutionId, ataId } = target;
     const inicio_em = buildUtcDate(billing.dataSessao, billing.horarioInicio);

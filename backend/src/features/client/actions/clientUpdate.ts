@@ -161,8 +161,9 @@ export async function updatePaymentData(
     clientId: string,
     dadosPagamento: PaymentDataPayload
 ): Promise<void> {
+    const where = dadosPagamento.id ? { id: dadosPagamento.id } : { clienteId: clientId };
     await tx.dados_pagamento.update({
-        where: { clienteId: clientId },
+        where,
         data: {
             nomeTitular: dadosPagamento.nomeTitular,
             numeroCarteirinha: dadosPagamento.numeroCarteirinha,
@@ -196,7 +197,7 @@ export async function updateSchoolData(
     const addressData = buildAddressData(dadosEscola.endereco);
 
     const schoolData = {
-        tipoEscola: dadosEscola.tipoEscola,
+        tipoEscola: dadosEscola.tipoEscola ?? null,
         nome: dadosEscola.nome,
         telefone: dadosEscola.telefone,
         email: dadosEscola.email,

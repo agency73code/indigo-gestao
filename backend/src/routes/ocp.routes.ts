@@ -5,10 +5,11 @@ import { auth } from '../middleware/auth.middleware.js';
 import { upload } from '../config/multer.js';
 import * as psychotherapy from '../features/olp/psychotherapy/psychotherapy.controller.js';
 import { requireAbility } from '../middleware/requireAbility.js';
+import { auditMiddleware } from '../utils/auditContext.js';
 
 const router: ExpressRouter = Router();
-
 router.use(auth);
+router.use(auditMiddleware);
 
 router.get('/clients', OlpController.listTherapistClients);
 router.get('/clients/:clientId', OlpController.getClientById);

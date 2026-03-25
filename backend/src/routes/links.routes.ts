@@ -4,10 +4,11 @@ import * as LinkController from '../controllers/links.controller.js';
 import * as SuperLinkController from '../features/links/supervision-link/supervisionLink.controller.js';
 import { auth } from '../middleware/auth.middleware.js';
 import { requireAbility } from '../middleware/requireAbility.js';
+import { auditMiddleware } from '../utils/auditContext.js';
 
 const router: ExpressRouter = Router();
-
 router.use(auth);
+router.use(auditMiddleware);
 
 router.get('/clientOptions', LinkController.getClientOptions);
 router.get('/clients', LinkController.listClients);
