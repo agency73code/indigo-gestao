@@ -111,12 +111,10 @@ const schoolAddressSchema = z.object({
 const schoolContactSchema = z.object({
     nome: z.string().optional().nullable().default(null),
     telefone: z.string().transform(strip).optional().nullable().default(null),
-    email: z
-        .string()
-        .email({ message: 'E-mail de contato da escola inválido' })
-        .optional()
-        .nullable()
-        .default(null),
+    email: z.preprocess(
+        (val) => (val === '' || val == null ? null : val),
+        z.string().email({ message: 'E-mail de contato da escola inválido' }).nullable().default(null),
+    ),
     funcao: z.string().optional().nullable().default(null),
 });
 
@@ -130,8 +128,16 @@ const schoolSchema = z.object({
         .optional()
         .nullable()
         .default(null),
-    endereco: schoolAddressSchema,
-    contatos: z.array(schoolContactSchema),
+    endereco: schoolAddressSchema.optional().default({
+        cep: null,
+        logradouro: null,
+        numero: null,
+        complemento: '',
+        bairro: null,
+        cidade: null,
+        uf: null,
+    }),
+    contatos: z.array(schoolContactSchema).optional().default([]),
 });
 
 const fileSchema = z.object({
