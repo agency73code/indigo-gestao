@@ -25,7 +25,7 @@ const caregiverSchema = z.object({
             .default(null),
     ),
     profissao: z.string().optional().nullable().default(null),
-    escolaridade: z.string().min(1, 'Escolaridade é obrigatório'),
+    escolaridade: z.string().optional().nullable().default(null),
     telefone: z.string().min(1, 'Telefone do responsável é obrigatório').transform(strip),
     email: z.email({ message: 'E-mail inválido' }),
     dataNascimento: z.preprocess(
@@ -109,19 +109,17 @@ const schoolAddressSchema = z.object({
 });
 
 const schoolContactSchema = z.object({
-    nome: z.string().min(1, 'Nome de contanto da escola é obrigatório'),
-    telefone: z.string().min(1, 'Telefone de contanto da escola é obrigatório').transform(strip),
-    email: z
-        .string()
-        .email({ message: 'E-mail de contato da escola inválido' })
-        .optional()
-        .nullable()
-        .default(null),
-    funcao: z.string().nullable(),
+    nome: z.string().optional().nullable().default(null),
+    telefone: z.string().transform(strip).optional().nullable().default(null),
+    email: z.preprocess(
+        (val) => (val === '' || val == null ? null : val),
+        z.string().email({ message: 'E-mail de contato da escola inválido' }).nullable().default(null),
+    ),
+    funcao: z.string().optional().nullable().default(null),
 });
 
 const schoolSchema = z.object({
-    tipoEscola: z.enum(['particular', 'publica', 'afastado', 'clinica-escola']),
+    tipoEscola: z.enum(['particular', 'publica', 'afastado', 'clinica-escola']).optional().nullable().default(null),
     nome: z.string().optional().nullable().default(null),
     telefone: z.string().transform(strip).optional().nullable().default(null),
     email: z
@@ -130,8 +128,16 @@ const schoolSchema = z.object({
         .optional()
         .nullable()
         .default(null),
-    endereco: schoolAddressSchema,
-    contatos: z.array(schoolContactSchema),
+    endereco: schoolAddressSchema.optional().default({
+        cep: null,
+        logradouro: null,
+        numero: null,
+        complemento: '',
+        bairro: null,
+        cidade: null,
+        uf: null,
+    }),
+    contatos: z.array(schoolContactSchema).optional().default([]),
 });
 
 const fileSchema = z.object({

@@ -197,7 +197,7 @@ export async function updateSchoolData(
     const addressData = buildAddressData(dadosEscola.endereco);
 
     const schoolData = {
-        tipoEscola: dadosEscola.tipoEscola,
+        tipoEscola: dadosEscola.tipoEscola ?? null,
         nome: dadosEscola.nome,
         telefone: dadosEscola.telefone,
         email: dadosEscola.email,

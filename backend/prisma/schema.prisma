@@ -202,7 +202,7 @@ model dados_pagamento {
 model dados_escola {
   id         Int              @id @default(autoincrement())
   clienteId  String           @unique
-  tipoEscola String
+  tipoEscola String?
   nome       String?
   telefone   String?
   email      String?

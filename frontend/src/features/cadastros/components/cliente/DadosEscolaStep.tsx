@@ -43,7 +43,7 @@ export default function DadosEscolaStep({ data, onUpdate, errors, onBlur }: Dado
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Tipo escola */}
                 <SelectField
-                    label="Tipo escola *"
+                    label="Tipo escola"
                     id="tipoEscola"
                     value={data.dadosEscola?.tipoEscola || ''}
                     onChange={(e) => updateDadosEscola('tipoEscola', e.target.value)}
@@ -132,7 +132,7 @@ export default function DadosEscolaStep({ data, onUpdate, errors, onBlur }: Dado
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Nome */}
                             <InputField
-                                label="Nome *"
+                                label="Nome"
                                 id={`nomeContato-${index}`}
                                 value={contato.nome || ''}
                                 onChange={(e) => {
@@ -149,7 +149,7 @@ export default function DadosEscolaStep({ data, onUpdate, errors, onBlur }: Dado
 
                             {/* Telefone */}
                             <InputField
-                                label="Telefone *"
+                                label="Telefone"
                                 id={`telefoneContato-${index}`}
                                 value={contato.telefone || ''}
                                 onChange={(e) => {
@@ -167,7 +167,7 @@ export default function DadosEscolaStep({ data, onUpdate, errors, onBlur }: Dado
 
                             {/* E-mail */}
                             <InputField
-                                label="E-mail *"
+                                label="E-mail"
                                 id={`emailContato-${index}`}
                                 type="email"
                                 value={contato.email || ''}
@@ -186,7 +186,7 @@ export default function DadosEscolaStep({ data, onUpdate, errors, onBlur }: Dado
 
                             {/* Função */}
                             <InputField
-                                label="Função/Relacionamento *"
+                                label="Função/Relacionamento"
                                 id={`funcaoContato-${index}`}
                                 value={contato.funcao || ''}
                                 onChange={(e) => {

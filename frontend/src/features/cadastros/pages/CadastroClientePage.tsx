@@ -384,9 +384,6 @@ export default function CadastroClientePage() {
                         if (cuidador.cpf?.trim() && !isValidCPF(cuidador.cpf)) {
                             newErrors[`cuidadores.${index}.cpf`] = 'CPF inválido';
                         }
-                        if (!cuidador.escolaridade?.trim()) {
-                            newErrors[`cuidadores.${index}.escolaridade`] = 'Escolaridade é obrigatória';
-                        }
                         if (!cuidador.endereco?.cep?.trim()) {
                             newErrors[`cuidadores.${index}.endereco.cep`] = 'CEP é obrigatório';
                         }
@@ -479,18 +476,7 @@ export default function CadastroClientePage() {
 
                 if (formData.dadosEscola?.contatos?.length) {
                     formData.dadosEscola.contatos.forEach((contato, index) => {
-                        if (!contato.nome?.trim())
-                            newErrors[`dadosEscola.contatos.${index}.nome`] = 'Nome é obrigatório';
-                        if (!contato.telefone?.trim())
-                            newErrors[`dadosEscola.contatos.${index}.telefone`] =
-                                'Telefone é obrigatório';
-                        if (!contato.funcao?.trim())
-                            newErrors[`dadosEscola.contatos.${index}.funcao`] =
-                                'Função é obrigatória';
-                        if (!contato.email?.trim())
-                            newErrors[`dadosEscola.contatos.${index}.email`] =
-                                'E-mail é obrigatório';
-                        if (contato.email && !isValidEmail(contato.email))
+                        if (contato.email?.trim() && !isValidEmail(contato.email))
                             newErrors[`dadosEscola.contatos.${index}.email`] = 'E-mail inválido';
                     });
                 }
@@ -526,7 +512,14 @@ export default function CadastroClientePage() {
         try {
             const payload = { ...formData };
 
-            if (!payload.dadosEscola?.tipoEscola) {
+            const hasSchoolData =
+                payload.dadosEscola?.tipoEscola ||
+                payload.dadosEscola?.nome?.trim() ||
+                payload.dadosEscola?.telefone?.trim() ||
+                payload.dadosEscola?.email?.trim() ||
+                (payload.dadosEscola?.contatos && payload.dadosEscola.contatos.length > 0);
+
+            if (!hasSchoolData) {
                 delete payload.dadosEscola;
             }
 
