@@ -50,7 +50,8 @@ export default function EnderecoForm({
         if (endereco.cidade !== nextCidade) onUpdate(index, 'cidade', nextCidade);
         if (endereco.uf !== nextUf) onUpdate(index, 'uf', nextUf);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [data, index, endereco.logradouro, endereco.bairro, endereco.cidade, endereco.uf]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [data]);
 
     return (
         <div className="space-y-4 relative">
