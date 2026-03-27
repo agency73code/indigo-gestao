@@ -57,6 +57,17 @@ export default function EnderecoStep({ data, onUpdate, errors, onBlur }: Enderec
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [data.enderecos?.[0]?.residenciaDe, JSON.stringify(data.cuidadores)]);
 
+    const handleEnderecoBatchUpdate = useCallback(
+        (index: number, fields: Partial<{ cep: string | null; logradouro: string | null; bairro: string | null; cidade: string | null; uf: string | null }>) => {
+            const current = data.enderecos && data.enderecos.length ? data.enderecos : enderecos;
+            const updated = [...current];
+            updated[index] = { ...updated[index], ...fields };
+            onUpdate('enderecos', updated);
+        },
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [data.enderecos, onUpdate],
+    );
+
     const handleEnderecoChange = useCallback(
         (index: number, field: string, value: string) => {
             const current = data.enderecos && data.enderecos.length ? data.enderecos : enderecos;
@@ -123,6 +134,7 @@ export default function EnderecoStep({ data, onUpdate, errors, onBlur }: Enderec
                     endereco={endereco}
                     index={index}
                     onUpdate={handleEnderecoChange}
+                    onBatchUpdate={handleEnderecoBatchUpdate}
                     onRemove={removerEndereco}
                     errors={errors}
                     onBlur={onBlur}
