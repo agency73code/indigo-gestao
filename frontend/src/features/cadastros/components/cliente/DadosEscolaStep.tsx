@@ -26,12 +26,14 @@ export default function DadosEscolaStep({ data, onUpdate, errors, onBlur }: Dado
     const { data: cepData, error: cepError } = useCepLookup(data.dadosEscola?.endereco?.cep || '');
 
     useEffect(() => {
-        if (cepData) {
-            updateEnderecoEscola('logradouro', cepData.logradouro);
-            updateEnderecoEscola('bairro', cepData.bairro);
-            updateEnderecoEscola('cidade', cepData.cidade);
-            updateEnderecoEscola('uf', cepData.uf);
-        }
+        if (!cepData) return;
+        onUpdate('dadosEscola.endereco', {
+            ...data.dadosEscola?.endereco,
+            logradouro: cepData.logradouro ?? '',
+            bairro: cepData.bairro ?? '',
+            cidade: cepData.cidade ?? '',
+            uf: cepData.uf ?? '',
+        });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [cepData]);
 

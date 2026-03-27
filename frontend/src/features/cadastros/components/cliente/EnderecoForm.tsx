@@ -22,6 +22,7 @@ interface EnderecoFormProps {
     endereco: Endereco;
     index: number;
     onUpdate: (index: number, field: string, value: string) => void;
+    onBatchUpdate: (index: number, fields: Partial<Endereco>) => void;
     onRemove: (index: number) => void;
     errors: Record<string, string>;
     onBlur: (field: string) => void;
@@ -31,6 +32,7 @@ export default function EnderecoForm({
     endereco,
     index,
     onUpdate,
+    onBatchUpdate,
     onRemove,
     errors,
     onBlur,
@@ -40,17 +42,21 @@ export default function EnderecoForm({
     useEffect(() => {
         if (!data) return;
 
+        const fields: Partial<Endereco> = {};
         const nextLogradouro = data.logradouro ?? '';
         const nextBairro = data.bairro ?? '';
         const nextCidade = data.cidade ?? '';
         const nextUf = data.uf ?? '';
 
-        if (endereco.logradouro !== nextLogradouro) onUpdate(index, 'logradouro', nextLogradouro);
-        if (endereco.bairro !== nextBairro) onUpdate(index, 'bairro', nextBairro);
-        if (endereco.cidade !== nextCidade) onUpdate(index, 'cidade', nextCidade);
-        if (endereco.uf !== nextUf) onUpdate(index, 'uf', nextUf);
+        if (endereco.logradouro !== nextLogradouro) fields.logradouro = nextLogradouro;
+        if (endereco.bairro !== nextBairro) fields.bairro = nextBairro;
+        if (endereco.cidade !== nextCidade) fields.cidade = nextCidade;
+        if (endereco.uf !== nextUf) fields.uf = nextUf;
+
+        if (Object.keys(fields).length > 0) {
+            onBatchUpdate(index, fields);
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [data]);
 
     return (
